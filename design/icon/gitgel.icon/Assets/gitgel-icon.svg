@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bellGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9ccbd8"/>
+      <stop offset="1" stop-color="#4f8fa3"/>
+    </linearGradient>
+  </defs>
+  <g id="tentacles" fill="none" stroke="#7fb3c4" stroke-width="50" stroke-linecap="round">
+    <path d="M512 520 C 478 600 546 660 512 760"/>
+    <path d="M388 520 C 376 612 300 628 296 712"/>
+    <path d="M636 520 C 648 612 724 628 728 712"/>
+  </g>
+  <path id="bell" fill="url(#bellGrad)" d="M202 500 C 202 272 344 140 512 140 C 680 140 822 272 822 500 Q 770 556 719 512 Q 667 556 615 512 Q 564 556 512 512 Q 460 556 409 512 Q 357 556 305 512 Q 254 556 202 500 Z"/>
+  <path id="highlight" fill="#ffffff" fill-opacity="0.28" d="M284 430 C 280 316 350 226 452 196 C 380 250 336 330 336 430 C 336 452 284 452 284 430 Z"/>
+  <g id="nodes" fill="#eef6f8" stroke="#4f8fa3" stroke-width="16">
+    <circle cx="512" cy="806" r="62"/>
+    <circle cx="296" cy="752" r="52"/>
+    <circle cx="728" cy="752" r="52"/>
+  </g>
+</svg>
