@@ -32,8 +32,10 @@ config bans every git2 API that writes).
 pnpm tauri build --bundles app
 ```
 
-The app is written to `src-tauri/target/release/bundle/macos/Gitgel.app`. It is unsigned and
-meant for local use only.
+The app is written to `src-tauri/target/release/bundle/macos/Gitgel.app`. It is ad-hoc signed
+(`bundle.macOS.signingIdentity: "-"`), not notarized. On another Mac, the first launch of a
+downloaded copy is blocked: open it once, then allow it under System Settings → Privacy &
+Security → Open Anyway, or run `xattr -dr com.apple.quarantine /Applications/Gitgel.app`.
 
 To publish it: `pnpm release` builds the app, zips it and uploads the zip to the GitHub release
 `<version>` (the version in `package.json`) with the `gh` CLI, creating the release

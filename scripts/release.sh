@@ -50,7 +50,7 @@ else
   gh release create "$TAG" "$ZIP" \
     --target "$HEAD_SHA" \
     --title "Gitgel $VERSION" \
-    --notes "Unsigned macOS build ($ARCH). After unzipping, right-click Gitgel.app → Open the first time, since it is not notarized."
+    --notes "macOS build ($ARCH), ad-hoc signed, not notarized. The first time: open Gitgel.app, then System Settings → Privacy & Security → Open Anyway. Or in Terminal: xattr -dr com.apple.quarantine /Applications/Gitgel.app"
 fi
 
 echo "Uploaded $(basename "$ZIP") to $TAG: $(gh release view "$TAG" --json url --jq .url)"
