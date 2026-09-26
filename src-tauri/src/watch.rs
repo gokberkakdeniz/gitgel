@@ -224,7 +224,14 @@ fn worker(state: AppState, rx: Receiver<DebounceEventResult>) {
             }
         }
         let jobs = process(&state, &paths);
-        log::debug!(
+        // Rounds that did work reach the release log; ignored-only rounds stay at debug.
+        let level = if jobs > 0 {
+            log::Level::Info
+        } else {
+            log::Level::Debug
+        };
+        log::log!(
+            level,
             "watch: {} events, {} jobs, {} ms",
             paths.len(),
             jobs,

@@ -5,14 +5,17 @@ pub mod config;
 pub mod error;
 pub mod files;
 pub mod git;
+pub mod logs;
 pub mod model;
 pub mod projects;
 pub mod repos;
 pub mod review;
 pub mod scan;
 pub mod state;
+pub mod timing;
 pub mod watch;
 
+use tauri::menu::{Menu, MenuItem, HELP_SUBMENU_ID};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -30,12 +33,39 @@ pub fn run() {
                         tauri_plugin_log::log::LevelFilter::Info
                     },
                 )
+                // Enough history to debug from ("Help › Show Logs in Finder").
+                .max_file_size(2_000_000)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(3))
                 .build(),
         )
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            log::info!("libgit2 {}", git::libgit2_version());
+            log::info!(
+                "Gitgel {} · libgit2 {}",
+                app.package_info().version,
+                git::libgit2_version()
+            );
+            // The standard macOS menus, plus Help › Show Logs in Finder.
+            let menu = Menu::default(app.handle())?;
+            if let Some(help) = menu
+                .get(HELP_SUBMENU_ID)
+                .and_then(|k| k.as_submenu().cloned())
+            {
+                help.append(&MenuItem::with_id(
+                    app,
+                    logs::SHOW_LOGS_ID,
+                    "Show Logs in Finder",
+                    true,
+                    None::<&str>,
+                )?)?;
+            }
+            app.set_menu(menu)?;
+            app.on_menu_event(|app, event| {
+                if event.id() == logs::SHOW_LOGS_ID {
+                    logs::show_logs(app);
+                }
+            });
             let config_path = config::config_path(app.handle())?;
             let config = config::load(&config_path);
             let state = state::AppState::new(app.handle().clone(), config, config_path);

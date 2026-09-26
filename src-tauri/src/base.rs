@@ -48,6 +48,7 @@ fn default_for(
 
 /// Everything the base menu lists for one entry.
 pub fn base_options(state: &AppState, repo_id: &str, key: &str) -> Result<BaseOptions, AppError> {
+    let started = std::time::Instant::now();
     let config = config::snapshot(state);
     let (_, branch, worktree) = parse_key(key)?;
     let repo_cfg = repo_of(&config, repo_id)?;
@@ -85,6 +86,12 @@ pub fn base_options(state: &AppState, repo_id: &str, key: &str) -> Result<BaseOp
         .collect();
     branches.sort();
 
+    log::info!(
+        "base options {key}: {:.0} ms · {} suggested, {} branches",
+        started.elapsed().as_secs_f64() * 1000.0,
+        suggested.len(),
+        branches.len()
+    );
     Ok(BaseOptions {
         current: entry.base,
         suggested,

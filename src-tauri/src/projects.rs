@@ -166,6 +166,7 @@ pub fn repoint_entry(
 
 /// Every entry of the project summarized, active or not, in project order.
 pub fn project_view(state: &AppState, project_id: &str) -> Result<ProjectView, AppError> {
+    let started = std::time::Instant::now();
     let config = config::snapshot(state);
     let project = config
         .projects
@@ -190,6 +191,12 @@ pub fn project_view(state: &AppState, project_id: &str) -> Result<ProjectView, A
         })
         .collect::<Vec<_>>();
     remember_tips(state, project_id, &seen_tips(&entries));
+    log::info!(
+        "project view {}: {:.0} ms · {} entries",
+        project.name,
+        started.elapsed().as_secs_f64() * 1000.0,
+        entries.len()
+    );
     Ok(ProjectView { project, entries })
 }
 

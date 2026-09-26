@@ -9,30 +9,41 @@ use crate::git::inspect;
 use crate::model::{Config, DuplicateOf, FolderKind, RepoConfig, Settings, UpdateReason};
 use crate::scan;
 use crate::state::{lock, AppState};
+use crate::timing::Timings;
 use crate::watch;
 
 /// Adds the main repository of every `repo` / `resolved` folder; duplicates and non-repos are
 /// skipped.
 pub fn add_repos(state: &AppState, paths: &[String]) -> Result<Config, AppError> {
+    let mut t = Timings::start();
     let mut added = Vec::new();
-    let config = config::update(state, |config| {
-        for check in inspect::inspect_folders(paths, config) {
-            if let (FolderKind::Repo | FolderKind::Resolved, Some(path)) =
-                (check.kind, check.repo_path)
-            {
-                let id = config::new_id("r");
-                added.push(id.clone());
-                config.repos.push(RepoConfig { id, path });
+    let config = t.time("inspect + save", || {
+        config::update(state, |config| {
+            for check in inspect::inspect_folders(paths, config) {
+                if let (FolderKind::Repo | FolderKind::Resolved, Some(path)) =
+                    (check.kind, check.repo_path)
+                {
+                    let id = config::new_id("r");
+                    added.push(id.clone());
+                    config.repos.push(RepoConfig { id, path });
+                }
             }
-        }
-        Ok(config.clone())
+            Ok(config.clone())
+        })
     })?;
     for id in &added {
-        scan::rescan_repo(state, id, UpdateReason::Rescan, None);
+        t.time("scan", || {
+            scan::rescan_repo(state, id, UpdateReason::Rescan, None)
+        });
     }
     if !added.is_empty() {
-        watch::sync_watches(state);
+        t.time("watch", || watch::sync_watches(state));
     }
+    log::info!(
+        "add repos: {t} · {} added of {} folders",
+        added.len(),
+        paths.len()
+    );
     Ok(config)
 }
 

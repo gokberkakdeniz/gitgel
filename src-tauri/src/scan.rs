@@ -1,5 +1,6 @@
 //! Branch and worktree discovery, entry summaries and the stored scan result.
 
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -18,6 +19,7 @@ use crate::model::{
     RepoUpdated, ScanResult, UpdateReason,
 };
 use crate::state::{lock, AppState};
+use crate::timing::Timings;
 
 pub const REPO_UPDATED: &str = "repo-updated";
 
@@ -47,6 +49,8 @@ struct RepoCtx<'a> {
     default_base: Option<String>,
     /// Local name of the default base (e.g. `master`). Its own base is its upstream.
     base_branch: Option<String>,
+    /// Step durations for the log.
+    timings: RefCell<Timings>,
 }
 
 impl RepoCtx<'_> {
@@ -123,8 +127,12 @@ fn fill(
     now: i64,
     scan: &mut RepoScan,
 ) -> Result<RepoLayout, AppError> {
-    let (default_base, source) =
-        refs::resolve_default_base(repo, &config.settings.default_base_order).unzip();
+    let mut t = Timings::start();
+    let (default_base, source) = t
+        .time("base", || {
+            refs::resolve_default_base(repo, &config.settings.default_base_order)
+        })
+        .unzip();
     scan.default_base.clone_from(&default_base);
     scan.default_base_source = source;
     let default_tip = default_base
@@ -134,7 +142,7 @@ fn fill(
         .as_deref()
         .map(|b| refs::base_branch_name(repo, b));
 
-    let wts = worktrees::list_worktrees(pool, repo)?;
+    let wts = t.time("worktrees", || worktrees::list_worktrees(pool, repo))?;
     let layout = RepoLayout {
         git_dir: worktrees::git_dir(repo),
         worktrees: wts
@@ -157,11 +165,18 @@ fn fill(
         config,
         default_base,
         base_branch: base_branch.clone(),
+        timings: RefCell::new(t),
     };
     let horizon = i64::from(config.settings.active_days) * 86_400;
     let mut live_tips = HashSet::new();
 
-    for branch in refs::local_branches(repo)? {
+    let branches = {
+        let started = std::time::Instant::now();
+        let branches = refs::local_branches(repo)?;
+        ctx.timings.borrow_mut().add("branches", started.elapsed());
+        branches
+    };
+    for branch in branches {
         live_tips.insert(branch.tip.clone());
         if Some(&branch.name) == base_branch.as_ref() {
             // Listed only while it holds work: unpushed commits or uncommitted changes.
@@ -232,6 +247,14 @@ fn fill(
     scan.others
         .sort_by_key(|o| std::cmp::Reverse(o.last_commit_at));
     lock(cache).prune(&repo_cfg.id, &live_tips);
+    log::info!(
+        "scan {}: {} · {} active, {} others, {} worktrees",
+        scan.name,
+        ctx.timings.borrow(),
+        scan.active.len(),
+        scan.others.len(),
+        layout.worktrees.len()
+    );
     Ok(layout)
 }
 
@@ -333,6 +356,13 @@ fn summarize(
 }
 
 fn uncommitted_count(ctx: &RepoCtx, worktree: &Path) -> Result<u32, AppError> {
+    let started = std::time::Instant::now();
+    let n = uncommitted_count_untimed(ctx, worktree);
+    ctx.timings.borrow_mut().add("status", started.elapsed());
+    n
+}
+
+fn uncommitted_count_untimed(ctx: &RepoCtx, worktree: &Path) -> Result<u32, AppError> {
     // The main worktree is the repository already locked by the caller.
     let n = if worktree == ctx.main_path {
         diff::uncommitted_count(ctx.repo)?
@@ -345,7 +375,10 @@ fn uncommitted_count(ctx: &RepoCtx, worktree: &Path) -> Result<u32, AppError> {
 }
 
 fn cached_committed(ctx: &RepoCtx, tip: &str, base: &str) -> Result<CommittedStats, AppError> {
-    committed_stats(ctx.cache, &ctx.repo_cfg.id, ctx.repo, tip, base)
+    let started = std::time::Instant::now();
+    let stats = committed_stats(ctx.cache, &ctx.repo_cfg.id, ctx.repo, tip, base);
+    ctx.timings.borrow_mut().add("stats", started.elapsed());
+    stats
 }
 
 /// Committed stats of `tip` against `base`, from the cache when possible. The cache lock is not
@@ -366,6 +399,13 @@ pub fn committed_stats(
 }
 
 fn cached_merged(ctx: &RepoCtx, tip: &str, base: &str) -> Result<bool, AppError> {
+    let started = std::time::Instant::now();
+    let merged = cached_merged_untimed(ctx, tip, base);
+    ctx.timings.borrow_mut().add("merged", started.elapsed());
+    merged
+}
+
+fn cached_merged_untimed(ctx: &RepoCtx, tip: &str, base: &str) -> Result<bool, AppError> {
     let id = &ctx.repo_cfg.id;
     if let Some(merged) = lock(ctx.cache).merged(id, tip, base) {
         return Ok(merged);
@@ -501,6 +541,7 @@ fn summarize_locked(
             .as_deref()
             .map(|b| refs::base_branch_name(repo, b)),
         default_base,
+        timings: RefCell::new(Timings::start()),
     };
     let mut s = summarize(&ctx, branch.map(str::to_string), worktree, tip, at);
     // A detached entry keeps its key even when its worktree is gone.
@@ -631,6 +672,7 @@ pub fn refresh_worktree(
         config,
         default_base: scan.default_base.clone(),
         base_branch,
+        timings: RefCell::new(Timings::start()),
     };
     let mut changed = false;
     let mut updated = scan.active.clone();

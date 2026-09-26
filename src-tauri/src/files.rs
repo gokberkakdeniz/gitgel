@@ -22,6 +22,31 @@ pub fn read_file_pair(
     worktree_path: Option<&str>,
     change: &FileChange,
 ) -> Result<FilePair, AppError> {
+    let started = std::time::Instant::now();
+    let pair = read_pair(state, repo_id, worktree_path, change);
+    if let Ok(p) = &pair {
+        log::info!(
+            "file {}: {:.1} ms ({})",
+            change.path,
+            started.elapsed().as_secs_f64() * 1000.0,
+            if p.binary {
+                "binary".to_string()
+            } else if p.too_large {
+                "too large".to_string()
+            } else {
+                format!("{} B → {} B", p.original.len(), p.modified.len())
+            }
+        );
+    }
+    pair
+}
+
+fn read_pair(
+    state: &AppState,
+    repo_id: &str,
+    worktree_path: Option<&str>,
+    change: &FileChange,
+) -> Result<FilePair, AppError> {
     let config = config::snapshot(state);
     let repo_cfg = config
         .repos
