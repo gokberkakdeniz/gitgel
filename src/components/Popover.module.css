@@ -1,0 +1,11 @@
+.popover {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pop);
+  box-shadow: var(--shadow-pop);
+}

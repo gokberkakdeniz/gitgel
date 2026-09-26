@@ -1,0 +1,8 @@
+.kbd {
+  padding: 1px 6px;
+  background: var(--bg-hover);
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}

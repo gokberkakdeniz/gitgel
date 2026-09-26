@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:#7fb3c4;text-decoration:none}a:hover{color:#a3cad6}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; display: flex; position: relative; background: #141311; overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc">
+<dc-import name="Sidebar" active="{{activeProject}}" inbox-count="{{inboxCount}}" projects="{{sidebarProjects}}" hint-size="260px,800px"></dc-import>
+
+<main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 28px; border-bottom: 1px solid #302e2a">
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: #faf9f5">Session auth refresh</h1>
+</sc-if>
+<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}">
+<label style="display: flex">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Project name</span>
+<input value="{{draftName}}" style="{{renameInputStyle}}">
+</label>
+</sc-if>
+<div style="{{subtitleStyle}}">{{subtitle}}</div>
+</div>
+<button aria-label="Refresh" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #d8d4cc">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
+</button>
+<button aria-label="Project options" aria-haspopup="menu" style="{{optionsBtnStyle}}">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
+</button>
+<a href="Palette.dc.html" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #faf9f5; font-weight: 500; font-size: 13px">Add entries <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">⌘K</span></a>
+<a href="Diff.dc.html" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #4f8fa3; border-radius: 8px; color: #141311; font-weight: 600; font-size: 13px">Review changes</a>
+</header>
+
+<sc-if value="{{hasRows}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column">
+<div style="display: grid; grid-template-columns: 104px minmax(0, 1fr) 160px 56px 56px 116px 160px 32px; column-gap: 12px; padding: 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96; border-bottom: 1px solid #262420">
+<span>Repo</span><span>Branch</span><span>Base</span><span>Ahead</span><span>Files</span><span>Uncommitted</span><span>State</span><span></span>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div style="{{r.rowStyle}}">
+<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; color: #faf9f5">{{r.repo}}</span>
+<a href="Diff.dc.html" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #faf9f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.branch}}</a>
+<button style="justify-self: start; max-width: 100%; min-width: 0; display: flex; align-items: center; gap: 4px; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; padding: 4px 10px"><span style="min-width: 0; overflow: hidden; text-overflow: ellipsis">{{r.base}}</span><svg style="flex-shrink: 0" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{r.ahead}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{r.files}}</span>
+<span style="{{r.dirtyStyle}}">{{r.dirtyLabel}}</span>
+<span style="{{r.stateStyle}}">{{r.state}}</span>
+<button aria-label="Entry options" style="{{r.menuBtnStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
+</div>
+</sc-for>
+<sc-if value="{{showHint}}" hint-placeholder-val="{{false}}">
+<a href="Palette.dc.html" style="display: flex; align-items: center; gap: 12px; margin: 20px 28px; padding: 18px 20px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; color: #d8d4cc">
+<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 20px; color: #7fb3c4">+</span>
+<span style="flex-grow: 1; font-size: 14px">Add related branches from other repositories</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96; background: #2a2825; border-radius: 5px; padding: 1px 6px">⌘K</span>
+</a>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center">
+<div style="width: 420px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">No entries yet</h2>
+<p style="margin: 0; font-size: 14px; color: #d8d4cc; line-height: 1.55">A project groups branches that belong to one piece of work, across any of your repositories.</p>
+<a href="Palette.dc.html" style="margin-top: 8px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 20px; background: #4f8fa3; border-radius: 8px; color: #141311; font-weight: 600; font-size: 14px">Add branches <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; opacity: 0.8">⌘K</span></a>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showMenu}}" hint-placeholder-val="{{false}}">
+<div role="menu" aria-label="Entry options" style="position: absolute; top: 377px; right: 28px; width: 260px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; padding: 6px">
+<button role="menuitem" style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 0; border-radius: 8px; background: #2a2825; text-align: left; cursor: pointer">
+<span style="color: #faf9f5; font-size: 13px">View last known state</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">tip 3be91a0 · seen 2d ago</span>
+</button>
+<button role="menuitem" style="display: flex; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #faf9f5; font-size: 13px; text-align: left">Point to another branch…</button>
+<button role="menuitem" style="display: flex; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #faf9f5; font-size: 13px; text-align: left">Copy branch name</button>
+<div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
+<button role="menuitem" style="display: flex; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #ee9a90; font-size: 13px; text-align: left">Remove from project</button>
+</div>
+</sc-if>
+<sc-if value="{{showProjectMenu}}" hint-placeholder-val="{{false}}">
+<div role="menu" aria-label="Project options" style="position: absolute; top: 54px; right: 290px; width: 230px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; padding: 6px">
+<button role="menuitem" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 0; border-radius: 8px; background: #2a2825; color: #faf9f5; font-size: 13px; text-align: left; cursor: pointer">Rename <span style="font-size: 12px; color: #a09d96">double-click title</span></button>
+<div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
+<button role="menuitem" style="display: flex; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #ee9a90; font-size: 13px; text-align: left">Delete project…</button>
+</div>
+</sc-if>
+</main>
+
+<sc-if value="{{showDelete}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: flex-start; padding-top: 180px">
+<div role="alertdialog" aria-label="Delete project" style="width: 440px; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 10px; padding: 22px 24px 18px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: #faf9f5">Delete “Session auth refresh”?</div>
+<p style="margin: 0; font-size: 14px; line-height: 1.55; color: #d8d4cc">The project and its 6 entries are removed from this app. Branches, worktrees and repositories are not touched.</p>
+<div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px">
+<button style="height: 36px; padding: 0 16px; background: #2a2825; border: 1px solid #383631; border-radius: 8px; color: #faf9f5; font-size: 13px">Cancel</button>
+<button style="height: 36px; padding: 0 16px; background: #c64545; border: 0; border-radius: 8px; color: #ffffff; font-size: 13px; font-weight: 600">Delete project</button>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["full","one","empty"],"default":"full"},"menu":{"editor":"boolean","default":false},"projectMenu":{"editor":"boolean","default":false},"rename":{"editor":"enum","options":["none","edit","conflict"],"default":"none"},"confirmDelete":{"editor":"boolean","default":false},"fresh":{"editor":"boolean","default":false},"fromSelection":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var fromSel = !!this.props.fromSelection;
+    var fresh = !!this.props.fresh || fromSel;
+    var variant = fromSel ? 'sel' : fresh ? 'empty' : (this.props.variant ?? 'full');
+    var menu = !!this.props.menu && variant === 'full';
+    var pill = function (c, bg) {
+      return 'justify-self: start; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 9999px; white-space: nowrap; color: ' + c + '; background: ' + bg;
+    };
+    var S = {
+      '': 'font-size: 12px; color: #75726b',
+      'merged into main': pill('#8fcf9c', 'rgba(93,184,114,0.14)'),
+      'base missing': pill('#e8c071', 'rgba(212,160,23,0.14)'),
+      'branch deleted': pill('#ee9a90', 'rgba(198,69,69,0.16)'),
+      'repo path not found': pill('#ee9a90', 'rgba(198,69,69,0.16)')
+    };
+    var data = [
+      { repo: 'web-app', branch: 'session-token-refresh', base: 'main', ahead: '↑4', files: '6', dirty: 3 },
+      { repo: 'api-server', branch: 'token-rotation-job', base: 'main', ahead: '↑2', files: '4', dirty: 1 },
+      { repo: 'api-server', branch: 'refresh-endpoint', base: 'main', ahead: '↑0', files: '0', dirty: 0, state: 'merged into main' },
+      { repo: 'mobile', branch: 'feat/token-store', base: 'feat/auth-core', ahead: '—', files: '—', dirty: 0, state: 'base missing' },
+      { repo: 'web-app', branch: 'logout-flow', base: 'main', ahead: '—', files: '—', dirty: 0, state: 'branch deleted', dim: true, target: true },
+      { repo: 'admin-panel', branch: 'session-ui', base: 'main', ahead: '—', files: '—', dirty: 0, state: 'repo path not found', dim: true }
+    ];
+    if (variant === 'one') data = data.slice(0, 1);
+    if (variant === 'empty') data = [];
+    if (variant === 'sel') data = [
+      { repo: 'web-app', branch: 'sidebar-virtualization', base: 'main', ahead: '↑11', files: '23', dirty: 0 },
+      { repo: 'api-server', branch: 'rate-limit-middleware', base: 'main', ahead: '↑3', files: '5', dirty: 7 },
+      { repo: 'api-server', branch: 'migrate-pg-pool', base: 'feat/db-v2', ahead: '↑6', files: '12', dirty: 0 }
+    ];
+    var count = String(data.length);
+    var rename = fresh ? 'edit' : (this.props.rename ?? 'none');
+    var conflict = rename === 'conflict';
+    var projectMenu = !!this.props.projectMenu;
+    var ring = conflict ? '#ee9a90; box-shadow: 0 0 0 3px rgba(198,69,69,0.25)' : '#4f8fa3; box-shadow: 0 0 0 3px rgba(79,143,163,0.25)';
+    var subtitle = variant === 'full' ? '6 entries across 4 repos' : variant === 'one' ? '1 entry · web-app' : 'Empty';
+    return {
+      renaming: rename !== 'none',
+      notRenaming: rename === 'none',
+      draftName: fresh ? 'Untitled project' : conflict ? 'Rate limiting rollout' : 'Session token refresh',
+      activeProject: fresh ? 'Untitled project' : 'Session auth refresh',
+      renameInputStyle: 'width: 340px; height: 34px; margin: -3px 0 -1px -9px; padding: 0 8px; background: #1a1917; border-radius: 8px; outline: none; color: #faf9f5; font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; border: 1px solid ' + ring,
+      subtitleStyle: 'font-size: 12px; ' + (conflict ? 'color: #ee9a90' : 'color: #a09d96'),
+      showProjectMenu: projectMenu,
+      showDelete: !!this.props.confirmDelete,
+      optionsBtnStyle: 'width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #d8d4cc; ' + (projectMenu ? 'background: #383631; border: 1px solid #4a4741' : 'background: #211f1c; border: 1px solid #302e2a'),
+      hasRows: data.length > 0,
+      isEmpty: data.length === 0,
+      showHint: variant === 'one',
+      showMenu: menu,
+      inboxCount: variant === 'full' ? '7' : '6',
+      subtitle: fromSel ? '3 entries across 2 repos · name your project · ↵ save' : fresh ? 'Name your project · ↵ save · esc discards it' : conflict ? 'A project named “Rate limiting rollout” already exists' : rename === 'edit' ? '↵ save · esc cancel' : subtitle,
+      sidebarProjects: fresh ? [{ name: 'Rate limiting rollout', count: '2' }, { name: 'Untitled project', count: '0' }] : [{ name: 'Session auth refresh', count: count }, { name: 'Rate limiting rollout', count: '2' }],
+      rows: data.map(function (r) {
+        var d = r.dirty > 0;
+        var hot = menu && r.target;
+        return Object.assign({}, r, {
+          state: r.state || '—',
+          stateStyle: S[r.state || ''],
+          dirtyLabel: d ? '● ' + r.dirty + ' changed' : '—',
+          dirtyStyle: d ? 'font-size: 12px; font-weight: 500; color: #7fb3c4' : 'font-size: 12px; color: #75726b',
+          menuBtnStyle: 'width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #d8d4cc; border: 0; ' + (hot ? 'background: #383631' : 'background: transparent'),
+          rowStyle: 'display: grid; grid-template-columns: 104px minmax(0, 1fr) 160px 56px 56px 116px 160px 32px; column-gap: 12px; align-items: center; padding: 12px 28px; border-bottom: 1px solid #262420; color: #d8d4cc; ' + (hot ? 'background: #211f1c; ' : '') + (r.dim && !hot ? 'opacity: 0.6' : '')
+        });
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

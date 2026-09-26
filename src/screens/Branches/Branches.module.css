@@ -1,0 +1,507 @@
+.center {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.emptyBody {
+  width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--accent);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  color: var(--text-strong);
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-body);
+}
+
+.emptyButton {
+  margin-top: 8px;
+}
+
+.emptyHint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Header filter */
+
+.filter {
+  width: 230px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px 0 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+  cursor: text;
+}
+
+.filter:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.filterInput {
+  flex-grow: 1;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text-strong);
+}
+
+.filterInput::placeholder {
+  color: var(--text-muted);
+}
+
+.filterInput:focus-visible {
+  box-shadow: none;
+}
+
+/* Table */
+
+.table {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px;
+  column-gap: 12px;
+  align-items: center;
+  padding: 10px 28px;
+}
+
+.columns {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-row);
+}
+
+.list {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 24px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.band {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 28px;
+  background: var(--bg-band);
+  border-top: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border);
+}
+
+.bandIcon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.repoName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.repoPath {
+  flex-grow: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pillButton {
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.row {
+  border-bottom: 1px solid var(--border-row);
+  color: var(--text-body);
+}
+
+.row:hover {
+  background: var(--bg-sunken);
+}
+
+.branchCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.branchName {
+  max-width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-strong);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.branchName:hover {
+  color: var(--accent-hover);
+}
+
+.sub {
+  max-width: 100%;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.age {
+  color: var(--text-muted);
+}
+
+.dirty {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent-text);
+}
+
+.faint {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.pill {
+  justify-self: start;
+}
+
+/* Checkboxes only on the hovered row, or on all rows while selecting (flow H). */
+
+.check {
+  visibility: hidden;
+}
+
+.row:hover .check,
+.selecting .check {
+  visibility: visible;
+}
+
+.selected,
+.selected:hover {
+  background: var(--selected-bg);
+}
+
+.hot,
+.hot:hover {
+  background: var(--bg-elevated);
+}
+
+/* Projects column (flow I) */
+
+.projects {
+  justify-self: start;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.projectsChip {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--text-body);
+}
+
+.projectsChip:hover {
+  background: var(--bg-hover);
+}
+
+.projectsNone {
+  background: transparent;
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.projectsAdd {
+  display: none;
+}
+
+/* "+ Add" on the hovered or focused row. */
+.row:hover .projectsNone,
+.projectsNone:focus-visible {
+  border-color: var(--border);
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+.row:hover .projectsNone .projectsDash,
+.projectsNone:focus-visible .projectsDash {
+  display: none;
+}
+
+.row:hover .projectsNone .projectsAdd,
+.projectsNone:focus-visible .projectsAdd {
+  display: inline;
+}
+
+.projectsPicking,
+.projectsPicking:hover,
+.row:hover .projectsPicking {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.projectsPicking .projectsDash {
+  display: none;
+}
+
+.projectsPicking .projectsAdd {
+  display: inline;
+}
+
+.projectsOpen,
+.projectsOpen:hover {
+  background: var(--bg-pressed);
+  border-color: #4a4741;
+  color: var(--text-strong);
+}
+
+.projectsAdded {
+  background: rgba(79, 143, 163, 0.12);
+  border-color: var(--accent);
+  color: var(--text-strong);
+}
+
+.projMenu {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+}
+
+.projMenuLabel {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.projMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-strong);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.projMenuItem:hover,
+.projMenuItem:focus-visible {
+  background: var(--bg-hover);
+  box-shadow: none;
+}
+
+.projDot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--text-faint);
+  border-radius: 50%;
+}
+
+.projName {
+  flex-grow: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.projArrow {
+  color: var(--text-muted);
+}
+
+.projDivider {
+  height: 1px;
+  margin: 4px;
+  background: var(--border);
+}
+
+.projAddAnother {
+  color: var(--accent-text);
+  font-weight: 500;
+}
+
+.toastBranch {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Selection bar */
+
+.selectionBar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  z-index: 20;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 16px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pop);
+  box-shadow: var(--shadow-pop);
+  white-space: nowrap;
+}
+
+.selCount {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.selRepos {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.selDivider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--border-strong);
+}
+
+.selAdd {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  color: var(--text-strong);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.selClear {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.selClear:hover {
+  background: var(--bg-pressed);
+  color: var(--text-strong);
+}
+
+/* The band of a repo opened from its name elsewhere. */
+.flash {
+  animation: flash 1.6s ease-out;
+}
+
+@keyframes flash {
+  0%,
+  40% {
+    box-shadow: inset 0 0 0 1px var(--accent);
+    background: rgba(79, 143, 163, 0.12);
+  }
+  100% {
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+}
+
+.list {
+  scroll-padding-top: 8px;
+}

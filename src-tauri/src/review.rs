@@ -1,0 +1,212 @@
+//! Review data for a project or a single branch.
+
+use std::path::Path;
+
+use crate::cache::CommittedDetail;
+use crate::config;
+use crate::error::AppError;
+use crate::git::{diff, history, refs, Repo};
+use crate::model::{
+    Config, EntryState, EntrySummary, FilesByMode, RepoConfig, ReviewData, ReviewGroup,
+    ReviewTarget,
+};
+use crate::scan;
+use crate::state::{lock, AppState};
+
+/// Commits listed per entry.
+const COMMIT_LIMIT: usize = 200;
+
+pub fn get_review(state: &AppState, target: &ReviewTarget) -> Result<ReviewData, AppError> {
+    let config = config::snapshot(state);
+    match target {
+        ReviewTarget::Branch {
+            repo_id,
+            branch,
+            worktree_path,
+            tip_override,
+        } => {
+            let repo_cfg = config
+                .repos
+                .iter()
+                .find(|r| &r.id == repo_id)
+                .ok_or_else(|| AppError::NotFound(format!("repository {repo_id}")))?;
+            let summary = scan::summarize_one(
+                &state.pool,
+                &state.cache,
+                repo_cfg,
+                &config,
+                branch.as_deref(),
+                worktree_path.as_deref(),
+                tip_override.as_deref(),
+            );
+            let mut data = ReviewData {
+                groups: Vec::new(),
+                not_in_review: Vec::new(),
+                total_entries: 1,
+            };
+            if reviewable(&summary) {
+                data.groups.push(group(state, &config, repo_cfg, summary)?);
+            } else {
+                data.not_in_review.push(summary);
+            }
+            Ok(data)
+        }
+        ReviewTarget::Project { project_id } => {
+            let project = config
+                .projects
+                .iter()
+                .find(|p| &p.id == project_id)
+                .ok_or_else(|| AppError::NotFound(format!("project {project_id}")))?;
+            let mut data = ReviewData {
+                groups: Vec::new(),
+                not_in_review: Vec::new(),
+                total_entries: project.entries.len() as u32,
+            };
+            // Two entries from the same repo are two groups; project order is kept.
+            for e in &project.entries {
+                let Some(repo_cfg) = config.repos.iter().find(|r| r.id == e.repo_id) else {
+                    data.not_in_review
+                        .push(scan::removed_repo_summary(e, &config));
+                    continue;
+                };
+                let summary = scan::summarize_one(
+                    &state.pool,
+                    &state.cache,
+                    repo_cfg,
+                    &config,
+                    e.branch.as_deref(),
+                    e.worktree_path.as_deref(),
+                    None,
+                );
+                if !reviewable(&summary) {
+                    data.not_in_review.push(summary);
+                    continue;
+                }
+                match group(state, &config, repo_cfg, summary.clone()) {
+                    // A merged entry with nothing left to show is not reviewable.
+                    Ok(g) if summary.state == EntryState::Merged && is_empty(&g) => {
+                        data.not_in_review.push(summary)
+                    }
+                    Ok(g) => data.groups.push(g),
+                    Err(e) => {
+                        log::warn!("review of {} failed: {e}", summary.key);
+                        data.not_in_review.push(EntrySummary {
+                            state: EntryState::GitError,
+                            error: Some(e.to_string()),
+                            ..summary
+                        });
+                    }
+                }
+            }
+            let mut seen: Vec<_> = data.groups.iter().map(|g| g.entry.clone()).collect();
+            seen.extend(data.not_in_review.iter().cloned());
+            crate::projects::remember_tips(state, project_id, &crate::projects::seen_tips(&seen));
+            Ok(data)
+        }
+    }
+}
+
+fn is_empty(g: &ReviewGroup) -> bool {
+    g.files.committed.is_empty() && g.files.uncommitted.is_empty() && g.files.all.is_empty()
+}
+
+fn reviewable(s: &EntrySummary) -> bool {
+    matches!(
+        s.state,
+        EntryState::Ok | EntryState::Detached | EntryState::Merged
+    )
+}
+
+fn group(
+    state: &AppState,
+    config: &Config,
+    repo_cfg: &RepoConfig,
+    entry: EntrySummary,
+) -> Result<ReviewGroup, AppError> {
+    let shared = state.pool.get(Path::new(&repo_cfg.path))?;
+    let repo = lock(&shared);
+    let (Some(tip), Some(base)) = (entry.head_sha.clone(), entry.base.clone()) else {
+        return Err(AppError::NotFound(format!(
+            "{} has no tip or base",
+            entry.key
+        )));
+    };
+    let base_tip = refs::resolve_commit(&repo, &base)
+        .ok_or_else(|| AppError::NotFound(format!("base {base}")))?;
+    let stats = scan::committed_stats(&state.cache, &repo_cfg.id, &repo, &tip, &base_tip)?;
+    let merge_base = stats
+        .merge_base
+        .ok_or_else(|| AppError::NotFound("no common ancestor".into()))?;
+
+    let cached = lock(&state.cache).detail(&repo_cfg.id, &tip, &base_tip);
+    let detail = match cached {
+        Some(detail) => detail,
+        None => {
+            let default_tip =
+                refs::resolve_default_base(&repo, &config.settings.default_base_order)
+                    .and_then(|(name, _)| refs::resolve_commit(&repo, &name));
+            let stack = history::stack(
+                &repo,
+                entry.branch.as_deref(),
+                &tip,
+                &base_tip,
+                default_tip.as_deref(),
+            )?;
+            let mut commits = history::commits(&repo, &base_tip, &tip, COMMIT_LIMIT)?;
+            for c in &mut commits {
+                c.from_branch = stack.from_branch.get(&c.sha).cloned();
+            }
+            let detail = CommittedDetail {
+                files: diff::committed_changes(&repo, &merge_base, &tip)?,
+                commits,
+                suggested: stack.suggested,
+            };
+            lock(&state.cache).put_detail(&repo_cfg.id, &tip, &base_tip, detail.clone());
+            detail
+        }
+    };
+
+    // The working-tree layers are read fresh every time; they are not cached.
+    let (uncommitted, all) = match &entry.worktree_path {
+        Some(wt) => {
+            let wt = Path::new(wt);
+            let read = |wt_repo: &Repo| -> Result<_, AppError> {
+                Ok((
+                    diff::uncommitted(wt_repo)?,
+                    diff::workdir_changes(wt_repo, &merge_base)?,
+                ))
+            };
+            if canonical(wt) == canonical(Path::new(&repo_cfg.path)) {
+                read(&repo)?
+            } else {
+                let shared = state.pool.get(wt)?;
+                let wt_repo = lock(&shared);
+                read(&wt_repo)?
+            }
+        }
+        None => (Vec::new(), detail.files.clone()),
+    };
+
+    // The best candidate, unless it already is the base.
+    let stack_hint = detail
+        .suggested
+        .into_iter()
+        .next()
+        .filter(|h| Some(&h.branch) != entry.base.as_ref());
+
+    Ok(ReviewGroup {
+        entry,
+        merge_base: Some(merge_base),
+        files: FilesByMode {
+            committed: detail.files,
+            uncommitted,
+            all,
+        },
+        commits: detail.commits,
+        stack_hint,
+    })
+}
+
+fn canonical(path: &Path) -> std::path::PathBuf {
+    path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
+}

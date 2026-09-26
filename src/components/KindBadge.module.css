@@ -1,0 +1,37 @@
+.badge {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.A {
+  color: var(--kind-a-text);
+  background: var(--kind-a-bg);
+}
+
+.M {
+  color: var(--kind-m-text);
+  background: var(--kind-m-bg);
+}
+
+.R {
+  color: var(--kind-r-text);
+  background: var(--kind-r-bg);
+}
+
+.D {
+  color: var(--kind-d-text);
+  background: var(--kind-d-bg);
+}
+
+.U {
+  color: var(--kind-u-text);
+  background: var(--kind-u-bg);
+}

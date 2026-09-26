@@ -1,0 +1,17 @@
+.view {
+  position: relative;
+  flex-grow: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-main);
+}
+
+.message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-main);
+  color: var(--text-muted);
+}

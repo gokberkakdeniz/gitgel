@@ -1,0 +1,248 @@
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-row);
+  font-size: 14px;
+  color: var(--text-code);
+}
+
+.top {
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 12px 0 16px;
+}
+
+/* Room for the native traffic lights. */
+.lights {
+  width: 64px;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 10px 0;
+}
+
+.row {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px 0 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  color: var(--text-code);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--bg-sunken);
+}
+
+.active,
+.active:hover {
+  background: var(--bg-sidebar-active);
+  color: var(--text-strong);
+}
+
+.plus {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text-code);
+}
+
+.branchIcon {
+  flex-shrink: 0;
+  margin: 0 3px;
+  color: var(--text-muted);
+}
+
+.grow {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.projectsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26px 12px 6px 20px;
+  color: var(--text-muted);
+}
+
+.projectFilter {
+  flex-grow: 1;
+  margin-left: -8px;
+  margin-right: 6px;
+}
+
+.projectsActions {
+  display: flex;
+  gap: 2px;
+}
+
+.projects {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 10px;
+}
+
+.footer {
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px 0 10px;
+  border-top: 1px solid var(--bg-hover);
+}
+
+.repoRow {
+  flex-grow: 1;
+  min-width: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-code);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.repoRow:hover {
+  background: var(--bg-sunken);
+}
+
+/* Shown only while the footer is hovered; keeps its place otherwise. */
+.repoAdd {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+  visibility: hidden;
+  cursor: pointer;
+}
+
+.footer:hover .repoAdd,
+.repoAdd:focus-visible {
+  visibility: visible;
+}
+
+.repoAdd:hover {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+
+.folderIcon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.gear {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.gear:hover {
+  background: var(--bg-sunken);
+  color: var(--text-strong);
+}
+
+.gearActive,
+.gearActive:hover {
+  background: var(--bg-sidebar-active);
+  color: var(--text-strong);
+}
+
+.projectRow {
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 10px 0 16px;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  color: var(--text-code);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.projectRow:hover {
+  background: var(--bg-sunken);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--text-faint);
+  border-radius: 50%;
+}
+
+.dotActive {
+  border-color: var(--text-code);
+}
+
+.projectName {
+  flex-grow: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.projectRow.active,
+.projectRow.active:hover {
+  background: var(--bg-sidebar-active);
+  color: var(--text-strong);
+}

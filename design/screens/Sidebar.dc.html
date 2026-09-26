@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sidebar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<nav style="width: 260px; height: 800px; box-sizing: border-box; background: #0e0d0c; border-right: 1px solid #262420; display: flex; flex-direction: column; font-family: 'Instrument Sans', -apple-system, sans-serif; font-size: 14px; color: #e0ddd6">
+
+<div style="height: 52px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 12px 0 16px">
+<div style="display: flex; gap: 8px; margin-right: 6px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button aria-label="Toggle sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: #a09d96">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="M9.5 4.5v15"></path></svg>
+</button>
+<button aria-label="Back" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: #a09d96">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m11 6-6 6 6 6"></path></svg>
+</button>
+<button aria-label="Forward" disabled="{{true}}" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: #5c5a55">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+</button>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 10px 0">
+<button style="{{newStyle}}">
+<span style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #302e2a; color: #e0ddd6">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+</span>
+<span>New project</span>
+</button>
+<a href="Main.dc.html" style="{{inboxStyle}}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a09d96" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin: 0 3px"><circle cx="6" cy="6" r="2.2"></circle><circle cx="6" cy="18" r="2.2"></circle><circle cx="18" cy="9" r="2.2"></circle><path d="M6 8.2v7.6"></path><path d="M18 11.2c0 3-3 4.3-9.8 5"></path></svg>
+<span style="flex-grow: 1">Branches</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a09d96">{{inboxCount}}</span>
+</a></div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 26px 12px 6px 20px">
+<span style="font-size: 14px; color: #a09d96">Projects</span>
+<div style="display: flex; gap: 2px">
+<button aria-label="Search projects" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: #a09d96">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"></circle><path d="m20 20-4.2-4.2"></path></svg>
+</button>
+<button aria-label="Sort and filter projects" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: #a09d96">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 4v16M16 4v16"></path><circle cx="8" cy="15" r="2.2" fill="#0e0d0c"></circle><circle cx="16" cy="9" r="2.2" fill="#0e0d0c"></circle></svg>
+</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 0 10px">
+<sc-if value="{{draft}}" hint-placeholder-val="{{false}}">
+<label style="display: flex; align-items: center; gap: 14px; height: 40px; padding: 0 10px 0 16px; border-radius: 10px; background: #24221f; box-shadow: inset 0 0 0 1px #4f8fa3">
+<span style="width: 7px; height: 7px; flex-shrink: 0; box-sizing: border-box; border: 1.5px solid #4f8fa3; border-radius: 50%"></span>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">New project name</span>
+<input value="{{draftName}}" style="flex-grow: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #faf9f5; font-family: inherit; font-size: 14px; padding: 0">
+</label>
+<span style="padding: 2px 16px 6px 37px; font-size: 12px; color: #a09d96">↵ create · esc cancel</span>
+</sc-if>
+<sc-for list="{{items}}" as="p" hint-placeholder-count="2">
+<a href="Projects.dc.html" style="{{p.style}}">
+<span style="{{p.dotStyle}}"></span>
+<span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{p.name}}</span>
+</a>
+</sc-for>
+</div>
+
+<div style="flex-grow: 1"></div>
+
+<div style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 12px 0 10px; border-top: 1px solid #2a2825">
+<a href="Settings.dc.html" style="{{repoRowStyle}}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a09d96" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
+<span style="flex-grow: 1">{{repoLabel}}</span>
+</a>
+<button aria-label="Add repository" title="Add repository…" style="{{repoAddStyle}}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+</button>
+<a href="Settings.dc.html" aria-label="Settings" style="{{settingsStyle}}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"></path></svg>
+</a>
+</div>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"text","default":"inbox"},"inboxCount":{"editor":"text","default":"7"},"projects":{"editor":null},"draft":{"editor":"boolean","default":false},"draftName":{"editor":null},"repoHover":{"editor":"boolean","default":false},"$preview":{"width":260,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var active = this.props.active ?? 'inbox';
+    var draft = !!this.props.draft;
+    var repoHover = !!this.props.repoHover;
+    var projects = this.props.projects ?? [{ name: 'Session auth refresh', count: '5' }, { name: 'Rate limiting rollout', count: '2' }];
+    var row = function (on, pad) {
+      return 'display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 10px 0 ' + pad + 'px; border: 0; border-radius: 10px; text-decoration: none; font-family: inherit; font-size: 14px; text-align: left; cursor: pointer; ' +
+        (on ? 'background: #24221f; color: #faf9f5' : 'background: transparent; color: #e0ddd6');
+    };
+    return {
+      inboxCount: this.props.inboxCount ?? '7',
+      newStyle: row(draft, 8),
+      inboxStyle: row(active === 'inbox' && !draft, 8),
+      settingsStyle: 'width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; ' + (active === 'settings' ? 'background: #24221f; color: #faf9f5' : 'color: #a09d96'),
+      repoLabel: '3 repositories',
+      repoRowStyle: 'flex-grow: 1; display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 10px; border-radius: 8px; text-decoration: none; color: #e0ddd6; ' + (repoHover ? 'background: #1a1917' : ''),
+      repoAddStyle: 'width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; cursor: pointer; ' + (repoHover ? 'background: #2a2825; color: #faf9f5' : 'background: transparent; color: #a09d96; visibility: hidden'),
+      items: projects.map(function (p) {
+        var on = active === p.name;
+        return {
+          name: p.name,
+          style: row(on, 16) + '; gap: 14px',
+          dotStyle: 'width: 7px; height: 7px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 1.5px solid ' + (on ? '#e0ddd6' : '#75726b')
+        };
+      }),
+      draft: draft,
+      draftName: this.props.draftName ?? ''
+    };
+  }
+}
+</script>
+</body>
+</html>

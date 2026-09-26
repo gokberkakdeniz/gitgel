@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Branches</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:#7fb3c4;text-decoration:none}a:hover{color:#a3cad6}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; display: flex; position: relative; background: #141311; overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc">
+<dc-import name="Sidebar" active="inbox" inbox-count="{{inboxCount}}" projects="{{sidebarProjects}}" draft="{{draft}}" draft-name="Session auth refresh" repo-hover="{{repoHover}}" hint-size="260px,800px"></dc-import>
+
+<main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 28px; border-bottom: 1px solid #302e2a">
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: #faf9f5">Branches</h1>
+<div style="font-size: 12px; color: #a09d96; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{subtitle}}</div>
+</div>
+<sc-if value="{{hasRepos}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; gap: 10px">
+<button aria-label="Refresh" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #d8d4cc">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
+</button>
+<div role="group" aria-label="Show branches" style="display: flex; padding: 3px; gap: 2px; background: #211f1c; border-radius: 10px">
+<sc-for list="{{scopes}}" as="sc" hint-placeholder-count="2">
+<button onClick="{{sc.pick}}" aria-pressed="{{sc.on}}" style="{{sc.style}}">{{sc.label}} <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">{{sc.count}}</span></button>
+</sc-for>
+</div>
+<a href="Palette.dc.html" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px 0 12px; background: #1a1917; border: 1px solid #302e2a; border-radius: 8px; color: #a09d96; width: 230px; box-sizing: border-box">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left">Filter branch or worktree</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96; background: #2a2825; border-radius: 5px; padding: 1px 6px">⌘K</span>
+</a>
+</div>
+</sc-if>
+</header>
+
+<sc-if value="{{hasRepos}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; flex-grow: 1; min-height: 0">
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px; column-gap: 12px; padding: 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96; border-bottom: 1px solid #262420">
+<span></span><span>Branch</span><span>Ahead</span><span>Files</span><span>Uncommitted</span><span>State</span><span>Projects</span><span>Age</span>
+</div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px">
+<sc-for list="{{repos}}" as="repo" hint-placeholder-count="3">
+<section style="display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px 28px; background: #1c1b18; border-top: 1px solid #383631; border-bottom: 1px solid #302e2a">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f8fa3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
+<span style="font-size: 15px; font-weight: 600; color: #faf9f5">{{repo.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96; flex-grow: 1">{{repo.path}}</span>
+<span style="font-size: 12px; color: #a09d96">{{repo.count}}</span>
+</div>
+<sc-for list="{{repo.rows}}" as="row" hint-placeholder-count="2">
+<div style="{{row.rowStyle}}">
+<input type="checkbox" aria-label="Select {{row.branch}}" checked="{{row.checked}}" style="{{row.checkStyle}}">
+<a href="FlowD3.dc.html" style="display: flex; flex-direction: column; gap: 3px; min-width: 0; color: inherit">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #faf9f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{row.branch}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{row.sub}}</span>
+</a>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">↑{{row.ahead}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{row.files}}</span>
+<span style="{{row.dirtyStyle}}">{{row.dirtyLabel}}</span>
+<span style="{{row.stateStyle}}">{{row.state}}</span>
+<button aria-haspopup="menu" title="{{row.projTitle}}" style="{{row.projStyle}}"><span>{{row.projLabel}}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="{{row.projChevStyle}}"><path d="m6 9 6 6 6-6"></path></svg></button>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a09d96">{{row.age}}</span>
+</div>
+</sc-for>
+</section>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center">
+<div style="width: 440px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
+<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4f8fa3" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"></circle><circle cx="6" cy="18" r="2.5"></circle><circle cx="18" cy="9" r="2.5"></circle><path d="M6 8.5v7"></path><path d="M18 11.5c0 3-3 4.5-9.5 5.2"></path></svg>
+<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">No repositories yet</h2>
+<p style="margin: 0; font-size: 14px; color: #d8d4cc; line-height: 1.55">Add the git repositories you want to watch. Branches and worktrees are read in place; nothing is checked out or changed.</p>
+<button style="margin-top: 8px; height: 40px; padding: 0 20px; background: #4f8fa3; border: 0; border-radius: 8px; color: #141311; font-size: 14px; font-weight: 600">Add repository…</button>
+<span style="font-size: 12px; color: #a09d96">or drop folders onto this window</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showPick}}" hint-placeholder-val="{{false}}">
+<div role="dialog" aria-label="Add to project" style="position: absolute; top: 196px; right: 84px; width: 300px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; overflow: hidden">
+<label style="display: flex; padding: 10px; border-bottom: 1px solid #302e2a">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Filter projects</span>
+<input placeholder="Filter projects" style="flex-grow: 1; min-width: 0; height: 32px; padding: 0 10px; background: #1a1917; border: 1px solid #302e2a; border-radius: 8px; color: #faf9f5; font-size: 13px">
+</label>
+<div style="display: flex; flex-direction: column; padding: 4px">
+<button style="display: flex; justify-content: space-between; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #faf9f5; font-size: 13px; text-align: left">Rate limiting rollout <span style="font-size: 12px; color: #a09d96">2 entries</span></button>
+</div>
+<div style="padding: 4px; border-top: 1px solid #302e2a">
+<button style="display: flex; width: 100%; padding: 8px 10px; border: 0; border-radius: 8px; background: #2a2825; color: #7fb3c4; font-size: 13px; font-weight: 500; text-align: left">+ New project…</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showNew}}" hint-placeholder-val="{{false}}">
+<div role="dialog" aria-label="New project" style="position: absolute; top: 196px; right: 84px; width: 320px; box-sizing: border-box; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 14px; padding: 16px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; letter-spacing: -0.3px; color: #faf9f5">New project</div>
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12px; font-weight: 500; color: #d8d4cc">Name</span>
+<input value="Session auth refresh" style="height: 36px; padding: 0 12px; background: #1a1917; border: 1px solid #4f8fa3; box-shadow: 0 0 0 3px rgba(79,143,163,0.25); border-radius: 8px; color: #faf9f5; font-size: 14px; outline: none">
+</label>
+<div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #a09d96">
+<span>First entry</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #d8d4cc">web-app / session-token-refresh · base main</span>
+</div>
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<button style="height: 32px; padding: 0 14px; background: #2a2825; border: 1px solid #383631; border-radius: 8px; color: #faf9f5; font-size: 13px">Cancel</button>
+<button style="height: 32px; padding: 0 14px; background: #4f8fa3; border: 0; border-radius: 8px; color: #141311; font-size: 13px; font-weight: 600">Create &amp; add ↵</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showProjMenu}}" hint-placeholder-val="{{false}}">
+<div role="menu" aria-label="Projects containing session-token-refresh" style="position: absolute; top: 196px; right: 84px; width: 270px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; padding: 6px">
+<div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">In 2 projects</div>
+<a href="Projects.dc.html" role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: #2a2825; color: #faf9f5; font-size: 13px">
+<span style="width: 7px; height: 7px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 1.5px solid #e0ddd6"></span>
+<span style="flex-grow: 1">Session auth refresh</span>
+<span style="color: #a09d96">→</span>
+</a>
+<a href="Projects.dc.html" role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: #faf9f5; font-size: 13px">
+<span style="width: 7px; height: 7px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 1.5px solid #75726b"></span>
+<span style="flex-grow: 1">Rate limiting rollout</span>
+<span style="color: #a09d96">→</span>
+</a>
+<div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
+<button role="menuitem" style="display: flex; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #7fb3c4; font-size: 13px; font-weight: 500; text-align: left; cursor: pointer">+ Add to another project…</button>
+</div>
+</sc-if>
+
+<sc-if value="{{showToast}}" hint-placeholder-val="{{false}}">
+<div role="status" style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; padding: 10px 12px 10px 16px; background: #2a2825; border: 1px solid #383631; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); white-space: nowrap; color: #faf9f5">
+<span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px">session-token-refresh</span> added to Session auth refresh</span>
+<button style="height: 28px; padding: 0 12px; background: #383631; border: 0; border-radius: 8px; color: #faf9f5; font-size: 12px">Undo</button>
+<a href="Projects.dc.html" style="font-size: 12px; font-weight: 500">Open project →</a>
+</div>
+</sc-if>
+<sc-if value="{{showSelBar}}" hint-placeholder-val="{{false}}">
+<div role="toolbar" aria-label="Selection" style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; background: #2a2825; border: 1px solid #383631; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); white-space: nowrap">
+<span style="font-size: 13px; color: #faf9f5; font-weight: 500">3 branches selected</span>
+<span style="font-size: 12px; color: #a09d96">across 2 repos</span>
+<div style="width: 1px; height: 20px; background: #383631; margin: 0 4px"></div>
+<button style="height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: #211f1c; border: 1px solid #383631; border-radius: 8px; color: #faf9f5; font-size: 13px">Add to project
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg>
+</button>
+<a href="FlowH2.dc.html" style="height: 32px; display: flex; align-items: center; padding: 0 14px; background: #4f8fa3; border-radius: 8px; color: #141311; font-size: 13px; font-weight: 600">New project</a>
+<button aria-label="Clear selection" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 8px; color: #a09d96">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+</button>
+</div>
+</sc-if>
+</main>
+
+<sc-if value="{{showDrop}}" hint-placeholder-val="{{false}}">
+<div aria-hidden="true" style="position: absolute; inset: 0; box-shadow: inset 0 0 0 2px #4f8fa3; background: rgba(79,143,163,0.06); display: flex; align-items: center; justify-content: center; pointer-events: none">
+<div style="display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: #211f1c; border: 1px solid #4f8fa3; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); color: #faf9f5; font-size: 14px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f8fa3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path><path d="M12 11v5M9.5 13.5h5"></path></svg>
+Drop folders to add repositories
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showSheet}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: flex-start; padding-top: 110px">
+<div role="dialog" aria-label="Add repositories" style="width: 600px; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 20px 24px 14px; display: flex; flex-direction: column; gap: 4px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: #faf9f5">Add repositories</div>
+<div style="font-size: 13px; color: #a09d96">{{sheetSubtitle}}</div>
+</div>
+<div style="display: flex; flex-direction: column; border-top: 1px solid #302e2a">
+<sc-for list="{{picked}}" as="p" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid #302e2a">
+<span style="{{p.iconStyle}}">{{p.icon}}</span>
+<span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #faf9f5">{{p.path}}</span>
+<span style="font-size: 12px; color: #a09d96">{{p.note}}</span>
+</span>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; justify-content: flex-end; gap: 8px; padding: 14px 24px; background: #1a1917">
+<button style="height: 36px; padding: 0 16px; background: #2a2825; border: 1px solid #383631; border-radius: 8px; color: #faf9f5; font-size: 13px">Cancel</button>
+<button style="height: 36px; padding: 0 16px; background: #4f8fa3; border: 0; border-radius: 8px; color: #141311; font-size: 13px; font-weight: 600">{{sheetButton}}</button>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;draft&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  renderVals() {
+    var popover = this.props.popover ?? 'none';
+    var added = !!this.props.added;
+    var empty = !!this.props.empty;
+    var pill = function (c, bg) {
+      return 'justify-self: start; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 9999px; white-space: nowrap; color: ' + c + '; background: ' + bg;
+    };
+    var states = {
+      '': 'font-size: 12px; color: #75726b',
+      'merged into main': pill('#8fcf9c', 'rgba(93,184,114,0.14)'),
+      'detached HEAD': pill('#e8c071', 'rgba(212,160,23,0.14)')
+    };
+    var selectMode = !!this.props.select;
+    var projMenu = !!this.props.projMenu && popover === 'none' && !added && !selectMode;
+    var grid = 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px; column-gap: 12px; align-items: center; padding: 10px 28px; border-bottom: 1px solid #262420; color: #d8d4cc; ';
+    var chip = 'justify-self: start; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 8px; font-family: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; ';
+    var mk = function (r) {
+      var dirty = r.dirty > 0;
+      var focus = r.focus && popover !== 'none';
+      var hover = r.hover && popover === 'none' && !selectMode;
+      var checked = selectMode && !!r.sel;
+      var showAdd = focus || hover;
+      var showCheck = selectMode || hover;
+      var justAdded = r.focus && added;
+      var list = r.focus && popover !== 'none' ? [] : justAdded ? ['Session auth refresh'] : (r.projects || []);
+      var n = list.length;
+      var open = projMenu && r.focus;
+      var projStyle = chip + (
+        focus ? 'background: #4f8fa3; border: 1px solid #4f8fa3; color: #141311; font-weight: 600'
+        : open ? 'background: #383631; border: 1px solid #4a4741; color: #faf9f5'
+        : justAdded ? 'background: rgba(79,143,163,0.12); border: 1px solid #4f8fa3; color: #faf9f5'
+        : n ? 'background: #211f1c; border: 1px solid #302e2a; color: #d8d4cc'
+        : showAdd ? 'background: transparent; border: 1px solid #302e2a; color: #7fb3c4'
+        : 'background: transparent; border: 1px solid transparent; color: #75726b; cursor: default');
+      return Object.assign({}, r, {
+        projLabel: n ? (n === 1 ? '1 project' : n + ' projects') : (showAdd ? '+ Add' : '—'),
+        projTitle: list.join(', '),
+        projStyle: projStyle,
+        projChevStyle: n ? 'flex-shrink: 0' : 'display: none',
+        projCount: n,
+        checked: checked,
+        checkStyle: 'width: 16px; height: 16px; margin: 0; accent-color: #4f8fa3; cursor: pointer; ' + (showCheck ? '' : 'visibility: hidden'),
+        state: r.state || '—',
+        stateStyle: states[r.state || ''],
+        dirtyLabel: dirty ? '● ' + r.dirty + ' changed' : '—',
+        dirtyStyle: dirty ? 'font-size: 12px; font-weight: 500; color: #7fb3c4' : 'font-size: 12px; color: #75726b',
+        rowStyle: grid + ((focus || open) ? 'background: #211f1c' : checked ? 'background: rgba(79,143,163,0.10)' : hover ? 'background: #1a1917' : '')
+      });
+    };
+    var repos = [
+      { name: 'web-app', path: '~/code/web-app', rows: [
+        { branch: 'session-token-refresh', sub: 'base main · worktree ~/code/wt/token-refresh', ahead: 4, files: 9, dirty: 3, age: '6m', focus: true, projects: ['Session auth refresh', 'Rate limiting rollout'] },
+        { branch: 'sidebar-virtualization', sub: 'base main · worktree ~/code/wt/sidebar', ahead: 11, files: 23, dirty: 0, age: '42m', hover: true, sel: true },
+        { branch: 'feat/billing-v2', sub: 'base main · not checked out', ahead: 18, files: 31, dirty: 0, age: '2d' }
+      ]},
+      { name: 'api-server', path: '~/code/api-server', rows: [
+        { branch: 'rate-limit-middleware', sub: 'base main · worktree ~/code/wt/rate-limit', ahead: 3, files: 5, dirty: 7, age: '14m', sel: true, projects: ['Rate limiting rollout'] },
+        { branch: 'migrate-pg-pool', sub: 'base feat/db-v2 · worktree ~/code/wt/pg-pool', ahead: 6, files: 12, dirty: 0, age: '1h', sel: true },
+        { branch: 'a41c9e2', sub: 'base main · worktree ~/code/wt/a41c9e2', ahead: 2, files: 3, dirty: 1, age: '3h', state: 'detached HEAD' }
+      ]},
+      { name: 'shared-ui', path: '~/code/shared-ui', rows: [
+        { branch: 'button-tokens', sub: 'base main · worktree ~/code/wt/tokens', ahead: 0, files: 0, dirty: 0, age: '5d', state: 'merged into main' }
+      ]}
+    ];
+    var draft = !!this.props.draft;
+    var sidebarProjects = (popover !== 'none' || draft)
+      ? [{ name: 'Rate limiting rollout', count: '2' }]
+      : added
+        ? [{ name: 'Rate limiting rollout', count: '2' }, { name: 'Session auth refresh', count: '1' }]
+        : [{ name: 'Session auth refresh', count: '5' }, { name: 'Rate limiting rollout', count: '2' }];
+    var self = this;
+    var scope = this.state && this.state.scope ? this.state.scope : (this.props.scope ?? 'all');
+    var unassigned = scope === 'unassigned';
+    var built = repos.map(function (g) { return { name: g.name, path: g.path, rows: g.rows.map(mk) }; });
+    var total = 0, free = 0;
+    built.forEach(function (g) { g.rows.forEach(function (r) { total++; if (!r.projCount) free++; }); });
+    var shownRepos = built.map(function (g) {
+      var rows = unassigned ? g.rows.filter(function (r) { return !r.projCount; }) : g.rows;
+      return { name: g.name, path: g.path, rows: rows, count: rows.length + (rows.length === 1 ? ' branch' : ' branches') };
+    }).filter(function (g) { return g.rows.length > 0; });
+    var ico = 'width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: 600; ';
+    return {
+      draft: draft,
+      hasRepos: !empty,
+      isEmpty: empty,
+      showSheet: !!this.props.sheet,
+      showDrop: !empty && !!this.props.dropping,
+      repoHover: !empty && !!this.props.repoHover,
+      sheetSubtitle: empty ? '4 folders selected. Worktree folders resolve to their main repository.' : '3 folders selected. Repositories already in Gitgel are skipped.',
+      sheetButton: empty ? 'Add 2 repositories' : 'Add 1 repository',
+      showPick: !empty && popover === 'pick',
+      showNew: !empty && popover === 'new',
+      showToast: !empty && added,
+      showSelBar: !empty && selectMode,
+      inboxCount: empty ? '0' : '7',
+      showProjMenu: !empty && projMenu,
+      sidebarProjects: empty ? [] : sidebarProjects,
+      subtitle: empty ? 'Nothing to review yet' : (unassigned ? 'Active branches not in any project · ' : 'Active branches · ') + shownRepos.length + ' repos · checked out in a worktree, or committed in the last 14 days',
+      scopes: [['all', 'All', total], ['unassigned', 'Not in a project', free]].map(function (x) {
+        var on = scope === x[0];
+        return {
+          label: x[1], count: String(x[2]), on: on,
+          pick: function () { self.setState({ scope: x[0] }); },
+          style: 'height: 26px; padding: 0 10px; border: 0; border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ' + (on ? 'background: #383631; color: #faf9f5' : 'background: transparent; color: #a09d96')
+        };
+      }),
+      repos: shownRepos,
+      picked: !empty ? [
+        { path: '~/code/mobile', note: 'Git repository · default base main', icon: '✓', iconStyle: ico + 'color: #8fcf9c; background: rgba(93,184,114,0.14)' },
+        { path: '~/code/web-app', note: 'Already added · skipped', icon: '↪', iconStyle: ico + 'color: #e8c071; background: rgba(212,160,23,0.14)' },
+        { path: '~/code/wt/pg-pool', note: 'Worktree of ~/code/api-server · already added, skipped', icon: '↪', iconStyle: ico + 'color: #e8c071; background: rgba(212,160,23,0.14)' }
+      ] : [
+        { path: '~/code/web-app', note: 'Git repository · default base main', icon: '✓', iconStyle: ico + 'color: #8fcf9c; background: rgba(93,184,114,0.14)' },
+        { path: '~/code/api-server', note: 'Git repository · default base main', icon: '✓', iconStyle: ico + 'color: #8fcf9c; background: rgba(93,184,114,0.14)' },
+        { path: '~/code/wt/rate-limit', note: 'Worktree of ~/code/api-server · already in this list, skipped', icon: '↪', iconStyle: ico + 'color: #e8c071; background: rgba(212,160,23,0.14)' },
+        { path: '~/Downloads/designs', note: 'Not a git repository · skipped', icon: '✕', iconStyle: ico + 'color: #ee9a90; background: rgba(198,69,69,0.16)' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

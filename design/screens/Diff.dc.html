@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project review</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:#7fb3c4;text-decoration:none}a:hover{color:#a3cad6}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; display: flex; flex-direction: column; position: relative; background: #141311; overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc">
+
+<header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid #302e2a; background: #141311">
+<div style="display: flex; gap: 8px; margin-right: -4px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: #a09d96">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="M9.5 4.5v15"></path></svg>
+</button>
+<a href="{{backHref}}" aria-label="{{backLabel}}" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #d8d4cc; border-radius: 7px">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m11 6-6 6 6 6"></path></svg>
+</a>
+<div style="display: flex; flex-direction: column; gap: 1px; min-width: 0; margin-left: 4px">
+<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; letter-spacing: -0.2px; color: #faf9f5; white-space: nowrap">{{title}}</span>
+<span style="font-size: 12px; color: #a09d96; white-space: nowrap">{{subtitle}}</span>
+</div>
+<div style="flex-grow: 1"></div>
+<div role="group" aria-label="Diff layer" style="display: flex; padding: 3px; gap: 2px; background: #211f1c; border-radius: 10px">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="3">
+<button onClick="{{m.pick}}" style="{{m.style}}">{{m.label}} <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">{{m.count}}</span></button>
+</sc-for>
+</div>
+<button aria-label="Refresh" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #d8d4cc">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
+</button>
+</header>
+
+<sc-if value="{{showBanner}}" hint-placeholder-val="{{false}}">
+<div role="status" style="{{bannerStyle}}">{{banner}}</div>
+</sc-if>
+
+<div style="flex-grow: 1; display: flex; min-height: 0">
+<aside style="width: 310px; flex-shrink: 0; border-right: 1px solid #302e2a; display: flex; flex-direction: column; gap: 4px; background: #0e0d0c; padding: 8px; box-sizing: border-box; overflow: hidden">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+<section style="display: flex; flex-direction: column; gap: 1px">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px">
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<button onClick="{{g.toggle}}" aria-expanded="{{g.open}}" style="display: flex; align-items: center; gap: 8px; flex-grow: 1; min-width: 0; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: left">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a09d96" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="{{g.chevStyle}}"><path d="m6 9 6 6 6-6"></path></svg>
+<span style="font-size: 14px; font-weight: 600; color: #faf9f5; white-space: nowrap">{{g.repo}}</span>
+</button>
+<button aria-haspopup="listbox" style="{{g.baseStyle}}"><span style="color: #a09d96">base</span> {{g.base}} <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{g.branch}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8fcf9c; flex-shrink: 0">{{g.add}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #ee9a90; flex-shrink: 0">{{g.del}}</span>
+</div>
+</div>
+<sc-if value="{{g.stackHint}}" hint-placeholder-val="{{false}}">
+<div style="margin: 0 8px 6px 28px; padding: 7px 10px; border-radius: 8px; background: rgba(212,160,23,0.12); color: #e8c071; font-size: 12px; line-height: 1.4">3 of 5 commits come from feat/job-queue. A different base may fit better.</div>
+</sc-if>
+<sc-if value="{{g.open}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 1px">
+<sc-for list="{{g.files}}" as="f" hint-placeholder-count="4">
+<button onClick="{{f.pick}}" style="{{f.rowStyle}}">
+<span style="{{f.kindStyle}}">{{f.kind}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #faf9f5; white-space: nowrap">{{f.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #75726b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1; text-align: left">{{f.dir}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8fcf9c">{{f.add}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #ee9a90">{{f.del}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</sc-for>
+
+<sc-if value="{{showAttention}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 2px; margin-top: 10px; padding-top: 12px; border-top: 1px solid #2a2825">
+<div style="padding: 0 8px 6px; font-size: 12px; color: #a09d96">Not in review · 4</div>
+<sc-for list="{{attention}}" as="a" hint-placeholder-count="4">
+<a href="Projects.dc.html" style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; color: #d8d4cc; min-width: 0">
+<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0; flex-grow: 1">
+<span style="font-size: 12px; font-weight: 500; color: #d8d4cc">{{a.repo}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{a.branch}}</span>
+</span>
+<span style="{{a.tagStyle}}">{{a.tag}}</span>
+</a>
+</sc-for>
+</div>
+</sc-if>
+</aside>
+
+<section style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0">
+<div style="border-bottom: 1px solid #302e2a; padding: 12px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: baseline; gap: 10px; min-width: 0">
+<span style="font-size: 14px; font-weight: 600; color: #faf9f5">{{entry.repo}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{entry.branch}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">{{entry.where}}</span>
+<div style="flex-grow: 1"></div>
+<span style="font-size: 12px; color: #a09d96; white-space: nowrap">{{entry.commitLabel}}</span>
+</div>
+<sc-if value="{{showCommits}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{commits}}" as="c" hint-placeholder-count="3">
+<div style="{{c.style}}">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #7fb3c4">{{c.sha}}</span>
+<span style="flex-grow: 1; color: #faf9f5">{{c.msg}}</span>
+<span style="{{c.fromStyle}}">{{c.from}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">{{c.age}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 9px 18px; border-bottom: 1px solid #302e2a; background: #1a1917">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #faf9f5">{{filePath}}</span>
+<span style="font-size: 12px; color: #a09d96">{{compare}}</span>
+<div style="flex-grow: 1"></div>
+<span style="font-size: 12px; color: #a09d96">Side by side · read-only</span>
+</div>
+
+<sc-if value="{{hasSample}}" hint-placeholder-val="{{true}}">
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: #141311; min-height: 0">
+<div style="border-right: 1px solid #302e2a; padding-top: 6px; overflow: hidden">
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="10">
+<div style="{{l.lStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: #75726b">{{l.ln}}</span><span style="width: 14px; flex-shrink: 0; color: #ee9a90">{{l.lMark}}</span><span style="white-space: pre">{{l.lt}}</span></div>
+</sc-for>
+</div>
+<div style="padding-top: 6px; overflow: hidden">
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="10">
+<div style="{{l.rStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: #75726b">{{l.rn}}</span><span style="width: 14px; flex-shrink: 0; color: #8fcf9c">{{l.rMark}}</span><span style="white-space: pre">{{l.rt}}</span></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{noSample}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 13px">[Diff content for this file is not drawn in the mockup]</div>
+</sc-if>
+</section>
+</div>
+
+<sc-if value="{{showBaseMenu}}" hint-placeholder-val="{{false}}">
+<div role="listbox" aria-label="Choose base for token-rotation-job" style="position: absolute; top: 164px; left: 150px; width: 340px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; overflow: hidden; padding-bottom: 6px">
+<label style="display: flex; padding: 10px; border-bottom: 1px solid #302e2a">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Filter branches</span>
+<input placeholder="Filter branches, tags, SHAs" style="flex-grow: 1; min-width: 0; height: 32px; padding: 0 10px; background: #1a1917; border: 1px solid #302e2a; border-radius: 8px; color: #faf9f5; font-size: 13px">
+</label>
+<div style="padding: 10px 16px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Suggested</div>
+<button style="display: flex; flex-direction: column; gap: 2px; margin: 0 6px; padding: 8px 10px; border: 0; border-radius: 8px; background: #2a2825; text-align: left; cursor: pointer">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #faf9f5">feat/job-queue</span>
+<span style="font-size: 12px; color: #a09d96">Contains 3 of the 5 commits shown</span>
+</button>
+<div style="padding: 12px 16px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Default</div>
+<button style="display: flex; justify-content: space-between; margin: 0 6px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; text-align: left; cursor: pointer">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #faf9f5">main</span>
+<span style="font-size: 12px; color: #a09d96">current · from origin/HEAD</span>
+</button>
+<div style="padding: 12px 16px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Other branches</div>
+<button style="display: flex; margin: 0 6px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #d8d4cc; text-align: left">feat/db-v2</button>
+<button style="display: flex; margin: 0 6px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #d8d4cc; text-align: left">release/2026.09</button>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null }; }
+  renderVals() {
+    var self = this;
+    var scope = this.props.scope ?? 'project';
+    var focus = this.props.focus ?? 'web';
+    var stacked = !!this.props.stacked;
+    var apiBase = this.props.base ?? 'main';
+    var extra = stacked && apiBase === 'main';
+    var menu = !!this.props.baseMenu;
+    var mode = this.state.mode || this.props.mode || 'Committed';
+    var collapsed = this.state.collapsed || (focus === 'api' ? { web: true } : {});
+    var kinds = {
+      A: 'color: #8fcf9c; background: rgba(93,184,114,0.15)',
+      M: 'color: #e8c071; background: rgba(212,160,23,0.15)',
+      R: 'color: #93b8ee; background: rgba(90,140,220,0.16)',
+      D: 'color: #ee9a90; background: rgba(198,69,69,0.18)',
+      U: 'color: #c5b2f2; background: rgba(160,130,230,0.16)'
+    };
+    var G = [];
+    if (scope === 'branch') {
+      G.push({ id: 'rl', repo: 'api-server', branch: 'rate-limit-middleware', base: 'main', wt: '~/code/wt/rate-limit',
+        committed: [
+          ['A', 'rate-limit.ts', 'src/middleware', '+84', ''],
+          ['M', 'index.ts', 'src/middleware', '+2', ''],
+          ['R', 'limits.ts', 'src/config ← config/rateLimits.ts', '+3', '−1'],
+          ['A', 'rate-limit.test.ts', 'test', '+61', ''],
+          ['M', 'package.json', '', '+1', '−1']
+        ],
+        uncommitted: [
+          ['M', 'rate-limit.ts', 'src/middleware', '+12', '−4'],
+          ['M', 'rate-limit.test.ts', 'test', '+9', ''],
+          ['U', 'bench.ts', 'scripts · untracked', '+40', '']
+        ],
+        commits: [
+          { sha: 'a41c9e2', msg: 'Wire rate limiter into middleware chain', age: '14m' },
+          { sha: '7f02b1d', msg: 'Add sliding-window rate limiter with tests', age: '1h' },
+          { sha: 'c93e0aa', msg: 'Move limits into src/config', age: '2h' }
+        ] });
+    } else {
+      G.push({ id: 'web', repo: 'web-app', branch: 'session-token-refresh', base: 'main', wt: '~/code/wt/token-refresh',
+        committed: [
+          ['M', 'session.ts', 'src/auth', '+6', '−2'],
+          ['A', 'refresh.ts', 'src/auth', '+64', ''],
+          ['M', 'client.ts', 'src/api', '+9', '−3'],
+          ['R', 'tokens.ts', 'src/auth ← src/auth/token.ts', '+2', '−2'],
+          ['A', 'refresh.test.ts', 'test/auth', '+48', ''],
+          ['M', 'package.json', '', '+1', '−1']
+        ],
+        uncommitted: [
+          ['M', 'refresh.ts', 'src/auth', '+2', '−1'],
+          ['M', 'refresh.test.ts', 'test/auth', '+5', ''],
+          ['U', 'token-debug.ts', 'scripts · untracked', '+22', '']
+        ],
+        commits: [
+          { sha: 'd81f03a', msg: 'Refresh expired sessions instead of rejecting', age: '6m' },
+          { sha: '4b7e2c9', msg: 'Add refreshSession with token rotation', age: '52m' },
+          { sha: '9a13f60', msg: 'Rename token module to tokens', age: '1h' },
+          { sha: '2cc0d48', msg: 'Retry API calls once after refresh', age: '2h' }
+        ] });
+      var apiCommitted = [
+        ['A', 'rotate-tokens.ts', 'src/jobs', '+71', ''],
+        ['M', 'index.ts', 'src/jobs', '+2', ''],
+        ['M', 'schedule.ts', 'src/config', '+4', '−1'],
+        ['A', 'rotate-tokens.test.ts', 'test/jobs', '+39', '']
+      ];
+      if (extra) apiCommitted = apiCommitted.concat([
+        ['A', 'worker.ts', 'src/queue', '+88', ''],
+        ['A', 'index.ts', 'src/queue', '+12', ''],
+        ['M', 'docker-compose.yml', '', '+6', '']
+      ]);
+      G.push({ id: 'api', repo: 'api-server', branch: 'token-rotation-job', base: apiBase, wt: '~/code/wt/token-rotation',
+        committed: apiCommitted,
+        uncommitted: [['M', 'rotate-tokens.ts', 'src/jobs', '+3', '−1']],
+        commits: [
+          { sha: 'e02b7d1', msg: 'Schedule token rotation nightly', age: '20m' },
+          { sha: '5f9a3c2', msg: 'Add token rotation job', age: '1h' }
+        ],
+        parent: extra ? [
+          { sha: '7c41e09', msg: 'Add queue worker', age: '1d', from: 'feat/job-queue' },
+          { sha: '1d8b5fa', msg: 'Add queue module', age: '1d', from: 'feat/job-queue' },
+          { sha: 'b33e7a4', msg: 'Add redis to docker-compose', age: '2d', from: 'feat/job-queue' }
+        ] : [] });
+    }
+    var listFor = function (g) {
+      if (mode === 'Committed') return g.committed;
+      if (mode === 'Uncommitted') return g.uncommitted;
+      var names = g.committed.map(function (f) { return f[2] + '/' + f[1]; });
+      return g.committed.concat(g.uncommitted.filter(function (f) { return names.indexOf(f[2] + '/' + f[1]) < 0; }));
+    };
+    var keyOf = function (g, f) { return g.id + ':' + f[2] + '/' + f[1]; };
+    var allKeys = [];
+    G.forEach(function (g) { listFor(g).forEach(function (f) { allKeys.push(keyOf(g, f)); }); });
+    var defSel = scope === 'branch'
+      ? (mode === 'Uncommitted' ? 'rl:src/middleware/rate-limit.ts' : 'rl:src/middleware/index.ts')
+      : focus === 'api' ? 'api:src/jobs/index.ts'
+      : (mode === 'Uncommitted' ? 'web:src/auth/refresh.ts' : 'web:src/auth/session.ts');
+    var sel = this.state.file && allKeys.indexOf(this.state.file) >= 0 ? this.state.file : (allKeys.indexOf(defSel) >= 0 ? defSel : allKeys[0]);
+    var num = function (s) { return Math.abs(parseInt(String(s || '0').replace('−', '').replace('+', ''), 10) || 0); };
+    var selGroup = G[0], selFile = null;
+    var groups = G.map(function (g) {
+      var list = listFor(g);
+      var open = !collapsed[g.id];
+      var add = 0, del = 0;
+      list.forEach(function (f) { add += num(f[3]); del += num(f[4]); });
+      var baseActive = g.id === 'api' && (menu || apiBase !== 'main');
+      return {
+        repo: g.repo, branch: g.branch, base: g.base,
+        add: '+' + add, del: del ? '−' + del : '',
+        open: open,
+        chevStyle: 'flex-shrink: 0; transition: transform 0.15s; ' + (open ? '' : 'transform: rotate(-90deg)'),
+        toggle: function () { var c = Object.assign({}, collapsed); c[g.id] = open; self.setState({ collapsed: c }); },
+        stackHint: g.id === 'api' && extra,
+        baseStyle: 'flex-shrink: 0; margin-left: auto; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: #211f1c; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: #d8d4cc; cursor: pointer; ' + (baseActive ? 'border: 1px solid #4f8fa3; box-shadow: 0 0 0 2px rgba(79,143,163,0.25)' : 'border: 1px solid #302e2a'),
+        files: list.map(function (f) {
+          var key = keyOf(g, f);
+          var on = key === sel;
+          if (on) { selGroup = g; selFile = f; }
+          return {
+            kind: f[0], name: f[1], dir: (f[2] || '.'), add: f[3], del: f[4],
+            pick: function () { self.setState({ file: key }); },
+            kindStyle: 'width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; font-weight: 500; ' + kinds[f[0]],
+            rowStyle: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px 0 28px; border: 0; border-radius: 8px; cursor: pointer; ' + (on ? 'background: #2a2825' : 'background: transparent')
+          };
+        })
+      };
+    });
+    var counts = { Committed: 0, Uncommitted: 0, All: 0 };
+    ['Committed', 'Uncommitted', 'All'].forEach(function (m) {
+      var saved = mode; mode = m;
+      G.forEach(function (g) { counts[m] += listFor(g).length; });
+      mode = saved;
+    });
+    var btn = 'height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ';
+    var modes = ['Committed', 'Uncommitted', 'All'].map(function (m) {
+      return {
+        label: m, count: String(counts[m]),
+        pick: function () { self.setState({ mode: m, file: null }); },
+        style: btn + (m === mode ? 'background: #383631; color: #faf9f5' : 'background: transparent; color: #a09d96')
+      };
+    });
+    var S = {
+      'web:src/auth/session.ts': [
+        [1, "import { store } from './store';", 1, "import { store } from './store';", ''],
+        ['', '', 2, "import { refreshSession } from './refresh';", 'add'],
+        [2, "import { readCookie } from '../http';", 3, "import { readCookie } from '../http';", ''],
+        ['…', '', '…', '', 'fold'],
+        [10, 'export async function getSession(req: Request) {', 11, 'export async function getSession(req: Request) {', ''],
+        [11, "  const token = readCookie(req, 'sid');", 12, "  const token = readCookie(req, 'sid');", ''],
+        [12, '  if (!token) return null;', 13, '  if (!token) return null;', ''],
+        [13, '  const session = await store.get(token);', 14, '  const session = await store.get(token);', ''],
+        [14, '  if (!session || session.expiresAt < Date.now()) {', 15, '  if (!session) return null;', 'mod'],
+        ['', '', 16, '  if (session.expiresAt < Date.now()) {', 'add'],
+        [15, '    return null;', 17, '    return refreshSession(session);', 'mod'],
+        [16, '  }', 18, '  }', ''],
+        [17, '  return session;', 19, '  return session;', ''],
+        [18, '}', 20, '}', '']
+      ],
+      'web:src/auth/refresh.ts': [
+        [20, 'export async function refreshSession(s: Session) {', 20, 'export async function refreshSession(s: Session) {', ''],
+        [21, '  const next = await issueToken(s.userId);', 21, '  const next = await issueToken(s.userId, { rotate: true });', 'mod'],
+        [22, '  await store.set(next.id, next);', 22, '  await store.set(next.id, next);', ''],
+        ['', '', 23, '  await store.delete(s.id);', 'add'],
+        [23, '  return next;', 24, '  return next;', ''],
+        [24, '}', 25, '}', '']
+      ],
+      'api:src/jobs/index.ts': [
+        [1, "import { cleanupSessions } from './cleanup';", 1, "import { cleanupSessions } from './cleanup';", ''],
+        ['', '', 2, "import { rotateTokens } from './rotate-tokens';", 'add'],
+        [2, '', 3, '', ''],
+        [3, 'export const jobs = [', 4, 'export const jobs = [', ''],
+        [4, '  cleanupSessions,', 5, '  cleanupSessions,', ''],
+        ['', '', 6, '  rotateTokens,', 'add'],
+        [5, '];', 7, '];', '']
+      ],
+      'rl:src/middleware/index.ts': [
+        [1, "import { Router } from 'express';", 1, "import { Router } from 'express';", ''],
+        [2, "import { auth } from './auth';", 2, "import { auth } from './auth';", ''],
+        ['', '', 3, "import { rateLimit } from './rate-limit';", 'add'],
+        [3, '', 4, '', ''],
+        [4, 'export function mount(app: Router) {', 5, 'export function mount(app: Router) {', ''],
+        ['', '', 6, "  app.use(rateLimit({ window: '1m', max: 120 }));", 'add'],
+        [5, '  app.use(auth());', 7, '  app.use(auth());', ''],
+        [6, '}', 8, '}', '']
+      ],
+      'rl:src/middleware/rate-limit.ts': [
+        [12, 'export function rateLimit(opts: Options) {', 12, 'export function rateLimit(opts: Options) {', ''],
+        [13, '  const store = new Map<string, number[]>();', 13, '  const store = opts.store ?? new MemoryStore();', 'mod'],
+        [14, '  return (req, res, next) => {', 14, '  return async (req, res, next) => {', 'mod'],
+        [15, '    const key = req.ip;', 15, '    const key = opts.key?.(req) ?? req.ip;', 'mod'],
+        [16, '    const now = Date.now();', 16, '    const now = Date.now();', '']
+      ]
+    };
+    var rows = null;
+    if (mode === 'Uncommitted') {
+      if (sel === 'web:src/auth/refresh.ts' || sel === 'rl:src/middleware/rate-limit.ts') rows = S[sel];
+    } else if (sel !== 'web:src/auth/refresh.ts' && sel !== 'rl:src/middleware/rate-limit.ts') {
+      rows = S[sel] || null;
+    }
+    var base0 = 'display: flex; padding-right: 12px; color: #e0ddd6; ';
+    var hatch = 'background: repeating-linear-gradient(135deg, #1c1b18 0 4px, #141311 4px 8px)';
+    var lines = (rows || []).map(function (r) {
+      var k = r[4];
+      if (k === 'fold') {
+        var fs = 'display: flex; padding-left: 58px; color: #75726b; background: #1a1917; font-size: 11px';
+        return { ln: '', lt: '⋯ 7 unchanged lines', rn: '', rt: '⋯ 7 unchanged lines', lMark: '', rMark: '', lStyle: fs, rStyle: fs };
+      }
+      return {
+        ln: r[0], lt: r[1], rn: r[2], rt: r[3],
+        lMark: k === 'mod' || k === 'del' ? '−' : '', rMark: k === 'mod' || k === 'add' ? '+' : '',
+        lStyle: base0 + (k === 'add' ? hatch : k ? 'background: rgba(198,69,69,0.17)' : ''),
+        rStyle: base0 + (k === 'del' ? hatch : k ? 'background: rgba(93,184,114,0.15)' : '')
+      };
+    });
+    var cm = (selGroup.commits || []).concat(selGroup.parent || []).map(function (c) {
+      return Object.assign({ from: '' }, c, {
+        style: 'display: flex; gap: 12px; align-items: baseline; ' + (c.from ? 'opacity: 0.6' : ''),
+        fromStyle: c.from ? 'font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: #e8c071; background: rgba(212,160,23,0.14); border-radius: 9999px; padding: 1px 8px' : 'display: none'
+      });
+    });
+    var dir = selFile ? String(selFile[2] || '').split(' ')[0] : '';
+    var path = selFile ? (dir ? dir + '/' : '') + selFile[1] : '';
+    var pill = function (c, bg) { return 'flex-shrink: 0; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 9999px; white-space: nowrap; color: ' + c + '; background: ' + bg; };
+    var project = scope === 'project';
+    var baseChanged = project && apiBase !== 'main';
+    return {
+      title: project ? 'Session auth refresh' : 'rate-limit-middleware',
+      subtitle: project ? 'Project review · 2 of 6 entries have changes' : 'api-server · not in a project',
+      backHref: project ? 'Projects.dc.html' : 'Main.dc.html',
+      backLabel: project ? 'Back to project' : 'Back to Branches',
+      modes: modes, groups: groups, lines: lines,
+      hasSample: !!rows, noSample: !rows,
+      entry: {
+        repo: selGroup.repo, branch: selGroup.branch,
+        where: mode === 'Uncommitted' ? 'working tree ' + selGroup.wt : selGroup.base + '..' + selGroup.branch,
+        commitLabel: mode === 'Uncommitted' ? 'HEAD ↔ working tree' : cm.length + ' commits ahead of ' + selGroup.base
+      },
+      showCommits: mode !== 'Uncommitted',
+      commits: cm,
+      filePath: path,
+      compare: mode === 'Uncommitted' ? 'HEAD ↔ working tree' : mode === 'All' ? 'merge-base ↔ working tree' : 'merge-base ↔ ' + selGroup.branch,
+      showAttention: project,
+      attention: [
+        { repo: 'api-server', branch: 'refresh-endpoint', tag: 'merged', tagStyle: pill('#8fcf9c', 'rgba(93,184,114,0.14)') },
+        { repo: 'mobile', branch: 'feat/token-store', tag: 'base missing', tagStyle: pill('#e8c071', 'rgba(212,160,23,0.14)') },
+        { repo: 'web-app', branch: 'logout-flow', tag: 'deleted', tagStyle: pill('#ee9a90', 'rgba(198,69,69,0.16)') },
+        { repo: 'admin-panel', branch: 'session-ui', tag: 'repo missing', tagStyle: pill('#ee9a90', 'rgba(198,69,69,0.16)') }
+      ],
+      showBaseMenu: menu && project,
+      showBanner: mode === 'Uncommitted' || baseChanged,
+      banner: mode === 'Uncommitted'
+        ? (project ? 'Uncommitted changes across 2 checked-out entries' : 'Working tree at ' + selGroup.wt)
+        : 'Base for token-rotation-job set to feat/job-queue. Saved for this branch; Branches and projects use it too.',
+      bannerStyle: 'padding: 9px 20px; font-size: 12px; border-bottom: 1px solid #302e2a; ' + (mode === 'Uncommitted' ? 'background: rgba(212,160,23,0.12); color: #e8c071' : 'background: #211f1c; color: #d8d4cc')
+    };
+  }
+}
+</script>
+</body>
+</html>

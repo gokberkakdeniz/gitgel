@@ -1,0 +1,18 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.warning {
+  color: var(--warning-text);
+  background: rgba(212, 160, 23, 0.12);
+}
+
+.neutral {
+  color: var(--text-body);
+  background: var(--bg-elevated);
+}

@@ -1,0 +1,32 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 24px 18px;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  letter-spacing: -0.3px;
+  color: var(--text-strong);
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-body);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cancel {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}

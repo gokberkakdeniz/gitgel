@@ -1,0 +1,418 @@
+.screen {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.muted {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Header */
+
+.header {
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Room for the native traffic lights. */
+.lights {
+  width: 56px;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.back {
+  color: var(--text-body);
+}
+
+.titles {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: 4px;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  letter-spacing: -0.2px;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.body {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* File list */
+
+.files {
+  width: 310px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.groupHead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 8px 6px;
+}
+
+.groupLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.groupToggle {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+
+.closed {
+  transform: rotate(-90deg);
+}
+
+.repoName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.baseButton {
+  flex-shrink: 0;
+  margin-left: auto;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.baseButton .muted {
+  font-size: 11px;
+}
+
+.baseCustom {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(79, 143, 163, 0.25);
+}
+
+.groupLine2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 20px;
+}
+
+.branch {
+  flex-grow: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.add,
+.del {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.add {
+  color: var(--diff-add-mark);
+}
+
+.del {
+  color: var(--diff-del-mark);
+}
+
+.fileRows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fileRow {
+  width: 100%;
+  height: 30px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 28px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.fileRow:hover {
+  background: var(--bg-sunken);
+}
+
+.selected,
+.selected:hover {
+  background: var(--bg-hover);
+}
+
+.fileName {
+  flex-shrink: 0;
+  max-width: 60%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileDir {
+  flex-grow: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Right side */
+
+.main {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.entryBar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.entryLine {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.entryBranch {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-body);
+  white-space: nowrap;
+}
+
+.entryRange {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.commits {
+  max-height: 132px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.commit {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.sha {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-text);
+}
+
+.subject {
+  flex-grow: 1;
+  min-width: 0;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.age {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.fileBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border);
+}
+
+.filePath {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+/* Project scope: entries with nothing to diff, as one line (TASKS §2 default). */
+.notInReview {
+  margin-top: 10px;
+  padding: 12px 8px 0;
+  border-top: 1px solid var(--bg-hover);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.linkButton {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  color: var(--accent-hover);
+}
+
+/* Stacked branch (flow E) */
+.stackHint {
+  margin: 0 8px 6px 28px;
+  padding: 7px 10px;
+  border-radius: var(--radius-control);
+  background: rgba(212, 160, 23, 0.12);
+  color: var(--warning-text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.foreign {
+  opacity: 0.6;
+}
+
+.fromPill {
+  padding: 1px 8px;
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+
+.pending {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.repoLink {
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.repoLink:hover {
+  color: var(--accent-hover);
+}
