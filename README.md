@@ -47,8 +47,6 @@ if needed. It needs a clean, pushed working tree; after new commits, bump the ve
 - Log: `~/Library/Logs/com.gitgel.desktop/Gitgel.log` (up to 3 × 2 MB). Every scan, review, file
   read and file-watch round logs one line with its step timings. **Help › Show Logs in Finder**
   writes all of it, with the app and libgit2 versions, to `~/Downloads/Gitgel-logs-<time>.log`.
-- Measuring a repository outside the app:
-  `cargo run --release --manifest-path src-tauri/Cargo.toml --example bench -- <repo path>`
 
 ## Test repositories
 

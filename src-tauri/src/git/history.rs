@@ -69,6 +69,13 @@ pub fn stack(
     let default_tip = default_base_tip.map(Oid::from_str).transpose()?;
     let listed = reachable(repo, tip_oid, base_oid)?;
     let listed_set: HashSet<Oid> = listed.iter().copied().collect();
+    // Commits of the entry not merged into the default base. Walking these (usually few)
+    // commits replaces an ancestry check per branch, which is slow in long histories.
+    let not_in_default: Option<HashSet<Oid>> = match default_tip {
+        Some(d) if d == base_oid => Some(listed_set.clone()),
+        Some(d) => Some(reachable(repo, tip_oid, d)?.into_iter().collect()),
+        None => None,
+    };
 
     let mut ranked: Vec<(StackHint, HashSet<Oid>)> = Vec::new();
     for branch in repo.branches(Some(BranchType::Local))? {
@@ -79,12 +86,9 @@ pub fn stack(
         if Some(name) == entry_branch || c == tip_oid {
             continue;
         }
-        let from_tip = repo.graph_descendant_of(tip_oid, c)?;
-        let merged = match default_tip {
-            Some(d) => c == d || repo.graph_descendant_of(d, c)?,
-            None => false,
-        };
-        if !from_tip || merged {
+        // A branch sharing any listed commit is reachable from the tip and not from the base,
+        // so its tip is itself a listed commit; it must not be merged into the default base.
+        if !listed_set.contains(&c) || not_in_default.as_ref().is_some_and(|d| !d.contains(&c)) {
             continue;
         }
         let shared: HashSet<Oid> = reachable(repo, c, base_oid)?
@@ -127,6 +131,98 @@ fn reachable(repo: &Repository, tip: Oid, base: Oid) -> Result<Vec<Oid>, AppErro
     walk.push(tip)?;
     walk.hide(base)?;
     Ok(walk.collect::<Result<Vec<_>, _>>()?)
+}
+
+/// Which branch tips are merged into (reachable from) a base, remembered per repository so a
+/// base that moved forward only needs its new commits walked.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct MergedState {
+    pub base: String,
+    /// Tips answered at `base`.
+    pub checked: HashSet<String>,
+    /// The checked tips that are merged.
+    pub merged: HashSet<String>,
+}
+
+/// Commit dates are not strictly ordered; walk this far past the oldest tip before giving up.
+const DATE_SLACK: i64 = 86_400;
+
+/// Answers "is this tip merged into `base`?" for every `(tip, commit time)`, reusing `prev`.
+/// One history walk replaces an ancestry check per branch, which is slow in long histories.
+pub fn merged_tips(
+    repo: &Repository,
+    base: &str,
+    tips: &[(String, i64)],
+    prev: Option<&MergedState>,
+) -> Result<MergedState, AppError> {
+    let base_oid = Oid::from_str(base)?;
+    let mut state = MergedState {
+        base: base.to_string(),
+        ..MergedState::default()
+    };
+    match prev {
+        Some(p) if p.base == base => {
+            state.checked = p.checked.clone();
+            state.merged = p.merged.clone();
+        }
+        // The base moved forward: only its new commits can merge more tips.
+        Some(p)
+            if repo
+                .graph_descendant_of(base_oid, Oid::from_str(&p.base)?)
+                .unwrap_or(false) =>
+        {
+            let new: HashSet<String> = reachable(repo, base_oid, Oid::from_str(&p.base)?)?
+                .into_iter()
+                .map(|o| o.to_string())
+                .collect();
+            state.checked = p.checked.clone();
+            state.merged = p
+                .checked
+                .iter()
+                .filter(|t| p.merged.contains(*t) || new.contains(*t))
+                .cloned()
+                .collect();
+        }
+        _ => {}
+    }
+
+    // Tips never answered: walk the base's history newest first until all are found or the
+    // walk is older than the oldest of them.
+    let mut unresolved: HashMap<Oid, (String, i64)> = HashMap::new();
+    for (tip, time) in tips {
+        if !state.checked.contains(tip) {
+            unresolved.insert(Oid::from_str(tip)?, (tip.clone(), *time));
+        }
+    }
+    if !unresolved.is_empty() {
+        let cutoff = unresolved.values().map(|(_, t)| *t).min().unwrap_or(0) - DATE_SLACK;
+        let mut walk = repo.revwalk()?;
+        walk.set_sorting(Sort::TIME)?;
+        walk.push(base_oid)?;
+        let mut left = unresolved.len();
+        for oid in walk {
+            let oid = oid?;
+            if let Some((tip, _)) = unresolved.get(&oid) {
+                state.merged.insert(tip.clone());
+                left -= 1;
+                if left == 0 {
+                    break;
+                }
+            }
+            if repo.find_commit(oid)?.time().seconds() < cutoff {
+                break;
+            }
+        }
+        state
+            .checked
+            .extend(unresolved.into_values().map(|(tip, _)| tip));
+    }
+
+    // Forget branches that are gone.
+    let current: HashSet<&String> = tips.iter().map(|(t, _)| t).collect();
+    state.checked.retain(|t| current.contains(t));
+    state.merged.retain(|t| current.contains(t));
+    Ok(state)
 }
 
 /// What a branch adds on top of its base. Depends only on the two tips, so it is cached by
@@ -259,6 +355,48 @@ mod tests {
         )
         .unwrap();
         assert!(s.suggested.is_empty() && s.from_branch.is_empty());
+    }
+
+    #[test]
+    fn merged_tips_walks_once_and_follows_the_base() {
+        let t = TestRepo::new();
+        let root = t.commit_on("main", &[("a", Some(b"a"))], "init", 10);
+        t.branch_from("done", root);
+        let done = t.commit_on("done", &[("d", Some(b"d"))], "d", 9);
+        t.set_branch("main", done); // fast-forward: `done` is merged
+        let base1 = t.commit_on("main", &[("b", Some(b"b"))], "b", 8);
+        t.branch_from("open", base1);
+        let open = t.commit_on("open", &[("o", Some(b"o"))], "o", 7);
+        let time = |oid: git2::Oid| t.repo.find_commit(oid).unwrap().time().seconds();
+        let tips = vec![
+            (done.to_string(), time(done)),
+            (open.to_string(), time(open)),
+        ];
+
+        // First time: one walk answers both.
+        let s1 = merged_tips(&t.repo, &base1.to_string(), &tips, None).unwrap();
+        assert_eq!(s1.merged, HashSet::from([done.to_string()]));
+        assert_eq!(s1.checked.len(), 2);
+
+        // The base moves forward over `open`: only the new commits are looked at.
+        t.set_branch("main", open);
+        let base2 = t
+            .commit_on("main", &[("c", Some(b"c"))], "c", 6)
+            .to_string();
+        let s2 = merged_tips(&t.repo, &base2, &tips, Some(&s1)).unwrap();
+        assert_eq!(
+            s2.merged,
+            HashSet::from([done.to_string(), open.to_string()])
+        );
+
+        // Same base: answers are kept; branches that are gone are forgotten.
+        let s3 = merged_tips(&t.repo, &base2, &tips[..1], Some(&s2)).unwrap();
+        assert_eq!(s3.checked, HashSet::from([done.to_string()]));
+        assert_eq!(s3.merged, HashSet::from([done.to_string()]));
+
+        // A base that is not a descendant (reset) is answered from scratch.
+        let s4 = merged_tips(&t.repo, &root.to_string(), &tips, Some(&s2)).unwrap();
+        assert!(s4.merged.is_empty());
     }
 
     #[test]

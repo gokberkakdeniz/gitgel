@@ -254,11 +254,13 @@ fn process(state: &AppState, paths: &[PathBuf]) -> usize {
                 refs.insert(repo_id);
             }
             Some(Change::Worktree { repo_id, path, rel }) => {
-                if refs.contains(&repo_id) || touched.contains(&(repo_id.clone(), path.clone())) {
+                if touched.contains(&(repo_id.clone(), path.clone())) {
                     continue;
                 }
                 let cache = ignore_cache.entry(path.clone()).or_default();
                 if rel.as_os_str().is_empty() || !is_ignored(state, &path, &rel, cache) {
+                    // Its cached status is stale, even when a refs rescan follows.
+                    lock(&state.cache).invalidate_workdir(&path);
                     touched.insert((repo_id, path));
                 }
             }

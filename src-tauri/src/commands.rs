@@ -7,7 +7,7 @@ use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
     BaseOptions, Config, EntryRef, FileChange, FilePair, FolderCheck, ProjectConfig, ProjectView,
-    ReviewData, ReviewTarget, ScanResult, Settings, UpdateReason,
+    ReviewData, ReviewTarget, ScanResult, Settings,
 };
 use crate::state::AppState;
 use crate::{base, files, projects, repos, review, scan, watch};
@@ -90,12 +90,15 @@ pub async fn get_scan(state: State<'_, AppState>) -> Result<ScanResult, AppError
 
 /// Always scans everything, and emits `repo-updated` for each repo so open screens refresh.
 #[tauri::command]
-pub async fn rescan_all(state: State<'_, AppState>) -> Result<ScanResult, AppError> {
-    blocking(&state, |state| {
-        let result = scan::scan_all(state);
-        for repo in &result.repos {
-            scan::emit_repo_updated(state, repo.clone(), UpdateReason::Rescan, None);
+/// `force` (the refresh button) also rereads every working tree; window focus relies on the
+/// file watcher for those.
+pub async fn rescan_all(state: State<'_, AppState>, force: bool) -> Result<ScanResult, AppError> {
+    blocking(&state, move |state| {
+        if force {
+            crate::state::lock(&state.cache).invalidate_workdirs();
         }
+        // scan_all emits each repo whose result changed.
+        let result = scan::scan_all(state);
         watch::sync_watches(state);
         Ok(result)
     })

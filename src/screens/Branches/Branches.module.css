@@ -505,3 +505,9 @@
 .list {
   scroll-padding-top: 8px;
 }
+
+.pending {
+  padding: 12px 28px;
+  font-size: 12px;
+  color: var(--text-muted);
+}

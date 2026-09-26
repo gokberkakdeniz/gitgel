@@ -8,7 +8,7 @@ import styles from './RefreshButton.module.css';
 export function RefreshButton() {
   const refreshing = useData((s) => s.refreshing);
   return (
-    <IconButton size={32} aria-label="Refresh" onClick={() => void rescanAll()}>
+    <IconButton size={32} aria-label="Refresh" onClick={() => void rescanAll(true)}>
       <RefreshIcon className={refreshing ? styles.spin : undefined} />
     </IconButton>
   );

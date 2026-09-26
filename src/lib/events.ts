@@ -35,20 +35,32 @@ async function start() {
 }
 
 let rescanning: Promise<void> | null = null;
+let rescanningForced = false;
+let current: object | null = null;
 
-/** Full rescan (focus and refresh buttons). The backend pushes each repo as `repo-updated`.
- * A call while one is running joins it. */
-export function rescanAll(): Promise<void> {
-  rescanning ??= (async () => {
+/** Full rescan. The backend pushes each repo as `repo-updated`. `force` (the refresh button)
+ * also rereads every working tree; window focus relies on the file watcher for those. A call
+ * while one is running joins it, unless it asks for more (a forced one after a plain one). */
+export function rescanAll(force = false): Promise<void> {
+  if (rescanning && (rescanningForced || !force)) return rescanning;
+  const previous = rescanning;
+  const token = {};
+  current = token;
+  const run = (async () => {
+    await previous;
     useData.getState().setRefreshing(true);
     try {
-      await ipc.rescanAll();
+      await ipc.rescanAll(force);
     } catch (e) {
       console.error('rescan failed', e);
     } finally {
-      useData.getState().setRefreshing(false);
-      rescanning = null;
+      if (current === token) {
+        rescanning = null;
+        useData.getState().setRefreshing(false);
+      }
     }
   })();
-  return rescanning;
+  rescanning = run;
+  rescanningForced = force;
+  return run;
 }

@@ -15,8 +15,8 @@ use crate::git::history::{self, CommittedStats};
 use crate::git::pool::RepoPool;
 use crate::git::{diff, refs, worktrees, Repo};
 use crate::model::{
-    entry_key, Config, EntryState, EntrySummary, OtherBranch, RepoConfig, RepoScan, RepoStatus,
-    RepoUpdated, ScanResult, UpdateReason,
+    entry_key, Config, EntryState, EntrySummary, FileChange, OtherBranch, RepoConfig, RepoScan,
+    RepoStatus, RepoUpdated, ScanResult, UpdateReason,
 };
 use crate::state::{lock, AppState};
 use crate::timing::Timings;
@@ -176,6 +176,7 @@ fn fill(
         ctx.timings.borrow_mut().add("branches", started.elapsed());
         branches
     };
+    let mut other_tips: Vec<(String, i64)> = Vec::new();
     for branch in branches {
         live_tips.insert(branch.tip.clone());
         if Some(&branch.name) == base_branch.as_ref() {
@@ -217,17 +218,29 @@ fn fill(
                 continue;
             }
         }
-        let merged = match &default_tip {
-            Some(base) => cached_merged(&ctx, &branch.tip, base).unwrap_or(false),
-            None => false,
-        };
+        other_tips.push((branch.tip.clone(), branch.last_commit_at));
         scan.others.push(OtherBranch {
             repo_id: repo_cfg.id.clone(),
             repo_name: scan.name.clone(),
             branch: branch.name,
             last_commit_at: branch.last_commit_at,
-            merged,
+            merged: false,
         });
+    }
+    // One pass answers "merged into the default base?" for every other branch.
+    if let Some(base) = &default_tip {
+        let started = std::time::Instant::now();
+        let prev = lock(cache).merged(&repo_cfg.id);
+        match history::merged_tips(repo, base, &other_tips, prev.as_ref()) {
+            Ok(state) => {
+                for (o, (tip, _)) in scan.others.iter_mut().zip(&other_tips) {
+                    o.merged = state.merged.contains(tip);
+                }
+                lock(cache).put_merged(&repo_cfg.id, state);
+            }
+            Err(e) => log::warn!("merged check in {} failed: {e}", repo_cfg.path),
+        }
+        ctx.timings.borrow_mut().add("merged", started.elapsed());
     }
 
     for wt in wts.iter().filter(|w| w.branch.is_none()) {
@@ -312,7 +325,7 @@ fn summarize(
     };
 
     if let Some(wt) = &worktree_path {
-        match uncommitted_count(ctx, wt) {
+        match uncommitted_count(ctx, wt, &tip) {
             Ok(n) => s.uncommitted = Some(n),
             Err(e) => fail(&mut s, &mut flags, e),
         }
@@ -355,23 +368,83 @@ fn summarize(
     s
 }
 
-fn uncommitted_count(ctx: &RepoCtx, worktree: &Path) -> Result<u32, AppError> {
+/// Uncommitted file count of a worktree whose HEAD is `head`; cached until the watcher reports
+/// a change in it or HEAD moves.
+fn uncommitted_count(ctx: &RepoCtx, worktree: &Path, head: &str) -> Result<u32, AppError> {
+    if let Some(w) = lock(ctx.cache).workdir(worktree, head) {
+        let n = w.count.or(w.uncommitted.as_ref().map(|u| u.len() as u32));
+        if let Some(n) = n {
+            ctx.timings
+                .borrow_mut()
+                .add("status cached", std::time::Duration::ZERO);
+            return Ok(n);
+        }
+    }
     let started = std::time::Instant::now();
-    let n = uncommitted_count_untimed(ctx, worktree);
-    ctx.timings.borrow_mut().add("status", started.elapsed());
-    n
-}
-
-fn uncommitted_count_untimed(ctx: &RepoCtx, worktree: &Path) -> Result<u32, AppError> {
+    // The file list, not just the count: a review of this worktree then opens from the cache.
     // The main worktree is the repository already locked by the caller.
-    let n = if worktree == ctx.main_path {
-        diff::uncommitted_count(ctx.repo)?
+    let list = if worktree == ctx.main_path {
+        cached_uncommitted(ctx.cache, ctx.repo, worktree, head)?
     } else {
         let shared = ctx.pool.get(worktree)?;
         let wt_repo = lock(&shared);
-        diff::uncommitted_count(&wt_repo)?
+        cached_uncommitted(ctx.cache, &wt_repo, worktree, head)?
     };
-    Ok(n as u32)
+    ctx.timings.borrow_mut().add("status", started.elapsed());
+    Ok(list.len() as u32)
+}
+
+/// HEAD ↔ working tree file list of a worktree, cached like `uncommitted_count`.
+pub fn cached_uncommitted(
+    cache: &Mutex<Cache>,
+    wt_repo: &Repo,
+    worktree: &Path,
+    head: &str,
+) -> Result<Vec<FileChange>, AppError> {
+    if let Some(list) = lock(cache)
+        .workdir(worktree, head)
+        .and_then(|w| w.uncommitted)
+    {
+        return Ok(list);
+    }
+    let list = diff::uncommitted(wt_repo)?;
+    let n = list.len() as u32;
+    lock(cache).update_workdir(worktree, head, |w| {
+        w.count = Some(n);
+        w.uncommitted = Some(list.clone());
+    });
+    Ok(list)
+}
+
+/// Merge-base ↔ working tree file list, limited to the paths that can differ (committed or
+/// uncommitted changes), cached like `uncommitted_count`.
+pub fn cached_all(
+    cache: &Mutex<Cache>,
+    wt_repo: &Repo,
+    worktree: &Path,
+    head: &str,
+    merge_base: &str,
+    committed: &[FileChange],
+    uncommitted: &[FileChange],
+) -> Result<Vec<FileChange>, AppError> {
+    if let Some(list) = lock(cache)
+        .workdir(worktree, head)
+        .and_then(|w| w.all.get(merge_base).cloned())
+    {
+        return Ok(list);
+    }
+    let mut paths: Vec<String> = committed
+        .iter()
+        .chain(uncommitted)
+        .flat_map(|c| std::iter::once(c.path.clone()).chain(c.old_path.clone()))
+        .collect();
+    paths.sort();
+    paths.dedup();
+    let list = diff::workdir_changes_paths(wt_repo, merge_base, &paths)?;
+    lock(cache).update_workdir(worktree, head, |w| {
+        w.all.insert(merge_base.to_string(), list.clone());
+    });
+    Ok(list)
 }
 
 fn cached_committed(ctx: &RepoCtx, tip: &str, base: &str) -> Result<CommittedStats, AppError> {
@@ -396,23 +469,6 @@ pub fn committed_stats(
     let stats = history::committed_stats(repo, tip, base)?;
     lock(cache).put_committed(repo_id, tip, base, stats.clone());
     Ok(stats)
-}
-
-fn cached_merged(ctx: &RepoCtx, tip: &str, base: &str) -> Result<bool, AppError> {
-    let started = std::time::Instant::now();
-    let merged = cached_merged_untimed(ctx, tip, base);
-    ctx.timings.borrow_mut().add("merged", started.elapsed());
-    merged
-}
-
-fn cached_merged_untimed(ctx: &RepoCtx, tip: &str, base: &str) -> Result<bool, AppError> {
-    let id = &ctx.repo_cfg.id;
-    if let Some(merged) = lock(ctx.cache).merged(id, tip, base) {
-        return Ok(merged);
-    }
-    let merged = history::is_ancestor(ctx.repo, tip, base)?;
-    lock(ctx.cache).put_merged(id, tip, base, merged);
-    Ok(merged)
 }
 
 /// Summary of one entry outside a full scan (review, project view). `tip_override` reviews a
@@ -699,40 +755,42 @@ pub fn refresh_worktree(
 // ---- Stored scan and commands' helpers ----
 
 /// Scans every configured repository in parallel and replaces the stored result.
+/// Each repo is stored and, when its result changed, emitted as `repo-updated` as soon as it is
+/// done, so the screen fills in repo by repo.
 pub fn scan_all(state: &AppState) -> ScanResult {
     let started = Instant::now();
     let config = config::snapshot(state);
     state.pool.retain_existing();
     let now = chrono::Utc::now().timestamp();
-    let results: Vec<RepoResult> = std::thread::scope(|s| {
-        let handles: Vec<_> = config
-            .repos
-            .iter()
-            .map(|r| s.spawn(|| scan_repo(&state.pool, &state.cache, r, &config, now)))
-            .collect();
-        handles
-            .into_iter()
-            .zip(&config.repos)
-            .map(|(h, r)| {
-                h.join().unwrap_or_else(|_| RepoResult {
+    let (tx, rx) = std::sync::mpsc::channel::<(usize, RepoResult)>();
+    let mut results: Vec<Option<RepoResult>> = config.repos.iter().map(|_| None).collect();
+    std::thread::scope(|s| {
+        for (i, r) in config.repos.iter().enumerate() {
+            let tx = tx.clone();
+            let config = &config;
+            s.spawn(move || {
+                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    scan_repo(&state.pool, &state.cache, r, config, now)
+                }))
+                .unwrap_or_else(|_| RepoResult {
                     scan: failed_scan(r, "scan panicked"),
                     layout: None,
-                })
-            })
-            .collect()
-    });
-
-    let mut stored = lock(&state.last_scan);
-    let mut layouts = lock(&state.layouts);
-    stored.clear();
-    layouts.clear();
-    for r in &results {
-        stored.insert(r.scan.repo.id.clone(), r.scan.clone());
-        if let Some(layout) = &r.layout {
-            layouts.insert(r.scan.repo.id.clone(), layout.clone());
+                });
+                let _ = tx.send((i, result));
+            });
         }
-    }
-    drop((stored, layouts));
+        drop(tx);
+        for (i, result) in rx {
+            store(state, &result, UpdateReason::Rescan, None, false);
+            results[i] = Some(result);
+        }
+    });
+    let results: Vec<RepoResult> = results.into_iter().flatten().collect();
+
+    // Forget repos that left the config.
+    let ids: HashSet<&str> = config.repos.iter().map(|r| r.id.as_str()).collect();
+    lock(&state.last_scan).retain(|id, _| ids.contains(id.as_str()));
+    lock(&state.layouts).retain(|id, _| ids.contains(id.as_str()));
     log::info!(
         "scan: {} repos, {} ms",
         results.len(),
@@ -780,17 +838,37 @@ pub fn rescan_repo(
         &config,
         chrono::Utc::now().timestamp(),
     );
-    lock(&state.last_scan).insert(repo_id.to_string(), result.scan.clone());
+    // A worktree change may alter file contents without changing the summary: always emit.
+    let always = reason == UpdateReason::Worktree;
+    store(state, &result, reason, worktree_path, always)
+}
+
+/// Stores a repo's scan and layout and emits `repo-updated` if the scan changed (or `always`).
+/// Returns whether the layout (git dir, worktrees) changed.
+fn store(
+    state: &AppState,
+    result: &RepoResult,
+    reason: UpdateReason,
+    worktree_path: Option<String>,
+    always: bool,
+) -> bool {
+    let id = result.scan.repo.id.clone();
+    let scan_changed = lock(&state.last_scan)
+        .insert(id.clone(), result.scan.clone())
+        .as_ref()
+        != Some(&result.scan);
     let layout_changed = {
         let mut layouts = lock(&state.layouts);
-        let changed = layouts.get(repo_id) != result.layout.as_ref();
-        match result.layout {
-            Some(layout) => layouts.insert(repo_id.to_string(), layout),
-            None => layouts.remove(repo_id),
+        let changed = layouts.get(&id) != result.layout.as_ref();
+        match &result.layout {
+            Some(layout) => layouts.insert(id.clone(), layout.clone()),
+            None => layouts.remove(&id),
         };
         changed
     };
-    emit_repo_updated(state, result.scan, reason, worktree_path);
+    if scan_changed || always {
+        emit_repo_updated(state, result.scan.clone(), reason, worktree_path);
+    }
     layout_changed
 }
 
@@ -1066,7 +1144,13 @@ mod tests {
         .scan;
         assert_eq!(active(&scan, "done").state, EntryState::Merged);
 
+        // The cached status holds until the watcher reports the change.
         t.write_file(&wt, "new.txt", b"x\n");
+        assert_eq!(
+            refresh_worktree(&pool, &cache, &config, &mut scan, &wt).unwrap(),
+            Some(false)
+        );
+        lock(&cache).invalidate_workdir(&wt);
         assert_eq!(
             refresh_worktree(&pool, &cache, &config, &mut scan, &wt).unwrap(),
             Some(true)

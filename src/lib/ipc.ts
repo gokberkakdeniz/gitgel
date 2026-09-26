@@ -23,7 +23,8 @@ export const addRepos = (paths: string[]) => invoke<Config>('add_repos', { paths
 
 export const getScan = () => invoke<ScanResult>('get_scan');
 
-export const rescanAll = () => invoke<ScanResult>('rescan_all');
+/** `force` also rereads every working tree (the refresh button). */
+export const rescanAll = (force: boolean) => invoke<ScanResult>('rescan_all', { force });
 
 export const getReview = (target: ReviewTarget) => invoke<ReviewData>('get_review', { target });
 

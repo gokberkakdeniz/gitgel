@@ -142,10 +142,8 @@ pub fn update_settings(state: &AppState, settings: Settings) -> Result<Config, A
         };
         Ok(config.clone())
     })?;
-    let result = scan::scan_all(state);
-    for repo in result.repos {
-        scan::emit_repo_updated(state, repo, UpdateReason::Rescan, None);
-    }
+    // scan_all emits each repo whose result changed.
+    scan::scan_all(state);
     watch::sync_watches(state);
     Ok(config)
 }

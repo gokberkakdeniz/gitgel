@@ -170,6 +170,28 @@ pub fn workdir_changes(wt_repo: &Repository, from: &str) -> Result<Vec<FileChang
     changes(&diff, NewSide::Workdir)
 }
 
+/// Like `workdir_changes`, limited to exactly `paths`: the files that changed between `from` and
+/// HEAD plus the uncommitted ones are the only candidates, so the rest of a large tree is skipped.
+pub fn workdir_changes_paths(
+    wt_repo: &Repository,
+    from: &str,
+    paths: &[String],
+) -> Result<Vec<FileChange>, AppError> {
+    if paths.is_empty() {
+        return Ok(Vec::new());
+    }
+    wt_repo.index()?.read(false)?;
+    let tree = wt_repo.find_commit(Oid::from_str(from)?)?.tree()?;
+    let mut opts = diff_options(true);
+    opts.disable_pathspec_match(true);
+    for p in paths {
+        opts.pathspec(p);
+    }
+    let mut diff = wt_repo.diff_tree_to_workdir_with_index(Some(&tree), Some(&mut opts))?;
+    find_renames(&mut diff)?;
+    changes(&diff, NewSide::Workdir)
+}
+
 /// Size of a blob without loading its content.
 pub fn blob_size(repo: &Repository, oid: &str) -> Result<usize, AppError> {
     Ok(repo.odb()?.read_header(Oid::from_str(oid)?)?.0)

@@ -156,7 +156,15 @@ function BranchList() {
   )} · checked out in a worktree, or committed in the last ${days} days`;
 
   let body;
-  if (!scannedOnce) {
+  // Repos appear as they finish scanning; the rest are counted below the list.
+  const pending = config.repos.length - scans.length;
+  const pendingNote =
+    pending > 0 ? (
+      <div className={styles.pending}>
+        Scanning {plural(pending, 'more repository', 'more repositories')}…
+      </div>
+    ) : null;
+  if (groups.length === 0 && (pending > 0 || !scannedOnce)) {
     body = <div className={`${styles.center} ${styles.muted}`}>Scanning repositories…</div>;
   } else if (groups.length === 0 && filter.trim()) {
     body = <div className={`${styles.center} ${styles.muted}`}>No branches match “{filter.trim()}”</div>;
@@ -192,6 +200,7 @@ function BranchList() {
             onPopover={setPopover}
           />
         ))}
+        {pendingNote}
       </div>
     );
   }

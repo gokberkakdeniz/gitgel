@@ -158,14 +158,27 @@ fn group(
         ),
     };
 
-    // The working-tree layers are read fresh every time; they are not cached.
+    // The working-tree layers come from the worktree cache (dropped when the watcher reports a
+    // change there, or when HEAD moves).
     let (uncommitted, all) = match &entry.worktree_path {
         Some(wt) => {
             let wt = Path::new(wt);
             let read = |wt_repo: &Repo, t: &mut Timings| -> Result<_, AppError> {
-                let uncommitted = t.time("uncommitted", || diff::uncommitted(wt_repo))?;
+                let uncommitted = t.time("uncommitted", || {
+                    scan::cached_uncommitted(&state.cache, wt_repo, wt, &tip)
+                })?;
                 let all = match &merge_base {
-                    Some(mb) => t.time("all", || diff::workdir_changes(wt_repo, mb))?,
+                    Some(mb) => t.time("all", || {
+                        scan::cached_all(
+                            &state.cache,
+                            wt_repo,
+                            wt,
+                            &tip,
+                            mb,
+                            &detail.files,
+                            &uncommitted,
+                        )
+                    })?,
                     None => uncommitted.clone(),
                 };
                 Ok((uncommitted, all))

@@ -3,8 +3,20 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::git::history::CommittedStats;
+use crate::git::history::{CommittedStats, MergedState};
 use crate::model::{CommitInfo, FileChange, StackHint};
+
+/// What a worktree's working tree holds, valid while its HEAD stays `head` and the watcher
+/// reports no change in it.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct WorkdirState {
+    pub head: String,
+    pub count: Option<u32>,
+    /// HEAD ↔ working tree.
+    pub uncommitted: Option<Vec<FileChange>>,
+    /// Merge-base ↔ working tree, per merge-base.
+    pub all: HashMap<String, Vec<FileChange>>,
+}
 
 /// The committed file list and commit list of a branch against a base (review screen), with
 /// its stacked-branch candidates.
@@ -24,9 +36,11 @@ const MAX_ENTRIES: usize = 5000;
 #[derive(Default)]
 pub struct Cache {
     committed: HashMap<Key, CommittedStats>,
-    /// Whether the tip is an ancestor of the base (for `OtherBranch::merged`).
-    merged: HashMap<Key, bool>,
+    /// Per repository: which other branches are merged into the default base.
+    merged: HashMap<String, MergedState>,
     detail: HashMap<Key, CommittedDetail>,
+    /// Per worktree folder (canonical).
+    workdirs: HashMap<std::path::PathBuf, WorkdirState>,
 }
 
 fn key(repo_id: &str, tip: &str, base: &str) -> Key {
@@ -42,12 +56,12 @@ impl Cache {
         self.committed.insert(key(repo_id, tip, base), stats);
     }
 
-    pub fn merged(&self, repo_id: &str, tip: &str, base: &str) -> Option<bool> {
-        self.merged.get(&key(repo_id, tip, base)).copied()
+    pub fn merged(&self, repo_id: &str) -> Option<MergedState> {
+        self.merged.get(repo_id).cloned()
     }
 
-    pub fn put_merged(&mut self, repo_id: &str, tip: &str, base: &str, merged: bool) {
-        self.merged.insert(key(repo_id, tip, base), merged);
+    pub fn put_merged(&mut self, repo_id: &str, state: MergedState) {
+        self.merged.insert(repo_id.to_string(), state);
     }
 
     pub fn detail(&self, repo_id: &str, tip: &str, base: &str) -> Option<CommittedDetail> {
@@ -58,13 +72,47 @@ impl Cache {
         self.detail.insert(key(repo_id, tip, base), detail);
     }
 
+    /// The cached state of a worktree whose HEAD is still `head`.
+    pub fn workdir(&self, path: &std::path::Path, head: &str) -> Option<WorkdirState> {
+        self.workdirs.get(path).filter(|w| w.head == head).cloned()
+    }
+
+    /// Updates a worktree's state for `head` (starting afresh if HEAD moved).
+    pub fn update_workdir(
+        &mut self,
+        path: &std::path::Path,
+        head: &str,
+        f: impl FnOnce(&mut WorkdirState),
+    ) {
+        let w = self.workdirs.entry(path.to_path_buf()).or_default();
+        if w.head != head {
+            *w = WorkdirState {
+                head: head.to_string(),
+                ..WorkdirState::default()
+            };
+        }
+        f(w);
+    }
+
+    /// Something in the worktree changed (file-watch event).
+    pub fn invalidate_workdir(&mut self, path: &std::path::Path) {
+        self.workdirs.remove(path);
+    }
+
+    /// The refresh button: read every working tree again.
+    pub fn invalidate_workdirs(&mut self) {
+        self.workdirs.clear();
+    }
+
     /// After a scan of `repo_id`: forgets that repo's entries whose tip no branch has any more.
     pub fn prune(&mut self, repo_id: &str, live_tips: &HashSet<String>) {
         let keep = |k: &Key| k.0 != repo_id || live_tips.contains(&k.1);
         self.committed.retain(|k, _| keep(k));
-        self.merged.retain(|k, _| keep(k));
+        if live_tips.is_empty() {
+            self.merged.remove(repo_id);
+        }
         self.detail.retain(|k, _| keep(k));
-        if self.committed.len() + self.merged.len() + self.detail.len() > MAX_ENTRIES {
+        if self.committed.len() + self.detail.len() > MAX_ENTRIES {
             self.committed.clear();
             self.merged.clear();
             self.detail.clear();
@@ -98,11 +146,13 @@ mod tests {
         c.put_committed("r_1", "tip1", "b", stats());
         c.put_committed("r_1", "old", "b", stats());
         c.put_committed("r_2", "old", "b", stats());
-        c.put_merged("r_1", "old", "b", true);
+
         c.prune("r_1", &HashSet::from(["tip1".to_string()]));
         assert!(c.committed("r_1", "tip1", "b").is_some());
         assert!(c.committed("r_1", "old", "b").is_none());
         assert!(c.committed("r_2", "old", "b").is_some());
-        assert_eq!(c.merged("r_1", "old", "b"), None);
+        c.put_merged("r_1", MergedState::default());
+        c.forget_repo("r_1");
+        assert_eq!(c.merged("r_1"), None);
     }
 }
