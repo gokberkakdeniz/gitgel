@@ -28,9 +28,19 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* Same geometry as the sidebar's top row, so the buttons don't move when the sidebar hides. */
+.chrome {
+  height: 52px;
+  align-self: flex-start;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 /* Room for the native traffic lights. */
 .lights {
-  width: 56px;
+  width: 64px;
   align-self: stretch;
   flex-shrink: 0;
 }

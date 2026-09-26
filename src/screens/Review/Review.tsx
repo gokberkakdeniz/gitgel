@@ -360,17 +360,19 @@ function ReviewHeader({
 
   return (
     <header className={styles.header} data-tauri-drag-region>
-      {!sidebarVisible && (
-        <>
-          <div className={styles.lights} data-tauri-drag-region />
-          <IconButton aria-label="Show sidebar" onClick={() => setSidebarVisible(true)}>
-            <SidebarIcon />
-          </IconButton>
-        </>
-      )}
-      <IconButton aria-label={backLabel} onClick={back} className={styles.back}>
-        <BackIcon />
-      </IconButton>
+      <div className={styles.chrome} data-tauri-drag-region>
+        {!sidebarVisible && (
+          <>
+            <div className={styles.lights} data-tauri-drag-region />
+            <IconButton aria-label="Show sidebar" onClick={() => setSidebarVisible(true)}>
+              <SidebarIcon />
+            </IconButton>
+          </>
+        )}
+        <IconButton aria-label={backLabel} onClick={back} className={styles.back}>
+          <BackIcon />
+        </IconButton>
+      </div>
       <div className={styles.titles} data-tauri-drag-region>
         <span className={styles.title} data-tauri-drag-region>
           {title}
