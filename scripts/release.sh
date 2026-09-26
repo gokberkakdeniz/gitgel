@@ -2,7 +2,8 @@
 # Builds Gitgel.app, zips it and uploads the zip to the GitHub release <version>, creating the
 # release (and its tag, on GitHub) when it does not exist yet. Run with `pnpm release`.
 #
-# The version comes from src-tauri/tauri.conf.json. The build must match a pushed commit, so the
+# The version is the app's (package.json, via src-tauri/tauri.conf.json). The build must match a
+# pushed commit, so the
 # working tree has to be clean and HEAD pushed. Re-running for the same version replaces the zip,
 # as long as the release still points at HEAD; after new commits, bump the version first.
 set -euo pipefail
@@ -13,7 +14,14 @@ die() { echo "release: $*" >&2; exit 1; }
 command -v gh >/dev/null || die "gh is not installed"
 gh auth status >/dev/null 2>&1 || die "not logged in to GitHub; run: gh auth login"
 
-VERSION="$(node -p 'require("./src-tauri/tauri.conf.json").version')"
+# tauri.conf.json may hold the version itself or point at a file that does ("../package.json").
+VERSION="$(node -p '
+  const path = require("path");
+  const conf = "./src-tauri/tauri.conf.json";
+  const v = require(conf).version;
+  v.endsWith(".json") ? require("./" + path.join("src-tauri", v)).version : v;
+')"
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]] || die "not a version: $VERSION"
 TAG="$VERSION"
 ARCH="$(uname -m)"
 BUNDLE="src-tauri/target/release/bundle"
@@ -27,7 +35,7 @@ HEAD_SHA="$(git rev-parse HEAD)"
 # An existing tag must already point at this commit.
 REMOTE_TAG_SHA="$(git ls-remote origin "refs/tags/$TAG^{}" "refs/tags/$TAG" | awk 'NR==1 { print $1 }')"
 if [[ -n "$REMOTE_TAG_SHA" && "$REMOTE_TAG_SHA" != "$HEAD_SHA" ]]; then
-  die "$TAG already points at ${REMOTE_TAG_SHA:0:7}, not HEAD (${HEAD_SHA:0:7}); bump the version in src-tauri/tauri.conf.json, package.json and src-tauri/Cargo.toml"
+  die "$TAG already points at ${REMOTE_TAG_SHA:0:7}, not HEAD (${HEAD_SHA:0:7}); bump the version in package.json"
 fi
 
 pnpm tauri build --bundles app

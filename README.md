@@ -36,7 +36,7 @@ The app is written to `src-tauri/target/release/bundle/macos/Gitgel.app`. It is 
 meant for local use only.
 
 To publish it: `pnpm release` builds the app, zips it and uploads the zip to the GitHub release
-`<version>` (version from `src-tauri/tauri.conf.json`) with the `gh` CLI, creating the release
+`<version>` (the version in `package.json`) with the `gh` CLI, creating the release
 if needed. It needs a clean, pushed working tree; after new commits, bump the version first.
 
 ## Files
