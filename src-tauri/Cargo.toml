@@ -1,9 +1,9 @@
 [package]
 name = "gitgel"
-version = "0.1.0"
 description = "Read-only reviewer for git branches and worktrees"
 authors = ["Gökberk Akdeniz"]
 edition = "2021"
+publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
