@@ -154,6 +154,14 @@ export function ChevronDownIcon({ size = 12, className }: IconProps) {
   );
 }
 
+export function ChevronUpIcon({ size = 12, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={2} className={className}>
+      <path d="m6 15 6-6 6 6" />
+    </Svg>
+  );
+}
+
 export function CloseIcon({ size = 14, className }: IconProps) {
   return (
     <Svg size={size} strokeWidth={2} className={className}>

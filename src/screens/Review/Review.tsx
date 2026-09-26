@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '../../components/Banner';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
-import { BackIcon, ChevronDownIcon, RefreshIcon, SidebarIcon } from '../../components/icons';
+import { BackIcon, ChevronDownIcon, ChevronUpIcon, RefreshIcon, SidebarIcon } from '../../components/icons';
 import { IconButton } from '../../components/IconButton';
 import { KindBadge } from '../../components/KindBadge';
 import { Pill } from '../../components/Pill';
@@ -13,7 +13,8 @@ import { getReview } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
 import type { DiffMode, EntrySummary, ReviewData, ReviewGroup, ReviewTarget } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
-import { DiffView } from '../../monaco/DiffView';
+import { next, prev } from '../../monaco/changeNav';
+import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
 import { useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
@@ -66,6 +67,46 @@ export function Review({ target, backLabel, focusKey }: Props) {
   const current = resolveSelection(visible, mode, selected);
   const group = visible.find((g) => g.entry.key === current?.key);
   const change = group?.files[mode].find((f) => f.path === current?.path);
+
+  // Jumping between changes (flow D4): files in list order, collapsed groups included.
+  const files = visible.flatMap((g) => g.files[mode].map((f) => fileId(g.entry.key, f.path)));
+  const currentId = current ? fileId(current.key, current.path) : null;
+  const fileIndex = currentId ? files.indexOf(currentId) : -1;
+  const [land, setLand] = useState<{ id: string | null; where: 'first' | 'last' }>({ id: null, where: 'first' });
+  const [nav, setNav] = useState<NavInfo>({ index: null, count: 0 });
+  const diffNav = useRef<DiffNav | null>(null);
+  const select = (f: FileRef, where: 'first' | 'last' = 'first') => {
+    setSelected(f);
+    setLand({ id: fileId(f.key, f.path), where });
+  };
+  const step = (dir: 1 | -1) => {
+    const state = { index: nav.index, count: nav.count, files, fileIndex };
+    const r = dir > 0 ? next(state) : prev(state);
+    if (r?.kind === 'hunk') diffNav.current?.goTo(r.index);
+    if (r?.kind === 'file') {
+      const [key, path] = r.key.split('\u0000');
+      setCollapsed((c) => {
+        const open = new Set(c);
+        open.delete(key);
+        return open;
+      });
+      select({ key, path }, r.land);
+    }
+  };
+  const stepRef = useRef(step);
+  stepRef.current = step;
+  // ⌥↓ / ⌥↑ outside the diff; inside it Monaco handles them.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.altKey || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+      if ((e.target as HTMLElement | null)?.closest('.monaco-editor, input, textarea')) return;
+      if (useUi.getState().modalCount > 0) return;
+      e.preventDefault();
+      stepRef.current(e.key === 'ArrowDown' ? 1 : -1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const entry = group?.entry ?? groups[0]?.entry ?? data?.notInReview[0];
   // Base menu, the "saved" banner after a change and the group waiting for its recompute.
   const [baseMenu, setBaseMenu] = useState<{ group: ReviewGroup; rect: DOMRect } | null>(null);
@@ -126,7 +167,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
               open={!collapsed.has(g.entry.key)}
               onToggle={() => toggle(g.entry.key)}
               selected={current}
-              onSelect={setSelected}
+              onSelect={(f) => select(f)}
               pending={pendingKey === g.entry.key}
               onBase={(rect) => setBaseMenu({ group: g, rect })}
             />
@@ -160,12 +201,24 @@ export function Review({ target, backLabel, focusKey }: Props) {
                 <span className={styles.muted}>{compareLabel(mode, group.entry)}</span>
                 <span className={styles.grow} />
                 <span className={styles.muted}>Side by side · read-only</span>
+                <span className={styles.barDivider} />
+                <ChangeNav
+                  nav={nav}
+                  prevFile={files[fileIndex - 1]}
+                  nextFile={files[fileIndex + 1]}
+                  onStep={step}
+                />
               </div>
               <DiffView
                 repoId={group.entry.repoId}
                 worktreePath={group.entry.worktreePath}
                 change={change}
                 mode={mode}
+                fileKey={`${currentId}\u0000${mode}`}
+                land={land.id === currentId ? land.where : 'first'}
+                onNav={setNav}
+                onStep={(dir) => stepRef.current(dir)}
+                navRef={diffNav}
               />
             </>
           ) : (
@@ -190,6 +243,70 @@ export function Review({ target, backLabel, focusKey }: Props) {
         />
       )}
     </div>
+  );
+}
+
+function fileId(entryKey: string, path: string): string {
+  return `${entryKey}\u0000${path}`;
+}
+
+const fileName = (id: string | undefined) => (id ? basename(id.split('\u0000')[1]) : '');
+
+/** "Change 2 of 3" and ↑ ↓; past a file's first/last change they continue into the neighbour. */
+function ChangeNav({
+  nav,
+  prevFile,
+  nextFile,
+  onStep,
+}: {
+  nav: NavInfo;
+  prevFile: string | undefined;
+  nextFile: string | undefined;
+  onStep: (dir: 1 | -1) => void;
+}) {
+  const i = nav.index ?? 0;
+  const atFirst = nav.count === 0 || i === 0;
+  const atLast = nav.count === 0 || i >= nav.count - 1;
+  const prevTitle = atFirst
+    ? prevFile
+      ? `Previous file: ${fileName(prevFile)} (⌥↑)`
+      : 'First change'
+    : 'Previous change (⌥↑)';
+  const nextTitle = atLast
+    ? nextFile
+      ? `Next file: ${fileName(nextFile)} (⌥↓)`
+      : 'Last change'
+    : 'Next change (⌥↓)';
+  const cls = (cross: boolean) => (cross ? `${styles.navButton} ${styles.navCross}` : styles.navButton);
+  return (
+    <>
+      <span aria-live="polite" className={styles.navLabel}>
+        {nav.count === 0 ? 'No line changes' : `Change ${i + 1} of ${nav.count}`}
+        {nav.count > 0 && atLast && nextFile && <span className={styles.muted}> · next file {fileName(nextFile)}</span>}
+      </span>
+      <div role="group" aria-label="Jump between changes" className={styles.navGroup}>
+        <button
+          type="button"
+          aria-label="Previous change"
+          title={prevTitle}
+          className={cls(atFirst && !!prevFile)}
+          disabled={atFirst && !prevFile}
+          onClick={() => onStep(-1)}
+        >
+          <ChevronUpIcon size={14} />
+        </button>
+        <button
+          type="button"
+          aria-label="Next change"
+          title={nextTitle}
+          className={cls(atLast && !!nextFile)}
+          disabled={atLast && !nextFile}
+          onClick={() => onStep(1)}
+        >
+          <ChevronDownIcon size={14} />
+        </button>
+      </div>
+    </>
   );
 }
 

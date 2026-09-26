@@ -328,13 +328,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 18px;
+  padding: 5px 10px 5px 18px;
   background: var(--bg-sunken);
   border-bottom: 1px solid var(--border);
 }
 
 .filePath {
   min-width: 0;
+  flex-shrink: 1;
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-strong);
@@ -414,5 +415,60 @@
 }
 
 .repoLink:hover {
+  color: var(--accent-hover);
+}
+
+/* Jump between changes (flow D4) */
+.barDivider {
+  width: 1px;
+  height: 16px;
+  margin: 0 2px;
+  flex-shrink: 0;
+  background: var(--border);
+}
+
+.navLabel {
+  font-size: 12px;
+  color: var(--text-body);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.navGroup {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+.navButton {
+  width: 26px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.navButton:not(:disabled):hover {
+  background: var(--bg-hover);
+}
+
+.navButton:disabled {
+  color: #4a4843;
+  cursor: default;
+}
+
+.navCross,
+.navCross:not(:disabled):hover {
+  background: rgba(79, 143, 163, 0.18);
   color: var(--accent-hover);
 }

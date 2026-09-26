@@ -539,7 +539,7 @@ diff.find_similar(Some(&mut find))?;
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | üst satır 18–33, nav 35–46, "Projects" başlığı 48–58, liste 60–75, footer 79–90 (repo satırı + "+" butonu 80–86), satır ve footer stilleri 100–121 |
 | Branches | `Main.dc.html` | header 22–44 (All / Not in a project seçici 32–36), kolon başlığı 48–50, repo bandı 54–59, satır 61–73 (Projects hücresi 71), satır ve Projects hücresi stilleri 211–252, filtre mantığı 275–285 ve 303–310, boş durum 81–91, B1 popover 93–106, B2 form 108–124, Projects menüsü 126–142, toast 144–150, selection bar 151–164, sürükle-bırak overlay 167–174, sheet 176–200 ve 312–327 |
-| Review | `Diff.dc.html` | header 20–45, banner 47–49 ve 427–431, dosya listesi 52–102 ve 283–303, sağ taraf 104–151, base menüsü 154–174, segmented 311–318, diff satırları 377–391, commit satırları 392–397 |
+| Review | `Diff.dc.html` | header 20–45, banner 47–49 ve 474–478, dosya listesi 52–102 ve 288–313, sağ taraf 104–161, dosya çubuğu ve değişiklik atlama 127–142, base menüsü 164–184, segmented 322–329, atlama mantığı 387–414 ve 448–455, diff satırları ve mevcut change işareti 415–430, commit satırları 431–436 |
 | Project | `Projects.dc.html` | header 22–43, tablo 47–60 ve 172–183, "add related" kartı 62–68, boş proje 72–80, entry menüsü 82–93, proje menüsü 94–100, silme modalı 103–114, rename 150–170, pill'ler 124–133 |
 | Palette | `Palette.dc.html` | dialog 25–56, satır stili 70–76, pill'ler 62–69 |
 | Settings | `Settings.dc.html` | tamamı |
@@ -2105,12 +2105,15 @@ Her task'ta: **Bağımlı** (önce bitmesi gerekenler), **Dosyalar** (dokunulaca
      - ⌘N: New project (akış C), modal açık değilse her ekrandan (kullanıcı kararı 2026-09-26;
        T5 sırasında eklendi).
      - F2: Project ekranında rename (T5.5).
+     - ⌥↓ / ⌥↑: Review'da sonraki/önceki değişiklik, dosya sınırında komşu dosyaya (T9.1).
      - ⌘R: Project ekranında "Review changes" (proje review'unu açar); her yerde webview
        yenilemesini `preventDefault` ile engeller. Yenileme refresh butonunda ve focus'ta kalır
        (kullanıcı kararı 2026-09-26; T6 sırasında eklendi).
      - ⌘← / ⌘→ (metin alanı dışında) ve ⌘[ / ⌘] (fiziksel tuş; Türkçe Q klavyede ⌘ğ / ⌘ü):
        back/forward (kullanıcı kararı 2026-09-26).
      - Esc: en üstteki popover/menü/modal/palette'i kapatır, yoksa seçim/filtreyi temizler.
+     - ⌥↓ / ⌥↑: Review'da sonraki/önceki değişiklik, dosya sınırında sonraki/önceki dosya
+       (T9.1 ile eklendi).
   2. Varsayılan webview sağ tık menüsünü engelle (input, textarea ve `.monaco-editor` hariç).
   3. Tüm ikon butonlarda ekran dosyalarındaki `aria-label`'lar; popover/menü/modal'larda
      `role`'ler (`dialog`, `menu`, `menuitem`, `listbox`, `alertdialog`, `status`, `toolbar`).
@@ -2186,6 +2189,64 @@ Her task'ta: **Bağımlı** (önce bitmesi gerekenler), **Dosyalar** (dokunulaca
 - **Kullanıcıya göster:** HANDOFF §3'teki A–H akışlarının hepsi build edilmiş `.app` üzerinde; T8.4
   ölçümleri; T8.5 salt okunur denetimi; §2'deki açık soru varsayılanlarının listesi (kesinleştirmesi
   için).
+
+---
+
+### Faz 9 — Sonradan eklenenler
+
+#### T9.1 Review: değişiklikler arasında atlama (akış D4)
+- **Bağımlı:** T8.8
+- **Neden:** Büyük dosyalarda değişiklikleri kaydırarak bulmak zor (kullanıcı geri bildirimi
+  2026-09-26).
+- **Referans:** `Diff.dc.html` dosya çubuğu 127–142, atlama mantığı 387–414 ve 448–455, mevcut
+  değişiklik işareti 415 ve 418–430; canvas'ta `FlowD4` (`hunk="last"`). HANDOFF §2 Review
+  "Jump between changes".
+- **Dosyalar:** `src/monaco/DiffView.tsx`, `src/monaco/changeNav.ts` (yeni, saf mantık),
+  `src/screens/Review/*`, `src/styles/*`
+- **Adımlar:**
+  1. Değişiklik listesi: `diffEditor.onDidUpdateDiff` → `diffEditor.getLineChanges()`. Her
+     change bir hunk. Sadece silme olan change'te (`modifiedEndLineNumber === 0`) hedef satır
+     original editördeki `originalStartLineNumber`; diğerlerinde modified editördeki
+     `modifiedStartLineNumber`. Monaco'nun `goToDiff('next')`'ini kullanma: indeks vermiyor ve
+     dosya sınırında durmuyor.
+  2. `changeNav.ts` (saf, Vitest'li): `next(state)` / `prev(state)` → `{ kind: 'hunk', index }`
+     ya da `{ kind: 'file', key, land: 'first' | 'last' }` ya da `null`. Dosya sırası = sol
+     listedeki düz sıra (grup sırası, sonra dosya sırası; katlı gruplar dahil).
+  3. Atlama: satırı ilgili editörde görünür alanın üst üçte birine getir:
+     `setScrollTop(getTopForLineNumber(line) - getLayoutInfo().height / 3)` (diff editörde iki
+     taraf senkron kayar); imleci o satıra koy. `hideUnchangedRegions` açık kalır; değişiklikler zaten gizlenmez.
+  4. Mevcut change işareti: iki editörde de change satırlarına `deltaDecorations` ile
+     `isWholeLine: true`, `className: 'gg-current-change'` →
+     `box-shadow: inset 3px 0 0 #7fb3c4`. Silme/ekleme tarafında satır yoksa (karşı taraf
+     dolgusu) sadece var olan tarafı işaretle.
+  5. Dosya geçişi: `{ kind: 'file' }` → store'da seçili dosyayı değiştir, grubu katlıysa aç,
+     `pendingLand` sakla; yeni diff'in `onDidUpdateDiff`'inde ilk ya da son change'e atla.
+     Kullanıcı dosyayı listeden seçerse `pendingLand = 'first'`.
+  6. Elle kaydırma: `onDidScrollChange`'te (programatik atlama sırasında değil) mevcut indeks =
+     bitişi görünür alanın ilk satırına eşit ya da sonra olan ilk change; yoksa sonuncu. Sayaç
+     buna göre güncellenir.
+  7. Dosya çubuğu (sağ uç, "Side by side · read-only"den sonra ayırıcı): sayaç
+     `Change {i} of {n}` (`aria-live="polite"`, tabular rakamlar). Son change'te ve sonraki dosya
+     varsa ` · next file {ad}` muted ek. ↑ ↓ butonları referanstaki grup kutusu içinde;
+     `aria-label` "Previous change" / "Next change"; tooltip'ler: normalde
+     "Next change (⌥↓)", dosya sınırında "Next file: {ad} (⌥↓)", listenin sonunda
+     "Last change" (buton pasif). Dosya sınırındaki buton accent tonunda
+     (`rgba(79,143,163,0.18)` zemin, `#a3cad6` ikon).
+  8. Değişiklik yoksa (binary, tooLarge, satır farkı olmayan rename): sayaç "No line changes",
+     ↑ ↓ doğrudan önceki/sonraki dosyaya gider.
+  9. Kısayollar: Review ekranında ⌥↓ / ⌥↑. Monaco odaktayken de çalışsın diye iki editöre
+     `addCommand(KeyMod.Alt | KeyCode.DownArrow / UpArrow, …)` ekle (read-only olduğu için satır
+     taşıma çakışması yok). T8.3'teki kısayol listesine ekle.
+- **Kabul:** Fixture'da 1500+ satırlık, 10+ hunk'lı bir dosyada (yoksa T0.7 script'ine
+  `web-app` `session-token-refresh` altına ekle ve fixture'ları yeniden kur) ↓ ile her hunk
+  sırayla üst üçte bire geliyor, sayaç doğru; son hunk'ta ↓ sonraki dosyanın ilk hunk'ına,
+  ilk hunk'ta ↑ önceki dosyanın son hunk'ına gidiyor; katlı grup açılıyor; elle kaydırınca
+  sayaç güncelleniyor; Uncommitted ve All modlarında da çalışıyor. `changeNav.ts` için Vitest.
+
+#### T9.2 ✋ Kontrol noktası — Faz 9
+- **Bağımlı:** T9.1
+- **Kullanıcıya göster:** büyük dosyada ↑ ↓ ve ⌥↑ / ⌥↓, dosya sınırında geçiş, katlı gruba
+  geçiş. Onay bekle.
 
 ---
 
@@ -2308,3 +2369,8 @@ Durum: `[ ]` yapılacak · `[x]` bitti (sonuna ` — YYYY-MM-DD` ekle). Yarım k
   - not: ilk açılışta macOS ~/Desktop izni istedi; onaylanana kadar ilk tarama bekledi (233 sn), sonra 3–4 ms.
 - [x] T8.8 ✋ Son kontrol noktası — 2026-09-26
   - not: kullanıcı "her şey düzgün" dedi; §2 açık soru varsayılanları olduğu gibi kaldı.
+
+### Faz 9 — Sonradan eklenenler
+- [x] T9.1 Review: değişiklikler arasında atlama (akış D4)
+  - not: kod, `changeNav` testleri ve fixture'daki 1600 satırlık `src/catalog/items.ts` (14 değişiklik) hazır; ekranda kontrol kullanıcıda.
+- [x] T9.2 ✋ Kontrol noktası — Faz 9

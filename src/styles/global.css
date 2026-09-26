@@ -97,3 +97,8 @@ a:hover {
   background-image: repeating-linear-gradient(135deg, #1c1b18 0 4px, #141311 4px 8px) !important;
   background-size: auto !important;
 }
+
+/* The current change of the diff (flow D4): an accent bar on its left edge in both panes. */
+.monaco-editor .gg-current-change {
+  box-shadow: inset 3px 0 0 #7fb3c4;
+}

@@ -124,11 +124,21 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 
-<div style="display: flex; align-items: center; gap: 10px; padding: 9px 18px; border-bottom: 1px solid #302e2a; background: #1a1917">
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #faf9f5">{{filePath}}</span>
-<span style="font-size: 12px; color: #a09d96">{{compare}}</span>
+<div style="display: flex; align-items: center; gap: 10px; padding: 5px 10px 5px 18px; border-bottom: 1px solid #302e2a; background: #1a1917">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #faf9f5; white-space: nowrap">{{filePath}}</span>
+<span style="font-size: 12px; color: #a09d96; white-space: nowrap">{{compare}}</span>
 <div style="flex-grow: 1"></div>
-<span style="font-size: 12px; color: #a09d96">Side by side · read-only</span>
+<span style="font-size: 12px; color: #a09d96; white-space: nowrap">Side by side · read-only</span>
+<span style="width: 1px; height: 16px; background: #302e2a; margin: 0 2px"></span>
+<span aria-live="polite" style="font-size: 12px; color: #d8d4cc; white-space: nowrap; font-variant-numeric: tabular-nums">{{navLabel}}<span style="color: #a09d96">{{navNext}}</span></span>
+<div role="group" aria-label="Jump between changes" style="display: flex; gap: 2px; padding: 2px; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px">
+<button onClick="{{prevChange}}" disabled="{{prevDisabled}}" aria-label="Previous change" title="{{prevTitle}}" style="{{prevStyle}}">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"></path></svg>
+</button>
+<button onClick="{{nextChange}}" disabled="{{nextDisabled}}" aria-label="Next change" title="{{nextTitle}}" style="{{nextStyle}}">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+</button>
+</div>
 </div>
 
 <sc-if value="{{hasSample}}" hint-placeholder-val="{{true}}">
@@ -174,9 +184,9 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null }; }
+  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null }; }
   renderVals() {
     var self = this;
     var scope = this.props.scope ?? 'project';
@@ -295,7 +305,7 @@ class Component extends DCLogic {
           if (on) { selGroup = g; selFile = f; }
           return {
             kind: f[0], name: f[1], dir: (f[2] || '.'), add: f[3], del: f[4],
-            pick: function () { self.setState({ file: key }); },
+            pick: function () { self.setState({ file: key, hunk: 0 }); },
             kindStyle: 'width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; font-weight: 500; ' + kinds[f[0]],
             rowStyle: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px 0 28px; border: 0; border-radius: 8px; cursor: pointer; ' + (on ? 'background: #2a2825' : 'background: transparent')
           };
@@ -312,7 +322,7 @@ class Component extends DCLogic {
     var modes = ['Committed', 'Uncommitted', 'All'].map(function (m) {
       return {
         label: m, count: String(counts[m]),
-        pick: function () { self.setState({ mode: m, file: null }); },
+        pick: function () { self.setState({ mode: m, file: null, hunk: null }); },
         style: btn + (m === mode ? 'background: #383631; color: #faf9f5' : 'background: transparent; color: #a09d96')
       };
     });
@@ -374,9 +384,38 @@ class Component extends DCLogic {
     } else if (sel !== 'web:src/auth/refresh.ts' && sel !== 'rl:src/middleware/rate-limit.ts') {
       rows = S[sel] || null;
     }
+    var hunkOf = [], nH = 0, prevCh = false;
+    (rows || []).forEach(function (r, i) {
+      var ch = !!r[4] && r[4] !== 'fold';
+      if (ch && !prevCh) nH++;
+      hunkOf[i] = ch ? nH - 1 : -1;
+      prevCh = ch;
+    });
+    if (!rows) nH = 1;
+    var hIdx = this.state.hunk;
+    if (hIdx == null) hIdx = this.props.hunk === 'last' ? nH - 1 : 0;
+    if (hIdx < 0 || hIdx >= nH) hIdx = nH - 1;
+    var si = allKeys.indexOf(sel);
+    var nextKey = allKeys[si + 1], prevKey = allKeys[si - 1];
+    var atLast = hIdx === nH - 1, atFirst = hIdx === 0;
+    var shortName = function (k) { return k.split('/').pop(); };
+    var openGroupOf = function (k) { var c = Object.assign({}, collapsed); c[k.split(':')[0]] = false; return c; };
+    var nextChange = function () {
+      if (!atLast) self.setState({ hunk: hIdx + 1 });
+      else if (nextKey) self.setState({ file: nextKey, hunk: 0, collapsed: openGroupOf(nextKey) });
+    };
+    var prevChange = function () {
+      if (!atFirst) self.setState({ hunk: hIdx - 1 });
+      else if (prevKey) self.setState({ file: prevKey, hunk: -1, collapsed: openGroupOf(prevKey) });
+    };
+    var navBtn = function (off, cross) {
+      return 'width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; cursor: pointer; ' +
+        (off ? 'background: transparent; color: #4a4843; cursor: default' : cross ? 'background: rgba(79,143,163,0.18); color: #a3cad6' : 'background: transparent; color: #d8d4cc');
+    };
+    var cur = 'box-shadow: inset 3px 0 0 #7fb3c4; ';
     var base0 = 'display: flex; padding-right: 12px; color: #e0ddd6; ';
     var hatch = 'background: repeating-linear-gradient(135deg, #1c1b18 0 4px, #141311 4px 8px)';
-    var lines = (rows || []).map(function (r) {
+    var lines = (rows || []).map(function (r, i) {
       var k = r[4];
       if (k === 'fold') {
         var fs = 'display: flex; padding-left: 58px; color: #75726b; background: #1a1917; font-size: 11px';
@@ -385,8 +424,8 @@ class Component extends DCLogic {
       return {
         ln: r[0], lt: r[1], rn: r[2], rt: r[3],
         lMark: k === 'mod' || k === 'del' ? '−' : '', rMark: k === 'mod' || k === 'add' ? '+' : '',
-        lStyle: base0 + (k === 'add' ? hatch : k ? 'background: rgba(198,69,69,0.17)' : ''),
-        rStyle: base0 + (k === 'del' ? hatch : k ? 'background: rgba(93,184,114,0.15)' : '')
+        lStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'add' ? hatch : k ? 'background: rgba(198,69,69,0.17)' : ''),
+        rStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'del' ? hatch : k ? 'background: rgba(93,184,114,0.15)' : '')
       };
     });
     var cm = (selGroup.commits || []).concat(selGroup.parent || []).map(function (c) {
@@ -406,6 +445,14 @@ class Component extends DCLogic {
       backHref: project ? 'Projects.dc.html' : 'Main.dc.html',
       backLabel: project ? 'Back to project' : 'Back to Branches',
       modes: modes, groups: groups, lines: lines,
+      navLabel: 'Change ' + (hIdx + 1) + ' of ' + nH,
+      navNext: atLast && nextKey ? ' · next file ' + shortName(nextKey) : '',
+      prevChange: prevChange, nextChange: nextChange,
+      prevDisabled: atFirst && !prevKey, nextDisabled: atLast && !nextKey,
+      prevTitle: atFirst ? (prevKey ? 'Previous file: ' + shortName(prevKey) + ' (⌥↑)' : 'First change') : 'Previous change (⌥↑)',
+      nextTitle: atLast ? (nextKey ? 'Next file: ' + shortName(nextKey) + ' (⌥↓)' : 'Last change') : 'Next change (⌥↓)',
+      prevStyle: navBtn(atFirst && !prevKey, atFirst && !!prevKey),
+      nextStyle: navBtn(atLast && !nextKey, atLast && !!nextKey),
       hasSample: !!rows, noSample: !rows,
       entry: {
         repo: selGroup.repo, branch: selGroup.branch,

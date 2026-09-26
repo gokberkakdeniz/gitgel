@@ -63,6 +63,8 @@ make_web_app() {
   put "$seed" src/auth/token.ts 'export function readToken() { return ""; }'
   put "$seed" src/api/client.ts 'export const baseUrl = "/api";'
   put "$seed" package.json '{ "name": "web-app", "version": "1.0.0" }'
+  # A long file for jumping between changes (flow D4).
+  put "$seed" src/catalog/items.ts "$(seq 1 1600 | awk '{ printf "export const item%d = %d;\n", $1, $1 }')"
   commit "$seed" 30 "Initial app"
   git -C "$seed" push -q "$remote" main
   rm -rf "$seed"
@@ -102,6 +104,13 @@ make_web_app() {
   commit "$repo" 2 "Rename token.ts to tokens.ts"
   put "$repo" test/auth/refresh.test.ts 'test("refresh", () => {});'
   commit "$repo" 1 "Test refresh"
+  # 12 separate edits, a deletion and an insertion across the long file: 14 changes.
+  put "$repo" src/catalog/items.ts "$(seq 1 1600 | awk '
+    $1 >= 700 && $1 <= 702 { next }
+    $1 % 125 == 0 { printf "export const item%d = %d; // repriced\n", $1, $1 * 2; next }
+    { printf "export const item%d = %d;\n", $1, $1 }
+    $1 == 1400 { print "export const itemExtra = 0;" }')"
+  commit "$repo" 1 "Reprice the catalog"
   git -C "$repo" switch -q main
   git -C "$repo" worktree add -q "$ROOT/wt/token-refresh" session-token-refresh
   put "$ROOT/wt/token-refresh" src/auth/refresh.ts 'export function refresh() { return getSession(); }'

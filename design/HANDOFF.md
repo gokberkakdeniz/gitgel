@@ -139,11 +139,12 @@ Layout:
   - Commit list for that entry. Commits that belong to another branch are shown at 60% opacity with a warning pill naming the branch.
   - File header: path + compare label ("merge-base ↔ branch", "HEAD ↔ working tree", "merge-base ↔ working tree").
   - Side-by-side Monaco diff.
+  - **Jump between changes** (right end of the file header, after "Side by side · read-only"): a counter "Change 2 of 3" and a ↑ ↓ button pair. The current change has a 3px accent bar (`#7fb3c4`) on its left edge in both panes; jumping scrolls it into view (top third). At the last change of a file, ↓ switches to the accent tint, its tooltip becomes "Next file: refresh.ts", the counter adds "· next file refresh.ts", and pressing it opens the next file in list order (expanding a collapsed group) at its first change. ↑ at the first change does the same backwards and lands on the previous file's last change. Disabled only at the very first / last change of the whole list. Picking a file lands on its first change. Shortcuts ⌥↓ / ⌥↑, also while the diff has focus.
 - **Uncommitted mode:** the commit list is hidden and a warning-tinted banner says which working trees are shown. No refresh-interval text anywhere.
 - **Base menu** (from a group's base button): filter input; **Suggested** (branch containing some of the listed commits, with the reason); **Default** (main, "current · from origin/HEAD"); **Other branches**.
 - After a base change, a neutral banner says the base was saved for that branch.
 
-Props drawn: `scope`, `mode`, `focus` (web/api; api collapses the first group), `stacked`, `base`, `baseMenu`.
+Props drawn: `scope`, `mode`, `focus` (web/api; api collapses the first group), `stacked`, `base`, `baseMenu`, `hunk` (first/last: which change is current when the screen opens).
 
 ### Project (`Projects.dc.html`)
 
@@ -204,6 +205,7 @@ Props drawn: `variant` full/one/empty, `menu`, `projectMenu`, `rename` none/edit
   1. Project → "Review changes" opens project review (Committed).
   2. Uncommitted applies to the whole project.
   3. A Branches row opens single-branch review.
+  4. Jump between changes with ↑ ↓ (⌥↑ / ⌥↓); past the last change of a file it continues into the next file (`FlowD4`).
 - **E · Stacked branch.**
   1. With base main, the entry shows another branch's commits, dimmed and labelled, plus the warning note.
   2. The group's base button opens the base menu with a suggestion.

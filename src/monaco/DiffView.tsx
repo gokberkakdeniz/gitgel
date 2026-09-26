@@ -1,10 +1,11 @@
 import { DiffEditor } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { readFilePair } from '../lib/ipc';
 import type { DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
 import styles from './DiffView.module.css';
+import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
 import { languageForPath } from './language';
 import { monacoReady } from './setup';
 
@@ -25,19 +26,41 @@ const OPTIONS: monaco.editor.IDiffEditorConstructionOptions = {
   contextmenu: false,
 };
 
+/** The current change and how many there are. */
+export interface NavInfo {
+  index: number | null;
+  count: number;
+}
+
+export interface DiffNav {
+  goTo: (index: number) => void;
+}
+
 interface Props {
   repoId: string;
   worktreePath: string | null;
   change: FileChange;
   mode: DiffMode;
+  /** Identifies the file on screen; when it changes the view lands on a change. */
+  fileKey: string;
+  /** Where to land in a newly shown file (the last change when coming back from the next file). */
+  land: 'first' | 'last';
+  onNav: (info: NavInfo) => void;
+  /** ⌥↓ / ⌥↑ while the diff has focus. */
+  onStep: (dir: 1 | -1) => void;
+  navRef: MutableRefObject<DiffNav | null>;
 }
 
 /** Side-by-side diff of one file. The editor stays mounted; only its content changes. */
-export function DiffView({ repoId, worktreePath, change, mode }: Props) {
+export function DiffView({ repoId, worktreePath, change, mode, fileKey, land, onNav, onStep, navRef }: Props) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     void monacoReady.then(() => setReady(true));
   }, []);
+
+  // Latest props for Monaco callbacks registered once.
+  const latest = useRef({ onNav, onStep, land, fileKey });
+  latest.current = { onNav, onStep, land, fileKey };
 
   // The wrapper would dispose the models before the editor lets go of them, which Monaco
   // reports as an error. It keeps them instead; here the editor is detached first.
@@ -60,11 +83,80 @@ export function DiffView({ repoId, worktreePath, change, mode }: Props) {
 
   const changeKey = `${change.path}\u0000${change.oldOid}\u0000${change.newOid}`;
   const { data } = useInvoke(
-    () => readFilePair(repoId, worktreePath, change),
-    [repoId, worktreePath, changeKey, mode],
+    // Tagged with the file it belongs to: the previous file stays on screen while loading.
+    () => readFilePair(repoId, worktreePath, change).then((pair) => ({ ...pair, fileKey })),
+    [repoId, worktreePath, changeKey, mode, fileKey],
     // Blob contents never change; only a working-tree side needs refetching.
     { repoIds: change.newOid === null ? [repoId] : [] },
   );
+
+  // ---- Changes (hunks), the current one, jumping (flow D4) ----
+  const nav = useRef({
+    hunks: [] as Hunk[],
+    index: null as number | null,
+    /** The file the view last landed in; a different file on screen lands again. */
+    landedKey: null as string | null,
+    /** Scrolling done by a jump, not by the user. */
+    jumping: false,
+    shownKey: null as string | null,
+    decorations: [] as monaco.editor.IEditorDecorationsCollection[],
+  });
+
+  const report = () => latest.current.onNav({ index: nav.current.index, count: nav.current.hunks.length });
+
+  const mark = () => {
+    const m = mounted.current;
+    const n = nav.current;
+    if (!m || n.decorations.length < 2) return;
+    const h = n.index === null ? undefined : n.hunks[n.index];
+    const deco = (start: number, end: number) =>
+      end > 0 ? [{ range: new monaco.Range(start, 1, end, 1), options: { isWholeLine: true, className: 'gg-current-change' } }] : [];
+    n.decorations[0].set(h ? deco(h.originalStart, h.originalEnd) : []);
+    n.decorations[1].set(h ? deco(h.modifiedStart, h.modifiedEnd) : []);
+  };
+
+  const goTo = (index: number) => {
+    const m = mounted.current;
+    const n = nav.current;
+    const h = n.hunks[index];
+    if (!m || !h) return;
+    const target = hunkTarget(h);
+    const ed = target.side === 'original' ? m.editor.getOriginalEditor() : m.editor.getModifiedEditor();
+    n.jumping = true;
+    // Top third of the view; both sides scroll together.
+    ed.setScrollTop(Math.max(0, ed.getTopForLineNumber(target.line) - ed.getLayoutInfo().height / 3));
+    ed.setPosition({ lineNumber: target.line, column: 1 });
+    window.setTimeout(() => (n.jumping = false), 80);
+    n.index = index;
+    mark();
+    report();
+  };
+  navRef.current = { goTo };
+
+  const onDiffUpdated = () => {
+    const m = mounted.current;
+    const n = nav.current;
+    if (!m) return;
+    n.hunks = (m.editor.getLineChanges() ?? []).map((c) => ({
+      originalStart: c.originalStartLineNumber,
+      originalEnd: c.originalEndLineNumber,
+      modifiedStart: c.modifiedStartLineNumber,
+      modifiedEnd: c.modifiedEndLineNumber,
+    }));
+    const { fileKey: wanted, land: where } = latest.current;
+    if (n.shownKey === wanted && n.landedKey !== wanted) {
+      // A newly shown file: land on its first (or last) change.
+      n.landedKey = wanted;
+      n.index = null;
+      if (n.hunks.length > 0) goTo(where === 'last' ? n.hunks.length - 1 : 0);
+      else report();
+    } else {
+      // Same file, new content: keep the place.
+      if (n.index !== null) n.index = n.hunks.length ? Math.min(n.index, n.hunks.length - 1) : null;
+      mark();
+      report();
+    }
+  };
   const language = useMemo(() => languageForPath(change.path, monaco.languages.getLanguages()), [change.path]);
 
   const message = data?.binary
@@ -72,6 +164,21 @@ export function DiffView({ repoId, worktreePath, change, mode }: Props) {
     : data?.tooLarge
       ? 'File is too large to show (over 1 MB)'
       : null;
+
+  // Which file's content is on screen. Monaco reports no diff update when the text does not
+  // change (e.g. two binary files), so settle those here.
+  const shownText = useRef<{ original: string; modified: string } | null>(null);
+  useEffect(() => {
+    nav.current.shownKey = data?.fileKey ?? null;
+    const text = { original: message ? '' : (data?.original ?? ''), modified: message ? '' : (data?.modified ?? '') };
+    const same =
+      shownText.current?.original === text.original && shownText.current?.modified === text.modified;
+    shownText.current = text;
+    // Same text as before (another file with equal content, or both sides empty): the current
+    // line changes still hold, so land now.
+    if (data && same) onDiffUpdated();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   return (
     <div className={styles.view}>
@@ -88,6 +195,27 @@ export function DiffView({ repoId, worktreePath, change, mode }: Props) {
           onMount={(editor) => {
             const model = editor.getModel();
             mounted.current = { editor, models: model ? [model.original, model.modified] : [] };
+            const original = editor.getOriginalEditor();
+            const modified = editor.getModifiedEditor();
+            nav.current.decorations = [original.createDecorationsCollection(), modified.createDecorationsCollection()];
+            editor.onDidUpdateDiff(onDiffUpdated);
+            // Scrolling by hand moves "current" to the first change in view.
+            modified.onDidScrollChange(() => {
+              const n = nav.current;
+              if (n.jumping || n.hunks.length === 0) return;
+              const first = modified.getVisibleRanges()[0]?.startLineNumber ?? 1;
+              const index = hunkAtScroll(n.hunks, first);
+              if (index !== n.index) {
+                n.index = index;
+                mark();
+                report();
+              }
+            });
+            // Read-only, so ⌥↑/⌥↓ (move line) is free for jumping.
+            for (const ed of [original, modified]) {
+              ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.DownArrow, () => latest.current.onStep(1));
+              ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.UpArrow, () => latest.current.onStep(-1));
+            }
           }}
         />
       )}
