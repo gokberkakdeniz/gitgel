@@ -125,45 +125,20 @@ fn group(
 ) -> Result<ReviewGroup, AppError> {
     let shared = state.pool.get(Path::new(&repo_cfg.path))?;
     let repo = lock(&shared);
-    let (Some(tip), Some(base)) = (entry.head_sha.clone(), entry.base.clone()) else {
-        return Err(AppError::NotFound(format!(
-            "{} has no tip or base",
-            entry.key
-        )));
+    let Some(tip) = entry.head_sha.clone() else {
+        return Err(AppError::NotFound(format!("{} has no tip", entry.key)));
     };
-    let base_tip = refs::resolve_commit(&repo, &base)
-        .ok_or_else(|| AppError::NotFound(format!("base {base}")))?;
-    let stats = scan::committed_stats(&state.cache, &repo_cfg.id, &repo, &tip, &base_tip)?;
-    let merge_base = stats
-        .merge_base
-        .ok_or_else(|| AppError::NotFound("no common ancestor".into()))?;
-
-    let cached = lock(&state.cache).detail(&repo_cfg.id, &tip, &base_tip);
-    let detail = match cached {
-        Some(detail) => detail,
-        None => {
-            let default_tip =
-                refs::resolve_default_base(&repo, &config.settings.default_base_order)
-                    .and_then(|(name, _)| refs::resolve_commit(&repo, &name));
-            let stack = history::stack(
-                &repo,
-                entry.branch.as_deref(),
-                &tip,
-                &base_tip,
-                default_tip.as_deref(),
-            )?;
-            let mut commits = history::commits(&repo, &base_tip, &tip, COMMIT_LIMIT)?;
-            for c in &mut commits {
-                c.from_branch = stack.from_branch.get(&c.sha).cloned();
-            }
-            let detail = CommittedDetail {
-                files: diff::committed_changes(&repo, &merge_base, &tip)?,
-                commits,
-                suggested: stack.suggested,
-            };
-            lock(&state.cache).put_detail(&repo_cfg.id, &tip, &base_tip, detail.clone());
-            detail
-        }
+    // A base branch without an upstream has nothing to compare with: only its working tree.
+    let (merge_base, detail) = match entry.base.clone() {
+        Some(base) => committed_layer(state, config, repo_cfg, &repo, &entry, &tip, &base)?,
+        None => (
+            None,
+            CommittedDetail {
+                files: Vec::new(),
+                commits: Vec::new(),
+                suggested: Vec::new(),
+            },
+        ),
     };
 
     // The working-tree layers are read fresh every time; they are not cached.
@@ -171,10 +146,12 @@ fn group(
         Some(wt) => {
             let wt = Path::new(wt);
             let read = |wt_repo: &Repo| -> Result<_, AppError> {
-                Ok((
-                    diff::uncommitted(wt_repo)?,
-                    diff::workdir_changes(wt_repo, &merge_base)?,
-                ))
+                let uncommitted = diff::uncommitted(wt_repo)?;
+                let all = match &merge_base {
+                    Some(mb) => diff::workdir_changes(wt_repo, mb)?,
+                    None => uncommitted.clone(),
+                };
+                Ok((uncommitted, all))
             };
             if canonical(wt) == canonical(Path::new(&repo_cfg.path)) {
                 read(&repo)?
@@ -196,7 +173,7 @@ fn group(
 
     Ok(ReviewGroup {
         entry,
-        merge_base: Some(merge_base),
+        merge_base,
         files: FilesByMode {
             committed: detail.files,
             uncommitted,
@@ -209,4 +186,47 @@ fn group(
 
 fn canonical(path: &Path) -> std::path::PathBuf {
     path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
+}
+
+/// Merge-base and the committed files and commits of `tip` against `base`, cached by
+/// (repo, tip, base tip).
+fn committed_layer(
+    state: &AppState,
+    config: &Config,
+    repo_cfg: &RepoConfig,
+    repo: &Repo,
+    entry: &EntrySummary,
+    tip: &str,
+    base: &str,
+) -> Result<(Option<String>, CommittedDetail), AppError> {
+    let base_tip = refs::resolve_commit(repo, base)
+        .ok_or_else(|| AppError::NotFound(format!("base {base}")))?;
+    let stats = scan::committed_stats(&state.cache, &repo_cfg.id, repo, tip, &base_tip)?;
+    let merge_base = stats
+        .merge_base
+        .ok_or_else(|| AppError::NotFound("no common ancestor".into()))?;
+
+    if let Some(detail) = lock(&state.cache).detail(&repo_cfg.id, tip, &base_tip) {
+        return Ok((Some(merge_base), detail));
+    }
+    let default_tip = refs::resolve_default_base(repo, &config.settings.default_base_order)
+        .and_then(|(name, _)| refs::resolve_commit(repo, &name));
+    let stack = history::stack(
+        repo,
+        entry.branch.as_deref(),
+        tip,
+        &base_tip,
+        default_tip.as_deref(),
+    )?;
+    let mut commits = history::commits(repo, &base_tip, tip, COMMIT_LIMIT)?;
+    for c in &mut commits {
+        c.from_branch = stack.from_branch.get(&c.sha).cloned();
+    }
+    let detail = CommittedDetail {
+        files: diff::committed_changes(repo, &merge_base, tip)?,
+        commits,
+        suggested: stack.suggested,
+    };
+    lock(&state.cache).put_detail(&repo_cfg.id, tip, &base_tip, detail.clone());
+    Ok((Some(merge_base), detail))
 }

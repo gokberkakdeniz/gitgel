@@ -45,6 +45,22 @@ struct RepoCtx<'a> {
     main_path: PathBuf,
     config: &'a Config,
     default_base: Option<String>,
+    /// Local name of the default base (e.g. `master`). Its own base is its upstream.
+    base_branch: Option<String>,
+}
+
+impl RepoCtx<'_> {
+    /// The base an entry uses unless one was saved for it, and whether not having one is a
+    /// problem. The base branch is compared with its upstream (unpushed commits); without an
+    /// upstream it only shows uncommitted work.
+    fn fallback_base(&self, branch: Option<&str>) -> (Option<String>, bool) {
+        match branch {
+            Some(b) if Some(b) == self.base_branch.as_deref() => {
+                (refs::upstream_of(self.repo, b), false)
+            }
+            _ => (self.default_base.clone(), true),
+        }
+    }
 }
 
 /// Scans one repository. Never fails: problems end up in `status` / `error` or in the state of
@@ -140,6 +156,7 @@ fn fill(
         main_path: canonical(Path::new(&repo_cfg.path)),
         config,
         default_base,
+        base_branch: base_branch.clone(),
     };
     let horizon = i64::from(config.settings.active_days) * 86_400;
     let mut live_tips = HashSet::new();
@@ -147,6 +164,23 @@ fn fill(
     for branch in refs::local_branches(repo)? {
         live_tips.insert(branch.tip.clone());
         if Some(&branch.name) == base_branch.as_ref() {
+            // Listed only while it holds work: unpushed commits or uncommitted changes.
+            let worktree = checked_out
+                .get(branch.name.as_str())
+                .map(|p| p.to_path_buf());
+            let summary = summarize(
+                &ctx,
+                Some(branch.name.clone()),
+                worktree,
+                Some(branch.tip.clone()),
+                Some(branch.last_commit_at),
+            );
+            let has_work = summary.ahead.unwrap_or(0) > 0
+                || summary.uncommitted.unwrap_or(0) > 0
+                || summary.state == EntryState::GitError;
+            if has_work {
+                scan.active.push(summary);
+            }
             continue;
         }
         let worktree = checked_out
@@ -216,7 +250,8 @@ fn summarize(
     let key = entry_key(&ctx.repo_cfg.id, branch.as_deref(), worktree_str.as_deref());
     let custom = ctx.config.branch_bases.get(&key).cloned();
     let base_is_custom = custom.is_some();
-    let base = custom.or_else(|| ctx.default_base.clone());
+    let (fallback, base_required) = ctx.fallback_base(branch.as_deref());
+    let base = custom.or(fallback);
 
     let mut s = EntrySummary {
         key,
@@ -260,18 +295,20 @@ fn summarize(
         }
     }
 
+    // `Err(None)`: nothing to compare with, which is fine (base branch without upstream).
     let stats = match base
         .as_deref()
         .map(|b| (b, refs::resolve_commit(ctx.repo, b)))
     {
-        None => Err("no default base found".to_string()),
-        Some((b, None)) => Err(format!("base {b} not found")),
+        None if !base_required => Err(None),
+        None => Err(Some("no default base found".to_string())),
+        Some((b, None)) => Err(Some(format!("base {b} not found"))),
         Some((_, Some(base_tip))) => match cached_committed(ctx, &tip, &base_tip) {
-            Ok(stats) if stats.merge_base.is_none() => Err("no common ancestor".to_string()),
+            Ok(stats) if stats.merge_base.is_none() => Err(Some("no common ancestor".to_string())),
             Ok(stats) => Ok(stats),
             Err(e) => {
                 fail(&mut s, &mut flags, e);
-                Err(String::new())
+                Err(Some(String::new()))
             }
         },
     };
@@ -285,7 +322,7 @@ fn summarize(
             flags.merged =
                 (stats.ahead == 0 || stats.squash_merged) && s.uncommitted.unwrap_or(0) == 0;
         }
-        Err(reason) if !flags.git_error => {
+        Err(Some(reason)) if !flags.git_error => {
             flags.base_missing = true;
             s.error = Some(reason);
         }
@@ -460,6 +497,9 @@ fn summarize_locked(
         repo_name: repo_name(&repo_cfg.path),
         main_path: canonical(Path::new(&repo_cfg.path)),
         config,
+        base_branch: default_base
+            .as_deref()
+            .map(|b| refs::base_branch_name(repo, b)),
         default_base,
     };
     let mut s = summarize(&ctx, branch.map(str::to_string), worktree, tip, at);
@@ -552,7 +592,8 @@ pub fn pick_state(f: &StateFlags) -> EntryState {
 
 /// Re-reads the uncommitted state of the entries checked out at `worktree` in a stored scan.
 /// Committed stats come from the cache. `None`: no entry is checked out there; otherwise whether
-/// an entry's summary changed.
+/// an entry's summary changed. The base branch's worktree also gives `None`: whether it is
+/// listed at all depends on its state, so the caller rescans the repo.
 pub fn refresh_worktree(
     pool: &RepoPool,
     cache: &Mutex<Cache>,
@@ -570,6 +611,16 @@ pub fn refresh_worktree(
     }
     let shared = pool.get(Path::new(&scan.repo.path))?;
     let repo = lock(&shared);
+    let base_branch = scan
+        .default_base
+        .as_deref()
+        .map(|b| refs::base_branch_name(&repo, b));
+    let on_base_branch = scan.active.iter().any(|e| {
+        e.worktree_path.as_deref() == Some(&*wt) && e.branch.is_some() && e.branch == base_branch
+    });
+    if on_base_branch {
+        return Ok(None);
+    }
     let ctx = RepoCtx {
         pool,
         cache,
@@ -579,6 +630,7 @@ pub fn refresh_worktree(
         main_path: canonical(Path::new(&scan.repo.path)),
         config,
         default_base: scan.default_base.clone(),
+        base_branch,
     };
     let mut changed = false;
     let mut updated = scan.active.clone();
@@ -1057,6 +1109,59 @@ mod tests {
         assert_eq!(r.scan.status, RepoStatus::Error);
         assert!(r.scan.error.is_some());
         assert!(r.scan.active.is_empty());
+    }
+
+    #[test]
+    fn base_branch_is_listed_only_with_unpushed_or_uncommitted_work() {
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a.txt", Some(b"a\n"))], "init", 3);
+        t.checkout_main();
+        t.set_origin_head("main");
+        // Clean and pushed: not listed.
+        assert!(run(&t).scan.active.is_empty());
+
+        // Two unpushed commits.
+        t.commit_on("main", &[("b.txt", Some(b"b\n"))], "b", 2);
+        t.commit_on("main", &[("c.txt", Some(b"c\n"))], "c", 1);
+        t.checkout_main();
+        let scan = run(&t).scan;
+        let m = active(&scan, "main");
+        assert_eq!(m.base.as_deref(), Some("origin/main"));
+        assert_eq!(
+            (m.ahead, m.files, m.uncommitted),
+            (Some(2), Some(2), Some(0))
+        );
+        assert_eq!(m.state, EntryState::Ok);
+    }
+
+    #[test]
+    fn base_branch_without_upstream_shows_uncommitted_work() {
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a.txt", Some(b"a\n"))], "init", 3);
+        t.checkout_main();
+        assert!(run(&t).scan.active.is_empty());
+
+        t.write_file(t.path(), "a.txt", b"a\nchanged\n");
+        let (pool, cache, repo_cfg, config) = setup(&t);
+        let mut scan = scan_repo(
+            &pool,
+            &cache,
+            &repo_cfg,
+            &config,
+            chrono::Utc::now().timestamp(),
+        )
+        .scan;
+        let m = active(&scan, "main");
+        assert_eq!(
+            (m.base.as_deref(), m.ahead, m.uncommitted),
+            (None, None, Some(1))
+        );
+        assert_eq!(m.state, EntryState::Ok);
+        // Its worktree is not refreshed in place: the caller rescans the repo.
+        assert_eq!(
+            refresh_worktree(&pool, &cache, &config, &mut scan, t.path()).unwrap(),
+            None
+        );
     }
 
     #[test]

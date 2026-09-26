@@ -306,7 +306,7 @@ function FileGroup({
             className={e.baseIsCustom ? `${styles.baseButton} ${styles.baseCustom}` : styles.baseButton}
             onClick={(ev) => onBase(ev.currentTarget.getBoundingClientRect())}
           >
-            <span className={styles.muted}>base</span> {e.base}
+            <span className={styles.muted}>base</span> {e.base ?? 'none'}
             <ChevronDownIcon size={9} />
           </button>
         </div>
@@ -352,7 +352,8 @@ function EntryBar({ group: g, mode }: { group: ReviewGroup; mode: DiffMode }) {
   const e = g.entry;
   const name = e.branch ?? e.shortSha ?? '';
   const ahead = e.ahead ?? g.commits.length;
-  const workingTree = mode === 'uncommitted';
+  // Without a base (a base branch with no upstream) there is only the working tree.
+  const workingTree = mode === 'uncommitted' || !e.base;
   return (
     <div className={styles.entryBar}>
       <div className={styles.entryLine}>

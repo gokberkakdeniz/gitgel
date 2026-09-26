@@ -306,7 +306,17 @@ fn update_worktree(state: &AppState, repo_id: &str, worktree: &Path) {
                 Some(worktree.to_string_lossy().into_owned()),
             );
         }
-        Ok(None) => {}
+        // The base branch's worktree (listed only while it holds work): rescan the repo.
+        Ok(None) => {
+            if scan::rescan_repo(
+                state,
+                repo_id,
+                UpdateReason::Worktree,
+                Some(worktree.to_string_lossy().into_owned()),
+            ) {
+                sync_watches(state);
+            }
+        }
         Err(e) => log::warn!("refresh of {} failed: {e}", worktree.display()),
     }
 }

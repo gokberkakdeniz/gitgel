@@ -28,6 +28,24 @@ fn repo_of<'a>(config: &'a Config, repo_id: &str) -> Result<&'a RepoConfig, AppE
         .ok_or_else(|| AppError::NotFound(format!("repository {repo_id}")))
 }
 
+/// The base an entry falls back to: the repo's default base, except for the default base branch
+/// itself, which is compared with its upstream (unpushed commits).
+fn default_for(
+    repo: &crate::git::Repo,
+    repo_default: Option<(String, String)>,
+    branch: Option<&str>,
+) -> Option<(String, String)> {
+    let base_branch = repo_default
+        .as_ref()
+        .map(|(name, _)| refs::base_branch_name(repo, name));
+    match branch {
+        Some(b) if Some(b) == base_branch.as_deref() => {
+            refs::upstream_of(repo, b).map(|up| (up, "upstream".to_string()))
+        }
+        _ => repo_default,
+    }
+}
+
 /// Everything the base menu lists for one entry.
 pub fn base_options(state: &AppState, repo_id: &str, key: &str) -> Result<BaseOptions, AppError> {
     let config = config::snapshot(state);
@@ -45,8 +63,9 @@ pub fn base_options(state: &AppState, repo_id: &str, key: &str) -> Result<BaseOp
 
     let shared = state.pool.get(Path::new(&repo_cfg.path))?;
     let repo = lock(&shared);
-    let default = refs::resolve_default_base(&repo, &config.settings.default_base_order);
-    let default_tip = default
+    let repo_default = refs::resolve_default_base(&repo, &config.settings.default_base_order);
+    let default = default_for(&repo, repo_default.clone(), branch);
+    let default_tip = repo_default
         .as_ref()
         .and_then(|(name, _)| refs::resolve_commit(&repo, name));
     let base_tip = entry
@@ -82,13 +101,14 @@ pub fn set_branch_base(
     key: &str,
     base: Option<&str>,
 ) -> Result<Config, AppError> {
-    let (repo_id, _, _) = parse_key(key)?;
+    let (repo_id, branch, _) = parse_key(key)?;
     let snapshot = config::snapshot(state);
     let repo_cfg = repo_of(&snapshot, repo_id)?;
     let default = {
         let shared = state.pool.get(Path::new(&repo_cfg.path))?;
         let repo = lock(&shared);
-        refs::resolve_default_base(&repo, &snapshot.settings.default_base_order).map(|(n, _)| n)
+        let repo_default = refs::resolve_default_base(&repo, &snapshot.settings.default_base_order);
+        default_for(&repo, repo_default, branch).map(|(n, _)| n)
     };
     let config = config::update(state, |config| {
         match base.map(str::trim).filter(|b| !b.is_empty()) {

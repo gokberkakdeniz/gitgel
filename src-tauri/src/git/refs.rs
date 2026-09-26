@@ -37,6 +37,22 @@ pub fn resolve_commit(repo: &Repository, rev: &str) -> Option<String> {
         .ok()
 }
 
+/// The remote branch `branch` is compared with to find unpushed commits: its configured
+/// upstream (e.g. `origin/master`), or else `origin/<branch>` when that exists.
+pub fn upstream_of(repo: &Repository, branch: &str) -> Option<String> {
+    if let Ok(local) = repo.find_branch(branch, BranchType::Local) {
+        if let Ok(upstream) = local.upstream() {
+            if let Ok(Some(name)) = upstream.name() {
+                return Some(name.to_string());
+            }
+        }
+    }
+    let fallback = format!("origin/{branch}");
+    repo.find_reference(&format!("refs/remotes/{fallback}"))
+        .is_ok()
+        .then_some(fallback)
+}
+
 /// Tag names, sorted.
 pub fn tags(repo: &Repository) -> Result<Vec<String>, AppError> {
     let mut tags: Vec<String> = repo
@@ -124,6 +140,21 @@ mod tests {
         assert!(branches[0].last_commit_at > branches[1].last_commit_at);
         assert_eq!(resolve_commit(&t.repo, "feat/x~1"), Some(a.to_string()));
         assert_eq!(resolve_commit(&t.repo, "nope"), None);
+    }
+
+    #[test]
+    fn upstream_is_the_tracked_branch_or_origin_of_the_same_name() {
+        let t = TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        assert_eq!(upstream_of(&t.repo, "main"), None);
+        t.set_origin_head("main");
+        assert_eq!(upstream_of(&t.repo, "main").as_deref(), Some("origin/main"));
+        t.branch_from("feature", tip);
+        t.set_upstream("feature", "origin/main");
+        assert_eq!(
+            upstream_of(&t.repo, "feature").as_deref(),
+            Some("origin/main")
+        );
     }
 
     #[test]

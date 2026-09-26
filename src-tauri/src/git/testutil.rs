@@ -144,6 +144,21 @@ impl TestRepo {
         self.repo.set_head(&format!("refs/heads/{branch}")).unwrap();
     }
 
+    /// Makes `branch` track the remote-tracking branch `upstream` (e.g. `origin/main`).
+    pub fn set_upstream(&self, branch: &str, upstream: &str) {
+        // libgit2 needs the remote to exist in the config.
+        if self.repo.find_remote("origin").is_err() {
+            self.repo
+                .remote("origin", "https://example.invalid/repo.git")
+                .unwrap();
+        }
+        self.repo
+            .find_branch(branch, BranchType::Local)
+            .unwrap()
+            .set_upstream(Some(upstream))
+            .unwrap();
+    }
+
     /// Fills the main working directory from HEAD.
     pub fn checkout_main(&self) {
         self.repo

@@ -1163,7 +1163,11 @@ Her task'ta: **Bağımlı** (önce bitmesi gerekenler), **Dosyalar** (dokunulaca
      - `branch → worktreePath` haritası kur.
      - Her branch için etkin base: `config.branchBases[entryKey] ?? defaultBase`.
      - Aday listesi:
-       - Adı `defaultBase`'in kısa adıyla (`origin/` öneki atılmış) aynı olan branch hariç.
+       - Adı `defaultBase`'in kısa adıyla (`origin/` öneki atılmış) aynı olan branch (base
+         branch) kendi upstream'ine göre karşılaştırılır (yapılandırılmış upstream, yoksa
+         `origin/<ad>`); sadece push edilmemiş commit'i ya da commit'lenmemiş değişikliği varsa
+         aktif listeye girer. Upstream yoksa sadece commit'lenmemiş katmanı gösterir, "base
+         missing" sayılmaz (kullanıcı kararı 2026-09-26).
        - Worktree'de checkout edilmiş her branch → aktif.
        - Değilse `now - lastCommitAt <= activeDays * 86400` ise özet çıkar (T2.3); `ahead > 0`
          ise aktif.
