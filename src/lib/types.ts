@@ -28,6 +28,7 @@ export interface Settings {
   activeDays: number;
   diffView: DiffLayout; // review layout, remembered
   ignoreWhitespace: boolean;
+  zoom: number; // View › Font Size, percent
 }
 export interface Config {
   version: 1;

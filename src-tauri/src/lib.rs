@@ -6,6 +6,7 @@ pub mod error;
 pub mod files;
 pub mod git;
 pub mod logs;
+pub mod menu;
 pub mod model;
 pub mod projects;
 pub mod repos;
@@ -15,10 +16,7 @@ pub mod state;
 pub mod timing;
 pub mod watch;
 
-use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, HELP_SUBMENU_ID};
-use tauri::{Emitter, Manager};
-
-const SETTINGS_ID: &str = "settings";
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -48,43 +46,15 @@ pub fn run() {
                 app.package_info().version,
                 git::libgit2_version()
             );
-            // The standard macOS menus, plus Gitgel › Settings… (⌘,) and Help › Show Logs in
-            // Finder.
-            let menu = Menu::default(app.handle())?;
-            // The first submenu is the app menu; Settings goes after "About Gitgel".
-            if let Some(app_menu) = menu.items()?.first().and_then(|k| k.as_submenu().cloned()) {
-                app_menu.insert(&PredefinedMenuItem::separator(app)?, 1)?;
-                app_menu.insert(
-                    &MenuItem::with_id(app, SETTINGS_ID, "Settings…", true, Some("CmdOrCtrl+,"))?,
-                    2,
-                )?;
-            }
-            if let Some(help) = menu
-                .get(HELP_SUBMENU_ID)
-                .and_then(|k| k.as_submenu().cloned())
-            {
-                help.append(&MenuItem::with_id(
-                    app,
-                    logs::SHOW_LOGS_ID,
-                    "Show Logs in Finder",
-                    true,
-                    None::<&str>,
-                )?)?;
-            }
-            app.set_menu(menu)?;
-            app.on_menu_event(|app, event| {
-                if event.id() == logs::SHOW_LOGS_ID {
-                    logs::show_logs(app);
-                } else if event.id() == SETTINGS_ID {
-                    let _ = app.emit("open-settings", ());
-                }
-            });
+            menu::install(app)?;
             let config_path = config::config_path(app.handle())?;
             let config = config::load(&config_path);
+            let zoom = config.settings.zoom;
             let state = state::AppState::new(app.handle().clone(), config, config_path);
             // Folders are watched after the first scan (`get_scan`).
             watch::start(&state);
             app.manage(state);
+            menu::apply_zoom(app.handle(), zoom);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

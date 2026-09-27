@@ -139,6 +139,7 @@ pub fn update_settings(state: &AppState, settings: Settings) -> Result<Config, A
     let config = config::update(state, |config| {
         let next = Settings {
             default_base_order: order,
+            zoom: crate::menu::clamp_zoom(settings.zoom),
             ..settings
         };
         // Only the base order and the threshold change what is listed.

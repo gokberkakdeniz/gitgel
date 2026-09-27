@@ -69,6 +69,8 @@ pub struct Settings {
     /// Review layout; configs from before it load as `split`.
     pub diff_view: DiffLayout,
     pub ignore_whitespace: bool,
+    /// View › Font Size: the window's zoom, in percent.
+    pub zoom: u32,
 }
 
 impl Default for Settings {
@@ -78,6 +80,7 @@ impl Default for Settings {
             active_days: 14,
             diff_view: DiffLayout::Split,
             ignore_whitespace: false,
+            zoom: 100,
         }
     }
 }

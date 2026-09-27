@@ -20,6 +20,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'Back', keys: ['⌘', '['], note: 'also ⌘←' },
       { label: 'Forward', keys: ['⌘', ']'], note: 'also ⌘→' },
       { label: 'Settings', keys: ['⌘', ','] },
+      { label: 'Font size', keys: ['⌘', '-', '/', '⌘', '.'], note: '⌘0 resets' },
       { label: 'Close menu or dialog', keys: ['esc'], note: 'or clear selection' },
     ],
   },
