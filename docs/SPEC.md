@@ -168,9 +168,12 @@ gitgel/
 
 ## 4. Visual system
 
-Dark only. Warm near-black neutrals, one cool accent. Tokens are CSS variables in
-`src/styles/tokens.css` (`bg.sidebar` → `--bg-sidebar`, `text.muted` → `--text-muted`, …) and
-the same hex values in `src/styles/tokens.ts` for Monaco.
+Two themes, dark and light (light is planned in T10.1), picked in Settings › Appearance (§5):
+System (default), Light or Dark. Warm neutrals, one cool accent. Tokens are CSS variables in
+`src/styles/tokens.css` (`bg.sidebar` → `--bg-sidebar`, `text.muted` → `--text-muted`, …): dark
+values on `:root`, light values on `:root[data-theme="light"]` (see "Light theme" below); the same
+values per theme in `src/styles/tokens.ts` for Monaco. The reference screens use the same tokens:
+each file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(--…)`.
 
 ### Colour tokens
 
@@ -181,6 +184,7 @@ the same hex values in `src/styles/tokens.ts` for Monaco.
 | `bg.sunken` | `#1a1917` | Inputs, sub-headers (file bar), modal footers, cards |
 | `bg.band` | `#1c1b18` | Repo band on Branches |
 | `bg.elevated` | `#211f1c` | Popovers, menus, modals, secondary buttons |
+| `bg.track` | `#211f1c` | Segmented-control track (same as `bg.elevated` in dark, grey in light) |
 | `bg.hover` | `#2a2825` | Hovered / selected rows in popovers and lists |
 | `bg.sidebarActive` | `#24221f` | Active sidebar item |
 | `bg.pressed` | `#383631` | Active segmented button, open menu trigger |
@@ -223,6 +227,63 @@ everything else `#e0ddd6`.
 18px square, radius 5, mono 10px/500: A `#8fcf9c` on green tint, M `#e8c071` on amber tint,
 R `#93b8ee` on `rgba(90,140,220,0.16)`, D `#ee9a90` on red tint, U (untracked) `#c5b2f2` on
 `rgba(160,130,230,0.16)`.
+
+### Light theme
+
+Same tokens, light values (`:root[data-theme="light"]`). The left side stays darker than the
+right: the sidebar and the review file list are the darkest surfaces, content the lightest,
+popovers and menus white. Everything not listed (traffic lights, fonts, sizes, radii, which token
+each component uses) is the same as dark.
+
+| Token | Dark | Light |
+|---|---|---|
+| `bg.sidebar` | `#0e0d0c` | `#f1efea` |
+| `bg.main` | `#141311` | `#fbfaf7` |
+| `bg.sunken` | `#1a1917` | `#f4f2ee` |
+| `bg.band` | `#1c1b18` | `#eeebe5` |
+| `bg.elevated` | `#211f1c` | `#ffffff` |
+| `bg.track` | `#211f1c` | `#e9e6e0` |
+| `bg.hover` | `#2a2825` | `#ebe8e1` |
+| `bg.sidebarActive` | `#24221f` | `#e4e0d8` |
+| `bg.pressed` | `#383631` | `#ffffff` (active segment, white on the grey track) |
+| `border` | `#302e2a` | `#e2ded6` |
+| `border.row` | `#262420` | `#ebe8e2` |
+| `border.strong` | `#383631` | `#d5d0c7` |
+| `text.strong` | `#faf9f5` | `#1d1c19` |
+| `text.code` | `#e0ddd6` | `#2b2925` |
+| `text.body` | `#d8d4cc` | `#3b3934` |
+| `text.muted` | `#a09d96` | `#6e6a62` |
+| `text.faint` | `#75726b` | `#99958c` |
+| `text.disabled` | `#5c5a55` | `#b7b2a9` (disabled Forward, unchecked checkbox border) |
+| `icon.disabled` | `#4a4843` | `#cbc6bd` (disabled ↑ ↓ step buttons) |
+| `accent` | `#4f8fa3` | `#3a7b8f` |
+| `accent.text` | `#7fb3c4` | `#2c6a7d` |
+| `accent.hover` | `#a3cad6` | `#1f5566` |
+| `on-accent` | `#141311` | `#ffffff` |
+| accent tints (`selected-bg`, chips, rings) | `rgba(79,143,163,a)` | `rgba(58,123,143,a)`, same alphas |
+| `success` | `#8fcf9c` on `rgba(93,184,114,0.14)` | `#2e7a45` on `rgba(46,140,78,0.14)` |
+| `warning` | `#e8c071` on `rgba(212,160,23,0.14)` | `#8a6212` on `rgba(196,146,20,0.14)` |
+| `danger` | `#ee9a90` on `rgba(198,69,69,0.16)` | `#b3463b` on `rgba(200,72,60,0.16)` |
+| `danger.fill` | `#c64545`, white text | same |
+| diff added / removed line | `rgba(93,184,114,0.15)` / `rgba(198,69,69,0.17)` | `rgba(46,140,78,0.15)` / `rgba(200,72,60,0.17)` |
+| diff filler | `#1c1b18` / `#141311` stripes | `repeating-linear-gradient(135deg, #eeebe5 0 4px, #fbfaf7 4px 8px)` |
+| folded region | `#1a1917` | `#f4f2ee` |
+| kind badges A / M / D | success / warning / danger text on their 0.15 / 0.15 / 0.18 tint | same rule, light values |
+| kind R | `#93b8ee` on `rgba(90,140,220,0.16)` | `#2f63a8` on `rgba(60,110,200,0.16)` |
+| kind U | `#c5b2f2` on `rgba(160,130,230,0.16)` | `#6a4fb5` on `rgba(140,100,220,0.16)` |
+| popover shadow | `0 16px 40px rgba(0,0,0,0.45)` | `0 16px 40px rgba(40,32,20,0.14)` |
+| modal shadow / scrim | `rgba(0,0,0,0.5)` | `rgba(30,26,20,0.28)` |
+| focus ring | `0 0 0 1px #4f8fa3, 0 0 0 3px rgba(79,143,163,0.25)` | `0 0 0 1px #3a7b8f, 0 0 0 3px rgba(58,123,143,0.25)` |
+
+Contrast on `bg.main`: `text.muted` 5.2:1, `accent.text` 5.8:1, white on `accent` 4.8:1.
+`text.faint` is only for line numbers and placeholders.
+
+Monaco `gitgel-light` (base `vs`), switched with `monaco.editor.setTheme`: background `#fbfaf7`,
+foreground `#2b2925`, line numbers `#99958c` (active `#6e6a62`), inserted line `#2e8c4e26`,
+removed line `#c8483c2b`, inserted text `#2e8c4e40`, removed text `#c8483c40`, diagonal fill
+`#eeebe5`, unchanged region `#f4f2ee` / `#99958c`, border `#e2ded6`, scrollbars `#d5d0c7`.
+Syntax: keyword `#2c6a7d`, string `#8a6212`, number `#6a4fb5`, type `#2f63a8`, comment `#99958c`
+italic, everything else `#2b2925`.
 
 ### Type
 
@@ -381,7 +442,11 @@ One screen for both scopes:
 
 Layout:
 
-- The sidebar is hidden while on Review and restored on leaving. **Header** (56px, `bg.main`,
+- The sidebar is hidden while on Review and restored on leaving. When the user shows it (the
+  header's show-sidebar button or the sidebar toggle), Review sits next to it
+  (`ReviewSidebar.dc.html`, board L2): the header drops the traffic-light space and the
+  show-sidebar button (both live in the sidebar's top row) and starts with Back at 16px padding;
+  the file list narrows to 280px; nothing else changes. **Header** (56px, `bg.main`,
   drag region): traffic-light space, show-sidebar button, Back (aria-label "Back to Branches" /
   "Back to project"), serif 18px title + 12px muted subtitle; right: segmented **Committed /
   Uncommitted / All**, each with its file count summed over all groups, and a refresh button.
@@ -562,6 +627,15 @@ Layout:
   - ✕ asks first only when projects use the repo: `Remove <name>?` · "Its N project entries are
     removed too. Nothing on disk is touched." · Cancel / danger "Remove". Removing drops the repo,
     its branch bases and its project entries.
+- **Appearance** (T10.1; right column, above Behaviour, serif 18px heading): a radiogroup
+  "Theme" of three tiles, gap 16 — **System** (default), **Light**, **Dark**. Tile: 120 × 72
+  mini-window preview (radius 9, clipped): a 32px sidebar strip with traffic lights and three
+  lines, content with a title bar, three lines and an accent chip, drawn in that theme's colours;
+  System is split diagonally (light top-left, dark bottom-right). 12px label under the tile.
+  Selected: `0 0 0 2px accent` ring and `text.strong` 500 label; others `0 0 0 1px border` and a
+  muted label. Arrow keys move the choice (radio semantics). Under the tiles, 12px muted: "System
+  follows the macOS appearance and switches with it." A choice applies at once and is saved
+  (`settings.appearance`).
 - **Behaviour:** serif 18px heading.
   - "Default base" ("Tried in order when a branch has no base set"): 230px mono input showing
     `origin/HEAD → main → master`. On blur/↵ it is split on `→`, `,` or `>`, trimmed, empties
@@ -730,6 +804,7 @@ export interface Settings {
   diffView: DiffLayout;          // default 'split'
   ignoreWhitespace: boolean;     // default false
   zoom: number;                  // View › Font Size, percent; default 100
+  appearance: 'system' | 'light' | 'dark'; // Settings › Appearance; default 'system' (T10.1)
 }
 export interface Config {
   version: 1;
@@ -1127,17 +1202,19 @@ No polling. The backend watches the file system, recomputes what changed and pus
 
 | Screen | File | Key lines |
 |---|---|---|
-| Sidebar | `Sidebar.dc.html` | top row 18–33, nav 35–46, "Projects" header 48–58, list 60–75, footer 79–90 (repo row + "+" 80–86), row and footer styles 100–121 |
-| Branches | `Main.dc.html` | header 22–44 (scope selector 32–36), columns 48–50, repo band 54–59, row 61–73 (Projects cell 71), row and cell styles 211–252, filter logic 275–285 and 303–310, empty state 81–91, picker 93–106, new-project form 108–124, projects menu 126–142, toast 144–150, selection bar 151–164, drop overlay 167–174, sheet 176–200 and 312–327 |
-| Review | `Diff.dc.html` | header 20–45, banners 47–49 and 650–654, file list 52–109 and 372–409 (commit chip 68–75), entry bar and commits 112–141 (commit stepping 120–127, list 129–140), file bar 143–190 (whitespace chip 146–148, view button and menu 150–179, change navigation 180–189), split body 192–205, unified body 206–212, base menu 219–239, commit selection 348–361, segmented 410–417, view values 616–625, commit values 628–638 |
+| Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
+| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52, repo band 56–61, row 63–75 (Projects cell 73), row and cell styles 213–254, filter logic 277–287 and 305–312, empty state 83–93, picker 95–108, new-project form 110–126, projects menu 128–144, toast 146–152, selection bar 153–166, drop overlay 169–176, sheet 178–202 and 314–329 |
+| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 657–661, file list 56–113 and 376–413 (commit chip 72–79), entry bar and commits 116–145 (commit stepping 124–131, list 133–144), file bar 147–194 (whitespace chip 150–152, view button and menu 154–183, change navigation 184–193), split body 196–209, unified body 210–216, base menu 223–243, commit selection 352–365, segmented 414–421, view values 623–632, commit values 635–645, theme and `embedded` values 607–608 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 172–183, "add related" card 62–68, empty project 72–80, entry menu 82–93, project menu 94–100, delete modal 103–114, rename 150–170, pills 124–133 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
-| Settings | `Settings.dc.html` | Repositories 28–46, Behaviour 49–59, Keyboard shortcuts 62–84, shortcut data and keycap style 94–130 |
+| Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 152–179), Behaviour 71–81, Keyboard shortcuts 84–106, shortcut data and keycap style 116–152 |
+| Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
+| Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
-Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:25`; back / forward
-`:28`, `:31`; plus `:38` (small, footer `:85`); branch `:43` (large `Main.dc.html:79`); search
-`:52`; sort/filter `:55`; folder `:81` (folder-plus `Main.dc.html:147`); gear `:88`; refresh
-`Main.dc.html:30`; chevron down `Main.dc.html:134`; close `Main.dc.html:138`; more
+Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27`; back / forward
+`:30`, `:33`; plus `:40` (small, footer `:87`); branch `:45` (large `Main.dc.html:81`); search
+`:54`; sort/filter `:57`; folder `:83` (folder-plus `Main.dc.html:149`); gear `:90`; refresh
+`Main.dc.html:32`; chevron down `Main.dc.html:136`; close `Main.dc.html:140`; more
 `Projects.dc.html:39`. Split / unified / check icons come from `Diff.dc.html`'s view menu.
 
 ---
@@ -1333,6 +1410,56 @@ only the tracker line (with a short note if useful).
 - [x] T9.5 ✋ Checkpoint — T9.3–T9.4
 - [x] T9.6 Review: one commit's changes (flow D7) — 2026-09-27
 - [x] T9.7 ✋ Checkpoint — T9.6
+
+### Phase 10 — Light theme
+- [ ] T10.1 Light theme and Settings › Appearance
+- [ ] T10.2 ✋ Checkpoint — phase 10
+
+#### T10.1 Light theme and Settings › Appearance
+- **Depends on:** T9.7
+- **Why:** user request 2026-09-27: a light mode, and a System / Light / Dark setting.
+- **Reference:** §4 "Light theme"; §5 Settings (Appearance) and Review (sidebar shown);
+  `Settings.dc.html` 51–70 and 152–186; `ReviewSidebar.dc.html`; canvas page "Light mode"
+  (L1 Branches, L2 Review with the sidebar shown, L3 Settings).
+- **Files:** `src/styles/tokens.css`, `src/styles/tokens.ts`, `src/monaco/theme.ts`,
+  `src/lib/theme.ts` (new), `src/lib/types.ts`, `src-tauri/src/config.rs` (Settings),
+  `src-tauri/capabilities/*`, `index.html`, `src/App.tsx`, `src/screens/Settings/*`,
+  `src/screens/Review/*`, the CSS modules that still hold hex colours.
+- **Steps:**
+  1. Config: `settings.appearance: 'system' | 'light' | 'dark'`, `#[serde(default)]` →
+     `"system"`; saved with `update_settings`.
+  2. `tokens.css`: dark stays on `:root`; add `--bg-track` (dark `#211f1c`), `--text-disabled`,
+     `--icon-disabled`; add a `:root[data-theme="light"]` block with every §4 light value
+     (backgrounds, borders, text, accent and its tints, status, diff, kinds, shadows, scrim, focus
+     ring, `--selected-bg`). Replace the hex colours left in CSS modules (`grep -rn
+     '#[0-9a-fA-F]\{6\}' src` outside `styles/tokens*`) with tokens; segmented tracks use
+     `--bg-track`, rgba(0,0,0,…) shadows use the shadow tokens.
+  3. `tokens.ts`: `palettes = { dark, light }`. `theme.ts`: define `gitgel-dark` (today's
+     `gitgel`) and `gitgel-light` (§4) and export `applyMonacoTheme(theme)`.
+  4. `theme.ts` resolves the effective theme: the setting, or for System
+     `matchMedia('(prefers-color-scheme: dark)')` plus its change listener. Apply by setting
+     `document.documentElement.dataset.theme`, calling
+     `getCurrentWindow().setTheme(appearance === 'system' ? null : appearance)` (title bar,
+     traffic lights, menus and native dialogs follow; add the `core:window:allow-set-theme`
+     permission) and switching Monaco.
+  5. No flash on launch: cache the effective theme in `localStorage`; an inline script in
+     `index.html` sets `data-theme` and the body background from it before the bundle loads;
+     loading the config corrects it if needed.
+  6. Settings › Appearance exactly as §5 (tiles are plain elements, not images).
+  7. Review with the sidebar shown: no traffic-light space or show-sidebar button in the header,
+     Back at 16px, file list 280px (§5 Review).
+  8. Go through every screen and overlay in light — Projects, Palette, the add-repos sheet, modals,
+     toasts, popovers, drop overlay, empty states were only drawn in dark — and fix anything that
+     assumed a dark surface (light text on light, black shadows, hard-coded colours in SVGs).
+- **Acceptance:** System / Light / Dark switch the whole app at once, Monaco and the title bar
+  included; with System, changing the macOS appearance while the app is open switches it; the
+  choice survives a restart with no flash of the other theme; dark is pixel-identical to before
+  (compare screenshots); light matches boards L1–L3.
+
+#### T10.2 ✋ Checkpoint — phase 10
+- **Depends on:** T10.1
+- **Show the user:** every screen in light, the Appearance tiles, System following macOS, the
+  review with the sidebar shown. Wait for approval.
 
 ### Unplanned work (done on request, outside the task list)
 - [x] `pnpm release` script and ad-hoc signing — 2026-09-26

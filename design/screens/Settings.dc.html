@@ -11,66 +11,88 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
 <style>
 body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
-a{color:#7fb3c4;text-decoration:none}a:hover{color:#a3cad6}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
 button,input{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
 </style>
 </helmet>
-<div style="width: 1280px; height: 800px; display: flex; background: #141311; overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc">
-<dc-import name="Sidebar" active="settings" inbox-count="7" hint-size="260px,800px"></dc-import>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<dc-import name="Sidebar" theme="{{themeName}}" active="settings" inbox-count="7" hint-size="260px,800px"></dc-import>
 
 <main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; overflow: auto">
-<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; padding: 0 32px; border-bottom: 1px solid #302e2a">
-<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: #faf9f5">Settings</h1>
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; padding: 0 32px; border-bottom: 1px solid var(--border)">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: var(--text-strong)">Settings</h1>
 </header>
 
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; padding: 28px 32px; align-items: start">
 
 <section style="display: flex; flex-direction: column; gap: 12px">
-<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: #faf9f5">Repositories</h2>
-<div style="display: flex; flex-direction: column; background: #1a1917; border: 1px solid #302e2a; border-radius: 12px; overflow: hidden">
+<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Repositories</h2>
+<div style="display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 12px; overflow: hidden">
 <sc-for list="{{repos}}" as="r" hint-placeholder-count="4">
-<div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid #302e2a">
-<span style="font-weight: 500; color: #faf9f5; width: 96px; flex-shrink: 0">{{r.name}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a09d96; flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.path}}</span>
+<div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border)">
+<span style="font-weight: 500; color: var(--text-strong); width: 96px; flex-shrink: 0">{{r.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.path}}</span>
 <span style="{{r.noteStyle}}">{{r.note}}</span>
 <sc-if value="{{r.missing}}" hint-placeholder-val="{{false}}">
-<button style="height: 28px; padding: 0 12px; background: #2a2825; border: 1px solid #383631; border-radius: 8px; color: #faf9f5; font-size: 12px">Locate…</button>
+<button style="height: 28px; padding: 0 12px; background: var(--bg-hover); border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text-strong); font-size: 12px">Locate…</button>
 </sc-if>
-<button aria-label="Remove repository" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 8px; color: #a09d96">
+<button aria-label="Remove repository" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 8px; color: var(--text-muted)">
 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
 </button>
 </div>
 </sc-for>
-<button style="padding: 12px 14px; background: transparent; border: 0; color: #7fb3c4; font-size: 13px; font-weight: 500; text-align: left">+ Add repository…</button>
+<button style="padding: 12px 14px; background: transparent; border: 0; color: var(--accent-text); font-size: 13px; font-weight: 500; text-align: left">+ Add repository…</button>
 </div>
 </section>
 
 <div style="display: flex; flex-direction: column; gap: 32px">
+<section aria-labelledby="appearance-title" style="display: flex; flex-direction: column; gap: 14px">
+<h2 id="appearance-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Appearance</h2>
+<div role="radiogroup" aria-label="Theme" style="display: flex; gap: 16px">
+<sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
+<button role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; cursor: pointer; font-size: 12px">
+<span style="{{t.frameStyle}}">
+<sc-for list="{{t.layers}}" as="ly" hint-placeholder-count="1">
+<span style="{{ly.style}}">
+<sc-for list="{{ly.rects}}" as="rc" hint-placeholder-count="6">
+<span style="{{rc}}"></span>
+</sc-for>
+</span>
+</sc-for>
+</span>
+<span style="{{t.labelStyle}}">{{t.label}}</span>
+</button>
+</sc-for>
+</div>
+<span style="font-size: 12px; color: var(--text-muted)">System follows the macOS appearance and switches with it.</span>
+</section>
 <section style="display: flex; flex-direction: column; gap: 14px">
-<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: #faf9f5">Behaviour</h2>
+<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Behaviour</h2>
 <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: #faf9f5">Default base</span><span style="font-size: 12px; color: #a09d96">Tried in order when a branch has no base set</span></span>
-<input value="origin/HEAD → main → master" style="width: 230px; height: 36px; padding: 0 12px; background: #1a1917; border: 1px solid #302e2a; border-radius: 8px; color: #faf9f5; font-family: 'JetBrains Mono', monospace; font-size: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Default base</span><span style="font-size: 12px; color: var(--text-muted)">Tried in order when a branch has no base set</span></span>
+<input value="origin/HEAD → main → master" style="width: 230px; height: 36px; padding: 0 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px">
 </label>
 <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: #faf9f5">Active threshold</span><span style="font-size: 12px; color: #a09d96">Branches without a worktree are listed if committed within</span></span>
-<span style="display: flex; align-items: center; gap: 8px"><input value="14" style="width: 60px; height: 36px; padding: 0 10px; background: #1a1917; border: 1px solid #302e2a; border-radius: 8px; color: #faf9f5; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right"><span style="color: #a09d96">days</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Active threshold</span><span style="font-size: 12px; color: var(--text-muted)">Branches without a worktree are listed if committed within</span></span>
+<span style="display: flex; align-items: center; gap: 8px"><input value="14" style="width: 60px; height: 36px; padding: 0 10px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right"><span style="color: var(--text-muted)">days</span></span>
 </label>
 </section>
 </div>
 
 <section aria-labelledby="shortcuts-title" style="grid-column: 1 / -1; margin-top: 40px; display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; align-items: baseline; gap: 12px">
-<h2 id="shortcuts-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: #faf9f5">Keyboard shortcuts</h2>
-<span style="font-size: 12px; color: #a09d96">Not editable yet</span>
+<h2 id="shortcuts-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Keyboard shortcuts</h2>
+<span style="font-size: 12px; color: var(--text-muted)">Not editable yet</span>
 </div>
 <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
 <sc-for list="{{shortcutGroups}}" as="sg" hint-placeholder-count="4">
-<div style="display: flex; flex-direction: column; background: #1a1917; border: 1px solid #302e2a; border-radius: 12px; padding: 6px 0">
-<div style="padding: 8px 14px 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">{{sg.title}}</div>
+<div style="display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 12px; padding: 6px 0">
+<div style="padding: 8px 14px 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">{{sg.title}}</div>
 <sc-for list="{{sg.items}}" as="it" hint-placeholder-count="3">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; padding: 0 14px">
-<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0"><span style="color: #e0ddd6; white-space: nowrap">{{it.label}}</span><span style="{{it.noteStyle}}">{{it.note}}</span></span>
+<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0"><span style="color: var(--text-code); white-space: nowrap">{{it.label}}</span><span style="{{it.noteStyle}}">{{it.note}}</span></span>
 <span style="display: flex; align-items: center; gap: 4px; flex-shrink: 0">
 <sc-for list="{{it.keys}}" as="k" hint-placeholder-count="1">
 <kbd style="{{k.style}}">{{k.text}}</kbd>
@@ -87,17 +109,17 @@ button,input{font-family:inherit}
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"appearance":{"editor":"enum","options":["system","light","dark"],"default":"system"},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
-    var ok = 'font-size: 12px; color: #a09d96; white-space: nowrap';
-    var cap = 'min-width: 22px; height: 22px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; background: #211f1c; border: 1px solid #383631; border-bottom-width: 2px; border-radius: 6px; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: #faf9f5; white-space: nowrap';
-    var sep = 'font-size: 11px; color: #75726b; padding: 0 1px';
+    var ok = 'font-size: 12px; color: var(--text-muted); white-space: nowrap';
+    var cap = 'min-width: 22px; height: 22px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 6px; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--text-strong); white-space: nowrap';
+    var sep = 'font-size: 11px; color: var(--text-faint); padding: 0 1px';
     var keys = function (list) {
       return list.map(function (t) { return t === '/' ? { text: '/', style: sep } : { text: t, style: cap }; });
     };
     var item = function (label, list, note) {
-      return { label: label, keys: keys(list), note: note || '', noteStyle: note ? 'font-size: 11px; color: #75726b; white-space: nowrap' : 'display: none' };
+      return { label: label, keys: keys(list), note: note || '', noteStyle: note ? 'font-size: 11px; color: var(--text-faint); white-space: nowrap' : 'display: none' };
     };
     var shortcutGroups = [
       { title: 'General', items: [
@@ -128,13 +150,46 @@ class Component extends DCLogic {
         item('Cancel', ['esc'])
       ] }
     ];
+    var self = this;
+    var appearance = (this.state && this.state.appearance) || this.props.appearance || 'system';
+    var osTheme = this.props.theme || 'dark';
+    var theme = appearance === 'system' ? osTheme : appearance;
+    var P = {
+      light: { sb: '#f1efea', main: '#fbfaf7', line: '#dcd8d0', strong: '#8a857c', accent: '#3a7b8f', edge: '#e2ded6' },
+      dark: { sb: '#0e0d0c', main: '#141311', line: '#383631', strong: '#75726b', accent: '#4f8fa3', edge: '#262420' }
+    };
+    var box = function (x, y, w, h, c, r) { return 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; width: ' + w + 'px; height: ' + h + 'px; background: ' + c + '; border-radius: ' + (r || 2) + 'px'; };
+    var layer = function (k, clip) {
+      var p = P[k];
+      return {
+        style: 'position: absolute; inset: 0; background: ' + p.main + (clip ? '; clip-path: polygon(0 0, 100% 0, 0 100%)' : ''),
+        rects: [
+          box(0, 0, 32, 72, p.sb, 0), box(32, 0, 1, 72, p.edge, 0),
+          box(6, 6, 4, 4, '#ff5f57', 2), box(12, 6, 4, 4, '#febc2e', 2), box(18, 6, 4, 4, '#28c840', 2),
+          box(6, 20, 20, 3, p.line), box(6, 27, 15, 3, p.line), box(6, 34, 18, 3, p.line),
+          box(40, 9, 42, 5, p.strong), box(40, 22, 70, 3, p.line), box(40, 29, 58, 3, p.line), box(40, 36, 64, 3, p.line),
+          box(40, 50, 26, 9, p.accent, 3)
+        ]
+      };
+    };
+    var themes = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(function (t) {
+      var on = appearance === t[0];
+      return {
+        label: t[1], on: on,
+        pick: function () { self.setState({ appearance: t[0] }); },
+        layers: t[0] === 'system' ? [layer('dark'), layer('light', true)] : [layer(t[0])],
+        frameStyle: 'position: relative; display: block; width: 120px; height: 72px; border-radius: 9px; overflow: hidden; ' + (on ? 'box-shadow: 0 0 0 2px var(--accent)' : 'box-shadow: 0 0 0 1px var(--border)'),
+        labelStyle: on ? 'color: var(--text-strong); font-weight: 500' : 'color: var(--text-muted)'
+      };
+    });
     return {
+      themeClass: 'theme-' + theme, themeName: theme, themes: themes,
       shortcutGroups: shortcutGroups,
       repos: [
         { name: 'web-app', path: '~/code/web-app', note: 'base main', noteStyle: ok, missing: false },
         { name: 'api-server', path: '~/code/api-server', note: 'base main', noteStyle: ok, missing: false },
         { name: 'shared-ui', path: '~/code/shared-ui', note: 'base main', noteStyle: ok, missing: false },
-        { name: 'admin-panel', path: '~/old/admin-panel', note: 'path not found', noteStyle: 'font-size: 11px; font-weight: 500; white-space: nowrap; color: #ee9a90; background: rgba(198,69,69,0.16); border-radius: 9999px; padding: 3px 10px', missing: true }
+        { name: 'admin-panel', path: '~/old/admin-panel', note: 'path not found', noteStyle: 'font-size: 11px; font-weight: 500; white-space: nowrap; color: var(--danger); background: rgba(var(--danger-rgb), 0.16); border-radius: 9999px; padding: 3px 10px', missing: true }
       ]
     };
   }
