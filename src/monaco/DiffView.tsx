@@ -2,12 +2,14 @@ import { DiffEditor } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { readFilePair } from '../lib/ipc';
+import { useEffectiveTheme } from '../lib/theme';
 import type { DiffLayout, DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
 import styles from './DiffView.module.css';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
 import { languageForPath } from './language';
 import { monacoReady } from './setup';
+import { MONACO_THEMES } from './theme';
 
 const OPTIONS: monaco.editor.IDiffEditorConstructionOptions = {
   readOnly: true,
@@ -76,6 +78,7 @@ export function DiffView({
   onCommitStep,
 }: Props) {
   const [ready, setReady] = useState(false);
+  const effective = useEffectiveTheme();
   useEffect(() => {
     void monacoReady.then(() => setReady(true));
   }, []);
@@ -243,7 +246,7 @@ export function DiffView({
     <div className={styles.view}>
       {ready && (
         <DiffEditor
-          theme="gitgel"
+          theme={MONACO_THEMES[effective]}
           language={language}
           original={message ? '' : (data?.original ?? '')}
           modified={message ? '' : (data?.modified ?? '')}

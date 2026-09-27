@@ -6,6 +6,7 @@ import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { ToastHost } from './components/Toast';
 import { startDraftProject } from './lib/draft';
 import { startEventBridge } from './lib/events';
+import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from './lib/theme';
 import { useFolderDrop } from './lib/useFolderDrop';
 import { AddReposSheet } from './screens/AddRepos/AddReposSheet';
 import { Branches } from './screens/Branches/Branches';
@@ -14,6 +15,7 @@ import { Settings } from './screens/Settings/Settings';
 import { Project } from './screens/Project/Project';
 import { Review } from './screens/Review/Review';
 import { selectRoute, useNav, type Route } from './state/nav';
+import { useData } from './state/data';
 import { useUi } from './state/ui';
 
 export default function App() {
@@ -24,6 +26,15 @@ export default function App() {
   useEffect(() => {
     startEventBridge().catch((e) => console.error('event bridge failed', e));
   }, []);
+
+  // Appearance (Settings › Appearance): the config wins once loaded; System follows macOS.
+  const appearance = useData((s) => s.config?.settings.appearance);
+  useEffect(() => {
+    return watchSystemTheme(() => useData.getState().config?.settings.appearance ?? 'system');
+  }, []);
+  useEffect(() => {
+    applyTheme(resolveEffective(appearance ?? 'system', systemIsDark()), appearance ?? 'system');
+  }, [appearance]);
 
   // ⌘N: new project (flow C), from anywhere unless a modal is open. ⌘R never reloads the
   // webview; on the Project screen it opens the review. ⌘← / ⌘→ (and ⌘[ / ⌘]): back / forward.

@@ -268,6 +268,9 @@ export function Review({ target, backLabel, focusKey }: Props) {
   }, [data, focusKey, chosenMode]);
 
   const counts = (m: DiffMode) => groups.reduce((n, g) => n + g.files[m].length, 0);
+  // With the sidebar shown next to Review the header drops its traffic-light space and the
+  // file list narrows (ReviewSidebar.dc.html).
+  const sidebarShown = useUi((s) => s.sidebarVisible);
   const toggle = (key: string) =>
     setCollapsed((c) => {
       const next = new Set(c);
@@ -297,7 +300,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
       )}
 
       <div className={styles.body}>
-        <aside className={styles.files}>
+        <aside className={sidebarShown ? `${styles.files} ${styles.filesNarrow}` : styles.files}>
           {visible.map((g) => (
             <FileGroup
               key={g.entry.key}

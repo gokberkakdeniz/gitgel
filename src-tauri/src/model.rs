@@ -71,6 +71,8 @@ pub struct Settings {
     pub ignore_whitespace: bool,
     /// View › Font Size: the window's zoom, in percent.
     pub zoom: u32,
+    /// Settings › Appearance; configs from before it load as `system`.
+    pub appearance: Appearance,
 }
 
 impl Default for Settings {
@@ -81,8 +83,18 @@ impl Default for Settings {
             diff_view: DiffLayout::Split,
             ignore_whitespace: false,
             zoom: 100,
+            appearance: Appearance::System,
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Appearance {
+    #[default]
+    System,
+    Light,
+    Dark,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

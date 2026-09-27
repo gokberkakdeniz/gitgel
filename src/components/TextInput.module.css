@@ -26,5 +26,5 @@
 .invalid,
 .invalid:focus {
   border-color: var(--danger-text);
-  box-shadow: 0 0 0 1px var(--danger-text), 0 0 0 3px rgba(198, 69, 69, 0.25);
+  box-shadow: 0 0 0 1px var(--danger-text), 0 0 0 3px rgba(var(--danger-rgb), 0.25);
 }

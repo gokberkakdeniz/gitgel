@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gitgel</title>
     <script>
+      // No flash of the other theme: the effective theme is cached in localStorage
+      // (docs/SPEC.md §4 "Light theme"); apply it before the bundle loads.
+      try {
+        var t = localStorage.getItem('gitgel.effective-theme');
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = t;
+        // The <html> element exists already; paint it now so there is no white flash.
+        document.documentElement.style.background = t === 'dark' ? '#141311' : '#fbfaf7';
+      } catch (e) {
+        /* The bundle applies the theme once it loads. */
+      }
+    </script>
+    <script>
       // Monaco's automatic layout trips this harmless WebKit notice; keep it out of the console.
       window.addEventListener(
         'error',

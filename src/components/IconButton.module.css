@@ -41,6 +41,6 @@
 }
 
 .button:disabled {
-  color: #5c5a55;
+  color: var(--text-disabled);
   cursor: default;
 }

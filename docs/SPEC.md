@@ -134,7 +134,7 @@ gitgel/
 │  ├─ App.tsx                     # layout, route switch, global shortcuts, drop overlay
 │  ├─ styles/   tokens.css  tokens.ts  global.css
 │  ├─ lib/      types.ts  ipc.ts  events.ts  useInvoke.ts  format.ts  paths.ts  entryKey.ts
-│  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts
+│  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts
 │  ├─ state/    nav.ts  ui.ts  data.ts
 │  ├─ components/                 # Button, IconButton, Pill, Checkbox, TextInput, Kbd, Popover,
 │  │                              # Menu, Modal, Toast, Segmented, KindBadge, Banner, icons.tsx,
@@ -168,7 +168,7 @@ gitgel/
 
 ## 4. Visual system
 
-Two themes, dark and light (light is planned in T10.1), picked in Settings › Appearance (§5):
+Two themes, dark and light, picked in Settings › Appearance (§5):
 System (default), Light or Dark. Warm neutrals, one cool accent. Tokens are CSS variables in
 `src/styles/tokens.css` (`bg.sidebar` → `--bg-sidebar`, `text.muted` → `--text-muted`, …): dark
 values on `:root`, light values on `:root[data-theme="light"]` (see "Light theme" below); the same
@@ -1412,8 +1412,8 @@ only the tracker line (with a short note if useful).
 - [x] T9.7 ✋ Checkpoint — T9.6
 
 ### Phase 10 — Light theme
-- [ ] T10.1 Light theme and Settings › Appearance
-- [ ] T10.2 ✋ Checkpoint — phase 10
+- [x] T10.1 Light theme and Settings › Appearance — 2026-09-27
+- [x] T10.2 ✋ Checkpoint — phase 10 — 2026-09-27
 
 #### T10.1 Light theme and Settings › Appearance
 - **Depends on:** T9.7

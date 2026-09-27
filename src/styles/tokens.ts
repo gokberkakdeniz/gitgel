@@ -1,5 +1,6 @@
 // Same values as tokens.css, for code that cannot read CSS variables (the Monaco theme).
-export const colors = {
+// `colors` / `kindColors` are the dark palette (backwards compatibility); `palettes` holds both.
+export const darkColors = {
   bgSidebar: '#0e0d0c',
   bgMain: '#141311',
   bgSunken: '#1a1917',
@@ -40,13 +41,72 @@ export const colors = {
   diffFoldBg: '#1a1917',
 } as const;
 
-export const kindColors = {
+export const lightColors = {
+  bgSidebar: '#f1efea',
+  bgMain: '#fbfaf7',
+  bgSunken: '#f4f2ee',
+  bgBand: '#eeebe5',
+  bgElevated: '#ffffff',
+  bgHover: '#ebe8e1',
+  bgSidebarActive: '#e4e0d8',
+  bgPressed: '#ffffff',
+
+  border: '#e2ded6',
+  borderRow: '#ebe8e2',
+  borderStrong: '#d5d0c7',
+
+  textStrong: '#1d1c19',
+  textCode: '#2b2925',
+  textBody: '#3b3934',
+  textMuted: '#6e6a62',
+  textFaint: '#99958c',
+
+  accent: '#3a7b8f',
+  accentText: '#2c6a7d',
+  accentHover: '#1f5566',
+  onAccent: '#ffffff',
+  selectedBg: 'rgba(58,123,143,0.10)',
+
+  successText: '#2e7a45',
+  successBg: 'rgba(46,140,78,0.14)',
+  warningText: '#8a6212',
+  warningBg: 'rgba(196,146,20,0.14)',
+  dangerText: '#b3463b',
+  dangerBg: 'rgba(200,72,60,0.16)',
+  dangerFill: '#c64545',
+
+  diffAddBg: 'rgba(46,140,78,0.15)',
+  diffDelBg: 'rgba(200,72,60,0.17)',
+  diffAddMark: '#2e7a45',
+  diffDelMark: '#b3463b',
+  diffFoldBg: '#f4f2ee',
+} as const;
+
+export const palettes = { dark: darkColors, light: lightColors } as const;
+
+export type EffectiveTheme = 'dark' | 'light';
+
+export const colors = darkColors;
+
+export const darkKindColors = {
   A: { text: '#8fcf9c', bg: 'rgba(93,184,114,0.15)' },
   M: { text: '#e8c071', bg: 'rgba(212,160,23,0.15)' },
   R: { text: '#93b8ee', bg: 'rgba(90,140,220,0.16)' },
   D: { text: '#ee9a90', bg: 'rgba(198,69,69,0.18)' },
   U: { text: '#c5b2f2', bg: 'rgba(160,130,230,0.16)' },
 } as const;
+
+export const lightKindColors = {
+  A: { text: '#2e7a45', bg: 'rgba(46,140,78,0.15)' },
+  M: { text: '#8a6212', bg: 'rgba(196,146,20,0.15)' },
+  R: { text: '#2f63a8', bg: 'rgba(60,110,200,0.16)' },
+  D: { text: '#b3463b', bg: 'rgba(200,72,60,0.18)' },
+  U: { text: '#6a4fb5', bg: 'rgba(140,100,220,0.16)' },
+} as const;
+
+export const kindPalettes = { dark: darkKindColors, light: lightKindColors } as const;
+
+export const kindColors = darkKindColors;
 
 export const fonts = {
   ui: "'Instrument Sans', -apple-system, sans-serif",

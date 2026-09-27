@@ -9,7 +9,7 @@
 
 .warning {
   color: var(--warning-text);
-  background: rgba(212, 160, 23, 0.12);
+  background: rgba(var(--warning-rgb), 0.12);
 }
 
 .neutral {

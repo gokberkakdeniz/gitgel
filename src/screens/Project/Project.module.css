@@ -13,7 +13,7 @@
   background: var(--bg-sunken);
   border: 1px solid var(--accent);
   border-radius: var(--radius-control);
-  box-shadow: 0 0 0 3px rgba(79, 143, 163, 0.25);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25);
   outline: none;
   color: var(--text-strong);
   font-family: var(--font-serif);
@@ -24,7 +24,7 @@
 
 .renameConflict {
   border-color: var(--danger-text);
-  box-shadow: 0 0 0 3px rgba(198, 69, 69, 0.25);
+  box-shadow: 0 0 0 3px rgba(var(--danger-rgb), 0.25);
 }
 
 .danger {
@@ -52,7 +52,7 @@
 .optionsOpen,
 .optionsOpen:hover {
   background: var(--bg-pressed);
-  border-color: #4a4741;
+  border-color: var(--chip-open-border);
 }
 
 .addButton {

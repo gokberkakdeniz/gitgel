@@ -23,12 +23,14 @@ export interface ProjectConfig {
   entries: EntryConfig[];
 }
 export type DiffLayout = 'split' | 'unified';
+export type Appearance = 'system' | 'light' | 'dark';
 export interface Settings {
   defaultBaseOrder: string[];
   activeDays: number;
   diffView: DiffLayout; // review layout, remembered
   ignoreWhitespace: boolean;
   zoom: number; // View › Font Size, percent
+  appearance: Appearance; // Settings › Appearance
 }
 export interface Config {
   version: 1;

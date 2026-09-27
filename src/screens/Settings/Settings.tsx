@@ -11,6 +11,7 @@ import { basename, tildifyHome } from '../../lib/paths';
 import type { AppError, Config, RepoConfig } from '../../lib/types';
 import { useData } from '../../state/data';
 import styles from './Settings.module.css';
+import { Appearance } from './Appearance';
 import { parseBaseOrder, parseDays } from './parse';
 import { SHORTCUTS } from '../../lib/shortcuts';
 
@@ -23,6 +24,7 @@ export function Settings() {
       <div className={styles.grid}>
         <Repositories config={config} />
         <div className={styles.column}>
+          <Appearance config={config} />
           <Behaviour config={config} />
         </div>
         <Shortcuts />

@@ -95,6 +95,11 @@
   border-right: 1px solid var(--border);
 }
 
+/* With the sidebar shown next to Review the file list narrows (ReviewSidebar.dc.html). */
+.filesNarrow {
+  width: 280px;
+}
+
 .group {
   display: flex;
   flex-direction: column;
@@ -168,7 +173,7 @@
 
 .baseCustom {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(79, 143, 163, 0.25);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.25);
 }
 
 .groupLine2 {
@@ -374,7 +379,7 @@
   min-width: 0;
   margin: 2px 0 0 20px;
   padding: 3px 3px 3px 8px;
-  background: rgba(79, 143, 163, 0.14);
+  background: rgba(var(--accent-rgb), 0.14);
   border-radius: 7px;
 }
 
@@ -411,7 +416,7 @@
 }
 
 .chipClose:hover {
-  background: rgba(79, 143, 163, 0.2);
+  background: rgba(var(--accent-rgb), 0.2);
 }
 
 .stale {
@@ -494,7 +499,7 @@
   margin: 0 8px 6px 28px;
   padding: 7px 10px;
   border-radius: var(--radius-control);
-  background: rgba(212, 160, 23, 0.12);
+  background: rgba(var(--warning-rgb), 0.12);
   color: var(--warning-text);
   font-size: 12px;
   line-height: 1.4;
@@ -578,13 +583,13 @@
 }
 
 .navButton:disabled {
-  color: #4a4843;
+  color: var(--icon-disabled);
   cursor: default;
 }
 
 .navCross,
 .navCross:not(:disabled):hover {
-  background: rgba(79, 143, 163, 0.18);
+  background: rgba(var(--accent-rgb), 0.18);
   color: var(--accent-hover);
 }
 
@@ -593,7 +598,7 @@
   flex-shrink: 0;
   height: 20px;
   padding: 0 8px;
-  background: rgba(79, 143, 163, 0.16);
+  background: rgba(var(--accent-rgb), 0.16);
   border: 0;
   border-radius: var(--radius-pill);
   color: var(--accent-hover);
@@ -685,7 +690,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid #5c5a55;
+  border: 1.5px solid var(--text-disabled);
   border-radius: 4px;
   color: transparent;
 }

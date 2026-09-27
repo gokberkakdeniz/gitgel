@@ -94,11 +94,11 @@ a:hover {
 
 /* Monaco: the filler opposite added/removed lines (docs/SPEC.md §4 "Diff colours"). */
 .monaco-editor .diagonal-fill {
-  background-image: repeating-linear-gradient(135deg, #1c1b18 0 4px, #141311 4px 8px) !important;
+  background-image: var(--diff-filler) !important;
   background-size: auto !important;
 }
 
 /* The current change of the diff (flow D4): an accent bar on its left edge in both panes. */
 .monaco-editor .gg-current-change {
-  box-shadow: inset 3px 0 0 #7fb3c4;
+  box-shadow: inset 3px 0 0 var(--accent-text);
 }

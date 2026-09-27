@@ -3,7 +3,7 @@
   display: flex;
   gap: 2px;
   padding: 3px;
-  background: var(--bg-elevated);
+  background: var(--bg-track);
   border-radius: var(--radius-seg);
 }
 
