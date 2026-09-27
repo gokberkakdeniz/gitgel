@@ -4,7 +4,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::git::history::{CommittedStats, MergedState};
-use crate::model::{CommitInfo, FileChange, StackHint};
+use crate::model::{CommitChanges, CommitInfo, FileChange, StackHint};
 
 /// What a worktree's working tree holds, valid while its HEAD stays `head` and the watcher
 /// reports no change in it.
@@ -41,6 +41,8 @@ pub struct Cache {
     detail: HashMap<Key, CommittedDetail>,
     /// Per worktree folder (canonical).
     workdirs: HashMap<std::path::PathBuf, WorkdirState>,
+    /// Per (repo, commit): a commit never changes, so these are kept until the repo is removed.
+    commits: HashMap<(String, String), CommitChanges>,
 }
 
 fn key(repo_id: &str, tip: &str, base: &str) -> Key {
@@ -94,6 +96,17 @@ impl Cache {
         f(w);
     }
 
+    pub fn commit(&self, repo_id: &str, sha: &str) -> Option<CommitChanges> {
+        self.commits
+            .get(&(repo_id.to_string(), sha.to_string()))
+            .cloned()
+    }
+
+    pub fn put_commit(&mut self, repo_id: &str, changes: CommitChanges) {
+        self.commits
+            .insert((repo_id.to_string(), changes.sha.clone()), changes);
+    }
+
     /// Something in the worktree changed (file-watch event).
     pub fn invalidate_workdir(&mut self, path: &std::path::Path) {
         self.workdirs.remove(path);
@@ -122,6 +135,7 @@ impl Cache {
     /// Drops everything about a repo (removed from the config).
     pub fn forget_repo(&mut self, repo_id: &str) {
         self.prune(repo_id, &HashSet::new());
+        self.commits.retain(|k, _| k.0 != repo_id);
     }
 }
 

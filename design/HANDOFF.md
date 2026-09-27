@@ -137,6 +137,7 @@ Layout:
 - **Right side:**
   - Entry bar: repo, branch, range (`base..branch` or the working-tree path), "N commits ahead of base".
   - Commit list for that entry. Commits that belong to another branch are shown at 60% opacity with a warning pill naming the branch.
+  - **One commit at a time:** every commit row is clickable ("Show only this commit"). Clicking one scopes **that entry** to the commit's own changes, diffed against its first parent (root commit: against an empty tree). The row gets `#2a2825` and a 2px accent bar on the left; the entry bar shows `parent..sha`, "Commit 3 of 4" (numbered oldest = 1), a ↑ ↓ pair for newer / older commit (⌥⇧↑ / ⌥⇧↓) and a "Show all commits" button. In the left list the entry's group shows a chip under the branch line (short SHA + subject + ✕), and its files and +/− are the commit's. The compare label reads `parent ↔ sha`. Clicking the selected row again, the chip's ✕ or "Show all commits" returns to the whole branch. Other entries in the project are not affected; the Committed / Uncommitted / All counts stay whole-branch totals. Switching to Uncommitted clears the selection; in All the commit alone is shown. Change navigation, Split / Unified and Ignore whitespace work the same inside a commit (`FlowD7`).
   - File header: path + compare label ("merge-base ↔ branch", "HEAD ↔ working tree", "merge-base ↔ working tree").
   - Monaco diff, **Split** (side by side, default) or **Unified**.
   - **Diff view menu:** the "Split ▾" / "Unified ▾" button in the file header (replaces the old "Side by side · read-only" text) opens a menu: **Layout** Split / Unified (⌥V toggles) and a checkbox **Ignore whitespace** (⌥W). Every row uses the same columns: a 16px indicator on the left (check for the selected layout, checkbox for whitespace), the label, the shortcut right-aligned; no layout icons inside the menu, so labels and shortcuts line up, "Hide lines where only indentation or trailing spaces changed". Both settings are global: they apply to every diff and are remembered across restarts. While whitespace is ignored, a "Whitespace ignored" chip sits next to the compare label; clicking it turns the option off. Ignoring whitespace never hides a file from the list and does not change the list's +/− counts; it only changes which lines are marked and the change counter (3 → 2 in `FlowD6`).
@@ -146,7 +147,7 @@ Layout:
 - **Base menu** (from a group's base button): filter input; **Suggested** (branch containing some of the listed commits, with the reason); **Default** (main, "current · from origin/HEAD"); **Other branches**.
 - After a base change, a neutral banner says the base was saved for that branch.
 
-Props drawn: `scope`, `mode`, `focus` (web/api; api collapses the first group), `stacked`, `base`, `baseMenu`, `hunk` (first/last: which change is current when the screen opens), `view` (split/unified), `ignoreWs`, `viewMenu`.
+Props drawn: `scope`, `mode`, `focus` (web/api; api collapses the first group), `stacked`, `base`, `baseMenu`, `hunk` (first/last: which change is current when the screen opens), `view` (split/unified), `ignoreWs`, `viewMenu`, `commit` (a web-app SHA to open scoped to that commit).
 
 ### Project (`Projects.dc.html`)
 
@@ -211,6 +212,7 @@ Props drawn: `variant` full/one/empty, `menu`, `projectMenu`, `rename` none/edit
   4. Jump between changes with ↑ ↓ (⌥↑ / ⌥↓); past the last change of a file it continues into the next file (`FlowD4`).
   5. The view button opens Split / Unified and Ignore whitespace (`FlowD5`).
   6. Unified with whitespace ignored: the indentation-only line is no longer a change and the chip shows (`FlowD6`).
+  7. Clicking a commit shows only that commit's changes against its parent; ↑ ↓ step through commits (`FlowD7`).
 - **E · Stacked branch.**
   1. With base main, the entry shows another branch's commits, dimmed and labelled, plus the warning note.
   2. The group's base button opens the base menu with a suggestion.

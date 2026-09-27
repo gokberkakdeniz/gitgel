@@ -17,7 +17,8 @@ export const SHORTCUTS: ShortcutGroup[] = [
     title: 'General',
     items: [
       { label: 'New project', keys: ['⌘', 'N'] },
-      { label: 'Back / Forward', keys: ['⌘', '[', '/', '⌘', ']'], note: 'also ⌘← ⌘→' },
+      { label: 'Back', keys: ['⌘', '['], note: 'also ⌘←' },
+      { label: 'Forward', keys: ['⌘', ']'], note: 'also ⌘→' },
       { label: 'Settings', keys: ['⌘', ','] },
       { label: 'Close menu or dialog', keys: ['esc'], note: 'or clear selection' },
     ],
@@ -36,6 +37,8 @@ export const SHORTCUTS: ShortcutGroup[] = [
     items: [
       { label: 'Next change', keys: ['⌥', '↓'], note: 'then next file' },
       { label: 'Previous change', keys: ['⌥', '↑'] },
+      { label: 'Newer commit', keys: ['⌥', '⇧', '↑'] },
+      { label: 'Older commit', keys: ['⌥', '⇧', '↓'] },
       { label: 'Split / Unified', keys: ['⌥', 'V'] },
       { label: 'Ignore whitespace', keys: ['⌥', 'W'] },
     ],

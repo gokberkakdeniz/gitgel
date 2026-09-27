@@ -544,10 +544,10 @@ diff.find_similar(Some(&mut find))?;
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | üst satır 18–33, nav 35–46, "Projects" başlığı 48–58, liste 60–75, footer 79–90 (repo satırı + "+" butonu 80–86), satır ve footer stilleri 100–121 |
 | Branches | `Main.dc.html` | header 22–44 (All / Not in a project seçici 32–36), kolon başlığı 48–50, repo bandı 54–59, satır 61–73 (Projects hücresi 71), satır ve Projects hücresi stilleri 211–252, filtre mantığı 275–285 ve 303–310, boş durum 81–91, B1 popover 93–106, B2 form 108–124, Projects menüsü 126–142, toast 144–150, selection bar 151–164, sürükle-bırak overlay 167–174, sheet 176–200 ve 312–327 |
-| Review | `Diff.dc.html` | header 20–45, banner 47–49 ve 554–558, dosya listesi 52–102 ve 327–353, sağ taraf 104–200, dosya çubuğu 127–174 (whitespace çipi 130–132, görünüm butonu ve menü 134–163, değişiklik atlama 164–173), split gövde 176–189, unified gövde 190–196, base menüsü 203–223, segmented 361–367, görünüm/whitespace durumu 426–430, atlama mantığı 431–458 ve 517–524, split satırları ve mevcut change işareti 459–474, unified satırları 475–499, commit satırları 500–505, görünüm değerleri 526–535 |
+| Review | `Diff.dc.html` | header 20–45, banner 47–49 ve 650–654, dosya listesi 52–109 ve 372–409 (commit çipi 68–75), entry bar ve commit listesi 112–141 (commit adımları 120–127, liste 129–140), dosya çubuğu 143–190 (whitespace çipi 146–148, görünüm butonu ve menü 150–179, değişiklik atlama 180–189), split gövde 192–205, unified gövde 206–212, base menüsü 219–239, commit seçimi durumu 348–361, segmented 410–417, commit örnek diff'i 442–458, satır kaynağı 486–493, görünüm/whitespace durumu 495–499, atlama mantığı 500–527 ve 607–614, split satırları 528–543, unified satırları 544–568, commit mantığı 569–595, görünüm değerleri 616–625, commit değerleri 628–638 |
 | Project | `Projects.dc.html` | header 22–43, tablo 47–60 ve 172–183, "add related" kartı 62–68, boş proje 72–80, entry menüsü 82–93, proje menüsü 94–100, silme modalı 103–114, rename 150–170, pill'ler 124–133 |
 | Palette | `Palette.dc.html` | dialog 25–56, satır stili 70–76, pill'ler 62–69 |
-| Settings | `Settings.dc.html` | Repositories 28–46, Behaviour 49–59, Keyboard shortcuts 62–84, kısayol verisi ve keycap stili 94–128 |
+| Settings | `Settings.dc.html` | Repositories 28–46, Behaviour 49–59, Keyboard shortcuts 62–84, kısayol verisi ve keycap stili 94–130 |
 
 **İkonlar** (1.6–1.8 stroke outline SVG; `src/components/icons.tsx`'e birebir kopyala, emoji
 kullanma):
@@ -2121,6 +2121,9 @@ Her task'ta: **Bağımlı** (önce bitmesi gerekenler), **Dosyalar** (dokunulaca
        (T9.1 ile eklendi).
      - ⌥V / ⌥W: Review'da Split ↔ Unified ve Ignore whitespace; ⌘,: Settings (T9.3–T9.4 ile
        eklendi).
+     - ⌥⇧↑ / ⌥⇧↓: Review'da daha yeni / eski commit; seçim yokken ⌥⇧↓ en yeni commit'i seçer
+       (T9.6 ile eklendi).
+     - ⌥⇧↑ / ⌥⇧↓: Review'da daha yeni / eski commit (T9.6 ile eklendi).
   2. Varsayılan webview sağ tık menüsünü engelle (input, textarea ve `.monaco-editor` hariç).
   3. Tüm ikon butonlarda ekran dosyalarındaki `aria-label`'lar; popover/menü/modal'larda
      `role`'ler (`dialog`, `menu`, `menuitem`, `listbox`, `alertdialog`, `status`, `toolbar`).
@@ -2329,6 +2332,61 @@ Her task'ta: **Bağımlı** (önce bitmesi gerekenler), **Dosyalar** (dokunulaca
 - **Kullanıcıya göster:** Split ↔ Unified, Ignore whitespace (girintisi değişen satırla), çip,
   uygulama yeniden açılınca kalıcılık, Settings'teki kısayol listesi, ⌘,. Onay bekle.
 
+#### T9.6 Review: tek commit'in değişiklikleri (akış D7)
+- **Bağımlı:** T9.5
+- **Neden:** Çok commit'li branch'lerde commit commit review (kullanıcı isteği 2026-09-27).
+- **Referans:** `Diff.dc.html` sol listede commit çipi 68–75, entry bar'da commit adımları ve
+  "Show all commits" 120–127, tıklanabilir commit listesi 129–140, seçim durumu 348–353,
+  `listFor` 354–361, satır kaynağı 486–493, commit mantığı 569–595, değerler 628–638, compare
+  etiketi 640; canvas'ta `FlowD7` (`commit="4b7e2c9"`). HANDOFF §2 Review "One commit at a time".
+- **Dosyalar:** `src-tauri/src/git/diff.rs`, `src-tauri/src/review.rs` (ya da yeni
+  `commit_review.rs`), `src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`, `src/lib/types.ts`,
+  `src/lib/ipc.ts`, `src/screens/Review/*`, `src/state/*`
+- **Adımlar:**
+  1. Backend: `get_commit_changes(repoId, sha) -> CommitChanges { sha, parent: Option<String>,
+     files: Vec<FileChange> }`. Parent = ilk parent (`commit.parent_id(0)`); merge commit'te de
+     ilk parent. Root commit'te boş ağaca göre: `diff_tree_to_tree(None, Some(&tree), …)` —
+     `tree_diff`'e `from: Option<Oid>` alan bir varyant ekle. `find_renames` uygula. Commit
+     değişmez olduğu için sonucu `cache.rs`'te SHA ile sınırsız süre önbelleğe al. Yazma yok;
+     T1.2'deki yasaklar geçerli.
+  2. `read_file_pair` değişmeden kullanılır: `FileChange`'teki eski/yeni blob OID'leri commit
+     diff'inden gelir, `worktreePath` null.
+  3. Frontend durumu: Review store'unda `commitByEntry: Record<entryKey, sha>`; ekran içi geçici
+     durum, config'e yazılmaz, Review'dan çıkınca sıfırlanır. Mod Uncommitted'a geçince temizlenir.
+     `All` modunda commit seçiliyse sadece commit gösterilir.
+  4. Sol liste: seçili commit'i olan grubun dosyaları `get_commit_changes` sonucundan gelir
+     (yüklenirken grup eski listesini soluk gösterir, spinner yok). Branch satırının altında çip:
+     kısa SHA (mono 11px `#a3cad6`), subject (12px, ellipsis), ✕ butonu ("Show all commits").
+     Çip zemini `rgba(79,143,163,0.14)`, radius 7. Grup başlığındaki +/− commit'in toplamı.
+     Segmented sayıları (Committed/Uncommitted/All) değişmez, tüm branch toplamı kalır.
+  5. Commit listesi: her satır `button` (`role="option"`, `aria-selected`), tooltip "Show only this
+     commit". Seçili satır `#2a2825` zemin + `inset 2px 0 0 #7fb3c4`, subject 500 ağırlık. Seçili
+     satıra tekrar tıklamak seçimi kaldırır. Başka branch'ten gelen (stacked, soluk) commit'ler de
+     seçilebilir.
+  6. Entry bar: seçim varken `where` = `{parentShort}..{sha}`, sağda "Commit {n} of {N}" (en eski
+     = 1), ↑ (Newer) ↓ (Older) grup kutusu (T9.1'deki buton stili, uçta pasif) ve "Show all commits"
+     butonu (26px, accent metin, `#302e2a` çerçeve). Dosya çubuğundaki compare etiketi
+     `{parentShort} ↔ {sha}`.
+  7. Commit değişince ilk dosyası seçilir ve T9.1'in ilk değişikliğine atlanır; seçim kalkınca
+     bulunulan dosya (branch listesinde varsa) seçili kalır.
+  8. Kısayollar: ⌥⇧↑ / ⌥⇧↓ daha yeni / eski commit; seçim yokken ⌥⇧↓ en yeni commit'i seçer.
+     `e.code` ile yakala; Monaco'ya da `addCommand(KeyMod.Alt | KeyMod.Shift | KeyCode.UpArrow/…)`
+     (read-only'de satır kopyalama ile çakışmaz). `shortcuts.ts`'e "Newer commit" / "Older commit"
+     ekle (Settings'te Review kartında görünür).
+  9. Dosya izleme (T2.8) branch'in tip'ini değiştirirse: seçili commit hâlâ branch'in geçmişinde
+     ise kalır, değilse (rebase/amend) seçim sessizce kalkar.
+- **Kabul:** Fixture'da `session-token-refresh`'in 4 commit'i tek tek açılıyor; her birinde sadece
+  o commit'in dosyaları ve satırları var, rename commit'inde rename doğru; en eski commit'in
+  parent'ı `main`'deki commit; ↑ ↓ ve ⌥⇧↑ / ⌥⇧↓ çalışıyor; projedeki diğer entry etkilenmiyor;
+  Uncommitted'a geçip dönünce tüm branch görünüyor; bir merge commit'i (yoksa fixture'a ekle) ilk
+  parent'a göre gösteriliyor. `get_commit_changes` için rename, root commit ve merge commit
+  birim testleri.
+
+#### T9.7 ✋ Kontrol noktası — T9.6
+- **Bağımlı:** T9.6
+- **Kullanıcıya göster:** çok commit'li branch'te commit commit gezinme (tıklama, ↑ ↓, kısayollar),
+  çip ile çıkış, proje review'unda diğer entry'nin etkilenmediği. Onay bekle.
+
 ---
 
 ## 9. Test stratejisi (özet)
@@ -2458,3 +2516,6 @@ Durum: `[ ]` yapılacak · `[x]` bitti (sonuna ` — YYYY-MM-DD` ekle). Yarım k
 - [x] T9.3 Review: Split / Unified ve Ignore whitespace (akış D5–D6) — 2026-09-27 (fixture: web-app `session-token-refresh`'te `src/auth/config.ts` girinti + gerçek değişiklik, `src/auth/scopes.ts` sadece boşluk)
 - [x] T9.4 Settings: Keyboard shortcuts bölümü ve ⌘, — 2026-09-27 ("Select several rows" satırı yok: uygulamada ⌘/⇧ ile çoklu seçim desteklenmiyor; ⌘, uygulama menüsündeki "Settings…")
 - [x] T9.5 ✋ Kontrol noktası — T9.3–T9.4
+- [x] T9.6 Review: tek commit'in değişiklikleri (akış D7) — 2026-09-27
+  - not: `session-token-refresh` artık 5 commit (T9.3'ün "Reformat the auth config" commit'i). Merge commit fixture'ı: web-app `feat/search` ("Merge main into feat/search", ilk parent'a göre `client.ts` + `timeout.ts`). Settings'te Back ve Forward ayrı satır (güncel `Settings.dc.html`).
+- [x] T9.7 ✋ Kontrol noktası — T9.6

@@ -102,13 +102,13 @@ class Component extends DCLogic {
     var shortcutGroups = [
       { title: 'General', items: [
         item('New project', ['⌘', 'N']),
-        item('Back / Forward', ['⌘', '[', '/', '⌘', ']'], 'also ⌘← ⌘→'),
+        item('Back', ['⌘', '['], 'also ⌘←'),
+        item('Forward', ['⌘', ']'], 'also ⌘→'),
         item('Settings', ['⌘', ',']),
         item('Close menu or dialog', ['esc'], 'or clear selection')
       ] },
       { title: 'Branches and projects', items: [
         item('Focus filter', ['⌘', 'K'], 'Branches'),
-        item('Select several rows', ['⌘', '/', '⇧'], 'hold and click'),
         item('Add branches', ['⌘', 'K'], 'Project'),
         item('Review changes', ['⌘', 'R'], 'Project'),
         item('Rename project', ['F2'])
@@ -116,6 +116,8 @@ class Component extends DCLogic {
       { title: 'Review', items: [
         item('Next change', ['⌥', '↓'], 'then next file'),
         item('Previous change', ['⌥', '↑']),
+        item('Newer commit', ['⌥', '⇧', '↑']),
+        item('Older commit', ['⌥', '⇧', '↓']),
         item('Split / Unified', ['⌥', 'V']),
         item('Ignore whitespace', ['⌥', 'W'])
       ] },

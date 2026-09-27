@@ -6,8 +6,8 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
-    BaseOptions, Config, EntryRef, FileChange, FilePair, FolderCheck, ProjectConfig, ProjectView,
-    ReviewData, ReviewTarget, ScanResult, Settings,
+    BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, ProjectConfig,
+    ProjectView, ReviewData, ReviewTarget, ScanResult, Settings,
 };
 use crate::state::AppState;
 use crate::{base, files, projects, repos, review, scan, watch};
@@ -111,6 +111,18 @@ pub async fn get_review(
     target: ReviewTarget,
 ) -> Result<ReviewData, AppError> {
     blocking(&state, move |state| review::get_review(state, &target)).await
+}
+
+#[tauri::command]
+pub async fn get_commit_changes(
+    state: State<'_, AppState>,
+    repo_id: String,
+    sha: String,
+) -> Result<CommitChanges, AppError> {
+    blocking(&state, move |state| {
+        review::get_commit_changes(state, &repo_id, &sha)
+    })
+    .await
 }
 
 #[tauri::command]

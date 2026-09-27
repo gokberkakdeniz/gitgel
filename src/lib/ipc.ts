@@ -2,6 +2,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
   BaseOptions,
+  CommitChanges,
   Config,
   EntryRef,
   FileChange,
@@ -27,6 +28,9 @@ export const getScan = () => invoke<ScanResult>('get_scan');
 export const rescanAll = (force: boolean) => invoke<ScanResult>('rescan_all', { force });
 
 export const getReview = (target: ReviewTarget) => invoke<ReviewData>('get_review', { target });
+
+export const getCommitChanges = (repoId: string, sha: string) =>
+  invoke<CommitChanges>('get_commit_changes', { repoId, sha });
 
 export const readFilePair = (repoId: string, worktreePath: string | null, change: FileChange) =>
   invoke<FilePair>('read_file_pair', { repoId, worktreePath, change });

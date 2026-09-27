@@ -5,6 +5,7 @@ import {
   BackIcon,
   CheckIcon,
   ChevronDownIcon,
+  CloseIcon,
   ChevronUpIcon,
   RefreshIcon,
   SidebarIcon,
@@ -19,9 +20,11 @@ import { RefreshButton } from '../../components/RefreshButton';
 import { Segmented } from '../../components/Segmented';
 import { entryKey } from '../../lib/entryKey';
 import { formatAge } from '../../lib/format';
-import { getReview, updateSettings } from '../../lib/ipc';
+import { getCommitChanges, getReview, updateSettings } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
 import type {
+  CommitChanges,
+  CommitInfo,
   DiffLayout,
   DiffMode,
   EntrySummary,
@@ -76,12 +79,30 @@ export function Review({ target, backLabel, focusKey }: Props) {
 
   const groups = data?.groups ?? [];
   const mode = chosenMode ?? defaultMode(groups);
+
+  // One commit at a time (flow D7): the commit picked per entry, for this visit only. Not in
+  // Uncommitted; in All the commit alone is shown.
+  const [commitSel, setCommitSel] = useState<Record<string, string>>({});
+  const [commitData, setCommitData] = useState<Record<string, CommitChanges>>({});
+  const commitScoped = mode !== 'uncommitted';
+  const shaOf = (g: ReviewGroup) => (commitScoped ? commitSel[g.entry.key] : undefined);
+  const commitOf = (g: ReviewGroup) => {
+    const sha = shaOf(g);
+    return sha ? commitData[commitId(g.entry.repoId, sha)] : undefined;
+  };
+  // The groups as listed: an entry scoped to a commit lists that commit's files.
+  const viewGroups = groups.map((g) => {
+    const c = commitOf(g);
+    return c ? { ...g, files: { ...g.files, [mode]: c.files } } : g;
+  });
+
   const setMode = (m: DiffMode) => {
     setChosenMode(m);
     setSelected(null);
+    if (m === 'uncommitted') setCommitSel({});
   };
   // Entries with nothing in this mode are hidden.
-  const visible = groups.filter((g) => g.files[mode].length > 0);
+  const visible = viewGroups.filter((g) => g.files[mode].length > 0 || !!shaOf(g));
   const current = resolveSelection(visible, mode, selected);
   const group = visible.find((g) => g.entry.key === current?.key);
   const change = group?.files[mode].find((f) => f.path === current?.path);
@@ -111,6 +132,77 @@ export function Review({ target, backLabel, focusKey }: Props) {
       select({ key, path }, r.land);
     }
   };
+  // Commit changes are fetched once per commit (they never change).
+  const requested = useRef(new Set<string>());
+  useEffect(() => {
+    for (const [key, sha] of Object.entries(commitSel)) {
+      const g = groups.find((x) => x.entry.key === key);
+      const id = g && commitId(g.entry.repoId, sha);
+      if (!g || !id || requested.current.has(id)) continue;
+      requested.current.add(id);
+      getCommitChanges(g.entry.repoId, sha).then(
+        (c) => setCommitData((d) => ({ ...d, [id]: c })),
+        (e) => {
+          console.error('commit changes failed', e);
+          requested.current.delete(id);
+          setCommitSel(({ [key]: _, ...rest }) => rest);
+        },
+      );
+    }
+  }, [commitSel, groups]);
+  // A new tip (rebase, amend) or base that no longer lists the commit drops the selection.
+  useEffect(() => {
+    if (!data) return;
+    setCommitSel((sel) => {
+      const kept = Object.entries(sel).filter(([key, sha]) =>
+        data.groups.find((g) => g.entry.key === key)?.commits.some((c) => c.sha === sha),
+      );
+      return kept.length === Object.keys(sel).length ? sel : Object.fromEntries(kept);
+    });
+  }, [data]);
+  // Picking a commit opens its first file once its changes are in.
+  const [openFirst, setOpenFirst] = useState<string | null>(null);
+  const firstFile = (() => {
+    const g = openFirst ? visible.find((x) => x.entry.key === openFirst) : undefined;
+    return g && commitOf(g) ? { key: g.entry.key, path: g.files[mode][0]?.path ?? null } : null;
+  })();
+  useEffect(() => {
+    if (!firstFile) return;
+    setOpenFirst(null);
+    if (firstFile.path) select({ key: firstFile.key, path: firstFile.path });
+    // Only when the commit's files arrive.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstFile?.key, firstFile?.path]);
+  const pickCommit = (g: ReviewGroup, sha: string | null) => {
+    const key = g.entry.key;
+    setCommitSel(({ [key]: _, ...rest }) => (sha ? { ...rest, [key]: sha } : rest));
+    if (sha) {
+      setOpenFirst(key);
+      setCollapsed((c) => {
+        const open = new Set(c);
+        open.delete(key);
+        return open;
+      });
+    } else if (current) {
+      // Back to the whole branch: the file on screen stays if the branch lists it.
+      select(current);
+    }
+  };
+  /** -1: newer, 1: older. With no commit picked, "older" picks the newest. */
+  const stepCommit = (dir: 1 | -1) => {
+    if (!commitScoped || !group || group.commits.length === 0) return;
+    const list = group.commits;
+    const i = list.findIndex((c) => c.sha === shaOf(group));
+    if (i < 0) {
+      if (dir === 1) pickCommit(group, list[0].sha);
+      return;
+    }
+    const j = i + dir;
+    if (j >= 0 && j < list.length) pickCommit(group, list[j].sha);
+  };
+  const stepCommitRef = useRef(stepCommit);
+  stepCommitRef.current = stepCommit;
+
   // Diff view settings (layout, whitespace), remembered in the config.
   const settings = useData((st) => st.config?.settings);
   const layout = settings?.diffView ?? 'split';
@@ -139,14 +231,17 @@ export function Review({ target, backLabel, focusKey }: Props) {
 
   const stepRef = useRef(step);
   stepRef.current = step;
-  // ⌥↓ / ⌥↑ outside the diff; inside it Monaco handles them. Listed in lib/shortcuts.ts.
+  // ⌥↓ / ⌥↑ (changes) and ⌥⇧↓ / ⌥⇧↑ (commits) outside the diff; inside it Monaco handles
+  // them. Listed in lib/shortcuts.ts.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!e.altKey || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+      if (!e.altKey || (e.code !== 'ArrowDown' && e.code !== 'ArrowUp')) return;
       if ((e.target as HTMLElement | null)?.closest('.monaco-editor, input, textarea')) return;
       if (useUi.getState().modalCount > 0) return;
       e.preventDefault();
-      stepRef.current(e.key === 'ArrowDown' ? 1 : -1);
+      const dir = e.code === 'ArrowDown' ? 1 : -1;
+      if (e.shiftKey) stepCommitRef.current(dir);
+      else stepRef.current(dir);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -214,6 +309,9 @@ export function Review({ target, backLabel, focusKey }: Props) {
               onSelect={(f) => select(f)}
               pending={pendingKey === g.entry.key}
               onBase={(rect) => setBaseMenu({ group: g, rect })}
+              commit={g.commits.find((c) => c.sha === shaOf(g))}
+              loading={!!shaOf(g) && !commitOf(g)}
+              onClearCommit={() => pickCommit(g, null)}
             />
           ))}
           {target.kind === 'project' && data && data.notInReview.length > 0 && (
@@ -239,10 +337,21 @@ export function Review({ target, backLabel, focusKey }: Props) {
             </div>
           ) : group && change ? (
             <>
-              <EntryBar group={group} mode={mode} />
+              <EntryBar
+                group={group}
+                mode={mode}
+                sha={shaOf(group)}
+                parent={commitParent(group, shaOf(group), commitOf(group))}
+                onPick={(sha) => pickCommit(group, sha)}
+                onStep={stepCommit}
+              />
               <div className={styles.fileBar}>
                 <span className={styles.filePath}>{change.path}</span>
-                <span className={styles.muted}>{compareLabel(mode, group.entry)}</span>
+                <span className={styles.muted}>
+                  {shaOf(group)
+                    ? `${commitParent(group, shaOf(group), commitOf(group))} ↔ ${shaOf(group)!.slice(0, 7)}`
+                    : compareLabel(mode, group.entry)}
+                </span>
                 {ignoreWs && (
                   <button
                     type="button"
@@ -273,10 +382,10 @@ export function Review({ target, backLabel, focusKey }: Props) {
               </div>
               <DiffView
                 repoId={group.entry.repoId}
-                worktreePath={group.entry.worktreePath}
+                worktreePath={commitOf(group) ? null : group.entry.worktreePath}
                 change={change}
-                mode={mode}
-                fileKey={`${currentId}\u0000${mode}`}
+                mode={commitOf(group) ? 'committed' : mode}
+                fileKey={`${currentId}\u0000${mode}\u0000${commitOf(group)?.sha ?? ''}`}
                 land={land.id === currentId ? land.where : 'first'}
                 onNav={setNav}
                 onStep={(dir) => stepRef.current(dir)}
@@ -285,6 +394,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
                 ignoreWhitespace={ignoreWs}
                 onToggleLayout={() => viewRef.current.toggleLayout()}
                 onToggleWhitespace={() => viewRef.current.toggleWs()}
+                onCommitStep={(dir) => stepCommitRef.current(dir)}
               />
             </>
           ) : (
@@ -316,9 +426,20 @@ function fileId(entryKey: string, path: string): string {
   return `${entryKey}\u0000${path}`;
 }
 
+function commitId(repoId: string, sha: string): string {
+  return `${repoId}\u0000${sha}`;
+}
+
+/** Short parent of the picked commit: its first parent once loaded, else the next older listed one. */
+function commitParent(g: ReviewGroup, sha: string | undefined, c: CommitChanges | undefined): string {
+  if (!sha) return '';
+  if (c) return c.parent ? c.parent.slice(0, 7) : 'empty tree';
+  const i = g.commits.findIndex((x) => x.sha === sha);
+  return (g.commits[i + 1]?.sha ?? g.mergeBase ?? '').slice(0, 7);
+}
+
 const fileName = (id: string | undefined) => (id ? basename(id.split('\u0000')[1]) : '');
 
-/** "Change 2 of 3" and ↑ ↓; past a file's first/last change they continue into the neighbour. */
 /** Layout (Split / Unified) and Ignore whitespace; applies to every diff and is remembered. */
 function ViewMenu({
   layout,
@@ -395,6 +516,7 @@ function ViewMenu({
   );
 }
 
+/** "Change 2 of 3" and ↑ ↓; past a file's first/last change they continue into the neighbour. */
 function ChangeNav({
   onlyWhitespace,
   nav,
@@ -545,6 +667,9 @@ function FileGroup({
   onSelect,
   pending,
   onBase,
+  commit,
+  loading,
+  onClearCommit,
 }: {
   group: ReviewGroup;
   mode: DiffMode;
@@ -554,6 +679,11 @@ function FileGroup({
   onSelect: (f: FileRef) => void;
   pending: boolean;
   onBase: (rect: DOMRect) => void;
+  /** The commit this entry is scoped to (flow D7). */
+  commit: CommitInfo | undefined;
+  /** Its files are on the way; the previous list stays, dimmed. */
+  loading: boolean;
+  onClearCommit: () => void;
 }) {
   const files = g.files[mode];
   const add = files.reduce((n, f) => n + (f.add ?? 0), 0);
@@ -583,6 +713,23 @@ function FileGroup({
           <span className={styles.add}>+{add}</span>
           {del > 0 && <span className={styles.del}>−{del}</span>}
         </div>
+        {commit && (
+          <div className={styles.commitChip}>
+            <span className={styles.chipSha}>{commit.shortSha}</span>
+            <span className={styles.chipSubject} title={commit.subject}>
+              {commit.subject}
+            </span>
+            <button
+              type="button"
+              aria-label="Show all commits"
+              title="Show all commits"
+              className={styles.chipClose}
+              onClick={onClearCommit}
+            >
+              <CloseIcon size={10} />
+            </button>
+          </div>
+        )}
       </div>
       {g.stackHint && (
         <div className={styles.stackHint}>
@@ -591,7 +738,7 @@ function FileGroup({
         </div>
       )}
       {open && (
-        <div className={styles.fileRows}>
+        <div className={loading ? `${styles.fileRows} ${styles.stale}` : styles.fileRows}>
           {files.map((f) => {
             const on = selected?.key === e.key && selected.path === f.path;
             return (
@@ -616,46 +763,126 @@ function FileGroup({
   );
 }
 
-function EntryBar({ group: g, mode }: { group: ReviewGroup; mode: DiffMode }) {
+function EntryBar({
+  group: g,
+  mode,
+  sha,
+  parent,
+  onPick,
+  onStep,
+}: {
+  group: ReviewGroup;
+  mode: DiffMode;
+  /** The commit the entry is scoped to (flow D7). */
+  sha: string | undefined;
+  /** Its short parent. */
+  parent: string;
+  onPick: (sha: string | null) => void;
+  /** -1: newer, 1: older. */
+  onStep: (dir: 1 | -1) => void;
+}) {
   const e = g.entry;
   const name = e.branch ?? e.shortSha ?? '';
   const ahead = e.ahead ?? g.commits.length;
   // Without a base (a base branch with no upstream) there is only the working tree.
   const workingTree = mode === 'uncommitted' || !e.base;
+  const index = sha ? g.commits.findIndex((c) => c.sha === sha) : -1;
+  const total = g.commits.length;
+  const on = index >= 0;
+
+  // Stepping keeps the picked row in view.
+  const list = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    list.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [sha]);
+
   return (
     <div className={styles.entryBar}>
       <div className={styles.entryLine}>
-        <button
-          type="button"
-          className={`${styles.repoName} ${styles.repoLink}`}
-          title={`Show ${e.repoName} on Branches`}
-          onClick={() => useNav.getState().push({ name: 'branches', focusRepoId: e.repoId })}
-        >
-          {e.repoName}
-        </button>
-        <span className={styles.entryBranch}>{name}</span>
-        <span className={styles.entryRange}>
-          {workingTree && e.worktreePath ? `working tree ${tildifyHome(e.worktreePath)}` : `${e.base}..${name}`}
-        </span>
+        <div className={styles.entryNames}>
+          <button
+            type="button"
+            className={`${styles.repoName} ${styles.repoLink}`}
+            title={`Show ${e.repoName} on Branches`}
+            onClick={() => useNav.getState().push({ name: 'branches', focusRepoId: e.repoId })}
+          >
+            {e.repoName}
+          </button>
+          <span className={styles.entryBranch}>{name}</span>
+          <span className={styles.entryRange}>
+            {workingTree && e.worktreePath
+              ? `working tree ${tildifyHome(e.worktreePath)}`
+              : on
+                ? `${parent}..${sha!.slice(0, 7)}`
+                : `${e.base}..${name}`}
+          </span>
+        </div>
         <span className={styles.grow} />
         <span className={styles.muted}>
-          {workingTree ? 'HEAD ↔ working tree' : `${ahead} ${ahead === 1 ? 'commit' : 'commits'} ahead of ${e.base}`}
+          {workingTree
+            ? 'HEAD ↔ working tree'
+            : on
+              ? `Commit ${total - index} of ${total}`
+              : `${ahead} ${ahead === 1 ? 'commit' : 'commits'} ahead of ${e.base}`}
         </span>
-      </div>
-      {!workingTree && g.commits.length > 0 && (
-        <div className={styles.commits}>
-          {g.commits.map((c) => (
-            <div key={c.sha} className={c.fromBranch ? `${styles.commit} ${styles.foreign}` : styles.commit}>
-              <span className={styles.sha}>{c.shortSha}</span>
-              <span className={styles.subject}>{c.subject}</span>
-              {c.fromBranch && (
-                <Pill tone="warning" className={styles.fromPill}>
-                  {c.fromBranch}
-                </Pill>
-              )}
-              <span className={styles.age}>{formatAge(c.committedAt)}</span>
+        {on && !workingTree && (
+          <>
+            <div role="group" aria-label="Step through commits" className={styles.navGroup}>
+              <button
+                type="button"
+                aria-label="Newer commit"
+                title="Newer commit (⌥⇧↑)"
+                className={styles.navButton}
+                disabled={index <= 0}
+                onClick={() => onStep(-1)}
+              >
+                <ChevronUpIcon size={14} />
+              </button>
+              <button
+                type="button"
+                aria-label="Older commit"
+                title="Older commit (⌥⇧↓)"
+                className={styles.navButton}
+                disabled={index >= total - 1}
+                onClick={() => onStep(1)}
+              >
+                <ChevronDownIcon size={14} />
+              </button>
             </div>
-          ))}
+            <button type="button" className={styles.showAll} onClick={() => onPick(null)}>
+              Show all commits
+            </button>
+          </>
+        )}
+      </div>
+      {!workingTree && total > 0 && (
+        <div ref={list} role="listbox" aria-label="Commits" className={styles.commits}>
+          {g.commits.map((c) => {
+            const picked = c.sha === sha;
+            const cls = [styles.commit, picked && styles.commitOn, c.fromBranch && styles.foreign]
+              .filter(Boolean)
+              .join(' ');
+            return (
+              <button
+                key={c.sha}
+                type="button"
+                role="option"
+                aria-selected={picked}
+                title={picked ? 'Show all commits' : 'Show only this commit'}
+                className={cls}
+                onClick={() => onPick(picked ? null : c.sha)}
+              >
+                <span className={styles.sha}>{c.shortSha}</span>
+                <span className={styles.subject}>{c.subject}</span>
+                {c.fromBranch && (
+                  <Pill tone="warning" className={styles.fromPill}>
+                    {c.fromBranch}
+                  </Pill>
+                )}
+                <span className={styles.age}>{formatAge(c.committedAt)}</span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

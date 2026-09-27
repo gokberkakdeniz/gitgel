@@ -133,6 +133,17 @@ make_web_app() {
   commit "$repo" 2 "Invoice stub"
   git -C "$repo" switch -q main
 
+  # Started before the last main commit, then main merged in: the merge commit (flow D7) shows
+  # what came from main, against its first parent.
+  git -C "$repo" switch -q -c feat/search main~1
+  put "$repo" src/search/box.ts 'export function searchBox() { return "search"; }'
+  commit "$repo" 3 "Search box"
+  at 2
+  git -C "$repo" merge -q --no-ff -m "Merge main into feat/search" main
+  put "$repo" src/search/box.ts 'export function searchBox(q = "") { return q; }'
+  commit "$repo" 2 "Search box takes a query"
+  git -C "$repo" switch -q main
+
   git -C "$repo" push -q origin main
 }
 

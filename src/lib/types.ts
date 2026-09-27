@@ -136,6 +136,12 @@ export interface ReviewGroup {
   commits: CommitInfo[];
   stackHint: StackHint | null;
 }
+// One commit's own changes against its first parent (flow D7).
+export interface CommitChanges {
+  sha: string;
+  parent: string | null; // null => root commit, compared with an empty tree
+  files: FileChange[];
+}
 export interface ReviewData {
   groups: ReviewGroup[]; // reviewable entries, in project order
   notInReview: EntrySummary[]; // project scope only

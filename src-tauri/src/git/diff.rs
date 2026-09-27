@@ -3,7 +3,7 @@
 use git2::{Delta, Diff, DiffFindOptions, DiffOptions, Oid, Patch, Repository};
 
 use crate::error::AppError;
-use crate::model::{FileChange, FileKind};
+use crate::model::{CommitChanges, FileChange, FileKind};
 
 /// Where the right-hand side of a diff comes from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -163,6 +163,26 @@ pub fn committed_changes(
     changes(&diff, NewSide::Tree)
 }
 
+/// A commit's own changes: against its first parent (merge commits too), or against an empty
+/// tree for a root commit. Renames detected.
+pub fn commit_changes(repo: &Repository, sha: &str) -> Result<CommitChanges, AppError> {
+    let commit = repo.find_commit(Oid::from_str(sha)?)?;
+    let parent = commit.parent_id(0).ok();
+    let from = match parent {
+        Some(p) => Some(repo.find_commit(p)?.tree()?),
+        None => None,
+    };
+    let to = commit.tree()?;
+    let mut diff =
+        repo.diff_tree_to_tree(from.as_ref(), Some(&to), Some(&mut diff_options(false)))?;
+    find_renames(&mut diff)?;
+    Ok(CommitChanges {
+        sha: commit.id().to_string(),
+        parent: parent.map(|p| p.to_string()),
+        files: changes(&diff, NewSide::Tree)?,
+    })
+}
+
 /// Files changed from commit `from` to the working tree of `wt_repo`, untracked included.
 pub fn workdir_changes(wt_repo: &Repository, from: &str) -> Result<Vec<FileChange>, AppError> {
     let mut diff = workdir_diff(wt_repo, Oid::from_str(from)?)?;
@@ -290,6 +310,72 @@ mod tests {
         let paths = changed_paths(&diff);
         assert!(paths.contains(&"old/name.txt".to_string()));
         assert!(paths.contains(&"new/name.txt".to_string()));
+    }
+
+    #[test]
+    fn commit_changes_against_first_parent() {
+        let t = TestRepo::new();
+        let root = t.commit_on(
+            "main",
+            &[
+                ("a.txt", Some(b"1\n")),
+                ("old.txt", Some(b"one\ntwo\nthree\nfour\n")),
+            ],
+            "root",
+            3,
+        );
+        let second = t.commit_on(
+            "main",
+            &[
+                ("a.txt", Some(b"1\n2\n")),
+                ("old.txt", None),
+                ("new.txt", Some(b"one\ntwo\nthree\nfour\n")),
+            ],
+            "second",
+            2,
+        );
+
+        // Root commit: everything added, against an empty tree.
+        let r = commit_changes(&t.repo, &root.to_string()).unwrap();
+        assert_eq!(r.parent, None);
+        assert_eq!(r.files.len(), 2);
+        assert!(r
+            .files
+            .iter()
+            .all(|f| f.kind == FileKind::A && f.old_oid.is_none()));
+
+        // Only that commit's changes, rename detected.
+        let c = commit_changes(&t.repo, &second.to_string()).unwrap();
+        assert_eq!(c.parent, Some(root.to_string()));
+        assert_eq!(c.files.len(), 2);
+        let m = find(&c.files, "a.txt");
+        assert_eq!((m.kind, m.add, m.del), (FileKind::M, Some(1), Some(0)));
+        let rn = find(&c.files, "new.txt");
+        assert_eq!(rn.kind, FileKind::R);
+        assert_eq!(rn.old_path.as_deref(), Some("old.txt"));
+    }
+
+    #[test]
+    fn commit_changes_of_a_merge_use_the_first_parent() {
+        let t = TestRepo::new();
+        let base = t.commit_on("main", &[("a.txt", Some(b"a\n"))], "base", 3);
+        t.branch_from("side", base);
+        t.commit_on("side", &[("side.txt", Some(b"side\n"))], "side", 2);
+        let main = t.commit_on("main", &[("main.txt", Some(b"main\n"))], "main", 2);
+        // The merge brings in side.txt and also edits a.txt itself.
+        let merge = t.merge_on(
+            "main",
+            "side",
+            &[("side.txt", Some(b"side\n")), ("a.txt", Some(b"a\nb\n"))],
+            "merge side",
+        );
+
+        let c = commit_changes(&t.repo, &merge.to_string()).unwrap();
+        assert_eq!(c.parent, Some(main.to_string()));
+        let mut paths: Vec<_> = c.files.iter().map(|f| f.path.as_str()).collect();
+        paths.sort();
+        assert_eq!(paths, ["a.txt", "side.txt"]);
+        assert_eq!(find(&c.files, "side.txt").kind, FileKind::A);
     }
 
     #[test]

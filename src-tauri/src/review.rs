@@ -7,8 +7,8 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::{diff, history, refs, Repo};
 use crate::model::{
-    Config, EntryState, EntrySummary, FilesByMode, RepoConfig, ReviewData, ReviewGroup,
-    ReviewTarget,
+    CommitChanges, Config, EntryState, EntrySummary, FilesByMode, RepoConfig, ReviewData,
+    ReviewGroup, ReviewTarget,
 };
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -120,6 +120,37 @@ pub fn get_review(state: &AppState, target: &ReviewTarget) -> Result<ReviewData,
             Ok(data)
         }
     }
+}
+
+/// One commit's own changes (flow D7), cached by SHA.
+pub fn get_commit_changes(
+    state: &AppState,
+    repo_id: &str,
+    sha: &str,
+) -> Result<CommitChanges, AppError> {
+    if let Some(c) = lock(&state.cache).commit(repo_id, sha) {
+        return Ok(c);
+    }
+    let config = config::snapshot(state);
+    let repo_cfg = config
+        .repos
+        .iter()
+        .find(|r| r.id == repo_id)
+        .ok_or_else(|| AppError::NotFound(format!("repository {repo_id}")))?;
+    let mut t = Timings::start();
+    let changes = {
+        let shared = state.pool.get(Path::new(&repo_cfg.path))?;
+        let repo = lock(&shared);
+        t.time("diff", || diff::commit_changes(&repo, sha))?
+    };
+    log::info!(
+        "commit {} in {}: {t} · {} files",
+        &sha[..sha.len().min(7)],
+        repo_cfg.path,
+        changes.files.len()
+    );
+    lock(&state.cache).put_commit(repo_id, changes.clone());
+    Ok(changes)
 }
 
 fn is_empty(g: &ReviewGroup) -> bool {

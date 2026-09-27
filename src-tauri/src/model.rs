@@ -302,6 +302,16 @@ pub struct ReviewGroup {
     pub stack_hint: Option<StackHint>,
 }
 
+/// One commit's own changes, against its first parent (flow D7).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommitChanges {
+    pub sha: String,
+    /// First parent; `None` for a root commit (compared with an empty tree).
+    pub parent: Option<String>,
+    pub files: Vec<FileChange>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewData {

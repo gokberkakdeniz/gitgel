@@ -94,6 +94,7 @@ pub fn run() {
             commands::get_scan,
             commands::rescan_all,
             commands::get_review,
+            commands::get_commit_changes,
             commands::read_file_pair,
             commands::create_project,
             commands::rename_project,

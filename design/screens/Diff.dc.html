@@ -65,6 +65,13 @@ button,input{font-family:inherit}
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8fcf9c; flex-shrink: 0">{{g.add}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #ee9a90; flex-shrink: 0">{{g.del}}</span>
 </div>
+<sc-if value="{{g.commitOn}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; align-items: center; gap: 6px; margin: 2px 0 0 20px; padding: 3px 3px 3px 8px; border-radius: 7px; background: rgba(79,143,163,0.14); min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a3cad6; flex-shrink: 0">{{g.commitSha}}</span>
+<span style="font-size: 12px; color: #d8d4cc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{g.commitMsg}}</span>
+<button onClick="{{g.clearCommit}}" aria-label="Show all commits" title="Show all commits" style="width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: #a3cad6; cursor: pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</div>
+</sc-if>
 </div>
 <sc-if value="{{g.stackHint}}" hint-placeholder-val="{{false}}">
 <div style="margin: 0 8px 6px 28px; padding: 7px 10px; border-radius: 8px; background: rgba(212,160,23,0.12); color: #e8c071; font-size: 12px; line-height: 1.4">3 of 5 commits come from feat/job-queue. A different base may fit better.</div>
@@ -103,22 +110,31 @@ button,input{font-family:inherit}
 
 <section style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0">
 <div style="border-bottom: 1px solid #302e2a; padding: 12px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 28px">
 <div style="display: flex; align-items: baseline; gap: 10px; min-width: 0">
-<span style="font-size: 14px; font-weight: 600; color: #faf9f5">{{entry.repo}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{entry.branch}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">{{entry.where}}</span>
+<span style="font-size: 14px; font-weight: 600; color: #faf9f5; white-space: nowrap">{{entry.repo}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc; white-space: nowrap">{{entry.branch}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{entry.where}}</span>
+</div>
 <div style="flex-grow: 1"></div>
 <span style="font-size: 12px; color: #a09d96; white-space: nowrap">{{entry.commitLabel}}</span>
+<sc-if value="{{commitOn}}" hint-placeholder-val="{{false}}">
+<div role="group" aria-label="Step through commits" style="display: flex; gap: 2px; padding: 2px; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px">
+<button onClick="{{newerCommit}}" disabled="{{newerDisabled}}" aria-label="Newer commit" title="Newer commit (⌥⇧↑)" style="{{newerStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"></path></svg></button>
+<button onClick="{{olderCommit}}" disabled="{{olderDisabled}}" aria-label="Older commit" title="Older commit (⌥⇧↓)" style="{{olderStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<button onClick="{{clearCommit}}" style="height: 28px; box-sizing: border-box; padding: 0 10px; border: 1px solid #302e2a; border-radius: 8px; background: transparent; color: #7fb3c4; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer">Show all commits</button>
+</sc-if>
 </div>
 <sc-if value="{{showCommits}}" hint-placeholder-val="{{true}}">
-<div style="display: flex; flex-direction: column; gap: 6px">
+<div role="listbox" aria-label="Commits" style="display: flex; flex-direction: column; gap: 1px; margin: 0 -8px">
 <sc-for list="{{commits}}" as="c" hint-placeholder-count="3">
-<div style="{{c.style}}">
+<button role="option" aria-selected="{{c.on}}" onClick="{{c.pick}}" title="{{c.title}}" style="{{c.style}}">
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #7fb3c4">{{c.sha}}</span>
-<span style="flex-grow: 1; color: #faf9f5">{{c.msg}}</span>
+<span style="{{c.msgStyle}}">{{c.msg}}</span>
 <span style="{{c.fromStyle}}">{{c.from}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">{{c.age}}</span>
-</div>
+</button>
 </sc-for>
 </div>
 </sc-if>
@@ -223,9 +239,9 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"view":{"editor":"enum","options":["split","unified"],"default":"split"},"ignoreWs":{"editor":"boolean","default":false},"viewMenu":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"view":{"editor":"enum","options":["split","unified"],"default":"split"},"ignoreWs":{"editor":"boolean","default":false},"viewMenu":{"editor":"boolean","default":false},"commit":{"editor":"enum","options":["","d81f03a","4b7e2c9","9a13f60","2cc0d48"],"default":""},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null, view: null, ignoreWs: null, viewMenu: null }; }
+  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null, view: null, ignoreWs: null, viewMenu: null, commitSel: null }; }
   renderVals() {
     var self = this;
     var scope = this.props.scope ?? 'project';
@@ -262,7 +278,13 @@ class Component extends DCLogic {
           { sha: 'a41c9e2', msg: 'Wire rate limiter into middleware chain', age: '14m' },
           { sha: '7f02b1d', msg: 'Add sliding-window rate limiter with tests', age: '1h' },
           { sha: 'c93e0aa', msg: 'Move limits into src/config', age: '2h' }
-        ] });
+        ],
+        mb: '6e1a3c8',
+        byCommit: {
+          a41c9e2: [['M', 'index.ts', 'src/middleware', '+2', ''], ['M', 'package.json', '', '+1', '−1']],
+          '7f02b1d': [['A', 'rate-limit.ts', 'src/middleware', '+84', ''], ['A', 'rate-limit.test.ts', 'test', '+61', '']],
+          c93e0aa: [['R', 'limits.ts', 'src/config ← config/rateLimits.ts', '+3', '−1']]
+        } });
     } else {
       G.push({ id: 'web', repo: 'web-app', branch: 'session-token-refresh', base: 'main', wt: '~/code/wt/token-refresh',
         committed: [
@@ -283,7 +305,14 @@ class Component extends DCLogic {
           { sha: '4b7e2c9', msg: 'Add refreshSession with token rotation', age: '52m' },
           { sha: '9a13f60', msg: 'Rename token module to tokens', age: '1h' },
           { sha: '2cc0d48', msg: 'Retry API calls once after refresh', age: '2h' }
-        ] });
+        ],
+        mb: '8c2d5e1',
+        byCommit: {
+          d81f03a: [['M', 'session.ts', 'src/auth', '+6', '−2'], ['A', 'refresh.test.ts', 'test/auth', '+48', '']],
+          '4b7e2c9': [['A', 'refresh.ts', 'src/auth', '+64', ''], ['M', 'package.json', '', '+1', '−1']],
+          '9a13f60': [['R', 'tokens.ts', 'src/auth ← src/auth/token.ts', '+2', '−2']],
+          '2cc0d48': [['M', 'client.ts', 'src/api', '+9', '−3']]
+        } });
       var apiCommitted = [
         ['A', 'rotate-tokens.ts', 'src/jobs', '+71', ''],
         ['M', 'index.ts', 'src/jobs', '+2', ''],
@@ -306,9 +335,25 @@ class Component extends DCLogic {
           { sha: '7c41e09', msg: 'Add queue worker', age: '1d', from: 'feat/job-queue' },
           { sha: '1d8b5fa', msg: 'Add queue module', age: '1d', from: 'feat/job-queue' },
           { sha: 'b33e7a4', msg: 'Add redis to docker-compose', age: '2d', from: 'feat/job-queue' }
-        ] : [] });
+        ] : [],
+        mb: '0b9f4a7',
+        byCommit: {
+          e02b7d1: [['M', 'index.ts', 'src/jobs', '+2', ''], ['M', 'schedule.ts', 'src/config', '+4', '−1']],
+          '5f9a3c2': [['A', 'rotate-tokens.ts', 'src/jobs', '+71', ''], ['A', 'rotate-tokens.test.ts', 'test/jobs', '+39', '']],
+          '7c41e09': [['A', 'worker.ts', 'src/queue', '+88', '']],
+          '1d8b5fa': [['A', 'index.ts', 'src/queue', '+12', '']],
+          b33e7a4: [['M', 'docker-compose.yml', '', '+6', '']]
+        } });
     }
-    var listFor = function (g) {
+    var commitSel = this.state.commitSel;
+    if (!commitSel) {
+      commitSel = {};
+      var pc = this.props.commit;
+      if (pc) G.forEach(function (g) { if (g.byCommit && g.byCommit[pc]) commitSel[g.id] = pc; });
+    }
+    var listFor = function (g, whole) {
+      var cs = !whole && mode !== 'Uncommitted' && commitSel[g.id];
+      if (cs && g.byCommit[cs]) return g.byCommit[cs];
       if (mode === 'Committed') return g.committed;
       if (mode === 'Uncommitted') return g.uncommitted;
       var names = g.committed.map(function (f) { return f[2] + '/' + f[1]; });
@@ -337,6 +382,10 @@ class Component extends DCLogic {
         chevStyle: 'flex-shrink: 0; transition: transform 0.15s; ' + (open ? '' : 'transform: rotate(-90deg)'),
         toggle: function () { var c = Object.assign({}, collapsed); c[g.id] = open; self.setState({ collapsed: c }); },
         stackHint: g.id === 'api' && extra,
+        commitOn: mode !== 'Uncommitted' && !!commitSel[g.id],
+        commitSha: commitSel[g.id] || '',
+        commitMsg: (function () { var all = (g.commits || []).concat(g.parent || []); for (var i = 0; i < all.length; i++) if (all[i].sha === commitSel[g.id]) return all[i].msg; return ''; })(),
+        clearCommit: function () { var ns = Object.assign({}, commitSel); delete ns[g.id]; self.setState({ commitSel: ns, hunk: 0 }); },
         baseStyle: 'flex-shrink: 0; margin-left: auto; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: #211f1c; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: #d8d4cc; cursor: pointer; ' + (baseActive ? 'border: 1px solid #4f8fa3; box-shadow: 0 0 0 2px rgba(79,143,163,0.25)' : 'border: 1px solid #302e2a'),
         files: list.map(function (f) {
           var key = keyOf(g, f);
@@ -354,14 +403,14 @@ class Component extends DCLogic {
     var counts = { Committed: 0, Uncommitted: 0, All: 0 };
     ['Committed', 'Uncommitted', 'All'].forEach(function (m) {
       var saved = mode; mode = m;
-      G.forEach(function (g) { counts[m] += listFor(g).length; });
+      G.forEach(function (g) { counts[m] += listFor(g, true).length; });
       mode = saved;
     });
     var btn = 'height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ';
     var modes = ['Committed', 'Uncommitted', 'All'].map(function (m) {
       return {
         label: m, count: String(counts[m]),
-        pick: function () { self.setState({ mode: m, file: null, hunk: null }); },
+        pick: function () { self.setState({ mode: m, file: null, hunk: null, commitSel: m === 'Uncommitted' ? {} : commitSel }); },
         style: btn + (m === mode ? 'background: #383631; color: #faf9f5' : 'background: transparent; color: #a09d96')
       };
     });
@@ -389,6 +438,23 @@ class Component extends DCLogic {
         ['', '', 23, '  await store.delete(s.id);', 'add'],
         [23, '  return next;', 24, '  return next;', ''],
         [24, '}', 25, '}', '']
+      ],
+      'web:src/auth/refresh.ts@4b7e2c9': [
+        ['', '', 1, "import { issueToken } from './tokens';", 'add'],
+        ['', '', 2, "import { store } from './store';", 'add'],
+        ['', '', 3, "import type { Session } from './types';", 'add'],
+        ['', '', 4, '', 'add'],
+        ['', '', 5, 'const GRACE_MS = 30_000;', 'add'],
+        ['', '', 6, '', 'add'],
+        ['', '', 7, 'export function isExpired(s: Session, now = Date.now()) {', 'add'],
+        ['', '', 8, '  return s.expiresAt + GRACE_MS < now;', 'add'],
+        ['', '', 9, '}', 'add'],
+        ['', '', 10, '', 'add'],
+        ['', '', 11, 'export async function refreshSession(s: Session) {', 'add'],
+        ['', '', 12, '  const next = await issueToken(s.userId);', 'add'],
+        ['', '', 13, '  await store.set(next.id, next);', 'add'],
+        ['', '', 14, '  return next;', 'add'],
+        ['', '', 15, '}', 'add']
       ],
       'api:src/jobs/index.ts': [
         [1, "import { cleanupSessions } from './cleanup';", 1, "import { cleanupSessions } from './cleanup';", ''],
@@ -418,7 +484,10 @@ class Component extends DCLogic {
       ]
     };
     var rows = null;
-    if (mode === 'Uncommitted') {
+    var selSha = mode !== 'Uncommitted' ? commitSel[sel.split(':')[0]] : null;
+    if (selSha && S[sel + '@' + selSha]) {
+      rows = S[sel + '@' + selSha];
+    } else if (mode === 'Uncommitted') {
       if (sel === 'web:src/auth/refresh.ts' || sel === 'rl:src/middleware/rate-limit.ts') rows = S[sel];
     } else if (sel !== 'web:src/auth/refresh.ts' && sel !== 'rl:src/middleware/rate-limit.ts') {
       rows = S[sel] || null;
@@ -497,9 +566,30 @@ class Component extends DCLogic {
     var menuRow = function (on) { return 'display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; color: #faf9f5; font-size: 13px; text-align: left; cursor: pointer; ' + (on ? 'background: #2a2825' : 'background: transparent'); };
     var checkStyle = function (on) { return 'width: 16px; flex-shrink: 0; display: flex; justify-content: center; color: #7fb3c4; ' + (on ? '' : 'visibility: hidden'); };
     var setView = function (v) { self.setState({ view: v, viewMenu: false }); };
-    var cm = (selGroup.commits || []).concat(selGroup.parent || []).map(function (c) {
+    var gSha = mode !== 'Uncommitted' ? commitSel[selGroup.id] : null;
+    var cAll = (selGroup.commits || []).concat(selGroup.parent || []);
+    var cIdx = -1;
+    cAll.forEach(function (c, i) { if (c.sha === gSha) cIdx = i; });
+    var goCommit = function (sha) {
+      var ns = Object.assign({}, commitSel);
+      if (sha) ns[selGroup.id] = sha; else delete ns[selGroup.id];
+      var first = sha && selGroup.byCommit[sha] ? keyOf(selGroup, selGroup.byCommit[sha][0]) : sel;
+      self.setState({ commitSel: ns, file: first, hunk: 0 });
+    };
+    var parentSha = cIdx < 0 ? '' : (cAll[cIdx + 1] ? cAll[cIdx + 1].sha : selGroup.mb);
+    var stepBtn = function (off) {
+      return 'width: 26px; height: 22px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; cursor: pointer; background: transparent; color: ' + (off ? '#4a4843; cursor: default' : '#d8d4cc');
+    };
+    var cm = cAll.map(function (c, i) {
+      var on = i === cIdx;
       return Object.assign({ from: '' }, c, {
-        style: 'display: flex; gap: 12px; align-items: baseline; ' + (c.from ? 'opacity: 0.6' : ''),
+        on: on,
+        pick: function () { goCommit(on ? null : c.sha); },
+        title: on ? 'Show all commits' : 'Show only this commit',
+        msgStyle: 'flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #faf9f5; ' + (on ? 'font-weight: 500' : ''),
+        style: 'display: flex; gap: 12px; align-items: baseline; width: 100%; padding: 3px 8px; border: 0; border-radius: 6px; font-size: 13px; text-align: left; cursor: pointer; ' +
+          (on ? 'background: #2a2825; box-shadow: inset 2px 0 0 #7fb3c4; ' : 'background: transparent; ') +
+          (c.from ? 'opacity: ' + (on ? '0.85' : '0.6') : ''),
         fromStyle: c.from ? 'font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: #e8c071; background: rgba(212,160,23,0.14); border-radius: 9999px; padding: 1px 8px' : 'display: none'
       });
     });
@@ -535,13 +625,19 @@ class Component extends DCLogic {
       viewBtnStyle: 'display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ' + (viewMenuOpen ? 'background: #2a2825; color: #faf9f5; border: 1px solid #4f8fa3' : 'background: #211f1c; color: #d8d4cc; border: 1px solid #302e2a'),
       entry: {
         repo: selGroup.repo, branch: selGroup.branch,
-        where: mode === 'Uncommitted' ? 'working tree ' + selGroup.wt : selGroup.base + '..' + selGroup.branch,
-        commitLabel: mode === 'Uncommitted' ? 'HEAD ↔ working tree' : cm.length + ' commits ahead of ' + selGroup.base
+        where: mode === 'Uncommitted' ? 'working tree ' + selGroup.wt : gSha ? parentSha + '..' + gSha : selGroup.base + '..' + selGroup.branch,
+        commitLabel: mode === 'Uncommitted' ? 'HEAD ↔ working tree' : gSha ? 'Commit ' + (cAll.length - cIdx) + ' of ' + cAll.length : cm.length + ' commits ahead of ' + selGroup.base
       },
+      commitOn: !!gSha,
+      clearCommit: function () { goCommit(null); },
+      newerCommit: function () { if (cIdx > 0) goCommit(cAll[cIdx - 1].sha); },
+      olderCommit: function () { if (cIdx >= 0 && cIdx < cAll.length - 1) goCommit(cAll[cIdx + 1].sha); },
+      newerDisabled: cIdx <= 0, olderDisabled: cIdx < 0 || cIdx >= cAll.length - 1,
+      newerStyle: stepBtn(cIdx <= 0), olderStyle: stepBtn(cIdx < 0 || cIdx >= cAll.length - 1),
       showCommits: mode !== 'Uncommitted',
       commits: cm,
       filePath: path,
-      compare: mode === 'Uncommitted' ? 'HEAD ↔ working tree' : mode === 'All' ? 'merge-base ↔ working tree' : 'merge-base ↔ ' + selGroup.branch,
+      compare: mode === 'Uncommitted' ? 'HEAD ↔ working tree' : gSha ? parentSha + ' ↔ ' + gSha : mode === 'All' ? 'merge-base ↔ working tree' : 'merge-base ↔ ' + selGroup.branch,
       showAttention: project,
       attention: [
         { repo: 'api-server', branch: 'refresh-endpoint', tag: 'merged', tagStyle: pill('#8fcf9c', 'rgba(93,184,114,0.14)') },

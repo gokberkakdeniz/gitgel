@@ -59,6 +59,29 @@ impl TestRepo {
         msg: &str,
         days_ago: i64,
     ) -> Oid {
+        self.commit_with(branch, None, files, msg, days_ago)
+    }
+
+    /// A merge commit on `branch` with `other`'s tip as second parent. The tree is `branch`'s
+    /// with `files` applied (write the merged result explicitly).
+    pub fn merge_on(
+        &self,
+        branch: &str,
+        other: &str,
+        files: &[(&str, Option<&[u8]>)],
+        msg: &str,
+    ) -> Oid {
+        self.commit_with(branch, Some(other), files, msg, 1)
+    }
+
+    fn commit_with(
+        &self,
+        branch: &str,
+        merge: Option<&str>,
+        files: &[(&str, Option<&[u8]>)],
+        msg: &str,
+        days_ago: i64,
+    ) -> Oid {
         let repo = &self.repo;
         let refname = format!("refs/heads/{branch}");
         let parent = repo
@@ -97,7 +120,13 @@ impl TestRepo {
             &Time::new(now - days_ago * 86400, 0),
         )
         .unwrap();
-        let parents: Vec<&Commit> = parent.iter().collect();
+        let other = merge.map(|b| {
+            repo.find_reference(&format!("refs/heads/{b}"))
+                .unwrap()
+                .peel_to_commit()
+                .unwrap()
+        });
+        let parents: Vec<&Commit> = parent.iter().chain(other.iter()).collect();
         repo.commit(Some(&refname), &sig, &sig, msg, &tree, &parents)
             .unwrap()
     }

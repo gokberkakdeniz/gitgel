@@ -54,6 +54,8 @@ interface Props {
   /** ⌥V / ⌥W while the diff has focus. */
   onToggleLayout: () => void;
   onToggleWhitespace: () => void;
+  /** ⌥⇧↑ / ⌥⇧↓ while the diff has focus: newer (-1) / older (1) commit. */
+  onCommitStep: (dir: 1 | -1) => void;
 }
 
 /** Side-by-side diff of one file. The editor stays mounted; only its content changes. */
@@ -71,6 +73,7 @@ export function DiffView({
   ignoreWhitespace,
   onToggleLayout,
   onToggleWhitespace,
+  onCommitStep,
 }: Props) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -78,8 +81,8 @@ export function DiffView({
   }, []);
 
   // Latest props for Monaco callbacks registered once.
-  const latest = useRef({ onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace });
-  latest.current = { onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace };
+  const latest = useRef({ onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace, onCommitStep });
+  latest.current = { onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace, onCommitStep };
 
   // Layout and whitespace are editor options: changed in place, never by rebuilding the editor.
   // Monaco hides whitespace-only changes by default, so the option is always given.
@@ -273,6 +276,13 @@ export function DiffView({
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.UpArrow, () => latest.current.onStep(-1));
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyV, () => latest.current.onToggleLayout());
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyW, () => latest.current.onToggleWhitespace());
+              // ⌥⇧↑/⌥⇧↓ (copy line) is free too.
+              ed.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.UpArrow, () =>
+                latest.current.onCommitStep(-1),
+              );
+              ed.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.DownArrow, () =>
+                latest.current.onCommitStep(1),
+              );
             }
           }}
         />
