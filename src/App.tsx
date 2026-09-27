@@ -32,8 +32,9 @@ export default function App() {
   useEffect(() => {
     return watchSystemTheme(() => useData.getState().config?.settings.appearance ?? 'system');
   }, []);
+  // Until the config arrives, the theme index.html applied from the cache stays.
   useEffect(() => {
-    applyTheme(resolveEffective(appearance ?? 'system', systemIsDark()), appearance ?? 'system');
+    if (appearance) applyTheme(resolveEffective(appearance, systemIsDark()), appearance);
   }, [appearance]);
 
   // ⌘N: new project (flow C), from anywhere unless a modal is open. ⌘R never reloads the

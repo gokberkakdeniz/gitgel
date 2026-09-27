@@ -187,6 +187,8 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] T10.1 Light theme and Settings › Appearance — 2026-09-27
 - [x] T10.2 ✋ Checkpoint — phase 10 — 2026-09-27
 - [x] (on request) Docs: tasks moved to `docs/TASKS.md`; finished tasks keep one line — 2026-09-27
+- [x] (on request) Light theme review: no theme flash at launch (window hidden until its theme
+  and background are set), dead code removed — 2026-09-27
 
 ---
 

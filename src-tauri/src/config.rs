@@ -185,10 +185,7 @@ mod tests {
         assert_eq!(config.settings.diff_view, crate::model::DiffLayout::Split);
         assert!(!config.settings.ignore_whitespace);
         assert_eq!(config.settings.zoom, 100);
-        assert_eq!(
-            config.settings.appearance,
-            crate::model::Appearance::System
-        );
+        assert_eq!(config.settings.appearance, crate::model::Appearance::System);
     }
 
     #[test]

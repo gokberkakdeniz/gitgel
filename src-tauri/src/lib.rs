@@ -1,3 +1,4 @@
+pub mod appearance;
 pub mod base;
 pub mod cache;
 pub mod commands;
@@ -50,11 +51,13 @@ pub fn run() {
             let config_path = config::config_path(app.handle())?;
             let config = config::load(&config_path);
             let zoom = config.settings.zoom;
+            let appearance = config.settings.appearance;
             let state = state::AppState::new(app.handle().clone(), config, config_path);
             // Folders are watched after the first scan (`get_scan`).
             watch::start(&state);
             app.manage(state);
             menu::apply_zoom(app.handle(), zoom);
+            appearance::show_main_window(app.handle(), appearance);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

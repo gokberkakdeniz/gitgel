@@ -1,7 +1,6 @@
 // Effective theme resolution (docs/SPEC.md §4 "Light theme", §5 Settings › Appearance).
 import { useSyncExternalStore } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { applyMonacoTheme } from '../monaco/theme';
 import type { EffectiveTheme } from '../styles/tokens';
 import type { Appearance } from './types';
 
@@ -9,6 +8,7 @@ export type { EffectiveTheme };
 
 const CACHE_KEY = 'gitgel.effective-theme';
 
+// `bg.main` of each theme, for the native window (src-tauri/src/appearance.rs).
 const DARK_BG = '#141311';
 const LIGHT_BG = '#fbfaf7';
 
@@ -35,19 +35,16 @@ export function resolveEffective(appearance: Appearance, dark: boolean): Effecti
   return dark ? 'dark' : 'light';
 }
 
-export function cachedEffective(): EffectiveTheme | null {
-  const v = localStorage.getItem(CACHE_KEY);
-  return v === 'light' || v === 'dark' ? v : null;
-}
-
 /**
  * Applies the effective theme everywhere at once: the CSS tokens (`data-theme`), the
  * native title bar / traffic lights / menus (`setTheme`, `null` follows the system) and
- * Monaco. The choice is cached so the next launch starts without a flash.
+ * Monaco (through `useEffectiveTheme` in DiffView). The choice is cached so the next launch
+ * starts without a flash.
  */
 export function applyTheme(effective: EffectiveTheme, appearance: Appearance) {
   document.documentElement.dataset.theme = effective;
-  document.body.style.background = effective === 'dark' ? DARK_BG : LIGHT_BG;
+  // index.html painted <html> before the CSS loaded; from here the tokens take over.
+  document.documentElement.style.removeProperty('background');
   current = effective;
   notify();
   try {
@@ -55,10 +52,13 @@ export function applyTheme(effective: EffectiveTheme, appearance: Appearance) {
   } catch {
     // Private browsing or similar; theming still works for this run.
   }
-  applyMonacoTheme(effective);
   // Outside Tauri (plain `vite dev` in a browser) there is no window to theme.
   try {
-    void getCurrentWindow().setTheme(appearance === 'system' ? null : appearance);
+    const win = getCurrentWindow();
+    const warn = (what: string) => (e: unknown) => console.warn(`${what} failed`, e);
+    win.setTheme(appearance === 'system' ? null : appearance).catch(warn('setTheme'));
+    // Seen while resizing and before the page paints; the launch value is set in Rust.
+    win.setBackgroundColor(effective === 'dark' ? DARK_BG : LIGHT_BG).catch(warn('setBackgroundColor'));
   } catch {
     // Not running under Tauri.
   }

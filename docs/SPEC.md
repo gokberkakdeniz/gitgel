@@ -159,6 +159,7 @@ gitgel/
       ├─ main.rs  lib.rs          # lib.rs: run(), plugins, command registration
       ├─ menu.rs                  # app menu: Settings…, View › Font Size, Help items
       ├─ logs.rs                  # Help › Show Logs in Finder
+      ├─ appearance.rs            # window theme and background before it is shown
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
       ├─ git/                     # the ONLY place git2 is used
@@ -226,7 +227,7 @@ each file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(
   (accepted deviation from the reference's "⋯ N unchanged lines").
 - Current change (§5 Review): 3px accent bar `inset 3px 0 0 #7fb3c4` on its lines in both panes.
 
-Monaco theme `gitgel` (`src/monaco/theme.ts`, base `vs-dark`): background `#141311`, foreground
+Monaco theme `gitgel-dark` (`src/monaco/theme.ts`, base `vs-dark`): background `#141311`, foreground
 `#e0ddd6`, line numbers `#75726b` (active `#a09d96`), inserted line `#5db87226`, removed line
 `#c645452b`, inserted text `#5db87240`, removed text `#c6454548`, diagonal fill `#1c1b18`,
 unchanged region `#1a1917` / `#75726b`, border `#302e2a`, scrollbars `#383631`. Syntax colours:

@@ -1,5 +1,5 @@
 // The `gitgel-dark` / `gitgel-light` Monaco themes, built from the design tokens
-// (docs/SPEC.md §4). `gitgel` is kept as an alias of the dark theme.
+// (docs/SPEC.md §4). DiffView picks one through its `theme` prop.
 import type * as Monaco from 'monaco-editor';
 import { darkColors, lightColors, type EffectiveTheme } from '../styles/tokens';
 
@@ -113,18 +113,4 @@ function definition(p: Palette): Monaco.editor.IStandaloneThemeData {
 export function defineTheme(monaco: typeof Monaco) {
   monaco.editor.defineTheme(MONACO_THEMES.dark, definition(paletteOf('dark')));
   monaco.editor.defineTheme(MONACO_THEMES.light, definition(paletteOf('light')));
-  // Backwards compatibility: `gitgel` is the dark theme.
-  monaco.editor.defineTheme('gitgel', definition(paletteOf('dark')));
-  monacoInstance = monaco;
-}
-
-let monacoInstance: typeof Monaco | null = null;
-
-/** Switches the diff editors to the effective theme (no-op before Monaco loads). */
-export function applyMonacoTheme(theme: EffectiveTheme) {
-  try {
-    monacoInstance?.editor.setTheme(MONACO_THEMES[theme]);
-  } catch {
-    // Monaco is not up yet; DiffView passes the theme directly.
-  }
 }

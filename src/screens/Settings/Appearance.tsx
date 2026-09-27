@@ -108,6 +108,8 @@ export function Appearance({ config }: { config: Config }) {
               type="button"
               role="radio"
               aria-checked={on}
+              // One tab stop for the group; the arrow keys move between tiles.
+              tabIndex={on ? 0 : -1}
               onClick={() => pick(a)}
               className={styles.tile}
             >
