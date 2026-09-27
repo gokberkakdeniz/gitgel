@@ -110,6 +110,12 @@ export function Review({ target, backLabel, focusKey }: Props) {
   // Jumping between changes (flow D4): files in list order, collapsed groups included.
   const files = visible.flatMap((g) => g.files[mode].map((f) => fileId(g.entry.key, f.path)));
   const currentId = current ? fileId(current.key, current.path) : null;
+  // Keep the file on screen in the list when it changes from outside the list (next / previous
+  // change, a commit's first file); a row clicked in view does not scroll.
+  const fileList = useRef<HTMLElement>(null);
+  useEffect(() => {
+    fileList.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [currentId]);
   const fileIndex = currentId ? files.indexOf(currentId) : -1;
   const [land, setLand] = useState<{ id: string | null; where: 'first' | 'last' }>({ id: null, where: 'first' });
   const [nav, setNav] = useState<NavInfo>({ index: null, count: 0 });
@@ -300,7 +306,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
       )}
 
       <div className={styles.body}>
-        <aside className={sidebarShown ? `${styles.files} ${styles.filesNarrow}` : styles.files}>
+        <aside ref={fileList} className={sidebarShown ? `${styles.files} ${styles.filesNarrow}` : styles.files}>
           {visible.map((g) => (
             <FileGroup
               key={g.entry.key}
@@ -749,6 +755,7 @@ function FileGroup({
                 key={f.path}
                 type="button"
                 className={on ? `${styles.fileRow} ${styles.selected}` : styles.fileRow}
+                aria-current={on || undefined}
                 onClick={() => onSelect({ key: e.key, path: f.path })}
                 title={f.path}
               >
