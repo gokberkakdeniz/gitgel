@@ -467,7 +467,7 @@
   color: var(--text-muted);
 }
 
-/* Project scope: entries with nothing to diff, as one line (TASKS §2 default). */
+/* Project scope: entries with nothing to diff, as one line (docs/SPEC.md §5 Review). */
 .notInReview {
   margin-top: 10px;
   padding: 12px 8px 0;

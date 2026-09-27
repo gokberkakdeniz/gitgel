@@ -1,4 +1,4 @@
-// Outline icons copied from the design screens (see docs/TASKS.md §7). No emoji.
+// Outline icons copied from the design screens (see docs/SPEC.md §11). No emoji.
 import type { ReactNode } from 'react';
 
 interface IconProps {

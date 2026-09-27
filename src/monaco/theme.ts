@@ -1,4 +1,4 @@
-// The `gitgel` Monaco theme, built from the design tokens (HANDOFF §1).
+// The `gitgel` Monaco theme, built from the design tokens (docs/SPEC.md §4).
 import type * as Monaco from 'monaco-editor';
 import { colors } from '../styles/tokens';
 

@@ -92,7 +92,7 @@ a:hover {
   color: var(--text-muted);
 }
 
-/* Monaco: the filler opposite added/removed lines (HANDOFF §1 "Diff colours"). */
+/* Monaco: the filler opposite added/removed lines (docs/SPEC.md §4 "Diff colours"). */
 .monaco-editor .diagonal-fill {
   background-image: repeating-linear-gradient(135deg, #1c1b18 0 4px, #141311 4px 8px) !important;
   background-size: auto !important;

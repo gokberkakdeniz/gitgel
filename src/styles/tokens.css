@@ -1,4 +1,4 @@
-/* Design tokens from design/HANDOFF.md §1. Keep in sync with tokens.ts. */
+/* Design tokens from docs/SPEC.md §4. Keep in sync with tokens.ts. */
 :root {
   /* Backgrounds */
   --bg-sidebar: #0e0d0c;
