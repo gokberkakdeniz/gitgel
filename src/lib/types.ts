@@ -22,9 +22,12 @@ export interface ProjectConfig {
   createdAt: string; // ISO 8601 UTC
   entries: EntryConfig[];
 }
+export type DiffLayout = 'split' | 'unified';
 export interface Settings {
   defaultBaseOrder: string[];
   activeDays: number;
+  diffView: DiffLayout; // review layout, remembered
+  ignoreWhitespace: boolean;
 }
 export interface Config {
   version: 1;

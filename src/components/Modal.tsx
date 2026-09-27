@@ -22,6 +22,7 @@ export function Modal({ onClose, width, paddingTop = 110, closeOnScrim, children
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Listed in lib/shortcuts.ts.
       if (e.key === 'Escape') {
         e.stopPropagation();
         onClose();

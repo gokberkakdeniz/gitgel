@@ -27,6 +27,7 @@ export default function App() {
 
   // ⌘N: new project (flow C), from anywhere unless a modal is open. ⌘R never reloads the
   // webview; on the Project screen it opens the review. ⌘← / ⌘→ (and ⌘[ / ⌘]): back / forward.
+  // ⌘, (Settings) is the app menu's. Listed in lib/shortcuts.ts.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey && e.key.toLowerCase() === 'r') e.preventDefault();

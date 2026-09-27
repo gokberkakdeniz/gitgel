@@ -34,6 +34,14 @@ describe('hunks', () => {
     { originalStart: 50, originalEnd: 0, modifiedStart: 49, modifiedEnd: 55 },
   ];
 
+  it('lands everything in the modified editor when unified', () => {
+    expect(hunkTarget(hunks[1], true)).toEqual({ side: 'modified', line: 20 });
+    expect(hunkTarget({ originalStart: 1, originalEnd: 2, modifiedStart: 0, modifiedEnd: 0 }, true)).toEqual({
+      side: 'modified',
+      line: 1,
+    });
+  });
+
   it('lands deletions on the original side', () => {
     expect(hunkTarget(hunks[0])).toEqual({ side: 'modified', line: 3 });
     expect(hunkTarget(hunks[1])).toEqual({ side: 'original', line: 20 });

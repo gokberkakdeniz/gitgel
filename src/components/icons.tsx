@@ -162,6 +162,33 @@ export function ChevronUpIcon({ size = 12, className }: IconProps) {
   );
 }
 
+/** Diff layouts (Review view menu). */
+export function SplitIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.7} className={className}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <path d="M12 4.5v15" />
+    </Svg>
+  );
+}
+
+export function UnifiedIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.7} className={className}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <path d="M7.5 9.5h9M7.5 14.5h9" />
+    </Svg>
+  );
+}
+
+export function CheckIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={2.2} className={className}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </Svg>
+  );
+}
+
 export function CloseIcon({ size = 14, className }: IconProps) {
   return (
     <Svg size={size} strokeWidth={2} className={className}>

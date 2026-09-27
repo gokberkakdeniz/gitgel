@@ -2,7 +2,7 @@ import { DiffEditor } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { readFilePair } from '../lib/ipc';
-import type { DiffMode, FileChange } from '../lib/types';
+import type { DiffLayout, DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
 import styles from './DiffView.module.css';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
@@ -49,18 +49,44 @@ interface Props {
   /** ⌥↓ / ⌥↑ while the diff has focus. */
   onStep: (dir: 1 | -1) => void;
   navRef: MutableRefObject<DiffNav | null>;
+  layout: DiffLayout;
+  ignoreWhitespace: boolean;
+  /** ⌥V / ⌥W while the diff has focus. */
+  onToggleLayout: () => void;
+  onToggleWhitespace: () => void;
 }
 
 /** Side-by-side diff of one file. The editor stays mounted; only its content changes. */
-export function DiffView({ repoId, worktreePath, change, mode, fileKey, land, onNav, onStep, navRef }: Props) {
+export function DiffView({
+  repoId,
+  worktreePath,
+  change,
+  mode,
+  fileKey,
+  land,
+  onNav,
+  onStep,
+  navRef,
+  layout,
+  ignoreWhitespace,
+  onToggleLayout,
+  onToggleWhitespace,
+}: Props) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     void monacoReady.then(() => setReady(true));
   }, []);
 
   // Latest props for Monaco callbacks registered once.
-  const latest = useRef({ onNav, onStep, land, fileKey });
-  latest.current = { onNav, onStep, land, fileKey };
+  const latest = useRef({ onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace });
+  latest.current = { onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace };
+
+  // Layout and whitespace are editor options: changed in place, never by rebuilding the editor.
+  // Monaco hides whitespace-only changes by default, so the option is always given.
+  const options = useMemo(
+    () => ({ ...OPTIONS, renderSideBySide: layout === 'split', ignoreTrimWhitespace: ignoreWhitespace }),
+    [layout, ignoreWhitespace],
+  );
 
   // The wrapper would dispose the models before the editor lets go of them, which Monaco
   // reports as an error. It keeps them instead; here the editor is detached first.
@@ -98,6 +124,8 @@ export function DiffView({ repoId, worktreePath, change, mode, fileKey, land, on
     landedKey: null as string | null,
     /** Scrolling done by a jump, not by the user. */
     jumping: false,
+    /** The next diff update restarts at the first change. */
+    restart: false,
     shownKey: null as string | null,
     decorations: [] as monaco.editor.IEditorDecorationsCollection[],
   });
@@ -120,7 +148,7 @@ export function DiffView({ repoId, worktreePath, change, mode, fileKey, land, on
     const n = nav.current;
     const h = n.hunks[index];
     if (!m || !h) return;
-    const target = hunkTarget(h);
+    const target = hunkTarget(h, latest.current.layout === 'unified');
     const ed = target.side === 'original' ? m.editor.getOriginalEditor() : m.editor.getModifiedEditor();
     n.jumping = true;
     // Top third of the view; both sides scroll together.
@@ -144,7 +172,13 @@ export function DiffView({ repoId, worktreePath, change, mode, fileKey, land, on
       modifiedEnd: c.modifiedEndLineNumber,
     }));
     const { fileKey: wanted, land: where } = latest.current;
-    if (n.shownKey === wanted && n.landedKey !== wanted) {
+    if (n.restart) {
+      // Whitespace setting changed: the changes are different ones now, start at the first.
+      n.restart = false;
+      n.index = null;
+      if (n.hunks.length > 0) goTo(0);
+      else report();
+    } else if (n.shownKey === wanted && n.landedKey !== wanted) {
       // A newly shown file: land on its first (or last) change.
       n.landedKey = wanted;
       n.index = null;
@@ -158,6 +192,28 @@ export function DiffView({ repoId, worktreePath, change, mode, fileKey, land, on
     }
   };
   const language = useMemo(() => languageForPath(change.path, monaco.languages.getLanguages()), [change.path]);
+
+  // Switching layout keeps the current change and brings it back into view.
+  const firstLayout = useRef(true);
+  useEffect(() => {
+    if (firstLayout.current) {
+      firstLayout.current = false;
+      return;
+    }
+    const index = nav.current.index;
+    if (index !== null) requestAnimationFrame(() => goTo(index));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout]);
+
+  // Ignoring whitespace changes which lines count as changes: restart at the first one.
+  const firstWs = useRef(true);
+  useEffect(() => {
+    if (firstWs.current) {
+      firstWs.current = false;
+      return;
+    }
+    nav.current.restart = true;
+  }, [ignoreWhitespace]);
 
   const message = data?.binary
     ? 'Binary file not shown'
@@ -188,7 +244,7 @@ export function DiffView({ repoId, worktreePath, change, mode, fileKey, land, on
           language={language}
           original={message ? '' : (data?.original ?? '')}
           modified={message ? '' : (data?.modified ?? '')}
-          options={OPTIONS}
+          options={options}
           loading={null}
           keepCurrentOriginalModel
           keepCurrentModifiedModel
@@ -211,10 +267,12 @@ export function DiffView({ repoId, worktreePath, change, mode, fileKey, land, on
                 report();
               }
             });
-            // Read-only, so ⌥↑/⌥↓ (move line) is free for jumping.
+            // Read-only, so ⌥↑/⌥↓ (move line) is free for jumping. Listed in lib/shortcuts.ts.
             for (const ed of [original, modified]) {
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.DownArrow, () => latest.current.onStep(1));
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.UpArrow, () => latest.current.onStep(-1));
+              ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyV, () => latest.current.onToggleLayout());
+              ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyW, () => latest.current.onToggleWhitespace());
             }
           }}
         />

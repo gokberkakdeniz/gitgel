@@ -63,6 +63,9 @@ make_web_app() {
   put "$seed" src/auth/token.ts 'export function readToken() { return ""; }'
   put "$seed" src/api/client.ts 'export const baseUrl = "/api";'
   put "$seed" package.json '{ "name": "web-app", "version": "1.0.0" }'
+  # Reindented on session-token-refresh (flows D5–D6: Ignore whitespace).
+  put "$seed" src/auth/config.ts "$(printf '%s\n' 'export const auth = {' '  cookie: "sid",' '  ttl: 3600,' '  retries: 2,' '};')"
+  put "$seed" src/auth/scopes.ts "$(printf '%s\n' 'export const scopes = [' '  "read",' '  "write",' '];')"
   # A long file for jumping between changes (flow D4).
   put "$seed" src/catalog/items.ts "$(seq 1 1600 | awk '{ printf "export const item%d = %d;\n", $1, $1 }')"
   commit "$seed" 30 "Initial app"
@@ -104,6 +107,10 @@ make_web_app() {
   commit "$repo" 2 "Rename token.ts to tokens.ts"
   put "$repo" test/auth/refresh.test.ts 'test("refresh", () => {});'
   commit "$repo" 1 "Test refresh"
+  # config.ts: one reindented line, trailing spaces and one real change; scopes.ts: whitespace only.
+  put "$repo" src/auth/config.ts "$(printf '%s\n' 'export const auth = {' '    cookie: "sid",' '  ttl: 7200,  ' '  retries: 2,' '};')"
+  put "$repo" src/auth/scopes.ts "$(printf '%s\n' 'export const scopes = [' '    "read",' '    "write",   ' '];')"
+  commit "$repo" 1 "Reformat the auth config"
   # 12 separate edits, a deletion and an insertion across the long file: 14 changes.
   put "$repo" src/catalog/items.ts "$(seq 1 1600 | awk '
     $1 >= 700 && $1 <= 702 { next }

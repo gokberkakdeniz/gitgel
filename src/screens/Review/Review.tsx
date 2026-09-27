@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '../../components/Banner';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
-import { BackIcon, ChevronDownIcon, ChevronUpIcon, RefreshIcon, SidebarIcon } from '../../components/icons';
+import {
+  BackIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  RefreshIcon,
+  SidebarIcon,
+  SplitIcon,
+  UnifiedIcon,
+} from '../../components/icons';
+import { Popover } from '../../components/Popover';
 import { IconButton } from '../../components/IconButton';
 import { KindBadge } from '../../components/KindBadge';
 import { Pill } from '../../components/Pill';
@@ -9,9 +19,17 @@ import { RefreshButton } from '../../components/RefreshButton';
 import { Segmented } from '../../components/Segmented';
 import { entryKey } from '../../lib/entryKey';
 import { formatAge } from '../../lib/format';
-import { getReview } from '../../lib/ipc';
+import { getReview, updateSettings } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
-import type { DiffMode, EntrySummary, ReviewData, ReviewGroup, ReviewTarget } from '../../lib/types';
+import type {
+  DiffLayout,
+  DiffMode,
+  EntrySummary,
+  ReviewData,
+  ReviewGroup,
+  ReviewTarget,
+  Settings,
+} from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
@@ -93,9 +111,35 @@ export function Review({ target, backLabel, focusKey }: Props) {
       select({ key, path }, r.land);
     }
   };
+  // Diff view settings (layout, whitespace), remembered in the config.
+  const settings = useData((st) => st.config?.settings);
+  const layout = settings?.diffView ?? 'split';
+  const ignoreWs = settings?.ignoreWhitespace ?? false;
+  const saveView = (patch: Partial<Settings>) => {
+    if (settings) void updateSettings({ ...settings, ...patch });
+  };
+  const toggleLayout = () => saveView({ diffView: layout === 'split' ? 'unified' : 'split' });
+  const toggleWs = () => saveView({ ignoreWhitespace: !ignoreWs });
+  const viewRef = useRef({ toggleLayout, toggleWs });
+  viewRef.current = { toggleLayout, toggleWs };
+  // ⌥V / ⌥W outside the diff (inside it Monaco handles them). ⌥ turns letters into other
+  // characters, so the physical key is checked. Listed in lib/shortcuts.ts.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.altKey || (e.code !== 'KeyV' && e.code !== 'KeyW')) return;
+      if ((e.target as HTMLElement | null)?.closest('.monaco-editor, input, textarea')) return;
+      if (useUi.getState().modalCount > 0) return;
+      e.preventDefault();
+      if (e.code === 'KeyV') viewRef.current.toggleLayout();
+      else viewRef.current.toggleWs();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const stepRef = useRef(step);
   stepRef.current = step;
-  // ⌥↓ / ⌥↑ outside the diff; inside it Monaco handles them.
+  // ⌥↓ / ⌥↑ outside the diff; inside it Monaco handles them. Listed in lib/shortcuts.ts.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!e.altKey || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
@@ -199,10 +243,28 @@ export function Review({ target, backLabel, focusKey }: Props) {
               <div className={styles.fileBar}>
                 <span className={styles.filePath}>{change.path}</span>
                 <span className={styles.muted}>{compareLabel(mode, group.entry)}</span>
+                {ignoreWs && (
+                  <button
+                    type="button"
+                    className={styles.wsChip}
+                    title="Show whitespace changes (⌥W)"
+                    onClick={toggleWs}
+                  >
+                    Whitespace ignored
+                  </button>
+                )}
                 <span className={styles.grow} />
-                <span className={styles.muted}>Side by side · read-only</span>
+                <ViewMenu
+                  layout={layout}
+                  ignoreWs={ignoreWs}
+                  onLayout={(l) => saveView({ diffView: l })}
+                  onToggleWs={toggleWs}
+                />
                 <span className={styles.barDivider} />
                 <ChangeNav
+                  onlyWhitespace={
+                    ignoreWs && !change.binary && (change.add ?? 0) + (change.del ?? 0) > 0
+                  }
                   nav={nav}
                   prevFile={files[fileIndex - 1]}
                   nextFile={files[fileIndex + 1]}
@@ -219,6 +281,10 @@ export function Review({ target, backLabel, focusKey }: Props) {
                 onNav={setNav}
                 onStep={(dir) => stepRef.current(dir)}
                 navRef={diffNav}
+                layout={layout}
+                ignoreWhitespace={ignoreWs}
+                onToggleLayout={() => viewRef.current.toggleLayout()}
+                onToggleWhitespace={() => viewRef.current.toggleWs()}
               />
             </>
           ) : (
@@ -253,12 +319,91 @@ function fileId(entryKey: string, path: string): string {
 const fileName = (id: string | undefined) => (id ? basename(id.split('\u0000')[1]) : '');
 
 /** "Change 2 of 3" and ↑ ↓; past a file's first/last change they continue into the neighbour. */
+/** Layout (Split / Unified) and Ignore whitespace; applies to every diff and is remembered. */
+function ViewMenu({
+  layout,
+  ignoreWs,
+  onLayout,
+  onToggleWs,
+}: {
+  layout: DiffLayout;
+  ignoreWs: boolean;
+  onLayout: (l: DiffLayout) => void;
+  onToggleWs: () => void;
+}) {
+  const [at, setAt] = useState<DOMRect | null>(null);
+  const radio = (value: DiffLayout, label: string) => (
+    <button
+      type="button"
+      role="menuitemradio"
+      aria-checked={layout === value}
+      className={layout === value ? `${styles.viewRow} ${styles.viewRowOn}` : styles.viewRow}
+      onClick={() => {
+        onLayout(value);
+        setAt(null);
+      }}
+    >
+      <span className={layout === value ? styles.viewCheck : `${styles.viewCheck} ${styles.hidden}`}>
+        <CheckIcon />
+      </span>
+      <span className={styles.grow}>{label}</span>
+      <span className={styles.viewKey}>⌥V</span>
+    </button>
+  );
+  return (
+    <>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={!!at}
+        title="Diff view"
+        className={at ? `${styles.viewButton} ${styles.viewButtonOpen}` : styles.viewButton}
+        onClick={(e) => setAt(at ? null : e.currentTarget.getBoundingClientRect())}
+      >
+        {layout === 'split' ? <SplitIcon /> : <UnifiedIcon />}
+        <span>{layout === 'split' ? 'Split' : 'Unified'}</span>
+        <ChevronDownIcon size={9} />
+      </button>
+      {at && (
+        <Popover anchorRect={at} width={290} alignRight onClose={() => setAt(null)}>
+          <div role="menu" aria-label="Diff view" className={styles.viewMenu}>
+            <div className={styles.viewTitle}>Layout</div>
+            {radio('split', 'Split')}
+            {radio('unified', 'Unified')}
+            <div className={styles.viewDivider} />
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={ignoreWs}
+              className={`${styles.viewRow} ${styles.viewRowTop}`}
+              onClick={onToggleWs}
+            >
+              <span className={ignoreWs ? `${styles.viewBox} ${styles.viewBoxOn}` : styles.viewBox}>
+                <CheckIcon />
+              </span>
+              <span className={styles.viewText}>
+                <span>Ignore whitespace</span>
+                <span className={styles.viewHint}>Hide lines where only indentation or trailing spaces changed</span>
+              </span>
+              <span className={`${styles.viewKey} ${styles.viewKeyTop}`}>⌥W</span>
+            </button>
+            <div className={styles.viewFoot}>Applies to every diff and is remembered.</div>
+          </div>
+        </Popover>
+      )}
+    </>
+  );
+}
+
 function ChangeNav({
+  onlyWhitespace,
   nav,
   prevFile,
   nextFile,
   onStep,
 }: {
+  /** Ignoring whitespace left this file with no changes. */
+  onlyWhitespace: boolean;
   nav: NavInfo;
   prevFile: string | undefined;
   nextFile: string | undefined;
@@ -281,7 +426,11 @@ function ChangeNav({
   return (
     <>
       <span aria-live="polite" className={styles.navLabel}>
-        {nav.count === 0 ? 'No line changes' : `Change ${i + 1} of ${nav.count}`}
+        {nav.count === 0
+          ? onlyWhitespace
+            ? 'Only whitespace changed'
+            : 'No line changes'
+          : `Change ${i + 1} of ${nav.count}`}
         {nav.count > 0 && atLast && nextFile && <span className={styles.muted}> · next file {fileName(nextFile)}</span>}
       </span>
       <div role="group" aria-label="Jump between changes" className={styles.navGroup}>

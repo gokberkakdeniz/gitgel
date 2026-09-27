@@ -15,8 +15,10 @@ pub mod state;
 pub mod timing;
 pub mod watch;
 
-use tauri::menu::{Menu, MenuItem, HELP_SUBMENU_ID};
-use tauri::Manager;
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, HELP_SUBMENU_ID};
+use tauri::{Emitter, Manager};
+
+const SETTINGS_ID: &str = "settings";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -46,8 +48,17 @@ pub fn run() {
                 app.package_info().version,
                 git::libgit2_version()
             );
-            // The standard macOS menus, plus Help › Show Logs in Finder.
+            // The standard macOS menus, plus Gitgel › Settings… (⌘,) and Help › Show Logs in
+            // Finder.
             let menu = Menu::default(app.handle())?;
+            // The first submenu is the app menu; Settings goes after "About Gitgel".
+            if let Some(app_menu) = menu.items()?.first().and_then(|k| k.as_submenu().cloned()) {
+                app_menu.insert(&PredefinedMenuItem::separator(app)?, 1)?;
+                app_menu.insert(
+                    &MenuItem::with_id(app, SETTINGS_ID, "Settings…", true, Some("CmdOrCtrl+,"))?,
+                    2,
+                )?;
+            }
             if let Some(help) = menu
                 .get(HELP_SUBMENU_ID)
                 .and_then(|k| k.as_submenu().cloned())
@@ -64,6 +75,8 @@ pub fn run() {
             app.on_menu_event(|app, event| {
                 if event.id() == logs::SHOW_LOGS_ID {
                     logs::show_logs(app);
+                } else if event.id() == SETTINGS_ID {
+                    let _ = app.emit("open-settings", ());
                 }
             });
             let config_path = config::config_path(app.handle())?;

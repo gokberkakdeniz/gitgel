@@ -9,8 +9,10 @@ export interface Hunk {
 }
 
 /** Where a jump lands: the editor side and line that start the hunk. */
-export function hunkTarget(h: Hunk): { side: 'original' | 'modified'; line: number } {
-  // Only a deletion has no modified lines; land on its first removed line.
+export function hunkTarget(h: Hunk, unified = false): { side: 'original' | 'modified'; line: number } {
+  // Unified shows only the modified editor (removed lines are zones in it): a deletion lands
+  // on the line it sits at. Split lands a deletion on its first removed line.
+  if (unified) return { side: 'modified', line: Math.max(1, h.modifiedStart) };
   return h.modifiedEnd === 0
     ? { side: 'original', line: h.originalStart }
     : { side: 'modified', line: h.modifiedStart };

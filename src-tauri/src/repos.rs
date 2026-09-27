@@ -135,15 +135,22 @@ pub fn update_settings(state: &AppState, settings: Settings) -> Result<Config, A
             "the active threshold must be 1–365 days".into(),
         ));
     }
+    let mut rescan = false;
     let config = config::update(state, |config| {
-        config.settings = Settings {
+        let next = Settings {
             default_base_order: order,
-            active_days: settings.active_days,
+            ..settings
         };
+        // Only the base order and the threshold change what is listed.
+        rescan = next.default_base_order != config.settings.default_base_order
+            || next.active_days != config.settings.active_days;
+        config.settings = next;
         Ok(config.clone())
     })?;
-    // scan_all emits each repo whose result changed.
-    scan::scan_all(state);
-    watch::sync_watches(state);
+    if rescan {
+        // scan_all emits each repo whose result changed.
+        scan::scan_all(state);
+        watch::sync_watches(state);
+    }
     Ok(config)
 }

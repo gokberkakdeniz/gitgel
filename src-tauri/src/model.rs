@@ -66,6 +66,9 @@ pub struct ProjectConfig {
 pub struct Settings {
     pub default_base_order: Vec<String>,
     pub active_days: u32,
+    /// Review layout; configs from before it load as `split`.
+    pub diff_view: DiffLayout,
+    pub ignore_whitespace: bool,
 }
 
 impl Default for Settings {
@@ -73,8 +76,18 @@ impl Default for Settings {
         Settings {
             default_base_order: vec!["origin/HEAD".into(), "main".into(), "master".into()],
             active_days: 14,
+            diff_view: DiffLayout::Split,
+            ignore_whitespace: false,
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DiffLayout {
+    #[default]
+    Split,
+    Unified,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

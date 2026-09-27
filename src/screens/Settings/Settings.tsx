@@ -12,6 +12,7 @@ import type { AppError, Config, RepoConfig } from '../../lib/types';
 import { useData } from '../../state/data';
 import styles from './Settings.module.css';
 import { parseBaseOrder, parseDays } from './parse';
+import { SHORTCUTS } from '../../lib/shortcuts';
 
 export function Settings() {
   const config = useData((s) => s.config);
@@ -24,6 +25,7 @@ export function Settings() {
         <div className={styles.column}>
           <Behaviour config={config} />
         </div>
+        <Shortcuts />
       </div>
     </>
   );
@@ -131,6 +133,47 @@ function Repositories({ config }: { config: Config }) {
   );
 }
 
+function Shortcuts() {
+  return (
+    <section className={styles.shortcuts} aria-labelledby="shortcuts-title">
+      <div className={styles.shortcutsHead}>
+        <h2 id="shortcuts-title" className={styles.heading}>
+          Keyboard shortcuts
+        </h2>
+        <span className={styles.settingHint}>Not editable yet</span>
+      </div>
+      <div className={styles.shortcutGrid}>
+        {SHORTCUTS.map((group) => (
+          <div key={group.title} className={styles.shortcutCard}>
+            <div className={styles.shortcutTitle}>{group.title}</div>
+            {group.items.map((item) => (
+              <div key={`${item.label}${item.note ?? ''}`} className={styles.shortcutRow}>
+                <span className={styles.shortcutText}>
+                  <span className={styles.shortcutLabel}>{item.label}</span>
+                  {item.note && <span className={styles.shortcutNote}>{item.note}</span>}
+                </span>
+                <span className={styles.keys}>
+                  {item.keys.map((k, i) =>
+                    k === '/' ? (
+                      <span key={i} className={styles.keySep}>
+                        /
+                      </span>
+                    ) : (
+                      <kbd key={i} className={styles.key}>
+                        {k}
+                      </kbd>
+                    ),
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Behaviour({ config }: { config: Config }) {
   const { defaultBaseOrder, activeDays } = config.settings;
   const orderText = defaultBaseOrder.join(' → ');
@@ -146,7 +189,7 @@ function Behaviour({ config }: { config: Config }) {
       setOrder(orderText);
       return;
     }
-    void updateSettings({ defaultBaseOrder: parsed, activeDays });
+    void updateSettings({ ...config.settings, defaultBaseOrder: parsed });
   };
   const saveDays = () => {
     const n = parseDays(days);
@@ -154,7 +197,7 @@ function Behaviour({ config }: { config: Config }) {
       setDays(String(activeDays));
       return;
     }
-    void updateSettings({ defaultBaseOrder, activeDays: n });
+    void updateSettings({ ...config.settings, activeDays: n });
   };
   const onEnter = (save: () => void) => (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {

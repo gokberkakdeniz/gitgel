@@ -18,7 +18,7 @@ button,input{font-family:inherit}
 <div style="width: 1280px; height: 800px; display: flex; background: #141311; overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc">
 <dc-import name="Sidebar" active="settings" inbox-count="7" hint-size="260px,800px"></dc-import>
 
-<main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0">
+<main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; overflow: auto">
 <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; padding: 0 32px; border-bottom: 1px solid #302e2a">
 <h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: #faf9f5">Settings</h1>
 </header>
@@ -59,6 +59,30 @@ button,input{font-family:inherit}
 </section>
 </div>
 
+<section aria-labelledby="shortcuts-title" style="grid-column: 1 / -1; margin-top: 40px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: baseline; gap: 12px">
+<h2 id="shortcuts-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: #faf9f5">Keyboard shortcuts</h2>
+<span style="font-size: 12px; color: #a09d96">Not editable yet</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{shortcutGroups}}" as="sg" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; background: #1a1917; border: 1px solid #302e2a; border-radius: 12px; padding: 6px 0">
+<div style="padding: 8px 14px 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">{{sg.title}}</div>
+<sc-for list="{{sg.items}}" as="it" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; padding: 0 14px">
+<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0"><span style="color: #e0ddd6; white-space: nowrap">{{it.label}}</span><span style="{{it.noteStyle}}">{{it.note}}</span></span>
+<span style="display: flex; align-items: center; gap: 4px; flex-shrink: 0">
+<sc-for list="{{it.keys}}" as="k" hint-placeholder-count="1">
+<kbd style="{{k.style}}">{{k.text}}</kbd>
+</sc-for>
+</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</section>
+
 </div>
 </main>
 </div>
@@ -67,7 +91,43 @@ button,input{font-family:inherit}
 class Component extends DCLogic {
   renderVals() {
     var ok = 'font-size: 12px; color: #a09d96; white-space: nowrap';
+    var cap = 'min-width: 22px; height: 22px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; background: #211f1c; border: 1px solid #383631; border-bottom-width: 2px; border-radius: 6px; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: #faf9f5; white-space: nowrap';
+    var sep = 'font-size: 11px; color: #75726b; padding: 0 1px';
+    var keys = function (list) {
+      return list.map(function (t) { return t === '/' ? { text: '/', style: sep } : { text: t, style: cap }; });
+    };
+    var item = function (label, list, note) {
+      return { label: label, keys: keys(list), note: note || '', noteStyle: note ? 'font-size: 11px; color: #75726b; white-space: nowrap' : 'display: none' };
+    };
+    var shortcutGroups = [
+      { title: 'General', items: [
+        item('New project', ['⌘', 'N']),
+        item('Back / Forward', ['⌘', '[', '/', '⌘', ']'], 'also ⌘← ⌘→'),
+        item('Settings', ['⌘', ',']),
+        item('Close menu or dialog', ['esc'], 'or clear selection')
+      ] },
+      { title: 'Branches and projects', items: [
+        item('Focus filter', ['⌘', 'K'], 'Branches'),
+        item('Select several rows', ['⌘', '/', '⇧'], 'hold and click'),
+        item('Add branches', ['⌘', 'K'], 'Project'),
+        item('Review changes', ['⌘', 'R'], 'Project'),
+        item('Rename project', ['F2'])
+      ] },
+      { title: 'Review', items: [
+        item('Next change', ['⌥', '↓'], 'then next file'),
+        item('Previous change', ['⌥', '↑']),
+        item('Split / Unified', ['⌥', 'V']),
+        item('Ignore whitespace', ['⌥', 'W'])
+      ] },
+      { title: 'Lists and dialogs', items: [
+        item('Move', ['↑', '/', '↓']),
+        item('Mark row', ['space'], 'Add palette'),
+        item('Confirm', ['↵']),
+        item('Cancel', ['esc'])
+      ] }
+    ];
     return {
+      shortcutGroups: shortcutGroups,
       repos: [
         { name: 'web-app', path: '~/code/web-app', note: 'base main', noteStyle: ok, missing: false },
         { name: 'api-server', path: '~/code/api-server', note: 'base main', noteStyle: ok, missing: false },

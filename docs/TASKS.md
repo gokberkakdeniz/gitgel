@@ -107,7 +107,7 @@ branch tespiti.
 | Proje | Sabit `id`, ad sadece görüntü içindir, adlar benzersizdir (büyük/küçük harf duyarsız, trim'li). | HANDOFF §4.4 |
 | Silinen branch | Entry `lastKnownTip` (SHA + görülme zamanı) tutar. | HANDOFF §4.5 |
 | Review | Proje genelinde tek ekran; dosyalar entry başına gruplu; tek mod toggle'ı. Tek branch review'u aynı ekranın tek gruplu hâli. | HANDOFF §4.6 |
-| Settings | Sadece: repolar, default base sırası, aktif gün eşiği. | HANDOFF §4.7 |
+| Settings | Repolar, default base sırası, aktif gün eşiği ve salt okunur kısayol listesi (T9.4). Diff görünümü ve whitespace ayarı Settings'te değil, Review'daki menüde; config'te saklanır (T9.3). | HANDOFF §4.7, §2 Settings |
 | Config sahibi | Config'i sadece Rust okur/yazar. Frontend hiçbir zaman dosyaya yazmaz; her değişiklik bir Tauri komutudur. | — |
 | Config yolu | `~/Library/Application Support/com.gitgel.desktop/config.json` (Tauri `app_data_dir()`). | — |
 | Log | `tauri-plugin-log` → `~/Library/Logs/com.gitgel.desktop/`. Git hataları `log::warn!` ile yazılır. | SPEC |
@@ -211,7 +211,12 @@ export interface ProjectConfig {
   createdAt: string;             // ISO 8601 UTC
   entries: EntryConfig[];
 }
-export interface Settings { defaultBaseOrder: string[]; activeDays: number }
+export interface Settings {
+  defaultBaseOrder: string[];
+  activeDays: number;
+  diffView: 'split' | 'unified';   // T9.3, varsayılan 'split'
+  ignoreWhitespace: boolean;       // T9.3, varsayılan false
+}
 export interface Config {
   version: 1;
   repos: RepoConfig[];
@@ -539,10 +544,10 @@ diff.find_similar(Some(&mut find))?;
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | üst satır 18–33, nav 35–46, "Projects" başlığı 48–58, liste 60–75, footer 79–90 (repo satırı + "+" butonu 80–86), satır ve footer stilleri 100–121 |
 | Branches | `Main.dc.html` | header 22–44 (All / Not in a project seçici 32–36), kolon başlığı 48–50, repo bandı 54–59, satır 61–73 (Projects hücresi 71), satır ve Projects hücresi stilleri 211–252, filtre mantığı 275–285 ve 303–310, boş durum 81–91, B1 popover 93–106, B2 form 108–124, Projects menüsü 126–142, toast 144–150, selection bar 151–164, sürükle-bırak overlay 167–174, sheet 176–200 ve 312–327 |
-| Review | `Diff.dc.html` | header 20–45, banner 47–49 ve 474–478, dosya listesi 52–102 ve 288–313, sağ taraf 104–161, dosya çubuğu ve değişiklik atlama 127–142, base menüsü 164–184, segmented 322–329, atlama mantığı 387–414 ve 448–455, diff satırları ve mevcut change işareti 415–430, commit satırları 431–436 |
+| Review | `Diff.dc.html` | header 20–45, banner 47–49 ve 554–558, dosya listesi 52–102 ve 327–353, sağ taraf 104–200, dosya çubuğu 127–174 (whitespace çipi 130–132, görünüm butonu ve menü 134–163, değişiklik atlama 164–173), split gövde 176–189, unified gövde 190–196, base menüsü 203–223, segmented 361–367, görünüm/whitespace durumu 426–430, atlama mantığı 431–458 ve 517–524, split satırları ve mevcut change işareti 459–474, unified satırları 475–499, commit satırları 500–505, görünüm değerleri 526–535 |
 | Project | `Projects.dc.html` | header 22–43, tablo 47–60 ve 172–183, "add related" kartı 62–68, boş proje 72–80, entry menüsü 82–93, proje menüsü 94–100, silme modalı 103–114, rename 150–170, pill'ler 124–133 |
 | Palette | `Palette.dc.html` | dialog 25–56, satır stili 70–76, pill'ler 62–69 |
-| Settings | `Settings.dc.html` | tamamı |
+| Settings | `Settings.dc.html` | Repositories 28–46, Behaviour 49–59, Keyboard shortcuts 62–84, kısayol verisi ve keycap stili 94–128 |
 
 **İkonlar** (1.6–1.8 stroke outline SVG; `src/components/icons.tsx`'e birebir kopyala, emoji
 kullanma):
@@ -2114,6 +2119,8 @@ Her task'ta: **Bağımlı** (önce bitmesi gerekenler), **Dosyalar** (dokunulaca
      - Esc: en üstteki popover/menü/modal/palette'i kapatır, yoksa seçim/filtreyi temizler.
      - ⌥↓ / ⌥↑: Review'da sonraki/önceki değişiklik, dosya sınırında sonraki/önceki dosya
        (T9.1 ile eklendi).
+     - ⌥V / ⌥W: Review'da Split ↔ Unified ve Ignore whitespace; ⌘,: Settings (T9.3–T9.4 ile
+       eklendi).
   2. Varsayılan webview sağ tık menüsünü engelle (input, textarea ve `.monaco-editor` hariç).
   3. Tüm ikon butonlarda ekran dosyalarındaki `aria-label`'lar; popover/menü/modal'larda
      `role`'ler (`dialog`, `menu`, `menuitem`, `listbox`, `alertdialog`, `status`, `toolbar`).
@@ -2248,6 +2255,80 @@ Her task'ta: **Bağımlı** (önce bitmesi gerekenler), **Dosyalar** (dokunulaca
 - **Kullanıcıya göster:** büyük dosyada ↑ ↓ ve ⌥↑ / ⌥↓, dosya sınırında geçiş, katlı gruba
   geçiş. Onay bekle.
 
+#### T9.3 Review: Split / Unified ve Ignore whitespace (akış D5–D6)
+- **Bağımlı:** T9.2
+- **Referans:** `Diff.dc.html` dosya çubuğu 127–174 (whitespace çipi 130–132, görünüm butonu ve
+  menü 134–163), split gövde 176–189, unified gövde 190–196, mantık 426–430, unified satırları
+  475–499, değerler 526–535; canvas'ta `FlowD5`, `FlowD6`. HANDOFF §2 Review "Diff view menu" ve
+  "Unified layout".
+- **Dosyalar:** `src/lib/types.ts`, `src-tauri/src/config.rs` (ve Settings tipi), `src/monaco/DiffView.tsx`,
+  `src/screens/Review/*`, `src/components/icons.tsx`
+- **Adımlar:**
+  1. Config `Settings`'e `diffView: 'split' | 'unified'` (varsayılan `'split'`) ve
+     `ignoreWhitespace: boolean` (varsayılan `false`) ekle; eski config dosyası bu alanlar
+     olmadan okunabilmeli (`#[serde(default)]`). Mevcut `update_settings` komutuyla kaydet.
+  2. **Önemli:** Monaco'nun `ignoreTrimWhitespace` varsayılanı `true`. Şu an `DiffView`'da
+     verilmediği için uygulama whitespace değişikliklerini zaten gizliyor. Seçeneği her zaman
+     açıkça `ignoreTrimWhitespace: settings.ignoreWhitespace` olarak ver.
+  3. `renderSideBySide: settings.diffView === 'split'`. `useInlineViewWhenSpaceIsLimited: false`
+     kalır. Değişince editörü yeniden oluşturma, `updateOptions` kullan; mevcut change indeksi
+     (T9.1) korunur, satır yeniden görünür yapılır.
+  4. Unified'da Monaco silinen satırları view zone olarak gösterir; satır numarası kolonları
+     referanstaki iki kolonla birebir aynı olmayabilir. Bu kabul edilen bir sapmadır (T3.5'teki
+     katlama metni gibi). T9.1'in change işareti modified editörde; sadece silme olan change'te
+     `modifiedStartLineNumber` satırına atla.
+  5. Ignore whitespace backend'e gitmez: dosya listesi ve +/− sayıları değişmez, dosya gizlenmez.
+     Sadece Monaco'nun işaretlediği satırlar ve T9.1 sayacı değişir (`getLineChanges()` zaten bu
+     seçeneğe uyar). Değişiklik kalmayan dosyada sayaç "Only whitespace changed", ↑ ↓ komşu
+     dosyalara gider. Seçenek değişince `hunk` indeksi 0'a döner.
+  6. Dosya çubuğu: "Side by side · read-only" yazısını kaldır; yerine görünüm butonu (split ya da
+     unified ikonu + "Split"/"Unified" + chevron, referans 134–140). Menü (`role="menu"`, 290px,
+     butonun altında sağa hizalı): "Layout" başlığı, `menuitemradio` Split / Unified, ayırıcı,
+     `menuitemcheckbox` "Ignore whitespace" + açıklama. Her satır aynı hizada: solda 16px
+     gösterge kolonu (radio'da seçiliye accent check, seçili olmayanda boş; checkbox'ta kutu),
+     sonra ad, en sağda kısayol (`⌥V`, `⌥W`). Menü satırlarında layout ikonu yok (ikon butonda);
+     böylece adlar ve kısayollar tüm satırlarda aynı kolonda durur. Sonra altta muted "Applies to every diff and is remembered.". Seçince menü kapanır
+     (checkbox'ta açık kalır). Esc ve dışarı tıklama kapatır (`Popover` bileşeni).
+  7. `ignoreWhitespace` açıkken compare etiketinin yanında "Whitespace ignored" çipi (buton;
+     tıklayınca kapatır, tooltip "Show whitespace changes (⌥W)").
+  8. Kısayollar: Review ekranında ⌥V (layout değiştir) ve ⌥W (whitespace). ⌥ harfi özel karakter
+     ürettiği için `e.key` değil `e.code === 'KeyV' / 'KeyW'` kontrol et. Monaco odaktayken de
+     çalışsın diye T9.1'deki gibi iki editöre `addCommand(KeyMod.Alt | KeyCode.KeyV / KeyW)`.
+- **Kabul:** Split ↔ Unified geçişi editörü yeniden kurmadan oluyor; uygulama yeniden açılınca
+  seçim duruyor. Fixture'da sadece girintisi değişen bir satır (yoksa `make-fixtures.sh`'e ekle)
+  Ignore whitespace kapalıyken işaretli, açıkken değil; sayaç buna göre değişiyor; dosya
+  listesi ve sayılar değişmiyor. ⌥V / ⌥W editör odaktayken de çalışıyor.
+
+#### T9.4 Settings: Keyboard shortcuts bölümü ve ⌘,
+- **Bağımlı:** T9.3
+- **Referans:** `Settings.dc.html` bölüm 62–84, veri ve keycap stili 94–128. HANDOFF §2 Settings
+  "Keyboard shortcuts".
+- **Dosyalar:** `src/lib/shortcuts.ts` (yeni), `src/screens/Settings/*`, `src/App.tsx`,
+  `src-tauri/src/lib.rs`
+- **Adımlar:**
+  1. `shortcuts.ts`: tek kaynak liste — `{ group, label, keys: string[], note?: string }[]`.
+     Gruplar ve sıra referanstaki gibi: General, Branches and projects, Review, Lists and dialogs.
+     Satırlar uygulamanın **gerçekte** desteklediği kısayollar; referanstaki listeyle
+     karşılaştır, fark varsa koddaki davranış esastır ve listeyi ona göre yaz. Handler'lar bu
+     listeyi okumak zorunda değil (düzenleme özelliği yok), ama her kısayol handler'ının yanına
+     `// shortcuts.ts'te listelenir` yorumu koy ki biri değişince liste de güncellensin.
+  2. Settings ekranı: iki kolonun altında tam genişlik "Keyboard shortcuts" başlığı + muted "Not
+     editable yet"; 4 kart grid'i. Satır: label (nowrap), altında opsiyonel muted not, sağda
+     keycap'ler (`<kbd>`). "/" ayırıcı keycap değil, muted metin. Ekran taşarsa `main` kayar.
+  3. ⌘, → Settings: macOS standardı. App menüsüne (Tauri varsayılan menüsündeki uygulama
+     alt menüsü) `CmdOrCtrl+,` hızlandırıcılı "Settings…" öğesi ekle; tıklanınca frontend'e
+     event gönder, frontend `nav.push({ name: 'settings' })` yapar. Menü eklemek zor olursa
+     `App.tsx`'teki global keydown'a ekle.
+  4. T8.3'teki kısayol listesine ⌘, ⌥V ve ⌥W'yi ekle.
+- **Kabul:** Settings'teki liste uygulamadaki kısayollarla birebir (her birini elle dene); ⌘,
+  her ekrandan Settings'i açıyor; 1280×800 pencerede dört kart yan yana, dar pencerede sayfa
+  kayıyor.
+
+#### T9.5 ✋ Kontrol noktası — T9.3–T9.4
+- **Bağımlı:** T9.4
+- **Kullanıcıya göster:** Split ↔ Unified, Ignore whitespace (girintisi değişen satırla), çip,
+  uygulama yeniden açılınca kalıcılık, Settings'teki kısayol listesi, ⌘,. Onay bekle.
+
 ---
 
 ## 9. Test stratejisi (özet)
@@ -2374,3 +2455,6 @@ Durum: `[ ]` yapılacak · `[x]` bitti (sonuna ` — YYYY-MM-DD` ekle). Yarım k
 - [x] T9.1 Review: değişiklikler arasında atlama (akış D4)
   - not: kod, `changeNav` testleri ve fixture'daki 1600 satırlık `src/catalog/items.ts` (14 değişiklik) hazır; ekranda kontrol kullanıcıda.
 - [x] T9.2 ✋ Kontrol noktası — Faz 9
+- [x] T9.3 Review: Split / Unified ve Ignore whitespace (akış D5–D6) — 2026-09-27 (fixture: web-app `session-token-refresh`'te `src/auth/config.ts` girinti + gerçek değişiklik, `src/auth/scopes.ts` sadece boşluk)
+- [x] T9.4 Settings: Keyboard shortcuts bölümü ve ⌘, — 2026-09-27 ("Select several rows" satırı yok: uygulamada ⌘/⇧ ile çoklu seçim desteklenmiyor; ⌘, uygulama menüsündeki "Settings…")
+- [x] T9.5 ✋ Kontrol noktası — T9.3–T9.4

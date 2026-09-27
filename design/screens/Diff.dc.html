@@ -127,8 +127,40 @@ button,input{font-family:inherit}
 <div style="display: flex; align-items: center; gap: 10px; padding: 5px 10px 5px 18px; border-bottom: 1px solid #302e2a; background: #1a1917">
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #faf9f5; white-space: nowrap">{{filePath}}</span>
 <span style="font-size: 12px; color: #a09d96; white-space: nowrap">{{compare}}</span>
+<sc-if value="{{ignoreWs}}" hint-placeholder-val="{{false}}">
+<button onClick="{{toggleWs}}" title="Show whitespace changes (⌥W)" style="flex-shrink: 0; height: 20px; padding: 0 8px; border: 0; border-radius: 9999px; background: rgba(79,143,163,0.16); color: #a3cad6; font-size: 11px; font-weight: 500; white-space: nowrap; cursor: pointer">Whitespace ignored</button>
+</sc-if>
 <div style="flex-grow: 1"></div>
-<span style="font-size: 12px; color: #a09d96; white-space: nowrap">Side by side · read-only</span>
+<div style="position: relative; z-index: 20; flex-shrink: 0">
+<button onClick="{{toggleViewMenu}}" aria-haspopup="menu" aria-expanded="{{viewMenuOpen}}" title="Diff view" style="{{viewBtnStyle}}">
+<sc-if value="{{isSplit}}" hint-placeholder-val="{{true}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="M12 4.5v15"></path></svg></sc-if>
+<sc-if value="{{isUnified}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="M7.5 9.5h9M7.5 14.5h9"></path></svg></sc-if>
+<span>{{viewLabel}}</span>
+<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg>
+</button>
+<sc-if value="{{viewMenuOpen}}" hint-placeholder-val="{{false}}">
+<div role="menu" aria-label="Diff view" style="position: absolute; top: 34px; right: 0; width: 290px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); padding: 6px; display: flex; flex-direction: column; gap: 1px">
+<div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Layout</div>
+<button role="menuitemradio" aria-checked="{{isSplit}}" onClick="{{pickSplit}}" style="{{splitRowStyle}}">
+<span style="{{splitCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
+<span style="flex-grow: 1">Split</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #75726b">⌥V</span>
+</button>
+<button role="menuitemradio" aria-checked="{{isUnified}}" onClick="{{pickUnified}}" style="{{unifiedRowStyle}}">
+<span style="{{unifiedCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
+<span style="flex-grow: 1">Unified</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #75726b">⌥V</span>
+</button>
+<div style="height: 1px; background: #302e2a; margin: 5px 4px"></div>
+<button role="menuitemcheckbox" aria-checked="{{ignoreWs}}" onClick="{{toggleWs}}" style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #faf9f5; font-size: 13px; text-align: left; cursor: pointer">
+<span style="{{wsBoxStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
+<span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1"><span>Ignore whitespace</span><span style="font-size: 12px; line-height: 1.4; color: #a09d96">Hide lines where only indentation or trailing spaces changed</span></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #75726b; padding-top: 2px">⌥W</span>
+</button>
+<div style="padding: 6px 10px 4px; font-size: 11px; color: #75726b">Applies to every diff and is remembered.</div>
+</div>
+</sc-if>
+</div>
 <span style="width: 1px; height: 16px; background: #302e2a; margin: 0 2px"></span>
 <span aria-live="polite" style="font-size: 12px; color: #d8d4cc; white-space: nowrap; font-variant-numeric: tabular-nums">{{navLabel}}<span style="color: #a09d96">{{navNext}}</span></span>
 <div role="group" aria-label="Jump between changes" style="display: flex; gap: 2px; padding: 2px; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px">
@@ -141,7 +173,7 @@ button,input{font-family:inherit}
 </div>
 </div>
 
-<sc-if value="{{hasSample}}" hint-placeholder-val="{{true}}">
+<sc-if value="{{showSplit}}" hint-placeholder-val="{{true}}">
 <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: #141311; min-height: 0">
 <div style="border-right: 1px solid #302e2a; padding-top: 6px; overflow: hidden">
 <sc-for list="{{lines}}" as="l" hint-placeholder-count="10">
@@ -153,6 +185,13 @@ button,input{font-family:inherit}
 <div style="{{l.rStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: #75726b">{{l.rn}}</span><span style="width: 14px; flex-shrink: 0; color: #8fcf9c">{{l.rMark}}</span><span style="white-space: pre">{{l.rt}}</span></div>
 </sc-for>
 </div>
+</div>
+</sc-if>
+<sc-if value="{{showUnified}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: #141311; min-height: 0; padding-top: 6px; overflow: hidden">
+<sc-for list="{{uLines}}" as="u" hint-placeholder-count="14">
+<div style="{{u.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 8px; color: #75726b">{{u.on}}</span><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: #75726b">{{u.nn}}</span><span style="{{u.markStyle}}">{{u.mark}}</span><span style="white-space: pre">{{u.t}}</span></div>
+</sc-for>
 </div>
 </sc-if>
 <sc-if value="{{noSample}}" hint-placeholder-val="{{false}}">
@@ -184,9 +223,9 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"view":{"editor":"enum","options":["split","unified"],"default":"split"},"ignoreWs":{"editor":"boolean","default":false},"viewMenu":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null }; }
+  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null, view: null, ignoreWs: null, viewMenu: null }; }
   renderVals() {
     var self = this;
     var scope = this.props.scope ?? 'project';
@@ -334,7 +373,7 @@ class Component extends DCLogic {
         ['…', '', '…', '', 'fold'],
         [10, 'export async function getSession(req: Request) {', 11, 'export async function getSession(req: Request) {', ''],
         [11, "  const token = readCookie(req, 'sid');", 12, "  const token = readCookie(req, 'sid');", ''],
-        [12, '  if (!token) return null;', 13, '  if (!token) return null;', ''],
+        [12, '    if (!token) return null;', 13, '  if (!token) return null;', 'ws'],
         [13, '  const session = await store.get(token);', 14, '  const session = await store.get(token);', ''],
         [14, '  if (!session || session.expiresAt < Date.now()) {', 15, '  if (!session) return null;', 'mod'],
         ['', '', 16, '  if (session.expiresAt < Date.now()) {', 'add'],
@@ -384,6 +423,11 @@ class Component extends DCLogic {
     } else if (sel !== 'web:src/auth/refresh.ts' && sel !== 'rl:src/middleware/rate-limit.ts') {
       rows = S[sel] || null;
     }
+    var st = this.state;
+    var view = st.view || this.props.view || 'split';
+    var ignoreWs = st.ignoreWs != null ? st.ignoreWs : !!this.props.ignoreWs;
+    var viewMenuOpen = st.viewMenu != null ? st.viewMenu : !!this.props.viewMenu;
+    if (rows) rows = rows.map(function (r) { return r[4] === 'ws' ? r.slice(0, 4).concat([ignoreWs ? '' : 'mod']) : r; });
     var hunkOf = [], nH = 0, prevCh = false;
     (rows || []).forEach(function (r, i) {
       var ch = !!r[4] && r[4] !== 'fold';
@@ -428,6 +472,31 @@ class Component extends DCLogic {
         rStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'del' ? hatch : k ? 'background: rgba(93,184,114,0.15)' : '')
       };
     });
+    var uLines = [];
+    var uRow = function (on, nn, mark, t, kind, isCur) {
+      var bg = kind === 'del' ? 'background: rgba(198,69,69,0.17)' : kind === 'add' ? 'background: rgba(93,184,114,0.15)' : '';
+      uLines.push({ on: on, nn: nn, mark: mark, t: t,
+        style: base0 + (isCur ? cur : '') + bg,
+        markStyle: 'width: 14px; flex-shrink: 0; color: ' + (kind === 'del' ? '#ee9a90' : '#8fcf9c') });
+    };
+    var pend = [];
+    var flush = function () {
+      if (!pend.length) return;
+      var isCur = hunkOf[pend[0]] === hIdx;
+      pend.forEach(function (i) { var r = rows[i]; if (r[4] === 'mod' || r[4] === 'del') uRow(r[0], '', '−', r[1], 'del', isCur); });
+      pend.forEach(function (i) { var r = rows[i]; if (r[4] === 'mod' || r[4] === 'add') uRow('', r[2], '+', r[3], 'add', isCur); });
+      pend = [];
+    };
+    (rows || []).forEach(function (r, i) {
+      if (r[4] === 'fold') { flush(); uLines.push({ on: '', nn: '', mark: '', t: '⋯ 7 unchanged lines', style: 'display: flex; padding-left: 0; color: #75726b; background: #1a1917; font-size: 11px', markStyle: 'width: 14px; flex-shrink: 0' }); return; }
+      if (r[4]) { pend.push(i); return; }
+      flush();
+      uRow(r[0], r[2], '', r[3], '', false);
+    });
+    flush();
+    var menuRow = function (on) { return 'display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; color: #faf9f5; font-size: 13px; text-align: left; cursor: pointer; ' + (on ? 'background: #2a2825' : 'background: transparent'); };
+    var checkStyle = function (on) { return 'width: 16px; flex-shrink: 0; display: flex; justify-content: center; color: #7fb3c4; ' + (on ? '' : 'visibility: hidden'); };
+    var setView = function (v) { self.setState({ view: v, viewMenu: false }); };
     var cm = (selGroup.commits || []).concat(selGroup.parent || []).map(function (c) {
       return Object.assign({ from: '' }, c, {
         style: 'display: flex; gap: 12px; align-items: baseline; ' + (c.from ? 'opacity: 0.6' : ''),
@@ -454,6 +523,16 @@ class Component extends DCLogic {
       prevStyle: navBtn(atFirst && !prevKey, atFirst && !!prevKey),
       nextStyle: navBtn(atLast && !nextKey, atLast && !!nextKey),
       hasSample: !!rows, noSample: !rows,
+      showSplit: !!rows && view === 'split', showUnified: !!rows && view === 'unified', uLines: uLines,
+      isSplit: view === 'split', isUnified: view === 'unified', viewLabel: view === 'split' ? 'Split' : 'Unified',
+      ignoreWs: ignoreWs, viewMenuOpen: viewMenuOpen,
+      toggleViewMenu: function () { self.setState({ viewMenu: !viewMenuOpen }); },
+      pickSplit: function () { setView('split'); }, pickUnified: function () { setView('unified'); },
+      toggleWs: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); },
+      splitRowStyle: menuRow(view === 'split'), unifiedRowStyle: menuRow(view === 'unified'),
+      splitCheckStyle: checkStyle(view === 'split'), unifiedCheckStyle: checkStyle(view === 'unified'),
+      wsBoxStyle: 'width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 4px; ' + (ignoreWs ? 'background: #4f8fa3; color: #faf9f5; border: 0' : 'border: 1.5px solid #5c5a55; color: transparent'),
+      viewBtnStyle: 'display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ' + (viewMenuOpen ? 'background: #2a2825; color: #faf9f5; border: 1px solid #4f8fa3' : 'background: #211f1c; color: #d8d4cc; border: 1px solid #302e2a'),
       entry: {
         repo: selGroup.repo, branch: selGroup.branch,
         where: mode === 'Uncommitted' ? 'working tree ' + selGroup.wt : selGroup.base + '..' + selGroup.branch,

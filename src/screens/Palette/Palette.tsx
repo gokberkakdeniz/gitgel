@@ -81,6 +81,7 @@ function PaletteDialog({ projectId }: { projectId: string }) {
     close();
   };
 
+  // ↑ ↓, space and ↵. Listed in lib/shortcuts.ts.
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();

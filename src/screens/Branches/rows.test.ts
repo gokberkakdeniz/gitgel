@@ -51,7 +51,7 @@ const config: Config = {
       entries: [{ repoId: 'r_1', branch: 'in-project', worktreePath: null, lastKnownTip: null }],
     },
   ],
-  settings: { defaultBaseOrder: ['main'], activeDays: 14 },
+  settings: { defaultBaseOrder: ['main'], activeDays: 14, diffView: 'split', ignoreWhitespace: false },
 };
 
 const scans = [

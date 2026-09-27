@@ -138,13 +138,15 @@ Layout:
   - Entry bar: repo, branch, range (`base..branch` or the working-tree path), "N commits ahead of base".
   - Commit list for that entry. Commits that belong to another branch are shown at 60% opacity with a warning pill naming the branch.
   - File header: path + compare label ("merge-base ↔ branch", "HEAD ↔ working tree", "merge-base ↔ working tree").
-  - Side-by-side Monaco diff.
-  - **Jump between changes** (right end of the file header, after "Side by side · read-only"): a counter "Change 2 of 3" and a ↑ ↓ button pair. The current change has a 3px accent bar (`#7fb3c4`) on its left edge in both panes; jumping scrolls it into view (top third). At the last change of a file, ↓ switches to the accent tint, its tooltip becomes "Next file: refresh.ts", the counter adds "· next file refresh.ts", and pressing it opens the next file in list order (expanding a collapsed group) at its first change. ↑ at the first change does the same backwards and lands on the previous file's last change. Disabled only at the very first / last change of the whole list. Picking a file lands on its first change. Shortcuts ⌥↓ / ⌥↑, also while the diff has focus.
+  - Monaco diff, **Split** (side by side, default) or **Unified**.
+  - **Diff view menu:** the "Split ▾" / "Unified ▾" button in the file header (replaces the old "Side by side · read-only" text) opens a menu: **Layout** Split / Unified (⌥V toggles) and a checkbox **Ignore whitespace** (⌥W). Every row uses the same columns: a 16px indicator on the left (check for the selected layout, checkbox for whitespace), the label, the shortcut right-aligned; no layout icons inside the menu, so labels and shortcuts line up, "Hide lines where only indentation or trailing spaces changed". Both settings are global: they apply to every diff and are remembered across restarts. While whitespace is ignored, a "Whitespace ignored" chip sits next to the compare label; clicking it turns the option off. Ignoring whitespace never hides a file from the list and does not change the list's +/− counts; it only changes which lines are marked and the change counter (3 → 2 in `FlowD6`).
+  - **Unified layout:** one column with old and new line numbers side by side, then the ± mark; inside a change, removed lines come first, then added lines.
+  - **Jump between changes** (right end of the file header, after the view button): a counter "Change 2 of 3" and a ↑ ↓ button pair. The current change has a 3px accent bar (`#7fb3c4`) on its left edge in both panes; jumping scrolls it into view (top third). At the last change of a file, ↓ switches to the accent tint, its tooltip becomes "Next file: refresh.ts", the counter adds "· next file refresh.ts", and pressing it opens the next file in list order (expanding a collapsed group) at its first change. ↑ at the first change does the same backwards and lands on the previous file's last change. Disabled only at the very first / last change of the whole list. Picking a file lands on its first change. Shortcuts ⌥↓ / ⌥↑, also while the diff has focus.
 - **Uncommitted mode:** the commit list is hidden and a warning-tinted banner says which working trees are shown. No refresh-interval text anywhere.
 - **Base menu** (from a group's base button): filter input; **Suggested** (branch containing some of the listed commits, with the reason); **Default** (main, "current · from origin/HEAD"); **Other branches**.
 - After a base change, a neutral banner says the base was saved for that branch.
 
-Props drawn: `scope`, `mode`, `focus` (web/api; api collapses the first group), `stacked`, `base`, `baseMenu`, `hunk` (first/last: which change is current when the screen opens).
+Props drawn: `scope`, `mode`, `focus` (web/api; api collapses the first group), `stacked`, `base`, `baseMenu`, `hunk` (first/last: which change is current when the screen opens), `view` (split/unified), `ignoreWs`, `viewMenu`.
 
 ### Project (`Projects.dc.html`)
 
@@ -172,6 +174,7 @@ Props drawn: `variant` full/one/empty, `menu`, `projectMenu`, `rename` none/edit
 
 - **Repositories:** list with path, "base main" note, "path not found" pill + **Locate…** for missing ones, remove ✕; "+ Add repository…" opens the same folder picker and sheet as flow A.
 - **Behaviour:** Default base order (`origin/HEAD → main → master`), Active threshold (days).
+- **Keyboard shortcuts** (full width, below both columns; "Not editable yet"): four cards, **General**, **Branches and projects**, **Review**, **Lists and dialogs**. Each row is a label, an optional muted note (where it works, e.g. "Project"), and keycaps (mono 11px, `#211f1c`, 1px `#383631` border with a 2px bottom, radius 6). The list is read-only for now; editing comes later.
 - Nothing else. The poll interval, focus refresh and git-binary sections were removed on purpose.
 
 ---
@@ -206,6 +209,8 @@ Props drawn: `variant` full/one/empty, `menu`, `projectMenu`, `rename` none/edit
   2. Uncommitted applies to the whole project.
   3. A Branches row opens single-branch review.
   4. Jump between changes with ↑ ↓ (⌥↑ / ⌥↓); past the last change of a file it continues into the next file (`FlowD4`).
+  5. The view button opens Split / Unified and Ignore whitespace (`FlowD5`).
+  6. Unified with whitespace ignored: the indentation-only line is no longer a change and the chip shows (`FlowD6`).
 - **E · Stacked branch.**
   1. With base main, the entry shows another branch's commits, dimmed and labelled, plus the warning note.
   2. The group's base button opens the base menu with a suggestion.
@@ -231,7 +236,7 @@ These override the original spec.
 4. **Projects have a stable id**; the name is display-only. Names are unique.
 5. **Entries remember `lastKnownTip`** (SHA and time last seen), so a deleted branch can still show its last diff while the object exists.
 6. **Review is project-wide.** One screen, files grouped per entry, one mode toggle for the whole project. Single-branch review is the same screen with one group.
-7. **Settings contain only** repositories, default base order and active threshold. Refresh is event-driven: file watching (FSEvents), plus a full rescan when the window gains focus and on the manual refresh button. There is no polling. Refresh is not configurable, and no UI text mentions it.
+7. **Settings contain only** repositories, default base order, active threshold and a read-only list of keyboard shortcuts. Diff layout and ignore-whitespace live in the review screen's view menu, not in Settings. Refresh is event-driven: file watching (FSEvents), plus a full rescan when the window gains focus and on the manual refresh button. There is no polling. Refresh is not configurable, and no UI text mentions it.
 8. **Git is read through the git2 library (libgit2)**, not the git binary. There is no binary lookup, no git setting and no missing-git screen. The git commands quoted in this file (flow A2, item 10) describe behaviour; `docs/TASKS.md` §6 lists the git2 equivalents.
 9. **Worktree folders added as repos** resolve to their main repository.
 10. **Suggested base** = `git for-each-ref refs/heads --merged=<branch> --no-merged=<default-base>`, ranked by how many of the listed commits each candidate contains. Read-only.

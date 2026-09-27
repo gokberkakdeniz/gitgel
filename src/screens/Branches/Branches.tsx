@@ -123,7 +123,7 @@ function BranchList() {
   const [popover, setPopover] = useState<RowPopover | null>(null);
   const popoverEntry = allRows.find((r) => r.key === popover?.key);
 
-  // ⌘K focuses the filter on this screen.
+  // ⌘K focuses the filter on this screen. Listed in lib/shortcuts.ts.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey && e.key.toLowerCase() === 'k') {
@@ -136,7 +136,8 @@ function BranchList() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Esc clears the selection, or else the filter (popovers and modals close first).
+  // Esc clears the selection, or else the filter (popovers and modals close first). Listed in
+  // lib/shortcuts.ts.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const ui = useUi.getState();

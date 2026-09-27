@@ -35,7 +35,7 @@ export function Project({ projectId }: { projectId: string }) {
   return projectId === 'draft' ? <DraftProject /> : <SavedProject id={projectId} />;
 }
 
-/** ⌘K opens the Add palette for the project on screen. */
+/** ⌘K opens the Add palette for the project on screen. Listed in lib/shortcuts.ts. */
 function usePaletteShortcut() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -68,7 +68,7 @@ function SavedProject({ id }: { id: string }) {
     if (config && !project) nav.replace({ name: 'branches' });
   }, [config, project, nav]);
 
-  // F2 renames, like in Finder.
+  // F2 renames, like in Finder. Listed in lib/shortcuts.ts.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'F2' && useUi.getState().modalCount === 0) {
@@ -88,7 +88,7 @@ function SavedProject({ id }: { id: string }) {
     }
   }, [renameRequest, id]);
 
-  // ⌘R: Review changes.
+  // ⌘R: Review changes. Listed in lib/shortcuts.ts.
   const hasEntries = (project?.entries.length ?? 0) > 0;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

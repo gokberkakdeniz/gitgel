@@ -42,6 +42,7 @@ export function Popover({ anchorRect, onClose, width, alignRight, above, classNa
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
     };
     const onKey = (e: KeyboardEvent) => {
+      // Listed in lib/shortcuts.ts.
       if (e.key === 'Escape') {
         e.stopPropagation();
         onClose();

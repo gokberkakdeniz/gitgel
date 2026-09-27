@@ -2,6 +2,8 @@
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useData } from '../state/data';
+import { selectRoute, useNav } from '../state/nav';
+import { useUi } from '../state/ui';
 import * as ipc from './ipc';
 import { loadHome } from './paths';
 import type { Config, RepoUpdated } from './types';
@@ -23,6 +25,11 @@ async function start() {
     data.setConfig(e.payload);
   });
   await listen<RepoUpdated>('repo-updated', (e) => data.applyRepoUpdated(e.payload));
+  // App menu › Settings… (⌘,). Listed in lib/shortcuts.ts.
+  await listen('open-settings', () => {
+    const nav = useNav.getState();
+    if (useUi.getState().modalCount === 0 && selectRoute(nav).name !== 'settings') nav.push({ name: 'settings' });
+  });
   // Safety net for events the watcher missed; there is no timer.
   await getCurrentWindow().onFocusChanged(({ payload: focused }) => {
     if (focused && useData.getState().scannedOnce) void rescanAll();

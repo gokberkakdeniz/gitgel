@@ -131,7 +131,12 @@ mod tests {
                 "entries": [{ "repoId": "r_1", "branch": "session-token-refresh", "worktreePath": null,
                               "lastKnownTip": { "sha": "3be91a0", "seenAt": "2026-09-23T10:00:00Z" } }]
             }],
-            "settings": { "defaultBaseOrder": ["origin/HEAD", "main", "master"], "activeDays": 14 }
+            "settings": {
+                "defaultBaseOrder": ["origin/HEAD", "main", "master"],
+                "activeDays": 14,
+                "diffView": "unified",
+                "ignoreWhitespace": true
+            }
         });
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(
@@ -165,6 +170,18 @@ mod tests {
         save(&path, &config).unwrap();
         assert_eq!(load(&path), config);
         assert!(!path.with_extension("json.tmp").exists());
+    }
+
+    #[test]
+    fn settings_added_later_default_when_missing() {
+        let config: Config = serde_json::from_value(json!({
+            "version": 1,
+            "settings": { "defaultBaseOrder": ["main"], "activeDays": 7 }
+        }))
+        .unwrap();
+        assert_eq!(config.settings.active_days, 7);
+        assert_eq!(config.settings.diff_view, crate::model::DiffLayout::Split);
+        assert!(!config.settings.ignore_whitespace);
     }
 
     #[test]
