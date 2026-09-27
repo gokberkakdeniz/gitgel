@@ -54,6 +54,18 @@ button,input{font-family:inherit}
 
 <div style="flex-grow: 1; display: flex; min-height: 0">
 <aside style="width: {{asideW}}px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; background: var(--bg-sidebar); padding: 8px; box-sizing: border-box; overflow: hidden">
+<label style="{{filterStyle}}">
+<span style="display: flex; color: var(--text-muted)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="flex-shrink: 0"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></span>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Filter files</span>
+<input value="{{fileQuery}}" onChange="{{setQuery}}" onKeyDown="{{onFilterKey}}" placeholder="Filter files" spellcheck="false" style="flex-grow: 1; min-width: 0; height: 100%; background: transparent; border: 0; outline: none; padding: 0; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px">
+<sc-if value="{{hasQuery}}" hint-placeholder-val="{{false}}">
+<span aria-live="polite" style="flex-shrink: 0; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{matchCount}}</span>
+<button onClick="{{clearQuery}}" aria-label="Clear filter" title="Clear (esc)" style="width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 9999px; background: var(--bg-hover); color: var(--text-muted); cursor: pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</sc-if>
+<sc-if value="{{noQuery}}" hint-placeholder-val="{{true}}">
+<span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); background: var(--bg-hover); border-radius: 5px; padding: 1px 6px">⌘K</span>
+</sc-if>
+</label>
 <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
 <section style="display: flex; flex-direction: column; gap: 1px">
 <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px">
@@ -66,6 +78,7 @@ button,input{font-family:inherit}
 </div>
 <div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{g.branch}}</span>
+<span style="font-size: 11px; color: var(--text-muted); flex-shrink: 0; white-space: nowrap">{{g.matchLabel}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); flex-shrink: 0">{{g.add}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger); flex-shrink: 0">{{g.del}}</span>
 </div>
@@ -85,8 +98,8 @@ button,input{font-family:inherit}
 <sc-for list="{{g.files}}" as="f" hint-placeholder-count="4">
 <button onClick="{{f.pick}}" style="{{f.rowStyle}}">
 <span style="{{f.kindStyle}}">{{f.kind}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{f.name}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1; text-align: left">{{f.dir}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{f.n0}}<span style="{{f.hitStyle}}">{{f.n1}}</span>{{f.n2}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1; text-align: left">{{f.d0}}<span style="{{f.dirHitStyle}}">{{f.d1}}</span>{{f.d2}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{f.add}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{f.del}}</span>
 </button>
@@ -95,6 +108,13 @@ button,input{font-family:inherit}
 </sc-if>
 </section>
 </sc-for>
+<sc-if value="{{noMatches}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px 8px">
+<span style="font-size: 13px; color: var(--text-body)">No files match “{{fileQuery}}”</span>
+<span style="font-size: 12px; color: var(--text-muted); line-height: 1.4">Searched paths in {{modeLower}} files of every entry.</span>
+<button onClick="{{clearQuery}}" style="padding: 0; border: 0; background: transparent; color: var(--accent-text); font-size: 12px; font-weight: 500; cursor: pointer">Clear filter</button>
+</div>
+</sc-if>
 
 <sc-if value="{{showAttention}}" hint-placeholder-val="{{false}}">
 <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--bg-hover)">
@@ -243,9 +263,9 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"view":{"editor":"enum","options":["split","unified"],"default":"split"},"ignoreWs":{"editor":"boolean","default":false},"viewMenu":{"editor":"boolean","default":false},"commit":{"editor":"enum","options":["","d81f03a","4b7e2c9","9a13f60","2cc0d48"],"default":""},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"embedded":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"view":{"editor":"enum","options":["split","unified"],"default":"split"},"ignoreWs":{"editor":"boolean","default":false},"viewMenu":{"editor":"boolean","default":false},"commit":{"editor":"enum","options":["","d81f03a","4b7e2c9","9a13f60","2cc0d48"],"default":""},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"embedded":{"editor":"boolean","default":false},"fileQuery":{"editor":"text","default":""},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null, view: null, ignoreWs: null, viewMenu: null, commitSel: null }; }
+  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null, view: null, ignoreWs: null, viewMenu: null, commitSel: null, q: null }; }
   renderVals() {
     var self = this;
     var scope = this.props.scope ?? 'project';
@@ -364,23 +384,37 @@ class Component extends DCLogic {
       return g.committed.concat(g.uncommitted.filter(function (f) { return names.indexOf(f[2] + '/' + f[1]) < 0; }));
     };
     var keyOf = function (g, f) { return g.id + ':' + f[2] + '/' + f[1]; };
-    var allKeys = [];
-    G.forEach(function (g) { listFor(g).forEach(function (f) { allKeys.push(keyOf(g, f)); }); });
+    var q = this.state.q != null ? this.state.q : (this.props.fileQuery || '');
+    var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+    var matches = function (f) { var p = ((f[2] || '') + '/' + f[1]).toLowerCase(); return terms.every(function (t) { return p.indexOf(t) >= 0; }); };
+    var allKeys = [], navKeys = [];
+    G.forEach(function (g) { listFor(g).forEach(function (f) { allKeys.push(keyOf(g, f)); if (!terms.length || matches(f)) navKeys.push(keyOf(g, f)); }); });
+    var hl = function (text) {
+      var low = text.toLowerCase();
+      for (var i = 0; i < terms.length; i++) { var at = low.indexOf(terms[i]); if (at >= 0) return [text.slice(0, at), text.slice(at, at + terms[i].length), text.slice(at + terms[i].length)]; }
+      return [text, '', ''];
+    };
+    var hitStyle = 'background: rgba(var(--accent-rgb), 0.24); color: var(--text-strong); border-radius: 3px';
     var defSel = scope === 'branch'
       ? (mode === 'Uncommitted' ? 'rl:src/middleware/rate-limit.ts' : 'rl:src/middleware/index.ts')
       : focus === 'api' ? 'api:src/jobs/index.ts'
       : (mode === 'Uncommitted' ? 'web:src/auth/refresh.ts' : 'web:src/auth/session.ts');
+    if (terms.length && !this.state.file && navKeys.length) defSel = navKeys[0];
     var sel = this.state.file && allKeys.indexOf(this.state.file) >= 0 ? this.state.file : (allKeys.indexOf(defSel) >= 0 ? defSel : allKeys[0]);
     var num = function (s) { return Math.abs(parseInt(String(s || '0').replace('−', '').replace('+', ''), 10) || 0); };
     var selGroup = G[0], selFile = null;
     var groups = G.map(function (g) {
       var list = listFor(g);
-      var open = !collapsed[g.id];
+      var shown = terms.length ? list.filter(matches) : list;
+      list.forEach(function (f) { if (keyOf(g, f) === sel) { selGroup = g; selFile = f; } });
+      var open = !collapsed[g.id] || terms.length > 0;
       var add = 0, del = 0;
       list.forEach(function (f) { add += num(f[3]); del += num(f[4]); });
       var baseActive = g.id === 'api' && (menu || apiBase !== 'main');
       return {
         repo: g.repo, branch: g.branch, base: g.base,
+        hidden: terms.length > 0 && shown.length === 0,
+        matchLabel: terms.length ? shown.length + ' of ' + list.length : '',
         add: '+' + add, del: del ? '−' + del : '',
         open: open,
         chevStyle: 'flex-shrink: 0; transition: transform 0.15s; ' + (open ? '' : 'transform: rotate(-90deg)'),
@@ -391,12 +425,14 @@ class Component extends DCLogic {
         commitMsg: (function () { var all = (g.commits || []).concat(g.parent || []); for (var i = 0; i < all.length; i++) if (all[i].sha === commitSel[g.id]) return all[i].msg; return ''; })(),
         clearCommit: function () { var ns = Object.assign({}, commitSel); delete ns[g.id]; self.setState({ commitSel: ns, hunk: 0 }); },
         baseStyle: 'flex-shrink: 0; margin-left: auto; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--bg-elevated); font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--text-body); cursor: pointer; ' + (baseActive ? 'border: 1px solid var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.25)' : 'border: 1px solid var(--border)'),
-        files: list.map(function (f) {
+        files: shown.map(function (f) {
           var key = keyOf(g, f);
           var on = key === sel;
-          if (on) { selGroup = g; selFile = f; }
+          var n = hl(f[1]), d = hl(f[2] || '.');
           return {
             kind: f[0], name: f[1], dir: (f[2] || '.'), add: f[3], del: f[4],
+            n0: n[0], n1: n[1], n2: n[2], d0: d[0], d1: d[1], d2: d[2],
+            hitStyle: n[1] ? hitStyle : '', dirHitStyle: d[1] ? hitStyle : '',
             pick: function () { self.setState({ file: key, hunk: 0 }); },
             kindStyle: 'width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; font-weight: 500; ' + kinds[f[0]],
             rowStyle: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px 0 28px; border: 0; border-radius: 8px; cursor: pointer; ' + (on ? 'background: var(--bg-hover)' : 'background: transparent')
@@ -404,6 +440,7 @@ class Component extends DCLogic {
         })
       };
     });
+    groups = groups.filter(function (g) { return !g.hidden; });
     var counts = { Committed: 0, Uncommitted: 0, All: 0 };
     ['Committed', 'Uncommitted', 'All'].forEach(function (m) {
       var saved = mode; mode = m;
@@ -512,8 +549,8 @@ class Component extends DCLogic {
     var hIdx = this.state.hunk;
     if (hIdx == null) hIdx = this.props.hunk === 'last' ? nH - 1 : 0;
     if (hIdx < 0 || hIdx >= nH) hIdx = nH - 1;
-    var si = allKeys.indexOf(sel);
-    var nextKey = allKeys[si + 1], prevKey = allKeys[si - 1];
+    var si = navKeys.indexOf(sel);
+    var nextKey = si >= 0 ? navKeys[si + 1] : navKeys[0], prevKey = si >= 0 ? navKeys[si - 1] : navKeys[navKeys.length - 1];
     var atLast = hIdx === nH - 1, atFirst = hIdx === 0;
     var shortName = function (k) { return k.split('/').pop(); };
     var openGroupOf = function (k) { var c = Object.assign({}, collapsed); c[k.split(':')[0]] = false; return c; };
@@ -645,7 +682,18 @@ class Component extends DCLogic {
       commits: cm,
       filePath: path,
       compare: mode === 'Uncommitted' ? 'HEAD ↔ working tree' : gSha ? parentSha + ' ↔ ' + gSha : mode === 'All' ? 'merge-base ↔ working tree' : 'merge-base ↔ ' + selGroup.branch,
-      showAttention: project,
+      showAttention: project && !terms.length,
+      fileQuery: q, hasQuery: q.length > 0, noQuery: q.length === 0,
+      matchCount: navKeys.length + (navKeys.length === 1 ? ' file' : ' files'),
+      noMatches: terms.length > 0 && navKeys.length === 0,
+      modeLower: mode.toLowerCase(),
+      setQuery: function (e) { self.setState({ q: e.target.value }); },
+      clearQuery: function () { self.setState({ q: '' }); },
+      onFilterKey: function (e) {
+        if (e.key === 'Escape') { e.preventDefault(); self.setState({ q: '' }); }
+        else if (e.key === 'Enter' && navKeys.length) { e.preventDefault(); self.setState({ file: navKeys[0], hunk: 0 }); }
+      },
+      filterStyle: 'position: relative; display: flex; align-items: center; gap: 8px; height: 30px; margin: 0 0 6px; padding: 0 6px 0 10px; box-sizing: border-box; background: var(--bg-sunken); border-radius: 8px; flex-shrink: 0; ' + (q.length ? 'border: 1px solid var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2)' : 'border: 1px solid var(--border)'),
       attention: [
         { repo: 'api-server', branch: 'refresh-endpoint', tag: 'merged', tagStyle: pill('var(--success)', 'rgba(var(--success-rgb), 0.14)') },
         { repo: 'mobile', branch: 'feat/token-store', tag: 'base missing', tagStyle: pill('var(--warning)', 'rgba(var(--warning-rgb), 0.14)') },

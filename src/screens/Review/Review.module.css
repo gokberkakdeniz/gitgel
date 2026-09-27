@@ -735,3 +735,109 @@
   font-size: 11px;
   color: var(--text-faint);
 }
+
+/* File filter (flow D8). Sticky above the groups; its shadow covers the list's top padding. */
+.filter {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  margin: 0 0 6px;
+  padding: 0 6px 0 10px;
+  box-sizing: border-box;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  box-shadow: 0 -8px 0 var(--bg-sidebar);
+}
+
+.filterOn {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px rgba(var(--accent-rgb), 0.2),
+    0 -8px 0 var(--bg-sidebar);
+}
+
+.filterIcon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.filterInput {
+  flex-grow: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.filterInput:focus-visible {
+  box-shadow: none;
+}
+
+.filterInput::placeholder {
+  color: var(--text-muted);
+}
+
+.filterCount {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.filterClear {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--bg-hover);
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.hit {
+  background: rgba(var(--accent-rgb), 0.24);
+  color: var(--text-strong);
+  border-radius: 3px;
+}
+
+.matchLabel {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.noMatch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 8px;
+}
+
+.noMatchTitle {
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.noMatchHint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}

@@ -21,6 +21,13 @@ describe('next / prev', () => {
     expect(next(at(1, 2, 2))).toBeNull();
   });
 
+  it('goes to the first / last listed file from a file the filter hides', () => {
+    expect(next(at(2, 3, -1))).toEqual({ kind: 'file', key: 'g1\0a.ts', land: 'first' });
+    expect(prev(at(0, 3, -1))).toEqual({ kind: 'file', key: 'g2\0c.ts', land: 'last' });
+    // Its own changes still come first.
+    expect(next(at(0, 3, -1))).toEqual({ kind: 'hunk', index: 1 });
+  });
+
   it('moves straight between files when a file has no line changes', () => {
     expect(next(at(null, 0, 1))).toEqual({ kind: 'file', key: 'g2\0c.ts', land: 'first' });
     expect(prev(at(null, 0, 1))).toEqual({ kind: 'file', key: 'g1\0a.ts', land: 'last' });

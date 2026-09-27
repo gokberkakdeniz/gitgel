@@ -193,6 +193,10 @@ rather than as a task is listed the same way, marked "(on request)".
   the file-ID cache, footprint on every log line (bench repos: 353 → 107 MB after a scan, watcher
   setup +110 MB → 0; scan time unchanged) — 2026-09-27
 
+### Phase 11 — Review file filter
+- [x] T11.1 Review: filter the file list — 2026-09-27
+- [x] T11.2 ✋ Checkpoint — phase 11 — 2026-09-27
+
 ---
 
 ## Open

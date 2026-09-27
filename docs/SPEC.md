@@ -468,6 +468,28 @@ Layout:
   mode are hidden.
 - **Left file list** (310px, `bg.sidebar`, padding 8, scrolls), one group per entry (two entries
   from the same repo are two groups):
+  - **File filter** (flow D8): a 30px field at the top of the list, above the
+    groups (margin-bottom 6, `bg.sunken`, 1px `border`, radius 8, padding 0 6px 0 10px): muted
+    13px search icon, mono 12 input with placeholder "Filter files", and on the right a muted
+    `Kbd` "⌘K" while empty, or `N files` (11px muted, `aria-live`) plus an 18px round ✕
+    (`bg.hover`, "Clear filter") while it has text; with text the field gets the accent border
+    and `0 0 0 2px` accent ring at 0.2. ⌘K focuses it (Review only; the Branches ⌘K is unchanged).
+    - Matching: the text is split on spaces; a file matches when every term appears in its
+      path (`dir/name`, case-insensitive; a rename's old path counts). It filters the files of
+      the current mode (and of the picked commit, when an entry is scoped to one).
+    - Each visible file row highlights the first matching term in the name and in the folder
+      (`rgba(accent, 0.24)` background, radius 3, `text.strong`). Groups with no match are
+      hidden; collapsed groups open while filtering. Line 2 of a group shows 11px muted
+      `n of m` before its +/− (which stay the whole group's totals). The "not reviewable" line
+      is hidden while filtering. The Committed / Uncommitted / All counts do not change.
+    - No match: under the field, 13px `No files match “<text>”`, 12px muted
+      `Searched paths in <mode> files of every entry.` and a "Clear filter" text button.
+    - Keys in the field: ↵ opens the first match (at its first change); Esc clears the text
+      (a second Esc leaves the field).
+    - The selected file does not change while typing; if it is filtered out, the diff keeps
+      showing it. Change navigation (⌥↓ / ⌥↑, "next file") moves through the visible files only;
+      from a filtered-out file it goes to the first / last visible one.
+    - The text survives mode switches, commit picks and refreshes; leaving Review clears it.
   - Line 1: collapse chevron + 14px/600 repo name, then the right-aligned **base button** (22px,
     `bg.elevated`, mono 11, muted "base" + name + chevron; accent border and ring when the base
     is custom). A small spinner shows while that group recomputes after a base change.
@@ -749,7 +771,7 @@ own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free).
 | | Settings | ⌘, | app menu |
 | | Font size | ⌘- / ⌘. , ⌘0 resets | View menu |
 | | Close menu or dialog | Esc | topmost popover, menu, modal or palette; otherwise clears the selection or filter |
-| Branches and projects | Focus filter | ⌘K | Branches |
+| Branches and projects | Focus filter | ⌘K | Branches; Review focuses the file filter |
 | | Add branches | ⌘K | Project (opens the palette) |
 | | Review changes | ⌘R | Project |
 | | Rename project | F2 | Project |
@@ -1224,7 +1246,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52, repo band 56–61, row 63–75 (Projects cell 73), row and cell styles 213–254, filter logic 277–287 and 305–312, empty state 83–93, picker 95–108, new-project form 110–126, projects menu 128–144, toast 146–152, selection bar 153–166, drop overlay 169–176, sheet 178–202 and 314–329 |
-| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 657–661, file list 56–113 and 376–413 (commit chip 72–79), entry bar and commits 116–145 (commit stepping 124–131, list 133–144), file bar 147–194 (whitespace chip 150–152, view button and menu 154–183, change navigation 184–193), split body 196–209, unified body 210–216, base menu 223–243, commit selection 352–365, segmented 414–421, view values 623–632, commit values 635–645, theme and `embedded` values 607–608 |
+| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 705–709, file list 56–133 and 406–450 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–214 (whitespace chip 170–172, view button and menu 174–203, change navigation 204–213), split body 216–229, unified body 230–236, base menu 243–263, commit selection 372–385, filter logic 387–397, 408–412, 443 and 552–553, segmented 451–458, view values 660–669, commit values 672–682, theme and `embedded` values 644–645, filter values 685–696 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 172–183, "add related" card 62–68, empty project 72–80, entry menu 82–93, project menu 94–100, delete modal 103–114, rename 150–170, pills 124–133 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 152–179), Behaviour 71–81, Keyboard shortcuts 84–106, shortcut data and keycap style 116–152 |

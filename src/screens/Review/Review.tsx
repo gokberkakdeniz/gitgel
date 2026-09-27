@@ -8,12 +8,14 @@ import {
   CloseIcon,
   ChevronUpIcon,
   RefreshIcon,
+  SearchIcon,
   SidebarIcon,
   SplitIcon,
   UnifiedIcon,
 } from '../../components/icons';
 import { Popover } from '../../components/Popover';
 import { IconButton } from '../../components/IconButton';
+import { Kbd } from '../../components/Kbd';
 import { KindBadge } from '../../components/KindBadge';
 import { Pill } from '../../components/Pill';
 import { RefreshButton } from '../../components/RefreshButton';
@@ -25,6 +27,7 @@ import { basename, tildifyHome } from '../../lib/paths';
 import type {
   CommitChanges,
   CommitInfo,
+  FileChange,
   DiffLayout,
   DiffMode,
   EntrySummary,
@@ -39,6 +42,7 @@ import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
 import { useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
+import { fileMatches, filterTerms, firstHit } from './fileFilter';
 import styles from './Review.module.css';
 import {
   compareLabel,
@@ -107,8 +111,27 @@ export function Review({ target, backLabel, focusKey }: Props) {
   const group = visible.find((g) => g.entry.key === current?.key);
   const change = group?.files[mode].find((f) => f.path === current?.path);
 
-  // Jumping between changes (flow D4): files in list order, collapsed groups included.
-  const files = visible.flatMap((g) => g.files[mode].map((f) => fileId(g.entry.key, f.path)));
+  // File filter (flow D8): narrows the list and change navigation, never the selection or counts.
+  const [fileQuery, setFileQuery] = useState('');
+  const terms = filterTerms(fileQuery);
+  const filtering = terms.length > 0;
+  const shownOf = (g: ReviewGroup) => (filtering ? g.files[mode].filter((f) => fileMatches(f, terms)) : g.files[mode]);
+  const listed = filtering ? visible.filter((g) => shownOf(g).length > 0) : visible;
+  const filterInput = useRef<HTMLInputElement>(null);
+  // ⌘K focuses the filter (inside the diff Monaco handles it). Listed in lib/shortcuts.ts.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.metaKey || e.key.toLowerCase() !== 'k' || useUi.getState().modalCount > 0) return;
+      e.preventDefault();
+      filterInput.current?.focus();
+      filterInput.current?.select();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Jumping between changes (flow D4): listed files in order, collapsed groups included.
+  const files = listed.flatMap((g) => shownOf(g).map((f) => fileId(g.entry.key, f.path)));
   const currentId = current ? fileId(current.key, current.path) : null;
   // Keep the file on screen in the list when it changes from outside the list (next / previous
   // change, a commit's first file); a row clicked in view does not scroll.
@@ -307,12 +330,33 @@ export function Review({ target, backLabel, focusKey }: Props) {
 
       <div className={styles.body}>
         <aside ref={fileList} className={sidebarShown ? `${styles.files} ${styles.filesNarrow}` : styles.files}>
-          {visible.map((g) => (
+          <FileFilter
+            inputRef={filterInput}
+            query={fileQuery}
+            onQuery={setFileQuery}
+            count={files.length}
+            onOpenFirst={() => {
+              const [key, path] = files[0]?.split('\u0000') ?? [];
+              if (key) select({ key, path });
+            }}
+          />
+          {filtering && files.length === 0 && (
+            <div className={styles.noMatch}>
+              <span className={styles.noMatchTitle}>No files match “{fileQuery}”</span>
+              <span className={styles.noMatchHint}>Searched paths in {mode} files of every entry.</span>
+              <button type="button" className={styles.linkButton} onClick={() => setFileQuery('')}>
+                Clear filter
+              </button>
+            </div>
+          )}
+          {listed.map((g) => (
             <FileGroup
               key={g.entry.key}
               group={g}
               mode={mode}
-              open={!collapsed.has(g.entry.key)}
+              shown={shownOf(g)}
+              terms={terms}
+              open={filtering || !collapsed.has(g.entry.key)}
               onToggle={() => toggle(g.entry.key)}
               selected={current}
               onSelect={(f) => select(f)}
@@ -323,7 +367,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
               onClearCommit={() => pickCommit(g, null)}
             />
           ))}
-          {target.kind === 'project' && data && data.notInReview.length > 0 && (
+          {target.kind === 'project' && data && data.notInReview.length > 0 && !filtering && (
             <div className={styles.notInReview}>
               {data.notInReview.length} {data.notInReview.length === 1 ? 'entry' : 'entries'} not reviewable ·{' '}
               <button
@@ -384,7 +428,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
                     ignoreWs && !change.binary && (change.add ?? 0) + (change.del ?? 0) > 0
                   }
                   nav={nav}
-                  prevFile={files[fileIndex - 1]}
+                  prevFile={fileIndex >= 0 ? files[fileIndex - 1] : files[files.length - 1]}
                   nextFile={files[fileIndex + 1]}
                   onStep={step}
                 />
@@ -404,6 +448,10 @@ export function Review({ target, backLabel, focusKey }: Props) {
                 onToggleLayout={() => viewRef.current.toggleLayout()}
                 onToggleWhitespace={() => viewRef.current.toggleWs()}
                 onCommitStep={(dir) => stepCommitRef.current(dir)}
+                onFocusFilter={() => {
+                  filterInput.current?.focus();
+                  filterInput.current?.select();
+                }}
               />
             </>
           ) : (
@@ -670,6 +718,8 @@ function ReviewHeader({
 function FileGroup({
   group: g,
   mode,
+  shown,
+  terms,
   open,
   onToggle,
   selected,
@@ -682,6 +732,9 @@ function FileGroup({
 }: {
   group: ReviewGroup;
   mode: DiffMode;
+  /** The files the filter lets through (all of them without a filter). */
+  shown: FileChange[];
+  terms: string[];
   open: boolean;
   onToggle: () => void;
   selected: FileRef | null;
@@ -719,6 +772,11 @@ function FileGroup({
         </div>
         <div className={styles.groupLine2}>
           <span className={styles.branch}>{e.branch ?? e.shortSha}</span>
+          {terms.length > 0 && (
+            <span className={styles.matchLabel}>
+              {shown.length} of {files.length}
+            </span>
+          )}
           <span className={styles.add}>+{add}</span>
           {del > 0 && <span className={styles.del}>−{del}</span>}
         </div>
@@ -748,7 +806,7 @@ function FileGroup({
       )}
       {open && (
         <div className={loading ? `${styles.fileRows} ${styles.stale}` : styles.fileRows}>
-          {files.map((f) => {
+          {shown.map((f) => {
             const on = selected?.key === e.key && selected.path === f.path;
             return (
               <button
@@ -760,8 +818,12 @@ function FileGroup({
                 title={f.path}
               >
                 <KindBadge kind={f.kind} />
-                <span className={styles.fileName}>{basename(f.path)}</span>
-                <span className={styles.fileDir}>{dirLabel(f)}</span>
+                <span className={styles.fileName}>
+                  <Highlighted text={basename(f.path)} terms={terms} />
+                </span>
+                <span className={styles.fileDir}>
+                  <Highlighted text={dirLabel(f)} terms={terms} />
+                </span>
                 {!!f.add && <span className={styles.add}>+{f.add}</span>}
                 {!!f.del && <span className={styles.del}>−{f.del}</span>}
               </button>
@@ -770,6 +832,84 @@ function FileGroup({
         </div>
       )}
     </section>
+  );
+}
+
+/** The first matching term in `text`, tinted. */
+function Highlighted({ text, terms }: { text: string; terms: string[] }) {
+  const hit = terms.length > 0 ? firstHit(text, terms) : null;
+  if (!hit) return <>{text}</>;
+  return (
+    <>
+      {hit[0]}
+      <mark className={styles.hit}>{hit[1]}</mark>
+      {hit[2]}
+    </>
+  );
+}
+
+/** The field above the file list (flow D8). */
+function FileFilter({
+  inputRef,
+  query,
+  onQuery,
+  count,
+  onOpenFirst,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  query: string;
+  onQuery: (q: string) => void;
+  /** Files the filter lets through. */
+  count: number;
+  /** ↵: open the first match. */
+  onOpenFirst: () => void;
+}) {
+  const active = query.length > 0;
+  return (
+    <label className={active ? `${styles.filter} ${styles.filterOn}` : styles.filter}>
+      <SearchIcon size={13} className={styles.filterIcon} />
+      <input
+        ref={inputRef}
+        className={styles.filterInput}
+        value={query}
+        placeholder="Filter files"
+        aria-label="Filter files"
+        spellCheck={false}
+        onChange={(e) => onQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (count > 0) onOpenFirst();
+          } else if (e.key === 'Escape') {
+            // Clears first; a second Esc leaves the field.
+            e.preventDefault();
+            if (active) onQuery('');
+            else e.currentTarget.blur();
+          }
+        }}
+      />
+      {active ? (
+        <>
+          <span aria-live="polite" className={styles.filterCount}>
+            {count} {count === 1 ? 'file' : 'files'}
+          </span>
+          <button
+            type="button"
+            aria-label="Clear filter"
+            title="Clear (esc)"
+            className={styles.filterClear}
+            onClick={() => {
+              onQuery('');
+              inputRef.current?.focus();
+            }}
+          >
+            <CloseIcon size={10} />
+          </button>
+        </>
+      ) : (
+        <Kbd>⌘K</Kbd>
+      )}
+    </label>
   );
 }
 

@@ -58,6 +58,8 @@ interface Props {
   onToggleWhitespace: () => void;
   /** ⌥⇧↑ / ⌥⇧↓ while the diff has focus: newer (-1) / older (1) commit. */
   onCommitStep: (dir: 1 | -1) => void;
+  /** ⌘K while the diff has focus: the file filter. */
+  onFocusFilter: () => void;
 }
 
 /** Side-by-side diff of one file. The editor stays mounted; only its content changes. */
@@ -76,6 +78,7 @@ export function DiffView({
   onToggleLayout,
   onToggleWhitespace,
   onCommitStep,
+  onFocusFilter,
 }: Props) {
   const [ready, setReady] = useState(false);
   const effective = useEffectiveTheme();
@@ -84,8 +87,8 @@ export function DiffView({
   }, []);
 
   // Latest props for Monaco callbacks registered once.
-  const latest = useRef({ onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace, onCommitStep });
-  latest.current = { onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace, onCommitStep };
+  const latest = useRef({ onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace, onCommitStep, onFocusFilter });
+  latest.current = { onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace, onCommitStep, onFocusFilter };
 
   // Layout and whitespace are editor options: changed in place, never by rebuilding the editor.
   // Monaco hides whitespace-only changes by default, so the option is always given.
@@ -286,6 +289,8 @@ export function DiffView({
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.DownArrow, () =>
                 latest.current.onCommitStep(1),
               );
+              // ⌘K is otherwise the prefix of Monaco's editing chords, which read-only does not need.
+              ed.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => latest.current.onFocusFilter());
             }
           }}
         />

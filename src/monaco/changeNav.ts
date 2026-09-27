@@ -22,8 +22,10 @@ export interface NavState {
   /** Current hunk (null before the first jump). */
   index: number | null;
   count: number;
-  /** Flat file list: groups in order, then their files (collapsed groups included). */
+  /** Flat file list: groups in order, then their files (collapsed groups included; only the
+   * files the filter shows). */
   files: string[];
+  /** -1: the current file is not in the list (filtered out). */
   fileIndex: number;
 }
 
@@ -42,7 +44,8 @@ export function next(s: NavState): NavStep {
 export function prev(s: NavState): NavStep {
   const i = s.index ?? 0;
   if (s.count > 0 && i > 0) return { kind: 'hunk', index: Math.min(i, s.count) - 1 };
-  const key = s.files[s.fileIndex - 1];
+  // From a file not in the list (filtered out), go to the last listed one.
+  const key = s.fileIndex >= 0 ? s.files[s.fileIndex - 1] : s.files[s.files.length - 1];
   return key ? { kind: 'file', key, land: 'last' } : null;
 }
 

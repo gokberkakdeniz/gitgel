@@ -27,7 +27,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
   {
     title: 'Branches and projects',
     items: [
-      { label: 'Focus filter', keys: ['⌘', 'K'], note: 'Branches' },
+      { label: 'Focus filter', keys: ['⌘', 'K'], note: 'Branches, Review files' },
       { label: 'Add branches', keys: ['⌘', 'K'], note: 'Project' },
       { label: 'Review changes', keys: ['⌘', 'R'], note: 'Project' },
       { label: 'Rename project', keys: ['F2'] },
