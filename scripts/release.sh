@@ -2,6 +2,11 @@
 # Builds Gitgel.app, zips it and uploads the zip to the GitHub release <version>, creating the
 # release (and its tag, on GitHub) when it does not exist yet. Run with `pnpm release`.
 #
+# Then publishes it to the Homebrew tap (`brew install --cask gokberkakdeniz/tap/gitgel`): this
+# repository is private, so brew cannot download from its releases; the zip also goes to the
+# public tap repository's release gitgel-<version>, and the cask there is updated and pushed.
+# The tap is a clone of that repository next to this one, or at $GITGEL_TAP_DIR.
+#
 # The version is the app's (package.json, via src-tauri/tauri.conf.json). The build must match a
 # pushed commit, so the
 # working tree has to be clean and HEAD pushed. Re-running for the same version replaces the zip,
@@ -28,6 +33,11 @@ BUNDLE="src-tauri/target/release/bundle"
 APP="$BUNDLE/macos/Gitgel.app"
 ZIP="$BUNDLE/Gitgel-$VERSION-macos-$ARCH.zip"
 
+TAP_REPO="gokberkakdeniz/homebrew-tap"
+TAP_DIR="${GITGEL_TAP_DIR:-../homebrew-tap}"
+CASK="Casks/gitgel.rb"
+TAP_TAG="gitgel-$VERSION"
+
 [[ -z "$(git status --porcelain)" ]] || die "uncommitted changes; commit them first"
 HEAD_SHA="$(git rev-parse HEAD)"
 [[ -n "$(git branch -r --contains "$HEAD_SHA")" ]] || die "HEAD is not pushed; push it first"
@@ -37,6 +47,13 @@ REMOTE_TAG_SHA="$(git ls-remote origin "refs/tags/$TAG^{}" "refs/tags/$TAG" | aw
 if [[ -n "$REMOTE_TAG_SHA" && "$REMOTE_TAG_SHA" != "$HEAD_SHA" ]]; then
   die "$TAG already points at ${REMOTE_TAG_SHA:0:7}, not HEAD (${HEAD_SHA:0:7}); bump the version in package.json"
 fi
+
+# The tap is checked before building, so a release never stops half-way for it.
+[[ "$ARCH" == arm64 ]] || die "the cask is for Apple silicon (arm64), this Mac is $ARCH"
+[[ -f "$TAP_DIR/$CASK" ]] || die "no $CASK in $TAP_DIR; clone $TAP_REPO there or set GITGEL_TAP_DIR"
+[[ -z "$(git -C "$TAP_DIR" status --porcelain)" ]] || die "uncommitted changes in $TAP_DIR"
+git -C "$TAP_DIR" pull -q --ff-only
+[[ -n "$(git -C "$TAP_DIR" branch -r --contains HEAD)" ]] || die "$TAP_DIR has unpushed commits"
 
 pnpm tauri build --bundles app
 
@@ -54,3 +71,25 @@ else
 fi
 
 echo "Uploaded $(basename "$ZIP") to $TAG: $(gh release view "$TAG" --json url --jq .url)"
+
+# Homebrew tap: the zip first, then the cask that points at it.
+if gh release view "$TAP_TAG" --repo "$TAP_REPO" >/dev/null 2>&1; then
+  gh release upload "$TAP_TAG" "$ZIP" --repo "$TAP_REPO" --clobber
+else
+  gh release create "$TAP_TAG" "$ZIP" \
+    --repo "$TAP_REPO" \
+    --title "Gitgel $VERSION" \
+    --notes "Gitgel $VERSION for macOS ($ARCH). Install with: brew install --cask gokberkakdeniz/tap/gitgel"
+fi
+SHA256="$(shasum -a 256 "$ZIP" | awk '{ print $1 }')"
+sed -i '' -E \
+  -e "s/^  version \".*\"$/  version \"$VERSION\"/" \
+  -e "s/^  sha256 \".*\"$/  sha256 \"$SHA256\"/" \
+  "$TAP_DIR/$CASK"
+if git -C "$TAP_DIR" diff --quiet -- "$CASK"; then
+  echo "Cask already at $VERSION"
+else
+  git -C "$TAP_DIR" commit -q -m "gitgel $VERSION" -- "$CASK"
+  git -C "$TAP_DIR" push -q
+  echo "Cask updated to $VERSION: brew upgrade --cask gitgel"
+fi

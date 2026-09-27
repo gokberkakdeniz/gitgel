@@ -9,6 +9,16 @@ Claude Code) left in their worktrees.
 - Updates on its own from file-system events (FSEvents), plus a full rescan when the window
   gains focus and on the refresh button. No polling.
 
+## Install
+
+```bash
+brew install --cask gokberkakdeniz/tap/gitgel
+```
+
+Apple silicon only. Updates come with `brew upgrade`. The cask lives in
+[gokberkakdeniz/homebrew-tap](https://github.com/gokberkakdeniz/homebrew-tap), next to the
+downloadable builds.
+
 ## Prerequisites
 
 - macOS with Xcode Command Line Tools (`xcode-select --install`)
@@ -40,6 +50,9 @@ Security → Open Anyway, or run `xattr -dr com.apple.quarantine /Applications/G
 To publish it: `pnpm release` builds the app, zips it and uploads the zip to the GitHub release
 `<version>` (the version in `package.json`) with the `gh` CLI, creating the release
 if needed. It needs a clean, pushed working tree; after new commits, bump the version first.
+It then publishes the same zip to the Homebrew tap: a release `gitgel-<version>` in
+`gokberkakdeniz/homebrew-tap`, and the cask's version and checksum, committed and pushed. The
+tap is expected as a clean clone at `../homebrew-tap` (or `$GITGEL_TAP_DIR`).
 
 ## Files
 
