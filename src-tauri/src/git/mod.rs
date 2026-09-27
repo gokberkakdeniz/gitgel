@@ -22,6 +22,15 @@ impl From<git2::Error> for AppError {
     }
 }
 
+/// libgit2's object cache across all repositories: `(in use, limit)` in MB.
+pub fn object_cache_mb() -> (i64, i64) {
+    // SAFETY: reads two process-wide counters; no repository is touched.
+    match unsafe { git2::opts::get_cached_memory() } {
+        Ok((used, max)) => (used as i64 >> 20, max as i64 >> 20),
+        Err(_) => (-1, -1),
+    }
+}
+
 /// Version of the bundled libgit2, e.g. "1.9.1".
 pub fn libgit2_version() -> String {
     let (major, minor, patch) = git2::Version::get().libgit2_version();

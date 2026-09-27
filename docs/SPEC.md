@@ -120,7 +120,7 @@ theme, configurable refresh.
 | Settings | Repositories, default base order, active threshold and a read-only list of keyboard shortcuts. Diff layout and ignore-whitespace live in Review's view menu, font size in View › Font Size; all three are stored in the config. |
 | Config owner | Only Rust reads and writes the config. The frontend never writes files; every change is a Tauri command. |
 | Config path | `~/Library/Application Support/com.gitgel.desktop/config.json` (Tauri `app_data_dir()`). |
-| Logs | `tauri-plugin-log` → `~/Library/Logs/com.gitgel.desktop/Gitgel.log`, up to 3 × 2 MB. Git errors are logged with `log::warn!`. Debug level (watch rounds) only in dev builds. |
+| Logs | `tauri-plugin-log` → `~/Library/Logs/com.gitgel.desktop/Gitgel.log`, up to 3 × 2 MB. Git errors are logged with `log::warn!`. Debug level (watch rounds) only in dev builds. Every line ends with the process's memory footprint. |
 | Package manager | pnpm, version pinned in `package.json` `packageManager`. |
 | Frontend | React + TypeScript + Vite, state in zustand. Backend data arrives two ways: **push** (config and scan result live in a store, updated by backend events) and **request/response** (review, project view, file contents, base options, commit changes) through a small `useInvoke` hook that refetches when a related repo event arrives. No React Query. Styling: CSS Modules + CSS variables. Fuzzy search: fuse.js. |
 | Diff | `@monaco-editor/react` + `monaco-editor`, bundled locally (`loader.config({ monaco })`), never from a CDN. |
@@ -160,6 +160,7 @@ gitgel/
       ├─ menu.rs                  # app menu: Settings…, View › Font Size, Help items
       ├─ logs.rs                  # Help › Show Logs in Finder
       ├─ appearance.rs            # window theme and background before it is shown
+      ├─ memory.rs                # frees libgit2 memory after full scans
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
       ├─ git/                     # the ONLY place git2 is used
@@ -1159,7 +1160,9 @@ current base, the group gets `stackHint { branch, contains, total: |S| }`. A com
 
 No polling. The backend watches the file system, recomputes what changed and pushes the result.
 
-- `notify-debouncer-full` (FSEvents), 300 ms debounce; use its `notify` re-export.
+- `notify-debouncer-full` (FSEvents), 300 ms debounce; use its `notify` re-export. No file-ID
+  cache (`NoCache`): it only pairs up renames, which we do not need, and it would walk every
+  watched folder into memory.
 - **Watched roots** (recursive, canonical; FSEvents reports real paths such as `/private/…`):
   each repo's git dir (`commondir()`), and every worktree folder (main and linked, anywhere under
   home). A root inside another watched root is not watched separately; missing paths are skipped.
@@ -1207,6 +1210,11 @@ No polling. The backend watches the file system, recomputes what changed and pus
 - **Commit changes** per `(repo, sha)`, kept until the repo is removed (commits never change).
 - After a repo scan, entries for tips no branch has any more are pruned; past 5000 entries the
   cache is dropped.
+- libgit2's own object cache (up to 256 MB across repositories) speeds a scan up but is not
+  needed once the results above are stored, so every full scan ends by closing the pooled
+  repositories and handing freed memory back to macOS (`src-tauri/src/memory.rs`); they reopen
+  on the next request. The scan log line reports the object cache and the memory before and
+  after.
 
 ---
 

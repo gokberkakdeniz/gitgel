@@ -7,6 +7,7 @@ pub mod error;
 pub mod files;
 pub mod git;
 pub mod logs;
+pub mod memory;
 pub mod menu;
 pub mod model;
 pub mod projects;
@@ -34,6 +35,16 @@ pub fn run() {
                         tauri_plugin_log::log::LevelFilter::Info
                     },
                 )
+                // Every line ends with the app's memory footprint, to see what makes it grow.
+                .format(|out, message, record| {
+                    out.finish(format_args!(
+                        "[{}][{}][{}] {message} · {} MB",
+                        chrono::Local::now().format("%Y-%m-%d][%H:%M:%S"),
+                        record.target(),
+                        record.level(),
+                        memory::footprint_mb()
+                    ))
+                })
                 // Enough history to debug from ("Help › Show Logs in Finder").
                 .max_file_size(2_000_000)
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(3))

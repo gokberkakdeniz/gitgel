@@ -28,6 +28,7 @@ thiserror = "=2.0.21"
 log = "=0.4.34"
 chrono = "=0.4.45"
 uuid = { version = "=1.26.1", features = ["v4"] }
+libc = "=0.2.189"
 git2 = { version = "=0.21.0", default-features = false, features = ["vendored-libgit2"] }
 notify-debouncer-full = "=0.7.0"
 tauri-plugin-opener = "=2.5.5"

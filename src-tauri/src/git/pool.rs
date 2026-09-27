@@ -46,6 +46,12 @@ impl RepoPool {
         self.lock().remove(&path);
     }
 
+    /// Closes every pooled repository, freeing libgit2's object cache and pack windows; they
+    /// reopen on the next request. Holders of a repository keep theirs until they drop it.
+    pub fn clear(&self) {
+        self.lock().clear();
+    }
+
     /// Drops repositories whose folder no longer exists.
     pub fn retain_existing(&self) {
         self.lock().retain(|path, _| path.exists());

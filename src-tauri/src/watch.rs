@@ -8,8 +8,9 @@ use std::sync::mpsc::{channel, Receiver};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
+use notify_debouncer_full::notify::Config;
 use notify_debouncer_full::notify::{EventKind, RecommendedWatcher, RecursiveMode};
-use notify_debouncer_full::{new_debouncer, DebounceEventResult, Debouncer, RecommendedCache};
+use notify_debouncer_full::{new_debouncer_opt, DebounceEventResult, Debouncer, NoCache};
 
 use crate::config;
 use crate::git::worktrees;
@@ -178,7 +179,7 @@ pub fn classify(index: &WatchIndex, path: &Path) -> Option<Change> {
 
 #[derive(Default)]
 pub struct Watcher {
-    debouncer: Mutex<Option<Debouncer<RecommendedWatcher, RecommendedCache>>>,
+    debouncer: Mutex<Option<Debouncer<RecommendedWatcher, NoCache>>>,
     index: Mutex<WatchIndex>,
     watched: Mutex<HashSet<PathBuf>>,
 }
@@ -186,7 +187,10 @@ pub struct Watcher {
 /// Starts the debouncer and the worker thread. Folders are added by `sync_watches`.
 pub fn start(state: &AppState) {
     let (tx, rx) = channel();
-    match new_debouncer(DEBOUNCE, None, tx) {
+    // No file-ID cache: it exists to pair up renames, which we do not need (events are
+    // classified by path), and it walks every watched folder into memory (~100 MB with a large
+    // worktree and its node_modules).
+    match new_debouncer_opt(DEBOUNCE, None, tx, NoCache, Config::default()) {
         Ok(debouncer) => *lock(&state.watch.debouncer) = Some(debouncer),
         Err(e) => {
             log::warn!("file watching unavailable: {e}");

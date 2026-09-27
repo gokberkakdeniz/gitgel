@@ -189,6 +189,9 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Docs: tasks moved to `docs/TASKS.md`; finished tasks keep one line — 2026-09-27
 - [x] (on request) Light theme review: no theme flash at launch (window hidden until its theme
   and background are set), dead code removed — 2026-09-27
+- [x] (on request) Memory: close pooled repositories after each full scan, file watching without
+  the file-ID cache, footprint on every log line (bench repos: 353 → 107 MB after a scan, watcher
+  setup +110 MB → 0; scan time unchanged) — 2026-09-27
 
 ---
 

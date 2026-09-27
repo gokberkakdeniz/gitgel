@@ -791,11 +791,13 @@ pub fn scan_all(state: &AppState) -> ScanResult {
     let ids: HashSet<&str> = config.repos.iter().map(|r| r.id.as_str()).collect();
     lock(&state.last_scan).retain(|id, _| ids.contains(id.as_str()));
     lock(&state.layouts).retain(|id, _| ids.contains(id.as_str()));
+    let (cache, cache_max) = crate::git::object_cache_mb();
     log::info!(
-        "scan: {} repos, {} ms",
+        "scan: {} repos, {} ms · libgit2 object cache {cache}/{cache_max} MB",
         results.len(),
         started.elapsed().as_millis()
     );
+    crate::memory::release(state);
     ScanResult {
         repos: results.into_iter().map(|r| r.scan).collect(),
         scanned_at: now,
