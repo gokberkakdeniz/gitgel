@@ -6,6 +6,8 @@ import CssWorker from 'monaco-editor/language/css/css.worker?worker';
 import HtmlWorker from 'monaco-editor/language/html/html.worker?worker';
 import JsonWorker from 'monaco-editor/language/json/json.worker?worker';
 import TsWorker from 'monaco-editor/language/typescript/ts.worker?worker';
+import { language as rubyLanguage } from 'monaco-editor/languages/definitions/ruby/ruby';
+import { guardTopLevelEnd } from './ruby';
 import { defineTheme } from './theme';
 
 self.MonacoEnvironment = {
@@ -42,6 +44,9 @@ monaco.json.jsonDefaults.setDiagnosticsOptions({ validate: false });
 for (const defaults of [monaco.css.cssDefaults, monaco.css.scssDefaults, monaco.css.lessDefaults]) {
   defaults.setOptions({ validate: false });
 }
+
+// Registered directly, it replaces the grammar Monaco would load on first use.
+monaco.languages.setMonarchTokensProvider('ruby', guardTopLevelEnd(rubyLanguage));
 
 loader.config({ monaco });
 defineTheme(monaco);
