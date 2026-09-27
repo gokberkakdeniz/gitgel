@@ -1,8 +1,9 @@
 # Gitgel — spec
 
 This is the single source of truth for Gitgel: what the product does, how it looks and behaves,
-the architecture, the shared types, the git rules and the progress tracker. It describes the app
-as it is now. `design/screens/*.dc.html` hold the visual reference for each screen (§11).
+the architecture, the shared types and the git rules. It describes the app as it is now, plus
+parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
+`design/screens/*.dc.html` hold the visual reference for each screen (§11).
 
 ---
 
@@ -48,15 +49,25 @@ as it is now. `design/screens/*.dc.html` hold the visual reference for each scre
 
   For UI work, also open the screen with `pnpm tauri dev` and compare it with its `.dc.html`.
 
-### Tasks and checkpoints
+### Tasks
 
-- New work is added as tasks in §14 (template there) and done in order. Check that a task's
-  dependencies are ticked before starting it.
-- A ✋ checkpoint task means: stop, leave the app running (`pnpm tauri dev`), list for the user
-  what to check and how, and wait for approval before continuing.
-- When a task is done, tick it in §14 (`- [x] … — YYYY-MM-DD`), only once its acceptance
-  criteria hold. If it is left half-done, do not tick it; add `  - note: …` under it.
-- When a task changes behaviour, update the relevant section of this file in the same change.
+Tasks and their status are in `docs/TASKS.md`. Its top section says how a task is written and
+how it is completed.
+
+### Keeping this file current
+
+This file describes the app as it is, plus what open tasks will add:
+
+- A design change updates the sections it affects **before** it is built, and marks each new or
+  changed part with `(planned, Tn.m)` where the reader would otherwise take it as built. The task
+  in `docs/TASKS.md` then points at those sections instead of repeating them.
+- The agent that builds the task removes those markers and changes nothing else here, unless
+  what was built differs from the text (then the text is corrected to match, and the difference
+  is mentioned at the checkpoint).
+- Edit in place: change the lines that changed, keep the section order and headings, do not
+  rewrap untouched paragraphs. Numbered section references (§4, §10 …) are used from code
+  comments and `CLAUDE.md`, so sections are never renumbered; new top-level sections go at the
+  end of this file.
 
 ---
 
@@ -627,7 +638,7 @@ Layout:
   - ✕ asks first only when projects use the repo: `Remove <name>?` · "Its N project entries are
     removed too. Nothing on disk is touched." · Cancel / danger "Remove". Removing drops the repo,
     its branch bases and its project entries.
-- **Appearance** (T10.1; right column, above Behaviour, serif 18px heading): a radiogroup
+- **Appearance** (right column, above Behaviour, serif 18px heading): a radiogroup
   "Theme" of three tiles, gap 16 — **System** (default), **Light**, **Dark**. Tile: 120 × 72
   mini-window preview (radius 9, clipped): a 32px sidebar strip with traffic lights and three
   lines, content with a title bar, three lines and an accent chip, drawn in that theme's colours;
@@ -1282,188 +1293,3 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
 - **Renamed branch detection:** the reflog's "Branch: renamed …" entry (`repo.reflog(...)`), or
   local branches whose tip equals an entry's `lastKnownTip`.
 - **Intel builds:** the release and cask are arm64 only.
-
----
-
-## 14. Progress tracker
-
-Status: `[ ]` to do · `[x]` done (append ` — YYYY-MM-DD`). Put `  - note: …` under a task left
-half-done. Checkpoints are ticked when the user approves.
-
-New tasks go at the end under a new phase, in this form:
-
-```
-#### T<phase>.<n> <title>
-- **Depends on:** …
-- **Why:** … (user request / feedback, date)
-- **Reference:** `<screen>.dc.html` lines …
-- **Files:** …
-- **Steps:** 1. … 2. …
-- **Acceptance:** …
-```
-
-and get a line in the list below. Once done, fold the resulting behaviour into §1–§13 and keep
-only the tracker line (with a short note if useful).
-
-### Phase 0 — Environment and skeleton
-- [x] T0.1 Check prerequisites — 2026-09-26
-- [x] T0.2 Tauri 2 + React + TS + Vite skeleton — 2026-09-26
-- [x] T0.3 Dependencies and pinned versions — 2026-09-26
-- [x] T0.4 Folder layout and template cleanup — 2026-09-26
-- [x] T0.5 Fonts, colour tokens, global CSS — 2026-09-26
-- [x] T0.6 Window, title bar and permissions — 2026-09-26
-- [x] T0.7 Test fixture repositories — 2026-09-26
-- [x] T0.8 ✋ Checkpoint — phase 0 — 2026-09-26
-
-### Phase 1 — Git layer, config, adding repositories
-- [x] T1.1 Rust module skeleton, error type, AppState — 2026-09-26
-- [x] T1.2 git2 boundary: write bans and test repo helper — 2026-09-26
-- [x] T1.3 Repository pool — 2026-09-26
-- [x] T1.4 Config file — 2026-09-26
-- [x] T1.5 Frontend groundwork: types, IPC, stores, event bridge, useInvoke, router — 2026-09-26
-- [x] T1.6 Base UI components and icons — 2026-09-26
-- [x] T1.7 Sidebar and app shell — 2026-09-26
-- [x] T1.8 Folder inspection and default base (backend) — 2026-09-26
-- [x] T1.9 First run: empty state, folder picker, drag and drop, sheet — 2026-09-26
-- [x] T1.10 ✋ Checkpoint — phase 1 — 2026-09-26
-
-### Phase 2 — Branch and worktree discovery, Branches screen
-- [x] T2.1 Diff → FileChange conversion — 2026-09-26
-- [x] T2.2 Repo scan: branches, worktrees, base resolution — 2026-09-26
-  - note: the base branch is compared with its upstream (user decision 2026-09-26).
-- [x] T2.3 Entry summary: ahead, files, merged, state — 2026-09-26
-- [x] T2.4 Uncommitted changes — 2026-09-26
-- [x] T2.5 Cache and parallel scan — 2026-09-26
-- [x] T2.6 Scan commands and stored result — 2026-09-26
-- [x] T2.7 Branches screen — 2026-09-26
-  - note: word-based filter (user decision 2026-09-26).
-- [x] T2.8 File watching and targeted recompute (backend) — 2026-09-26
-- [x] T2.9 Frontend: live updates, focus and refresh button — 2026-09-26
-- [x] T2.10 ✋ Checkpoint — phase 2 — 2026-09-26
-
-### Phase 3 — Committed diff (Review + Monaco)
-- [x] T3.1 Monaco setup and theme — 2026-09-26
-- [x] T3.2 Review data (committed) — backend — 2026-09-26
-- [x] T3.3 Reading file contents — backend — 2026-09-26
-- [x] T3.4 Review screen skeleton and file list — 2026-09-26
-- [x] T3.5 Diff view — 2026-09-26
-- [x] T3.6 Navigation: Branches → Review — 2026-09-26
-- [x] T3.7 ✋ Checkpoint — phase 3 — 2026-09-26
-
-### Phase 4 — Uncommitted layer and mode toggle
-- [x] T4.1 Uncommitted and All file lists — backend — 2026-09-26
-- [x] T4.2 Reading from the working tree — 2026-09-26
-- [x] T4.3 Mode toggle, banner and labels — frontend — 2026-09-26
-- [x] T4.4 ✋ Checkpoint — phase 4 — 2026-09-26
-
-### Phase 5 — Projects and Add palette
-- [x] T5.0 Adding repositories later: sidebar footer and drop on every screen — 2026-09-26
-- [x] T5.1 Project commands — backend — 2026-09-26
-- [x] T5.2 Project view data — backend — 2026-09-26
-- [x] T5.3 Sidebar project list — 2026-09-26
-- [x] T5.4 Project screen — 2026-09-26
-  - note: repo name links go to that repo's band on Branches (user decision 2026-09-26).
-- [x] T5.5 Rename and delete — 2026-09-26
-  - note: F2 renames (user decision 2026-09-26).
-- [x] T5.6 Flow C: empty project (New project) — 2026-09-26
-  - note: ⌘N from every screen (user decision 2026-09-26).
-- [x] T5.7 Flow B: adding a row to a project — 2026-09-26
-- [x] T5.8 Flow H: multi-select and selection bar — 2026-09-26
-- [x] T5.9 Add palette (⌘K) — 2026-09-26
-  - note: Space/↵ rules (user decision 2026-09-26).
-- [x] T5.10 Project-wide review — 2026-09-26
-- [x] T5.11 ✋ Checkpoint — phase 5 — 2026-09-26
-
-### Phase 6 — Base management and stacked branches
-- [x] T6.1 Base options and saving — backend — 2026-09-26
-- [x] T6.2 Stacked detection — backend — 2026-09-26
-- [x] T6.3 Base menu — frontend — 2026-09-26
-  - note: ⌘R opens the project review and never reloads the webview (user decision 2026-09-26).
-- [x] T6.4 ✋ Checkpoint — phase 6 — 2026-09-26
-
-### Phase 7 — State labels and broken entries
-- [x] T7.0 Branches: all active branches, Projects column, "Not in a project" filter — 2026-09-26
-- [x] T7.1 lastKnownTip tracking — 2026-09-26
-- [x] T7.2 Full entry menu — 2026-09-26
-- [x] T7.3 Broken entry display and redirects — 2026-09-26
-- [x] T7.4 Error label and logging — 2026-09-26
-- [x] T7.5 ✋ Checkpoint — phase 7 — 2026-09-26
-
-### Phase 8 — Settings, polish, build
-- [x] T8.1 Settings: Repositories — 2026-09-26
-- [x] T8.2 Settings: Behaviour — 2026-09-26
-- [x] T8.3 Keyboard shortcuts and focus — 2026-09-26
-  - note: ⌘[ / ⌘] match physical keys; ⌘← / ⌘→ too (user decision 2026-09-26).
-- [x] T8.4 Performance check — 2026-09-26
-- [x] T8.5 Read-only audit — 2026-09-26
-- [x] T8.6 Visual QA — 2026-09-26
-- [x] T8.7 Production build and README — 2026-09-26
-  - note: on first launch macOS asked for ~/Desktop access; the first scan waited for it.
-- [x] T8.8 ✋ Final checkpoint — 2026-09-26
-
-### Phase 9 — Later additions
-- [x] T9.1 Review: jump between changes (flow D4) — 2026-09-26
-- [x] T9.2 ✋ Checkpoint — phase 9
-- [x] T9.3 Review: Split / Unified and Ignore whitespace (flows D5–D6) — 2026-09-27
-- [x] T9.4 Settings: Keyboard shortcuts section and ⌘, — 2026-09-27
-  - note: no "Select several rows" row; the app has no ⌘/⇧-click multi-select.
-- [x] T9.5 ✋ Checkpoint — T9.3–T9.4
-- [x] T9.6 Review: one commit's changes (flow D7) — 2026-09-27
-- [x] T9.7 ✋ Checkpoint — T9.6
-
-### Phase 10 — Light theme
-- [x] T10.1 Light theme and Settings › Appearance — 2026-09-27
-- [x] T10.2 ✋ Checkpoint — phase 10 — 2026-09-27
-
-#### T10.1 Light theme and Settings › Appearance
-- **Depends on:** T9.7
-- **Why:** user request 2026-09-27: a light mode, and a System / Light / Dark setting.
-- **Reference:** §4 "Light theme"; §5 Settings (Appearance) and Review (sidebar shown);
-  `Settings.dc.html` 51–70 and 152–186; `ReviewSidebar.dc.html`; canvas page "Light mode"
-  (L1 Branches, L2 Review with the sidebar shown, L3 Settings).
-- **Files:** `src/styles/tokens.css`, `src/styles/tokens.ts`, `src/monaco/theme.ts`,
-  `src/lib/theme.ts` (new), `src/lib/types.ts`, `src-tauri/src/config.rs` (Settings),
-  `src-tauri/capabilities/*`, `index.html`, `src/App.tsx`, `src/screens/Settings/*`,
-  `src/screens/Review/*`, the CSS modules that still hold hex colours.
-- **Steps:**
-  1. Config: `settings.appearance: 'system' | 'light' | 'dark'`, `#[serde(default)]` →
-     `"system"`; saved with `update_settings`.
-  2. `tokens.css`: dark stays on `:root`; add `--bg-track` (dark `#211f1c`), `--text-disabled`,
-     `--icon-disabled`; add a `:root[data-theme="light"]` block with every §4 light value
-     (backgrounds, borders, text, accent and its tints, status, diff, kinds, shadows, scrim, focus
-     ring, `--selected-bg`). Replace the hex colours left in CSS modules (`grep -rn
-     '#[0-9a-fA-F]\{6\}' src` outside `styles/tokens*`) with tokens; segmented tracks use
-     `--bg-track`, rgba(0,0,0,…) shadows use the shadow tokens.
-  3. `tokens.ts`: `palettes = { dark, light }`. `theme.ts`: define `gitgel-dark` (today's
-     `gitgel`) and `gitgel-light` (§4) and export `applyMonacoTheme(theme)`.
-  4. `theme.ts` resolves the effective theme: the setting, or for System
-     `matchMedia('(prefers-color-scheme: dark)')` plus its change listener. Apply by setting
-     `document.documentElement.dataset.theme`, calling
-     `getCurrentWindow().setTheme(appearance === 'system' ? null : appearance)` (title bar,
-     traffic lights, menus and native dialogs follow; add the `core:window:allow-set-theme`
-     permission) and switching Monaco.
-  5. No flash on launch: cache the effective theme in `localStorage`; an inline script in
-     `index.html` sets `data-theme` and the body background from it before the bundle loads;
-     loading the config corrects it if needed.
-  6. Settings › Appearance exactly as §5 (tiles are plain elements, not images).
-  7. Review with the sidebar shown: no traffic-light space or show-sidebar button in the header,
-     Back at 16px, file list 280px (§5 Review).
-  8. Go through every screen and overlay in light — Projects, Palette, the add-repos sheet, modals,
-     toasts, popovers, drop overlay, empty states were only drawn in dark — and fix anything that
-     assumed a dark surface (light text on light, black shadows, hard-coded colours in SVGs).
-- **Acceptance:** System / Light / Dark switch the whole app at once, Monaco and the title bar
-  included; with System, changing the macOS appearance while the app is open switches it; the
-  choice survives a restart with no flash of the other theme; dark is pixel-identical to before
-  (compare screenshots); light matches boards L1–L3.
-
-#### T10.2 ✋ Checkpoint — phase 10
-- **Depends on:** T10.1
-- **Show the user:** every screen in light, the Appearance tiles, System following macOS, the
-  review with the sidebar shown. Wait for approval.
-
-### Unplanned work (done on request, outside the task list)
-- [x] `pnpm release` script and ad-hoc signing — 2026-09-26
-- [x] Help › Show Logs in Finder and step timings in the log — 2026-09-26
-- [x] Performance for large repositories (merged state, working-tree cache, progressive scan) — 2026-09-26
-- [x] Help › Discuss on GitHub / Search or Report an Issue on GitHub; View › Font Size — 2026-09-27
-- [x] Homebrew tap (`gokberkakdeniz/homebrew-tap`) and release upload — 2026-09-27
