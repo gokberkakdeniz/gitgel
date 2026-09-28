@@ -144,6 +144,7 @@ gitgel/
 ├─ CLAUDE.md
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
+├─ docs/NOTES.md                  # handoff notes for the design assistant
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
 ├─ scripts/release.sh             # `pnpm release` (§12)
 ├─ index.html  package.json  pnpm-lock.yaml  .nvmrc  vite.config.ts  tsconfig*.json

@@ -240,6 +240,8 @@ rather than as a task is listed the same way, marked "(on request)".
     buttons enabled and opens the repository folder, with a note saying so (reverses the T14.6
     decision to show only "Copy branch name").
 - [x] T14.9 ✋ Checkpoint — T14.7–T14.8 — 2026-09-28
+- [x] (on request) Docs: `docs/NOTES.md` handoff notes for the design assistant (stale `.dc.html`
+  states, launch fallback) — 2026-09-28
 
 ---
 
