@@ -1,4 +1,5 @@
 pub mod appearance;
+pub mod apps;
 pub mod base;
 pub mod cache;
 pub mod commands;
@@ -95,6 +96,8 @@ pub fn run() {
             commands::locate_repo,
             commands::remove_repo,
             commands::update_settings,
+            commands::get_open_apps,
+            commands::open_folder,
         ])
         .run(tauri::generate_context!());
     if let Err(e) = result {

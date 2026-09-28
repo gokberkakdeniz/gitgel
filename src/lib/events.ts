@@ -22,7 +22,13 @@ async function start() {
   // Listen first so nothing emitted during the initial load is lost.
   await listen<Config>('config-changed', (e) => {
     configEvents++;
+    const before = useData.getState().config?.settings;
     data.setConfig(e.payload);
+    // The terminal item follows Settings › Behaviour › Terminal.
+    const after = e.payload.settings;
+    if (before && (before.terminal !== after.terminal || before.terminalApp !== after.terminalApp)) {
+      void loadOpenApps();
+    }
   });
   await listen<RepoUpdated>('repo-updated', (e) => data.applyRepoUpdated(e.payload));
   // App menu › Settings… (⌘,). Listed in lib/shortcuts.ts.
@@ -31,14 +37,27 @@ async function start() {
     if (useUi.getState().modalCount === 0 && selectRoute(nav).name !== 'settings') nav.push({ name: 'settings' });
   });
   // Safety net for events the watcher missed; there is no timer.
+  // An app installed meanwhile shows up in the open items.
   await getCurrentWindow().onFocusChanged(({ payload: focused }) => {
-    if (focused && useData.getState().scannedOnce) void rescanAll();
+    if (!focused) return;
+    void loadOpenApps();
+    if (useData.getState().scannedOnce) void rescanAll();
   });
 
+  void loadOpenApps();
   const [config] = await Promise.all([ipc.getConfig(), loadHome()]);
   // A config-changed that arrived meanwhile is newer than this answer.
   if (configEvents === 0) data.setConfig(config);
   data.setScan(await ipc.getScan());
+}
+
+async function loadOpenApps() {
+  try {
+    const apps = await ipc.getOpenApps();
+    if (JSON.stringify(apps) !== JSON.stringify(useData.getState().openApps)) useData.getState().setOpenApps(apps);
+  } catch (e) {
+    console.error('cannot list apps', e);
+  }
 }
 
 let rescanning: Promise<void> | null = null;

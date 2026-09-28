@@ -214,8 +214,58 @@ rather than as a task is listed the same way, marked "(on request)".
     tree; a branch with a stored base stays listed; a branch review keeps its one group visible.
 - [x] T13.2 ✋ Checkpoint — phase 13 — 2026-09-28
 
+### Phase 14 — Open elsewhere
+- [x] T14.1 Project entry menu: Open in Finder and installed apps — 2026-09-28
+  - note: a detached entry whose worktree is gone (`branch_deleted`) gets no open items; menus
+    now move with ↑/↓ (shared `Menu`).
+- [x] T14.2 Branches: row menu — 2026-09-28
+- [x] T14.3 ✋ Checkpoint — phase 14 — 2026-09-28
+  - note: user feedback: icons on the menu items (real app icons, grayscale; user decision) and a
+    default terminal setting → T14.4–T14.5. Branches not checked out keep only "Copy branch
+    name" (opening the repo folder would show another branch's files).
+- [x] T14.4 Menu item icons — 2026-09-28
+  - note: Finder is now an `OpenApp` (`finder`) and `open_folder` takes a required app id.
+- [x] T14.5 Settings: default terminal — 2026-09-28
+  - note: Ghostty and Warp are no longer listed on their own; they work as Other. Other runs no
+    command: it names an app (opened with `open -a`), as `std::process::Command` is banned.
+- [x] T14.6 ✋ Checkpoint — T14.4–T14.5 — 2026-09-28
+  - note: user feedback: Other runs a command (`%` = folder), the terminal choice becomes a
+    dropdown with an automatic default, open items always show (disabled, with a note) → T14.7–T14.8.
+
 ---
 
 ## Open
 
-No open tasks.
+### Phase 14 — Open elsewhere
+
+#### T14.7 Terminal: dropdown, Automatic, Other command
+- **Depends on:** T14.6
+- **Why:** user request 2026-09-28: "wezterm start --cwd %" style commands; a dropdown; default to
+  an installed non-Terminal app when nothing was picked.
+- **Spec:** SPEC §0 "Rules" (Command exception); §5 Settings "Behaviour" (Terminal); §8
+  `Settings`, `OpenApp.found`; §9 "Open items" (Terminals); §10 "Setup and boundary".
+- **Reference:** `Settings.dc.html` Terminal block (select, Other input and note, missing line);
+  canvas J4, J5.
+- **Files:** `src-tauri/src/model.rs` (`TerminalChoice::Auto` default; rename `terminal_app` →
+  `terminal_command`), `apps.rs`, `repos.rs`, `config.rs` tests; `src/lib/types.ts`,
+  `events.ts`; `Settings.tsx`, `Settings.module.css`.
+- **Steps:**
+  1. `#[allow(clippy::disallowed_methods)]` only on the spawn helper in `apps.rs`, with a comment.
+  2. Shell-quote the folder (`'…'`, `'` → `'\''`); spawn detached, reap in a thread.
+  3. Tests: `%` replacement and quoting, Automatic order, app-vs-command detection.
+- **Acceptance:** J4/J5 match; Other `wezterm start --cwd %` and `Ghostty`-style names work;
+  Automatic shows the resolved name.
+
+#### T14.8 Menus: open items always listed, with a note
+- **Depends on:** T14.7
+- **Why:** user request 2026-09-28: keep all the buttons, with a warning under them.
+- **Spec:** SPEC §5 Project "Entry menu" (Open items, "Always listed"); §6 flow J.
+- **Reference:** `Main.dc.html` row menu (disabled items and note); canvas J3, J5.
+- **Files:** `src/components/OpenItems.tsx`, `Menu.tsx` (a `MenuNote`), `Menu.module.css`,
+  `icons.tsx` (info icon); `Project.tsx`, `Branches.tsx`.
+- **Acceptance:** a branch not checked out, a missing repo and a deleted branch show disabled open
+  items with the matching note; a missing terminal disables only its item.
+
+#### T14.9 ✋ Checkpoint — T14.7–T14.8
+- **Depends on:** T14.8
+- **Steps:** leave `pnpm tauri dev` running; ask the user to check J3–J5 and run an Other command.

@@ -1,6 +1,6 @@
 // Data the backend pushes: config and scan results, kept current by backend events.
 import { create } from 'zustand';
-import type { Config, RepoScan, RepoUpdated, ScanResult } from '../lib/types';
+import type { Config, OpenApp, RepoScan, RepoUpdated, ScanResult } from '../lib/types';
 
 interface DataState {
   config: Config | null;
@@ -9,10 +9,12 @@ interface DataState {
   repoVersion: Record<string, number>; // bumped on every update of that repo
   configVersion: number; // bumped on every config change
   refreshing: boolean; // a full rescan is running
+  openApps: OpenApp[]; // installed apps for the entry menus' open items
   setConfig: (config: Config) => void;
   setScan: (result: ScanResult) => void;
   applyRepoUpdated: (event: RepoUpdated) => void;
   setRefreshing: (refreshing: boolean) => void;
+  setOpenApps: (apps: OpenApp[]) => void;
 }
 
 export const useData = create<DataState>()((set) => ({
@@ -22,6 +24,7 @@ export const useData = create<DataState>()((set) => ({
   repoVersion: {},
   configVersion: 0,
   refreshing: false,
+  openApps: [],
   setConfig: (config) => set((s) => ({ config, configVersion: s.configVersion + 1 })),
   setScan: (result) =>
     set((s) => {
@@ -39,6 +42,7 @@ export const useData = create<DataState>()((set) => ({
       repoVersion: { ...s.repoVersion, [e.repoId]: (s.repoVersion[e.repoId] ?? 0) + 1 },
     })),
   setRefreshing: (refreshing) => set({ refreshing }),
+  setOpenApps: (openApps) => set({ openApps }),
 }));
 
 /** Scans of the repos in the config, in config order. Records of removed repos are ignored. */

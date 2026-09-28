@@ -47,8 +47,8 @@ button,input{font-family:inherit}
 
 <sc-if value="{{hasRepos}}" hint-placeholder-val="{{true}}">
 <div style="display: flex; flex-direction: column; flex-grow: 1; min-height: 0">
-<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px; column-gap: 12px; padding: 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-row)">
-<span></span><span>Branch</span><span>Ahead</span><span>Files</span><span>Uncommitted</span><span>State</span><span>Projects</span><span>Age</span>
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px 32px; column-gap: 12px; padding: 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-row)">
+<span></span><span>Branch</span><span>Ahead</span><span>Files</span><span>Uncommitted</span><span>State</span><span>Projects</span><span>Age</span><span></span>
 </div>
 <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px">
 <sc-for list="{{repos}}" as="repo" hint-placeholder-count="3">
@@ -72,6 +72,7 @@ button,input{font-family:inherit}
 <span style="{{row.stateStyle}}">{{row.state}}</span>
 <button aria-haspopup="menu" title="{{row.projTitle}}" style="{{row.projStyle}}"><span>{{row.projLabel}}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="{{row.projChevStyle}}"><path d="m6 9 6 6 6-6"></path></svg></button>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">{{row.age}}</span>
+<button aria-label="Branch options" aria-haspopup="menu" style="{{row.menuBtnStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
 </div>
 </sc-for>
 </section>
@@ -93,7 +94,7 @@ button,input{font-family:inherit}
 </sc-if>
 
 <sc-if value="{{showPick}}" hint-placeholder-val="{{false}}">
-<div role="dialog" aria-label="Add to project" style="position: absolute; top: 196px; right: 84px; width: 300px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; overflow: hidden">
+<div role="dialog" aria-label="Add to project" style="position: absolute; top: 196px; right: 128px; width: 300px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; overflow: hidden">
 <label style="display: flex; padding: 10px; border-bottom: 1px solid var(--border)">
 <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Filter projects</span>
 <input placeholder="Filter projects" style="flex-grow: 1; min-width: 0; height: 32px; padding: 0 10px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-size: 13px">
@@ -108,7 +109,7 @@ button,input{font-family:inherit}
 </sc-if>
 
 <sc-if value="{{showNew}}" hint-placeholder-val="{{false}}">
-<div role="dialog" aria-label="New project" style="position: absolute; top: 196px; right: 84px; width: 320px; box-sizing: border-box; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; gap: 14px; padding: 16px">
+<div role="dialog" aria-label="New project" style="position: absolute; top: 196px; right: 128px; width: 320px; box-sizing: border-box; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; gap: 14px; padding: 16px">
 <div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; letter-spacing: -0.3px; color: var(--text-strong)">New project</div>
 <label style="display: flex; flex-direction: column; gap: 6px">
 <span style="font-size: 12px; font-weight: 500; color: var(--text-body)">Name</span>
@@ -126,7 +127,7 @@ button,input{font-family:inherit}
 </sc-if>
 
 <sc-if value="{{showProjMenu}}" hint-placeholder-val="{{false}}">
-<div role="menu" aria-label="Projects containing session-token-refresh" style="position: absolute; top: 196px; right: 84px; width: 270px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; padding: 6px">
+<div role="menu" aria-label="Projects containing session-token-refresh" style="position: absolute; top: 196px; right: 128px; width: 270px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; padding: 6px">
 <div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">In 2 projects</div>
 <a href="Projects.dc.html" role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--bg-hover); color: var(--text-strong); font-size: 13px">
 <span style="width: 7px; height: 7px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 1.5px solid var(--text-code)"></span>
@@ -140,6 +141,19 @@ button,input{font-family:inherit}
 </a>
 <div style="height: 1px; background: var(--border); margin: 4px 4px"></div>
 <button role="menuitem" style="display: flex; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--accent-text); font-size: 13px; font-weight: 500; text-align: left; cursor: pointer">+ Add to another project…</button>
+</div>
+</sc-if>
+
+<sc-if value="{{showRowMenu}}" hint-placeholder-val="{{false}}">
+<div role="menu" aria-label="Branch options" style="{{rowMenuStyle}}">
+<button role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: var(--bg-hover); color: var(--text-strong); font-size: 13px; text-align: left; cursor: pointer"><span style="width: 16px; display: flex; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--text-muted)"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></span>Copy branch name</button>
+<div style="height: 1px; background: var(--border); margin: 4px 4px"></div>
+<sc-for list="{{openItems}}" as="o" hint-placeholder-count="4">
+<button role="menuitem" disabled="{{o.disabled}}" style="{{o.style}}"><span aria-hidden="true" style="{{o.iconStyle}}"></span>{{o.label}}</button>
+</sc-for>
+<sc-if value="{{rowMenuNote}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; gap: 8px; padding: 6px 10px 4px; font-size: 12px; line-height: 1.45; color: var(--warning)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg><span>Not checked out in a worktree, so there is no folder to open.</span></div>
+</sc-if>
 </div>
 </sc-if>
 
@@ -202,7 +216,7 @@ Drop folders to add repositories
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;draft&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;draft&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;rowMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;worktree&quot;,&quot;notCheckedOut&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
     var popover = this.props.popover ?? 'none';
@@ -218,7 +232,9 @@ class Component extends DCLogic {
     };
     var selectMode = !!this.props.select;
     var projMenu = !!this.props.projMenu && popover === 'none' && !added && !selectMode;
-    var grid = 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px; column-gap: 12px; align-items: center; padding: 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body); ';
+    var rowMenu = popover === 'none' && !added && !selectMode && !projMenu ? (this.props.rowMenu ?? 'none') : 'none';
+    var menuTarget = rowMenu === 'worktree' ? 'session-token-refresh' : rowMenu === 'notCheckedOut' ? 'feat/billing-v2' : null;
+    var grid = 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px 32px; column-gap: 12px; align-items: center; padding: 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body); ';
     var chip = 'justify-self: start; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 8px; font-family: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; ';
     var mk = function (r) {
       var dirty = r.dirty > 0;
@@ -231,6 +247,7 @@ class Component extends DCLogic {
       var list = r.focus && popover !== 'none' ? [] : justAdded ? ['Session auth refresh'] : (r.projects || []);
       var n = list.length;
       var open = projMenu && r.focus;
+      var menuOpen = r.branch === menuTarget;
       var projStyle = chip + (
         focus ? 'background: var(--accent); border: 1px solid var(--accent); color: var(--on-accent); font-weight: 600'
         : open ? 'background: var(--bg-pressed); border: 1px solid var(--icon-disabled); color: var(--text-strong)'
@@ -245,12 +262,13 @@ class Component extends DCLogic {
         projChevStyle: n ? 'flex-shrink: 0' : 'display: none',
         projCount: n,
         checked: checked,
+        menuBtnStyle: 'width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; color: var(--text-body); cursor: pointer; ' + (menuOpen ? 'background: var(--bg-pressed)' : hover ? 'background: transparent' : 'background: transparent; opacity: 0'),
         checkStyle: 'width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; ' + (showCheck ? '' : 'visibility: hidden'),
         state: r.state || '—',
         stateStyle: states[r.state || ''],
         dirtyLabel: dirty ? '● ' + r.dirty + ' changed' : '—',
         dirtyStyle: dirty ? 'font-size: 12px; font-weight: 500; color: var(--accent-text)' : 'font-size: 12px; color: var(--text-faint)',
-        rowStyle: grid + ((focus || open) ? 'background: var(--bg-elevated)' : checked ? 'background: rgba(var(--accent-rgb), 0.10)' : hover ? 'background: var(--bg-sunken)' : '')
+        rowStyle: grid + ((focus || open || menuOpen) ? 'background: var(--bg-elevated)' : checked ? 'background: rgba(var(--accent-rgb), 0.10)' : hover ? 'background: var(--bg-sunken)' : '')
       });
     };
     var repos = [
@@ -301,6 +319,19 @@ class Component extends DCLogic {
       showSelBar: !empty && selectMode,
       inboxCount: empty ? '0' : '7',
       showProjMenu: !empty && projMenu,
+      showRowMenu: !empty && menuTarget !== null,
+      rowMenuNote: rowMenu === 'notCheckedOut',
+      rowMenuStyle: 'position: absolute; top: ' + (rowMenu === 'worktree' ? 196 : 304) + 'px; right: 28px; width: 260px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; padding: 6px',
+      // Real app icons (from macOS), drawn grayscale; the placeholders stand in for them.
+      openItems: ['Open in Finder', 'Open in Cursor', 'Open in VS Code', 'Open in Terminal'].map(function (label, i) {
+        var tones = ['#b8b4ac, #6e6a62', '#3b3934, #1d1c19', '#8f8b83, #4a4843', '#5c5a55, #2b2925'];
+        var off = rowMenu === 'notCheckedOut';
+        return {
+          label: label, disabled: off,
+          style: 'display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; font-size: 13px; text-align: left; ' + (off ? 'color: var(--text-faint); cursor: default' : 'color: var(--text-strong); cursor: pointer'),
+          iconStyle: 'width: 16px; height: 16px; flex-shrink: 0; border-radius: 4px; background: linear-gradient(160deg, ' + tones[i] + ')' + (off ? '; opacity: 0.4' : '')
+        };
+      }),
       sidebarProjects: empty ? [] : sidebarProjects,
       subtitle: empty ? 'Nothing to review yet' : (unassigned ? 'Active branches not in any project · ' : 'Active branches · ') + shownRepos.length + ' repos · checked out in a worktree, or committed in the last 14 days',
       scopes: [['all', 'All', total], ['unassigned', 'Not in a project', free]].map(function (x) {

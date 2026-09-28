@@ -5,10 +5,11 @@ import { CloseIcon } from '../../components/icons';
 import { Modal } from '../../components/Modal';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
+import { Segmented } from '../../components/Segmented';
 import { openAddRepos } from '../../lib/addRepos';
 import { locateRepo, removeRepo, updateSettings } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
-import type { AppError, Config, RepoConfig } from '../../lib/types';
+import type { AppError, Config, RepoConfig, TerminalChoice } from '../../lib/types';
 import { useData } from '../../state/data';
 import styles from './Settings.module.css';
 import { Appearance } from './Appearance';
@@ -242,6 +243,65 @@ function Behaviour({ config }: { config: Config }) {
           <span className={styles.settingHint}>days</span>
         </span>
       </label>
+      <TerminalSetting config={config} />
     </section>
+  );
+}
+
+const TERMINALS: { value: TerminalChoice; label: string }[] = [
+  { value: 'terminal', label: 'Terminal' },
+  { value: 'iterm', label: 'iTerm2' },
+  { value: 'wezterm', label: 'WezTerm' },
+  { value: 'other', label: 'Other' },
+];
+
+/** The app behind "Open in <terminal>" in the entry menus. */
+function TerminalSetting({ config }: { config: Config }) {
+  const { terminal, terminalApp } = config.settings;
+  const [app, setApp] = useState(terminalApp);
+  useEffect(() => setApp(terminalApp), [terminalApp]);
+  // The backend lists the terminal item only when it found the app.
+  const found = useData((s) => s.openApps.some((a) => a.id === 'terminal'));
+  const loaded = useData((s) => s.openApps.length > 0);
+  const saveApp = () => {
+    if (app.trim() !== terminalApp) void updateSettings({ ...config.settings, terminalApp: app.trim() });
+  };
+
+  return (
+    <div className={styles.terminal}>
+      <div className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>Terminal</span>
+          <span className={styles.settingHint}>Used by “Open in …” in the branch menus</span>
+        </span>
+        <Segmented
+          aria-label="Terminal"
+          size="sm"
+          value={terminal}
+          onChange={(value) => void updateSettings({ ...config.settings, terminal: value })}
+          options={TERMINALS}
+        />
+      </div>
+      {terminal === 'other' && (
+        <input
+          aria-label="Terminal app"
+          className={`${styles.input} ${styles.orderInput} ${styles.terminalApp}`}
+          placeholder="App name or path, e.g. Ghostty"
+          value={app}
+          spellCheck={false}
+          onChange={(e) => setApp(e.target.value)}
+          onBlur={saveApp}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              saveApp();
+              e.currentTarget.blur();
+            }
+          }}
+        />
+      )}
+      {loaded && !found && (terminal !== 'other' || terminalApp) && (
+        <span className={styles.terminalMissing}>Not found; the menus leave it out</span>
+      )}
+    </div>
   );
 }

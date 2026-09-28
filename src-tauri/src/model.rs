@@ -78,6 +78,10 @@ pub struct Settings {
     pub zoom: u32,
     /// Settings › Appearance; configs from before it load as `system`.
     pub appearance: Appearance,
+    /// Settings › Behaviour › Terminal, for the entry menus' open items.
+    pub terminal: TerminalChoice,
+    /// The `other` terminal: an app name, a `.app` path or a bundle id.
+    pub terminal_app: String,
 }
 
 impl Default for Settings {
@@ -91,6 +95,8 @@ impl Default for Settings {
             diff_context_lines: 3,
             zoom: 100,
             appearance: Appearance::System,
+            terminal: TerminalChoice::Terminal,
+            terminal_app: String::new(),
         }
     }
 }
@@ -132,6 +138,16 @@ pub enum Appearance {
     System,
     Light,
     Dark,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TerminalChoice {
+    #[default]
+    Terminal,
+    Iterm,
+    Wezterm,
+    Other,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -485,6 +501,16 @@ pub struct BaseOptions {
 pub struct ProjectView {
     pub project: ProjectConfig,
     pub entries: Vec<EntrySummary>,
+}
+
+/// An installed app the entry menus can open a worktree folder in (`apps.rs`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenApp {
+    pub id: String,
+    pub name: String,
+    /// PNG data URL of the app's icon.
+    pub icon: Option<String>,
 }
 
 #[cfg(test)]

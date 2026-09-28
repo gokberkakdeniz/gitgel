@@ -34,7 +34,10 @@ export interface Settings {
   diffContextLines: number; // lines kept around each change: 3, 5 or 10
   zoom: number; // View › Font Size, percent
   appearance: Appearance; // Settings › Appearance
+  terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"
+  terminalApp: string; // the Other terminal: app name, .app path or bundle id
 }
+export type TerminalChoice = 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
   version: 1;
   repos: RepoConfig[];
@@ -199,6 +202,13 @@ export interface BaseOptions {
 export interface ProjectView {
   project: ProjectConfig;
   entries: EntrySummary[];
+}
+
+/** An installed app the entry menus can open a worktree folder in. */
+export interface OpenApp {
+  id: string; // "vscode"
+  name: string; // "VS Code"
+  icon: string | null; // PNG data URL of the app's icon
 }
 
 // What `invoke` rejects with (AppError in error.rs).

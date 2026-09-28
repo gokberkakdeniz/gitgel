@@ -8,6 +8,7 @@ import type {
   FileChange,
   FilePair,
   FolderCheck,
+  OpenApp,
   ProjectConfig,
   ProjectView,
   ReviewData,
@@ -70,3 +71,9 @@ export const locateRepo = (repoId: string, path: string) => invoke<Config>('loca
 export const removeRepo = (repoId: string) => invoke<Config>('remove_repo', { repoId });
 
 export const updateSettings = (settings: Settings) => invoke<Config>('update_settings', { settings });
+
+/** Installed apps for the open items, in menu order. */
+export const getOpenApps = () => invoke<OpenApp[]>('get_open_apps');
+
+/** Opens a worktree folder in one of `getOpenApps` (Finder included). */
+export const openFolder = (path: string, app: string) => invoke<null>('open_folder', { path, app });

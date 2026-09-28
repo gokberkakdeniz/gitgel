@@ -1,8 +1,11 @@
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
-import { BranchLargeIcon, ChevronDownIcon, CloseIcon, FolderIcon } from '../../components/icons';
+import { BranchLargeIcon, ChevronDownIcon, CloseIcon, CopyIcon, FolderIcon, MoreIcon } from '../../components/icons';
+import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
+import { OpenItems, openableFolder } from '../../components/OpenItems';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
@@ -61,11 +64,13 @@ function readScope(): BranchScope {
   }
 }
 
-/** A popover opened from a row: its Projects menu, the project picker, or the base menu. */
+/** A popover opened from a row: its Projects menu, the project picker, the base menu, or the row
+ * menu (⋯). */
 type RowPopover =
   | { kind: 'projects'; key: string; rect: DOMRect }
   | { kind: 'picker'; key: string; rect: DOMRect }
-  | { kind: 'base'; key: string; rect: DOMRect };
+  | { kind: 'base'; key: string; rect: DOMRect }
+  | { kind: 'menu'; key: string; rect: DOMRect };
 
 function BranchList() {
   const config = useData((s) => s.config)!;
@@ -232,6 +237,7 @@ function BranchList() {
           <span>State</span>
           <span>Projects</span>
           <span>Age</span>
+          <span />
         </div>
         {body}
       </div>
@@ -259,6 +265,11 @@ function BranchList() {
             onAdded={setJustAdded}
             onDone={() => setPopover(null)}
           />
+        </Popover>
+      )}
+      {popover?.kind === 'menu' && popoverEntry && (
+        <Popover anchorRect={popover.rect} width={260} alignRight onClose={() => setPopover(null)}>
+          <RowMenu entry={popoverEntry} onClose={() => setPopover(null)} />
         </Popover>
       )}
       {popover?.kind === 'base' && popoverEntry && (
@@ -397,7 +408,7 @@ function Row({
     const ui = useUi.getState();
     ui.setSelectedKeys(selected ? ui.selectedKeys.filter((k) => k !== e.key) : [...ui.selectedKeys, e.key]);
   };
-  const hot = popover === 'projects' || popover === 'picker';
+  const hot = popover === 'projects' || popover === 'picker' || popover === 'menu';
   const cls = [styles.grid, styles.row, selected && styles.selected, hot && styles.hot].filter(Boolean).join(' ');
   const n = projectNames.length;
   const cellCls = [
@@ -447,7 +458,38 @@ function Row({
         )}
       </button>
       <span className={`${styles.mono} ${styles.age}`}>{e.lastCommitAt ? formatAge(e.lastCommitAt) : '—'}</span>
+      <button
+        type="button"
+        aria-label="Branch options"
+        aria-haspopup="menu"
+        className={popover === 'menu' ? `${styles.rowMenu} ${styles.rowMenuOpen}` : styles.rowMenu}
+        onClick={(ev) => onPopover('menu', ev.currentTarget.getBoundingClientRect())}
+      >
+        <MoreIcon size={14} />
+      </button>
     </div>
+  );
+}
+
+/** The row's ⋯ menu: Copy branch name, then the open items. */
+function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void }) {
+  const folder = openableFolder(entry);
+  return (
+    <Menu aria-label="Branch options" autoFocus>
+      {entry.branch !== null && (
+        <MenuItem
+          icon={<CopyIcon />}
+          onSelect={() => {
+            void writeText(entry.branch!);
+            onClose();
+          }}
+        >
+          Copy branch name
+        </MenuItem>
+      )}
+      {entry.branch !== null && folder && <MenuDivider />}
+      {folder && <OpenItems path={folder} onDone={onClose} />}
+    </Menu>
   );
 }
 

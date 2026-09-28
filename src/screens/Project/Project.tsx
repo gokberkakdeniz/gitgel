@@ -2,9 +2,10 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
-import { ChevronDownIcon, MoreIcon } from '../../components/icons';
+import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
 import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
+import { OpenItems, openableFolder } from '../../components/OpenItems';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
@@ -555,7 +556,8 @@ function StatePill({
   }
 }
 
-/** Entry options: [View last known state], Point to another branch…, Copy branch name, Remove. */
+/** Entry options: [View last known state], Point to another branch…, Copy branch name, [open
+ * items], Remove. */
 function EntryMenu({
   entry,
   stored,
@@ -577,11 +579,14 @@ function EntryMenu({
     enabled: !!tip,
   });
   const seen = tip ? formatAge(Date.parse(tip.seenAt) / 1000) : '';
+  const hasFirst = !!tip || entry.branch !== null;
+  const folder = openableFolder(entry);
 
   return (
     <Menu aria-label="Entry options">
       {tip && (
         <MenuItem
+          icon={<HistoryIcon />}
           disabled={exists === false}
           sub={
             exists === false
@@ -600,9 +605,14 @@ function EntryMenu({
           View last known state
         </MenuItem>
       )}
-      {saved && entry.branch !== null && <MenuItem onSelect={onRepoint}>Point to another branch…</MenuItem>}
+      {saved && entry.branch !== null && (
+        <MenuItem icon={<BranchIcon size={14} />} onSelect={onRepoint}>
+          Point to another branch…
+        </MenuItem>
+      )}
       {entry.branch !== null && (
         <MenuItem
+          icon={<CopyIcon />}
           onSelect={() => {
             void writeText(entry.branch!);
             onClose();
@@ -611,8 +621,10 @@ function EntryMenu({
           Copy branch name
         </MenuItem>
       )}
-      {(tip || entry.branch !== null) && <MenuDivider />}
-      <MenuItem danger onSelect={onRemove}>
+      {hasFirst && folder && <MenuDivider />}
+      {folder && <OpenItems path={folder} onDone={onClose} />}
+      {(hasFirst || folder) && <MenuDivider />}
+      <MenuItem danger icon={<RemoveIcon />} onSelect={onRemove}>
         Remove from project
       </MenuItem>
     </Menu>

@@ -22,7 +22,8 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 ### Rules
 
 - **Git only through git2 (libgit2).** The git CLI is never run; `std::process::Command` is
-  banned in app code. git2 is used only under `src-tauri/src/git/`; other modules use the
+  banned in app code. The one exception (planned, T14.7) is `src-tauri/src/apps.rs`, which starts
+  the terminal the user set in Settings (WezTerm, or an Other command); it never runs git. git2 is used only under `src-tauri/src/git/`; other modules use the
   functions there and the types in §8.
 - **Read-only.** The app never calls a git2 API that writes to a repository: no checkout,
   set_head, commit, stash, reset, merge, cherry-pick, revert, branch/reference/tag
@@ -166,6 +167,7 @@ gitgel/
       ├─ menu.rs                  # app menu: Settings…, View › Font Size, Help items
       ├─ logs.rs                  # Help › Show Logs in Finder
       ├─ appearance.rs            # window theme and background before it is shown
+      ├─ apps.rs                  # open items: installed editors/terminals, open a folder
       ├─ nearest.rs               # nearest default: local vs remote default base
       ├─ memory.rs                # frees libgit2 memory after full scans
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
@@ -337,7 +339,9 @@ italic, everything else `#2b2925`.
 - `Popover`: positioned under an anchor rect, kept inside the viewport, `bg.elevated`, radius 12,
   popover shadow; outside click and Esc close it.
 - `Menu`: padding 6, items 8px 10px, radius 8, active item `bg.hover`; `danger`, `hint`, `sub`
-  lines and dividers.
+  lines and dividers; ↑/↓ move between the enabled items. Items may carry an icon on the left:
+  a 16px slot, gap 10; line icons are 14px, stroke 1.8, `text.muted` (danger
+  items: `danger.text`); an item with a `sub` line keeps the icon beside its first line.
 - `Modal`: scrim, `bg.elevated`, radius 16, positioned from the top; Esc closes it.
 - `Toast`: bottom centre, `#2a2825` on `#383631` border, radius 12; one at a time.
 - `Segmented`: padding 3, gap 2, `bg.elevated`, radius 10; buttons 26–28px, 12px/500; active
@@ -398,9 +402,9 @@ Every active branch, whether or not it is in a project.
     spaces, and every typed word must appear in the branch name or SHA, the worktree path or the
     repo name, in any order, case-insensitive ("to be" finds `to-be-deleted`, "feat queue" finds
     `feat/job-queue`). Esc clears it.
-- **Columns:** grid `16px minmax(0,1fr) 60px 68px 128px 150px 112px 44px`, column-gap 12,
+- **Columns:** grid `16px minmax(0,1fr) 60px 68px 128px 150px 112px 44px 32px`, column-gap 12,
   padding 10px 28px, section-label style: [checkbox] Branch · Ahead · Files · Uncommitted · State ·
-  Projects · Age.
+  Projects · Age · [⋯].
 - **Repo band** per repo: `bg.band`, top border `border.strong`, bottom border `border`, padding
   10px 28px; folder icon in accent, 15px/600 repo name, mono 11px muted path, "N branches" on the
   right; 14px between bands. Repos with no rows are hidden, except when focused from a repo link
@@ -428,6 +432,11 @@ Every active branch, whether or not it is in a project.
     - Right after an add the cell shows the new count with an accent outline and
       `rgba(79,143,163,0.12)` fill for ~2 s. In "Not in a project" the row leaves the list.
   - Age: mono 12 muted.
+  - **Row menu**: a 30px "⋯" button (`aria-label` "Branch options"), shown on
+    the hovered or focused row and while its menu is open (then `bg.pressed`, row
+    `bg.elevated`). It opens a 260px menu, right-aligned under the button: "Copy branch name"
+    (hidden for a detached HEAD), then the open items as in the Project entry menu (with a divider
+    between the two groups); icons as there. ↑/↓/↵/Esc work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
 - Repos sorted by their newest commit, rows newest first.
 - While the first scan runs: muted "Scanning repositories…" (the list fills in repo by repo).
@@ -646,12 +655,30 @@ Layout:
   - Broken entries (deleted branch, missing repo) stay in the list at 60% opacity. States are
     labels, never error screens, modals or toasts.
 - **Entry menu** (260px; the row is `bg.elevated` and the button `bg.pressed` while open):
+  - Every item has an icon: history (View last known state), branch (Point to
+    another branch…), copy (Copy branch name), minus-in-circle (Remove from project); open items
+    as below.
   - "View last known state" (deleted branches only), with mono 11 muted
     `tip <shortSha> · seen <age> ago`; disabled with `tip <shortSha> · no longer in the repository`
     when the commit is gone. Opens single-branch review on that tip.
   - "Point to another branch…": a branch picker (local branches of the entry's repo); repoints
     the entry and refreshes its last known tip.
   - "Copy branch name" (hidden for detached entries).
+  - **Open items**: divider, "Open in Finder" (the worktree folder), then "Open in <App>" for
+    each installed editor, in this order: Cursor, VS Code, Windsurf, Zed, Sublime Text, then one
+    item for the terminal chosen in Settings › Behaviour ("Open in Terminal", "Open in iTerm2",
+    "Open in WezTerm", or the Other app's or command's name). Editors that are not installed are
+    not listed. Each item's icon is the app's own macOS icon, 16px, drawn grayscale
+    (`filter: grayscale(1)`), Finder's too; without one, a terminal line icon.
+    A pick closes the menu; a failure is logged (`log::warn!`), nothing is shown.
+    - Always listed (planned, T14.8). When there is no folder to open, every open item is
+      disabled (text `text.faint`, icon at 40%) and a warning note closes the group: 12px
+      `warning.text`, line-height 1.45, padding 6px 10px 4px, a 14px circle-i icon, then "Not
+      checked out in a worktree, so there is no folder to open." / "Repository not found, so there
+      is nothing to open." / "The branch was deleted, so there is nothing to open." (a gone
+      detached worktree counts as deleted). When only the chosen terminal is not installed, its
+      item alone is disabled and the note says "<Name> is not installed; pick another terminal in
+      Settings."
   - Divider, danger "Remove from project".
 - **Project menu** (230px; also on the sidebar's right-click): "Rename" (hint "F2"), divider,
   danger "Delete project…".
@@ -724,6 +751,15 @@ Layout:
   - "Active threshold" ("Branches without a worktree are listed if committed within"): 60px
     right-aligned mono input + "days"; anything but an integer 1–365 restores the old value.
   - Changing either rescans every repo.
+  - "Terminal" ("Used by “Open in …” in the branch menus") (planned, T14.7): a 230 × 36px
+    dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
+    right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
+    Terminal, iTerm2, WezTerm, "Other…". Other shows under it, full width, a 36px mono input
+    (placeholder `wezterm start --cwd %`, saved on blur/↵, trimmed; empty = Automatic) and a
+    12px muted note: "A command, or an app name such as Ghostty. `%` becomes the worktree folder;
+    the command runs in your login shell, in that folder." When the chosen app is not installed,
+    a right-aligned 12px `warning` line: "<Name> is not installed; the menus show it disabled".
+    Saved at once (`settings.terminal`, `settings.terminalCommand`).
 - **Keyboard shortcuts** (full width under both columns, margin-top 40): serif 18px heading +
   muted "Not editable yet"; four cards (`bg.sunken`, radius 12, padding 6px 0) in a
   `repeat(4, minmax(max-content, 1fr))` grid, gap 12 (a narrow window scrolls instead of
@@ -800,6 +836,10 @@ open.
 - **I · Which projects a branch is in.** The Projects column counts them; clicking the count
   lists them and offers "+ Add to another project…". The "Not in a project" filter shows only
   branches in no project.
+- **J · Open elsewhere.** The ⋯ menu of a checked-out entry (Project) or
+  row (Branches) opens its worktree folder in Finder or in an installed editor or terminal. A
+  branch that is not checked out has no folder: its open items are disabled, with a note saying
+  why (planned, T14.8).
 
 ---
 
@@ -889,6 +929,8 @@ export interface Settings {
   diffContext: 'changes' | 'whole'; // default 'changes'
   diffContextLines: 3 | 5 | 10;  // default 3; anything else reads as 3
   zoom: number;                  // View › Font Size, percent; default 100
+  terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto' (planned, T14.7)
+  terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   appearance: 'system' | 'light' | 'dark'; // Settings › Appearance; default 'system' (T10.1)
 }
 export interface Config {
@@ -1044,6 +1086,12 @@ export interface BaseOptions {
   tags: string[];
 }
 export interface ProjectView { project: ProjectConfig; entries: EntrySummary[] }
+export interface OpenApp {
+  id: string;                    // "vscode"; "finder"; "terminal" is the chosen terminal
+  name: string;                  // "VS Code"
+  icon: string | null;           // PNG data URL of the app's icon
+  found: boolean;                // false only for a terminal that is not installed (planned, T14.7)
+}
 ```
 
 ### Errors
@@ -1067,6 +1115,9 @@ pub enum AppError {
 
 - `state/data.ts`: `config`, `scan` (by repo id), `scannedOnce`, `repoVersion[repoId]` (bumped on
   each `repo-updated`), `configVersion`. Scan records of repos no longer in the config are ignored.
+  `openApps`: the installed apps for the open items, loaded with the config and
+  again on every window focus (an app installed meanwhile appears) and when the terminal
+  settings change.
 - `state/nav.ts`: history router (`stack`, `index`; `push`, `replace`, `back`, `forward`). Routes:
   `branches` (optional `focusRepoId`), `project` (`projectId`, `'draft'` for a draft),
   `review` (`target`, `focusKey?`, `backLabel`), `settings`.
@@ -1110,6 +1161,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `remove_repo` | `repoId` | `Config` |
 | `locate_repo` | `repoId, path` | `Config` |
 | `update_settings` | `settings: Settings` | `Config` |
+| `get_open_apps` | – | `OpenApp[]` (installed ones, in menu order) |
+| `open_folder` | `path, app: string` | `null` (`app`: an `OpenApp` id) |
 
 Notes:
 
@@ -1131,6 +1184,27 @@ Notes:
   inside it (else `Forbidden`); symlinks show their link text; a file that just vanished is `""`.
 - `update_settings` validates the base order (not empty) and threshold (1–365) and clamps
   `zoom` to 50–200.
+- Open items, in `src-tauri/src/apps.rs`: a fixed list of `id`, name and bundle
+  id — `cursor` Cursor `com.todesktop.230313mzl4w4u92`, `vscode` VS Code `com.microsoft.VSCode`,
+  `windsurf` Windsurf `com.exafunction.windsurf`, `zed` Zed `dev.zed.Zed`, `sublime` Sublime Text
+  `com.sublimetext.4`; `finder` Finder `com.apple.finder` first; terminals: Terminal `com.apple.Terminal`, iTerm2 `com.googlecode.iterm2`, WezTerm
+  `com.github.wez.wezterm`, or the Other app (Settings › Behaviour), listed last with id
+  `terminal`, always (planned, T14.7: with `found: false` when not installed; Automatic picks
+  the first installed of iTerm2, WezTerm, Terminal). `get_open_apps` asks Launch Services for each bundle id
+  (`NSWorkspace URLForApplicationWithBundleIdentifier:`), so apps outside `/Applications` are
+  found too. Icons: `NSWorkspace iconForFile:` on the app's bundle, the 16pt
+  representation (32px on Retina) encoded as PNG, cached per app path for the app's lifetime. `open_folder`
+  accepts only an existing folder and a listed id; it opens the folder with
+  `tauri-plugin-opener` (`open_path`, with the app's bundle path). No git.
+  - Terminals (planned, T14.7): Terminal and iTerm2 open with `open_path`. WezTerm runs
+    `<bundle>/Contents/MacOS/wezterm start --cwd <folder>`. Other: a single word or path that
+    resolves to an app (name in `/Applications`, `/Applications/Utilities`,
+    `/System/Applications`, `/System/Applications/Utilities`, `~/Applications`, with or without
+    `.app`; an existing `.app` path; a bundle id) opens with `open_path`; anything else is a
+    command: every `%` is replaced with the folder, single-quoted for the shell, and it runs as
+    `$SHELL -l -c <command>` (`/bin/zsh` without `$SHELL`) with the folder as working directory,
+    stdin/stdout/stderr null, not waited for (a thread reaps it). Its name is the app its first
+    word names if one is found (icon too), else the first word.
 
 | Event | Payload | When |
 |---|---|---|
@@ -1148,7 +1222,7 @@ Notes:
 - git2 is used only under `src-tauri/src/git/`. No git2 type leaks out: SHAs are hex `String`s,
   errors `AppError`, results the types in §8.
 - `src-tauri/clippy.toml` turns every writing API into a compile error under `-D warnings`:
-  - `std::process::Command::new`.
+  - `std::process::Command::new` (allowed only in `apps.rs` for the terminal, planned T14.7).
   - `git2::Repository::` `init`, `init_bare`, `init_opts`, `clone`, `clone_recurse`,
     `checkout_head`, `checkout_index`, `checkout_tree`, `set_head`, `set_head_detached`,
     `set_head_bytes`, `commit`, `commit_signed`, `branch`, `branch_from_annotated_commit`,
@@ -1332,11 +1406,11 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Screen | File | Key lines |
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
-| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52, repo band 56–61, row 63–75 (Projects cell 73), row and cell styles 213–254, filter logic 277–287 and 305–312, empty state 83–93, picker 95–108, new-project form 110–126, projects menu 128–144, toast 146–152, selection bar 153–166, drop overlay 169–176, sheet 178–202 and 314–329 |
+| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52, repo band 56–61, row 63–76 (Projects cell 73, ⋯ button 75), row and cell styles 226–271 (row menu target 234–235, ⋯ style 264), filter logic 294–303 and 326–334, empty state 84–94, picker 96–109, new-project form 111–127, projects menu 129–145, row menu 147–157 (icons 149, 153) and 321–329, toast 159–165, selection bar 166–179, drop overlay 182–189, sheet 191–215 and 336–345 |
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 438–482 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–290 (sections, Default pair, pills, disabled rows, hint), base menu data per case 695–737 (`baseCase`: stacked / behind / unrelated / remote; effective base 307–308), commit selection 404–417, filter logic 419–429, 440–444, 475 and 608–609, segmented 483–490, context and fold logic 581–596 (sample hidden lines 495–503), view values 759–782 (context 766–781), commit values 785–795, theme and `embedded` values 743–744, filter values 798–809 |
-| Project | `Projects.dc.html` | header 22–43, table 47–60 and 172–183, "add related" card 62–68, empty project 72–80, entry menu 82–93, project menu 94–100, delete modal 103–114, rename 150–170, pills 124–133 |
+| Project | `Projects.dc.html` | header 22–43, table 47–60 and 198–209, "add related" card 62–68, empty project 72–80, entry menu with icons 82–96 (with open items 97–108, values 187–195), project menu 109–115, delete modal 118–129, rename 166–196, pills 140–149 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
-| Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 153–180), Behaviour 71–81, Keyboard shortcuts 84–106, shortcut data and keycap style 116–153 |
+| Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 173–203), Behaviour 71–100 (Terminal 81–99, values 205–220), Keyboard shortcuts 103–125, shortcut data and keycap style 135–172 |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 

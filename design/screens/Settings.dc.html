@@ -78,6 +78,29 @@ button,input{font-family:inherit}
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Active threshold</span><span style="font-size: 12px; color: var(--text-muted)">Branches without a worktree are listed if committed within</span></span>
 <span style="display: flex; align-items: center; gap: 8px"><input value="14" style="width: 60px; height: 36px; padding: 0 10px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right"><span style="color: var(--text-muted)">days</span></span>
 </label>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<label style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Terminal</span><span style="font-size: 12px; color: var(--text-muted)">Used by “Open in …” in the branch menus</span></span>
+<span style="position: relative; display: flex; flex-shrink: 0">
+<select aria-label="Terminal" style="width: 230px; height: 36px; box-sizing: border-box; padding: 0 30px 0 12px; appearance: none; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 13px">
+<sc-for list="{{terminals}}" as="tm" hint-placeholder-count="5">
+<option value="{{tm.value}}" selected="{{tm.on}}">{{tm.label}}</option>
+</sc-for>
+</select>
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position: absolute; right: 12px; top: 12px; color: var(--text-muted); pointer-events: none"><path d="m6 9 6 6 6-6"></path></svg>
+</span>
+</label>
+<sc-if value="{{terminalOther}}" hint-placeholder-val="{{false}}">
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Terminal command</span>
+<input value="wezterm start --cwd %" placeholder="wezterm start --cwd %" style="height: 36px; box-sizing: border-box; padding: 0 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px">
+<span style="font-size: 12px; line-height: 1.5; color: var(--text-muted)">A command, or an app name such as Ghostty. <span style="font-family: 'JetBrains Mono', monospace; color: var(--text-code)">%</span> becomes the worktree folder; the command runs in your login shell, in that folder.</span>
+</label>
+</sc-if>
+<sc-if value="{{terminalMissing}}" hint-placeholder-val="{{false}}">
+<span style="align-self: flex-end; font-size: 12px; color: var(--warning)">iTerm2 is not installed; the menus show it disabled</span>
+</sc-if>
+</div>
 </section>
 </div>
 
@@ -109,7 +132,7 @@ button,input{font-family:inherit}
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"appearance":{"editor":"enum","options":["system","light","dark"],"default":"system"},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"appearance":{"editor":"enum","options":["system","light","dark"],"default":"system"},"terminal":{"editor":"enum","options":["auto","terminal","iterm","wezterm","other","missing"],"default":"auto"},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
     var ok = 'font-size: 12px; color: var(--text-muted); white-space: nowrap';
@@ -183,8 +206,16 @@ class Component extends DCLogic {
         labelStyle: on ? 'color: var(--text-strong); font-weight: 500' : 'color: var(--text-muted)'
       };
     });
+    var term = this.props.terminal ?? 'auto';
+    var termKind = term === 'missing' ? 'iterm' : term;
+    var terminals = [['auto', 'Automatic (WezTerm)'], ['terminal', 'Terminal'], ['iterm', 'iTerm2'], ['wezterm', 'WezTerm'], ['other', 'Other…']].map(function (x) {
+      return { value: x[0], label: x[1], on: termKind === x[0] };
+    });
     return {
       themeClass: 'theme-' + theme, themeName: theme, themes: themes,
+      terminals: terminals,
+      terminalOther: termKind === 'other',
+      terminalMissing: term === 'missing',
       shortcutGroups: shortcutGroups,
       repos: [
         { name: 'web-app', path: '~/code/web-app', note: 'base main', noteStyle: ok, missing: false },

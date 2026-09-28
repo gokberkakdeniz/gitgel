@@ -139,7 +139,9 @@ mod tests {
                 "zoom": 125,
                 "appearance": "system",
                 "diffContext": "whole",
-                "diffContextLines": 5
+                "diffContextLines": 5,
+                "terminal": "other",
+                "terminalApp": "Ghostty"
             }
         });
         let config: Config = serde_json::from_value(value.clone()).unwrap();
@@ -193,6 +195,11 @@ mod tests {
             crate::model::DiffContext::Changes
         );
         assert_eq!(config.settings.diff_context_lines, 3);
+        assert_eq!(
+            config.settings.terminal,
+            crate::model::TerminalChoice::Terminal
+        );
+        assert_eq!(config.settings.terminal_app, "");
     }
 
     #[test]

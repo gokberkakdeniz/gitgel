@@ -6,11 +6,11 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
-    BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, ProjectConfig,
-    ProjectView, ReviewData, ReviewTarget, ScanResult, Settings,
+    BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, OpenApp,
+    ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, Settings,
 };
 use crate::state::AppState;
-use crate::{base, files, projects, repos, review, scan, watch};
+use crate::{apps, base, files, projects, repos, review, scan, watch};
 
 /// Runs git or disk work off the async runtime.
 pub async fn blocking<T, F>(state: &AppState, f: F) -> Result<T, AppError>
@@ -262,6 +262,27 @@ pub async fn repoint_entry(
 ) -> Result<Config, AppError> {
     blocking(&state, move |state| {
         projects::repoint_entry(state, &project_id, &key, &branch)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn get_open_apps(state: State<'_, AppState>) -> Result<Vec<OpenApp>, AppError> {
+    blocking(&state, |state| {
+        Ok(apps::installed(&config::snapshot(state).settings))
+    })
+    .await
+}
+
+/// Opens a worktree folder in one of `get_open_apps` (Finder included).
+#[tauri::command]
+pub async fn open_folder(
+    state: State<'_, AppState>,
+    path: String,
+    app: String,
+) -> Result<(), AppError> {
+    blocking(&state, move |state| {
+        apps::open_folder(&path, &app, &config::snapshot(state).settings)
     })
     .await
 }

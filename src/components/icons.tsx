@@ -206,3 +206,44 @@ export function MoreIcon({ size = 15, className }: IconProps) {
     </svg>
   );
 }
+
+// Menu item icons (`Projects.dc.html` entry menus).
+
+export function CopyIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.8} className={className}>
+      <rect x="8" y="8" width="12" height="12" rx="2" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </Svg>
+  );
+}
+
+export function HistoryIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.8} className={className}>
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+      <path d="M12 8v4l3 2" />
+    </Svg>
+  );
+}
+
+export function RemoveIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.8} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12h8" />
+    </Svg>
+  );
+}
+
+/** Stand-in for an app whose icon could not be read. */
+export function TerminalIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.8} className={className}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="m7 9 3 3-3 3" />
+      <path d="M13 15h4" />
+    </Svg>
+  );
+}

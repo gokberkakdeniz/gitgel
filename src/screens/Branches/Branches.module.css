@@ -97,7 +97,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px;
+  grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px 32px;
   column-gap: 12px;
   align-items: center;
   padding: 10px 28px;
@@ -265,6 +265,37 @@
 .hot,
 .hot:hover {
   background: var(--bg-elevated);
+}
+
+/* Row menu (⋯): hidden with opacity, so Tab still reaches it */
+
+.rowMenu {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-body);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.row:hover .rowMenu,
+.row:focus-within .rowMenu,
+.rowMenuOpen {
+  opacity: 1;
+}
+
+.rowMenu:hover {
+  background: var(--bg-hover);
+}
+
+.rowMenuOpen,
+.rowMenuOpen:hover {
+  background: var(--bg-pressed);
 }
 
 /* Projects column (flow I) */

@@ -1,0 +1,6 @@
+/* The app's own icon, monochrome (docs/SPEC.md §5 Project "Entry menu"). */
+.appIcon {
+  width: 16px;
+  height: 16px;
+  filter: grayscale(1);
+}
