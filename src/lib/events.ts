@@ -26,7 +26,7 @@ async function start() {
     data.setConfig(e.payload);
     // The terminal item follows Settings › Behaviour › Terminal.
     const after = e.payload.settings;
-    if (before && (before.terminal !== after.terminal || before.terminalApp !== after.terminalApp)) {
+    if (before && (before.terminal !== after.terminal || before.terminalCommand !== after.terminalCommand)) {
       void loadOpenApps();
     }
   });

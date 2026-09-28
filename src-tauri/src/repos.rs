@@ -141,7 +141,7 @@ pub fn update_settings(state: &AppState, settings: Settings) -> Result<Config, A
             default_base_order: order,
             zoom: crate::menu::clamp_zoom(settings.zoom),
             diff_context_lines: crate::model::valid_context_lines(settings.diff_context_lines),
-            terminal_app: settings.terminal_app.trim().to_string(),
+            terminal_command: settings.terminal_command.trim().to_string(),
             ..settings
         };
         // Only the base order and the threshold change what is listed.

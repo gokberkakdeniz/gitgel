@@ -14,7 +14,9 @@ export function openableFolder(e: EntrySummary): string | null {
 /** Open in Finder, then Open in <App> for each installed app; shared by the entry menus. Each
  * item shows the app's own icon, grayscale. */
 export function OpenItems({ path, onDone }: { path: string; onDone: () => void }) {
-  const apps = useData((s) => s.openApps);
+  const openApps = useData((s) => s.openApps);
+  // A terminal that is not installed stays out of the menus; T14.8 lists it disabled with a note.
+  const apps = openApps.filter((a) => a.found);
   const open = (app: string) => {
     onDone();
     // The backend logs a failure; nothing is shown.

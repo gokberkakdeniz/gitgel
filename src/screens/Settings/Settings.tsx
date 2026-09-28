@@ -5,7 +5,6 @@ import { CloseIcon } from '../../components/icons';
 import { Modal } from '../../components/Modal';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
-import { Segmented } from '../../components/Segmented';
 import { openAddRepos } from '../../lib/addRepos';
 import { locateRepo, removeRepo, updateSettings } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
@@ -248,59 +247,81 @@ function Behaviour({ config }: { config: Config }) {
   );
 }
 
-const TERMINALS: { value: TerminalChoice; label: string }[] = [
-  { value: 'terminal', label: 'Terminal' },
-  { value: 'iterm', label: 'iTerm2' },
-  { value: 'wezterm', label: 'WezTerm' },
-  { value: 'other', label: 'Other' },
-];
-
 /** The app behind "Open in <terminal>" in the entry menus. */
 function TerminalSetting({ config }: { config: Config }) {
-  const { terminal, terminalApp } = config.settings;
-  const [app, setApp] = useState(terminalApp);
-  useEffect(() => setApp(terminalApp), [terminalApp]);
-  // The backend lists the terminal item only when it found the app.
-  const found = useData((s) => s.openApps.some((a) => a.id === 'terminal'));
-  const loaded = useData((s) => s.openApps.length > 0);
-  const saveApp = () => {
-    if (app.trim() !== terminalApp) void updateSettings({ ...config.settings, terminalApp: app.trim() });
+  const { terminal, terminalCommand } = config.settings;
+  const [command, setCommand] = useState(terminalCommand);
+  useEffect(() => setCommand(terminalCommand), [terminalCommand]);
+  const openApps = useData((s) => s.openApps);
+  const termApp = openApps.find((a) => a.id === 'terminal');
+  const loaded = openApps.length > 0;
+  const saveCommand = () => {
+    const trimmed = command.trim();
+    if (trimmed !== terminalCommand) void updateSettings({ ...config.settings, terminalCommand: trimmed });
   };
 
   return (
     <div className={styles.terminal}>
-      <div className={styles.setting}>
+      <label className={styles.setting}>
         <span className={styles.settingText}>
           <span className={styles.settingName}>Terminal</span>
           <span className={styles.settingHint}>Used by “Open in …” in the branch menus</span>
         </span>
-        <Segmented
-          aria-label="Terminal"
-          size="sm"
-          value={terminal}
-          onChange={(value) => void updateSettings({ ...config.settings, terminal: value })}
-          options={TERMINALS}
-        />
-      </div>
+        <span className={styles.terminalWrap}>
+          <select
+            aria-label="Terminal"
+            className={styles.terminalSelect}
+            value={terminal}
+            onChange={(e) => void updateSettings({ ...config.settings, terminal: e.target.value as TerminalChoice })}
+          >
+            <option value="auto">Automatic{termApp ? ` (${termApp.name})` : ''}</option>
+            <option value="terminal">Terminal</option>
+            <option value="iterm">iTerm2</option>
+            <option value="wezterm">WezTerm</option>
+            <option value="other">Other…</option>
+          </select>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            className={styles.terminalChevron}
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6"></path>
+          </svg>
+        </span>
+      </label>
       {terminal === 'other' && (
-        <input
-          aria-label="Terminal app"
-          className={`${styles.input} ${styles.orderInput} ${styles.terminalApp}`}
-          placeholder="App name or path, e.g. Ghostty"
-          value={app}
-          spellCheck={false}
-          onChange={(e) => setApp(e.target.value)}
-          onBlur={saveApp}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              saveApp();
-              e.currentTarget.blur();
-            }
-          }}
-        />
+        <label className={styles.terminalOther}>
+          <span className={styles.srOnly}>Terminal command</span>
+          <input
+            className={`${styles.input} ${styles.terminalCommand}`}
+            placeholder="wezterm start --cwd %"
+            value={command}
+            spellCheck={false}
+            onChange={(e) => setCommand(e.target.value)}
+            onBlur={saveCommand}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                saveCommand();
+                e.currentTarget.blur();
+              }
+            }}
+          />
+          <span className={styles.settingHint}>
+            A command, or an app name such as Ghostty. <span className={styles.mono}>%</span> becomes the worktree
+            folder; the command runs in your login shell, in that folder.
+          </span>
+        </label>
       )}
-      {loaded && !found && (terminal !== 'other' || terminalApp) && (
-        <span className={styles.terminalMissing}>Not found; the menus leave it out</span>
+      {loaded && termApp && !termApp.found && (
+        <span className={styles.terminalMissing}>
+          {termApp.name} is not installed; the menus show it disabled
+        </span>
       )}
     </div>
   );

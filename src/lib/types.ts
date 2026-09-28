@@ -35,9 +35,9 @@ export interface Settings {
   zoom: number; // View › Font Size, percent
   appearance: Appearance; // Settings › Appearance
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"
-  terminalApp: string; // the Other terminal: app name, .app path or bundle id
+  terminalCommand: string; // the Other terminal: a command (`%` = folder), an app name, a .app path or a bundle id; empty = Automatic
 }
-export type TerminalChoice = 'terminal' | 'iterm' | 'wezterm' | 'other';
+export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
   version: 1;
   repos: RepoConfig[];
@@ -209,6 +209,7 @@ export interface OpenApp {
   id: string; // "vscode"
   name: string; // "VS Code"
   icon: string | null; // PNG data URL of the app's icon
+  found: boolean; // false only for a terminal that is not installed
 }
 
 // What `invoke` rejects with (AppError in error.rs).

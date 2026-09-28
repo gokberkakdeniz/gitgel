@@ -22,7 +22,7 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 ### Rules
 
 - **Git only through git2 (libgit2).** The git CLI is never run; `std::process::Command` is
-  banned in app code. The one exception (planned, T14.7) is `src-tauri/src/apps.rs`, which starts
+  banned in app code. The one exception is `src-tauri/src/apps.rs`, which starts
   the terminal the user set in Settings (WezTerm, or an Other command); it never runs git. git2 is used only under `src-tauri/src/git/`; other modules use the
   functions there and the types in §8.
 - **Read-only.** The app never calls a git2 API that writes to a repository: no checkout,
@@ -751,7 +751,7 @@ Layout:
   - "Active threshold" ("Branches without a worktree are listed if committed within"): 60px
     right-aligned mono input + "days"; anything but an integer 1–365 restores the old value.
   - Changing either rescans every repo.
-  - "Terminal" ("Used by “Open in …” in the branch menus") (planned, T14.7): a 230 × 36px
+  - "Terminal" ("Used by “Open in …” in the branch menus"): a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
     Terminal, iTerm2, WezTerm, "Other…". Other shows under it, full width, a 36px mono input
@@ -929,7 +929,7 @@ export interface Settings {
   diffContext: 'changes' | 'whole'; // default 'changes'
   diffContextLines: 3 | 5 | 10;  // default 3; anything else reads as 3
   zoom: number;                  // View › Font Size, percent; default 100
-  terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto' (planned, T14.7)
+  terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   appearance: 'system' | 'light' | 'dark'; // Settings › Appearance; default 'system' (T10.1)
 }
@@ -1090,7 +1090,7 @@ export interface OpenApp {
   id: string;                    // "vscode"; "finder"; "terminal" is the chosen terminal
   name: string;                  // "VS Code"
   icon: string | null;           // PNG data URL of the app's icon
-  found: boolean;                // false only for a terminal that is not installed (planned, T14.7)
+  found: boolean;                // false only for a terminal that is not installed
 }
 ```
 
@@ -1161,7 +1161,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `remove_repo` | `repoId` | `Config` |
 | `locate_repo` | `repoId, path` | `Config` |
 | `update_settings` | `settings: Settings` | `Config` |
-| `get_open_apps` | – | `OpenApp[]` (installed ones, in menu order) |
+| `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
 | `open_folder` | `path, app: string` | `null` (`app`: an `OpenApp` id) |
 
 Notes:
@@ -1189,14 +1189,14 @@ Notes:
   `windsurf` Windsurf `com.exafunction.windsurf`, `zed` Zed `dev.zed.Zed`, `sublime` Sublime Text
   `com.sublimetext.4`; `finder` Finder `com.apple.finder` first; terminals: Terminal `com.apple.Terminal`, iTerm2 `com.googlecode.iterm2`, WezTerm
   `com.github.wez.wezterm`, or the Other app (Settings › Behaviour), listed last with id
-  `terminal`, always (planned, T14.7: with `found: false` when not installed; Automatic picks
+  `terminal`, always (with `found: false` when not installed; Automatic picks
   the first installed of iTerm2, WezTerm, Terminal). `get_open_apps` asks Launch Services for each bundle id
   (`NSWorkspace URLForApplicationWithBundleIdentifier:`), so apps outside `/Applications` are
   found too. Icons: `NSWorkspace iconForFile:` on the app's bundle, the 16pt
   representation (32px on Retina) encoded as PNG, cached per app path for the app's lifetime. `open_folder`
   accepts only an existing folder and a listed id; it opens the folder with
   `tauri-plugin-opener` (`open_path`, with the app's bundle path). No git.
-  - Terminals (planned, T14.7): Terminal and iTerm2 open with `open_path`. WezTerm runs
+  - Terminals: Terminal and iTerm2 open with `open_path`. WezTerm runs
     `<bundle>/Contents/MacOS/wezterm start --cwd <folder>`. Other: a single word or path that
     resolves to an app (name in `/Applications`, `/Applications/Utilities`,
     `/System/Applications`, `/System/Applications/Utilities`, `~/Applications`, with or without
@@ -1222,7 +1222,7 @@ Notes:
 - git2 is used only under `src-tauri/src/git/`. No git2 type leaks out: SHAs are hex `String`s,
   errors `AppError`, results the types in §8.
 - `src-tauri/clippy.toml` turns every writing API into a compile error under `-D warnings`:
-  - `std::process::Command::new` (allowed only in `apps.rs` for the terminal, planned T14.7).
+  - `std::process::Command::new` (allowed only in `apps.rs` for the terminal).
   - `git2::Repository::` `init`, `init_bare`, `init_opts`, `clone`, `clone_recurse`,
     `checkout_head`, `checkout_index`, `checkout_tree`, `set_head`, `set_head_detached`,
     `set_head_bytes`, `commit`, `commit_signed`, `branch`, `branch_from_annotated_commit`,

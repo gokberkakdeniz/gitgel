@@ -360,7 +360,7 @@
   font-weight: 500;
 }
 
-/* Behaviour › Terminal: the Other input and the not-found line sit under the choice. */
+/* Behaviour › Terminal: the dropdown, the Other input and note, and the not-found line. */
 .terminal {
   display: flex;
   flex-direction: column;
@@ -368,8 +368,63 @@
   gap: 10px;
 }
 
-.terminalApp {
-  align-self: flex-end;
+.terminalWrap {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.terminalSelect {
+  width: 230px;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 0 30px 0 12px;
+  appearance: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  outline: none;
+  color: var(--text-strong);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.terminalSelect:focus {
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.terminalChevron {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.terminalOther {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.terminalCommand {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  color: var(--text-code);
 }
 
 .terminalMissing {

@@ -80,8 +80,9 @@ pub struct Settings {
     pub appearance: Appearance,
     /// Settings › Behaviour › Terminal, for the entry menus' open items.
     pub terminal: TerminalChoice,
-    /// The `other` terminal: an app name, a `.app` path or a bundle id.
-    pub terminal_app: String,
+    /// The `other` terminal: a command (`%` becomes the folder), an app name, a `.app` path or
+    /// a bundle id. Empty means Automatic.
+    pub terminal_command: String,
 }
 
 impl Default for Settings {
@@ -95,8 +96,8 @@ impl Default for Settings {
             diff_context_lines: 3,
             zoom: 100,
             appearance: Appearance::System,
-            terminal: TerminalChoice::Terminal,
-            terminal_app: String::new(),
+            terminal: TerminalChoice::Auto,
+            terminal_command: String::new(),
         }
     }
 }
@@ -143,7 +144,9 @@ pub enum Appearance {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TerminalChoice {
+    /// The first installed of iTerm2, WezTerm, Terminal.
     #[default]
+    Auto,
     Terminal,
     Iterm,
     Wezterm,
@@ -511,6 +514,8 @@ pub struct OpenApp {
     pub name: String,
     /// PNG data URL of the app's icon.
     pub icon: Option<String>,
+    /// False only for a terminal that is not installed.
+    pub found: bool,
 }
 
 #[cfg(test)]

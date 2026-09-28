@@ -141,7 +141,7 @@ mod tests {
                 "diffContext": "whole",
                 "diffContextLines": 5,
                 "terminal": "other",
-                "terminalApp": "Ghostty"
+                "terminalCommand": "Ghostty"
             }
         });
         let config: Config = serde_json::from_value(value.clone()).unwrap();
@@ -197,9 +197,9 @@ mod tests {
         assert_eq!(config.settings.diff_context_lines, 3);
         assert_eq!(
             config.settings.terminal,
-            crate::model::TerminalChoice::Terminal
+            crate::model::TerminalChoice::Auto
         );
-        assert_eq!(config.settings.terminal_app, "");
+        assert_eq!(config.settings.terminal_command, "");
     }
 
     #[test]
