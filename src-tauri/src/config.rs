@@ -137,7 +137,9 @@ mod tests {
                 "diffView": "unified",
                 "ignoreWhitespace": true,
                 "zoom": 125,
-                "appearance": "system"
+                "appearance": "system",
+                "diffContext": "whole",
+                "diffContextLines": 5
             }
         });
         let config: Config = serde_json::from_value(value.clone()).unwrap();
@@ -186,6 +188,32 @@ mod tests {
         assert!(!config.settings.ignore_whitespace);
         assert_eq!(config.settings.zoom, 100);
         assert_eq!(config.settings.appearance, crate::model::Appearance::System);
+        assert_eq!(
+            config.settings.diff_context,
+            crate::model::DiffContext::Changes
+        );
+        assert_eq!(config.settings.diff_context_lines, 3);
+    }
+
+    #[test]
+    fn context_lines_outside_the_choices_read_as_3() {
+        for (value, expected) in [
+            (json!(10), 10),
+            (json!(7), 3),
+            (json!("five"), 3),
+            (json!(-1), 3),
+        ] {
+            let config: Config = serde_json::from_value(json!({
+                "version": 1,
+                "settings": { "diffContext": "whole", "diffContextLines": value }
+            }))
+            .unwrap();
+            assert_eq!(config.settings.diff_context_lines, expected);
+            assert_eq!(
+                config.settings.diff_context,
+                crate::model::DiffContext::Whole
+            );
+        }
     }
 
     #[test]

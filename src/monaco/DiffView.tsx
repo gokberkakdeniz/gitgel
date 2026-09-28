@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor';
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { readFilePair } from '../lib/ipc';
 import { useEffectiveTheme } from '../lib/theme';
-import type { DiffLayout, DiffMode, FileChange } from '../lib/types';
+import type { DiffContext, DiffLayout, DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
 import styles from './DiffView.module.css';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
@@ -17,16 +17,24 @@ const OPTIONS: monaco.editor.IDiffEditorConstructionOptions = {
   renderSideBySide: true,
   useInlineViewWhenSpaceIsLimited: false,
   renderIndicators: true,
-  hideUnchangedRegions: { enabled: true, contextLineCount: 3, minimumLineCount: 3 },
   fontFamily: 'JetBrains Mono',
   fontSize: 12,
   lineHeight: 20,
   minimap: { enabled: false },
+  // Monaco turns the pinned class / method header on whenever unchanged lines are not folded.
+  stickyScroll: { enabled: false },
   renderOverviewRuler: false,
   scrollBeyondLastLine: false,
   automaticLayout: true,
   contextmenu: false,
 };
+
+/** Monaco's folding of unchanged lines for a Context setting. */
+function folding(context: DiffContext, contextLines: number): monaco.editor.IDiffEditorOptions['hideUnchangedRegions'] {
+  return context === 'whole'
+    ? { enabled: false }
+    : { enabled: true, contextLineCount: contextLines, minimumLineCount: 3, revealLineCount: 20 };
+}
 
 /** The current change and how many there are. */
 export interface NavInfo {
@@ -53,9 +61,14 @@ interface Props {
   navRef: MutableRefObject<DiffNav | null>;
   layout: DiffLayout;
   ignoreWhitespace: boolean;
+  /** Changes only (unchanged lines folded, `contextLines` kept around each change) or whole file. */
+  context: DiffContext;
+  contextLines: number;
   /** ⌥V / ⌥W while the diff has focus. */
   onToggleLayout: () => void;
   onToggleWhitespace: () => void;
+  /** ⌥C while the diff has focus: changes only ↔ whole file. */
+  onToggleContext: () => void;
   /** ⌥⇧↑ / ⌥⇧↓ while the diff has focus: newer (-1) / older (1) commit. */
   onCommitStep: (dir: 1 | -1) => void;
   /** ⌘K while the diff has focus: the file filter. */
@@ -75,8 +88,11 @@ export function DiffView({
   navRef,
   layout,
   ignoreWhitespace,
+  context,
+  contextLines,
   onToggleLayout,
   onToggleWhitespace,
+  onToggleContext,
   onCommitStep,
   onFocusFilter,
 }: Props) {
@@ -87,14 +103,20 @@ export function DiffView({
   }, []);
 
   // Latest props for Monaco callbacks registered once.
-  const latest = useRef({ onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace, onCommitStep, onFocusFilter });
-  latest.current = { onNav, onStep, land, fileKey, layout, onToggleLayout, onToggleWhitespace, onCommitStep, onFocusFilter };
+  const handlers = { onNav, onStep, onToggleLayout, onToggleWhitespace, onToggleContext, onCommitStep, onFocusFilter };
+  const latest = useRef({ ...handlers, land, fileKey, layout, context, contextLines });
+  latest.current = { ...handlers, land, fileKey, layout, context, contextLines };
 
-  // Layout and whitespace are editor options: changed in place, never by rebuilding the editor.
-  // Monaco hides whitespace-only changes by default, so the option is always given.
+  // Layout, whitespace and context are editor options: changed in place, never by rebuilding the
+  // editor. Monaco hides whitespace-only changes by default, so the option is always given.
   const options = useMemo(
-    () => ({ ...OPTIONS, renderSideBySide: layout === 'split', ignoreTrimWhitespace: ignoreWhitespace }),
-    [layout, ignoreWhitespace],
+    () => ({
+      ...OPTIONS,
+      renderSideBySide: layout === 'split',
+      ignoreTrimWhitespace: ignoreWhitespace,
+      hideUnchangedRegions: folding(context, contextLines),
+    }),
+    [layout, ignoreWhitespace, context, contextLines],
   );
 
   // The wrapper would dispose the models before the editor lets go of them, which Monaco
@@ -135,6 +157,8 @@ export function DiffView({
     jumping: false,
     /** The next diff update restarts at the first change. */
     restart: false,
+    /** The next diff update brings the current change back into view (the folds changed). */
+    reveal: false,
     shownKey: null as string | null,
     decorations: [] as monaco.editor.IEditorDecorationsCollection[],
   });
@@ -170,10 +194,22 @@ export function DiffView({
   };
   navRef.current = { goTo };
 
+  // Monaco carries each fold's open / closed state over from the previous content through markers
+  // on the text, but a new file arrives with setValue, which drops them, and Monaco then opens every
+  // fold. Switching folding off and on closes them all again (what Whole file → Changes only does).
+  const refold = () => {
+    const m = mounted.current;
+    const { context, contextLines } = latest.current;
+    if (!m || context === 'whole') return;
+    m.editor.updateOptions({ hideUnchangedRegions: { enabled: false } });
+    m.editor.updateOptions({ hideUnchangedRegions: folding(context, contextLines) });
+  };
+
   const onDiffUpdated = () => {
     const m = mounted.current;
     const n = nav.current;
     if (!m) return;
+    refold();
     n.hunks = (m.editor.getLineChanges() ?? []).map((c) => ({
       originalStart: c.originalStartLineNumber,
       originalEnd: c.originalEndLineNumber,
@@ -194,10 +230,15 @@ export function DiffView({
       if (n.hunks.length > 0) goTo(where === 'last' ? n.hunks.length - 1 : 0);
       else report();
     } else {
-      // Same file, new content: keep the place.
+      // Same file, new content (or new folds): keep the place.
       if (n.index !== null) n.index = n.hunks.length ? Math.min(n.index, n.hunks.length - 1) : null;
-      mark();
-      report();
+      const reveal = n.reveal;
+      n.reveal = false;
+      if (reveal && n.index !== null) goTo(n.index);
+      else {
+        mark();
+        report();
+      }
     }
   };
   const language = useMemo(() => languageForPath(change.path, monaco.languages.getLanguages()), [change.path]);
@@ -213,6 +254,22 @@ export function DiffView({
     if (index !== null) requestAnimationFrame(() => goTo(index));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layout]);
+
+  // Changing the context re-folds the file: keep the current change and bring it back into view,
+  // now and again once Monaco has recomputed the folds (a new line count recomputes the diff).
+  const firstContext = useRef(true);
+  useEffect(() => {
+    if (firstContext.current) {
+      firstContext.current = false;
+      return;
+    }
+    // Folds opened while Whole file was on (a file opened meanwhile comes back all open) close.
+    refold();
+    nav.current.reveal = true;
+    const index = nav.current.index;
+    if (index !== null) requestAnimationFrame(() => goTo(index));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, contextLines]);
 
   // Ignoring whitespace changes which lines count as changes: restart at the first one.
   const firstWs = useRef(true);
@@ -282,6 +339,7 @@ export function DiffView({
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.UpArrow, () => latest.current.onStep(-1));
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyV, () => latest.current.onToggleLayout());
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyW, () => latest.current.onToggleWhitespace());
+              ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyC, () => latest.current.onToggleContext());
               // ⌥⇧↑/⌥⇧↓ (copy line) is free too.
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.UpArrow, () =>
                 latest.current.onCommitStep(-1),

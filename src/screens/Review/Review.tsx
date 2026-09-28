@@ -28,6 +28,7 @@ import type {
   CommitChanges,
   CommitInfo,
   FileChange,
+  DiffContext,
   DiffLayout,
   DiffMode,
   EntrySummary,
@@ -232,26 +233,31 @@ export function Review({ target, backLabel, focusKey }: Props) {
   const stepCommitRef = useRef(stepCommit);
   stepCommitRef.current = stepCommit;
 
-  // Diff view settings (layout, whitespace), remembered in the config.
+  // Diff view settings (layout, context, whitespace), remembered in the config.
   const settings = useData((st) => st.config?.settings);
   const layout = settings?.diffView ?? 'split';
   const ignoreWs = settings?.ignoreWhitespace ?? false;
+  const context = settings?.diffContext ?? 'changes';
+  const contextLines = settings?.diffContextLines ?? 3;
   const saveView = (patch: Partial<Settings>) => {
     if (settings) void updateSettings({ ...settings, ...patch });
   };
   const toggleLayout = () => saveView({ diffView: layout === 'split' ? 'unified' : 'split' });
   const toggleWs = () => saveView({ ignoreWhitespace: !ignoreWs });
-  const viewRef = useRef({ toggleLayout, toggleWs });
-  viewRef.current = { toggleLayout, toggleWs };
-  // ⌥V / ⌥W outside the diff (inside it Monaco handles them). ⌥ turns letters into other
+  // Keeps the number of lines when switching back to changes only.
+  const toggleContext = () => saveView({ diffContext: context === 'changes' ? 'whole' : 'changes' });
+  const viewRef = useRef({ toggleLayout, toggleWs, toggleContext });
+  viewRef.current = { toggleLayout, toggleWs, toggleContext };
+  // ⌥V / ⌥C / ⌥W outside the diff (inside it Monaco handles them). ⌥ turns letters into other
   // characters, so the physical key is checked. Listed in lib/shortcuts.ts.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!e.altKey || (e.code !== 'KeyV' && e.code !== 'KeyW')) return;
+      if (!e.altKey || e.metaKey || e.ctrlKey || !['KeyV', 'KeyC', 'KeyW'].includes(e.code)) return;
       if ((e.target as HTMLElement | null)?.closest('.monaco-editor, input, textarea')) return;
       if (useUi.getState().modalCount > 0) return;
       e.preventDefault();
       if (e.code === 'KeyV') viewRef.current.toggleLayout();
+      else if (e.code === 'KeyC') viewRef.current.toggleContext();
       else viewRef.current.toggleWs();
     };
     window.addEventListener('keydown', onKey);
@@ -420,6 +426,9 @@ export function Review({ target, backLabel, focusKey }: Props) {
                   layout={layout}
                   ignoreWs={ignoreWs}
                   onLayout={(l) => saveView({ diffView: l })}
+                  context={context}
+                  contextLines={contextLines}
+                  onContext={(c, lines) => saveView({ diffContext: c, diffContextLines: lines })}
                   onToggleWs={toggleWs}
                 />
                 <span className={styles.barDivider} />
@@ -447,6 +456,9 @@ export function Review({ target, backLabel, focusKey }: Props) {
                 ignoreWhitespace={ignoreWs}
                 onToggleLayout={() => viewRef.current.toggleLayout()}
                 onToggleWhitespace={() => viewRef.current.toggleWs()}
+                context={context}
+                contextLines={contextLines}
+                onToggleContext={() => viewRef.current.toggleContext()}
                 onCommitStep={(dir) => stepCommitRef.current(dir)}
                 onFocusFilter={() => {
                   filterInput.current?.focus();
@@ -497,19 +509,44 @@ function commitParent(g: ReviewGroup, sha: string | undefined, c: CommitChanges 
 
 const fileName = (id: string | undefined) => (id ? basename(id.split('\u0000')[1]) : '');
 
-/** Layout (Split / Unified) and Ignore whitespace; applies to every diff and is remembered. */
+/** Layout, context and Ignore whitespace; applies to every diff and is remembered. */
 function ViewMenu({
   layout,
   ignoreWs,
   onLayout,
+  context,
+  contextLines,
+  onContext,
   onToggleWs,
 }: {
   layout: DiffLayout;
   ignoreWs: boolean;
   onLayout: (l: DiffLayout) => void;
+  context: DiffContext;
+  contextLines: number;
+  onContext: (context: DiffContext, lines: number) => void;
   onToggleWs: () => void;
 }) {
   const [at, setAt] = useState<DOMRect | null>(null);
+  const contextRadio = (value: DiffContext, label: string) => (
+    <button
+      type="button"
+      role="menuitemradio"
+      aria-checked={context === value}
+      className={context === value ? `${styles.viewRow} ${styles.viewRowOn}` : styles.viewRow}
+      onClick={() => {
+        onContext(value, contextLines);
+        // Whole file closes the menu; changes only leaves it open to pick the lines.
+        if (value === 'whole') setAt(null);
+      }}
+    >
+      <span className={context === value ? styles.viewCheck : `${styles.viewCheck} ${styles.hidden}`}>
+        <CheckIcon />
+      </span>
+      <span className={styles.grow}>{label}</span>
+      <span className={styles.viewKey}>⌥C</span>
+    </button>
+  );
   const radio = (value: DiffLayout, label: string) => (
     <button
       type="button"
@@ -543,11 +580,37 @@ function ViewMenu({
         <ChevronDownIcon size={9} />
       </button>
       {at && (
-        <Popover anchorRect={at} width={290} alignRight onClose={() => setAt(null)}>
+        <Popover anchorRect={at} width={300} alignRight onClose={() => setAt(null)}>
           <div role="menu" aria-label="Diff view" className={styles.viewMenu}>
             <div className={styles.viewTitle}>Layout</div>
             {radio('split', 'Split')}
             {radio('unified', 'Unified')}
+            <div className={styles.viewDivider} />
+            <div className={styles.viewTitle}>Context</div>
+            {contextRadio('changes', 'Changes only')}
+            <div
+              role="group"
+              aria-label="Lines around each change"
+              aria-disabled={context === 'whole'}
+              className={context === 'whole' ? `${styles.viewLines} ${styles.viewLinesOff}` : styles.viewLines}
+            >
+              <span className={styles.viewLinesLabel}>Lines around changes</span>
+              <div className={styles.viewLinesTrack}>
+                {[3, 5, 10].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-pressed={contextLines === n}
+                    tabIndex={context === 'whole' ? -1 : undefined}
+                    className={contextLines === n ? `${styles.viewLinesBtn} ${styles.viewLinesBtnOn}` : styles.viewLinesBtn}
+                    onClick={() => onContext('changes', n)}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {contextRadio('whole', 'Whole file')}
             <div className={styles.viewDivider} />
             <button
               type="button"

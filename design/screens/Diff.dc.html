@@ -179,7 +179,7 @@ button,input{font-family:inherit}
 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg>
 </button>
 <sc-if value="{{viewMenuOpen}}" hint-placeholder-val="{{false}}">
-<div role="menu" aria-label="Diff view" style="position: absolute; top: 34px; right: 0; width: 290px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); padding: 6px; display: flex; flex-direction: column; gap: 1px">
+<div role="menu" aria-label="Diff view" style="position: absolute; top: 34px; right: 0; width: 300px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); padding: 6px; display: flex; flex-direction: column; gap: 1px">
 <div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">Layout</div>
 <button role="menuitemradio" aria-checked="{{isSplit}}" onClick="{{pickSplit}}" style="{{splitRowStyle}}">
 <span style="{{splitCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
@@ -190,6 +190,26 @@ button,input{font-family:inherit}
 <span style="{{unifiedCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
 <span style="flex-grow: 1">Unified</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">⌥V</span>
+</button>
+<div style="height: 1px; background: var(--border); margin: 5px 4px"></div>
+<div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">Context</div>
+<button role="menuitemradio" aria-checked="{{isChangesOnly}}" onClick="{{pickChangesOnly}}" style="{{changesRowStyle}}">
+<span style="{{changesCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
+<span style="flex-grow: 1">Changes only</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">⌥C</span>
+</button>
+<div role="group" aria-label="Lines around each change" style="{{ctxLinesRowStyle}}">
+<span style="flex-grow: 1; font-size: 12px; color: var(--text-muted)">Lines around changes</span>
+<div style="display: flex; padding: 2px; gap: 2px; background: var(--bg-track); border-radius: 7px">
+<sc-for list="{{ctxOptions}}" as="o" hint-placeholder-count="3">
+<button onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="{{o.style}}">{{o.label}}</button>
+</sc-for>
+</div>
+</div>
+<button role="menuitemradio" aria-checked="{{isWholeFile}}" onClick="{{pickWholeFile}}" style="{{wholeRowStyle}}">
+<span style="{{wholeCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
+<span style="flex-grow: 1">Whole file</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">⌥C</span>
 </button>
 <div style="height: 1px; background: var(--border); margin: 5px 4px"></div>
 <button role="menuitemcheckbox" aria-checked="{{ignoreWs}}" onClick="{{toggleWs}}" style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--text-strong); font-size: 13px; text-align: left; cursor: pointer">
@@ -263,9 +283,9 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"view":{"editor":"enum","options":["split","unified"],"default":"split"},"ignoreWs":{"editor":"boolean","default":false},"viewMenu":{"editor":"boolean","default":false},"commit":{"editor":"enum","options":["","d81f03a","4b7e2c9","9a13f60","2cc0d48"],"default":""},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"embedded":{"editor":"boolean","default":false},"fileQuery":{"editor":"text","default":""},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"scope":{"editor":"enum","options":["project","branch"],"default":"project"},"mode":{"editor":"enum","options":["Committed","Uncommitted","All"],"default":"Committed"},"focus":{"editor":"enum","options":["web","api"],"default":"web"},"stacked":{"editor":"boolean","default":false},"base":{"editor":"enum","options":["main","feat/job-queue"],"default":"main"},"baseMenu":{"editor":"boolean","default":false},"hunk":{"editor":"enum","options":["first","last"],"default":"first"},"view":{"editor":"enum","options":["split","unified"],"default":"split"},"ignoreWs":{"editor":"boolean","default":false},"viewMenu":{"editor":"boolean","default":false},"commit":{"editor":"enum","options":["","d81f03a","4b7e2c9","9a13f60","2cc0d48"],"default":""},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"embedded":{"editor":"boolean","default":false},"fileQuery":{"editor":"text","default":""},"context":{"editor":"enum","options":["changes","whole"],"default":"changes"},"contextLines":{"editor":"enum","options":["3","5","10"],"default":"3"},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null, view: null, ignoreWs: null, viewMenu: null, commitSel: null, q: null }; }
+  constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null, view: null, ignoreWs: null, viewMenu: null, commitSel: null, q: null, context: null, ctxLines: null }; }
   renderVals() {
     var self = this;
     var scope = this.props.scope ?? 'project';
@@ -460,7 +480,15 @@ class Component extends DCLogic {
         [1, "import { store } from './store';", 1, "import { store } from './store';", ''],
         ['', '', 2, "import { refreshSession } from './refresh';", 'add'],
         [2, "import { readCookie } from '../http';", 3, "import { readCookie } from '../http';", ''],
-        ['…', '', '…', '', 'fold'],
+        ['…', '', '…', '', 'fold', [
+          [3, "import type { Session } from './types';", 4, "import type { Session } from './types';", ''],
+          [4, '', 5, '', ''],
+          [5, "const COOKIE = 'sid';", 6, "const COOKIE = 'sid';", ''],
+          [6, 'const MAX_AGE = 60 * 60 * 24;', 7, 'const MAX_AGE = 60 * 60 * 24;', ''],
+          [7, '', 8, '', ''],
+          [8, '/** Session for the request, or null. */', 9, '/** Session for the request, or null. */', ''],
+          [9, '// Cookies are read once per request.', 10, '// Cookies are read once per request.', '']
+        ]],
         [10, 'export async function getSession(req: Request) {', 11, 'export async function getSession(req: Request) {', ''],
         [11, "  const token = readCookie(req, 'sid');", 12, "  const token = readCookie(req, 'sid');", ''],
         [12, '    if (!token) return null;', 13, '  if (!token) return null;', 'ws'],
@@ -538,6 +566,22 @@ class Component extends DCLogic {
     var ignoreWs = st.ignoreWs != null ? st.ignoreWs : !!this.props.ignoreWs;
     var viewMenuOpen = st.viewMenu != null ? st.viewMenu : !!this.props.viewMenu;
     if (rows) rows = rows.map(function (r) { return r[4] === 'ws' ? r.slice(0, 4).concat([ignoreWs ? '' : 'mod']) : r; });
+    var context = st.context || this.props.context || 'changes';
+    var ctxLines = st.ctxLines || parseInt(this.props.contextLines || '3', 10);
+    if (rows) {
+      var expanded = [];
+      rows.forEach(function (r) {
+        if (r[4] !== 'fold') { expanded.push(r); return; }
+        var hid = r[5] || [];
+        var keep = context === 'whole' ? hid.length : Math.max(0, ctxLines - 3);
+        if (keep * 2 >= hid.length) { expanded = expanded.concat(hid); return; }
+        expanded = expanded.concat(hid.slice(0, keep));
+        expanded.push(['…', '', '…', '', 'fold', null, hid.length - 2 * keep]);
+        expanded = expanded.concat(hid.slice(hid.length - keep));
+      });
+      rows = expanded;
+    }
+    var foldText = function (r) { var n = r[6] != null ? r[6] : (r[5] ? r[5].length : 7); return '⋯ ' + n + ' unchanged line' + (n === 1 ? '' : 's'); };
     var hunkOf = [], nH = 0, prevCh = false;
     (rows || []).forEach(function (r, i) {
       var ch = !!r[4] && r[4] !== 'fold';
@@ -573,7 +617,7 @@ class Component extends DCLogic {
       var k = r[4];
       if (k === 'fold') {
         var fs = 'display: flex; padding-left: 58px; color: var(--text-faint); background: var(--bg-sunken); font-size: 11px';
-        return { ln: '', lt: '⋯ 7 unchanged lines', rn: '', rt: '⋯ 7 unchanged lines', lMark: '', rMark: '', lStyle: fs, rStyle: fs };
+        return { ln: '', lt: foldText(r), rn: '', rt: foldText(r), lMark: '', rMark: '', lStyle: fs, rStyle: fs };
       }
       return {
         ln: r[0], lt: r[1], rn: r[2], rt: r[3],
@@ -598,7 +642,7 @@ class Component extends DCLogic {
       pend = [];
     };
     (rows || []).forEach(function (r, i) {
-      if (r[4] === 'fold') { flush(); uLines.push({ on: '', nn: '', mark: '', t: '⋯ 7 unchanged lines', style: 'display: flex; padding-left: 0; color: var(--text-faint); background: var(--bg-sunken); font-size: 11px', markStyle: 'width: 14px; flex-shrink: 0' }); return; }
+      if (r[4] === 'fold') { flush(); uLines.push({ on: '', nn: '', mark: '', t: foldText(r), style: 'display: flex; padding-left: 0; color: var(--text-faint); background: var(--bg-sunken); font-size: 11px', markStyle: 'width: 14px; flex-shrink: 0' }); return; }
       if (r[4]) { pend.push(i); return; }
       flush();
       uRow(r[0], r[2], '', r[3], '', false);
@@ -664,6 +708,20 @@ class Component extends DCLogic {
       pickSplit: function () { setView('split'); }, pickUnified: function () { setView('unified'); },
       toggleWs: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); },
       splitRowStyle: menuRow(view === 'split'), unifiedRowStyle: menuRow(view === 'unified'),
+      isChangesOnly: context === 'changes', isWholeFile: context === 'whole',
+      pickChangesOnly: function () { self.setState({ context: 'changes' }); },
+      pickWholeFile: function () { self.setState({ context: 'whole', viewMenu: false }); },
+      changesRowStyle: menuRow(context === 'changes'), wholeRowStyle: menuRow(context === 'whole'),
+      changesCheckStyle: checkStyle(context === 'changes'), wholeCheckStyle: checkStyle(context === 'whole'),
+      ctxLinesRowStyle: 'display: flex; align-items: center; gap: 10px; padding: 0 10px 6px 36px; ' + (context === 'whole' ? 'opacity: 0.45; pointer-events: none' : ''),
+      ctxOptions: [3, 5, 10].map(function (n) {
+        var on = ctxLines === n;
+        return {
+          label: String(n), on: on,
+          pick: function () { self.setState({ ctxLines: n, context: 'changes' }); },
+          style: 'min-width: 28px; height: 22px; padding: 0 6px; border: 0; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 11px; cursor: pointer; ' + (on ? 'background: var(--bg-pressed); color: var(--text-strong)' : 'background: transparent; color: var(--text-muted)')
+        };
+      }),
       splitCheckStyle: checkStyle(view === 'split'), unifiedCheckStyle: checkStyle(view === 'unified'),
       wsBoxStyle: 'width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 4px; ' + (ignoreWs ? 'background: var(--accent); color: var(--text-strong); border: 0' : 'border: 1.5px solid var(--text-disabled); color: transparent'),
       viewBtnStyle: 'display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ' + (viewMenuOpen ? 'background: var(--bg-hover); color: var(--text-strong); border: 1px solid var(--accent)' : 'background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)'),

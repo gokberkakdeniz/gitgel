@@ -117,7 +117,7 @@ theme, configurable refresh.
 | Base | Stored per branch: `branchBases["<repoId>:<branch>"]`. |
 | Deleted branches | Entries keep `lastKnownTip` (SHA + when it was last seen), so a deleted branch can still show its last diff while the commit exists. |
 | Review | One screen for a whole project, files grouped per entry, one mode toggle. Single-branch review is the same screen with one group. |
-| Settings | Repositories, default base order, active threshold and a read-only list of keyboard shortcuts. Diff layout and ignore-whitespace live in Review's view menu, font size in View › Font Size; all three are stored in the config. |
+| Settings | Repositories, default base order, active threshold and a read-only list of keyboard shortcuts. Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
 | Config owner | Only Rust reads and writes the config. The frontend never writes files; every change is a Tauri command. |
 | Config path | `~/Library/Application Support/com.gitgel.desktop/config.json` (Tauri `app_data_dir()`). |
 | Logs | `tauri-plugin-log` → `~/Library/Logs/com.gitgel.desktop/Gitgel.log`, up to 3 × 2 MB. Git errors are logged with `log::warn!`. Debug level (watch rounds) only in dev builds. Every line ends with the process's memory footprint. |
@@ -538,18 +538,29 @@ Layout:
   view button, a divider and change navigation.
 - **Diff:** Monaco diff editor, read-only, **Split** (side by side, default) or **Unified**
   (removed lines shown as view zones above the added ones; line-number columns may differ from
-  the reference, accepted). Unchanged regions fold (context 3). No minimap, overview ruler or
+  the reference, accepted). Unchanged regions fold according to the view menu's **Context**
+  (default: changes only, 3 lines around each change; Whole file shows everything). No minimap, overview ruler, sticky scroll or
   context menu; `useInlineViewWhenSpaceIsLimited: false`. The editor is created once; changing
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
   shown"; files over 1 MiB "File is too large to show (over 1 MB)".
 - **Diff view menu:** the view button (split or unified icon + "Split" / "Unified" + chevron;
-  28px, `#211f1c`, open state `#2a2825` with accent border) opens a 290px menu (`role="menu"`,
-  right-aligned under the button): "Layout" label, `menuitemradio` Split / Unified (⌥V), divider,
-  `menuitemcheckbox` "Ignore whitespace" with "Hide lines where only indentation or trailing
+  28px, `#211f1c`, open state `#2a2825` with accent border) opens a 300px menu (`role="menu"`,
+  right-aligned under the button): "Layout" label, `menuitemradio`
+  Split / Unified (⌥V), divider, **Context** ("Context" label, `menuitemradio`
+  "Changes only" (⌥C), then an indented row "Lines around changes" (12px muted, starts at the
+  label column) with a small segmented 3 / 5 / 10 on the right (track `bg.track`, padding 2,
+  radius 7; buttons min 28 × 22, mono 11, active `bg.pressed` + `text.strong`), then
+  `menuitemradio` "Whole file" (⌥C); while Whole file is picked the lines row is at 45% opacity
+  and inert; picking a number also selects Changes only), divider, `menuitemcheckbox` "Ignore whitespace" with "Hide lines where only indentation or trailing
   spaces changed" (⌥W), and a muted footer "Applies to every diff and is remembered." Every row
   has a 16px indicator column (accent check for the picked layout, a checkbox for whitespace),
   the label, and the shortcut right-aligned; no icons inside the menu. Picking a layout closes
-  the menu; the checkbox leaves it open. Both settings are global and saved in the config.
+  the menu; the checkbox leaves it open. All of them are global and saved in the config.
+- **Context** (flow D9): Changes only passes Monaco `hideUnchangedRegions:
+  { enabled: true, contextLineCount: N, minimumLineCount: 3, revealLineCount: 20 }` with N = 3, 5
+  or 10; Whole file passes `enabled: false`. A folded region is expanded by clicking it (Monaco's
+  own control); a changed setting re-folds the current file. ⌥C toggles Changes only ↔ Whole
+  file, keeping N. It does not affect the file list, counts or change navigation.
 - **Ignore whitespace** only changes which lines Monaco marks (`ignoreTrimWhitespace`, always
   passed explicitly because Monaco's default is on) and the change counter. It never hides a
   file and never changes the list's `+/−`. While on, a "Whitespace ignored" chip (20px pill,
@@ -736,7 +747,8 @@ open.
   2. Uncommitted applies to the whole project.
   3. A Branches row opens single-branch review.
   4. ↑ ↓ (⌥↑ / ⌥↓) jump between changes and continue into the next / previous file.
-  5. The view button switches Split / Unified and Ignore whitespace.
+  5. The view button switches Split / Unified and Ignore whitespace (and the
+     context: changes only with 3 / 5 / 10 lines, or the whole file — flow D9).
   6. With whitespace ignored, an indentation-only line is no longer a change and the chip shows.
   7. Clicking a commit shows only that commit's changes against its parent; ↑ ↓ (⌥⇧↑ / ⌥⇧↓)
      step through commits.
@@ -779,6 +791,7 @@ own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free).
 | | Newer / older commit | ⌥⇧↑ / ⌥⇧↓ | with no commit picked, ⌥⇧↓ picks the newest |
 | | Split / Unified | ⌥V | |
 | | Ignore whitespace | ⌥W | |
+| | Changes only / Whole file | ⌥C | |
 | Lists and dialogs | Move | ↑ / ↓ | |
 | | Mark row | Space | Add palette |
 | | Confirm | ↵ | |
@@ -838,6 +851,8 @@ export interface Settings {
   activeDays: number;            // default 14
   diffView: DiffLayout;          // default 'split'
   ignoreWhitespace: boolean;     // default false
+  diffContext: 'changes' | 'whole'; // default 'changes'
+  diffContextLines: 3 | 5 | 10;  // default 3; anything else reads as 3
   zoom: number;                  // View › Font Size, percent; default 100
   appearance: 'system' | 'light' | 'dark'; // Settings › Appearance; default 'system' (T10.1)
 }
@@ -1246,10 +1261,10 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52, repo band 56–61, row 63–75 (Projects cell 73), row and cell styles 213–254, filter logic 277–287 and 305–312, empty state 83–93, picker 95–108, new-project form 110–126, projects menu 128–144, toast 146–152, selection bar 153–166, drop overlay 169–176, sheet 178–202 and 314–329 |
-| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 705–709, file list 56–133 and 406–450 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–214 (whitespace chip 170–172, view button and menu 174–203, change navigation 204–213), split body 216–229, unified body 230–236, base menu 243–263, commit selection 372–385, filter logic 387–397, 408–412, 443 and 552–553, segmented 451–458, view values 660–669, commit values 672–682, theme and `embedded` values 644–645, filter values 685–696 |
+| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 763–767, file list 56–133 and 426–470 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–283, commit selection 392–405, filter logic 407–417, 428–432, 463 and 596–597, segmented 471–478, context and fold logic 569–584 (sample hidden lines 483–491), view values 704–727 (context 711–726), commit values 730–740, theme and `embedded` values 688–689, filter values 743–754 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 172–183, "add related" card 62–68, empty project 72–80, entry menu 82–93, project menu 94–100, delete modal 103–114, rename 150–170, pills 124–133 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
-| Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 152–179), Behaviour 71–81, Keyboard shortcuts 84–106, shortcut data and keycap style 116–152 |
+| Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 153–180), Behaviour 71–81, Keyboard shortcuts 84–106, shortcut data and keycap style 116–153 |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 

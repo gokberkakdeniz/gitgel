@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 /// Key of a project entry and of `Config::branch_bases`.
 pub fn entry_key(repo_id: &str, branch: Option<&str>, worktree_path: Option<&str>) -> String {
@@ -69,6 +69,11 @@ pub struct Settings {
     /// Review layout; configs from before it load as `split`.
     pub diff_view: DiffLayout,
     pub ignore_whitespace: bool,
+    /// Review: fold unchanged lines or show the whole file.
+    pub diff_context: DiffContext,
+    /// Lines kept around each change while folding: 3, 5 or 10.
+    #[serde(deserialize_with = "context_lines")]
+    pub diff_context_lines: u32,
     /// View › Font Size: the window's zoom, in percent.
     pub zoom: u32,
     /// Settings › Appearance; configs from before it load as `system`.
@@ -82,10 +87,42 @@ impl Default for Settings {
             active_days: 14,
             diff_view: DiffLayout::Split,
             ignore_whitespace: false,
+            diff_context: DiffContext::Changes,
+            diff_context_lines: 3,
             zoom: 100,
             appearance: Appearance::System,
         }
     }
+}
+
+/// The lines-around-changes choices; anything else counts as 3.
+pub fn valid_context_lines(n: u32) -> u32 {
+    if matches!(n, 3 | 5 | 10) {
+        n
+    } else {
+        3
+    }
+}
+
+/// Reads `diffContextLines` leniently: a value that is not 3, 5 or 10 (or not a number) is 3,
+/// so a hand-edited config never gets set aside for it.
+fn context_lines<'de, D: Deserializer<'de>>(d: D) -> Result<u32, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(valid_context_lines(
+        value
+            .as_u64()
+            .and_then(|n| u32::try_from(n).ok())
+            .unwrap_or(3),
+    ))
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DiffContext {
+    /// Unchanged lines fold, keeping `diffContextLines` around each change.
+    #[default]
+    Changes,
+    Whole,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

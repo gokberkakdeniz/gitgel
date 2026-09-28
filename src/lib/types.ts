@@ -23,12 +23,15 @@ export interface ProjectConfig {
   entries: EntryConfig[];
 }
 export type DiffLayout = 'split' | 'unified';
+export type DiffContext = 'changes' | 'whole';
 export type Appearance = 'system' | 'light' | 'dark';
 export interface Settings {
   defaultBaseOrder: string[];
   activeDays: number;
   diffView: DiffLayout; // review layout, remembered
   ignoreWhitespace: boolean;
+  diffContext: DiffContext; // changes only (folded) or the whole file
+  diffContextLines: number; // lines kept around each change: 3, 5 or 10
   zoom: number; // View › Font Size, percent
   appearance: Appearance; // Settings › Appearance
 }

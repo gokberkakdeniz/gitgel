@@ -41,6 +41,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'Newer commit', keys: ['⌥', '⇧', '↑'] },
       { label: 'Older commit', keys: ['⌥', '⇧', '↓'] },
       { label: 'Split / Unified', keys: ['⌥', 'V'] },
+      { label: 'Changes only / Whole file', keys: ['⌥', 'C'] },
       { label: 'Ignore whitespace', keys: ['⌥', 'W'] },
     ],
   },

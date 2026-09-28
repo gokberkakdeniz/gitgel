@@ -197,6 +197,13 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] T11.1 Review: filter the file list — 2026-09-27
 - [x] T11.2 ✋ Checkpoint — phase 11 — 2026-09-27
 
+### Phase 12 — Review context
+- [x] T12.1 Review: changes only / whole file and lines around changes — 2026-09-28
+  - note: Monaco reopened every fold after a file switch (the wrapper's setValue drops the markers
+    it keeps fold state in); folding is reset after each diff and each Context change. Sticky
+    scroll is off (Monaco turns it on when nothing is folded).
+- [x] T12.2 ✋ Checkpoint — phase 12 — 2026-09-28
+
 ---
 
 ## Open
