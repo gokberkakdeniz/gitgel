@@ -106,8 +106,9 @@ export function Review({ target, backLabel, focusKey }: Props) {
     setSelected(null);
     if (m === 'uncommitted') setCommitSel({});
   };
-  // Entries with nothing in this mode are hidden.
-  const visible = viewGroups.filter((g) => g.files[mode].length > 0 || !!shaOf(g));
+  // Entries with nothing in this mode are hidden, except the one group of a branch review: its
+  // header holds the base button, the way out of a base that leaves nothing to show.
+  const visible = viewGroups.filter((g) => g.files[mode].length > 0 || !!shaOf(g) || target.kind === 'branch');
   const current = resolveSelection(visible, mode, selected);
   const group = visible.find((g) => g.entry.key === current?.key);
   const change = group?.files[mode].find((f) => f.path === current?.path);
@@ -826,10 +827,12 @@ function FileGroup({
           <button
             type="button"
             aria-haspopup="listbox"
+            title={`base ${e.base ?? 'none'}`}
             className={e.baseIsCustom ? `${styles.baseButton} ${styles.baseCustom}` : styles.baseButton}
             onClick={(ev) => onBase(ev.currentTarget.getBoundingClientRect())}
           >
-            <span className={styles.muted}>base</span> {e.base ?? 'none'}
+            <span className={styles.muted}>base</span>
+            <span className={styles.baseName}>{e.base ?? 'none'}</span>
             <ChevronDownIcon size={9} />
           </button>
         </div>
@@ -840,7 +843,8 @@ function FileGroup({
               {shown.length} of {files.length}
             </span>
           )}
-          <span className={styles.add}>+{add}</span>
+          {/* An empty group (a branch review with nothing in this mode) shows no "+0". */}
+          {files.length > 0 && <span className={styles.add}>+{add}</span>}
           {del > 0 && <span className={styles.del}>−{del}</span>}
         </div>
         {commit && (

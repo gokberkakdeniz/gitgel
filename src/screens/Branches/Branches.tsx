@@ -508,7 +508,11 @@ function ProjectsMenu({
 function StateCell({ entry: e, onBase }: { entry: EntrySummary; onBase: (rect: DOMRect) => void }) {
   switch (e.state) {
     case 'merged':
-      return <Pill tone="success" className={styles.pill}>merged into {e.base}</Pill>;
+      return (
+        <Pill tone="success" className={styles.pill} title={`merged into ${e.base}`}>
+          merged into {e.base}
+        </Pill>
+      );
     case 'detached':
       return <Pill tone="warning" className={styles.pill}>detached HEAD</Pill>;
     case 'base_missing':

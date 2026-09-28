@@ -151,7 +151,9 @@
 }
 
 .baseButton {
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 62%;
   margin-left: auto;
   height: 22px;
   display: flex;
@@ -168,7 +170,26 @@
 }
 
 .baseButton .muted {
+  flex-shrink: 0;
   font-size: 11px;
+}
+
+.baseButton svg {
+  flex-shrink: 0;
+}
+
+/* A long base (origin/release/…) and a long repo name share the line: both end in an ellipsis. */
+.baseName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groupToggle .repoName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .baseCustom {

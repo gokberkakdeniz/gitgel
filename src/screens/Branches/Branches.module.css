@@ -239,6 +239,11 @@
 
 .pill {
   justify-self: start;
+  /* A long base ("merged into origin/release/…") ends in an ellipsis inside its column. */
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Checkboxes only on the hovered row, or on all rows while selecting (flow H). */

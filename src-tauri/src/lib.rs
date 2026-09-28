@@ -10,6 +10,7 @@ pub mod logs;
 pub mod memory;
 pub mod menu;
 pub mod model;
+pub mod nearest;
 pub mod projects;
 pub mod repos;
 pub mod review;

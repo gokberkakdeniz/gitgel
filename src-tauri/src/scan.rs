@@ -13,11 +13,13 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::history::{self, CommittedStats};
 use crate::git::pool::RepoPool;
+use crate::git::refs::DefaultBase;
 use crate::git::{diff, refs, worktrees, Repo};
 use crate::model::{
     entry_key, Config, EntryState, EntrySummary, FileChange, OtherBranch, RepoConfig, RepoScan,
     RepoStatus, RepoUpdated, ScanResult, UpdateReason,
 };
+use crate::nearest;
 use crate::state::{lock, AppState};
 use crate::timing::Timings;
 
@@ -46,23 +48,45 @@ struct RepoCtx<'a> {
     repo_name: String,
     main_path: PathBuf,
     config: &'a Config,
-    default_base: Option<String>,
+    /// The default base, with its local and remote forms (T13.1).
+    default: Option<DefaultBase>,
     /// Local name of the default base (e.g. `master`). Its own base is its upstream.
     base_branch: Option<String>,
+    /// Default refs the entries ended up using (for the merged-state walks).
+    used_defaults: RefCell<HashSet<String>>,
     /// Step durations for the log.
     timings: RefCell<Timings>,
 }
 
 impl RepoCtx<'_> {
     /// The base an entry uses unless one was saved for it, and whether not having one is a
-    /// problem. The base branch is compared with its upstream (unpushed commits); without an
-    /// upstream it only shows uncommitted work.
-    fn fallback_base(&self, branch: Option<&str>) -> (Option<String>, bool) {
+    /// problem. The base branch is compared with its upstream (unpushed commits); without a
+    /// usable upstream (none, or one with no common ancestor) it only shows uncommitted work.
+    /// Other entries use the nearest default.
+    fn fallback_base(&self, branch: Option<&str>, tip: Option<&str>) -> (Option<String>, bool) {
         match branch {
             Some(b) if Some(b) == self.base_branch.as_deref() => {
-                (refs::upstream_of(self.repo, b), false)
+                let upstream = refs::upstream_of(self.repo, b).filter(|up| {
+                    let up_tip = refs::resolve_commit(self.repo, up);
+                    match (tip, up_tip) {
+                        (Some(tip), Some(up_tip)) => {
+                            !matches!(history::ahead_of(self.repo, tip, &up_tip), Ok(None))
+                        }
+                        _ => true,
+                    }
+                });
+                (upstream, false)
             }
-            _ => (self.default_base.clone(), true),
+            _ => {
+                let base = self.default.as_ref().map(|def| {
+                    let started = std::time::Instant::now();
+                    let r =
+                        nearest::default_ref(self.cache, self.repo, &self.repo_cfg.id, def, tip);
+                    self.timings.borrow_mut().add("nearest", started.elapsed());
+                    r
+                });
+                (base, true)
+            }
         }
     }
 }
@@ -128,19 +152,14 @@ fn fill(
     scan: &mut RepoScan,
 ) -> Result<RepoLayout, AppError> {
     let mut t = Timings::start();
-    let (default_base, source) = t
-        .time("base", || {
-            refs::resolve_default_base(repo, &config.settings.default_base_order)
-        })
-        .unzip();
-    scan.default_base.clone_from(&default_base);
-    scan.default_base_source = source;
-    let default_tip = default_base
-        .as_deref()
-        .and_then(|b| refs::resolve_commit(repo, b));
-    let base_branch = default_base
-        .as_deref()
-        .map(|b| refs::base_branch_name(repo, b));
+    let default = t.time("base", || {
+        refs::default_base(repo, &config.settings.default_base_order)
+    });
+    scan.default_base = default.as_ref().map(|d| d.name.clone());
+    scan.default_base_source = default.as_ref().map(|d| d.source.clone());
+    let base_branch = default
+        .as_ref()
+        .map(|d| refs::base_branch_name(repo, &d.name));
 
     let wts = t.time("worktrees", || worktrees::list_worktrees(pool, repo))?;
     let layout = RepoLayout {
@@ -163,8 +182,9 @@ fn fill(
         repo_name: scan.name.clone(),
         main_path: canonical(Path::new(&repo_cfg.path)),
         config,
-        default_base,
+        default: default.clone(),
         base_branch: base_branch.clone(),
+        used_defaults: RefCell::new(HashSet::new()),
         timings: RefCell::new(t),
     };
     let horizon = i64::from(config.settings.active_days) * 86_400;
@@ -212,8 +232,9 @@ fn fill(
                 Some(branch.last_commit_at),
             );
             // Recent branches count only when they add something; a missing base or an error
-            // is shown rather than hidden.
-            if checked || summary.ahead != Some(0) {
+            // is shown rather than hidden, and so is a branch whose base was picked by hand
+            // (else a base at its own tip would hide it, with no way back to the menu).
+            if checked || summary.ahead != Some(0) || summary.base_is_custom {
                 scan.active.push(summary);
                 continue;
             }
@@ -227,16 +248,26 @@ fn fill(
             merged: false,
         });
     }
-    // One pass answers "merged into the default base?" for every other branch.
-    if let Some(base) = &default_tip {
+    // One pass per default form in use answers "merged into the default base?" for every other
+    // branch: the configured default, plus the other form when some entry uses it (T13.1).
+    let mut walked: Vec<String> = default.iter().map(|d| d.name.clone()).collect();
+    for used in ctx.used_defaults.borrow().iter() {
+        if !walked.contains(used) {
+            walked.push(used.clone());
+        }
+    }
+    for name in walked {
+        let Some(base) = refs::resolve_commit(repo, &name) else {
+            continue;
+        };
         let started = std::time::Instant::now();
-        let prev = lock(cache).merged(&repo_cfg.id);
-        match history::merged_tips(repo, base, &other_tips, prev.as_ref()) {
+        let prev = lock(cache).merged(&repo_cfg.id, &name);
+        match history::merged_tips(repo, &base, &other_tips, prev.as_ref()) {
             Ok(state) => {
                 for (o, (tip, _)) in scan.others.iter_mut().zip(&other_tips) {
-                    o.merged = state.merged.contains(tip);
+                    o.merged |= state.merged.contains(tip);
                 }
-                lock(cache).put_merged(&repo_cfg.id, state);
+                lock(cache).put_merged(&repo_cfg.id, &name, state);
             }
             Err(e) => log::warn!("merged check in {} failed: {e}", repo_cfg.path),
         }
@@ -286,8 +317,16 @@ fn summarize(
     let key = entry_key(&ctx.repo_cfg.id, branch.as_deref(), worktree_str.as_deref());
     let custom = ctx.config.branch_bases.get(&key).cloned();
     let base_is_custom = custom.is_some();
-    let (fallback, base_required) = ctx.fallback_base(branch.as_deref());
-    let base = custom.or(fallback);
+    let (base, base_required) = match custom {
+        Some(c) => (Some(c), true),
+        None => {
+            let (fallback, required) = ctx.fallback_base(branch.as_deref(), tip.as_deref());
+            if let Some(f) = &fallback {
+                ctx.used_defaults.borrow_mut().insert(f.clone());
+            }
+            (fallback, required)
+        }
+    };
 
     let mut s = EntrySummary {
         key,
@@ -550,8 +589,7 @@ fn summarize_locked(
     worktree_path: Option<&str>,
     tip_override: Option<&str>,
 ) -> Result<EntrySummary, AppError> {
-    let default_base =
-        refs::resolve_default_base(repo, &config.settings.default_base_order).map(|(name, _)| name);
+    let default = refs::default_base(repo, &config.settings.default_base_order);
     let wts = worktrees::list_worktrees(pool, repo)?;
     let (worktree, mut tip, mut at) = match branch {
         Some(name) => {
@@ -593,10 +631,11 @@ fn summarize_locked(
         repo_name: repo_name(&repo_cfg.path),
         main_path: canonical(Path::new(&repo_cfg.path)),
         config,
-        base_branch: default_base
-            .as_deref()
-            .map(|b| refs::base_branch_name(repo, b)),
-        default_base,
+        base_branch: default
+            .as_ref()
+            .map(|d| refs::base_branch_name(repo, &d.name)),
+        default,
+        used_defaults: RefCell::new(HashSet::new()),
         timings: RefCell::new(Timings::start()),
     };
     let mut s = summarize(&ctx, branch.map(str::to_string), worktree, tip, at);
@@ -726,8 +765,9 @@ pub fn refresh_worktree(
         repo_name: scan.name.clone(),
         main_path: canonical(Path::new(&scan.repo.path)),
         config,
-        default_base: scan.default_base.clone(),
+        default: refs::default_base(&repo, &config.settings.default_base_order),
         base_branch,
+        used_defaults: RefCell::new(HashSet::new()),
         timings: RefCell::new(Timings::start()),
     };
     let mut changed = false;

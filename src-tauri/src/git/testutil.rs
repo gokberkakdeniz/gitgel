@@ -168,6 +168,13 @@ impl TestRepo {
             .unwrap();
     }
 
+    /// Points the remote-tracking branch `name` (e.g. `origin/main`) at `oid`.
+    pub fn set_remote(&self, name: &str, oid: Oid) {
+        self.repo
+            .reference(&format!("refs/remotes/{name}"), oid, true, "test")
+            .unwrap();
+    }
+
     /// Points the main HEAD at `branch` without touching the working directory.
     pub fn point_head(&self, branch: &str) {
         self.repo.set_head(&format!("refs/heads/{branch}")).unwrap();

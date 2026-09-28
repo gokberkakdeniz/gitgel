@@ -84,6 +84,84 @@ pub fn base_branch_name(repo: &Repository, base: &str) -> String {
     }
 }
 
+/// A ref's name and the commit it points at.
+pub type NamedTip = (String, String);
+
+/// The repo's default base (T13.1): what the order resolved to, and, when that name exists both
+/// locally and as a remote-tracking branch, both forms with their tips.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DefaultBase {
+    /// The ref the order resolved to (local when it exists), e.g. `master`.
+    pub name: String,
+    /// The matching order item, e.g. `origin/HEAD`.
+    pub source: String,
+    /// `(name, tip)` of local `N`.
+    pub local: Option<NamedTip>,
+    /// `(name, tip)` of its remote-tracking twin, e.g. `origin/master`.
+    pub remote: Option<NamedTip>,
+}
+
+impl DefaultBase {
+    /// Both forms exist: the nearest-default rule decides between them.
+    pub fn pair(&self) -> Option<(&NamedTip, &NamedTip)> {
+        Some((self.local.as_ref()?, self.remote.as_ref()?))
+    }
+}
+
+/// The default base with its local and remote forms. The remote twin is local `N`'s configured
+/// upstream, else `<remote>/N` for a `<remote>/HEAD` order item, else `origin/N`.
+pub fn default_base(repo: &Repository, order: &[String]) -> Option<DefaultBase> {
+    let (name, source) = resolve_default_base(repo, order)?;
+    let n = base_branch_name(repo, &name);
+    let tip = |r: &str| resolve_commit(repo, r).map(|t| (r.to_string(), t));
+    let local = repo
+        .find_branch(&n, BranchType::Local)
+        .ok()
+        .and_then(|b| Some((n.clone(), b.get().target()?.to_string())));
+    let upstream = repo
+        .find_branch(&n, BranchType::Local)
+        .ok()
+        .and_then(|b| b.upstream().ok())
+        .and_then(|u| u.name().ok().flatten().map(str::to_string));
+    let remote_ref = |r: &str| {
+        repo.find_reference(&format!("refs/remotes/{r}"))
+            .is_ok()
+            .then(|| r.to_string())
+    };
+    let remote = upstream
+        .or_else(|| {
+            source
+                .strip_suffix("/HEAD")
+                .and_then(|remote| remote_ref(&format!("{remote}/{n}")))
+        })
+        .or_else(|| remote_ref(&format!("origin/{n}")))
+        .and_then(|r| tip(&r));
+    Some(DefaultBase {
+        name,
+        source,
+        local,
+        remote,
+    })
+}
+
+/// Remote-tracking branch names (`origin/x`), without `*/HEAD`, sorted.
+pub fn remote_branches(repo: &Repository) -> Result<Vec<String>, AppError> {
+    let mut out = Vec::new();
+    for branch in repo.branches(Some(BranchType::Remote))? {
+        let (branch, _) = branch?;
+        if branch.get().target().is_none() {
+            continue;
+        }
+        if let Ok(Some(name)) = branch.name() {
+            if !name.ends_with("/HEAD") {
+                out.push(name.to_string());
+            }
+        }
+    }
+    out.sort();
+    Ok(out)
+}
+
 /// First item of `order` that exists in `repo`, as `(base name, matching order item)`.
 ///
 /// `<remote>/HEAD` items follow the remote's symbolic HEAD (`origin/HEAD` -> `origin/main`) and

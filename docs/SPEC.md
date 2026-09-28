@@ -89,13 +89,19 @@ signed, not notarized, no sandbox.
   repo + worktree path for a detached HEAD.
 - **Base:** the ref a branch is diffed against. Found from the default order
   (`origin/HEAD → main → master`, editable in Settings). The user can change it; the choice is
-  stored **per branch** and applies wherever that branch appears.
+  stored **per branch** and applies wherever that branch appears. Without a stored choice, when
+  the default name exists both locally and as a remote-tracking branch (`master` and
+  `origin/master`), the branch uses whichever of the two shares the most history with it — the
+  **nearest default** (§10 "Nearest default"). The UI always names the ref
+  actually used, e.g. `origin/master`.
 - **Active branch:** checked out in a worktree, or committed in the last N days (Settings,
-  default 14) and ahead of its base.
+  default 14) and ahead of its base (or with a base picked by hand, even when not ahead of it:
+  otherwise picking a base at its own tip would hide it; user decision 2026-09-28).
 - **Base branch:** the branch whose name matches the repo's default base (e.g. `main`). It is
   compared with its upstream (the configured one, else `origin/<name>`) and is listed only when it
-  has unpushed commits or uncommitted changes. Without an upstream only its working tree is shown;
-  that is not "base missing".
+  has unpushed commits or uncommitted changes. Without a usable upstream (none, or one with no
+  common ancestor, e.g. after a force-push) only its working tree is shown; that is not "base
+  missing".
 
 **Screens:** Branches (including the first-run empty state), Project, Review, Add palette (⌘K),
 Settings.
@@ -160,6 +166,7 @@ gitgel/
       ├─ menu.rs                  # app menu: Settings…, View › Font Size, Help items
       ├─ logs.rs                  # Help › Show Logs in Finder
       ├─ appearance.rs            # window theme and background before it is shown
+      ├─ nearest.rs               # nearest default: local vs remote default base
       ├─ memory.rs                # frees libgit2 memory after full scans
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
@@ -465,7 +472,7 @@ Layout:
   Uncommitted / All**, each with its file count summed over all groups, and a refresh button.
 - Default mode Committed; Uncommitted if there are no committed changes but some uncommitted.
   Switching mode resets the selection to that mode's first file. Groups with no files in the
-  mode are hidden.
+  mode are hidden, except the one group of a branch review (its base button stays reachable).
 - **Left file list** (310px, `bg.sidebar`, padding 8, scrolls), one group per entry (two entries
   from the same repo are two groups):
   - **File filter** (flow D8): a 30px field at the top of the list, above the
@@ -582,13 +589,41 @@ Layout:
   `Uncommitted changes across N checked-out entries` (project).
 - **Base menu** (340px popover, from a group's base button, the Project table's Base button or a
   "base missing" pill): "Filter branches, tags, SHAs" input; **Suggested** (mono 13 name +
-  `Contains N of the M commits shown`); **Default** (name + `current · from <source>` or
-  `from <source>`); **Other branches** ("current" on the current base); **Tags** when the filter
+  `Contains N of the M commits shown`); **Default** (see "Default and remote rows" below);
+  **Other branches**; **Remote branches**; **Tags** when the filter
   matches some; a "Use <shortSha>" row when the filter is a 7–40 hex SHA that resolves. Empty
   sections are hidden; ↑/↓/↵/Esc work. After a choice only that group recomputes (the others keep
   their data) and a neutral banner says `Base for <branch> set to <base>. Saved for this branch;
   Branches and projects use it too.` (the uncommitted banner takes precedence; the banner goes
   away when leaving the screen).
+- **Default and remote rows** (flows E4–E6):
+  - **Selection** (user decision 2026-09-28, replacing the `auto` / `current` pills and the "Use
+    automatic default" button): every row has a 16px leading check column, as in the diff view
+    menu; the base in use gets an `accent.text` check (`aria-selected`), in every section — the
+    stored custom base, else the Automatic row. No pills and no "current" notes. The row
+    highlight (`bg.hover`) is only the keyboard / hover row; the menu opens with it on the
+    checked row.
+  - Default header: `Default` + 11px `text.faint` `from <source>` (e.g. `from origin/HEAD`).
+  - First row **Automatic** (13px sans): second line 12px muted `uses <ref>` (the ref the
+    nearest-default rule picks now), on the right `N commits` against it; tooltip "Uses whichever
+    of the two shares the most history with this branch". Picking it clears the stored base
+    (`set_branch_base(key, null)`), so it is also the way back from any stored base, even when a
+    candidate row is disabled.
+  - Then one row per default candidate, only when there are two (the local branch and its
+    remote-tracking twin, `master`, `origin/master`, local first), to pin one by hand: mono 13
+    name; on the right 12px muted `N commits` (the entry's commits on top of that candidate), or
+    `same as <other>` when both point at the same commit. A candidate with no common ancestor is
+    disabled (45% opacity, skipped by ↑/↓, tooltip "No common ancestor with this branch") and its
+    note reads `no common ancestor`. With a single candidate the section is the Automatic row
+    only.
+  - Picking a candidate row stores it as the custom base, like any other row.
+  - **Remote branches** (after Other branches, before Tags): remote-tracking branches
+    (`refs/remotes/*`, without `*/HEAD` and without the Default candidates), same row style as
+    Other branches. The one whose short name equals the entry's branch comes first, with a muted
+    `same name` note. Filtered by the menu input like the other sections; hidden when empty.
+  - The group's base button and the entry bar range always show the ref in use
+    (`base origin/master`, `origin/master..feat/x`); the accent border of the base button still
+    means "stored custom base" only.
 - Empty states: "No committed changes" / "No uncommitted changes" / "No changes". Branch scope
   on an entry that cannot be reviewed: "This branch no longer exists", "Repository not found",
   "Base missing: …".
@@ -886,7 +921,7 @@ export interface EntrySummary {
   worktreePath: string | null;   // where it is checked out; null if not checked out
   headSha: string | null;        // current tip; null if deleted or the repo is missing
   shortSha: string | null;
-  base: string | null;           // effective base ref (custom or repo default)
+  base: string | null;           // effective base ref: custom, else the nearest default
   baseIsCustom: boolean;
   ahead: number | null;
   files: number | null;          // files changed merge-base..tip
@@ -992,11 +1027,20 @@ export interface FolderCheck {
   duplicateOf: 'config' | 'batch' | null;
   defaultBase: string | null;
 }
+export interface BaseCandidate {
+  name: string;                           // "master" or "origin/master"
+  remote: boolean;
+  ahead: number | null;                   // the entry's commits on top of it; null if unrelated
+  sameAs: string | null;                  // the other candidate's name when both are one commit
+  unrelated: boolean;                     // no common ancestor with the entry's tip
+  auto: boolean;                          // the one the nearest-default rule picked
+}
 export interface BaseOptions {
   current: string | null;
   suggested: StackHint[];                 // descending by contains, contains > 0
-  default: { name: string; source: string } | null;
+  defaults: { source: string; candidates: BaseCandidate[] } | null; // local first
   branches: string[];                     // all local branches except the entry itself
+  remotes: string[];                      // remote-tracking, same-name first
   tags: string[];
 }
 export interface ProjectView { project: ProjectConfig; entries: EntrySummary[] }
@@ -1074,7 +1118,8 @@ Notes:
   the watch list and emit `repo-updated`.
 - Project names: trimmed, not empty, unique case-insensitively (`NameConflict`). `create_project`
   and `add_entries` fill each entry's `lastKnownTip`; an entry already in the project is skipped.
-- `set_branch_base` with `null` or the repo default removes the key from `branchBases`.
+- `set_branch_base` stores any ref, a Default candidate included; `null` (the Automatic row)
+  removes the key from `branchBases`.
 - `repoint_entry` fails if the new key is already in the project.
 - `get_project_view` and project `get_review` refresh `lastKnownTip` when the tip moved or was
   seen over an hour ago, in one config write (no write when nothing changed).
@@ -1138,6 +1183,9 @@ Notes:
 | Default base | each `defaultBaseOrder` item: `<remote>/HEAD` → `find_reference("refs/remotes/<remote>/HEAD")?.symbolic_target()` (local branch of that name if it exists, else `origin/<name>`); otherwise a local branch, else any ref that resolves | first match wins |
 | Ref check | `revparse_single(rev)?.peel_to_commit()?.id()` | error = missing |
 | Local branches | `branches(Some(BranchType::Local))` → `name()`, `get().target()` | skip symbolic (`target()` None) |
+| Remote branches | `branches(Some(BranchType::Remote))` → `name()` | skip `*/HEAD` and symbolic refs |
+| Upstream | `find_branch(name, Local)?.upstream()?.name()` | none → `<remote>/<name>` if it resolves |
+| Ancestry | `graph_descendant_of(a, b)` | a == b is not a descendant; compare ids first |
 | Commit time | `find_commit(oid)?.time().seconds()` | committer time |
 | Tags | `tag_names(None)` | |
 | Worktrees | main: `workdir()` + `head()`; linked: `worktrees()` → `find_worktree(name)` → `validate()`, `path()` | `worktrees()` does not list the main one; failed `validate()` or missing folder = prunable, skip; unborn HEAD, skip |
@@ -1193,6 +1241,30 @@ base). Candidates with `contains > 0`, descending, are `suggested`. If the best 
 current base, the group gets `stackHint { branch, contains, total: |S| }`. A commit's
 `fromBranch` is the first ranked candidate that contains it.
 
+### Nearest default
+
+Only for entries without a stored custom base, and not for the base branch itself (it keeps its
+upstream comparison, §1).
+
+1. The default order resolves to a name N and a source, as today.
+2. Candidates: local `N` if it exists, and its remote-tracking twin — the configured upstream of
+   local `N`, else `<remote>/N` where `<remote>` comes from the matched `<remote>/HEAD` item,
+   else `origin/N` — if it resolves. One candidate: it is the base, as today.
+3. For each: `merge_base(candidate, tip)`; `NotFound` → unrelated, dropped (shown disabled in
+   the menu). Both unrelated → `base_missing` ("no common ancestor"), as today.
+4. Both related, merge-bases mbL and mbR:
+   - mbL == mbR → the configured default (the ref N resolved to: local if it exists).
+   - mbR descends from mbL → remote; mbL descends from mbR → local (the newer merge-base gives
+     the smaller, correct diff).
+   - Diverged (neither descends): fewer `ahead` (`graph_ahead_behind(tip, candidate).0`) wins;
+     a tie → the configured default.
+5. The picked ref is the entry's `base` everywhere: stats, commit list, merged state, squash
+   detection, Review. Put the rule in a pure function (`pick_default(local, remote,
+   configured)` over merge-base relations and ahead counts) with unit tests; the git2 part only
+   gathers its inputs.
+6. Cache the pick with the committed stats, keyed `(repo, tip, local tip, remote tip)`; the
+   per-repo merged-state walk runs once per candidate that some entry uses.
+
 ### Change watching
 
 No polling. The backend watches the file system, recomputes what changed and pushes the result.
@@ -1234,7 +1306,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 `src-tauri/src/cache.rs`; a result is reused as long as its inputs did not move:
 
 - **Committed stats** (merge-base, ahead, files, add/del, squash-merged) per
-  `(repo, tip, base tip)`.
+  `(repo, tip, base tip)`; the nearest-default pick per `(repo, tip, local tip, remote tip)`.
 - **Committed detail** for Review (committed files, commits with `fromBranch`, stack candidates)
   per `(repo, tip, base tip)`.
 - **Merged state** per repo: which branch tips are reachable from the default base, from one
@@ -1261,7 +1333,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52, repo band 56–61, row 63–75 (Projects cell 73), row and cell styles 213–254, filter logic 277–287 and 305–312, empty state 83–93, picker 95–108, new-project form 110–126, projects menu 128–144, toast 146–152, selection bar 153–166, drop overlay 169–176, sheet 178–202 and 314–329 |
-| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 763–767, file list 56–133 and 426–470 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–283, commit selection 392–405, filter logic 407–417, 428–432, 463 and 596–597, segmented 471–478, context and fold logic 569–584 (sample hidden lines 483–491), view values 704–727 (context 711–726), commit values 730–740, theme and `embedded` values 688–689, filter values 743–754 |
+| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 438–482 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–290 (sections, Default pair, pills, disabled rows, hint), base menu data per case 695–737 (`baseCase`: stacked / behind / unrelated / remote; effective base 307–308), commit selection 404–417, filter logic 419–429, 440–444, 475 and 608–609, segmented 483–490, context and fold logic 581–596 (sample hidden lines 495–503), view values 759–782 (context 766–781), commit values 785–795, theme and `embedded` values 743–744, filter values 798–809 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 172–183, "add related" card 62–68, empty project 72–80, entry menu 82–93, project menu 94–100, delete modal 103–114, rename 150–170, pills 124–133 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 153–180), Behaviour 71–81, Keyboard shortcuts 84–106, shortcut data and keycap style 116–153 |
@@ -1288,7 +1360,15 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   selection, Branches rows and filter, palette items, draft rows, default base parsing, project
   helpers.
 - **Fixtures:** `scripts/make-fixtures.sh` builds throwaway repos in `~/gitgel-fixtures` (or
-  `$GITGEL_FIXTURES`). It uses the git CLI and writes, but only inside the folder it creates and
+  `$GITGEL_FIXTURES`). Nearest default: a `base-cases` repo (cloned from a bare remote,
+  `origin/HEAD` → `master`; local `master` has an unpushed commit and `origin/master` moved on)
+  with `from-origin` (started from `origin/master` → `origin/master`), `from-local` (started
+  from local `master` → `master`) and `diverged` (from local `master`, then `origin/master`
+  merged in: the merge-bases diverge → `origin/master`, fewer commits ahead); its remote also has
+  `origin/from-origin` (same-name row) and `origin/release/2026.09` (remote only); and a
+  `base-unrelated` repo whose `origin/master` was force-pushed to an unrelated history, with
+  `unrelated-origin` (→ `master`, the remote row disabled). That case needs its own repo because
+  it rewrites `origin/master`. It uses the git CLI and writes, but only inside the folder it creates and
   marks with `.gitgel-fixtures` (it refuses to touch a folder without the marker). Ask the user
   before running it for the first time.
   - **web-app** (cloned from a bare remote so `origin/HEAD` → `main`): `session-token-refresh`

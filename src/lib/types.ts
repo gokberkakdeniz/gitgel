@@ -180,11 +180,20 @@ export interface FolderCheck {
   duplicateOf: 'config' | 'batch' | null;
   defaultBase: string | null;
 }
+export interface BaseCandidate {
+  name: string; // "master" or "origin/master"
+  remote: boolean;
+  ahead: number | null; // the entry's commits on top of it; null if unrelated
+  sameAs: string | null; // the other candidate's name when both are one commit
+  unrelated: boolean; // no common ancestor with the entry's tip
+  auto: boolean; // the one the nearest-default rule picked
+}
 export interface BaseOptions {
   current: string | null;
   suggested: StackHint[]; // descending by contains, contains > 0
-  default: { name: string; source: string } | null;
+  defaults: { source: string; candidates: BaseCandidate[] } | null; // local first
   branches: string[]; // all local branches except the entry itself
+  remotes: string[]; // remote-tracking, same-name first
   tags: string[];
 }
 export interface ProjectView {

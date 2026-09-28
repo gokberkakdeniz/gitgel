@@ -183,6 +183,90 @@ make_api_server() {
   git -C "$repo" worktree add -q --detach "$ROOT/wt/detached" feat/job-queue~1
 }
 
+# Nearest default (T13.1): local master and origin/master differ. Local master has an unpushed
+# commit and origin/master moved on without it, so each branch below is nearer to one of them.
+make_base_cases() {
+  local remote="$ROOT/remote/base-cases.git" seed="$ROOT/remote/base-cases-seed" repo="$ROOT/base-cases"
+
+  git init -q --bare -b master "$remote"
+  git init -q -b master "$seed"
+  git -C "$seed" remote add origin "$remote"
+  put "$seed" README.md '# base cases'
+  put "$seed" src/app.ts 'export const version = 1;'
+  commit "$seed" 20 "Base"
+  git -C "$seed" push -q origin master
+  git clone -q "$remote" "$repo"
+
+  # Someone else pushed; local master is not updated.
+  put "$seed" src/upstream.ts 'export const upstream = 1;'
+  commit "$seed" 10 "Upstream work 1"
+  put "$seed" src/upstream.ts 'export const upstream = 2;'
+  commit "$seed" 9 "Upstream work 2"
+  git -C "$seed" push -q origin master
+  # A branch that only exists on the remote (Remote branches section).
+  git -C "$seed" switch -q -c release/2026.09
+  put "$seed" src/release.ts 'export const release = "2026.09";'
+  commit "$seed" 7 "Release branch"
+  git -C "$seed" push -q origin release/2026.09
+  rm -rf "$seed"
+
+  # Local master gets a commit that is never pushed; then origin is fetched.
+  put "$repo" src/local.ts 'export const local = 1;'
+  commit "$repo" 8 "Local unpushed work"
+  git -C "$repo" fetch -q origin
+
+  # Started from origin/master: nearer to origin/master.
+  git -C "$repo" switch -q --no-track -c from-origin origin/master
+  put "$repo" src/feature-a.ts 'export const a = 1;'
+  commit "$repo" 2 "Feature started from origin"
+  # Pushed: origin/from-origin is its same-name remote branch.
+  git -C "$repo" push -q origin from-origin
+
+  # Started from local master: nearer to master.
+  git -C "$repo" switch -q -c from-local master
+  put "$repo" src/feature-b.ts 'export const b = 1;'
+  commit "$repo" 2 "Feature started from local master"
+
+  # Started from local master, then origin/master merged in: the merge-bases diverge, and it has
+  # fewer commits on top of origin/master.
+  git -C "$repo" switch -q -c diverged master
+  put "$repo" src/feature-c.ts 'export const c = 1;'
+  commit "$repo" 3 "Feature on local master"
+  at 2
+  git -C "$repo" merge -q --no-ff -m "Merge origin/master into diverged" origin/master
+  put "$repo" src/feature-c.ts 'export const c = 2;'
+  commit "$repo" 1 "Feature after the merge"
+
+  git -C "$repo" switch -q master
+}
+
+# origin/master force-pushed to an unrelated history: only local master shares history.
+make_base_unrelated() {
+  local remote="$ROOT/remote/base-unrelated.git" seed="$ROOT/remote/base-unrelated-seed"
+  local repo="$ROOT/base-unrelated"
+
+  git init -q --bare -b master "$remote"
+  git init -q -b master "$seed"
+  git -C "$seed" remote add origin "$remote"
+  put "$seed" src/app.ts 'export const version = 1;'
+  commit "$seed" 20 "Base"
+  git -C "$seed" push -q origin master
+  git clone -q "$remote" "$repo"
+
+  # --orphan starts from an empty tree and working directory.
+  git -C "$seed" switch -q --orphan rewritten
+  put "$seed" src/rewritten.ts 'export const rewritten = true;'
+  commit "$seed" 5 "Rewritten history"
+  git -C "$seed" push -q --force origin rewritten:master
+  rm -rf "$seed"
+  git -C "$repo" fetch -q origin
+
+  git -C "$repo" switch -q -c unrelated-origin master
+  put "$repo" src/feature.ts 'export const feature = 1;'
+  commit "$repo" 1 "Feature on local master"
+  git -C "$repo" switch -q master
+}
+
 make_all() {
   case "$ROOT" in
     "" | "/" | "$HOME" | "$HOME/") die "refusing to use $ROOT as the fixture root" ;;
@@ -196,6 +280,8 @@ make_all() {
 
   make_web_app
   make_api_server
+  make_base_cases
+  make_base_unrelated
   put "$ROOT" not-a-repo/notes.txt 'Not a git repository.'
 
   cat <<EOF
@@ -204,6 +290,8 @@ Fixtures ready in $ROOT
 Add these in Gitgel:
   $ROOT/web-app              git repo (base from origin/HEAD -> main)
   $ROOT/api-server           git repo (base master, no origin)
+  $ROOT/base-cases           nearest default: from-origin, from-local, diverged
+  $ROOT/base-unrelated       nearest default: unrelated-origin
   $ROOT/wt/token-refresh     worktree folder, resolves to web-app
   $ROOT/not-a-repo           not a git repo
 EOF

@@ -204,6 +204,16 @@ rather than as a task is listed the same way, marked "(on request)".
     scroll is off (Monaco turns it on when nothing is folded).
 - [x] T12.2 ✋ Checkpoint — phase 12 — 2026-09-28
 
+### Phase 13 — Base: local vs origin
+- [x] T13.1 Base: automatic nearest default (local vs origin), remote branches in the base menu — 2026-09-28
+  - note: the unrelated case lives in its own fixture repo (`base-unrelated`): it rewrites
+    `origin/master`, which the other three cases need.
+  - note: after review (user decisions 2026-09-28): the base menu marks the base in use with one
+    check in every section, with an Automatic row instead of the `auto` / `current` pills and the
+    "Use automatic default" button; the base branch with an unrelated upstream shows its working
+    tree; a branch with a stored base stays listed; a branch review keeps its one group visible.
+- [x] T13.2 ✋ Checkpoint — phase 13 — 2026-09-28
+
 ---
 
 ## Open

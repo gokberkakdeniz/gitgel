@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::git::history::{CommittedStats, MergedState};
 use crate::model::{CommitChanges, CommitInfo, FileChange, StackHint};
+use crate::nearest::NearestDefault;
 
 /// What a worktree's working tree holds, valid while its HEAD stays `head` and the watcher
 /// reports no change in it.
@@ -37,12 +38,15 @@ const MAX_ENTRIES: usize = 5000;
 pub struct Cache {
     committed: HashMap<Key, CommittedStats>,
     /// Per repository: which other branches are merged into the default base.
-    merged: HashMap<String, MergedState>,
+    /// Per (repo, default base name): the default can have a local and a remote form (T13.1).
+    merged: HashMap<(String, String), MergedState>,
     detail: HashMap<Key, CommittedDetail>,
     /// Per worktree folder (canonical).
     workdirs: HashMap<std::path::PathBuf, WorkdirState>,
     /// Per (repo, commit): a commit never changes, so these are kept until the repo is removed.
     commits: HashMap<(String, String), CommitChanges>,
+    /// The nearest-default pick per (repo, tip, local default tip, remote default tip).
+    nearest: HashMap<(String, String, String, String), NearestDefault>,
 }
 
 fn key(repo_id: &str, tip: &str, base: &str) -> Key {
@@ -58,12 +62,15 @@ impl Cache {
         self.committed.insert(key(repo_id, tip, base), stats);
     }
 
-    pub fn merged(&self, repo_id: &str) -> Option<MergedState> {
-        self.merged.get(repo_id).cloned()
+    pub fn merged(&self, repo_id: &str, base: &str) -> Option<MergedState> {
+        self.merged
+            .get(&(repo_id.to_string(), base.to_string()))
+            .cloned()
     }
 
-    pub fn put_merged(&mut self, repo_id: &str, state: MergedState) {
-        self.merged.insert(repo_id.to_string(), state);
+    pub fn put_merged(&mut self, repo_id: &str, base: &str, state: MergedState) {
+        self.merged
+            .insert((repo_id.to_string(), base.to_string()), state);
     }
 
     pub fn detail(&self, repo_id: &str, tip: &str, base: &str) -> Option<CommittedDetail> {
@@ -96,6 +103,39 @@ impl Cache {
         f(w);
     }
 
+    pub fn nearest(
+        &self,
+        repo_id: &str,
+        tip: &str,
+        local: &str,
+        remote: &str,
+    ) -> Option<NearestDefault> {
+        let k = (
+            repo_id.to_string(),
+            tip.to_string(),
+            local.to_string(),
+            remote.to_string(),
+        );
+        self.nearest.get(&k).copied()
+    }
+
+    pub fn put_nearest(
+        &mut self,
+        repo_id: &str,
+        tip: &str,
+        local: &str,
+        remote: &str,
+        v: NearestDefault,
+    ) {
+        let k = (
+            repo_id.to_string(),
+            tip.to_string(),
+            local.to_string(),
+            remote.to_string(),
+        );
+        self.nearest.insert(k, v);
+    }
+
     pub fn commit(&self, repo_id: &str, sha: &str) -> Option<CommitChanges> {
         self.commits
             .get(&(repo_id.to_string(), sha.to_string()))
@@ -122,13 +162,16 @@ impl Cache {
         let keep = |k: &Key| k.0 != repo_id || live_tips.contains(&k.1);
         self.committed.retain(|k, _| keep(k));
         if live_tips.is_empty() {
-            self.merged.remove(repo_id);
+            self.merged.retain(|k, _| k.0 != repo_id);
         }
         self.detail.retain(|k, _| keep(k));
+        self.nearest
+            .retain(|k, _| k.0 != repo_id || live_tips.contains(&k.1));
         if self.committed.len() + self.detail.len() > MAX_ENTRIES {
             self.committed.clear();
             self.merged.clear();
             self.detail.clear();
+            self.nearest.clear();
         }
     }
 
@@ -165,8 +208,8 @@ mod tests {
         assert!(c.committed("r_1", "tip1", "b").is_some());
         assert!(c.committed("r_1", "old", "b").is_none());
         assert!(c.committed("r_2", "old", "b").is_some());
-        c.put_merged("r_1", MergedState::default());
+        c.put_merged("r_1", "main", MergedState::default());
         c.forget_repo("r_1");
-        assert_eq!(c.merged("r_1"), None);
+        assert_eq!(c.merged("r_1", "main"), None);
     }
 }

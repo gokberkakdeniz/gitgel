@@ -125,6 +125,50 @@ pub fn stack(
     })
 }
 
+/// How a branch relates to the two forms of the default base (T13.1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MbOrder {
+    /// Both merge-bases are the same commit.
+    Same,
+    /// The remote's merge-base descends from the local's: the remote is nearer.
+    RemoteNewer,
+    LocalNewer,
+    /// Neither descends from the other.
+    Diverged,
+}
+
+/// Commits `tip` has on top of `candidate`, or `None` when they share no history.
+pub fn ahead_of(repo: &Repository, tip: &str, candidate: &str) -> Result<Option<u32>, AppError> {
+    let (tip, candidate) = (Oid::from_str(tip)?, Oid::from_str(candidate)?);
+    match repo.merge_base(tip, candidate) {
+        Ok(_) => Ok(Some(repo.graph_ahead_behind(tip, candidate)?.0 as u32)),
+        Err(e) if e.code() == git2::ErrorCode::NotFound => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
+/// How `tip`'s merge-bases with the local and the remote default relate. Only meaningful when
+/// both share history with `tip`.
+pub fn merge_base_order(
+    repo: &Repository,
+    tip: &str,
+    local: &str,
+    remote: &str,
+) -> Result<MbOrder, AppError> {
+    let tip = Oid::from_str(tip)?;
+    let mb_local = repo.merge_base(tip, Oid::from_str(local)?)?;
+    let mb_remote = repo.merge_base(tip, Oid::from_str(remote)?)?;
+    Ok(if mb_local == mb_remote {
+        MbOrder::Same
+    } else if repo.graph_descendant_of(mb_remote, mb_local)? {
+        MbOrder::RemoteNewer
+    } else if repo.graph_descendant_of(mb_local, mb_remote)? {
+        MbOrder::LocalNewer
+    } else {
+        MbOrder::Diverged
+    })
+}
+
 /// Commits reachable from `tip` but not from `base`.
 fn reachable(repo: &Repository, tip: Oid, base: Oid) -> Result<Vec<Oid>, AppError> {
     let mut walk = repo.revwalk()?;

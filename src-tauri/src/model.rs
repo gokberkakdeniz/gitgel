@@ -442,9 +442,27 @@ pub struct FolderCheck {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DefaultBase {
+pub struct BaseCandidate {
+    /// `master` or `origin/master`.
     pub name: String,
+    pub remote: bool,
+    /// The entry's commits on top of it; `None` if unrelated (or the entry has no tip).
+    pub ahead: Option<u32>,
+    /// The other candidate's name when both point at the same commit.
+    pub same_as: Option<String>,
+    /// No common ancestor with the entry's tip.
+    pub unrelated: bool,
+    /// The one the nearest-default rule picked.
+    pub auto: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DefaultCandidates {
+    /// The matching order item (`origin/HEAD`), or `upstream` for the base branch itself.
     pub source: String,
+    /// Local first.
+    pub candidates: Vec<BaseCandidate>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -453,9 +471,12 @@ pub struct BaseOptions {
     pub current: Option<String>,
     /// Descending by `contains`, only `contains > 0`.
     pub suggested: Vec<StackHint>,
-    pub default: Option<DefaultBase>,
+    pub defaults: Option<DefaultCandidates>,
     /// All local branches except the entry itself.
     pub branches: Vec<String>,
+    /// Remote-tracking branches without `*/HEAD` and the default candidates; the one with the
+    /// entry's name first.
+    pub remotes: Vec<String>,
     pub tags: Vec<String>,
 }
 

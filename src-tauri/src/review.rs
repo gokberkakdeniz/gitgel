@@ -275,8 +275,13 @@ fn committed_layer(
         t.add("detail cached", std::time::Duration::ZERO);
         return Ok((Some(merge_base), detail));
     }
-    let default_tip = refs::resolve_default_base(repo, &config.settings.default_base_order)
-        .and_then(|(name, _)| refs::resolve_commit(repo, &name));
+    let default_tip = crate::nearest::default_tip_for(
+        &state.cache,
+        repo,
+        &repo_cfg.id,
+        &config.settings.default_base_order,
+        Some(tip),
+    );
     let stack = t.time("stack", || {
         history::stack(
             repo,
