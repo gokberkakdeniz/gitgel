@@ -664,21 +664,23 @@ Layout:
   - "Point to another branch…": a branch picker (local branches of the entry's repo); repoints
     the entry and refreshes its last known tip.
   - "Copy branch name" (hidden for detached entries).
-  - **Open items**: divider, "Open in Finder" (the worktree folder), then "Open in <App>" for
+  - **Open items**: divider, "Open in Finder" (the worktree folder, or the repository folder
+    when the branch is not checked out), then "Open in <App>" for
     each installed editor, in this order: Cursor, VS Code, Windsurf, Zed, Sublime Text, then one
     item for the terminal chosen in Settings › Behaviour ("Open in Terminal", "Open in iTerm2",
     "Open in WezTerm", or the Other app's or command's name). Editors that are not installed are
     not listed. Each item's icon is the app's own macOS icon, 16px, drawn grayscale
     (`filter: grayscale(1)`), Finder's too; without one, a terminal line icon.
     A pick closes the menu; a failure is logged (`log::warn!`), nothing is shown.
-    - Always listed (planned, T14.8). When there is no folder to open, every open item is
-      disabled (text `text.faint`, icon at 40%) and a warning note closes the group: 12px
-      `warning.text`, line-height 1.45, padding 6px 10px 4px, a 14px circle-i icon, then "Not
-      checked out in a worktree, so there is no folder to open." / "Repository not found, so there
-      is nothing to open." / "The branch was deleted, so there is nothing to open." (a gone
-      detached worktree counts as deleted). When only the chosen terminal is not installed, its
-      item alone is disabled and the note says "<Name> is not installed; pick another terminal in
-      Settings."
+    - Always listed. A branch that is not checked out still opens its repository folder, with a
+      warning note closing the group: "Not checked out in a worktree, so this opens the
+      repository folder." Only a missing repo or a deleted branch has nothing to open: every
+      open item is then disabled (text `text.faint`, icon at 40%) and the note says "Repository
+      not found, so there is nothing to open." / "The branch was deleted, so there is nothing to
+      open." (a gone detached worktree counts as deleted). The note is 12px `warning.text`,
+      line-height 1.45, padding 6px 10px 4px, with a 14px circle-i icon. When only the chosen
+      terminal is not installed, its item alone is disabled and the note says "<Name> is not
+      installed; pick another terminal in Settings."
   - Divider, danger "Remove from project".
 - **Project menu** (230px; also on the sidebar's right-click): "Rename" (hint "F2"), divider,
   danger "Delete project…".
@@ -754,7 +756,9 @@ Layout:
   - "Terminal" ("Used by “Open in …” in the branch menus"): a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
-    Terminal, iTerm2, WezTerm, "Other…". Other shows under it, full width, a 36px mono input
+    Terminal, iTerm2, WezTerm, "Other…". Terminals that are not installed are disabled. At
+    launch a chosen terminal that is not installed falls back to Automatic (an Other command
+    cannot be checked, so it is left alone). Other shows under it, full width, a 36px mono input
     (placeholder `wezterm start --cwd %`, saved on blur/↵, trimmed; empty = Automatic) and a
     12px muted note: "A command, or an app name such as Ghostty. `%` becomes the worktree folder;
     the command runs in your login shell, in that folder." When the chosen app is not installed,
@@ -836,10 +840,9 @@ open.
 - **I · Which projects a branch is in.** The Projects column counts them; clicking the count
   lists them and offers "+ Add to another project…". The "Not in a project" filter shows only
   branches in no project.
-- **J · Open elsewhere.** The ⋯ menu of a checked-out entry (Project) or
-  row (Branches) opens its worktree folder in Finder or in an installed editor or terminal. A
-  branch that is not checked out has no folder: its open items are disabled, with a note saying
-  why (planned, T14.8).
+- **J · Open elsewhere.** The ⋯ menu of an entry (Project) or
+  row (Branches) opens its worktree folder in Finder or in an installed editor or terminal; a
+  branch that is not checked out opens the repository folder instead, with a note saying so.
 
 ---
 
@@ -1092,6 +1095,11 @@ export interface OpenApp {
   icon: string | null;           // PNG data URL of the app's icon
   found: boolean;                // false only for a terminal that is not installed
 }
+export interface TerminalOption {
+  choice: 'terminal' | 'iterm' | 'wezterm';
+  name: string;                  // "Terminal"
+  found: boolean;                // false when not installed; the dropdown disables it
+}
 ```
 
 ### Errors
@@ -1117,7 +1125,8 @@ pub enum AppError {
   each `repo-updated`), `configVersion`. Scan records of repos no longer in the config are ignored.
   `openApps`: the installed apps for the open items, loaded with the config and
   again on every window focus (an app installed meanwhile appears) and when the terminal
-  settings change.
+  settings change. `terminalOptions`: the install state of Terminal/iTerm2/WezTerm for the
+  Settings dropdown, loaded the same way.
 - `state/nav.ts`: history router (`stack`, `index`; `push`, `replace`, `back`, `forward`). Routes:
   `branches` (optional `focusRepoId`), `project` (`projectId`, `'draft'` for a draft),
   `review` (`target`, `focusKey?`, `backLabel`), `settings`.
@@ -1162,6 +1171,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `locate_repo` | `repoId, path` | `Config` |
 | `update_settings` | `settings: Settings` | `Config` |
 | `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
+| `get_terminal_options` | – | `TerminalOption[]` (Terminal/iTerm2/WezTerm with install state) |
 | `open_folder` | `path, app: string` | `null` (`app`: an `OpenApp` id) |
 
 Notes:

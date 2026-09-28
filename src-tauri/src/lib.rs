@@ -62,7 +62,13 @@ pub fn run() {
             );
             menu::install(app)?;
             let config_path = config::config_path(app.handle())?;
-            let config = config::load(&config_path);
+            let mut config = config::load(&config_path);
+            // A chosen terminal that is no longer installed falls back to Automatic.
+            if apps::reset_missing_terminal(&mut config.settings) {
+                if let Err(e) = config::save(&config_path, &config) {
+                    log::warn!("cannot save the terminal fallback: {e}");
+                }
+            }
             let zoom = config.settings.zoom;
             let appearance = config.settings.appearance;
             let state = state::AppState::new(app.handle().clone(), config, config_path);
@@ -97,6 +103,7 @@ pub fn run() {
             commands::remove_repo,
             commands::update_settings,
             commands::get_open_apps,
+            commands::get_terminal_options,
             commands::open_folder,
         ])
         .run(tauri::generate_context!());

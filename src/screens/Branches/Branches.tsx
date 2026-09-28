@@ -5,7 +5,7 @@ import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
 import { BranchLargeIcon, ChevronDownIcon, CloseIcon, CopyIcon, FolderIcon, MoreIcon } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
-import { OpenItems, openableFolder } from '../../components/OpenItems';
+import { OpenItems } from '../../components/OpenItems';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
@@ -471,9 +471,8 @@ function Row({
   );
 }
 
-/** The row's ⋯ menu: Copy branch name, then the open items. */
+/** The row's ⋯ menu: Copy branch name, then the always-listed open items. */
 function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void }) {
-  const folder = openableFolder(entry);
   return (
     <Menu aria-label="Branch options" autoFocus>
       {entry.branch !== null && (
@@ -487,8 +486,8 @@ function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void 
           Copy branch name
         </MenuItem>
       )}
-      {entry.branch !== null && folder && <MenuDivider />}
-      {folder && <OpenItems path={folder} onDone={onClose} />}
+      {entry.branch !== null && <MenuDivider />}
+      <OpenItems entry={entry} onDone={onClose} />
     </Menu>
   );
 }

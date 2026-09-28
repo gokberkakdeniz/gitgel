@@ -5,7 +5,7 @@ import { Button } from '../../components/Button';
 import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
 import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
-import { OpenItems, openableFolder } from '../../components/OpenItems';
+import { OpenItems } from '../../components/OpenItems';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
@@ -580,7 +580,6 @@ function EntryMenu({
   });
   const seen = tip ? formatAge(Date.parse(tip.seenAt) / 1000) : '';
   const hasFirst = !!tip || entry.branch !== null;
-  const folder = openableFolder(entry);
 
   return (
     <Menu aria-label="Entry options">
@@ -621,9 +620,9 @@ function EntryMenu({
           Copy branch name
         </MenuItem>
       )}
-      {hasFirst && folder && <MenuDivider />}
-      {folder && <OpenItems path={folder} onDone={onClose} />}
-      {(hasFirst || folder) && <MenuDivider />}
+      {hasFirst && <MenuDivider />}
+      <OpenItems entry={entry} onDone={onClose} />
+      <MenuDivider />
       <MenuItem danger icon={<RemoveIcon />} onSelect={onRemove}>
         Remove from project
       </MenuItem>

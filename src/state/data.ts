@@ -1,6 +1,6 @@
 // Data the backend pushes: config and scan results, kept current by backend events.
 import { create } from 'zustand';
-import type { Config, OpenApp, RepoScan, RepoUpdated, ScanResult } from '../lib/types';
+import type { Config, OpenApp, RepoScan, RepoUpdated, ScanResult, TerminalOption } from '../lib/types';
 
 interface DataState {
   config: Config | null;
@@ -10,11 +10,13 @@ interface DataState {
   configVersion: number; // bumped on every config change
   refreshing: boolean; // a full rescan is running
   openApps: OpenApp[]; // installed apps for the entry menus' open items
+  terminalOptions: TerminalOption[]; // install state of Terminal/iTerm2/WezTerm, for Settings
   setConfig: (config: Config) => void;
   setScan: (result: ScanResult) => void;
   applyRepoUpdated: (event: RepoUpdated) => void;
   setRefreshing: (refreshing: boolean) => void;
   setOpenApps: (apps: OpenApp[]) => void;
+  setTerminalOptions: (options: TerminalOption[]) => void;
 }
 
 export const useData = create<DataState>()((set) => ({
@@ -25,6 +27,7 @@ export const useData = create<DataState>()((set) => ({
   configVersion: 0,
   refreshing: false,
   openApps: [],
+  terminalOptions: [],
   setConfig: (config) => set((s) => ({ config, configVersion: s.configVersion + 1 })),
   setScan: (result) =>
     set((s) => {
@@ -43,6 +46,7 @@ export const useData = create<DataState>()((set) => ({
     })),
   setRefreshing: (refreshing) => set({ refreshing }),
   setOpenApps: (openApps) => set({ openApps }),
+  setTerminalOptions: (terminalOptions) => set({ terminalOptions }),
 }));
 
 /** Scans of the repos in the config, in config order. Records of removed repos are ignored. */

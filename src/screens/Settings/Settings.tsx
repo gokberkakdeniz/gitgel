@@ -255,6 +255,9 @@ function TerminalSetting({ config }: { config: Config }) {
   const openApps = useData((s) => s.openApps);
   const termApp = openApps.find((a) => a.id === 'terminal');
   const loaded = openApps.length > 0;
+  // Terminals that are not installed cannot be picked.
+  const terminalOptions = useData((s) => s.terminalOptions);
+  const missing = (choice: TerminalChoice) => terminalOptions.some((o) => o.choice === choice && !o.found);
   const saveCommand = () => {
     const trimmed = command.trim();
     if (trimmed !== terminalCommand) void updateSettings({ ...config.settings, terminalCommand: trimmed });
@@ -275,9 +278,15 @@ function TerminalSetting({ config }: { config: Config }) {
             onChange={(e) => void updateSettings({ ...config.settings, terminal: e.target.value as TerminalChoice })}
           >
             <option value="auto">Automatic{termApp ? ` (${termApp.name})` : ''}</option>
-            <option value="terminal">Terminal</option>
-            <option value="iterm">iTerm2</option>
-            <option value="wezterm">WezTerm</option>
+            <option value="terminal" disabled={missing('terminal')}>
+              Terminal
+            </option>
+            <option value="iterm" disabled={missing('iterm')}>
+              iTerm2
+            </option>
+            <option value="wezterm" disabled={missing('wezterm')}>
+              WezTerm
+            </option>
             <option value="other">Other…</option>
           </select>
           <svg

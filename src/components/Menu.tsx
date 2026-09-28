@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { InfoIcon } from './icons';
 import styles from './Menu.module.css';
 
 interface MenuProps {
@@ -67,4 +68,14 @@ export function MenuItem({ children, onSelect, danger, hint, sub, disabled, icon
 
 export function MenuDivider() {
   return <div role="separator" className={styles.divider} />;
+}
+
+/** Warning note closing a menu group, e.g. why the open items are disabled. */
+export function MenuNote({ children }: { children: ReactNode }) {
+  return (
+    <div className={styles.note}>
+      <InfoIcon size={14} />
+      <span>{children}</span>
+    </div>
+  );
 }

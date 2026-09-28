@@ -41,10 +41,12 @@ async function start() {
   await getCurrentWindow().onFocusChanged(({ payload: focused }) => {
     if (!focused) return;
     void loadOpenApps();
+    void loadTerminalOptions();
     if (useData.getState().scannedOnce) void rescanAll();
   });
 
   void loadOpenApps();
+  void loadTerminalOptions();
   const [config] = await Promise.all([ipc.getConfig(), loadHome()]);
   // A config-changed that arrived meanwhile is newer than this answer.
   if (configEvents === 0) data.setConfig(config);
@@ -57,6 +59,16 @@ async function loadOpenApps() {
     if (JSON.stringify(apps) !== JSON.stringify(useData.getState().openApps)) useData.getState().setOpenApps(apps);
   } catch (e) {
     console.error('cannot list apps', e);
+  }
+}
+
+async function loadTerminalOptions() {
+  try {
+    const options = await ipc.getTerminalOptions();
+    if (JSON.stringify(options) !== JSON.stringify(useData.getState().terminalOptions))
+      useData.getState().setTerminalOptions(options);
+  } catch (e) {
+    console.error('cannot list terminals', e);
   }
 }
 

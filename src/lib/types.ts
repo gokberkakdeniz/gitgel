@@ -212,6 +212,13 @@ export interface OpenApp {
   found: boolean; // false only for a terminal that is not installed
 }
 
+/** A terminal the Settings dropdown can choose: whether it is installed. */
+export interface TerminalOption {
+  choice: TerminalChoice; // "terminal" | "iterm" | "wezterm"
+  name: string; // "Terminal"
+  found: boolean;
+}
+
 // What `invoke` rejects with (AppError in error.rs).
 export interface AppError {
   code: string;

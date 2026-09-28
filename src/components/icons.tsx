@@ -247,3 +247,14 @@ export function TerminalIcon({ size = 14, className }: IconProps) {
     </Svg>
   );
 }
+
+/** Circle-i; the warning note closing the entry menus' open items. */
+export function InfoIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.8} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v5" />
+      <path d="M12 16.5v.01" />
+    </Svg>
+  );
+}

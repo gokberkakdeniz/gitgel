@@ -518,6 +518,15 @@ pub struct OpenApp {
     pub found: bool,
 }
 
+/// A terminal the Settings dropdown can choose: whether it is installed (`apps.rs`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TerminalOption {
+    pub choice: TerminalChoice,
+    pub name: String,
+    pub found: bool,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

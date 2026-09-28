@@ -7,7 +7,7 @@ use std::process::Stdio;
 use std::sync::{Mutex, OnceLock};
 
 use crate::error::AppError;
-use crate::model::{OpenApp, Settings, TerminalChoice};
+use crate::model::{OpenApp, Settings, TerminalChoice, TerminalOption};
 
 /// `(id, name, bundle id)`, in menu order; the terminal comes after them.
 const APPS: &[(&str, &str, &str)] = &[
@@ -17,6 +17,14 @@ const APPS: &[(&str, &str, &str)] = &[
     ("windsurf", "Windsurf", "com.exafunction.windsurf"),
     ("zed", "Zed", "dev.zed.Zed"),
     ("sublime", "Sublime Text", "com.sublimetext.4"),
+];
+
+/// The known terminals: choice, display name, bundle id. Automatic tries them in this order:
+/// the first installed wins.
+const TERMINALS: &[(TerminalChoice, &str, &str)] = &[
+    (TerminalChoice::Iterm, "iTerm2", "com.googlecode.iterm2"),
+    (TerminalChoice::Wezterm, "WezTerm", "com.github.wez.wezterm"),
+    (TerminalChoice::Terminal, "Terminal", "com.apple.Terminal"),
 ];
 
 /// The id of the terminal item, whichever app it is.
@@ -104,12 +112,42 @@ struct ResolvedTerminal {
     action: Option<TerminalAction>,
 }
 
-/// Automatic tries these in order: the first installed wins.
-const AUTO_ORDER: &[(&str, &str)] = &[
-    ("iTerm2", "com.googlecode.iterm2"),
-    ("WezTerm", "com.github.wez.wezterm"),
-    ("Terminal", "com.apple.Terminal"),
-];
+/// Terminal, iTerm2 and WezTerm with their install state, for the Settings dropdown.
+pub fn terminal_options() -> Vec<TerminalOption> {
+    TERMINALS
+        .iter()
+        .map(|(choice, name, bundle)| TerminalOption {
+            choice: *choice,
+            name: (*name).into(),
+            found: app_path(bundle).is_some(),
+        })
+        .collect()
+}
+
+/// At launch an explicit terminal that is no longer installed falls back to Automatic (an Other
+/// command cannot be checked, so it is left alone). True when the settings changed.
+pub fn reset_missing_terminal(settings: &mut Settings) -> bool {
+    reset_missing_terminal_with(settings, app_path)
+}
+
+fn reset_missing_terminal_with(
+    settings: &mut Settings,
+    bundle: impl Fn(&str) -> Option<String>,
+) -> bool {
+    let installed = TERMINALS
+        .iter()
+        .any(|(choice, _, id)| *choice == settings.terminal && bundle(id).is_some());
+    if !installed
+        && TERMINALS
+            .iter()
+            .any(|(choice, _, _)| *choice == settings.terminal)
+    {
+        log::info!("terminal {:?} is not installed; falling back to Automatic", settings.terminal);
+        settings.terminal = TerminalChoice::Auto;
+        return true;
+    }
+    false
+}
 
 fn resolve_terminal(settings: &Settings) -> ResolvedTerminal {
     resolve_terminal_with(settings, app_path, find_other)
@@ -146,9 +184,9 @@ fn resolve_terminal_with(
 
 /// The first installed of iTerm2, WezTerm, Terminal.
 fn pick_auto(bundle: impl Fn(&str) -> Option<String>) -> Option<ResolvedTerminal> {
-    AUTO_ORDER.iter().find_map(|(name, id)| {
+    TERMINALS.iter().find_map(|(choice, name, id)| {
         let path = bundle(id)?;
-        let action = if *name == "WezTerm" {
+        let action = if *choice == TerminalChoice::Wezterm {
             TerminalAction::Wezterm(path.clone())
         } else {
             TerminalAction::OpenApp(path.clone())
@@ -464,6 +502,36 @@ mod tests {
         // Nothing installed: no action, still listed under a name.
         let resolved = resolve_terminal_with(&auto, no_bundle, no_app);
         assert!(resolved.action.is_none());
+    }
+
+    #[test]
+    fn launch_resets_a_missing_explicit_terminal_to_automatic() {
+        let installed = |id: &str| (id == "com.apple.Terminal").then(|| "/Terminal.app".into());
+        let mut settings = with_terminal(TerminalChoice::Iterm, "");
+        assert!(reset_missing_terminal_with(&mut settings, installed));
+        assert_eq!(settings.terminal, TerminalChoice::Auto);
+
+        // Installed, Automatic and Other are left alone.
+        let mut settings = with_terminal(TerminalChoice::Terminal, "");
+        assert!(!reset_missing_terminal_with(&mut settings, installed));
+        let mut settings = with_terminal(TerminalChoice::Other, "No Such Terminal");
+        assert!(!reset_missing_terminal_with(&mut settings, no_bundle));
+        let mut settings = Settings::default();
+        assert!(!reset_missing_terminal_with(&mut settings, no_bundle));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn terminal_options_list_the_known_terminals() {
+        // Terminal ships with macOS.
+        let options = terminal_options();
+        assert_eq!(options.len(), 3);
+        let terminal = options
+            .iter()
+            .find(|o| o.choice == TerminalChoice::Terminal)
+            .expect("Terminal");
+        assert_eq!(terminal.name, "Terminal");
+        assert!(terminal.found);
     }
 
     #[test]

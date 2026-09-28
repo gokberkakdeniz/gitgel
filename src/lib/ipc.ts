@@ -15,6 +15,7 @@ import type {
   ReviewTarget,
   ScanResult,
   Settings,
+  TerminalOption,
 } from './types';
 
 export const getConfig = () => invoke<Config>('get_config');
@@ -74,6 +75,9 @@ export const updateSettings = (settings: Settings) => invoke<Config>('update_set
 
 /** Installed apps for the open items, in menu order. */
 export const getOpenApps = () => invoke<OpenApp[]>('get_open_apps');
+
+/** Terminal, iTerm2 and WezTerm with their install state, for the Settings dropdown. */
+export const getTerminalOptions = () => invoke<TerminalOption[]>('get_terminal_options');
 
 /** Opens a worktree folder in one of `getOpenApps` (Finder included). */
 export const openFolder = (path: string, app: string) => invoke<null>('open_folder', { path, app });

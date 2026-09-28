@@ -7,7 +7,7 @@ use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
     BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, OpenApp,
-    ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, Settings,
+    ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, Settings, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{apps, base, files, projects, repos, review, scan, watch};
@@ -272,6 +272,14 @@ pub async fn get_open_apps(state: State<'_, AppState>) -> Result<Vec<OpenApp>, A
         Ok(apps::installed(&config::snapshot(state).settings))
     })
     .await
+}
+
+/// Terminal, iTerm2 and WezTerm with their install state, for the Settings dropdown.
+#[tauri::command]
+pub async fn get_terminal_options(
+    state: State<'_, AppState>,
+) -> Result<Vec<TerminalOption>, AppError> {
+    blocking(&state, |_| Ok(apps::terminal_options())).await
 }
 
 /// Opens a worktree folder in one of `get_open_apps` (Finder included).
