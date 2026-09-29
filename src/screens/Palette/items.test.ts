@@ -17,6 +17,7 @@ function entry(branch: string | null, extra: Partial<EntrySummary>): EntrySummar
     base: 'main',
     baseIsCustom: false,
     ahead: 2,
+    behind: 0,
     files: 4,
     add: 1,
     del: 0,

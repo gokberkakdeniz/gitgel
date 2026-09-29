@@ -402,9 +402,9 @@ Every active branch, whether or not it is in a project.
     spaces, and every typed word must appear in the branch name or SHA, the worktree path or the
     repo name, in any order, case-insensitive ("to be" finds `to-be-deleted`, "feat queue" finds
     `feat/job-queue`). Esc clears it.
-- **Columns:** grid `16px minmax(0,1fr) 60px 68px 128px 150px 112px 44px 32px`, column-gap 12,
-  padding 10px 28px, section-label style: [checkbox] Branch · Ahead · Files · Uncommitted · State ·
-  Projects · Age · [⋯].
+- **Columns:** grid `16px minmax(0,1fr) 120px 150px 112px 44px 32px`, column-gap 12,
+  padding 10px 28px, section-label style: [checkbox] Branch · "Diff" (tooltip "Ahead / Files
+  / Uncommitted") · State · Projects · Age · [⋯].
 - **Repo band** per repo: `bg.band`, top border `border.strong`, bottom border `border`, padding
   10px 28px; folder icon in accent, 15px/600 repo name, mono 11px muted path, "N branches" on the
   right; 14px between bands. Repos with no rows are hidden, except when focused from a repo link
@@ -412,11 +412,17 @@ Every active branch, whether or not it is in a project.
   git2 cannot open shows a danger "git error" pill.
 - **Row** (same grid, bottom border `border.row`):
   - Checkbox: visible only on the hovered row; once anything is selected, all are visible.
-  - Branch: mono 13 `text.strong` name (short SHA for a detached HEAD), under it mono 11 muted
-    `base <base> · worktree <~path>` or `base <base> · not checked out`. Only the name is a link
-    (opens single-branch review).
-  - Ahead mono 12 `↑N`; Files mono 12.
-  - Uncommitted: 12px/500 `accent.text` "● N changed", otherwise faint "—".
+  - Branch: a 14px slot, gap 6, then the mono 13 `text.strong` name (short SHA for a detached
+    HEAD). A branch checked out in a worktree shows a 13px folder icon (the repo band's,
+    `accent.text`) in the slot, tooltip `Checked out in <~path>`; otherwise the slot is empty, so
+    names line up. Under it, indented 20px, mono 11 muted `base <base>` (a detached HEAD adds
+    ` · <~path>`). Only the name is a link (opens single-branch review).
+  - **Diff** (mono 12, no wrap): ahead · files · uncommitted as `↑4 / 9 / 3`, the ` / `
+    separators `text.faint`. Ahead carries ` ↓N` when the base has N commits the branch does not
+    (it needs a rebase): `↑4 ↓2 / 9 / 3`. Uncommitted is 500 `accent.text` when above 0, faint
+    otherwise, and "—" when the branch is not checked out; ahead or files unknown show "—".
+    Tooltip: `4 ahead · 2 behind · 9 files · 3 uncommitted` (no "behind" part at 0; `· not
+    checked out` instead of the uncommitted part).
   - State pills: "merged into <base>" (success), "detached HEAD" (warning), "base missing"
     (warning, opens the base menu), "git error" (danger, tooltip = error); otherwise faint "—".
   - **Projects cell** (26px, radius 8, padding 0 9px, 12px):
@@ -969,6 +975,7 @@ export interface EntrySummary {
   base: string | null;           // effective base ref: custom, else the nearest default
   baseIsCustom: boolean;
   ahead: number | null;
+  behind: number | null;         // base commits the branch does not have
   files: number | null;          // files changed merge-base..tip
   add: number | null;
   del: number | null;
@@ -1416,7 +1423,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Screen | File | Key lines |
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
-| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52, repo band 56–61, row 63–76 (Projects cell 73, ⋯ button 75), row and cell styles 226–271 (row menu target 234–235, ⋯ style 264), filter logic 294–303 and 326–334, empty state 84–94, picker 96–109, new-project form 111–127, projects menu 129–145, row menu 147–157 (icons 149, 153) and 321–329, toast 159–165, selection bar 166–179, drop overlay 182–189, sheet 191–215 and 336–345 |
+| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 56–61, row 63–82 (checked-out icon 66–73, Diff cell 76, Projects cell 78, ⋯ button 80), row and cell styles 229–284 (row menu target 239–241, checked-out, sub and Diff values 274–282), filter logic 308–317 and 347–355, empty state 89–99, picker 101–114, new-project form 116–132, projects menu 134–150, row menu 152–163 and 337–346, toast 165–171, selection bar 172–185, drop overlay 188–195, sheet 197–221 and 360–369 |
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 438–482 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–290 (sections, Default pair, pills, disabled rows, hint), base menu data per case 695–737 (`baseCase`: stacked / behind / unrelated / remote; effective base 307–308), commit selection 404–417, filter logic 419–429, 440–444, 475 and 608–609, segmented 483–490, context and fold logic 581–596 (sample hidden lines 495–503), view values 759–782 (context 766–781), commit values 785–795, theme and `embedded` values 743–744, filter values 798–809 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–101, open-item entry menu 102–116 (`openMenu`: worktree / notCheckedOut / repoMissing, 147–152; items 184–195; note and position 211–215), project menu 117–123, delete modal 126–137, rename 180–202, pills 153–162 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |

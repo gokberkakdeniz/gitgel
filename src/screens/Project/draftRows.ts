@@ -23,6 +23,7 @@ export function draftRows(entries: EntryRef[], scan: Record<string, RepoScan>): 
       base: repo?.defaultBase ?? null,
       baseIsCustom: false,
       ahead: null,
+      behind: null,
       files: null,
       add: null,
       del: null,

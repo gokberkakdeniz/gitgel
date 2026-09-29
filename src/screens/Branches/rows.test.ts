@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Config, EntrySummary, RepoScan } from '../../lib/types';
-import { branchCount, branchGroups, matchesFilter, projectsOf, scopeCounts } from './rows';
+import { afu, branchCount, branchGroups, matchesFilter, projectsOf, scopeCounts } from './rows';
 
 function entry(repoId: string, branch: string | null, at: number, extra: Partial<EntrySummary> = {}): EntrySummary {
   const worktreePath = extra.worktreePath ?? null;
@@ -15,6 +15,7 @@ function entry(repoId: string, branch: string | null, at: number, extra: Partial
     base: 'main',
     baseIsCustom: false,
     ahead: 1,
+    behind: 0,
     files: 1,
     add: 1,
     del: 0,
@@ -133,5 +134,28 @@ describe('counts', () => {
   it('lists the projects of an entry', () => {
     expect(projectsOf(config, 'r_1:in-project').map((p) => p.name)).toEqual(['P']);
     expect(projectsOf(config, 'r_1:a')).toEqual([]);
+  });
+});
+
+describe('afu', () => {
+  it('shows ahead / files / uncommitted, with dashes for what is unknown', () => {
+    expect(afu(entry('r_1', 'a', 1, { ahead: 4, files: 9, uncommitted: 3, worktreePath: '/wt' }))).toEqual({
+      a: '↑4',
+      f: '9',
+      u: '3',
+      title: '4 ahead · 9 files · 3 uncommitted',
+    });
+    expect(afu(entry('r_1', 'c', 1, { ahead: 1, behind: 2, files: 1, uncommitted: 0, worktreePath: '/wt' }))).toEqual({
+      a: '↑1 ↓2',
+      f: '1',
+      u: '0',
+      title: '1 ahead · 2 behind · 1 files · 0 uncommitted',
+    });
+    expect(afu(entry('r_1', 'b', 1, { ahead: null, files: null }))).toEqual({
+      a: '—',
+      f: '—',
+      u: '—',
+      title: '— ahead · — files · not checked out',
+    });
   });
 });

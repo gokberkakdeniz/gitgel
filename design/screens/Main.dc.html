@@ -47,8 +47,8 @@ button,input{font-family:inherit}
 
 <sc-if value="{{hasRepos}}" hint-placeholder-val="{{true}}">
 <div style="display: flex; flex-direction: column; flex-grow: 1; min-height: 0">
-<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px 32px; column-gap: 12px; padding: 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-row)">
-<span></span><span>Branch</span><span>Ahead</span><span>Files</span><span>Uncommitted</span><span>State</span><span>Projects</span><span>Age</span><span></span>
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 120px 150px 112px 44px 32px; column-gap: 12px; padding: 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-row)">
+<span></span><span>Branch</span><span title="Ahead / Files / Uncommitted">Diff</span><span>State</span><span>Projects</span><span>Age</span><span></span>
 </div>
 <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px">
 <sc-for list="{{repos}}" as="repo" hint-placeholder-count="3">
@@ -63,12 +63,17 @@ button,input{font-family:inherit}
 <div style="{{row.rowStyle}}">
 <input type="checkbox" aria-label="Select {{row.branch}}" checked="{{row.checked}}" style="{{row.checkStyle}}">
 <a href="FlowD3.dc.html" style="display: flex; flex-direction: column; gap: 3px; min-width: 0; color: inherit">
+<span style="display: flex; align-items: center; gap: 6px; min-width: 0">
+<span title="{{row.wtTitle}}" style="width: 14px; height: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{row.checkedOut}}" hint-placeholder-val="{{true}}">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-label="Checked out" style="stroke: var(--accent-text)"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
+</sc-if>
+</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{row.branch}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{row.sub}}</span>
+</span>
+<span style="padding-left: 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{row.sub}}</span>
 </a>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">↑{{row.ahead}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">{{row.files}}</span>
-<span style="{{row.dirtyStyle}}">{{row.dirtyLabel}}</span>
+<span title="{{row.afuTitle}}" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap"><span>{{row.a}}</span><span style="color: var(--text-faint)"> / </span><span>{{row.f}}</span><span style="color: var(--text-faint)"> / </span><span style="{{row.uStyle}}">{{row.u}}</span></span>
 <span style="{{row.stateStyle}}">{{row.state}}</span>
 <button aria-haspopup="menu" title="{{row.projTitle}}" style="{{row.projStyle}}"><span>{{row.projLabel}}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="{{row.projChevStyle}}"><path d="m6 9 6 6 6-6"></path></svg></button>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">{{row.age}}</span>
@@ -234,7 +239,7 @@ class Component extends DCLogic {
     var projMenu = !!this.props.projMenu && popover === 'none' && !added && !selectMode;
     var rowMenu = popover === 'none' && !added && !selectMode && !projMenu ? (this.props.rowMenu ?? 'none') : 'none';
     var menuTarget = rowMenu === 'worktree' || rowMenu === 'terminalMissing' ? 'session-token-refresh' : rowMenu === 'notCheckedOut' ? 'feat/billing-v2' : null;
-    var grid = 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px 32px; column-gap: 12px; align-items: center; padding: 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body); ';
+    var grid = 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 120px 150px 112px 44px 32px; column-gap: 12px; align-items: center; padding: 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body); ';
     var chip = 'justify-self: start; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 8px; font-family: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; ';
     var mk = function (r) {
       var dirty = r.dirty > 0;
@@ -266,24 +271,31 @@ class Component extends DCLogic {
         checkStyle: 'width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; ' + (showCheck ? '' : 'visibility: hidden'),
         state: r.state || '—',
         stateStyle: states[r.state || ''],
-        dirtyLabel: dirty ? '● ' + r.dirty + ' changed' : '—',
-        dirtyStyle: dirty ? 'font-size: 12px; font-weight: 500; color: var(--accent-text)' : 'font-size: 12px; color: var(--text-faint)',
+        // Checked out: accent folder before the name (path in the tooltip); the sub line is the
+        // base only, plus the path for a detached HEAD.
+        checkedOut: !!r.wt,
+        wtTitle: r.wt ? 'Checked out in ' + r.wt : '',
+        sub: 'base ' + r.base + (r.state === 'detached HEAD' ? ' · ' + r.wt : ''),
+        // Diff: ahead (↓ behind the base when above 0), files, uncommitted ("—" when not checked out).
+        a: '↑' + r.ahead + (r.behind ? ' ↓' + r.behind : ''), f: String(r.files), u: r.wt ? String(r.dirty) : '—',
+        uStyle: dirty ? 'font-weight: 500; color: var(--accent-text)' : 'color: var(--text-faint)',
+        afuTitle: r.ahead + ' ahead · ' + (r.behind ? r.behind + ' behind · ' : '') + r.files + ' files · ' + (r.wt ? r.dirty + ' uncommitted' : 'not checked out'),
         rowStyle: grid + ((focus || open || menuOpen) ? 'background: var(--bg-elevated)' : checked ? 'background: rgba(var(--accent-rgb), 0.10)' : hover ? 'background: var(--bg-sunken)' : '')
       });
     };
     var repos = [
       { name: 'web-app', path: '~/code/web-app', rows: [
-        { branch: 'session-token-refresh', sub: 'base main · worktree ~/code/wt/token-refresh', ahead: 4, files: 9, dirty: 3, age: '6m', focus: true, projects: ['Session auth refresh', 'Rate limiting rollout'] },
-        { branch: 'sidebar-virtualization', sub: 'base origin/main · worktree ~/code/wt/sidebar', ahead: 11, files: 23, dirty: 0, age: '42m', hover: true, sel: true },
-        { branch: 'feat/billing-v2', sub: 'base main · not checked out', ahead: 18, files: 31, dirty: 0, age: '2d' }
+        { branch: 'session-token-refresh', base: 'main', wt: '~/code/wt/token-refresh', ahead: 4, files: 9, dirty: 3, age: '6m', focus: true, projects: ['Session auth refresh', 'Rate limiting rollout'] },
+        { branch: 'sidebar-virtualization', base: 'origin/main', wt: '~/code/wt/sidebar', ahead: 11, files: 23, dirty: 0, age: '42m', hover: true, sel: true },
+        { branch: 'feat/billing-v2', base: 'main', wt: null, behind: 7, ahead: 18, files: 31, dirty: 0, age: '2d' }
       ]},
       { name: 'api-server', path: '~/code/api-server', rows: [
-        { branch: 'rate-limit-middleware', sub: 'base main · worktree ~/code/wt/rate-limit', ahead: 3, files: 5, dirty: 7, age: '14m', sel: true, projects: ['Rate limiting rollout'] },
-        { branch: 'migrate-pg-pool', sub: 'base feat/db-v2 · worktree ~/code/wt/pg-pool', ahead: 6, files: 12, dirty: 0, age: '1h', sel: true },
-        { branch: 'a41c9e2', sub: 'base main · worktree ~/code/wt/a41c9e2', ahead: 2, files: 3, dirty: 1, age: '3h', state: 'detached HEAD' }
+        { branch: 'rate-limit-middleware', base: 'main', wt: '~/code/wt/rate-limit', ahead: 3, files: 5, dirty: 7, age: '14m', sel: true, projects: ['Rate limiting rollout'] },
+        { branch: 'migrate-pg-pool', base: 'feat/db-v2', wt: '~/code/wt/pg-pool', behind: 2, ahead: 6, files: 12, dirty: 0, age: '1h', sel: true },
+        { branch: 'a41c9e2', base: 'main', wt: '~/code/wt/a41c9e2', ahead: 2, files: 3, dirty: 1, age: '3h', state: 'detached HEAD' }
       ]},
       { name: 'shared-ui', path: '~/code/shared-ui', rows: [
-        { branch: 'button-tokens', sub: 'base main · worktree ~/code/wt/tokens', ahead: 0, files: 0, dirty: 0, age: '5d', state: 'merged into main' }
+        { branch: 'button-tokens', base: 'main', wt: null, ahead: 0, files: 0, dirty: 0, age: '5d', state: 'merged into main' }
       ]}
     ];
     var draft = !!this.props.draft;

@@ -246,6 +246,14 @@ rather than as a task is listed the same way, marked "(on request)".
   repo missing, branch deleted, terminal missing) and disabled terminal options, from
   `docs/NOTES.md` (removed); canvas flows J6–J8 — 2026-09-29
 
+
+### Phase 15 — Branches: compact rows
+- [x] T15.1 Branches: Diff column (ahead / files / uncommitted) and checked-out icon — 2026-09-29
+  - note: user decisions 2026-09-29: the column is "Diff" (tooltip Ahead / Files / Uncommitted);
+    ahead shows `↑N` and `↓N` when behind the base (new `EntrySummary.behind`, from the same
+    `graph_ahead_behind` call). Ahead/behind against the upstream (force-push case) is not shown.
+- [x] T15.2 ✋ Checkpoint — phase 15 — 2026-09-29
+
 ---
 
 ## Open

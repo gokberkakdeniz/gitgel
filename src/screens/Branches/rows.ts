@@ -90,3 +90,15 @@ export function scopeCounts(config: Config | null, scans: RepoScan[]): Record<Br
 export function branchCount(config: Config | null, scans: RepoScan[]): number {
   return scopeCounts(config, scans).all;
 }
+
+/** The Diff cell: ahead (`↑4`, plus `↓2` when behind the base), files, uncommitted ("—" when
+ * unknown; uncommitted is unknown when the entry is not checked out), and its tooltip. */
+export function afu(e: EntrySummary): { a: string; f: string; u: string; title: string } {
+  const behind = e.behind ?? 0;
+  const a = e.ahead === null ? '—' : `↑${e.ahead}${behind > 0 ? ` ↓${behind}` : ''}`;
+  const f = e.files === null ? '—' : String(e.files);
+  const u = e.uncommitted === null ? '—' : String(e.uncommitted);
+  const ahead = e.ahead === null ? '— ahead' : `${e.ahead} ahead${behind > 0 ? ` · ${behind} behind` : ''}`;
+  const title = `${ahead} · ${f} files · ${e.uncommitted === null ? 'not checked out' : `${u} uncommitted`}`;
+  return { a, f, u, title };
+}

@@ -339,6 +339,7 @@ fn summarize(
         base: base.clone(),
         base_is_custom,
         ahead: None,
+        behind: None,
         files: None,
         add: None,
         del: None,
@@ -390,6 +391,7 @@ fn summarize(
     match stats {
         Ok(stats) => {
             s.ahead = Some(stats.ahead);
+            s.behind = Some(stats.behind);
             s.files = Some(stats.files);
             s.add = Some(stats.add);
             s.del = Some(stats.del);
@@ -535,6 +537,7 @@ pub fn summarize_one(
             head_sha: None,
             short_sha: None,
             ahead: None,
+            behind: None,
             files: None,
             add: None,
             del: None,
@@ -661,6 +664,7 @@ pub fn removed_repo_summary(e: &crate::model::EntryConfig, config: &Config) -> E
         head_sha: None,
         short_sha: None,
         ahead: None,
+        behind: None,
         files: None,
         add: None,
         del: None,

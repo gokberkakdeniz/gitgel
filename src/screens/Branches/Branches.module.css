@@ -97,7 +97,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px 32px;
+  grid-template-columns: 16px minmax(0, 1fr) 120px 150px 112px 44px 32px;
   column-gap: 12px;
   align-items: center;
   padding: 10px 28px;
@@ -207,8 +207,32 @@
   color: var(--accent-hover);
 }
 
+/* The name, after a 14px slot that holds the checked-out folder icon (empty otherwise). */
+.branchLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.wtSlot {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wtIcon {
+  color: var(--accent-text);
+}
+
 .sub {
   max-width: 100%;
+  padding-left: 20px;
+  box-sizing: border-box;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
@@ -230,6 +254,15 @@
   font-size: 12px;
   font-weight: 500;
   color: var(--accent-text);
+}
+
+/* Diff: ahead, files, uncommitted in one cell. */
+.afu {
+  white-space: nowrap;
+}
+
+.afuSep {
+  color: var(--text-faint);
 }
 
 .faint {

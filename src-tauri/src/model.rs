@@ -223,6 +223,8 @@ pub struct EntrySummary {
     pub base: Option<String>,
     pub base_is_custom: bool,
     pub ahead: Option<u32>,
+    /// Base commits the branch does not have.
+    pub behind: Option<u32>,
     /// Files changed between merge-base and tip.
     pub files: Option<u32>,
     pub add: Option<u32>,

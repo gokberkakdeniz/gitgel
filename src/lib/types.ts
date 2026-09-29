@@ -73,6 +73,7 @@ export interface EntrySummary {
   base: string | null; // effective base ref (custom or repo default)
   baseIsCustom: boolean;
   ahead: number | null;
+  behind: number | null; // base commits the branch does not have
   files: number | null; // files changed merge-base..tip
   add: number | null;
   del: number | null;

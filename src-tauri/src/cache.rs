@@ -190,6 +190,7 @@ mod tests {
         CommittedStats {
             merge_base: Some("m".into()),
             ahead: 1,
+            behind: 0,
             files: 1,
             add: 1,
             del: 0,

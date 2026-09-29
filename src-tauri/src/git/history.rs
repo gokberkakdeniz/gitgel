@@ -276,6 +276,8 @@ pub struct CommittedStats {
     /// `None`: tip and base have no common ancestor; the other fields are then zero.
     pub merge_base: Option<String>,
     pub ahead: u32,
+    /// Base commits the branch does not have (it needs a rebase to catch up).
+    pub behind: u32,
     pub files: u32,
     pub add: u32,
     pub del: u32,
@@ -295,6 +297,7 @@ pub fn committed_stats(
             return Ok(CommittedStats {
                 merge_base: None,
                 ahead: 0,
+                behind: 0,
                 files: 0,
                 add: 0,
                 del: 0,
@@ -303,7 +306,8 @@ pub fn committed_stats(
         }
         Err(e) => return Err(e.into()),
     };
-    let ahead = repo.graph_ahead_behind(tip, base)?.0 as u32;
+    let (ahead, behind) = repo.graph_ahead_behind(tip, base)?;
+    let (ahead, behind) = (ahead as u32, behind as u32);
 
     let mut branch_diff = diff::tree_diff(repo, merge_base, tip)?;
     diff::find_renames(&mut branch_diff)?;
@@ -321,6 +325,7 @@ pub fn committed_stats(
     Ok(CommittedStats {
         merge_base: Some(merge_base.to_string()),
         ahead,
+        behind,
         files: changes.len() as u32,
         add,
         del,
@@ -481,7 +486,7 @@ mod tests {
         let tip = t.commit_on("feature", &[("b", Some(b"b"))], "b", 2);
         t.set_branch("main", tip);
         let s = committed_stats(&t.repo, &tip.to_string(), &tip.to_string()).unwrap();
-        assert_eq!((s.ahead, s.files), (0, 0));
+        assert_eq!((s.ahead, s.behind, s.files), (0, 0, 0));
     }
 
     #[test]
@@ -501,7 +506,8 @@ mod tests {
         let main = t.commit_on("main", &[("z", Some(b"z\n"))], "later", 1);
 
         let s = committed_stats(&t.repo, &tip.to_string(), &main.to_string()).unwrap();
-        assert_eq!(s.ahead, 2);
+        // Main got two commits after the branch started: the squash and a later one.
+        assert_eq!((s.ahead, s.behind), (2, 2));
         assert!(s.squash_merged);
     }
 

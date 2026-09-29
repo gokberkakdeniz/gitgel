@@ -24,7 +24,7 @@ import { selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import styles from './Branches.module.css';
 import { FilterField } from './FilterField';
-import { branchGroups, projectsOf, scopeCounts, type BranchScope, type RepoGroup } from './rows';
+import { afu, branchGroups, projectsOf, scopeCounts, type BranchScope, type RepoGroup } from './rows';
 
 export function Branches() {
   const config = useData((s) => s.config);
@@ -231,9 +231,7 @@ function BranchList() {
         <div className={`${styles.grid} ${styles.columns}`}>
           <span />
           <span>Branch</span>
-          <span>Ahead</span>
-          <span>Files</span>
-          <span>Uncommitted</span>
+          <span title="Ahead / Files / Uncommitted">Diff</span>
           <span>State</span>
           <span>Projects</span>
           <span>Age</span>
@@ -396,8 +394,11 @@ function Row({
   onPopover: (kind: RowPopover['kind'], rect: DOMRect) => void;
 }) {
   const push = useNav((s) => s.push);
-  const where = e.worktreePath ? `worktree ${tildifyHome(e.worktreePath)}` : 'not checked out';
-  const sub = e.base ? `base ${e.base} · ${where}` : where;
+  // A checked-out branch is marked by the folder icon; only a detached HEAD, named by its SHA,
+  // keeps the path in the sub line.
+  const wt = e.worktreePath ? tildifyHome(e.worktreePath) : null;
+  const sub = [e.base && `base ${e.base}`, e.branch === null && wt].filter(Boolean).join(' · ');
+  const counts = afu(e);
   const open = () =>
     push({
       name: 'review',
@@ -425,18 +426,28 @@ function Row({
     <div className={cls}>
       <Checkbox aria-label={`Select ${e.branch ?? e.shortSha}`} className={styles.check} checked={selected} onChange={toggle} />
       <div className={styles.branchCell}>
-        <button type="button" className={styles.branchName} onClick={open} title={e.branch ?? e.headSha ?? ''}>
-          {e.branch ?? e.shortSha}
-        </button>
-        <span className={styles.sub}>{sub}</span>
+        <span className={styles.branchLine}>
+          <span
+            className={styles.wtSlot}
+            role={wt ? 'img' : undefined}
+            aria-label={wt ? `Checked out in ${wt}` : undefined}
+            title={wt ? `Checked out in ${wt}` : undefined}
+          >
+            {wt && <FolderIcon size={13} className={styles.wtIcon} />}
+          </span>
+          <button type="button" className={styles.branchName} onClick={open} title={e.branch ?? e.headSha ?? ''}>
+            {e.branch ?? e.shortSha}
+          </button>
+        </span>
+        {sub && <span className={styles.sub}>{sub}</span>}
       </div>
-      <span className={styles.mono}>{e.ahead === null ? '—' : `↑${e.ahead}`}</span>
-      <span className={styles.mono}>{e.files ?? '—'}</span>
-      {e.uncommitted ? (
-        <span className={styles.dirty}>● {e.uncommitted} changed</span>
-      ) : (
-        <span className={styles.faint}>—</span>
-      )}
+      <span className={`${styles.mono} ${styles.afu}`} title={counts.title}>
+        {counts.a}
+        <span className={styles.afuSep}> / </span>
+        {counts.f}
+        <span className={styles.afuSep}> / </span>
+        <span className={e.uncommitted ? styles.dirty : styles.afuSep}>{counts.u}</span>
+      </span>
       <StateCell entry={e} onBase={(rect) => onPopover('base', rect)} />
       <button
         type="button"
