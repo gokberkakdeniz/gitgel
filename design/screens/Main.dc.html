@@ -152,7 +152,7 @@ button,input{font-family:inherit}
 <button role="menuitem" disabled="{{o.disabled}}" style="{{o.style}}"><span aria-hidden="true" style="{{o.iconStyle}}"></span>{{o.label}}</button>
 </sc-for>
 <sc-if value="{{rowMenuNote}}" hint-placeholder-val="{{false}}">
-<div style="display: flex; gap: 8px; padding: 6px 10px 4px; font-size: 12px; line-height: 1.45; color: var(--warning)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg><span>Not checked out in a worktree, so there is no folder to open.</span></div>
+<div style="display: flex; gap: 8px; padding: 6px 10px 4px; font-size: 12px; line-height: 1.45; color: var(--warning)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg><span>{{rowMenuNoteText}}</span></div>
 </sc-if>
 </div>
 </sc-if>
@@ -216,7 +216,7 @@ Drop folders to add repositories
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;draft&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;rowMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;worktree&quot;,&quot;notCheckedOut&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;draft&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;rowMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;worktree&quot;,&quot;notCheckedOut&quot;,&quot;terminalMissing&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
     var popover = this.props.popover ?? 'none';
@@ -233,7 +233,7 @@ class Component extends DCLogic {
     var selectMode = !!this.props.select;
     var projMenu = !!this.props.projMenu && popover === 'none' && !added && !selectMode;
     var rowMenu = popover === 'none' && !added && !selectMode && !projMenu ? (this.props.rowMenu ?? 'none') : 'none';
-    var menuTarget = rowMenu === 'worktree' ? 'session-token-refresh' : rowMenu === 'notCheckedOut' ? 'feat/billing-v2' : null;
+    var menuTarget = rowMenu === 'worktree' || rowMenu === 'terminalMissing' ? 'session-token-refresh' : rowMenu === 'notCheckedOut' ? 'feat/billing-v2' : null;
     var grid = 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 60px 68px 128px 150px 112px 44px 32px; column-gap: 12px; align-items: center; padding: 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body); ';
     var chip = 'justify-self: start; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 8px; font-family: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; ';
     var mk = function (r) {
@@ -320,12 +320,14 @@ class Component extends DCLogic {
       inboxCount: empty ? '0' : '7',
       showProjMenu: !empty && projMenu,
       showRowMenu: !empty && menuTarget !== null,
-      rowMenuNote: rowMenu === 'notCheckedOut',
-      rowMenuStyle: 'position: absolute; top: ' + (rowMenu === 'worktree' ? 196 : 304) + 'px; right: 28px; width: 260px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; padding: 6px',
+      // Not checked out: the items stay enabled and open the repository folder.
+      rowMenuNote: rowMenu === 'notCheckedOut' || rowMenu === 'terminalMissing',
+      rowMenuNoteText: rowMenu === 'terminalMissing' ? 'iTerm2 is not installed; pick another terminal in Settings.' : 'Not checked out in a worktree, so this opens the repository folder.',
+      rowMenuStyle: 'position: absolute; top: ' + (rowMenu === 'notCheckedOut' ? 304 : 196) + 'px; right: 28px; width: 260px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; padding: 6px',
       // Real app icons (from macOS), drawn grayscale; the placeholders stand in for them.
-      openItems: ['Open in Finder', 'Open in Cursor', 'Open in VS Code', 'Open in Terminal'].map(function (label, i) {
+      openItems: ['Open in Finder', 'Open in Cursor', 'Open in VS Code', rowMenu === 'terminalMissing' ? 'Open in iTerm2' : 'Open in Terminal'].map(function (label, i) {
         var tones = ['#b8b4ac, #6e6a62', '#3b3934, #1d1c19', '#8f8b83, #4a4843', '#5c5a55, #2b2925'];
-        var off = rowMenu === 'notCheckedOut';
+        var off = rowMenu === 'terminalMissing' && i === 3;
         return {
           label: label, disabled: off,
           style: 'display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; font-size: 13px; text-align: left; ' + (off ? 'color: var(--text-faint); cursor: default' : 'color: var(--text-strong); cursor: pointer'),

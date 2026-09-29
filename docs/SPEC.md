@@ -144,7 +144,6 @@ gitgel/
 ├─ CLAUDE.md
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
-├─ docs/NOTES.md                  # handoff notes for the design assistant
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
 ├─ scripts/release.sh             # `pnpm release` (§12)
 ├─ index.html  package.json  pnpm-lock.yaml  .nvmrc  vite.config.ts  tsconfig*.json
@@ -1419,9 +1418,9 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52, repo band 56–61, row 63–76 (Projects cell 73, ⋯ button 75), row and cell styles 226–271 (row menu target 234–235, ⋯ style 264), filter logic 294–303 and 326–334, empty state 84–94, picker 96–109, new-project form 111–127, projects menu 129–145, row menu 147–157 (icons 149, 153) and 321–329, toast 159–165, selection bar 166–179, drop overlay 182–189, sheet 191–215 and 336–345 |
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 438–482 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–290 (sections, Default pair, pills, disabled rows, hint), base menu data per case 695–737 (`baseCase`: stacked / behind / unrelated / remote; effective base 307–308), commit selection 404–417, filter logic 419–429, 440–444, 475 and 608–609, segmented 483–490, context and fold logic 581–596 (sample hidden lines 495–503), view values 759–782 (context 766–781), commit values 785–795, theme and `embedded` values 743–744, filter values 798–809 |
-| Project | `Projects.dc.html` | header 22–43, table 47–60 and 198–209, "add related" card 62–68, empty project 72–80, entry menu with icons 82–96 (with open items 97–108, values 187–195), project menu 109–115, delete modal 118–129, rename 166–196, pills 140–149 |
+| Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–101, open-item entry menu 102–116 (`openMenu`: worktree / notCheckedOut / repoMissing, 147–152; items 184–195; note and position 211–215), project menu 117–123, delete modal 126–137, rename 180–202, pills 153–162 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
-| Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 173–203), Behaviour 71–100 (Terminal 81–99, values 205–220), Keyboard shortcuts 103–125, shortcut data and keycap style 135–172 |
+| Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 177–207), Behaviour 71–104 (Terminal 81–103, options with disabled flag 209–214), Keyboard shortcuts 106–129, shortcut data and keycap style 139–176 |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 

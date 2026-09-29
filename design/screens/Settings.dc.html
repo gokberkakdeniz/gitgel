@@ -84,7 +84,7 @@ button,input{font-family:inherit}
 <span style="position: relative; display: flex; flex-shrink: 0">
 <select aria-label="Terminal" style="width: 230px; height: 36px; box-sizing: border-box; padding: 0 30px 0 12px; appearance: none; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 13px">
 <sc-for list="{{terminals}}" as="tm" hint-placeholder-count="5">
-<option value="{{tm.value}}" selected="{{tm.on}}">{{tm.label}}</option>
+<option value="{{tm.value}}" selected="{{tm.on}}" disabled="{{tm.disabled}}">{{tm.label}}</option>
 </sc-for>
 </select>
 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position: absolute; right: 12px; top: 12px; color: var(--text-muted); pointer-events: none"><path d="m6 9 6 6 6-6"></path></svg>
@@ -209,7 +209,8 @@ class Component extends DCLogic {
     var term = this.props.terminal ?? 'auto';
     var termKind = term === 'missing' ? 'iterm' : term;
     var terminals = [['auto', 'Automatic (WezTerm)'], ['terminal', 'Terminal'], ['iterm', 'iTerm2'], ['wezterm', 'WezTerm'], ['other', 'Other…']].map(function (x) {
-      return { value: x[0], label: x[1], on: termKind === x[0] };
+      // Not installed (here iTerm2): the option cannot be picked; Automatic and Other always can.
+      return { value: x[0], label: x[1], on: termKind === x[0], disabled: x[0] === 'iterm' };
     });
     return {
       themeClass: 'theme-' + theme, themeName: theme, themes: themes,

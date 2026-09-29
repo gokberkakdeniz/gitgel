@@ -242,6 +242,9 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] T14.9 ✋ Checkpoint — T14.7–T14.8 — 2026-09-28
 - [x] (on request) Docs: `docs/NOTES.md` handoff notes for the design assistant (stale `.dc.html`
   states, launch fallback) — 2026-09-28
+- [x] (on request) Design: open-item menu states (not checked out opens the repository folder,
+  repo missing, branch deleted, terminal missing) and disabled terminal options, from
+  `docs/NOTES.md` (removed); canvas flows J6–J8 — 2026-09-29
 
 ---
 
