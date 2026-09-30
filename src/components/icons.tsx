@@ -299,3 +299,38 @@ export function UpdateIcon({ size = 16, className }: IconProps) {
     </Svg>
   );
 }
+
+/** Settings › General in the settings section list. */
+export function TuneIcon({ size = 16, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.7} className={className}>
+      <path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4" />
+    </Svg>
+  );
+}
+
+/** Settings › Shortcuts in the settings section list. */
+export function KeyboardIcon({ size = 16, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.7} className={className}>
+      <path d="M3.5 6.5h17v11h-17ZM7 10h.01M10.5 10h.01M14 10h.01M17 10h.01M8 14h8" />
+    </Svg>
+  );
+}
+
+/** Move up / down in an ordered list (Settings › Default base). */
+export function ArrowUpIcon({ size = 13, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={2} className={className}>
+      <path d="M12 19V5M6 11l6-6 6 6" />
+    </Svg>
+  );
+}
+
+export function ArrowDownIcon({ size = 13, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={2} className={className}>
+      <path d="M12 5v14M6 13l6 6 6-6" />
+    </Svg>
+  );
+}

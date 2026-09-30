@@ -276,6 +276,9 @@ rather than as a task is listed the same way, marked "(on request)".
   — 2026-09-30
 - [x] (on request) Dev builds rebuild when package.json's version changes (no false update
   offer) — 2026-09-30
+- [x] (on request) Settings: VS Code-style section list (General / Repositories / Shortcuts) with
+  the chosen section's settings beside it; Default base is an ordered list (↑ ↓ ✕, "+ Add branch"
+  with ref-name and duplicate checks) instead of a `→`-separated text field — 2026-09-30
 
 ---
 

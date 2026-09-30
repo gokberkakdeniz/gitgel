@@ -124,7 +124,7 @@ theme, configurable refresh.
 | Base | Stored per branch: `branchBases["<repoId>:<branch>"]`. |
 | Deleted branches | Entries keep `lastKnownTip` (SHA + when it was last seen), so a deleted branch can still show its last diff while the commit exists. |
 | Review | One screen for a whole project, files grouped per entry, one mode toggle. Single-branch review is the same screen with one group. |
-| Settings | Repositories, default base order, active threshold and a read-only list of keyboard shortcuts. Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
+| Settings | Three sections in a list: General (theme, terminal, update checks), Repositories (repos, default base order, active threshold) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
 | Config owner | Only Rust reads and writes the config. The frontend never writes files; every change is a Tauri command. |
 | Config path | `~/Library/Application Support/com.gitgel.desktop/config.json` (Tauri `app_data_dir()`). |
 | Logs | `tauri-plugin-log` → `~/Library/Logs/com.gitgel.desktop/Gitgel.log`, up to 3 × 2 MB. Git errors are logged with `log::warn!`. Debug level (watch rounds) only in dev builds. Every line ends with the process's memory footprint. |
@@ -192,7 +192,7 @@ gitgel/
 
 ## 4. Visual system
 
-Two themes, dark and light, picked in Settings › Appearance (§5):
+Two themes, dark and light, picked in Settings › General › Theme (§5):
 System (default), Light or Dark. Warm neutrals, one cool accent. Tokens are CSS variables in
 `src/styles/tokens.css` (`bg.sidebar` → `--bg-sidebar`, `text.muted` → `--text-muted`, …): dark
 values on `:root`, light values on `:root[data-theme="light"]` (see "Light theme" below); the same
@@ -709,7 +709,7 @@ Layout:
   - **Open items**: divider, "Open in Finder" (the worktree folder, or the repository folder
     when the branch is not checked out), then "Open in <App>" for
     each installed editor, in this order: Cursor, VS Code, Windsurf, Zed, Sublime Text, then one
-    item for the terminal chosen in Settings › Behaviour ("Open in Terminal", "Open in iTerm2",
+    item for the terminal chosen in Settings › General ("Open in Terminal", "Open in iTerm2",
     "Open in WezTerm", or the Other app's or command's name). Editors that are not installed are
     not listed. Each item's icon is the app's own macOS icon, 16px, drawn grayscale
     (`filter: grayscale(1)`), Finder's too; without one, a terminal line icon.
@@ -769,7 +769,15 @@ Layout:
 
 ### Settings (`Settings.dc.html`)
 
-- A page header, serif 22px "Settings". Two columns (gap 40, padding 28px 32px); the page scrolls.
+- A page header, serif 22px "Settings". Under it, like VS Code's settings, a 200px section list
+  (padding 16px 10px, 1px `border.row` on its right) and the chosen section's pane (scrolls on
+  its own; content max 760px, padding 28px 32px 40px, groups 28px apart). Sections: 34px rows
+  (radius 8, 13px, 16px muted icon, gap 10): **General** (sliders), **Repositories** (folder icon,
+  repo count in mono 12 muted on the right), **Shortcuts** (keyboard). The chosen one:
+  `bg.sidebarActive`, `text.strong` 500, `aria-current="page"`; others hover `bg.sunken`.
+  Settings opens on the section shown last (General at first; kept for the session).
+  The sidebar's "N repositories" row and every "path not found" link open Repositories; the
+  gear and ⌘, open the last one.
 - **Repositories:** serif 18px heading; card (`bg.sunken`, radius 12). Row: 500-weight name
   (96px), mono 12 muted path (ellipsis), a note (`base <defaultBase>`, "no base found", or a
   danger pill "path not found" + 28px "Locate…", or "git error"), ✕ remove. "+ Add repository…"
@@ -780,22 +788,31 @@ Layout:
   - ✕ asks first only when projects use the repo: `Remove <name>?` · "Its N project entries are
     removed too. Nothing on disk is touched." · Cancel / danger "Remove". Removing drops the repo,
     its branch bases and its project entries.
-- **Appearance** (right column, above Behaviour, serif 18px heading): a radiogroup
-  "Theme" of three tiles, gap 16 — **System** (default), **Light**, **Dark**. Tile: 120 × 72
-  mini-window preview (radius 9, clipped): a 32px sidebar strip with traffic lights and three
-  lines, content with a title bar, three lines and an accent chip, drawn in that theme's colours;
-  System is split diagonally (light top-left, dark bottom-right). 12px label under the tile.
-  Selected: `0 0 0 2px accent` ring and `text.strong` 500 label; others `0 0 0 1px border` and a
-  muted label. Arrow keys move the choice (radio semantics). Under the tiles, 12px muted: "System
-  follows the macOS appearance and switches with it." A choice applies at once and is saved
-  (`settings.appearance`).
-- **Behaviour:** serif 18px heading.
-  - "Default base" ("Tried in order when a branch has no base set"): 230px mono input showing
-    `origin/HEAD → main → master`. On blur/↵ it is split on `→`, `,` or `>`, trimmed, empties
-    dropped; an empty list restores the old value.
+  - Under the card, "Default base" ("Tried in order when a branch has no base set"; label level with the first
+    row): an ordered list, one branch per row, so no separator is ever typed (flow M4/M5). A 280px
+    card (`bg.sunken`, radius 10); 34px rows: mono 11 faint position, mono 12 name (ellipsis),
+    then ↑ / ↓ / ✕ (24px icon buttons, shown while the row is hovered or holds focus): move up,
+    move down, remove. ↑ is disabled on the first row, ↓ on the last, ✕ when only one is left
+    (the list is never empty). The last row "+ Add branch" (`accent.text` 500) becomes a 28px
+    mono `Input` ("Branch name, e.g. develop"), with a 12px muted "↵ add · esc cancel" under the
+    card. ↵ adds the trimmed name at the end; a name already in the list ("<name> is already in
+    the list") or not a valid ref name ("Not a valid branch name": `git check-ref-format` rules,
+    e.g. spaces, `~ ^ : ? * [ \`, `..`, `@{`, `//`, a leading `-` or `/`, a trailing `/` or `.`,
+    a part starting with `.` or ending in `.lock`) is not added: the field turns invalid and the
+    line under the card says why in danger. Esc, or leaving the field empty, closes it. Each change is
+    saved at once.
   - "Active threshold" ("Branches without a worktree are listed if committed within"): 60px
     right-aligned mono input + "days"; anything but an integer 1–365 restores the old value.
   - Changing either rescans every repo.
+- **General:** serif 18px heading "General".
+  - "Theme": a radiogroup of three tiles, gap 16 — **System** (default), **Light**, **Dark**.
+    Tile: 120 × 72 mini-window preview (radius 9, clipped): a 32px sidebar strip with traffic
+    lights and three lines, content with a title bar, three lines and an accent chip, drawn in
+    that theme's colours; System is split diagonally (light top-left, dark bottom-right). 12px
+    label under the tile. Selected: `0 0 0 2px accent` ring and `text.strong` 500 label; others
+    `0 0 0 1px border` and a muted label. Arrow keys move the choice (radio semantics). Under the
+    tiles, 12px muted: "System follows the macOS appearance and switches with it." A choice
+    applies at once and is saved (`settings.appearance`).
   - "Terminal" ("Used by “Open in …” in the branch menus"): a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
@@ -809,10 +826,10 @@ Layout:
     Saved at once (`settings.terminal`, `settings.terminalCommand`).
   - "Check for updates" ("At launch and every 6 hours; a new version shows in the sidebar"): a
     checkbox, on by default (`settings.checkUpdates`). Off hides a found update; on checks at once.
-- **Keyboard shortcuts** (full width under both columns, margin-top 40): serif 18px heading +
-  muted "Not editable yet"; four cards (`bg.sunken`, radius 12, padding 6px 0) in a
-  `repeat(4, minmax(max-content, 1fr))` grid, gap 12 (a narrow window scrolls instead of
-  squeezing): **General**, **Branches and projects**, **Review**, **Lists and dialogs**. Group
+- **Shortcuts:** serif 18px heading "Keyboard shortcuts" + muted "Not editable yet"; four cards
+  (`bg.sunken`, radius 12, padding 6px 0) in a `repeat(2, minmax(max-content, 1fr))` grid, gap 12
+  (a narrow window scrolls instead of squeezing): **General**, **Branches and projects**,
+  **Review**, **Lists and dialogs**. Group
   title 11px uppercase (padding 8px 14px 6px); rows min 34px, padding 0 14px: label (`#e0ddd6`,
   nowrap), optional 11px `#75726b` note, keycaps on the right. Keycap: min 22 × 22px, padding 0 6,
   `#211f1c`, 1px `#383631` border with a 2px bottom, radius 6, mono 11 `#faf9f5`; "/" between
@@ -982,8 +999,8 @@ export interface Settings {
   zoom: number;                  // View › Font Size, percent; default 100
   terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
-  checkUpdates: boolean;         // Settings › Behaviour › Check for updates; default true
-  appearance: 'system' | 'light' | 'dark'; // Settings › Appearance; default 'system' (T10.1)
+  checkUpdates: boolean;         // Settings › General › Check for updates; default true
+  appearance: 'system' | 'light' | 'dark'; // Settings › General › Theme; default 'system' (T10.1)
 }
 export interface Config {
   version: 1;
@@ -1249,7 +1266,7 @@ Notes:
   id — `cursor` Cursor `com.todesktop.230313mzl4w4u92`, `vscode` VS Code `com.microsoft.VSCode`,
   `windsurf` Windsurf `com.exafunction.windsurf`, `zed` Zed `dev.zed.Zed`, `sublime` Sublime Text
   `com.sublimetext.4`; `finder` Finder `com.apple.finder` first; terminals: Terminal `com.apple.Terminal`, iTerm2 `com.googlecode.iterm2`, WezTerm
-  `com.github.wez.wezterm`, or the Other app (Settings › Behaviour), listed last with id
+  `com.github.wez.wezterm`, or the Other app (Settings › General), listed last with id
   `terminal`, always (with `found: false` when not installed; Automatic picks
   the first installed of iTerm2, WezTerm, Terminal). `get_open_apps` asks Launch Services for each bundle id
   (`NSWorkspace URLForApplicationWithBundleIdentifier:`), so apps outside `/Applications` are
@@ -1471,7 +1488,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 438–482 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–290 (sections, Default pair, pills, disabled rows, hint), base menu data per case 695–737 (`baseCase`: stacked / behind / unrelated / remote; effective base 307–308), commit selection 404–417, filter logic 419–429, 440–444, 475 and 608–609, segmented 483–490, context and fold logic 581–596 (sample hidden lines 495–503), view values 759–782 (context 766–781), commit values 785–795, theme and `embedded` values 743–744, filter values 798–809 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–101, open-item entry menu 102–116 (`openMenu`: worktree / notCheckedOut / repoMissing, 147–152; items 184–195; note and position 211–215), project menu 117–123, delete modal 126–137, rename 180–202, pills 153–162 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
-| Settings | `Settings.dc.html` | Repositories 30–48, Appearance 51–70 (tile builder 177–207), Behaviour 71–104 (Terminal 81–103, options with disabled flag 209–214), Keyboard shortcuts 106–129, shortcut data and keycap style 139–176 |
+| Settings | `Settings.dc.html` | section list 30–38 (data 262–274), Repositories 43–100 (repo card 44–62, Default base list 64–92 with rows, actions and add states 276–301, Active threshold 94–99), General 102–153 (Theme 104–122, tile builder 238–261; Terminal 124–146, options with disabled flag 304–308; Check for updates 147–152), Shortcuts 155–179, shortcut data and keycap style 189–237. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 

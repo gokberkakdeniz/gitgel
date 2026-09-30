@@ -1,4 +1,4 @@
-// Settings › Appearance: the System / Light / Dark theme tiles (docs/SPEC.md §5).
+// Settings › General › Theme: the System / Light / Dark theme tiles (docs/SPEC.md §5).
 // The mini-window previews are plain elements drawn from the palette values below
 // (design/screens/Settings.dc.html `layer()`), not images.
 import { useRef } from 'react';
@@ -92,11 +92,11 @@ export function Appearance({ config }: { config: Config }) {
   };
 
   return (
-    <section aria-labelledby="appearance-title" className={styles.section}>
-      <h2 id="appearance-title" className={styles.heading}>
-        Appearance
-      </h2>
-      <div role="radiogroup" aria-label="Theme" className={styles.tiles} onKeyDown={onKeyDown}>
+    <section aria-labelledby="theme-title" className={styles.section}>
+      <span id="theme-title" className={styles.settingName}>
+        Theme
+      </span>
+      <div role="radiogroup" aria-labelledby="theme-title" className={styles.tiles} onKeyDown={onKeyDown}>
         {ORDER.map((a, i) => {
           const on = current === a;
           return (

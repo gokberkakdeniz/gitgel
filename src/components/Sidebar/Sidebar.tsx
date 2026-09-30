@@ -7,7 +7,7 @@ import type { AppError, ProjectConfig } from '../../lib/types';
 import { readProjectSort, sortProjects, writeProjectSort, type ProjectSort } from '../../lib/projectSort';
 import { branchCount } from '../../screens/Branches/rows';
 import { selectRepoScans, useData } from '../../state/data';
-import { selectCanBack, selectCanForward, selectRoute, useNav, type Route } from '../../state/nav';
+import { openSettings, selectCanBack, selectCanForward, selectRoute, useNav, type Route } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import {
   BackIcon,
@@ -43,8 +43,8 @@ export function Sidebar() {
   const draft = useUi((s) => s.draftProject);
   const onDraft = route.name === 'project' && route.projectId === 'draft';
 
-  const go = (name: 'branches' | 'settings') => {
-    if (route.name !== name) push({ name });
+  const goBranches = () => {
+    if (route.name !== 'branches') push({ name: 'branches' });
   };
 
   return (
@@ -77,7 +77,7 @@ export function Sidebar() {
         <button
           type="button"
           className={route.name === 'branches' ? `${styles.row} ${styles.active}` : styles.row}
-          onClick={() => go('branches')}
+          onClick={() => goBranches()}
         >
           <BranchIcon className={styles.branchIcon} />
           <span className={styles.grow}>Branches</span>
@@ -90,7 +90,7 @@ export function Sidebar() {
       <UpdateRow />
 
       <div className={styles.footer}>
-        <button type="button" className={styles.repoRow} onClick={() => go('settings')}>
+        <button type="button" className={styles.repoRow} onClick={() => openSettings('repositories')}>
           <FolderIcon className={styles.folderIcon} />
           <span className={styles.grow}>{plural(repoCount, 'repository', 'repositories')}</span>
         </button>
@@ -107,7 +107,7 @@ export function Sidebar() {
           type="button"
           aria-label="Settings"
           className={route.name === 'settings' ? `${styles.gear} ${styles.gearActive}` : styles.gear}
-          onClick={() => go('settings')}
+          onClick={() => openSettings()}
         >
           <GearIcon />
         </button>

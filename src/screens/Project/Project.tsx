@@ -27,7 +27,7 @@ import { formatAge } from '../../lib/format';
 import type { EntryConfig, EntrySummary, RepoConfig } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
 import { useData } from '../../state/data';
-import { selectCanBack, useNav } from '../../state/nav';
+import { openSettings, selectCanBack, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { draftRows } from './draftRows';
 import editable from '../../components/EditableTitle.module.css';
@@ -392,7 +392,7 @@ function EntryTable({
   const menuEntry = rows.find((r) => r.key === menu?.key);
   const [baseMenu, setBaseMenu] = useState<{ entry: EntrySummary; rect: DOMRect } | null>(null);
   const [repoint, setRepoint] = useState<{ entry: EntrySummary; rect: DOMRect } | null>(null);
-  const settings = () => push({ name: 'settings' });
+  const settings = () => openSettings('repositories');
 
   return (
     <div className={styles.table}>

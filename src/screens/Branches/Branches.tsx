@@ -20,7 +20,7 @@ import { readProjectSort, sortProjects } from '../../lib/projectSort';
 import { refOf } from '../../lib/projects';
 import type { Config, EntrySummary } from '../../lib/types';
 import { selectRepoScans, useData } from '../../state/data';
-import { selectRoute, useNav } from '../../state/nav';
+import { openSettings, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import styles from './Branches.module.css';
 import { FilterField } from './FilterField';
@@ -342,7 +342,6 @@ function RepoSection({
   popover: RowPopover | null;
   onPopover: (p: RowPopover) => void;
 }) {
-  const push = useNav((s) => s.push);
   return (
     <section id={`repo-${scan.repo.id}`} className={styles.section}>
       <div className={flash ? `${styles.band} ${styles.flash}` : styles.band}>
@@ -350,7 +349,7 @@ function RepoSection({
         <span className={styles.repoName}>{scan.name}</span>
         <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
         {scan.status === 'missing' ? (
-          <button type="button" className={styles.pillButton} onClick={() => push({ name: 'settings' })}>
+          <button type="button" className={styles.pillButton} onClick={() => openSettings('repositories')}>
             <Pill tone="danger">path not found</Pill>
           </button>
         ) : scan.status === 'error' ? (

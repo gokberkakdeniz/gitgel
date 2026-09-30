@@ -1,6 +1,7 @@
 // A small router with back/forward history.
 import { create } from 'zustand';
 import type { ReviewTarget } from '../lib/types';
+import { useUi, type SettingsSection } from './ui';
 
 export type Route =
   | { name: 'branches'; focusRepoId?: string } // focus: scroll to that repo's band
@@ -31,3 +32,10 @@ export const useNav = create<NavState>()((set) => ({
 export const selectRoute = (s: NavState): Route => s.stack[s.index];
 export const selectCanBack = (s: NavState): boolean => s.index > 0;
 export const selectCanForward = (s: NavState): boolean => s.index < s.stack.length - 1;
+
+/** Opens Settings on `section`, or on the section shown last. */
+export function openSettings(section?: SettingsSection) {
+  if (section) useUi.getState().setSettingsSection(section);
+  const nav = useNav.getState();
+  if (selectRoute(nav).name !== 'settings') nav.push({ name: 'settings' });
+}

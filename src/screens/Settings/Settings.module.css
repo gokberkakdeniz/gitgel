@@ -1,22 +1,84 @@
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 40px;
-  align-items: start;
-  padding: 28px 32px;
-  overflow-y: auto;
+/* Under the page header: the section list and the chosen section's pane. */
+.body {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
 }
 
-.column {
+.sections {
+  width: 200px;
+  flex-shrink: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 2px;
+  padding: 16px 10px;
+  border-right: 1px solid var(--border-row);
+}
+
+.sectionItem {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-code);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sectionItem:hover {
+  background: var(--bg-sunken);
+}
+
+.sectionItemOn,
+.sectionItemOn:hover {
+  background: var(--bg-sidebar-active);
+  color: var(--text-strong);
+  font-weight: 500;
+}
+
+.sectionIcon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.sectionCount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.grow {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.pane {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.paneInner {
+  max-width: 760px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 28px 32px 40px;
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .heading {
@@ -151,8 +213,133 @@
   color: var(--text-muted);
 }
 
-.orderInput {
-  width: 230px;
+/* Default base: the ordered list, one branch per row. */
+.baseSetting {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Level with the first list row. */
+.baseText {
+  padding-top: 8px;
+}
+
+.baseColumn {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.baseCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.baseList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.baseRow {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 5px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.baseRow:hover {
+  background: var(--bg-hover);
+}
+
+.baseIndex {
+  width: 14px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.baseName {
+  flex-grow: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-code);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Shown while the row is hovered or holds focus. */
+.baseActions {
+  display: flex;
+  gap: 1px;
+  visibility: hidden;
+}
+
+.baseRow:hover .baseActions,
+.baseRow:focus-within .baseActions {
+  visibility: visible;
+}
+
+.baseAction {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.baseAction:not(:disabled):hover {
+  background: var(--bg-pressed);
+  color: var(--text-strong);
+}
+
+.baseAction:disabled {
+  color: var(--icon-disabled);
+  cursor: default;
+}
+
+.baseAdd {
+  height: 34px;
+  padding: 0 12px;
+  background: transparent;
+  border: 0;
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.baseAdd:hover {
+  color: var(--accent-hover);
+}
+
+.baseAddField {
+  padding: 4px;
+}
+
+.baseError {
+  font-size: 12px;
+  color: var(--danger-text);
 }
 
 .days {
@@ -204,10 +391,8 @@
   border-color: var(--border-strong);
 }
 
-/* Keyboard shortcuts: full width under the two columns. */
+/* Keyboard shortcuts: the group cards in two columns. */
 .shortcuts {
-  grid-column: 1 / -1;
-  margin-top: 40px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -222,7 +407,8 @@
 .shortcutGrid {
   display: grid;
   /* Never narrower than the content: a narrow window scrolls instead. */
-  grid-template-columns: repeat(4, minmax(max-content, 1fr));
+  grid-template-columns: repeat(2, minmax(max-content, 1fr));
+  align-items: start;
   gap: 12px;
 }
 

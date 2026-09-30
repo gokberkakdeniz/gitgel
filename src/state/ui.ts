@@ -20,6 +20,9 @@ export interface Toast {
   onLink?: () => void;
 }
 
+/** The Settings section on the right of its section list (flow M). */
+export type SettingsSection = 'general' | 'repositories' | 'shortcuts';
+
 interface UiState {
   sidebarVisible: boolean;
   branchesFilter: string;
@@ -30,6 +33,7 @@ interface UiState {
   addReposSheet: string[] | null; // picked folder paths while the sheet is open
   modalCount: number; // open modals; folder drops are ignored while any is open
   deletingProjectId: string | null; // the delete confirmation is open for this project
+  settingsSection: SettingsSection; // the last one shown; Settings opens on it
   setSidebarVisible: (visible: boolean) => void;
   setBranchesFilter: (filter: string) => void;
   setSelectedKeys: (keys: string[]) => void;
@@ -41,6 +45,7 @@ interface UiState {
   modalOpened: () => void;
   modalClosed: () => void;
   setDeletingProjectId: (id: string | null) => void;
+  setSettingsSection: (section: SettingsSection) => void;
 }
 
 let toastId = 0;
@@ -55,6 +60,7 @@ export const useUi = create<UiState>()((set) => ({
   addReposSheet: null,
   modalCount: 0,
   deletingProjectId: null,
+  settingsSection: 'general',
   setSidebarVisible: (sidebarVisible) => set({ sidebarVisible }),
   setBranchesFilter: (branchesFilter) => set({ branchesFilter }),
   setSelectedKeys: (selectedKeys) => set({ selectedKeys }),
@@ -66,4 +72,5 @@ export const useUi = create<UiState>()((set) => ({
   modalOpened: () => set((s) => ({ modalCount: s.modalCount + 1 })),
   modalClosed: () => set((s) => ({ modalCount: Math.max(0, s.modalCount - 1) })),
   setDeletingProjectId: (deletingProjectId) => set({ deletingProjectId }),
+  setSettingsSection: (settingsSection) => set({ settingsSection }),
 }));

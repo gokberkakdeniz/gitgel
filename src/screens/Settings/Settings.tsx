@@ -1,8 +1,8 @@
 import { open } from '@tauri-apps/plugin-dialog';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
-import { CloseIcon } from '../../components/icons';
+import { CloseIcon, FolderIcon, KeyboardIcon, TuneIcon } from '../../components/icons';
 import { Modal } from '../../components/Modal';
 import { Input } from '../../components/Input';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
@@ -12,24 +12,62 @@ import { locateRepo, removeRepo, updateSettings } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
 import type { AppError, Config, RepoConfig, TerminalChoice } from '../../lib/types';
 import { useData } from '../../state/data';
+import { useUi, type SettingsSection } from '../../state/ui';
 import styles from './Settings.module.css';
 import { Appearance } from './Appearance';
-import { parseBaseOrder, parseDays } from './parse';
+import { BaseOrder } from './BaseOrder';
+import { parseDays } from './parse';
 import { SHORTCUTS } from '../../lib/shortcuts';
 
+const SECTIONS: { id: SettingsSection; label: string; icon: ReactNode }[] = [
+  { id: 'general', label: 'General', icon: <TuneIcon /> },
+  { id: 'repositories', label: 'Repositories', icon: <FolderIcon size={16} /> },
+  { id: 'shortcuts', label: 'Shortcuts', icon: <KeyboardIcon /> },
+];
+
+/** A section list on the left, the chosen section's settings on the right (flow M). */
 export function Settings() {
   const config = useData((s) => s.config);
+  const section = useUi((s) => s.settingsSection);
+  const setSection = useUi((s) => s.setSettingsSection);
   if (!config) return null;
   return (
     <>
       <PageHeader title="Settings" />
-      <div className={styles.grid}>
-        <Repositories config={config} />
-        <div className={styles.column}>
-          <Appearance config={config} />
-          <Behaviour config={config} />
+      <div className={styles.body}>
+        <nav aria-label="Settings sections" className={styles.sections}>
+          {SECTIONS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              aria-current={s.id === section ? 'page' : undefined}
+              className={s.id === section ? `${styles.sectionItem} ${styles.sectionItemOn}` : styles.sectionItem}
+              onClick={() => setSection(s.id)}
+            >
+              <span className={styles.sectionIcon}>{s.icon}</span>
+              <span className={styles.grow}>{s.label}</span>
+              {s.id === 'repositories' && <span className={styles.sectionCount}>{config.repos.length}</span>}
+            </button>
+          ))}
+        </nav>
+        {/* Keyed so each section starts scrolled to the top. */}
+        <div key={section} className={styles.pane}>
+          <div className={styles.paneInner}>
+            {section === 'repositories' ? (
+              <>
+                <Repositories config={config} />
+                <section className={styles.section}>
+                  <BaseOrder config={config} />
+                  <ActiveThreshold config={config} />
+                </section>
+              </>
+            ) : section === 'general' ? (
+              <General config={config} />
+            ) : (
+              <Shortcuts />
+            )}
+          </div>
         </div>
-        <Shortcuts />
       </div>
     </>
   );
@@ -178,23 +216,13 @@ function Shortcuts() {
   );
 }
 
-function Behaviour({ config }: { config: Config }) {
-  const { defaultBaseOrder, activeDays } = config.settings;
-  const orderText = defaultBaseOrder.join(' → ');
-  const [order, setOrder] = useState(orderText);
+/** Changing it rescans every repo (as does the default base). */
+function ActiveThreshold({ config }: { config: Config }) {
+  const { activeDays } = config.settings;
   const [days, setDays] = useState(String(activeDays));
   // Follow changes saved elsewhere (or the normalized value after a save).
-  useEffect(() => setOrder(orderText), [orderText]);
   useEffect(() => setDays(String(activeDays)), [activeDays]);
 
-  const saveOrder = () => {
-    const parsed = parseBaseOrder(order);
-    if (parsed.length === 0 || parsed.join(' → ') === orderText) {
-      setOrder(orderText);
-      return;
-    }
-    void updateSettings({ ...config.settings, defaultBaseOrder: parsed });
-  };
   const saveDays = () => {
     const n = parseDays(days);
     if (n === null || n === activeDays) {
@@ -203,62 +231,54 @@ function Behaviour({ config }: { config: Config }) {
     }
     void updateSettings({ ...config.settings, activeDays: n });
   };
-  const onEnter = (save: () => void) => (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      save();
-      e.currentTarget.blur();
-    }
-  };
 
   return (
-    <section className={styles.section}>
-      <h2 className={styles.heading}>Behaviour</h2>
-      <label className={styles.setting}>
-        <span className={styles.settingText}>
-          <span className={styles.settingName}>Default base</span>
-          <span className={styles.settingHint}>Tried in order when a branch has no base set</span>
-        </span>
+    <label className={styles.setting}>
+      <span className={styles.settingText}>
+        <span className={styles.settingName}>Active threshold</span>
+        <span className={styles.settingHint}>Branches without a worktree are listed if committed within</span>
+      </span>
+      <span className={styles.days}>
         <Input
           mono
           size={36}
-          className={styles.orderInput}
-          value={order}
-          onChange={setOrder}
-          onBlur={saveOrder}
-          onKeyDown={onEnter(saveOrder)}
+          className={styles.daysInput}
+          value={days}
+          inputMode="numeric"
+          onChange={setDays}
+          onBlur={saveDays}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              saveDays();
+              e.currentTarget.blur();
+            }
+          }}
         />
-      </label>
-      <label className={styles.setting}>
-        <span className={styles.settingText}>
-          <span className={styles.settingName}>Active threshold</span>
-          <span className={styles.settingHint}>Branches without a worktree are listed if committed within</span>
-        </span>
-        <span className={styles.days}>
-          <Input
-            mono
-            size={36}
-            className={styles.daysInput}
-            value={days}
-            inputMode="numeric"
-            onChange={setDays}
-            onBlur={saveDays}
-            onKeyDown={onEnter(saveDays)}
+        <span className={styles.settingHint}>days</span>
+      </span>
+    </label>
+  );
+}
+
+function General({ config }: { config: Config }) {
+  return (
+    <>
+      <h2 className={styles.heading}>General</h2>
+      <Appearance config={config} />
+      <section className={styles.section}>
+        <TerminalSetting config={config} />
+        <label className={styles.setting}>
+          <span className={styles.settingText}>
+            <span className={styles.settingName}>Check for updates</span>
+            <span className={styles.settingHint}>At launch and every 6 hours; a new version shows in the sidebar</span>
+          </span>
+          <Checkbox
+            checked={config.settings.checkUpdates}
+            onChange={(e) => void updateSettings({ ...config.settings, checkUpdates: e.target.checked })}
           />
-          <span className={styles.settingHint}>days</span>
-        </span>
-      </label>
-      <TerminalSetting config={config} />
-      <label className={styles.setting}>
-        <span className={styles.settingText}>
-          <span className={styles.settingName}>Check for updates</span>
-          <span className={styles.settingHint}>At launch and every 6 hours; a new version shows in the sidebar</span>
-        </span>
-        <Checkbox
-          checked={config.settings.checkUpdates}
-          onChange={(e) => void updateSettings({ ...config.settings, checkUpdates: e.target.checked })}
-        />
-      </label>
-    </section>
+        </label>
+      </section>
+    </>
   );
 }
 
