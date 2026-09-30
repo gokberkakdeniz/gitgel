@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { getBaseOptions, setBranchBase, verifyRef } from '../../lib/ipc';
 import { useInvoke } from '../../lib/useInvoke';
 import { useData } from '../../state/data';
-import { CheckIcon } from '../icons';
+import { CheckIcon, SearchIcon } from '../icons';
+import { Input } from '../Input';
 import { Popover } from '../Popover';
 import { AUTO_TITLE, baseRows, initialRow, looksLikeSha, type BaseRow } from './baseRows';
 import styles from './BaseMenu.module.css';
@@ -77,14 +78,17 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, onClose, on
     <Popover anchorRect={anchorRect} width={340} onClose={onClose}>
       <div role="listbox" aria-label={`Choose base for ${branchName}`} className={styles.menu}>
         <div className={styles.filterRow}>
-          <input
+          <Input
             autoFocus
-            aria-label="Filter branches"
-            placeholder="Filter branches, tags, SHAs"
+            leftIcon={<SearchIcon size={13} />}
+            mono
+            clearable
+            size={32}
+            aria-label="Search branches"
+            placeholder="Search"
             className={styles.filter}
             value={query}
-            spellCheck={false}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={setQuery}
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                 e.preventDefault();

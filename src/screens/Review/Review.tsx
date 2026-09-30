@@ -7,6 +7,7 @@ import {
   ChevronDownIcon,
   CloseIcon,
   ChevronUpIcon,
+  ForwardIcon,
   PencilIcon,
   RefreshIcon,
   SearchIcon,
@@ -17,6 +18,7 @@ import {
 import { Popover } from '../../components/Popover';
 import { ProjectNameInput } from '../../components/ProjectNameInput';
 import { IconButton } from '../../components/IconButton';
+import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
 import { KindBadge } from '../../components/KindBadge';
 import { Pill } from '../../components/Pill';
@@ -43,9 +45,10 @@ import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
-import { useNav } from '../../state/nav';
+import { selectCanForward, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { fileMatches, filterTerms, firstHit } from './fileFilter';
+import editable from '../../components/EditableTitle.module.css';
 import styles from './Review.module.css';
 import {
   compareLabel,
@@ -321,6 +324,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   return (
     <div className={styles.screen}>
       <ReviewHeader entry={entry} target={target} backLabel={backLabel} data={data}>
+        <RefreshButton />
         <Segmented
           aria-label="Diff layer"
           value={mode}
@@ -331,7 +335,6 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
             count: data ? counts(m) : undefined,
           }))}
         />
-        <RefreshButton />
         {target.kind === 'project' && <EditProjectButton projectId={target.projectId} />}
       </ReviewHeader>
       {banner ? (
@@ -749,8 +752,12 @@ function ReviewHeader({
   const sidebarVisible = useUi((s) => s.sidebarVisible);
   const setSidebarVisible = useUi((s) => s.setSidebarVisible);
   const back = useNav((s) => s.back);
+  const forward = useNav((s) => s.forward);
+  const canForward = useNav(selectCanForward);
   const config = useData((s) => s.config);
   const [renaming, setRenaming] = useState(false);
+  // The title box's width when rename started, so the input keeps it.
+  const titleWidth = useRef<number | undefined>(undefined);
   const project = target.kind === 'project' ? config?.projects.find((p) => p.id === target.projectId) : undefined;
 
   let title = '';
@@ -774,30 +781,44 @@ function ReviewHeader({
   }
 
   return (
-    <header className={styles.header} data-tauri-drag-region>
-      <div className={styles.chrome} data-tauri-drag-region>
-        {!sidebarVisible && (
-          <>
-            <div className={styles.lights} data-tauri-drag-region />
-            <IconButton aria-label="Show sidebar" onClick={() => setSidebarVisible(true)}>
-              <SidebarIcon />
-            </IconButton>
-          </>
-        )}
-        <IconButton aria-label={backLabel} onClick={back} className={styles.back}>
-          <BackIcon />
-        </IconButton>
-      </div>
+    <header className={sidebarVisible ? styles.header : `${styles.header} ${styles.bare}`} data-tauri-drag-region>
+      {/* With the sidebar shown, its top row has the back and forward buttons. */}
+      {!sidebarVisible && (
+        <div className={styles.chrome} data-tauri-drag-region>
+          <div className={styles.lights} data-tauri-drag-region />
+          <IconButton aria-label="Show sidebar" onClick={() => setSidebarVisible(true)}>
+            <SidebarIcon />
+          </IconButton>
+          <IconButton aria-label={backLabel} onClick={back} className={styles.back}>
+            <BackIcon />
+          </IconButton>
+          <IconButton aria-label="Forward" onClick={forward} disabled={!canForward}>
+            <ForwardIcon />
+          </IconButton>
+        </div>
+      )}
       <div className={styles.titles} data-tauri-drag-region>
         {renaming && project ? (
-          <ProjectNameInput project={project} className={styles.titleInput} onDone={() => setRenaming(false)} />
-        ) : (
-          // Project scope: double-click renames the project, as on its page.
+          <ProjectNameInput
+            project={project}
+            className={editable.input}
+            width={titleWidth.current}
+            onDone={() => setRenaming(false)}
+          />
+        ) : project ? (
+          // Project scope: click renames the project in place, as on its page.
           <span
-            className={styles.title}
-            data-tauri-drag-region={project ? undefined : true}
-            onDoubleClick={project ? () => setRenaming(true) : undefined}
+            className={editable.title}
+            title="Rename project"
+            onClick={(e) => {
+              titleWidth.current = e.currentTarget.offsetWidth;
+              setRenaming(true);
+            }}
           >
+            {title}
+          </span>
+        ) : (
+          <span className={styles.title} data-tauri-drag-region>
             {title}
           </span>
         )}
@@ -806,7 +827,7 @@ function ReviewHeader({
         </span>
       </div>
       <div className={styles.grow} data-tauri-drag-region />
-      {children}
+      <div className={styles.actions}>{children}</div>
     </header>
   );
 }
@@ -963,52 +984,29 @@ function FileFilter({
   /** ↵: open the first match. */
   onOpenFirst: () => void;
 }) {
-  const active = query.length > 0;
   return (
-    <label className={active ? `${styles.filter} ${styles.filterOn}` : styles.filter}>
-      <SearchIcon size={13} className={styles.filterIcon} />
-      <input
-        ref={inputRef}
-        className={styles.filterInput}
-        value={query}
-        placeholder="Filter files"
-        aria-label="Filter files"
-        spellCheck={false}
-        onChange={(e) => onQuery(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            if (count > 0) onOpenFirst();
-          } else if (e.key === 'Escape') {
-            // Clears first; a second Esc leaves the field.
-            e.preventDefault();
-            if (active) onQuery('');
-            else e.currentTarget.blur();
-          }
-        }}
-      />
-      {active ? (
-        <>
-          <span aria-live="polite" className={styles.filterCount}>
-            {count} {count === 1 ? 'file' : 'files'}
-          </span>
-          <button
-            type="button"
-            aria-label="Clear filter"
-            title="Clear (esc)"
-            className={styles.filterClear}
-            onClick={() => {
-              onQuery('');
-              inputRef.current?.focus();
-            }}
-          >
-            <CloseIcon size={10} />
-          </button>
-        </>
-      ) : (
-        <Kbd>⌘K</Kbd>
-      )}
-    </label>
+    <Input
+      ref={inputRef}
+      leftIcon={<SearchIcon size={13} />}
+      rightIcon={query ? `${count} ${count === 1 ? 'file' : 'files'}` : <Kbd>⌘K</Kbd>}
+      mono
+      clearable
+      className={styles.filter}
+      value={query}
+      onChange={onQuery}
+      placeholder="Search"
+      aria-label="Search files"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (count > 0) onOpenFirst();
+        } else if (e.key === 'Escape') {
+          // Input clears a filled field first; this second Esc leaves it.
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+    />
   );
 }
 

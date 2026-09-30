@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Config, EntrySummary, RepoScan } from '../../lib/types';
-import { afu, branchCount, branchGroups, matchesFilter, projectsOf, scopeCounts } from './rows';
+import { afu, branchCount, branchGroups, matchesFilter, middleCut, projectsOf, scopeCounts } from './rows';
 
 function entry(repoId: string, branch: string | null, at: number, extra: Partial<EntrySummary> = {}): EntrySummary {
   const worktreePath = extra.worktreePath ?? null;
@@ -158,5 +158,25 @@ describe('afu', () => {
       u: '—',
       title: '— ahead · — files · not checked out',
     });
+  });
+});
+
+describe('middleCut', () => {
+  it('keeps short names whole', () => {
+    expect(middleCut('feat/billing-v2')).toEqual(['feat/billing-v2', '']);
+  });
+
+  it('keeps the end after a separator, so names that differ only at the end stay apart', () => {
+    expect(middleCut('feature/PROJ-4821-add-retry-with-exponential-backoff-to-the-api-client')).toEqual([
+      'feature/PROJ-4821-add-retry-with-exponential-backoff-to-',
+      'the-api-client',
+    ]);
+    expect(middleCut('feature/PROJ-4821-add-retry-with-exponential-backoff-to-the-api-client-v2')[1]).toBe(
+      'api-client-v2',
+    );
+  });
+
+  it('takes the last 16 characters when they have no separator', () => {
+    expect(middleCut('abcdefghijklmnopqrstuvwxyz0123')).toEqual(['abcdefghijklmn', 'opqrstuvwxyz0123']);
   });
 });

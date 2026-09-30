@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import { SearchIcon } from '../../components/icons';
+import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
 import styles from './Branches.module.css';
 
@@ -8,27 +9,22 @@ interface Props {
   onChange: (value: string) => void;
 }
 
-/** The header filter: a real filter of the list. Esc clears it. */
+/** The header filter: a real filter of the list. Esc clears it, a second Esc leaves it. */
 export const FilterField = forwardRef<HTMLInputElement, Props>(function FilterField({ value, onChange }, ref) {
   return (
-    <label className={styles.filter}>
-      <SearchIcon size={14} />
-      <input
-        ref={ref}
-        className={styles.filterInput}
-        placeholder="Filter branch or worktree"
-        value={value}
-        spellCheck={false}
-        autoComplete="off"
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') {
-            onChange('');
-            e.currentTarget.blur();
-          }
-        }}
-      />
-      <Kbd>⌘K</Kbd>
-    </label>
+    <Input
+      ref={ref}
+      leftIcon={<SearchIcon size={13} />}
+      rightIcon={!value && <Kbd>⌘K</Kbd>}
+      mono
+      clearable
+      size={32}
+      className={styles.filter}
+      placeholder="Search"
+      aria-label="Search branches and worktrees"
+      value={value}
+      onChange={onChange}
+      onKeyDown={(e) => e.key === 'Escape' && e.currentTarget.blur()}
+    />
   );
 });

@@ -1,0 +1,104 @@
+.field {
+  min-width: 0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+  cursor: text;
+}
+
+.s28 {
+  height: 28px;
+}
+
+.s30 {
+  height: 30px;
+}
+
+.s32 {
+  height: 32px;
+}
+
+.s36 {
+  height: 36px;
+  padding: 0 12px;
+}
+
+/* A clear button or a right slot sits closer to the edge. */
+.field:has(> .clear, > .slot:last-child) {
+  padding-right: 6px;
+}
+
+/* Focused, or a filter holding text: accent border and a soft ring. */
+.field:focus-within,
+.filled {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+.invalid,
+.invalid:focus-within {
+  border-color: var(--danger-text);
+  box-shadow: 0 0 0 2px rgba(var(--danger-rgb), 0.2);
+}
+
+/* leftIcon / rightIcon: muted, no wrap; icons are sized by the caller (13px for a search). */
+.slot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.input {
+  flex-grow: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 13px;
+}
+
+.mono .input {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.input:focus-visible {
+  box-shadow: none;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.clear {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--bg-hover);
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.clear:hover {
+  color: var(--text-strong);
+}

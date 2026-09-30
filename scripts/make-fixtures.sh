@@ -144,6 +144,30 @@ make_web_app() {
   commit "$repo" 2 "Search box takes a query"
   git -C "$repo" switch -q main
 
+  # Long branch names (50–100 characters), two differing only at the end, one in a worktree,
+  # one merged.
+  local long
+  for long in \
+    chore/PROJ-4410-bump-typescript-and-eslint-to-latest-majors \
+    feature/PROJ-4821-add-retry-with-exponential-backoff-to-the-api-client \
+    feature/PROJ-4821-add-retry-with-exponential-backoff-to-the-api-client-v2 \
+    bugfix/PROJ-5093-session-cookie-not-cleared-when-refresh-token-expires-mid-checkout \
+    users/jdoe/PROJ-5120-migrate-legacy-billing-invoices-to-the-new-ledger-service-with-backfill-job
+  do
+    git -C "$repo" switch -q -c "$long" main
+    put "$repo" "src/long/${long##*/}.ts" "export const branch = \"$long\";"
+    commit "$repo" 4 "Work on ${long##*/}"
+  done
+  # Long and squash-merged: main already has its timeout.ts (the "merged" pill on a long name).
+  git -C "$repo" switch -q -c \
+    bugfix/PROJ-5104-request-timeout-not-applied-when-the-api-client-retries-after-a-401 main~1
+  put "$repo" src/api/timeout.ts 'export const timeoutMs = 5000;'
+  commit "$repo" 4 "Apply the request timeout on retries"
+  git -C "$repo" switch -q main
+  git -C "$repo" worktree add -q "$ROOT/wt/session-cookie" \
+    bugfix/PROJ-5093-session-cookie-not-cleared-when-refresh-token-expires-mid-checkout
+  put "$ROOT/wt/session-cookie" src/auth/session.ts 'export function getSession() { return undefined; }'
+
   git -C "$repo" push -q origin main
 }
 

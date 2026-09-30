@@ -19,10 +19,10 @@ button{font-family:inherit}
 <dc-import name="Sidebar" active="{{activeProject}}" inbox-count="{{inboxCount}}" projects="{{sidebarProjects}}" hint-size="260px,800px"></dc-import>
 
 <main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
-<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 28px; border-bottom: 1px solid #302e2a">
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 16px 0 28px; border-bottom: 1px solid #302e2a">
 <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
 <sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}">
-<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: #faf9f5">Session auth refresh</h1>
+<h1 title="Rename project" style="margin: 0; display: block; box-sizing: border-box; width: fit-content; min-width: 340px; height: 30px; margin-left: -7px; padding: 0 6px; border: 1px solid transparent; border-radius: 8px; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; line-height: 28px; letter-spacing: -0.3px; color: #faf9f5; cursor: text">Session auth refresh</h1>
 </sc-if>
 <sc-if value="{{renaming}}" hint-placeholder-val="{{false}}">
 <label style="display: flex">
@@ -35,11 +35,11 @@ button{font-family:inherit}
 <button aria-label="Refresh" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #d8d4cc">
 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
 </button>
+<a href="Palette.dc.html" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #faf9f5; font-weight: 500; font-size: 13px">Add entries <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">⌘K</span></a>
+<a href="Diff.dc.html" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #4f8fa3; border-radius: 8px; color: #141311; font-weight: 600; font-size: 13px">Review changes</a>
 <button aria-label="Project options" aria-haspopup="menu" style="{{optionsBtnStyle}}">
 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
 </button>
-<a href="Palette.dc.html" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #faf9f5; font-weight: 500; font-size: 13px">Add entries <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">⌘K</span></a>
-<a href="Diff.dc.html" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #4f8fa3; border-radius: 8px; color: #141311; font-weight: 600; font-size: 13px">Review changes</a>
 </header>
 
 <sc-if value="{{hasRows}}" hint-placeholder-val="{{true}}">
@@ -115,8 +115,8 @@ button{font-family:inherit}
 </div>
 </sc-if>
 <sc-if value="{{showProjectMenu}}" hint-placeholder-val="{{false}}">
-<div role="menu" aria-label="Project options" style="position: absolute; top: 54px; right: 290px; width: 230px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; padding: 6px">
-<button role="menuitem" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 0; border-radius: 8px; background: #2a2825; color: #faf9f5; font-size: 13px; text-align: left; cursor: pointer">Rename <span style="font-size: 12px; color: #a09d96">double-click title</span></button>
+<div role="menu" aria-label="Project options" style="position: absolute; top: 56px; right: 16px; width: 230px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; padding: 6px">
+<button role="menuitem" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 0; border-radius: 8px; background: #2a2825; color: #faf9f5; font-size: 13px; text-align: left; cursor: pointer">Rename <span style="font-size: 12px; color: #a09d96">click the title</span></button>
 <div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
 <button role="menuitem" style="display: flex; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #ee9a90; font-size: 13px; text-align: left">Delete project…</button>
 </div>
@@ -171,7 +171,7 @@ class Component extends DCLogic {
     if (variant === 'one') data = data.slice(0, 1);
     if (variant === 'empty') data = [];
     if (variant === 'sel') data = [
-      { repo: 'web-app', branch: 'sidebar-virtualization', base: 'main', ahead: '↑11', files: '23', dirty: 0 },
+      { repo: 'web-app', branch: 'feature/PROJ-4821-add-retry-with-exponential-backoff-to-the-api-client', base: 'main', ahead: '↑11', files: '23', dirty: 0 },
       { repo: 'api-server', branch: 'rate-limit-middleware', base: 'main', ahead: '↑3', files: '5', dirty: 7 },
       { repo: 'api-server', branch: 'migrate-pg-pool', base: 'feat/db-v2', ahead: '↑6', files: '12', dirty: 0 }
     ];
@@ -179,7 +179,7 @@ class Component extends DCLogic {
     var rename = fresh ? 'edit' : (this.props.rename ?? 'none');
     var conflict = rename === 'conflict';
     var projectMenu = !!this.props.projectMenu;
-    var ring = conflict ? '#ee9a90; box-shadow: 0 0 0 3px rgba(198,69,69,0.25)' : '#4f8fa3; box-shadow: 0 0 0 3px rgba(79,143,163,0.25)';
+    var ring = conflict ? '#ee9a90' : '#4f8fa3';
     // Real app icons (from macOS), drawn grayscale; the placeholders stand in for them.
     var apps = function (off) {
       var tones = ['#b8b4ac, #6e6a62', '#3b3934, #1d1c19', '#8f8b83, #4a4843', '#5c5a55, #2b2925'];
@@ -197,7 +197,9 @@ class Component extends DCLogic {
       notRenaming: rename === 'none',
       draftName: fresh ? 'Untitled project' : conflict ? 'Rate limiting rollout' : 'Session token refresh',
       activeProject: fresh ? 'Untitled project' : 'Session auth refresh',
-      renameInputStyle: 'width: 340px; height: 34px; margin: -3px 0 -1px -9px; padding: 0 8px; background: #1a1917; border-radius: 8px; outline: none; color: #faf9f5; font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; border: 1px solid ' + ring,
+      // The title's own box (EditableTitle): same 30px, 6px padding and 1px border as the title, so the
+      // name does not move; editing only turns the border accent (danger on a conflict), no glow.
+      renameInputStyle: 'display: block; box-sizing: border-box; width: 340px; height: 30px; margin: 0 0 0 -7px; padding: 0 6px; background: #1a1917; border-radius: 8px; outline: none; box-shadow: none; color: #faf9f5; font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; border: 1px solid ' + ring,
       subtitleStyle: 'font-size: 12px; ' + (conflict ? 'color: #ee9a90' : 'color: #a09d96'),
       showProjectMenu: projectMenu,
       showDelete: !!this.props.confirmDelete,

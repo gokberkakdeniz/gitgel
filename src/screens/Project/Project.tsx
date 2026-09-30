@@ -2,7 +2,7 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
-import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
+import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon, SearchIcon } from '../../components/icons';
 import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { OpenItems } from '../../components/OpenItems';
@@ -30,6 +30,8 @@ import { useData } from '../../state/data';
 import { selectCanBack, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { draftRows } from './draftRows';
+import editable from '../../components/EditableTitle.module.css';
+import { Input } from '../../components/Input';
 import styles from './Project.module.css';
 
 export function Project({ projectId }: { projectId: string }) {
@@ -120,6 +122,12 @@ function SavedProject({ id }: { id: string }) {
         onRenameCancel={() => setRenaming(false)}
       >
         <RefreshButton />
+        <Button kbd="⌘K" className={styles.addButton} onClick={openPalette}>
+          Add entries
+        </Button>
+        <Button variant="primary" title="Review changes (⌘R)" disabled={project.entries.length === 0} onClick={review}>
+          Review changes
+        </Button>
         <button
           type="button"
           aria-label="Project options"
@@ -129,12 +137,6 @@ function SavedProject({ id }: { id: string }) {
         >
           <MoreIcon />
         </button>
-        <Button kbd="⌘K" className={styles.addButton} onClick={openPalette}>
-          Add entries
-        </Button>
-        <Button variant="primary" title="Review changes (⌘R)" disabled={project.entries.length === 0} onClick={review}>
-          Review changes
-        </Button>
       </ProjectHeader>
 
       {project.entries.length === 0 ? (
@@ -254,6 +256,8 @@ function ProjectHeader(props: HeaderProps) {
   const [value, setValue] = useState(title);
   const [saving, setSaving] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  // The title box's width when rename started, so the input keeps it.
+  const titleWidth = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (renaming) {
@@ -295,7 +299,10 @@ function ProjectHeader(props: HeaderProps) {
     <input
       ref={input}
       aria-label="Project name"
-      className={conflict ? `${styles.renameInput} ${styles.renameConflict}` : styles.renameInput}
+      className={editable.input}
+      data-editable-title
+      aria-invalid={!!conflict}
+      style={{ width: titleWidth.current }}
       value={value}
       spellCheck={false}
       onChange={(e) => {
@@ -314,8 +321,16 @@ function ProjectHeader(props: HeaderProps) {
       }}
     />
   ) : (
-    <span className={styles.title} onDoubleClick={props.onRenameStart}>
-      {title}
+    <span
+      className={editable.title}
+      data-editable-title
+      title="Rename project"
+      onClick={(e) => {
+        titleWidth.current = e.currentTarget.offsetWidth;
+        props.onRenameStart?.();
+      }}
+    >
+      {props.title}
     </span>
   );
 
@@ -645,15 +660,18 @@ function BranchPicker({
     <Popover anchorRect={anchorRect} width={300} alignRight onClose={onClose}>
       <div role="listbox" aria-label={`Point ${entry.branch} to another branch`} className={styles.picker}>
         <div className={styles.pickerFilterRow}>
-          <input
+          <Input
             autoFocus
-            aria-label="Filter branches"
-            placeholder="Filter branches"
+            leftIcon={<SearchIcon size={13} />}
+            mono
+            clearable
+            size={32}
+            aria-label="Search branches"
+            placeholder="Search"
             className={styles.pickerFilter}
             value={query}
-            spellCheck={false}
-            onChange={(e) => {
-              setQuery(e.target.value);
+            onChange={(q) => {
+              setQuery(q);
               setActive(0);
             }}
             onKeyDown={(e) => {

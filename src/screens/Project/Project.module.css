@@ -1,32 +1,5 @@
 /* Header */
 
-.title {
-  cursor: default;
-}
-
-.renameInput {
-  width: 340px;
-  max-width: 100%;
-  height: 34px;
-  margin: -3px 0 -1px -9px;
-  padding: 0 8px;
-  background: var(--bg-sunken);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-control);
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25);
-  outline: none;
-  color: var(--text-strong);
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 400;
-  letter-spacing: -0.3px;
-}
-
-.renameConflict {
-  border-color: var(--danger-text);
-  box-shadow: 0 0 0 3px rgba(var(--danger-rgb), 0.25);
-}
-
 .danger {
   color: var(--danger-text);
 }
@@ -311,20 +284,6 @@
 
 .pickerFilter {
   flex-grow: 1;
-  min-width: 0;
-  height: 32px;
-  padding: 0 10px;
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  outline: none;
-  color: var(--text-strong);
-  font-size: 13px;
-}
-
-.pickerFilter:focus {
-  border-color: var(--accent);
-  box-shadow: var(--focus-ring);
 }
 
 .pickerList {

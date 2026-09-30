@@ -18,14 +18,22 @@
 /* Header */
 
 .header {
-  height: 56px;
+  height: 64px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 16px;
+  /* As on the other page headers (PageHeader): 64px, 28px left, 16px right (the space above the
+     32px controls), actions 10px apart. */
+  padding: 0 16px 0 28px;
   background: var(--bg-main);
   border-bottom: 1px solid var(--border);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* Same geometry as the sidebar's top row, so the buttons don't move when the sidebar hides. */
@@ -49,28 +57,31 @@
   color: var(--text-body);
 }
 
+/* Sidebar hidden: the traffic lights and the chrome buttons start the header. */
+.bare {
+  padding-left: 16px;
+}
+
 .titles {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
+}
+
+.bare .titles {
   margin-left: 4px;
 }
 
+/* Title and subtitle as on the other page headers (.page-title, PageHeader). */
 .title {
   font-family: var(--font-serif);
-  font-size: 18px;
-  letter-spacing: -0.2px;
+  font-size: 22px;
+  letter-spacing: -0.3px;
   color: var(--text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.titleInput {
-  width: 300px;
-  font-family: var(--font-serif);
-  font-size: 18px;
 }
 
 .subtitle {
@@ -763,78 +774,22 @@
   color: var(--text-faint);
 }
 
-/* File filter (flow D8). Sticky above the groups; its shadow covers the list's top padding. */
+/* File filter (flow D8): an Input, sticky above the groups. A shadow strip covers the list's top
+   padding while the list scrolls under it; it is listed after the focus ring so the ring stays
+   whole on every side. */
 .filter {
   position: sticky;
   top: 0;
   z-index: 1;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 30px;
   margin: 0 0 6px;
-  padding: 0 6px 0 10px;
-  box-sizing: border-box;
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
   box-shadow: 0 -8px 0 var(--bg-sidebar);
 }
 
-.filterOn {
-  border-color: var(--accent);
+.filter.filter:focus-within,
+.filter.filter:has(input:not(:placeholder-shown)) {
   box-shadow:
     0 0 0 2px rgba(var(--accent-rgb), 0.2),
     0 -8px 0 var(--bg-sidebar);
-}
-
-.filterIcon {
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
-.filterInput {
-  flex-grow: 1;
-  min-width: 0;
-  height: 100%;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text-strong);
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
-.filterInput:focus-visible {
-  box-shadow: none;
-}
-
-.filterInput::placeholder {
-  color: var(--text-muted);
-}
-
-.filterCount {
-  flex-shrink: 0;
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.filterClear {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: var(--bg-hover);
-  border: 0;
-  border-radius: var(--radius-pill);
-  color: var(--text-muted);
-  cursor: pointer;
 }
 
 .hit {

@@ -26,7 +26,7 @@ import { Menu, MenuItem } from '../Menu';
 import { Popover } from '../Popover';
 import { ProjectNameInput } from '../ProjectNameInput';
 import { ProjectMenu } from '../ProjectMenu';
-import { TextInput } from '../TextInput';
+import { Input } from '../Input';
 import styles from './Sidebar.module.css';
 
 export function Sidebar() {
@@ -159,13 +159,17 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
     <>
       <div className={styles.projectsHeader}>
         {filtering ? (
-          <TextInput
+          <Input
             ref={filterRef}
             autoFocus
+            leftIcon={<SearchIcon size={13} />}
+            clearable
+            size={28}
             className={styles.projectFilter}
-            placeholder="Filter projects"
+            placeholder="Search"
+            aria-label="Search projects"
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={setFilter}
             onKeyDown={(e) => e.key === 'Escape' && closeFilter()}
             onBlur={() => !filter && closeFilter()}
           />

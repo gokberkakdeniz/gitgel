@@ -6,7 +6,8 @@ import { useData } from '../../state/data';
 import { useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { Button } from '../Button';
-import { TextInput } from '../TextInput';
+import { SearchIcon } from '../icons';
+import { Input } from '../Input';
 import styles from './ProjectPicker.module.css';
 
 interface Props {
@@ -87,13 +88,16 @@ function PickView({
   return (
     <div role="dialog" aria-label="Add to project" className={styles.pick}>
       <div className={styles.filterRow}>
-        <TextInput
+        <Input
           autoFocus
-          aria-label="Filter projects"
-          placeholder="Filter projects"
+          leftIcon={<SearchIcon size={13} />}
+          clearable
+          size={32}
+          aria-label="Search projects"
+          placeholder="Search"
           className={styles.filter}
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={setFilter}
         />
       </div>
       {shown.length > 0 && (
@@ -153,12 +157,12 @@ function NewView({
       <div className={styles.formTitle}>New project</div>
       <label className={styles.field}>
         <span className={styles.fieldLabel}>Name</span>
-        <TextInput
+        <Input
           autoFocus
-          height={36}
+          size={36}
           invalid={!!conflict}
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={setName}
           onKeyDown={(e) => {
             if (e.key === 'Enter') void create();
           }}

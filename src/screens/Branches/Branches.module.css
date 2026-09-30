@@ -47,43 +47,10 @@
   color: var(--text-muted);
 }
 
-/* Header filter */
+/* Header filter (an Input) */
 
 .filter {
-  width: 230px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px 0 12px;
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  color: var(--text-muted);
-  cursor: text;
-}
-
-.filter:focus-within {
-  border-color: var(--accent);
-  box-shadow: var(--focus-ring);
-}
-
-.filterInput {
-  flex-grow: 1;
-  min-width: 0;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text-strong);
-}
-
-.filterInput::placeholder {
-  color: var(--text-muted);
-}
-
-.filterInput:focus-visible {
-  box-shadow: none;
+  width: 200px;
 }
 
 /* Table */
@@ -97,13 +64,19 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr) 120px 150px 112px 44px 32px;
-  column-gap: 12px;
+  grid-template-columns: 16px minmax(0, 1fr) 104px 24px;
+  column-gap: 8px;
   align-items: center;
-  padding: 10px 28px;
+  padding: 10px 16px 10px 28px;
+}
+
+.columns > :nth-child(3) {
+  justify-self: end;
 }
 
 .columns {
+  /* The list below always keeps a 10px scrollbar gutter; the headers skip it too. */
+  padding-right: 26px;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -116,6 +89,7 @@
   flex-grow: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -131,7 +105,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 28px;
+  padding: 10px 16px 10px 28px;
   background: var(--bg-band);
   border-top: 1px solid var(--border-strong);
   border-bottom: 1px solid var(--border);
@@ -160,11 +134,15 @@
 }
 
 .count {
+  /* Ends where the Projects column does: past the 24px ⋮ column and its 8px gap. */
+  margin-right: 32px;
   font-size: 12px;
   color: var(--text-muted);
 }
 
 .pillButton {
+  flex-shrink: 0;
+  display: flex;
   padding: 0;
   background: none;
   border: 0;
@@ -189,7 +167,9 @@
 }
 
 .branchName {
+  display: flex;
   max-width: 100%;
+  min-width: 0;
   padding: 0;
   background: none;
   border: 0;
@@ -199,7 +179,6 @@
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   cursor: pointer;
 }
 
@@ -207,76 +186,89 @@
   color: var(--accent-hover);
 }
 
-/* The name, after a 14px slot that holds the checked-out folder icon (empty otherwise). */
-.branchLine {
+/* Middle ellipsis: the head shrinks with "…", the tail always shows. */
+.nameHead {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nameTail {
+  flex-shrink: 0;
+}
+
+/* Line 2: base · diff · age, then the state pill. Lines 2 and 3 have a fixed height so every
+   row is the same height, with or without a pill or a worktree. */
+.subLine {
+  height: 15px;
   display: flex;
   align-items: center;
   gap: 6px;
   max-width: 100%;
   min-width: 0;
-}
-
-.wtSlot {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wtIcon {
-  color: var(--accent-text);
-}
-
-.sub {
-  max-width: 100%;
-  padding-left: 20px;
-  box-sizing: border-box;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+.subLine > * {
+  flex-shrink: 0;
+}
+
+.subLine > .base {
+  flex-shrink: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.mono {
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
-.age {
-  color: var(--text-muted);
+.sep {
+  color: var(--text-faint);
 }
 
 .dirty {
-  font-size: 12px;
   font-weight: 500;
   color: var(--accent-text);
 }
 
-/* Diff: ahead, files, uncommitted in one cell. */
-.afu {
-  white-space: nowrap;
-}
-
-.afuSep {
-  color: var(--text-faint);
-}
-
-.faint {
-  font-size: 12px;
-  color: var(--text-faint);
-}
-
-.pill {
-  justify-self: start;
-  /* A long base ("merged into origin/release/…") ends in an ellipsis inside its column. */
+/* Line 3: where the branch is checked out. */
+.wtLine {
+  height: 15px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   max-width: 100%;
-  box-sizing: border-box;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.wtIcon {
+  flex-shrink: 0;
+  color: var(--accent-text);
+}
+
+/* Not checked out: the same line, faint. */
+.wtNone,
+.wtNone .wtIcon {
+  color: var(--text-faint);
+}
+
+.wtPath {
+  min-width: 0;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* State pills, compact so they sit in the mono sub line. */
+.pill {
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  padding: 0 7px;
+  box-sizing: border-box;
 }
 
 /* Checkboxes only on the hovered row, or on all rows while selecting (flow H). */
@@ -303,8 +295,8 @@
 /* Row menu (⋯): hidden with opacity, so Tab still reaches it */
 
 .rowMenu {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -334,7 +326,7 @@
 /* Projects column (flow I) */
 
 .projects {
-  justify-self: start;
+  justify-self: end;
   height: 26px;
   display: flex;
   align-items: center;

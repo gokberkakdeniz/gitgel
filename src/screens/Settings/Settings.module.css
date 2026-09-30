@@ -151,26 +151,8 @@
   color: var(--text-muted);
 }
 
-.input {
-  height: 36px;
-  flex-shrink: 0;
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  outline: none;
-  color: var(--text-strong);
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
-.input:focus {
-  border-color: var(--accent);
-  box-shadow: var(--focus-ring);
-}
-
 .orderInput {
   width: 230px;
-  padding: 0 12px;
 }
 
 .days {
@@ -181,7 +163,9 @@
 
 .daysInput {
   width: 60px;
-  padding: 0 10px;
+}
+
+.daysInput input {
   text-align: right;
 }
 
@@ -410,8 +394,6 @@
 
 .terminalCommand {
   width: 100%;
-  box-sizing: border-box;
-  padding: 0 12px;
 }
 
 .srOnly {

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
-import { BranchLargeIcon, ChevronDownIcon, CloseIcon, CopyIcon, FolderIcon, MoreIcon } from '../../components/icons';
+import { BranchLargeIcon, ChevronDownIcon, CloseIcon, CopyIcon, FolderIcon, MoreVerticalIcon, WorktreeIcon } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { OpenItems } from '../../components/OpenItems';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
@@ -24,7 +24,7 @@ import { selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import styles from './Branches.module.css';
 import { FilterField } from './FilterField';
-import { afu, branchGroups, projectsOf, scopeCounts, type BranchScope, type RepoGroup } from './rows';
+import { afu, branchGroups, middleCut, projectsOf, scopeCounts, type BranchScope, type RepoGroup } from './rows';
 
 export function Branches() {
   const config = useData((s) => s.config);
@@ -70,7 +70,8 @@ type RowPopover =
   | { kind: 'projects'; key: string; rect: DOMRect }
   | { kind: 'picker'; key: string; rect: DOMRect }
   | { kind: 'base'; key: string; rect: DOMRect }
-  | { kind: 'menu'; key: string; rect: DOMRect };
+  // `atPointer`: opened by right-clicking the row, so it opens at the pointer.
+  | { kind: 'menu'; key: string; rect: DOMRect; atPointer?: boolean };
 
 function BranchList() {
   const config = useData((s) => s.config)!;
@@ -231,10 +232,7 @@ function BranchList() {
         <div className={`${styles.grid} ${styles.columns}`}>
           <span />
           <span>Branch</span>
-          <span title="Ahead / Files / Uncommitted">Diff</span>
-          <span>State</span>
           <span>Projects</span>
-          <span>Age</span>
           <span />
         </div>
         {body}
@@ -266,7 +264,7 @@ function BranchList() {
         </Popover>
       )}
       {popover?.kind === 'menu' && popoverEntry && (
-        <Popover anchorRect={popover.rect} width={260} alignRight onClose={() => setPopover(null)}>
+        <Popover anchorRect={popover.rect} width={260} alignRight={!popover.atPointer} onClose={() => setPopover(null)}>
           <RowMenu entry={popoverEntry} onClose={() => setPopover(null)} />
         </Popover>
       )}
@@ -371,7 +369,7 @@ function RepoSection({
           selected={selectedKeys.includes(e.key)}
           justAdded={justAdded.includes(e.key)}
           popover={popover?.key === e.key ? popover.kind : null}
-          onPopover={(kind, rect) => onPopover({ kind, key: e.key, rect })}
+          onPopover={(kind, rect, atPointer) => onPopover({ kind, key: e.key, rect, atPointer })}
         />
       ))}
     </section>
@@ -391,14 +389,12 @@ function Row({
   selected: boolean;
   justAdded: boolean;
   popover: RowPopover['kind'] | null;
-  onPopover: (kind: RowPopover['kind'], rect: DOMRect) => void;
+  onPopover: (kind: RowPopover['kind'], rect: DOMRect, atPointer?: boolean) => void;
 }) {
   const push = useNav((s) => s.push);
-  // A checked-out branch is marked by the folder icon; only a detached HEAD, named by its SHA,
-  // keeps the path in the sub line.
   const wt = e.worktreePath ? tildifyHome(e.worktreePath) : null;
-  const sub = [e.base && `base ${e.base}`, e.branch === null && wt].filter(Boolean).join(' · ');
   const counts = afu(e);
+  const [head, tail] = middleCut(e.branch ?? e.shortSha ?? '');
   const open = () =>
     push({
       name: 'review',
@@ -423,32 +419,48 @@ function Row({
     .join(' ');
 
   return (
-    <div className={cls}>
+    <div
+      className={cls}
+      onContextMenu={(ev) => {
+        ev.preventDefault();
+        onPopover('menu', new DOMRect(ev.clientX, ev.clientY, 0, 0), true);
+      }}
+    >
       <Checkbox aria-label={`Select ${e.branch ?? e.shortSha}`} className={styles.check} checked={selected} onChange={toggle} />
       <div className={styles.branchCell}>
-        <span className={styles.branchLine}>
-          <span
-            className={styles.wtSlot}
-            role={wt ? 'img' : undefined}
-            aria-label={wt ? `Checked out in ${wt}` : undefined}
-            title={wt ? `Checked out in ${wt}` : undefined}
-          >
-            {wt && <FolderIcon size={13} className={styles.wtIcon} />}
+        <button type="button" className={styles.branchName} onClick={open} title={e.branch ?? e.headSha ?? ''}>
+          <span className={styles.nameHead}>{head}</span>
+          {tail && <span className={styles.nameTail}>{tail}</span>}
+        </button>
+        <span className={styles.subLine}>
+          {e.base && <span className={styles.base}>base {e.base}</span>}
+          {e.base && <span className={styles.sep}>·</span>}
+          <span title={counts.title}>
+            {counts.a}
+            <span className={styles.sep}> / </span>
+            {counts.f}
+            <span className={styles.sep}> / </span>
+            <span className={e.uncommitted ? styles.dirty : styles.sep}>{counts.u}</span>
           </span>
-          <button type="button" className={styles.branchName} onClick={open} title={e.branch ?? e.headSha ?? ''}>
-            {e.branch ?? e.shortSha}
-          </button>
+          <span className={styles.sep}>·</span>
+          <span title={e.changedAt ? 'Last change to uncommitted files' : undefined}>
+            {e.changedAt ? formatAge(e.changedAt) : e.lastCommitAt ? formatAge(e.lastCommitAt) : '—'}
+          </span>
+          <StateCell entry={e} onBase={(rect) => onPopover('base', rect)} />
         </span>
-        {sub && <span className={styles.sub}>{sub}</span>}
+        {/* Line 3 is always there, so every row has the same height. */}
+        {wt ? (
+          <span className={styles.wtLine} title={`Checked out in ${wt}`}>
+            <WorktreeIcon size={12} className={styles.wtIcon} />
+            <span className={styles.wtPath}>{wt}</span>
+          </span>
+        ) : (
+          <span className={`${styles.wtLine} ${styles.wtNone}`} title="The branch is not checked out anywhere.">
+            <WorktreeIcon size={12} className={styles.wtIcon} />
+            <span className={styles.wtPath}>—</span>
+          </span>
+        )}
       </div>
-      <span className={`${styles.mono} ${styles.afu}`} title={counts.title}>
-        {counts.a}
-        <span className={styles.afuSep}> / </span>
-        {counts.f}
-        <span className={styles.afuSep}> / </span>
-        <span className={e.uncommitted ? styles.dirty : styles.afuSep}>{counts.u}</span>
-      </span>
-      <StateCell entry={e} onBase={(rect) => onPopover('base', rect)} />
       <button
         type="button"
         aria-haspopup="menu"
@@ -468,9 +480,6 @@ function Row({
           </>
         )}
       </button>
-      <span className={`${styles.mono} ${styles.age}`} title={e.changedAt ? 'Last change to uncommitted files' : undefined}>
-        {e.changedAt ? formatAge(e.changedAt) : e.lastCommitAt ? formatAge(e.lastCommitAt) : '—'}
-      </span>
       <button
         type="button"
         aria-label="Branch options"
@@ -478,7 +487,7 @@ function Row({
         className={popover === 'menu' ? `${styles.rowMenu} ${styles.rowMenuOpen}` : styles.rowMenu}
         onClick={(ev) => onPopover('menu', ev.currentTarget.getBoundingClientRect())}
       >
-        <MoreIcon size={14} />
+        <MoreVerticalIcon size={14} />
       </button>
     </div>
   );
@@ -559,30 +568,35 @@ function ProjectsMenu({
   );
 }
 
+/** The state pill, at the end of the sub line. */
 function StateCell({ entry: e, onBase }: { entry: EntrySummary; onBase: (rect: DOMRect) => void }) {
   switch (e.state) {
     case 'merged':
       return (
         <Pill tone="success" className={styles.pill} title={`merged into ${e.base}`}>
-          merged into {e.base}
+          merged
         </Pill>
       );
     case 'detached':
-      return <Pill tone="warning" className={styles.pill}>detached HEAD</Pill>;
+      return (
+        <Pill tone="warning" className={styles.pill}>
+          detached HEAD
+        </Pill>
+      );
     case 'base_missing':
       return (
         <button
           type="button"
-          className={`${styles.pillButton} ${styles.pill}`}
+          className={styles.pillButton}
           title={e.error ?? undefined}
           onClick={(ev) => onBase(ev.currentTarget.getBoundingClientRect())}
         >
-          <Pill tone="warning">base missing</Pill>
+          <Pill tone="warning" className={styles.pill}>base missing</Pill>
         </button>
       );
     case 'git_error':
       return <Pill tone="danger" className={styles.pill} title={e.error ?? undefined}>git error</Pill>;
     default:
-      return <span className={styles.faint}>—</span>;
+      return null;
   }
 }

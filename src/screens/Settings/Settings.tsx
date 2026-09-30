@@ -4,6 +4,7 @@ import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
 import { CloseIcon } from '../../components/icons';
 import { Modal } from '../../components/Modal';
+import { Input } from '../../components/Input';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { openAddRepos } from '../../lib/addRepos';
@@ -217,11 +218,12 @@ function Behaviour({ config }: { config: Config }) {
           <span className={styles.settingName}>Default base</span>
           <span className={styles.settingHint}>Tried in order when a branch has no base set</span>
         </span>
-        <input
-          className={`${styles.input} ${styles.orderInput}`}
+        <Input
+          mono
+          size={36}
+          className={styles.orderInput}
           value={order}
-          spellCheck={false}
-          onChange={(e) => setOrder(e.target.value)}
+          onChange={setOrder}
           onBlur={saveOrder}
           onKeyDown={onEnter(saveOrder)}
         />
@@ -232,11 +234,13 @@ function Behaviour({ config }: { config: Config }) {
           <span className={styles.settingHint}>Branches without a worktree are listed if committed within</span>
         </span>
         <span className={styles.days}>
-          <input
-            className={`${styles.input} ${styles.daysInput}`}
+          <Input
+            mono
+            size={36}
+            className={styles.daysInput}
             value={days}
             inputMode="numeric"
-            onChange={(e) => setDays(e.target.value)}
+            onChange={setDays}
             onBlur={saveDays}
             onKeyDown={onEnter(saveDays)}
           />
@@ -318,12 +322,13 @@ function TerminalSetting({ config }: { config: Config }) {
       {terminal === 'other' && (
         <label className={styles.terminalOther}>
           <span className={styles.srOnly}>Terminal command</span>
-          <input
-            className={`${styles.input} ${styles.terminalCommand}`}
+          <Input
+            mono
+            size={36}
+            className={styles.terminalCommand}
             placeholder="wezterm start --cwd %"
             value={command}
-            spellCheck={false}
-            onChange={(e) => setCommand(e.target.value)}
+            onChange={setCommand}
             onBlur={saveCommand}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {

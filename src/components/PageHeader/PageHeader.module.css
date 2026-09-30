@@ -4,7 +4,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 28px;
+  /* Right: 16px, the same as the space above the 32px controls in the 64px header. */
+  padding: 0 16px 0 28px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -47,8 +48,8 @@
   text-overflow: ellipsis;
 }
 
-/* An inline editor (project rename) needs room for its focus ring. */
-.titles h1:has(> input) {
+/* An editable title (EditableTitle.module.css) draws its box 7px to the left of the text. */
+.titles h1:has(> [data-editable-title]) {
   overflow: visible;
 }
 

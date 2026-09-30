@@ -94,10 +94,11 @@
   color: var(--text-muted);
 }
 
+/* An Input in place of the "Projects" label: as tall as the 28px icon buttons beside it, its
+   search icon where the label's text was. */
 .projectFilter {
   flex-grow: 1;
-  margin-left: -8px;
-  margin-right: 6px;
+  margin: 0 6px 0 -10px;
 }
 
 .projectsActions {
@@ -273,12 +274,27 @@
   border-color: var(--text-code);
 }
 
-.renameRow {
+/* Rename: the whole row is the field (accent outline); the input inside is bare. */
+.renameRow,
+.renameRow:hover {
   cursor: default;
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
-.renameInput {
+
+.renameRow:has([aria-invalid='true']) {
+  box-shadow: inset 0 0 0 1px var(--danger-text);
+}
+
+.renameRow .renameInput,
+.renameRow .renameInput:focus,
+.renameRow .renameInput:focus-visible {
   flex-grow: 1;
-  margin-left: -10px;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
   font-size: 14px;
 }
 

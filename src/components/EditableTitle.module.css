@@ -1,0 +1,50 @@
+/* A page title that renames in place (Project page, project Review). The title and its input
+   share one box (1px border, 6px padding, 30px), so the text does not move when editing starts:
+   the box shows on hover, and while editing only its border turns accent. */
+
+.title,
+.input.input,
+.input.input:focus,
+.input.input:focus-visible {
+  display: block;
+  box-sizing: border-box;
+  min-width: 340px;
+  max-width: 100%;
+  height: 30px;
+  margin: 0 0 0 -7px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  box-shadow: none;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  color: var(--text-strong);
+}
+
+.title {
+  width: fit-content;
+  line-height: 28px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+
+.title:hover {
+  background: var(--bg-sunken);
+  border-color: var(--border);
+}
+
+.input.input,
+.input.input:focus,
+.input.input:focus-visible {
+  background: var(--bg-sunken);
+  border-color: var(--accent);
+  outline: none;
+}
+
+.input.input[aria-invalid='true'] {
+  border-color: var(--danger-text);
+}

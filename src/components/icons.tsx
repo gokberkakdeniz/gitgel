@@ -119,6 +119,16 @@ export function FolderIcon({ size = 18, className }: IconProps) {
   );
 }
 
+/** A terminal (>_): where a branch is checked out (a worktree), apart from the repo's folder. */
+export function WorktreeIcon({ size = 14, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.8} className={className}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <path d="m8 10 2.5 2.5L8 15M13 15h3" />
+    </Svg>
+  );
+}
+
 export function FolderPlusIcon({ size = 18, className }: IconProps) {
   return (
     <Svg size={size} strokeWidth={1.7} className={className}>
@@ -212,6 +222,17 @@ export function MoreIcon({ size = 15, className }: IconProps) {
       <circle cx="5" cy="12" r="1.6" />
       <circle cx="12" cy="12" r="1.6" />
       <circle cx="19" cy="12" r="1.6" />
+    </svg>
+  );
+}
+
+/** Vertical ⋮, for the narrow row menu column on Branches. */
+export function MoreVerticalIcon({ size = 15, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <circle cx="12" cy="5" r="1.6" />
+      <circle cx="12" cy="12" r="1.6" />
+      <circle cx="12" cy="19" r="1.6" />
     </svg>
   );
 }

@@ -263,6 +263,19 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) In-app updates: sidebar "Update to <version>" row, Gitgel › Check for
   Updates…, Settings › Check for updates; `pnpm release` signs the update and publishes the
   tap's `gitgel/latest.json`; the cask gets `auto_updates true` — 2026-09-30
+- [x] (on request) Fixtures: web-app gets six 59–96 character branch names (two differing only
+  at the end, one checked out in `wt/session-cookie` with a modified file, one squash-merged)
+  — 2026-09-30
+- [x] (on request) Branches: only Branch and Projects columns; three-line branch cell (name cut
+  in the middle, `base · diff · age` + state pill, checked-out path or "—"), equal row heights,
+  24px ⋮ column, right-click opens the row menu — 2026-09-30
+- [x] (on request) `Input` component (leftIcon / rightIcon, sizes, mono, invalid, clearable) for
+  every text field, placeholder "Search" on search fields; replaces `TextInput` — 2026-09-30
+- [x] (on request) Page headers: one height (64px), padding and action order; Review drops its
+  Back while the sidebar is shown; project titles rename in place on click without moving
+  — 2026-09-30
+- [x] (on request) Dev builds rebuild when package.json's version changes (no false update
+  offer) — 2026-09-30
 
 ---
 

@@ -155,7 +155,7 @@ gitgel/
 │  ├─ lib/      types.ts  ipc.ts  events.ts  useInvoke.ts  format.ts  paths.ts  entryKey.ts
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts
 │  ├─ state/    nav.ts  ui.ts  data.ts
-│  ├─ components/                 # Button, IconButton, Pill, Checkbox, TextInput, Kbd, Popover,
+│  ├─ components/                 # Button, IconButton, Pill, Checkbox, Input, Kbd, Popover,
 │  │                              # Menu, Modal, Toast, Segmented, KindBadge, Banner, icons.tsx,
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
@@ -322,7 +322,10 @@ italic, everything else `#2b2925`.
 
 - Radius: 8 buttons, inputs, rows · 10 segmented control · 12 popovers, menus, cards · 16 modals
   and palette · 9999 pills.
-- Sidebar 260px. Page header 64px (Review header 56px).
+- Sidebar 260px. Page headers (Branches, Project, Review, Settings) 64px: title serif 22px + 12px
+  muted subtitle (2px apart), 28px left and 16px right padding (the space above the 32px
+  controls), actions 10px apart in one order: refresh first, the screen's own controls in the
+  middle, edit (pencil or ⋯) last.
 - Buttons 32px (modal 36px, empty-state primary 40px). Sidebar rows 40px. Review file rows 30px.
 - Popover shadow `0 16px 40px rgba(0,0,0,0.45)`; modal shadow `0 24px 60px rgba(0,0,0,0.5)`;
   modal scrim `rgba(0,0,0,0.5)`.
@@ -336,8 +339,13 @@ italic, everything else `#2b2925`.
   `kbd` hint on the right in mono 11px.
 - `Pill`: `success | warning | danger | neutral`, 11px/500, padding 3px 10px. Neutral: `#d8d4cc`
   on `#302e2a`.
-- `TextInput`: `bg.sunken`, 1px border, focus ring; `invalid` turns the ring danger
-  (`#ee9a90` + `rgba(198,69,69,0.25)`).
+- `Input`: every text field (filters, Settings, New project name). `bg.sunken`, 1px border,
+  radius 8, `size` 28 / 30 (default) / 32 / 36; focused: accent border + 2px `rgba(accent,0.2)`
+  ring; `invalid`: the same in danger. `leftIcon` / `rightIcon` slots (muted, 11px: a 13px search
+  icon, a `⌘K` hint, a match count); `mono` for branches, files, paths and commands;
+  `clearable` (filters): while it has text it keeps the accent border and ends with an 18px round
+  ✕, and Esc clears it before anything else. In-place editors (page titles, the sidebar rename)
+  are not `Input`s.
 - `Popover`: positioned under an anchor rect, kept inside the viewport, `bg.elevated`, radius 12,
   popover shadow; outside click and Esc close it.
 - `Menu`: padding 6, items 8px 10px, radius 8, active item `bg.hover`; `danger`, `hint`, `sub`
@@ -356,7 +364,7 @@ italic, everything else `#2b2925`.
 1280 × 800 (min 1100 × 680), overlay title bar with hidden title; the native traffic lights sit
 top-left (≈70px kept free). Title rows (sidebar top row, page headers) carry
 `data-tauri-drag-region` on the element itself, never on buttons or inputs, and not on the
-Project title (double-click renames it). The default webview context menu is disabled except in
+Project title (a click renames it). The default webview context menu is disabled except in
 inputs, textareas and the diff.
 
 ---
@@ -373,7 +381,7 @@ inputs, textareas and the diff.
   **New project** (24px round `#302e2a` "+"; starts flow C) and **Branches** (branch icon, mono
   12px count of all active branches on the right).
 - **Projects** label (14px `text.muted`) with two icon buttons:
-  - Search turns the label row into a 32px "Filter projects" input (name contains; Esc closes).
+  - Search turns the label row into a 32px "Search" input (name contains; Esc closes).
   - Sort/filter opens a menu: "Sort by name" / "Sort by date created" (default: creation order),
     remembered in `localStorage` (`gitgel.projectSort`).
 - **Project list:** 40px rows, 7px hollow circle (1.5px border; `#e0ddd6` when active, else
@@ -381,8 +389,9 @@ inputs, textareas and the diff.
   sidebar kept shown, Back aria-label "Back"), or its page while it has no entries; the review's
   pencil opens the page. The active one (on its page or its project review) gets
   `bg.sidebarActive`. Right-click opens the project menu (Rename / Delete project…); Rename or a
-  double-click turns the row into a 32px input in place (name selected, no navigation): ↵ saves, Esc or leaving the
-  field cancels, a name conflict turns it danger with the message as its tooltip. A draft
+  double-click turns the whole row into the field in place (`bg.sunken`, inset 1px accent
+  outline, the name where it was and selected, no navigation): ↵ saves, Esc or leaving the field
+  cancels, a name conflict turns the outline danger with the message as its tooltip. A draft
   project (flow C) shows as an active row at the end.
 - **Update row** (only while a newer version is known, above the footer): 36px button, margin
   8px 10px 10px, radius 10, `rgba(accent, 0.12)` with a 1px `rgba(accent, 0.3)` border,
@@ -409,35 +418,46 @@ Every active branch, whether or not it is in a project.
     N repos · …` (N = visible repos). Counts ignore the text filter. The choice is remembered in
     `localStorage` (`gitgel.branches.scope`). If nothing is left: centred serif 22px "Every active
     branch is in a project". The sidebar count always shows all active branches.
-  - Filter field: 230 × 32px, `bg.sunken`, search icon, placeholder "Filter branch or worktree",
+  - Filter field: 200 × 32px, `bg.sunken`, search icon, placeholder "Search",
     `Kbd` "⌘K" (⌘K focuses it). It is a real filter, word-based: `-`, `/`, `_`, `.` count as
     spaces, and every typed word must appear in the branch name or SHA, the worktree path or the
     repo name, in any order, case-insensitive ("to be" finds `to-be-deleted`, "feat queue" finds
     `feat/job-queue`). Esc clears it.
-- **Columns:** grid `16px minmax(0,1fr) 120px 150px 112px 44px 32px`, column-gap 12,
-  padding 10px 28px, section-label style: [checkbox] Branch · "Diff" (tooltip "Ahead / Files
-  / Uncommitted") · State · Projects · Age · [⋯].
+- **Columns:** grid `16px minmax(0,1fr) 104px 24px`, column-gap 8, padding 10px 16px 10px 28px
+  (the list keeps a 10px scrollbar gutter; the header row adds it to its right padding so the
+  headings line up), section-label style: [checkbox] Branch · Projects (right-aligned) · [⋮].
+  The branch name gets all the room the other columns leave.
 - **Repo band** per repo: `bg.band`, top border `border.strong`, bottom border `border`, padding
-  10px 28px; folder icon in accent, 15px/600 repo name, mono 11px muted path, "N branches" on the
-  right; 14px between bands. Repos with no rows are hidden, except when focused from a repo link
+  10px 16px 10px 28px; folder icon in accent, 15px/600 repo name, mono 11px muted path,
+  "N branches" on the right, ending where the Projects column does (32px in); 14px between
+  bands. Repos with no rows are hidden, except when focused from a repo link
   (then "0 branches"). A missing repo shows a danger pill "path not found" (→ Settings); a repo
   git2 cannot open shows a danger "git error" pill.
 - **Row** (same grid, bottom border `border.row`):
   - Checkbox: visible only on the hovered row; once anything is selected, all are visible.
-  - Branch: a 14px slot, gap 6, then the mono 13 `text.strong` name (short SHA for a detached
-    HEAD). A branch checked out in a worktree shows a 13px folder icon (the repo band's,
-    `accent.text`) in the slot, tooltip `Checked out in <~path>`; otherwise the slot is empty, so
-    names line up. Under it, indented 20px, mono 11 muted `base <base>` (a detached HEAD adds
-    ` · <~path>`). Only the name is a link (opens single-branch review).
-  - **Diff** (mono 12, no wrap): ahead · files · uncommitted as `↑4 / 9 / 3`, the ` / `
-    separators `text.faint`. Ahead carries ` ↓N` when the base has N commits the branch does not
-    (it needs a rebase): `↑4 ↓2 / 9 / 3`. Uncommitted is 500 `accent.text` when above 0, faint
-    otherwise, and "—" when the branch is not checked out; ahead or files unknown show "—".
-    Tooltip: `4 ahead · 2 behind · 9 files · 3 uncommitted` (no "behind" part at 0; `· not
-    checked out` instead of the uncommitted part).
-  - State pills: "merged into <base>" (success), "detached HEAD" (warning), "base missing"
-    (warning, opens the base menu), "git error" (danger, tooltip = error); otherwise faint "—".
-  - **Projects cell** (26px, radius 8, padding 0 9px, 12px):
+  - **Branch** cell, three lines (gap 3), so every row has the same height:
+    1. The mono 13 `text.strong` name (short SHA for a detached HEAD), the only link (opens
+       single-branch review; tooltip the full name). Too long for the cell, it is cut in the
+       middle: the start shrinks with "…" and the end (at most the last 16 characters, from after
+       a `-`, `/`, `_` or `.`) always shows, so names that differ only at the end stay apart.
+    2. A 15px mono 11 muted line: `base <base> · <diff> · <age>` (faint `·`; only the base is cut
+       with "…" when the line runs out of room), then the state pill.
+       - Diff: ahead · files · uncommitted as `↑4 / 9 / 3`, the ` / ` separators `text.faint`.
+         Ahead carries ` ↓N` when the base has N commits the branch does not (it needs a
+         rebase): `↑4 ↓2 / 9 / 3`. Uncommitted is 500 `accent.text` when above 0, faint
+         otherwise, and "—" when the branch is not checked out; ahead or files unknown show "—".
+         Tooltip: `4 ahead · 2 behind · 9 files · 3 uncommitted` (no "behind" part at 0; `· not
+         checked out` instead of the uncommitted part).
+       - Age: the tip commit's age, or, when the branch has uncommitted changes (staged,
+         unstaged or untracked) edited after it, the newest modification time of those files
+         (tooltip "Last change to uncommitted files").
+       - State pill (compact: 11px/500 UI font, padding 0 7px): "merged" (success, tooltip
+         `merged into <base>`), "detached HEAD" (warning), "base missing" (warning, opens the base
+         menu), "git error" (danger, tooltip = error); nothing otherwise.
+    3. A 15px mono 11 line: a 12px terminal icon (`accent.text`) and the `~` path where the
+       branch is checked out (tooltip `Checked out in <~path>`), or, not checked out, the same
+       icon and a "—" in `text.faint` (tooltip "The branch is not checked out anywhere.").
+  - **Projects cell** (26px, radius 8, padding 0 9px, 12px, right-aligned in its column):
     - In no project: faint "—". On the hovered or focused row it becomes an outlined "+ Add" in
       `accent.text`, which opens the project picker (flow B) under the cell, right-aligned.
       While the picker is open the cell is accent-filled and the row `bg.elevated`.
@@ -449,12 +469,10 @@ Every active branch, whether or not it is in a project.
       work.
     - Right after an add the cell shows the new count with an accent outline and
       `rgba(79,143,163,0.12)` fill for ~2 s. In "Not in a project" the row leaves the list.
-  - Age: mono 12 muted; the tip commit's age, or, when the branch has uncommitted changes
-    (staged, unstaged or untracked) edited after it, the newest modification time of those
-    files (tooltip "Last change to uncommitted files").
-  - **Row menu**: a 30px "⋯" button (`aria-label` "Branch options"), shown on
+  - **Row menu**: a 24px vertical "⋮" button (`aria-label` "Branch options"), shown on
     the hovered or focused row and while its menu is open (then `bg.pressed`, row
-    `bg.elevated`). It opens a 260px menu, right-aligned under the button: "Copy branch name"
+    `bg.elevated`). It opens a 260px menu, right-aligned under the button (right-clicking
+    anywhere on the row opens it at the pointer): "Copy branch name"
     (hidden for a detached HEAD), then the open items as in the Project entry menu (with a divider
     between the two groups); icons as there. ↑/↓/↵/Esc work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
@@ -469,7 +487,7 @@ Every active branch, whether or not it is in a project.
 - **Selection bar** (flow H), bottom centre when 1+ rows are selected: "N branches selected"
   (13px/500) + 12px muted "across M repos", divider, secondary "Add to project ▾" (the project
   picker, opening above the bar), primary "New project", ✕ clears.
-- **Project picker** (300px popover): "Filter projects" input, projects (name + 12px muted
+- **Project picker** (300px popover): "Search" input, projects (name + 12px muted
   "N entries"), and a `#2a2825` footer "+ New project…" in `accent.text`. "+ New project…"
   turns it in place into a 320px form: serif 18px "New project", "Name" input (focused), "First
   entry" + mono 11 `<repo> / <branch> · base <base>`, Cancel / primary "Create & add ↵". A name
@@ -496,25 +514,23 @@ Layout:
   opened from the sidebar's project list: then it stays shown. When the user shows it (the
   header's show-sidebar button or the sidebar toggle), Review sits next to it
   (`ReviewSidebar.dc.html`, board L2): the header drops the traffic-light space and the
-  show-sidebar button (both live in the sidebar's top row) and starts with Back at 16px padding;
-  the file list narrows to 280px; nothing else changes. **Header** (56px, `bg.main`,
-  drag region): traffic-light space, show-sidebar button, Back (aria-label "Back to Branches" /
-  "Back to project" / "Back"), serif 18px title + 12px muted subtitle (project scope: double-click renames the project in
-  place, a 300px serif 18px input that works like the sidebar's); right: segmented
-  **Committed / Uncommitted / All**, each with its file count summed over all groups, a refresh
-  button and, in project scope, a 32px pencil button "Edit project" that opens the project page
-  (going back to it when Review was opened from there).
+  show-sidebar button and Back / Forward (all live in the sidebar's top row) and starts with the
+  title at 28px, as the other page headers; the file list narrows to 280px; nothing else
+  changes. **Header** (a page header, `bg.main`, drag region): with the sidebar hidden,
+  traffic-light space, show-sidebar button, Back (aria-label "Back to Branches" / "Back to
+  project" / "Back") and Forward at 16px padding; the title + subtitle (project scope: the title
+  renames the project in place like the Project page's); right: a refresh button, segmented
+  **Committed / Uncommitted / All**, each with its file count summed over all groups, and, in
+  project scope, a 32px pencil button "Edit project" that opens the project page (going back to
+  it when Review was opened from there).
 - Default mode Committed; Uncommitted if there are no committed changes but some uncommitted.
   Switching mode resets the selection to that mode's first file. Groups with no files in the
   mode are hidden, except the one group of a branch review (its base button stays reachable).
 - **Left file list** (310px, `bg.sidebar`, padding 8, scrolls), one group per entry (two entries
   from the same repo are two groups):
-  - **File filter** (flow D8): a 30px field at the top of the list, above the
-    groups (margin-bottom 6, `bg.sunken`, 1px `border`, radius 8, padding 0 6px 0 10px): muted
-    13px search icon, mono 12 input with placeholder "Filter files", and on the right a muted
-    `Kbd` "⌘K" while empty, or `N files` (11px muted, `aria-live`) plus an 18px round ✕
-    (`bg.hover`, "Clear filter") while it has text; with text the field gets the accent border
-    and `0 0 0 2px` accent ring at 0.2. ⌘K focuses it (Review only; the Branches ⌘K is unchanged).
+  - **File filter** (flow D8): a clearable mono `Input` at the top of the list, above the
+    groups (margin-bottom 6, sticky): search icon, placeholder "Search", and on the right `Kbd`
+    "⌘K" while empty, or `N files` (`aria-live`) plus the ✕ while it has text. ⌘K focuses it (Review only; the Branches ⌘K is unchanged).
     - Matching: the text is split on spaces; a file matches when every term appears in its
       path (`dir/name`, case-insensitive; a rename's old path counts). It filters the files of
       the current mode (and of the picked commit, when an entry is scoped to one).
@@ -622,7 +638,7 @@ Layout:
   working trees are shown: `Working tree at <~path>` (branch) or
   `Uncommitted changes across N checked-out entries` (project).
 - **Base menu** (340px popover, from a group's base button, the Project table's Base button or a
-  "base missing" pill): "Filter branches, tags, SHAs" input; **Suggested** (mono 13 name +
+  "base missing" pill): "Search" input; **Suggested** (mono 13 name +
   `Contains N of the M commits shown`); **Default** (see "Default and remote rows" below);
   **Other branches**; **Remote branches**; **Tags** when the filter
   matches some; a "Use <shortSha>" row when the filter is a 7–40 hex SHA that resolves. Empty
@@ -666,10 +682,11 @@ Layout:
 
 ### Project (`Projects.dc.html`)
 
-- **Header** (64px): serif 22px title (double-click or F2 renames); subtitle
-  `N entries across M repos` / `1 entry · <repo>` / `Empty`; right: refresh, "⋯" (32px; open
-  `bg.pressed` + `#4a4741` border), secondary "Add entries ⌘K", primary "Review changes"
-  (disabled when empty; ⌘R).
+- **Header** (a page header): the title (a click or F2 renames; on hover it shows its field box,
+  `bg.sunken` with a 1px border, tooltip "Rename project"); subtitle
+  `N entries across M repos` / `1 entry · <repo>` / `Empty`; right: refresh, secondary "Add
+  entries ⌘K", primary "Review changes" (disabled when empty; ⌘R), "⋯" (32px; open `bg.pressed`
+  + `#4a4741` border).
 - **Table:** grid `104px minmax(0,1fr) 160px 56px 56px 116px 160px 32px`, padding 12px 28px, row
   border `border.row`: Repo · Branch · Base · Ahead · Files · Uncommitted · State · ⋯.
   - Repo: serif 15px; click goes to Branches and highlights that repo's band.
@@ -709,9 +726,10 @@ Layout:
   - Divider, danger "Remove from project".
 - **Project menu** (230px; also on the sidebar's right-click): "Rename" (hint "F2"), divider,
   danger "Delete project…".
-- **Rename:** the title becomes an in-place input (340 × 34px, serif 22px, `bg.sunken`, accent
-  ring, text selected); subtitle "↵ save · esc cancel". A name conflict (case-insensitive,
-  itself excluded) turns the ring and subtitle danger: `A project named "X" already exists`; ↵
+- **Rename:** the title becomes an in-place input in the title's own box (at least 340px wide,
+  30px, padding 0 6px, 1px border, serif 22px, `bg.sunken`), so the name does not move; only the
+  border turns accent, no ring; text selected; subtitle "↵ save · esc cancel". A name conflict
+  (case-insensitive, itself excluded) turns the border and subtitle danger: `A project named "X" already exists`; ↵
   then does nothing, as with an empty name. Esc or a click elsewhere cancels.
 - **Delete confirm** (440px modal): serif 22px `Delete "Name"?`, "The project and its N entries
   are removed from this app. Branches, worktrees and repositories are not touched." ("its 1
@@ -751,7 +769,7 @@ Layout:
 
 ### Settings (`Settings.dc.html`)
 
-- Header 64px, serif 22px "Settings". Two columns (gap 40, padding 28px 32px); the page scrolls.
+- A page header, serif 22px "Settings". Two columns (gap 40, padding 28px 32px); the page scrolls.
 - **Repositories:** serif 18px heading; card (`bg.sunken`, radius 12). Row: 500-weight name
   (96px), mono 12 muted path (ellipsis), a note (`base <defaultBase>`, "no base found", or a
   danger pill "path not found" + 28px "Locate…", or "git error"), ✕ remove. "+ Add repository…"

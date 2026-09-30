@@ -3,19 +3,22 @@ import { renameProject } from '../lib/ipc';
 import { nameConflict } from '../lib/projects';
 import type { ProjectConfig } from '../lib/types';
 import { useData } from '../state/data';
-import { TextInput } from './TextInput';
 
 /**
  * In-place rename of a project name (sidebar row, Review title): ↵ saves; Esc or leaving the field
- * cancels. A name conflict turns it danger, with the message as its tooltip.
+ * cancels. A name conflict sets `aria-invalid`, with the message as its tooltip. Not an `Input`:
+ * the host styles it (EditableTitle, the sidebar row) so the name does not move.
  */
 export function ProjectNameInput({
   project,
   className,
+  width,
   onDone,
 }: {
   project: ProjectConfig;
   className?: string;
+  /** Keeps the width of the title it replaces. */
+  width?: number;
   onDone: () => void;
 }) {
   const config = useData((s) => s.config);
@@ -42,12 +45,15 @@ export function ProjectNameInput({
   };
 
   return (
-    <TextInput
+    <input
       ref={input}
       autoFocus
       aria-label="Project name"
       className={className}
-      invalid={!!conflict}
+      style={width ? { width } : undefined}
+      spellCheck={false}
+      autoComplete="off"
+      aria-invalid={!!conflict}
       title={conflict ? `A project named “${conflict}” already exists` : '↵ save · esc cancel'}
       value={value}
       onChange={(e) => setValue(e.target.value)}

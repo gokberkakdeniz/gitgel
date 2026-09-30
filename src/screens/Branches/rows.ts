@@ -102,3 +102,16 @@ export function afu(e: EntrySummary): { a: string; f: string; u: string; title: 
   const title = `${ahead} · ${f} files · ${e.uncommitted === null ? 'not checked out' : `${u} uncommitted`}`;
   return { a, f, u, title };
 }
+
+/**
+ * A branch name split for a middle ellipsis: the head shrinks with "…" and the tail always shows,
+ * so `…-api-client` and `…-api-client-v2` stay apart. The tail is at most the last 16 characters,
+ * starting after a `-`, `/`, `_` or `.` when there is one; short names are not split.
+ */
+export function middleCut(name: string): [head: string, tail: string] {
+  if (name.length <= 24) return [name, ''];
+  const end = name.slice(-16);
+  const sep = end.search(/[-/_.]/);
+  const tail = sep >= 0 && sep < end.length - 1 ? end.slice(sep + 1) : end;
+  return [name.slice(0, name.length - tail.length), tail];
+}
