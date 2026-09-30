@@ -441,14 +441,16 @@ Every active branch, whether or not it is in a project.
       work.
     - Right after an add the cell shows the new count with an accent outline and
       `rgba(79,143,163,0.12)` fill for ~2 s. In "Not in a project" the row leaves the list.
-  - Age: mono 12 muted.
+  - Age: mono 12 muted; the tip commit's age, or, when the branch has uncommitted changes
+    (staged, unstaged or untracked) edited after it, the newest modification time of those
+    files (tooltip "Last change to uncommitted files").
   - **Row menu**: a 30px "⋯" button (`aria-label` "Branch options"), shown on
     the hovered or focused row and while its menu is open (then `bg.pressed`, row
     `bg.elevated`). It opens a 260px menu, right-aligned under the button: "Copy branch name"
     (hidden for a detached HEAD), then the open items as in the Project entry menu (with a divider
     between the two groups); icons as there. ↑/↓/↵/Esc work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
-- Repos sorted by their newest commit, rows newest first.
+- Repos sorted by their newest row, rows newest first (by the age shown).
 - While the first scan runs: muted "Scanning repositories…" (the list fills in repo by repo).
   With repos but no rows: serif 22px "No active branches" and "Branches checked out in a worktree
   or committed in the last D days show up here."
@@ -990,6 +992,7 @@ export interface EntrySummary {
   del: number | null;
   uncommitted: number | null;    // null if not checked out
   lastCommitAt: number | null;   // committer time of the tip, unix seconds
+  changedAt: number | null;      // newest uncommitted file mtime; only when newer than lastCommitAt
   state: EntryState;
   error: string | null;          // detail for git_error / base_missing
 }

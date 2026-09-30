@@ -66,7 +66,7 @@ export function branchGroups(
       groups.push({ scan, rows });
     }
   }
-  const newest = (g: RepoGroup) => Math.max(0, ...g.rows.map((r) => r.lastCommitAt ?? 0));
+  const newest = (g: RepoGroup) => Math.max(0, ...g.rows.map((r) => r.changedAt ?? r.lastCommitAt ?? 0));
   groups.sort((a, b) => newest(b) - newest(a));
   return [...groups, ...missing];
 }

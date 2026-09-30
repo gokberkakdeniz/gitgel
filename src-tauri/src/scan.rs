@@ -287,7 +287,7 @@ fn fill(
     }
 
     scan.active
-        .sort_by_key(|e| std::cmp::Reverse(e.last_commit_at));
+        .sort_by_key(|e| std::cmp::Reverse(e.changed_at.or(e.last_commit_at)));
     scan.others
         .sort_by_key(|o| std::cmp::Reverse(o.last_commit_at));
     lock(cache).prune(&repo_cfg.id, &live_tips);
@@ -345,6 +345,7 @@ fn summarize(
         del: None,
         uncommitted: None,
         last_commit_at,
+        changed_at: None,
         state: EntryState::Ok,
         error: None,
     };
@@ -366,7 +367,11 @@ fn summarize(
 
     if let Some(wt) = &worktree_path {
         match uncommitted_count(ctx, wt, &tip) {
-            Ok(n) => s.uncommitted = Some(n),
+            Ok((n, at)) => {
+                s.uncommitted = Some(n);
+                // Its age is its last edit when that is newer than the tip commit.
+                s.changed_at = at.filter(|&at| n > 0 && at > s.last_commit_at.unwrap_or(0));
+            }
             Err(e) => fail(&mut s, &mut flags, e),
         }
     }
@@ -409,16 +414,20 @@ fn summarize(
     s
 }
 
-/// Uncommitted file count of a worktree whose HEAD is `head`; cached until the watcher reports
-/// a change in it or HEAD moves.
-fn uncommitted_count(ctx: &RepoCtx, worktree: &Path, head: &str) -> Result<u32, AppError> {
+/// Uncommitted file count of a worktree whose HEAD is `head`, with the newest modification time
+/// of those files; cached until the watcher reports a change in it or HEAD moves.
+fn uncommitted_count(
+    ctx: &RepoCtx,
+    worktree: &Path,
+    head: &str,
+) -> Result<(u32, Option<i64>), AppError> {
     if let Some(w) = lock(ctx.cache).workdir(worktree, head) {
         let n = w.count.or(w.uncommitted.as_ref().map(|u| u.len() as u32));
         if let Some(n) = n {
             ctx.timings
                 .borrow_mut()
                 .add("status cached", std::time::Duration::ZERO);
-            return Ok(n);
+            return Ok((n, w.changed_at));
         }
     }
     let started = std::time::Instant::now();
@@ -432,7 +441,10 @@ fn uncommitted_count(ctx: &RepoCtx, worktree: &Path, head: &str) -> Result<u32, 
         cached_uncommitted(ctx.cache, &wt_repo, worktree, head)?
     };
     ctx.timings.borrow_mut().add("status", started.elapsed());
-    Ok(list.len() as u32)
+    let changed_at = lock(ctx.cache)
+        .workdir(worktree, head)
+        .and_then(|w| w.changed_at);
+    Ok((list.len() as u32, changed_at))
 }
 
 /// HEAD ↔ working tree file list of a worktree, cached like `uncommitted_count`.
@@ -450,11 +462,24 @@ pub fn cached_uncommitted(
     }
     let list = diff::uncommitted(wt_repo)?;
     let n = list.len() as u32;
+    let changed_at = newest_mtime(worktree, &list);
     lock(cache).update_workdir(worktree, head, |w| {
         w.count = Some(n);
         w.uncommitted = Some(list.clone());
+        w.changed_at = changed_at;
     });
     Ok(list)
+}
+
+/// Newest modification time of the listed files that exist in `worktree` (deleted ones are
+/// skipped), unix seconds.
+fn newest_mtime(worktree: &Path, list: &[FileChange]) -> Option<i64> {
+    list.iter()
+        .filter_map(|c| std::fs::symlink_metadata(worktree.join(&c.path)).ok())
+        .filter_map(|m| m.modified().ok())
+        .filter_map(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs() as i64)
+        .max()
 }
 
 /// Merge-base ↔ working tree file list, limited to the paths that can differ (committed or
@@ -543,6 +568,7 @@ pub fn summarize_one(
             del: None,
             uncommitted: None,
             last_commit_at: None,
+            changed_at: None,
             state: pick_state(&flags),
             error,
         }
@@ -670,6 +696,7 @@ pub fn removed_repo_summary(e: &crate::model::EntryConfig, config: &Config) -> E
         del: None,
         uncommitted: None,
         last_commit_at: None,
+        changed_at: None,
         state: EntryState::RepoMissing,
         error: Some("repository removed from Gitgel".into()),
     }
@@ -791,6 +818,9 @@ pub fn refresh_worktree(
             *entry = fresh;
             changed = true;
         }
+    }
+    if changed {
+        updated.sort_by_key(|e| std::cmp::Reverse(e.changed_at.or(e.last_commit_at)));
     }
     scan.active = updated;
     Ok(Some(changed))
@@ -1097,12 +1127,32 @@ mod tests {
         let wt = t.add_worktree("done", "done");
         let scan = run(&t).scan;
         assert_eq!(active(&scan, "done").state, EntryState::Merged);
+        assert_eq!(active(&scan, "done").changed_at, None);
 
-        // A fresh branch with only uncommitted work is not "merged".
+        // A fresh branch with only uncommitted work is not "merged", and its age is its last edit.
         t.write_file(&wt, "new.txt", b"x\n");
         let scan = run(&t).scan;
-        assert_eq!(active(&scan, "done").state, EntryState::Ok);
-        assert_eq!(active(&scan, "done").uncommitted, Some(1));
+        let e = active(&scan, "done");
+        assert_eq!(e.state, EntryState::Ok);
+        assert_eq!(e.uncommitted, Some(1));
+        assert!(e.changed_at.unwrap() > e.last_commit_at.unwrap());
+    }
+
+    #[test]
+    fn unstaged_edit_newer_than_the_tip_sets_the_age() {
+        let t = TestRepo::new();
+        let root = t.commit_on("main", &[("a", Some(b"a\n"))], "init", 5);
+        t.checkout_main();
+        t.branch_from("feat", root);
+        t.commit_on("feat", &[("a", Some(b"b\n"))], "work", 3);
+        let wt = t.add_worktree("feat", "feat");
+        assert_eq!(active(&run(&t).scan, "feat").changed_at, None);
+
+        t.write_file(&wt, "a", b"c\n");
+        let scan = run(&t).scan;
+        let e = active(&scan, "feat");
+        assert_eq!((e.ahead, e.uncommitted), (Some(1), Some(1)));
+        assert!(e.changed_at.unwrap() > e.last_commit_at.unwrap());
     }
 
     #[test]

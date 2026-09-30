@@ -79,6 +79,7 @@ export interface EntrySummary {
   del: number | null;
   uncommitted: number | null; // null if not checked out
   lastCommitAt: number | null; // committer time of the tip, unix seconds
+  changedAt: number | null; // newest uncommitted file mtime, only when newer than lastCommitAt
   state: EntryState;
   error: string | null; // detail for git_error / base_missing
 }

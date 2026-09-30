@@ -233,6 +233,9 @@ pub struct EntrySummary {
     pub uncommitted: Option<u32>,
     /// Committer time of the tip commit, unix seconds.
     pub last_commit_at: Option<i64>,
+    /// Newest modification time of the uncommitted files (staged, unstaged and untracked), unix
+    /// seconds; only set when newer than `last_commit_at`.
+    pub changed_at: Option<i64>,
     pub state: EntryState,
     /// Detail for `git_error` / `base_missing`.
     pub error: Option<String>,

@@ -29,6 +29,7 @@ export function draftRows(entries: EntryRef[], scan: Record<string, RepoScan>): 
       del: null,
       uncommitted: null,
       lastCommitAt: other?.lastCommitAt ?? null,
+      changedAt: null,
       state: other?.merged ? 'merged' : 'ok',
       error: null,
     };

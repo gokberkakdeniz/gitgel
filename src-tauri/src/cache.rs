@@ -15,6 +15,8 @@ pub struct WorkdirState {
     pub count: Option<u32>,
     /// HEAD ↔ working tree.
     pub uncommitted: Option<Vec<FileChange>>,
+    /// Newest modification time of the files in `uncommitted` that exist, unix seconds.
+    pub changed_at: Option<i64>,
     /// Merge-base ↔ working tree, per merge-base.
     pub all: HashMap<String, Vec<FileChange>>,
 }

@@ -468,7 +468,9 @@ function Row({
           </>
         )}
       </button>
-      <span className={`${styles.mono} ${styles.age}`}>{e.lastCommitAt ? formatAge(e.lastCommitAt) : '—'}</span>
+      <span className={`${styles.mono} ${styles.age}`} title={e.changedAt ? 'Last change to uncommitted files' : undefined}>
+        {e.changedAt ? formatAge(e.changedAt) : e.lastCommitAt ? formatAge(e.lastCommitAt) : '—'}
+      </span>
       <button
         type="button"
         aria-label="Branch options"

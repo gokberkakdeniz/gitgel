@@ -257,6 +257,9 @@ rather than as a task is listed the same way, marked "(on request)".
   empty one its page; Review header "Edit project" pencil opens the page — 2026-09-30
 - [x] (on request) Sidebar: right-click Rename or double-click edits the project name inline in
   its row; double-clicking the project review title does the same — 2026-09-30
+- [x] (on request) Branches: Age of a branch with uncommitted changes (staged, unstaged or
+  untracked) is their newest modification time when that is newer than the tip commit (rows
+  sort by it too) — 2026-09-30
 
 ---
 

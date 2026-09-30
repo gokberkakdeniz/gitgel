@@ -21,6 +21,7 @@ function entry(repoId: string, branch: string | null, at: number, extra: Partial
     del: 0,
     uncommitted: null,
     lastCommitAt: at,
+    changedAt: null,
     state: 'ok',
     error: null,
     ...extra,

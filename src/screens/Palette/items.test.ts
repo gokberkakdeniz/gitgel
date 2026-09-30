@@ -23,6 +23,7 @@ function entry(branch: string | null, extra: Partial<EntrySummary>): EntrySummar
     del: 0,
     uncommitted: null,
     lastCommitAt: NOW - 3 * DAY,
+    changedAt: null,
     state: 'ok',
     error: null,
     ...extra,
