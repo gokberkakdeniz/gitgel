@@ -141,7 +141,8 @@ mod tests {
                 "diffContext": "whole",
                 "diffContextLines": 5,
                 "terminal": "other",
-                "terminalCommand": "Ghostty"
+                "terminalCommand": "Ghostty",
+                "checkUpdates": false
             }
         });
         let config: Config = serde_json::from_value(value.clone()).unwrap();

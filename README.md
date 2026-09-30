@@ -15,7 +15,8 @@ Claude Code) left in their worktrees.
 brew install --cask gokberkakdeniz/tap/gitgel
 ```
 
-Apple silicon only. Updates come with `brew upgrade`. The cask lives in
+Apple silicon only. Gitgel updates itself: a new version shows in the sidebar (or
+**Gitgel › Check for Updates…**) and installs with one click. The cask lives in
 [gokberkakdeniz/homebrew-tap](https://github.com/gokberkakdeniz/homebrew-tap), next to the
 downloadable builds.
 
@@ -53,6 +54,11 @@ if needed. It needs a clean, pushed working tree; after new commits, bump the ve
 It then publishes the same zip to the Homebrew tap: a release `gitgel-<version>` in
 `gokberkakdeniz/homebrew-tap`, and the cask's version and checksum, committed and pushed. The
 tap is expected as a clean clone at `../homebrew-tap` (or `$GITGEL_TAP_DIR`).
+
+In-app updates are signed with the updater key at `~/.tauri/gitgel.key` (or
+`$GITGEL_UPDATER_KEY`; password in `$GITGEL_UPDATER_KEY_PASSWORD`, none by default). Keep a
+backup: without it, installed copies can no longer update in-app. `pnpm release` uploads the
+signed `.app.tar.gz` to the tap release and points the tap's `gitgel/latest.json` at it.
 
 ## Files
 

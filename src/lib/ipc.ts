@@ -16,6 +16,7 @@ import type {
   ScanResult,
   Settings,
   TerminalOption,
+  UpdateInfo,
 } from './types';
 
 export const getConfig = () => invoke<Config>('get_config');
@@ -81,3 +82,9 @@ export const getTerminalOptions = () => invoke<TerminalOption[]>('get_terminal_o
 
 /** Opens a worktree folder in one of `getOpenApps` (Finder included). */
 export const openFolder = (path: string, app: string) => invoke<null>('open_folder', { path, app });
+
+/** The update found by the last check, if any. */
+export const getUpdate = () => invoke<UpdateInfo | null>('get_update');
+
+/** Downloads and installs that update, then the app restarts; rejects if it fails. */
+export const installUpdate = () => invoke<void>('install_update');

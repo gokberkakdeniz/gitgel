@@ -133,7 +133,8 @@ theme, configurable refresh.
 | Diff | `@monaco-editor/react` + `monaco-editor`, bundled locally (`loader.config({ monaco })`), never from a CDN. |
 | Fonts | Instrument Sans, Source Serif 4, JetBrains Mono via `@fontsource/*`, bundled. The app works offline. |
 | Bundle id | `com.gitgel.desktop` (must not end in `.app`). |
-| Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask (§12). |
+| Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). |
+| Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the tap's `gitgel/latest.json` at launch and on window focus, at most every 6 hours; installs a signed build on request and restarts (§12 "Updates"). |
 
 ---
 
@@ -170,6 +171,7 @@ gitgel/
       ├─ apps.rs                  # open items: installed editors/terminals, open a folder
       ├─ nearest.rs               # nearest default: local vs remote default base
       ├─ memory.rs                # frees libgit2 memory after full scans
+      ├─ updates.rs               # in-app updates: check, install, restart
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
       ├─ git/                     # the ONLY place git2 is used
@@ -382,6 +384,12 @@ inputs, textareas and the diff.
   double-click turns the row into a 32px input in place (name selected, no navigation): ↵ saves, Esc or leaving the
   field cancels, a name conflict turns it danger with the message as its tooltip. A draft
   project (flow C) shows as an active row at the end.
+- **Update row** (only while a newer version is known, above the footer): 36px button, margin
+  8px 10px 10px, radius 10, `rgba(accent, 0.12)` with a 1px `rgba(accent, 0.3)` border,
+  `accent.text` 13px: 16px arrow-up-in-circle icon + "Update to <version>" (title "Downloads
+  Gitgel <version> and restarts the app (you have <current>)"). A click downloads, checks and
+  installs it, then the app restarts; meanwhile "Updating… N%" (disabled). A failure turns it
+  danger: "Update failed · Retry", the error as its title.
 - **Footer** (56px, top border `#2a2825`): a 36px link row (folder icon + "N repositories",
   "1 repository") → Settings. On footer hover the row gets `bg.sunken` and a 32px "+" button
   appears (aria-label "Add repository", title "Add repository…"; hidden but space kept
@@ -781,6 +789,8 @@ Layout:
     the command runs in your login shell, in that folder." When the chosen app is not installed,
     a right-aligned 12px `warning` line: "<Name> is not installed; the menus show it disabled".
     Saved at once (`settings.terminal`, `settings.terminalCommand`).
+  - "Check for updates" ("At launch and every 6 hours; a new version shows in the sidebar"): a
+    checkbox, on by default (`settings.checkUpdates`). Off hides a found update; on checks at once.
 - **Keyboard shortcuts** (full width under both columns, margin-top 40): serif 18px heading +
   muted "Not editable yet"; four cards (`bg.sunken`, radius 12, padding 6px 0) in a
   `repeat(4, minmax(max-content, 1fr))` grid, gap 12 (a narrow window scrolls instead of
@@ -897,6 +907,9 @@ checkbox only (no ⌘/⇧-click).
 
 **App menu** (`src-tauri/src/menu.rs`, the standard macOS menus plus):
 
+- **Gitgel › Check for Updates…** (after About): checks now, whatever the setting, and answers in
+  a native dialog: "You’re up to date", or "A new version of Gitgel is available" with **Update
+  and Restart** / **Later**, or the error.
 - **Gitgel › Settings…** (⌘,): emits `open-settings`; the frontend opens Settings unless a modal
   is open or Settings is already showing.
 - **View › Font Size**: Decrease (⌘-), Increase (⌘.), Reset (⌘0). Zooms the whole window in steps
@@ -951,6 +964,7 @@ export interface Settings {
   zoom: number;                  // View › Font Size, percent; default 100
   terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
+  checkUpdates: boolean;         // Settings › Behaviour › Check for updates; default true
   appearance: 'system' | 'light' | 'dark'; // Settings › Appearance; default 'system' (T10.1)
 }
 export interface Config {
@@ -1505,7 +1519,17 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   repo's GitHub release `<version>` (no `v`; created on first run). The code repo is private, so it
   also uploads the zip to the public `gokberkakdeniz/homebrew-tap` release `gitgel-<version>`, then
   updates `version` and `sha256` in the tap's `Casks/gitgel.rb`, commits and pushes. After new
-  commits, bump the version first.
+  commits, bump the version first. It also builds the signed update (below) and needs its key.
+- **Updates:** the release build also makes `Gitgel.app.tar.gz` and its minisign signature
+  (`createUpdaterArtifacts`, passed with `--config` only by `release.sh`, so a plain build needs
+  no key; key `~/.tauri/gitgel.key` or `$GITGEL_UPDATER_KEY`, public key in `tauri.conf.json`).
+  It is uploaded as `Gitgel-<version>-macos-arm64.app.tar.gz` next to the zip in the tap release,
+  and `gitgel/latest.json` in the tap (`version`, `pub_date`, `platforms.darwin-aarch64` url +
+  signature) is committed with the cask. The app reads it from
+  `raw.githubusercontent.com/gokberkakdeniz/homebrew-tap/master/gitgel/latest.json`; the cask
+  has `auto_updates true`, so `brew upgrade` leaves a self-updating app alone. Only release
+  builds install; a lost key means existing installs can no longer update in-app (a new key
+  ships with a `brew upgrade`).
 - **Install:** `brew install --cask gokberkakdeniz/tap/gitgel` (Apple silicon). The cask removes
   the quarantine flag after install (`postflight_steps`), so the unnotarized app opens.
 - macOS asks for access to repositories in protected folders (`~/Desktop`, `~/Documents`); the

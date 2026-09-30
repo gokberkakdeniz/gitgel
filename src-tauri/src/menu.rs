@@ -1,5 +1,5 @@
-//! The app menu: the standard macOS menus plus Gitgel › Settings… (⌘,), View › Font Size and the
-//! Help items.
+//! The app menu: the standard macOS menus plus Gitgel › Check for Updates… and Settings… (⌘,),
+//! View › Font Size and the Help items.
 
 use tauri::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID};
 use tauri::{App, AppHandle, Emitter, Manager};
@@ -7,7 +7,9 @@ use tauri::{App, AppHandle, Emitter, Manager};
 use crate::config;
 use crate::logs;
 use crate::state::AppState;
+use crate::updates;
 
+const CHECK_UPDATES: &str = "check_updates";
 const SETTINGS: &str = "settings";
 const FONT_SMALLER: &str = "font_smaller";
 const FONT_LARGER: &str = "font_larger";
@@ -31,12 +33,22 @@ pub fn install(app: &App) -> tauri::Result<()> {
             .find(|s| s.text().is_ok_and(|t| t == text)))
     };
 
-    // The first submenu is the app menu; Settings goes after "About Gitgel".
+    // The first submenu is the app menu; Check for Updates and Settings go after "About Gitgel".
     if let Some(app_menu) = menu.items()?.first().and_then(|k| k.as_submenu().cloned()) {
-        app_menu.insert(&PredefinedMenuItem::separator(app)?, 1)?;
+        app_menu.insert(
+            &MenuItem::with_id(
+                app,
+                CHECK_UPDATES,
+                "Check for Updates…",
+                true,
+                None::<&str>,
+            )?,
+            1,
+        )?;
+        app_menu.insert(&PredefinedMenuItem::separator(app)?, 2)?;
         app_menu.insert(
             &MenuItem::with_id(app, SETTINGS, "Settings…", true, Some("CmdOrCtrl+,"))?,
-            2,
+            3,
         )?;
     }
 
@@ -105,6 +117,7 @@ pub fn install(app: &App) -> tauri::Result<()> {
 
 fn on_event(app: &AppHandle, event: MenuEvent) {
     match event.id().as_ref() {
+        CHECK_UPDATES => updates::check_now(app),
         SETTINGS => {
             let _ = app.emit("open-settings", ());
         }

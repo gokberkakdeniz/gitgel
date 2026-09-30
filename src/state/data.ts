@@ -1,6 +1,6 @@
 // Data the backend pushes: config and scan results, kept current by backend events.
 import { create } from 'zustand';
-import type { Config, OpenApp, RepoScan, RepoUpdated, ScanResult, TerminalOption } from '../lib/types';
+import type { Config, OpenApp, RepoScan, RepoUpdated, ScanResult, TerminalOption, UpdateInfo } from '../lib/types';
 
 interface DataState {
   config: Config | null;
@@ -11,12 +11,16 @@ interface DataState {
   refreshing: boolean; // a full rescan is running
   openApps: OpenApp[]; // installed apps for the entry menus' open items
   terminalOptions: TerminalOption[]; // install state of Terminal/iTerm2/WezTerm, for Settings
+  update: UpdateInfo | null; // a newer version, from the update check
+  updateProgress: number | 'unknown' | null; // download percent while installing; null otherwise
   setConfig: (config: Config) => void;
   setScan: (result: ScanResult) => void;
   applyRepoUpdated: (event: RepoUpdated) => void;
   setRefreshing: (refreshing: boolean) => void;
   setOpenApps: (apps: OpenApp[]) => void;
   setTerminalOptions: (options: TerminalOption[]) => void;
+  setUpdate: (update: UpdateInfo | null) => void;
+  setUpdateProgress: (progress: number | 'unknown' | null) => void;
 }
 
 export const useData = create<DataState>()((set) => ({
@@ -28,6 +32,8 @@ export const useData = create<DataState>()((set) => ({
   refreshing: false,
   openApps: [],
   terminalOptions: [],
+  update: null,
+  updateProgress: null,
   setConfig: (config) => set((s) => ({ config, configVersion: s.configVersion + 1 })),
   setScan: (result) =>
     set((s) => {
@@ -47,6 +53,8 @@ export const useData = create<DataState>()((set) => ({
   setRefreshing: (refreshing) => set({ refreshing }),
   setOpenApps: (openApps) => set({ openApps }),
   setTerminalOptions: (terminalOptions) => set({ terminalOptions }),
+  setUpdate: (update) => set({ update }),
+  setUpdateProgress: (updateProgress) => set({ updateProgress }),
 }));
 
 /** Scans of the repos in the config, in config order. Records of removed repos are ignored. */

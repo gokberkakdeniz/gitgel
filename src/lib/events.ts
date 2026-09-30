@@ -6,7 +6,7 @@ import { selectRoute, useNav } from '../state/nav';
 import { useUi } from '../state/ui';
 import * as ipc from './ipc';
 import { loadHome } from './paths';
-import type { Config, RepoUpdated } from './types';
+import type { Config, RepoUpdated, UpdateInfo } from './types';
 
 let started: Promise<void> | null = null;
 
@@ -31,6 +31,9 @@ async function start() {
     }
   });
   await listen<RepoUpdated>('repo-updated', (e) => data.applyRepoUpdated(e.payload));
+  // The backend checks for updates at launch and on focus (updates.rs).
+  await listen<UpdateInfo | null>('update-available', (e) => data.setUpdate(e.payload));
+  await listen<number | null>('update-progress', (e) => data.setUpdateProgress(e.payload ?? 'unknown'));
   // App menu › Settings… (⌘,). Listed in lib/shortcuts.ts.
   await listen('open-settings', () => {
     const nav = useNav.getState();
@@ -47,6 +50,8 @@ async function start() {
 
   void loadOpenApps();
   void loadTerminalOptions();
+  // A check that finished before the listener was added.
+  void ipc.getUpdate().then((u) => u && data.setUpdate(u));
   const [config] = await Promise.all([ipc.getConfig(), loadHome()]);
   // A config-changed that arrived meanwhile is newer than this answer.
   if (configEvents === 0) data.setConfig(config);

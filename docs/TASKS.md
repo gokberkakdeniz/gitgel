@@ -260,6 +260,9 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Branches: Age of a branch with uncommitted changes (staged, unstaged or
   untracked) is their newest modification time when that is newer than the tip commit (rows
   sort by it too) — 2026-09-30
+- [x] (on request) In-app updates: sidebar "Update to <version>" row, Gitgel › Check for
+  Updates…, Settings › Check for updates; `pnpm release` signs the update and publishes the
+  tap's `gitgel/latest.json`; the cask gets `auto_updates true` — 2026-09-30
 
 ---
 

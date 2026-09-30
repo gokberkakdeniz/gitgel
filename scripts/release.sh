@@ -7,6 +7,10 @@
 # public tap repository's release gitgel-<version>, and the cask there is updated and pushed.
 # The tap is a clone of that repository next to this one, or at $GITGEL_TAP_DIR.
 #
+# In-app updates: the build is also packed as a signed `.app.tar.gz` (the updater key, by default
+# ~/.tauri/gitgel.key, or $GITGEL_UPDATER_KEY), uploaded next to the zip in the tap release, and
+# the tap's gitgel/latest.json (the app's update endpoint) is pointed at it in the cask's commit.
+#
 # The version is the app's (package.json, via src-tauri/tauri.conf.json). The build must match a
 # pushed commit, so the
 # working tree has to be clean and HEAD pushed. Re-running for the same version replaces the zip,
@@ -37,7 +41,11 @@ TAP_REPO="gokberkakdeniz/homebrew-tap"
 TAP_DIR="${GITGEL_TAP_DIR:-../homebrew-tap}"
 CASK="Casks/gitgel.rb"
 TAP_TAG="gitgel-$VERSION"
+UPDATER_KEY="${GITGEL_UPDATER_KEY:-$HOME/.tauri/gitgel.key}"
+UPDATE="$BUNDLE/Gitgel-$VERSION-macos-$ARCH.app.tar.gz"
+LATEST="gitgel/latest.json"
 
+[[ -f "$UPDATER_KEY" ]] || die "no updater key at $UPDATER_KEY; restore it or set GITGEL_UPDATER_KEY"
 [[ -z "$(git status --porcelain)" ]] || die "uncommitted changes; commit them first"
 HEAD_SHA="$(git rev-parse HEAD)"
 [[ -n "$(git branch -r --contains "$HEAD_SHA")" ]] || die "HEAD is not pushed; push it first"
@@ -55,7 +63,13 @@ fi
 git -C "$TAP_DIR" pull -q --ff-only
 [[ -n "$(git -C "$TAP_DIR" branch -r --contains HEAD)" ]] || die "$TAP_DIR has unpushed commits"
 
-pnpm tauri build --bundles app
+# The updater artifacts (Gitgel.app.tar.gz and its .sig) are made only here, so a plain
+# `pnpm tauri build` needs no key.
+rm -f "$BUNDLE/macos/Gitgel.app.tar.gz" "$BUNDLE/macos/Gitgel.app.tar.gz.sig"
+TAURI_SIGNING_PRIVATE_KEY="$(cat "$UPDATER_KEY")" TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${GITGEL_UPDATER_KEY_PASSWORD:-}" \
+  pnpm tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":true}}'
+[[ -f "$BUNDLE/macos/Gitgel.app.tar.gz.sig" ]] || die "the build made no signed update"
+cp "$BUNDLE/macos/Gitgel.app.tar.gz" "$UPDATE"
 
 # ditto keeps the bundle's macOS metadata (symlinks, permissions) intact.
 rm -f "$ZIP"
@@ -72,11 +86,11 @@ fi
 
 echo "Uploaded $(basename "$ZIP") to $TAG: $(gh release view "$TAG" --json url --jq .url)"
 
-# Homebrew tap: the zip first, then the cask that points at it.
+# Homebrew tap: the zip and the update first, then the cask and latest.json that point at them.
 if gh release view "$TAP_TAG" --repo "$TAP_REPO" >/dev/null 2>&1; then
-  gh release upload "$TAP_TAG" "$ZIP" --repo "$TAP_REPO" --clobber
+  gh release upload "$TAP_TAG" "$ZIP" "$UPDATE" --repo "$TAP_REPO" --clobber
 else
-  gh release create "$TAP_TAG" "$ZIP" \
+  gh release create "$TAP_TAG" "$ZIP" "$UPDATE" \
     --repo "$TAP_REPO" \
     --title "Gitgel $VERSION" \
     --notes "Gitgel $VERSION for macOS ($ARCH). Install with: brew install --cask gokberkakdeniz/tap/gitgel"
@@ -86,10 +100,25 @@ sed -i '' -E \
   -e "s/^  version \".*\"$/  version \"$VERSION\"/" \
   -e "s/^  sha256 \".*\"$/  sha256 \"$SHA256\"/" \
   "$TAP_DIR/$CASK"
-if git -C "$TAP_DIR" diff --quiet -- "$CASK"; then
+mkdir -p "$TAP_DIR/$(dirname "$LATEST")"
+VERSION="$VERSION" \
+  URL="https://github.com/$TAP_REPO/releases/download/$TAP_TAG/$(basename "$UPDATE")" \
+  SIG="$BUNDLE/macos/Gitgel.app.tar.gz.sig" \
+  node -e '
+    const fs = require("fs");
+    const { VERSION, URL, SIG } = process.env;
+    const latest = {
+      version: VERSION,
+      pub_date: new Date().toISOString().replace(/\.\d+Z$/, "Z"),
+      platforms: { "darwin-aarch64": { url: URL, signature: fs.readFileSync(SIG, "utf8").trim() } },
+    };
+    process.stdout.write(JSON.stringify(latest, null, 2) + "\n");
+  ' >"$TAP_DIR/$LATEST"
+git -C "$TAP_DIR" add -- "$CASK" "$LATEST"
+if git -C "$TAP_DIR" diff --cached --quiet; then
   echo "Cask already at $VERSION"
 else
-  git -C "$TAP_DIR" commit -q -m "gitgel $VERSION" -- "$CASK"
+  git -C "$TAP_DIR" commit -q -m "gitgel $VERSION"
   git -C "$TAP_DIR" push -q
-  echo "Cask updated to $VERSION: brew upgrade --cask gitgel"
+  echo "Cask and update feed at $VERSION: brew upgrade --cask gitgel, or the app updates itself"
 fi

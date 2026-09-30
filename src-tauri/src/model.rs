@@ -83,6 +83,8 @@ pub struct Settings {
     /// The `other` terminal: a command (`%` becomes the folder), an app name, a `.app` path or
     /// a bundle id. Empty means Automatic.
     pub terminal_command: String,
+    /// Settings › Behaviour › Check for updates: at launch and on focus, at most every 6 hours.
+    pub check_updates: bool,
 }
 
 impl Default for Settings {
@@ -98,6 +100,7 @@ impl Default for Settings {
             appearance: Appearance::System,
             terminal: TerminalChoice::Auto,
             terminal_command: String::new(),
+            check_updates: true,
         }
     }
 }

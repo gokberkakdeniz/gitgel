@@ -136,6 +136,7 @@ pub fn update_settings(state: &AppState, settings: Settings) -> Result<Config, A
         ));
     }
     let mut rescan = false;
+    let mut updates_changed = false;
     let config = config::update(state, |config| {
         let next = Settings {
             default_base_order: order,
@@ -147,9 +148,13 @@ pub fn update_settings(state: &AppState, settings: Settings) -> Result<Config, A
         // Only the base order and the threshold change what is listed.
         rescan = next.default_base_order != config.settings.default_base_order
             || next.active_days != config.settings.active_days;
+        updates_changed = next.check_updates != config.settings.check_updates;
         config.settings = next;
         Ok(config.clone())
     })?;
+    if updates_changed {
+        crate::updates::setting_changed(&state.app, config.settings.check_updates);
+    }
     if rescan {
         // scan_all emits each repo whose result changed.
         scan::scan_all(state);

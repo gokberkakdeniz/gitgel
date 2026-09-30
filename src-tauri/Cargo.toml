@@ -32,6 +32,7 @@ libc = "=0.2.189"
 git2 = { version = "=0.21.0", default-features = false, features = ["vendored-libgit2"] }
 notify-debouncer-full = "=0.7.0"
 tauri-plugin-opener = "=2.5.5"
+tauri-plugin-updater = "=2.12.0"
 
 # Finds installed apps for the entry menus' open items (`apps.rs`). Already in the tree via tao.
 [target.'cfg(target_os = "macos")'.dependencies]

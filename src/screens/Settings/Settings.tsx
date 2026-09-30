@@ -1,6 +1,7 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { useEffect, useState } from 'react';
 import { Button } from '../../components/Button';
+import { Checkbox } from '../../components/Checkbox';
 import { CloseIcon } from '../../components/icons';
 import { Modal } from '../../components/Modal';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
@@ -243,6 +244,16 @@ function Behaviour({ config }: { config: Config }) {
         </span>
       </label>
       <TerminalSetting config={config} />
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>Check for updates</span>
+          <span className={styles.settingHint}>At launch and every 6 hours; a new version shows in the sidebar</span>
+        </span>
+        <Checkbox
+          checked={config.settings.checkUpdates}
+          onChange={(e) => void updateSettings({ ...config.settings, checkUpdates: e.target.checked })}
+        />
+      </label>
     </section>
   );
 }

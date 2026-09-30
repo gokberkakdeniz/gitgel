@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
+import { installUpdate } from '../../lib/ipc';
 import { startDraftProject } from '../../lib/draft';
 import { openAddRepos } from '../../lib/addRepos';
 import { plural } from '../../lib/format';
-import type { ProjectConfig } from '../../lib/types';
+import type { AppError, ProjectConfig } from '../../lib/types';
 import { readProjectSort, sortProjects, writeProjectSort, type ProjectSort } from '../../lib/projectSort';
 import { branchCount } from '../../screens/Branches/rows';
 import { selectRepoScans, useData } from '../../state/data';
@@ -18,6 +19,7 @@ import {
   SearchIcon,
   SidebarIcon,
   SlidersIcon,
+  UpdateIcon,
 } from '../icons';
 import { IconButton } from '../IconButton';
 import { Menu, MenuItem } from '../Menu';
@@ -84,6 +86,8 @@ export function Sidebar() {
       </div>
 
       <ProjectList route={route} draftName={onDraft ? draft?.name : undefined} />
+
+      <UpdateRow />
 
       <div className={styles.footer}>
         <button type="button" className={styles.repoRow} onClick={() => go('settings')}>
@@ -238,6 +242,46 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
         </Popover>
       )}
     </>
+  );
+}
+
+/** Shown while the update check has found a newer version: installs it and restarts. */
+function UpdateRow() {
+  const update = useData((s) => s.update);
+  const progress = useData((s) => s.updateProgress);
+  const [error, setError] = useState<string | null>(null);
+  if (!update) return null;
+
+  const install = async () => {
+    setError(null);
+    useData.getState().setUpdateProgress('unknown');
+    try {
+      await installUpdate(); // the app restarts when it succeeds
+    } catch (e) {
+      useData.getState().setUpdateProgress(null);
+      setError((e as AppError).message ?? String(e));
+    }
+  };
+
+  const installing = progress !== null;
+  const label = installing
+    ? `Updating…${typeof progress === 'number' ? ` ${progress}%` : ''}`
+    : error
+      ? 'Update failed · Retry'
+      : `Update to ${update.version}`;
+  const title =
+    error ?? `Downloads Gitgel ${update.version} and restarts the app (you have ${update.currentVersion})`;
+  return (
+    <button
+      type="button"
+      className={error && !installing ? `${styles.update} ${styles.updateFailed}` : styles.update}
+      title={title}
+      disabled={installing}
+      onClick={() => void install()}
+    >
+      <UpdateIcon className={styles.updateIcon} />
+      <span className={styles.grow}>{label}</span>
+    </button>
   );
 }
 

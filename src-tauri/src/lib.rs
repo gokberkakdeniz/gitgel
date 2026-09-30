@@ -18,9 +18,10 @@ pub mod review;
 pub mod scan;
 pub mod state;
 pub mod timing;
+pub mod updates;
 pub mod watch;
 
-use tauri::Manager;
+use tauri::{Manager, WindowEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -54,6 +55,8 @@ pub fn run() {
         )
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updates::Updates::default())
         .setup(|app| {
             log::info!(
                 "Gitgel {} · libgit2 {}",
@@ -77,7 +80,14 @@ pub fn run() {
             app.manage(state);
             menu::apply_zoom(app.handle(), zoom);
             appearance::show_main_window(app.handle(), appearance);
+            updates::check_if_due(app.handle());
             Ok(())
+        })
+        // Automatic update checks run at launch and on focus, at most every 6 hours.
+        .on_window_event(|window, event| {
+            if let WindowEvent::Focused(true) = event {
+                updates::check_if_due(window.app_handle());
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_config,
@@ -105,6 +115,8 @@ pub fn run() {
             commands::get_open_apps,
             commands::get_terminal_options,
             commands::open_folder,
+            commands::get_update,
+            commands::install_update,
         ])
         .run(tauri::generate_context!());
     if let Err(e) = result {

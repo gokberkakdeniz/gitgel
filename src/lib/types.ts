@@ -36,6 +36,7 @@ export interface Settings {
   appearance: Appearance; // Settings › Appearance
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"
   terminalCommand: string; // the Other terminal: a command (`%` = folder), an app name, a .app path or a bundle id; empty = Automatic
+  checkUpdates: boolean; // Settings › Behaviour › Check for updates
 }
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
@@ -219,6 +220,12 @@ export interface TerminalOption {
   choice: TerminalChoice; // "terminal" | "iterm" | "wezterm"
   name: string; // "Terminal"
   found: boolean;
+}
+
+// A newer version found by the update check (updates.rs); `update-available` carries it or null.
+export interface UpdateInfo {
+  version: string;
+  currentVersion: string;
 }
 
 // What `invoke` rejects with (AppError in error.rs).

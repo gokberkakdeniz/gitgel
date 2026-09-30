@@ -267,3 +267,14 @@ export function InfoIcon({ size = 14, className }: IconProps) {
     </Svg>
   );
 }
+
+/** Arrow up in a circle; the sidebar's update row. */
+export function UpdateIcon({ size = 16, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.8} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 11.5 4-4 4 4" />
+      <path d="M12 7.5V16.5" />
+    </Svg>
+  );
+}

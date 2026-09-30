@@ -1,6 +1,6 @@
 //! All `#[tauri::command]`s, as thin wrappers over the other modules.
 
-use tauri::State;
+use tauri::{AppHandle, State};
 
 use crate::config;
 use crate::error::AppError;
@@ -10,7 +10,7 @@ use crate::model::{
     ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, Settings, TerminalOption,
 };
 use crate::state::AppState;
-use crate::{apps, base, files, projects, repos, review, scan, watch};
+use crate::{apps, base, files, projects, repos, review, scan, updates, watch};
 
 /// Runs git or disk work off the async runtime.
 pub async fn blocking<T, F>(state: &AppState, f: F) -> Result<T, AppError>
@@ -293,4 +293,16 @@ pub async fn open_folder(
         apps::open_folder(&path, &app, &config::snapshot(state).settings)
     })
     .await
+}
+
+/// The update found by the last check, if any (§12 "Updates").
+#[tauri::command]
+pub fn get_update(app: AppHandle) -> Option<updates::UpdateInfo> {
+    updates::current(&app)
+}
+
+/// Downloads and installs the update found by the last check, then restarts the app.
+#[tauri::command]
+pub async fn install_update(app: AppHandle) -> Result<(), AppError> {
+    updates::install(app).await
 }
