@@ -7,6 +7,7 @@ import {
   ChevronDownIcon,
   CloseIcon,
   ChevronUpIcon,
+  PencilIcon,
   RefreshIcon,
   SearchIcon,
   SidebarIcon,
@@ -14,6 +15,7 @@ import {
   UnifiedIcon,
 } from '../../components/icons';
 import { Popover } from '../../components/Popover';
+import { ProjectNameInput } from '../../components/ProjectNameInput';
 import { IconButton } from '../../components/IconButton';
 import { Kbd } from '../../components/Kbd';
 import { KindBadge } from '../../components/KindBadge';
@@ -59,6 +61,8 @@ interface Props {
   backLabel: string;
   /** Project scope: open on this entry, with the other groups collapsed. */
   focusKey?: string;
+  /** Opened from the sidebar: leave it shown. */
+  keepSidebar?: boolean;
 }
 
 const MODE_LABELS: Record<DiffMode, string> = {
@@ -67,8 +71,8 @@ const MODE_LABELS: Record<DiffMode, string> = {
   all: 'All',
 };
 
-export function Review({ target, backLabel, focusKey }: Props) {
-  useSidebarHiddenWhileMounted();
+export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
+  useSidebarHiddenWhileMounted(!keepSidebar);
   const targetKey = JSON.stringify(target);
   const projects = useData((s) => s.config?.projects);
   const repoIds = useMemo(() => {
@@ -328,6 +332,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
           }))}
         />
         <RefreshButton />
+        {target.kind === 'project' && <EditProjectButton projectId={target.projectId} />}
       </ReviewHeader>
       {banner ? (
         <Banner tone="warning">{banner}</Banner>
@@ -702,14 +707,30 @@ function ChangeNav({
   );
 }
 
-/** Review hides the sidebar; leaving restores what it was. */
-function useSidebarHiddenWhileMounted() {
+/** Review hides the sidebar (unless opened from it); leaving restores what it was. */
+function useSidebarHiddenWhileMounted(hide: boolean) {
   useEffect(() => {
+    if (!hide) return;
     const ui = useUi.getState();
     const before = ui.sidebarVisible;
     ui.setSidebarVisible(false);
     return () => useUi.getState().setSidebarVisible(before);
-  }, []);
+  }, [hide]);
+}
+
+/** Opens the project page: back to it when Review was opened from there, else a new step. */
+function EditProjectButton({ projectId }: { projectId: string }) {
+  const edit = () => {
+    const nav = useNav.getState();
+    const prev = nav.stack[nav.index - 1];
+    if (prev?.name === 'project' && prev.projectId === projectId) nav.back();
+    else nav.push({ name: 'project', projectId });
+  };
+  return (
+    <IconButton size={32} aria-label="Edit project" title="Edit project" onClick={edit}>
+      <PencilIcon />
+    </IconButton>
+  );
 }
 
 function ReviewHeader({
@@ -729,6 +750,8 @@ function ReviewHeader({
   const setSidebarVisible = useUi((s) => s.setSidebarVisible);
   const back = useNav((s) => s.back);
   const config = useData((s) => s.config);
+  const [renaming, setRenaming] = useState(false);
+  const project = target.kind === 'project' ? config?.projects.find((p) => p.id === target.projectId) : undefined;
 
   let title = '';
   let subtitle = '';
@@ -743,7 +766,7 @@ function ReviewHeader({
         ? `${repo} · in ${project.name}`
         : `${repo} · not in a project`;
   } else {
-    title = config?.projects.find((p) => p.id === target.projectId)?.name ?? '';
+    title = project?.name ?? '';
     if (data) {
       const changed = data.groups.filter((g) => g.files.committed.length + g.files.uncommitted.length + g.files.all.length > 0).length;
       subtitle = `Project review · ${changed} of ${data.totalEntries} entries have changes`;
@@ -766,9 +789,18 @@ function ReviewHeader({
         </IconButton>
       </div>
       <div className={styles.titles} data-tauri-drag-region>
-        <span className={styles.title} data-tauri-drag-region>
-          {title}
-        </span>
+        {renaming && project ? (
+          <ProjectNameInput project={project} className={styles.titleInput} onDone={() => setRenaming(false)} />
+        ) : (
+          // Project scope: double-click renames the project, as on its page.
+          <span
+            className={styles.title}
+            data-tauri-drag-region={project ? undefined : true}
+            onDoubleClick={project ? () => setRenaming(true) : undefined}
+          >
+            {title}
+          </span>
+        )}
         <span className={styles.subtitle} data-tauri-drag-region>
           {subtitle}
         </span>

@@ -5,7 +5,8 @@ import type { ReviewTarget } from '../lib/types';
 export type Route =
   | { name: 'branches'; focusRepoId?: string } // focus: scroll to that repo's band
   | { name: 'project'; projectId: string } // 'draft' = unsaved draft project (T5.6)
-  | { name: 'review'; target: ReviewTarget; focusKey?: string; backLabel: string }
+  // keepSidebar: opened from the sidebar, so Review does not hide it
+  | { name: 'review'; target: ReviewTarget; focusKey?: string; backLabel: string; keepSidebar?: boolean }
   | { name: 'settings' };
 
 interface NavState {

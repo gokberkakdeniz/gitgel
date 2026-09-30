@@ -62,7 +62,6 @@ function SavedProject({ id }: { id: string }) {
 
   const [renaming, setRenaming] = useState(false);
   const [menuAt, setMenuAt] = useState<DOMRect | null>(null);
-  const renameRequest = useUi((s) => s.renamingProjectId);
 
   // A deleted project's page goes back to Branches.
   useEffect(() => {
@@ -80,14 +79,6 @@ function SavedProject({ id }: { id: string }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-
-  // Rename requested from the sidebar's right-click menu.
-  useEffect(() => {
-    if (renameRequest === id) {
-      setRenaming(true);
-      useUi.getState().setRenamingProjectId(null);
-    }
-  }, [renameRequest, id]);
 
   // ⌘R: Review changes. Listed in lib/shortcuts.ts.
   const hasEntries = (project?.entries.length ?? 0) > 0;

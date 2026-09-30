@@ -2,10 +2,11 @@ import { useMemo, useRef, useState } from 'react';
 import { startDraftProject } from '../../lib/draft';
 import { openAddRepos } from '../../lib/addRepos';
 import { plural } from '../../lib/format';
+import type { ProjectConfig } from '../../lib/types';
 import { readProjectSort, sortProjects, writeProjectSort, type ProjectSort } from '../../lib/projectSort';
 import { branchCount } from '../../screens/Branches/rows';
 import { selectRepoScans, useData } from '../../state/data';
-import { selectCanBack, selectCanForward, selectRoute, useNav } from '../../state/nav';
+import { selectCanBack, selectCanForward, selectRoute, useNav, type Route } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import {
   BackIcon,
@@ -21,6 +22,7 @@ import {
 import { IconButton } from '../IconButton';
 import { Menu, MenuItem } from '../Menu';
 import { Popover } from '../Popover';
+import { ProjectNameInput } from '../ProjectNameInput';
 import { ProjectMenu } from '../ProjectMenu';
 import { TextInput } from '../TextInput';
 import styles from './Sidebar.module.css';
@@ -81,7 +83,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      <ProjectList activeId={route.name === 'project' ? route.projectId : null} draftName={onDraft ? draft?.name : undefined} />
+      <ProjectList route={route} draftName={onDraft ? draft?.name : undefined} />
 
       <div className={styles.footer}>
         <button type="button" className={styles.repoRow} onClick={() => go('settings')}>
@@ -110,14 +112,18 @@ export function Sidebar() {
   );
 }
 
-function ProjectList({ activeId, draftName }: { activeId: string | null; draftName?: string }) {
+function ProjectList({ route, draftName }: { route: Route; draftName?: string }) {
   const projects = useData((s) => s.config?.projects);
+  const pageId = route.name === 'project' ? route.projectId : null;
+  const reviewId = route.name === 'review' && route.target.kind === 'project' ? route.target.projectId : null;
+  const activeId = pageId ?? reviewId;
   const push = useNav((s) => s.push);
   const [filtering, setFiltering] = useState(false);
   const [filter, setFilter] = useState('');
   const [sort, setSort] = useState<ProjectSort>(readProjectSort);
   const [sortMenu, setSortMenu] = useState<DOMRect | null>(null);
   const [contextMenu, setContextMenu] = useState<{ id: string; rect: DOMRect } | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
   const filterRef = useRef<HTMLInputElement>(null);
 
   const list = useMemo(() => {
@@ -135,8 +141,14 @@ function ProjectList({ activeId, draftName }: { activeId: string | null; draftNa
     setFiltering(false);
     setFilter('');
   };
+  const openPage = (id: string) => {
+    if (id !== pageId) push({ name: 'project', projectId: id });
+  };
+  // A project with entries opens its review (the pencil there opens the page); an empty one its page.
   const open = (id: string) => {
-    if (id !== activeId) push({ name: 'project', projectId: id });
+    if (!projects?.find((p) => p.id === id)?.entries.length) openPage(id);
+    else if (id !== reviewId)
+      push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: 'Back', keepSidebar: true });
   };
 
   return (
@@ -171,21 +183,26 @@ function ProjectList({ activeId, draftName }: { activeId: string | null; draftNa
         </div>
       </div>
       <div className={styles.projects}>
-        {list.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            className={p.id === activeId ? `${styles.projectRow} ${styles.active}` : styles.projectRow}
-            onClick={() => open(p.id)}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setContextMenu({ id: p.id, rect: new DOMRect(e.clientX, e.clientY, 0, 0) });
-            }}
-          >
-            <span className={p.id === activeId ? `${styles.dot} ${styles.dotActive}` : styles.dot} />
-            <span className={styles.projectName}>{p.name}</span>
-          </button>
-        ))}
+        {list.map((p) =>
+          p.id === renamingId ? (
+            <RenameRow key={p.id} project={p} active={p.id === activeId} onDone={() => setRenamingId(null)} />
+          ) : (
+            <button
+              key={p.id}
+              type="button"
+              className={p.id === activeId ? `${styles.projectRow} ${styles.active}` : styles.projectRow}
+              onClick={() => open(p.id)}
+              onDoubleClick={() => setRenamingId(p.id)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setContextMenu({ id: p.id, rect: new DOMRect(e.clientX, e.clientY, 0, 0) });
+              }}
+            >
+              <span className={p.id === activeId ? `${styles.dot} ${styles.dotActive}` : styles.dot} />
+              <span className={styles.projectName}>{p.name}</span>
+            </button>
+          ),
+        )}
         {draftName !== undefined && (
           <div className={`${styles.projectRow} ${styles.active}`}>
             <span className={`${styles.dot} ${styles.dotActive}`} />
@@ -210,8 +227,7 @@ function ProjectList({ activeId, draftName }: { activeId: string | null; draftNa
         <Popover anchorRect={contextMenu.rect} width={230} onClose={() => setContextMenu(null)}>
           <ProjectMenu
             onRename={() => {
-              open(contextMenu.id);
-              useUi.getState().setRenamingProjectId(contextMenu.id);
+              setRenamingId(contextMenu.id);
               setContextMenu(null);
             }}
             onDelete={() => {
@@ -222,5 +238,16 @@ function ProjectList({ activeId, draftName }: { activeId: string | null; draftNa
         </Popover>
       )}
     </>
+  );
+}
+
+/** Rename in place (right-click Rename or double-click): the row becomes an input. */
+function RenameRow({ project, active, onDone }: { project: ProjectConfig; active: boolean; onDone: () => void }) {
+  const cls = [styles.projectRow, styles.renameRow, active && styles.active].filter(Boolean).join(' ');
+  return (
+    <div className={cls}>
+      <span className={active ? `${styles.dot} ${styles.dotActive}` : styles.dot} />
+      <ProjectNameInput project={project} className={styles.renameInput} onDone={onDone} />
+    </div>
   );
 }

@@ -363,8 +363,8 @@ inputs, textareas and the diff.
 
 ### Sidebar (`Sidebar.dc.html`)
 
-- 260px, `bg.sidebar`, right border `border.row`. Hidden on Review; the header then shows a
-  show-sidebar button next to the traffic lights.
+- 260px, `bg.sidebar`, right border `border.row`. Hidden on Review (except a review opened from
+  the project list); the header then shows a show-sidebar button next to the traffic lights.
 - **Top row** (52px, drag region): traffic-light space, 28px icon buttons: sidebar toggle, Back,
   Forward (disabled colour `#5c5a55` when history does not allow it).
 - **Nav** (40px rows, radius 10, 14px; active `bg.sidebarActive` + `text.strong`):
@@ -375,8 +375,12 @@ inputs, textareas and the diff.
   - Sort/filter opens a menu: "Sort by name" / "Sort by date created" (default: creation order),
     remembered in `localStorage` (`gitgel.projectSort`).
 - **Project list:** 40px rows, 7px hollow circle (1.5px border; `#e0ddd6` when active, else
-  `#75726b`) + name with ellipsis, no counts. Click opens the project; the active one gets
-  `bg.sidebarActive`. Right-click opens the project menu (Rename / Delete project…). A draft
+  `#75726b`) + name with ellipsis, no counts. Click opens the project's review (project scope,
+  sidebar kept shown, Back aria-label "Back"), or its page while it has no entries; the review's
+  pencil opens the page. The active one (on its page or its project review) gets
+  `bg.sidebarActive`. Right-click opens the project menu (Rename / Delete project…); Rename or a
+  double-click turns the row into a 32px input in place (name selected, no navigation): ↵ saves, Esc or leaving the
+  field cancels, a name conflict turns it danger with the message as its tooltip. A draft
   project (flow C) shows as an active row at the end.
 - **Footer** (56px, top border `#2a2825`): a 36px link row (folder icon + "N repositories",
   "1 repository") → Settings. On footer hover the row gets `bg.sunken` and a 32px "+" button
@@ -468,7 +472,8 @@ Every active branch, whether or not it is in a project.
 
 One screen for both scopes:
 
-- **Project scope** (Project → "Review changes" or ⌘R, or a project row's branch link): title =
+- **Project scope** (a sidebar project with entries, Project → "Review changes" or ⌘R, or a
+  project row's branch link): title =
   project name, subtitle `Project review · X of Y entries have changes` (X = groups with a file in
   any mode).
 - **Branch scope** (a Branches row): title = branch (short SHA if detached), subtitle
@@ -477,14 +482,18 @@ One screen for both scopes:
 
 Layout:
 
-- The sidebar is hidden while on Review and restored on leaving. When the user shows it (the
+- The sidebar is hidden while on Review and restored on leaving, except when the review was
+  opened from the sidebar's project list: then it stays shown. When the user shows it (the
   header's show-sidebar button or the sidebar toggle), Review sits next to it
   (`ReviewSidebar.dc.html`, board L2): the header drops the traffic-light space and the
   show-sidebar button (both live in the sidebar's top row) and starts with Back at 16px padding;
   the file list narrows to 280px; nothing else changes. **Header** (56px, `bg.main`,
   drag region): traffic-light space, show-sidebar button, Back (aria-label "Back to Branches" /
-  "Back to project"), serif 18px title + 12px muted subtitle; right: segmented **Committed /
-  Uncommitted / All**, each with its file count summed over all groups, and a refresh button.
+  "Back to project" / "Back"), serif 18px title + 12px muted subtitle (project scope: double-click renames the project in
+  place, a 300px serif 18px input that works like the sidebar's); right: segmented
+  **Committed / Uncommitted / All**, each with its file count summed over all groups, a refresh
+  button and, in project scope, a 32px pencil button "Edit project" that opens the project page
+  (going back to it when Review was opened from there).
 - Default mode Committed; Uncommitted if there are no committed changes but some uncommitted.
   Switching mode resets the selection to that mode's first file. Groups with no files in the
   mode are hidden, except the one group of a branch review (its base button stays reachable).

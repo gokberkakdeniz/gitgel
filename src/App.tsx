@@ -112,6 +112,7 @@ function Screen({ route }: { route: Route }) {
           target={route.target}
           backLabel={route.backLabel}
           focusKey={route.focusKey}
+          keepSidebar={route.keepSidebar}
         />
       );
     case 'settings':

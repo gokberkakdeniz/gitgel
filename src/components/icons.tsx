@@ -146,6 +146,15 @@ export function RefreshIcon({ size = 15, className }: IconProps) {
   );
 }
 
+export function PencilIcon({ size = 15, className }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={1.8} className={className}>
+      <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <path d="m15 5 4 4" />
+    </Svg>
+  );
+}
+
 export function ChevronDownIcon({ size = 12, className }: IconProps) {
   return (
     <Svg size={size} strokeWidth={2} className={className}>

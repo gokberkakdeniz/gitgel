@@ -253,6 +253,10 @@ rather than as a task is listed the same way, marked "(on request)".
     ahead shows `↑N` and `↓N` when behind the base (new `EntrySummary.behind`, from the same
     `graph_ahead_behind` call). Ahead/behind against the upstream (force-push case) is not shown.
 - [x] T15.2 ✋ Checkpoint — phase 15 — 2026-09-29
+- [x] (on request) Sidebar: a project with entries opens its review (sidebar kept shown), an
+  empty one its page; Review header "Edit project" pencil opens the page — 2026-09-30
+- [x] (on request) Sidebar: right-click Rename or double-click edits the project name inline in
+  its row; double-clicking the project review title does the same — 2026-09-30
 
 ---
 

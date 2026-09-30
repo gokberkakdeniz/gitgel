@@ -233,6 +233,15 @@
   border-color: var(--text-code);
 }
 
+.renameRow {
+  cursor: default;
+}
+.renameInput {
+  flex-grow: 1;
+  margin-left: -10px;
+  font-size: 14px;
+}
+
 .projectName {
   flex-grow: 1;
   min-width: 0;

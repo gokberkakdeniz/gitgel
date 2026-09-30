@@ -29,7 +29,6 @@ interface UiState {
   toast: Toast | null;
   addReposSheet: string[] | null; // picked folder paths while the sheet is open
   modalCount: number; // open modals; folder drops are ignored while any is open
-  renamingProjectId: string | null; // the Project screen opens this project in rename mode
   deletingProjectId: string | null; // the delete confirmation is open for this project
   setSidebarVisible: (visible: boolean) => void;
   setBranchesFilter: (filter: string) => void;
@@ -41,7 +40,6 @@ interface UiState {
   setAddReposSheet: (paths: string[] | null) => void;
   modalOpened: () => void;
   modalClosed: () => void;
-  setRenamingProjectId: (id: string | null) => void;
   setDeletingProjectId: (id: string | null) => void;
 }
 
@@ -56,7 +54,6 @@ export const useUi = create<UiState>()((set) => ({
   toast: null,
   addReposSheet: null,
   modalCount: 0,
-  renamingProjectId: null,
   deletingProjectId: null,
   setSidebarVisible: (sidebarVisible) => set({ sidebarVisible }),
   setBranchesFilter: (branchesFilter) => set({ branchesFilter }),
@@ -68,6 +65,5 @@ export const useUi = create<UiState>()((set) => ({
   setAddReposSheet: (addReposSheet) => set({ addReposSheet }),
   modalOpened: () => set((s) => ({ modalCount: s.modalCount + 1 })),
   modalClosed: () => set((s) => ({ modalCount: Math.max(0, s.modalCount - 1) })),
-  setRenamingProjectId: (renamingProjectId) => set({ renamingProjectId }),
   setDeletingProjectId: (deletingProjectId) => set({ deletingProjectId }),
 }));
