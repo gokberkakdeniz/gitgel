@@ -48,7 +48,6 @@ export interface Config {
   projects: ProjectConfig[];
   settings: Settings;
   scripts: ScriptConfig[]; // the user's scripts, in menu order (SPEC §14)
-  scriptInputValues: Record<string, Record<string, string>>; // `${scriptId}|${entryKey}` -> last input values
 }
 
 // ---- Scripts (SPEC §14) ----

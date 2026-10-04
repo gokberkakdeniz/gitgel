@@ -175,8 +175,6 @@ pub struct Config {
     pub settings: Settings,
     /// The user's scripts, in menu order (SPEC §14).
     pub scripts: Vec<ScriptConfig>,
-    /// `<scriptId>|<entryKey>` -> the input values last run with.
-    pub script_input_values: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 impl Default for Config {
@@ -188,7 +186,6 @@ impl Default for Config {
             projects: Vec::new(),
             settings: Settings::default(),
             scripts: Vec::new(),
-            script_input_values: BTreeMap::new(),
         }
     }
 }

@@ -2,7 +2,6 @@
 import { create } from 'zustand';
 import { runScript } from '../lib/ipc';
 import type { AppError, EntrySummary, ScriptConfig, ScriptInput, ScriptOutputChunk, ScriptRun } from '../lib/types';
-import { useData } from '../state/data';
 import { useUi } from '../state/ui';
 import { branchContext, checkWhen, evalWhen, type ScriptMenuName } from './when';
 
@@ -129,10 +128,9 @@ export function pickScript(script: ScriptConfig, e: EntrySummary, menu: ScriptMe
   }
 }
 
-/** The values the run dialog opens with: the last ones run with on this entry, else the defaults. */
-export function rememberedInputs(script: ScriptConfig, e: EntrySummary): Record<string, string> {
-  const saved = useData.getState().config?.scriptInputValues[`${script.id}|${e.key}`] ?? {};
-  return Object.fromEntries(script.inputs.map((i) => [i.id, saved[i.id] ?? i.default]));
+/** The values the run dialog opens with: each input's default (nothing is remembered). */
+export function initialInputs(script: ScriptConfig): Record<string, string> {
+  return Object.fromEntries(script.inputs.map((i) => [i.id, i.default]));
 }
 
 /** Runs a script on an entry and shows its toast; with `show` (default: the script's `openOutput`)

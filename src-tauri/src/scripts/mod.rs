@@ -99,17 +99,12 @@ pub fn delete_script(state: &AppState, script_id: &str) -> Result<Config, AppErr
     })
 }
 
-/// Drops the script and its remembered input values.
 fn remove(config: &mut Config, script_id: &str) -> Result<(), AppError> {
     let before = config.scripts.len();
     config.scripts.retain(|s| s.id != script_id);
     if config.scripts.len() == before {
         return Err(AppError::NotFound(script_id.into()));
     }
-    let prefix = format!("{script_id}|");
-    config
-        .script_input_values
-        .retain(|key, _| !key.starts_with(&prefix));
     Ok(())
 }
 
@@ -375,17 +370,10 @@ mod tests {
     }
 
     #[test]
-    fn remove_drops_remembered_values() {
+    fn remove_drops_the_script() {
         let mut config = with(&[("s_1", "a"), ("s_2", "b")]);
-        config
-            .script_input_values
-            .insert("s_1|r_1:main".into(), Default::default());
-        config
-            .script_input_values
-            .insert("s_2|r_1:main".into(), Default::default());
         remove(&mut config, "s_1").unwrap();
         assert_eq!(config.scripts.len(), 1);
-        assert_eq!(config.script_input_values.len(), 1);
         assert!(remove(&mut config, "s_1").is_err());
     }
 

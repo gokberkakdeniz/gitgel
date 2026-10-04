@@ -197,17 +197,6 @@ pub fn run_script(
     ctx: RunContext,
 ) -> Result<ScriptRun, AppError> {
     let p = prepare(state, &script, &entry, &inputs, &ctx)?;
-    // The run dialog opens with these next time (SPEC §14 "Run dialog").
-    if !script.id.is_empty() && !inputs.is_empty() {
-        let key = format!("{}|{}", script.id, p.entry_key);
-        let unchanged = config::snapshot(state).script_input_values.get(&key) == Some(&inputs);
-        if !unchanged {
-            config::update(state, |config| {
-                config.script_input_values.insert(key, inputs.clone());
-                Ok(())
-            })?;
-        }
-    }
     if !script.id.is_empty() {
         let runs = lock(&state.runs);
         let same = runs.runs.values().find(|r| {

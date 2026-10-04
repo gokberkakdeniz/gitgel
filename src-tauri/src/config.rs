@@ -150,8 +150,7 @@ mod tests {
                              "options": [], "required": true, "when": "" }],
                 "runsIn": "worktree", "showIn": ["branches"], "when": "branch.checkedOut",
                 "openOutput": true, "askFirst": false, "disabled": false
-            }],
-            "scriptInputValues": { "s_1|r_1:main": { "PORT": "4000" } }
+            }]
         });
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(
@@ -206,7 +205,7 @@ mod tests {
         assert_eq!(config.settings.diff_context_lines, 3);
         assert_eq!(config.settings.terminal, crate::model::TerminalChoice::Auto);
         assert_eq!(config.settings.terminal_command, "");
-        assert!(config.scripts.is_empty() && config.script_input_values.is_empty());
+        assert!(config.scripts.is_empty());
     }
 
     #[test]

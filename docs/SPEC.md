@@ -1089,8 +1089,6 @@ export interface Config {
   projects: ProjectConfig[];
   settings: Settings;
   scripts: ScriptConfig[];               // §14, menu order
-  scriptInputValues: Record<string, Record<string, string>>; // `${scriptId}|${entryKey}` -> last
-                                         // input values 
 }
 export interface EntryRef { repoId: string; branch: string | null; worktreePath: string | null }
 ```
@@ -1831,7 +1829,7 @@ export interface ScriptRun {
 - Each input's `when` is evaluated again on every change; a hidden input is not validated and not
   set. A `when` that fails keeps the field shown with the error under it. Required inputs must be
   filled for Run.
-- Last values are remembered per script and entry (`scriptInputValues`), saved on Run. ⌘↵ runs,
+- The dialog always opens with each input's default; nothing typed is remembered. ⌘↵ runs,
   Esc cancels. With no shown input and `askFirst` off, no dialog opens.
 
 ### Settings › Scripts (N5)
@@ -1845,7 +1843,7 @@ export interface ScriptRun {
   toast).
   Dragging a row reorders (`reorder_scripts`). Empty: one muted row "No scripts yet".
 - Switching off turns the script off at once (saved, no toast): it leaves every menu but keeps its
-  place, command, inputs and remembered values. An off row dims its icon tile (0.45), shows the
+  place, command and inputs. An off row dims its icon tile (0.45), shows the
   name in `text.muted` and a small neutral "off" `Pill` after it; switching on brings it back. The
   section's count in the list counts all scripts.
 - Under the card, 12px muted: "Scripts run as you, with your permissions. Gitgel itself still only

@@ -366,6 +366,9 @@ rather than as a task is listed the same way, marked "(on request)".
     not a line under the row (user decision 2026-10-04). Rows now take `bg.hover` on hover like
     every `List` row (Repositories and Scripts did not before).
 - [x] T18.3 ✋ Checkpoint — phase 18 — 2026-10-04
+- [x] (on request) The run dialog no longer remembers input values: it always opens with the
+  defaults; `scriptInputValues` is gone from the config (an old file's key is ignored and dropped
+  on the next save) — 2026-10-04
 
 ---
 

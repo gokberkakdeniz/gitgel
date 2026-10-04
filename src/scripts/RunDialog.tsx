@@ -10,7 +10,7 @@ import { getBaseOptions } from '../lib/ipc';
 import { tildifyHome } from '../lib/paths';
 import { useInvoke } from '../lib/useInvoke';
 import { useData } from '../state/data';
-import { fillName, rememberedInputs, shownInputs, startScript, useRuns, type RunRequest } from './runs';
+import { fillName, initialInputs, shownInputs, startScript, useRuns, type RunRequest } from './runs';
 import styles from './RunDialog.module.css';
 
 /** The run dialog of the pick in `useRuns.dialog` (flow O). */
@@ -23,7 +23,7 @@ export function RunDialogHost() {
 function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => void }) {
   const { script, entry, menu, project } = request;
   const repoPath = useData((s) => s.config?.repos.find((r) => r.id === entry.repoId)?.path ?? '');
-  const [values, setValues] = useState(() => rememberedInputs(script, entry));
+  const [values, setValues] = useState(() => initialInputs(script));
   const shown = shownInputs(script, entry, menu, project, values);
   const hasBranch = shown.some(({ input }) => input.type === 'branch');
   const { data: options } = useInvoke(() => getBaseOptions(entry.repoId, entry.key), [entry.key], {
