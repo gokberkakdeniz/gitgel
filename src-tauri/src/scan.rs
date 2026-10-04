@@ -107,6 +107,7 @@ pub fn scan_repo(
         error: None,
         default_base: None,
         default_base_source: None,
+        base_branch: None,
         active: Vec::new(),
         others: Vec::new(),
         stashes: Vec::new(),
@@ -203,23 +204,18 @@ fn fill(
     for branch in branches {
         live_tips.insert(branch.tip.clone());
         if Some(&branch.name) == base_branch.as_ref() {
-            // Listed only while it holds work: unpushed commits or uncommitted changes.
+            // Always listed (T20.3), compared with its upstream.
             let worktree = checked_out
                 .get(branch.name.as_str())
                 .map(|p| p.to_path_buf());
-            let summary = summarize(
+            scan.active.push(summarize(
                 &ctx,
                 Some(branch.name.clone()),
                 worktree,
                 Some(branch.tip.clone()),
                 Some(branch.last_commit_at),
-            );
-            let has_work = summary.ahead.unwrap_or(0) > 0
-                || summary.uncommitted.unwrap_or(0) > 0
-                || summary.state == EntryState::GitError;
-            if has_work {
-                scan.active.push(summary);
-            }
+            ));
+            scan.base_branch = Some(branch.name.clone());
             continue;
         }
         let worktree = checked_out
@@ -448,9 +444,12 @@ fn summarize(
             s.files = Some(stats.files);
             s.add = Some(stats.add);
             s.del = Some(stats.del);
-            // A fresh worktree with only uncommitted work must not look merged.
-            flags.merged =
-                (stats.ahead == 0 || stats.squash_merged) && s.uncommitted.unwrap_or(0) == 0;
+            // A fresh worktree with only uncommitted work must not look merged, nor the base
+            // branch, which is level with its upstream most of the time.
+            let is_base = s.branch.is_some() && s.branch == ctx.base_branch;
+            flags.merged = (stats.ahead == 0 || stats.squash_merged)
+                && s.uncommitted.unwrap_or(0) == 0
+                && !is_base;
         }
         Err(Some(reason)) if !flags.git_error => {
             flags.base_missing = true;
@@ -807,8 +806,7 @@ pub fn pick_state(f: &StateFlags) -> EntryState {
 
 /// Re-reads the uncommitted state of the entries checked out at `worktree` in a stored scan.
 /// Committed stats come from the cache. `None`: no entry is checked out there; otherwise whether
-/// an entry's summary changed. The base branch's worktree also gives `None`: whether it is
-/// listed at all depends on its state, so the caller rescans the repo.
+/// an entry's summary changed.
 pub fn refresh_worktree(
     pool: &RepoPool,
     cache: &Mutex<Cache>,
@@ -830,12 +828,6 @@ pub fn refresh_worktree(
         .default_base
         .as_deref()
         .map(|b| refs::base_branch_name(&repo, b));
-    let on_base_branch = scan.active.iter().any(|e| {
-        e.worktree_path.as_deref() == Some(&*wt) && e.branch.is_some() && e.branch == base_branch
-    });
-    if on_base_branch {
-        return Ok(None);
-    }
     let ctx = RepoCtx {
         pool,
         cache,
@@ -1022,6 +1014,7 @@ fn failed_scan(repo_cfg: &RepoConfig, error: &str) -> RepoScan {
         error: Some(error.to_string()),
         default_base: None,
         default_base_source: None,
+        base_branch: None,
         active: Vec::new(),
         others: Vec::new(),
         stashes: Vec::new(),
@@ -1125,7 +1118,15 @@ mod tests {
         assert_eq!(scan.default_base.as_deref(), Some("main"));
         assert_eq!(scan.default_base_source.as_deref(), Some("main"));
 
-        let names: Vec<_> = scan.active.iter().map(|e| e.branch.as_deref()).collect();
+        // The base branch is always listed (T20.3); the others by activity.
+        assert_eq!(scan.base_branch.as_deref(), Some("main"));
+        assert_eq!(active(&scan, "main").state, EntryState::Ok);
+        let names: Vec<_> = scan
+            .active
+            .iter()
+            .map(|e| e.branch.as_deref())
+            .filter(|b| *b != Some("main"))
+            .collect();
         assert_eq!(
             names,
             [Some("feature"), Some("recent"), Some("squashed"), None]
@@ -1306,9 +1307,10 @@ mod tests {
             refresh_worktree(&pool, &cache, &config, &mut scan, &wt).unwrap(),
             Some(false)
         );
+        // The base branch's worktree (main) is refreshed in place too.
         assert_eq!(
             refresh_worktree(&pool, &cache, &config, &mut scan, t.path()).unwrap(),
-            None
+            Some(false)
         );
     }
 
@@ -1383,13 +1385,17 @@ mod tests {
     }
 
     #[test]
-    fn base_branch_is_listed_only_with_unpushed_or_uncommitted_work() {
+    fn base_branch_is_always_listed_and_never_merged() {
         let t = TestRepo::new();
         t.commit_on("main", &[("a.txt", Some(b"a\n"))], "init", 3);
         t.checkout_main();
         t.set_origin_head("main");
-        // Clean and pushed: not listed.
-        assert!(run(&t).scan.active.is_empty());
+        // Clean and pushed: still listed, level with its upstream, not "merged".
+        let scan = run(&t).scan;
+        assert_eq!(scan.base_branch.as_deref(), Some("main"));
+        let m = active(&scan, "main");
+        assert_eq!((m.ahead, m.uncommitted), (Some(0), Some(0)));
+        assert_eq!(m.state, EntryState::Ok);
 
         // Two unpushed commits.
         t.commit_on("main", &[("b.txt", Some(b"b\n"))], "b", 2);
@@ -1410,7 +1416,11 @@ mod tests {
         let t = TestRepo::new();
         t.commit_on("main", &[("a.txt", Some(b"a\n"))], "init", 3);
         t.checkout_main();
-        assert!(run(&t).scan.active.is_empty());
+        let clean = run(&t).scan;
+        assert_eq!(
+            (active(&clean, "main").ahead, active(&clean, "main").uncommitted),
+            (None, Some(0))
+        );
 
         t.write_file(t.path(), "a.txt", b"a\nchanged\n");
         let (pool, cache, repo_cfg, config) = setup(&t);
@@ -1428,10 +1438,10 @@ mod tests {
             (None, None, Some(1))
         );
         assert_eq!(m.state, EntryState::Ok);
-        // Its worktree is not refreshed in place: the caller rescans the repo.
+        // Its worktree is refreshed in place like any other.
         assert_eq!(
             refresh_worktree(&pool, &cache, &config, &mut scan, t.path()).unwrap(),
-            None
+            Some(false)
         );
     }
 

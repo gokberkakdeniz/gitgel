@@ -381,6 +381,20 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] T19.3 Stash actions, disabled — 2026-10-04
   - note: `MenuItem` gained a `title` (tooltip) for the disabled items.
 
+### Phase 20 — History
+- [x] T20.1 History backend: pages, search, refs — 2026-10-04
+- [x] T20.2 History screen — 2026-10-04
+  - note: `Review/parts.tsx` holds what Review and History share (`useDiffView` for the view
+    settings and ⌥V / ⌥C / ⌥W). The picked commit's files use Review's `FileRow` (`bg.hover`),
+    not the canvas's accent outline. The search covers paths by a tree diff per commit, only
+    for commits whose text did not match.
+- [x] T20.3 Base branch always listed — 2026-10-04
+  - note: the base branch's worktree is now refreshed in place by the watcher (it no longer
+    asks for a rescan). A base branch already in a project shows History instead of its
+    projects chip.
+- [x] T20.4 ✋ Checkpoint — phase 20 — 2026-10-04
+  - note: user feedback: the list label was cut off once the list scrolled (fixed).
+
 ---
 
 ## Open

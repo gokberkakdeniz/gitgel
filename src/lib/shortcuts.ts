@@ -27,7 +27,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
   {
     title: 'Branches and projects',
     items: [
-      { label: 'Focus filter', keys: ['⌘', 'K'], note: 'Branches, Review files' },
+      { label: 'Focus filter', keys: ['⌘', 'K'], note: 'Branches, Review files, History search' },
       { label: 'Add branches', keys: ['⌘', 'K'], note: 'Project' },
       { label: 'Review changes', keys: ['⌘', 'R'], note: 'Project' },
       { label: 'Rename project', keys: ['F2'] },
@@ -38,7 +38,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
     items: [
       { label: 'Next change', keys: ['⌥', '↓'], note: 'then next file' },
       { label: 'Previous change', keys: ['⌥', '↑'] },
-      { label: 'Newer commit', keys: ['⌥', '⇧', '↑'] },
+      { label: 'Newer commit', keys: ['⌥', '⇧', '↑'], note: 'also History' },
       { label: 'Older commit', keys: ['⌥', '⇧', '↓'] },
       { label: 'Split / Unified', keys: ['⌥', 'V'] },
       { label: 'Changes only / Whole file', keys: ['⌥', 'C'] },

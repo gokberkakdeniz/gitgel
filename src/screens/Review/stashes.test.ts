@@ -26,6 +26,7 @@ function scan(id: string, name: string, stashes: StashInfo[]): RepoScan {
     error: null,
     defaultBase: 'main',
     defaultBaseSource: 'main',
+    baseBranch: null,
     active: [],
     others: [],
     stashes,

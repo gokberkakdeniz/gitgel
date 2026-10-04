@@ -140,6 +140,18 @@ pub fn changed_paths(diff: &Diff) -> Vec<String> {
     paths
 }
 
+/// The paths a commit changed against its first parent (an empty tree for a root commit),
+/// without patches or rename detection.
+pub fn commit_paths(repo: &Repository, commit: &git2::Commit) -> Result<Vec<String>, AppError> {
+    let from = match commit.parent(0) {
+        Ok(p) => Some(p.tree()?),
+        Err(_) => None,
+    };
+    let to = commit.tree()?;
+    let diff = repo.diff_tree_to_tree(from.as_ref(), Some(&to), Some(&mut diff_options(false)))?;
+    Ok(changed_paths(&diff))
+}
+
 /// Number of changed files, without generating patches.
 pub fn delta_count(diff: &Diff) -> usize {
     diff.deltas()

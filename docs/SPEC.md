@@ -106,13 +106,13 @@ signed, not notarized, no sandbox.
   default 14) and ahead of its base (or with a base picked by hand, even when not ahead of it:
   otherwise picking a base at its own tip would hide it; user decision 2026-09-28).
 - **Base branch:** the branch whose name matches the repo's default base (e.g. `main`). It is
-  compared with its upstream (the configured one, else `origin/<name>`) and is listed only when it
-  has unpushed commits or uncommitted changes. Without a usable upstream (none, or one with no
+  compared with its upstream (the configured one, else `origin/<name>`) and is always listed, as
+  the first row of its repo. Without a usable upstream (none, or one with no
   common ancestor, e.g. after a force-push) only its working tree is shown; that is not "base
   missing".
+- **History:** a branch's commits, newest first, each one reviewable on its own (§16).
 
-**Screens:** Branches (including the first-run empty state), Project, Review, Add palette (⌘K),
-Settings.
+**Screens:** Branches (including the first-run empty state), Project, Review, History (§16), Add palette (⌘K), Settings.
 
 **Out of scope:** writing to repositories (a user's script may; Gitgel does not), review comments, GitHub/PR integration, fetch/pull,
 launching agents, multiple windows, LSP, the git CLI (even as a fallback), agent labels, a light
@@ -167,8 +167,11 @@ gitgel/
 │  │                              # Popover, Menu, Modal, Toast, Segmented, Select, SettingsNav,
 │  │                              # KindBadge, Banner, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
-│  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
+│  ├─ screens/  Branches/  Project/  Review/  History/  Settings/  Palette/  AddRepos/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
+│  │            # Review/parts.tsx: view menu, change navigation, file row, diff view settings
+│  │            #   (shared with History, §16)
+│  │            # History/: the History screen and its list rows (§16)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
@@ -192,15 +195,17 @@ gitgel/
       │  ├─ mod.rs                # submodules + From<git2::Error>
       │  ├─ pool.rs               # Repository pool
       │  ├─ inspect.rs            # folder resolution (flow A2)
-      │  ├─ refs.rs               # branches, default base, ref checks, tags
+      │  ├─ refs.rs               # branches, default base, ref checks, tags, last fetch time
       │  ├─ worktrees.rs          # main + linked worktrees, ignore check
       │  ├─ diff.rs               # tree/workdir/commit diffs, FileChange conversion, blobs
-      │  ├─ history.rs            # merge-base, ahead, revwalk, merged state, stack candidates
+      │  ├─ history.rs            # merge-base, ahead, revwalk, merged state, stack candidates,
+      │  │                        # history pages and search (§16)
       │  ├─ stash.rs              # stash stack from the refs/stash reflog, a stash's changes
       │  └─ testutil.rs           # #[cfg(test)] only: throwaway repos in a TempDir
       ├─ scan.rs                  # branch/worktree discovery, entry summaries, stored scan
       ├─ watch.rs                 # file watching, event classification, targeted recompute
       ├─ review.rs  files.rs  base.rs  projects.rs  repos.rs
+      ├─ history.rs               # a branch's history page, search, refs (§16)
 ```
 
 ---
@@ -474,7 +479,7 @@ inputs, textareas and the diff.
 
 ### Branches (`Main.dc.html`)
 
-Every active branch, whether or not it is in a project.
+Every active branch, whether or not it is in a project, and each repo's base branch.
 
 - **Header** (64px, drag region): title "Branches"; subtitle
   `Active branches · N repos · checked out in a worktree, or committed in the last D days`
@@ -484,7 +489,9 @@ Every active branch, whether or not it is in a project.
     project and repo bands left empty; the subtitle becomes `Active branches not in any project ·
     N repos · …` (N = visible repos). Counts ignore the text filter. The choice is remembered in
     `localStorage` (`gitgel.branches.scope`). If nothing is left: centred serif 22px "Every active
-    branch is in a project". The sidebar count always shows all active branches.
+    branch is in a project". The sidebar count always shows all active branches. Base branch rows
+    are left out of every count except the band's "N branches", and "Not in a project" still
+    lists them.
   - Filter field: 200 × 32px, `bg.sunken`, search icon, placeholder "Search",
     `Kbd` "⌘K" (⌘K focuses it). It is a real filter, word-based: `-`, `/`, `_`, `.` count as
     spaces, and every typed word must appear in the branch name or SHA, the worktree path or the
@@ -544,6 +551,22 @@ Every active branch, whether or not it is in a project.
     between the two groups); icons as there; then the Scripts group (§14, flow N1–N2). ↑/↓/↵/Esc
     work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
+- **Base branch row** (`HistH1.dc.html`): the repo's base branch (§1) is always
+  the first row of its band, whatever its age or work, so every repo that can be read has a band.
+  It differs from other rows:
+  - Background `bg.sunken` (hover `bg.hover`); no checkbox: a 12px `text.faint` branch icon in
+    its place, tooltip "Always listed". It cannot be selected.
+  - After the name, a compact `outline` pill "base". The name opens History (§16) on it, tooltip
+    `Show history of <name>`.
+  - Line 2 as other rows, against its upstream: `base origin/main · ↑0 ↓3 / 0 / 2 · 4m` (↓ as of
+    the last fetch); without a usable upstream the base part is left out and ahead / files are
+    "—". Never the "merged" pill.
+  - Projects cell: a 26px "History" button (12px history icon, 12px `accent.text`, `bg.elevated`,
+    1px `border`, radius 8; tooltip `Commit history of <name>`) that opens History.
+  - The row menu is the same as other rows'.
+- **Open history**: every row menu has "Open history" (history icon) right
+  under "Copy branch name" (first for a detached HEAD, which opens the history of its SHA). It
+  opens History (§16) on the row's branch.
 - **Stashes** of the repo under its rows (flow P1, §15).
 - Repos sorted by their newest row, rows newest first (by the age shown).
 - While the first scan runs: muted "Scanning repositories…" (the list fills in repo by repo).
@@ -1147,6 +1170,7 @@ export interface RepoScan {
   error: string | null;
   defaultBase: string | null;        // e.g. "main"
   defaultBaseSource: string | null;  // matching defaultBaseOrder item, e.g. "origin/HEAD"
+  baseBranch: string | null;         // local name of the base branch, always in `active`
   active: EntrySummary[];            // active branches + detached worktrees, newest first
   others: OtherBranch[];             // all other local branches except the base branch
   stashes: StashInfo[];              // the stash stack, newest first (§15)
@@ -1217,6 +1241,27 @@ export interface StashChanges {            // a stash against its first parent; 
   base: string;
   files: FileChange[];
 }
+// History (§16)
+export interface HistoryCommit {
+  sha: string; shortSha: string;
+  subject: string;
+  body: string;                   // the message after the subject, trimmed; '' when none
+  author: string; authorEmail: string;
+  committedAt: number;            // committer time, unix seconds
+  parents: number;                // > 1: a merge commit
+  inBase: boolean;                // reachable from the base asked for (below the base line)
+}
+export interface HistoryPage {
+  rev: string;                    // as asked for
+  tip: string | null;             // null => the rev does not resolve
+  commits: HistoryCommit[];       // newest first (committer time), at most `limit`
+  more: boolean;                  // the walk has more commits (or matches) past `limit`
+  total: number | null;           // commits reachable from the tip; null while searching
+  ahead: number | null;           // commits not in the base; null without a base
+  mergeBase: string | null;       // tip ↔ base
+  fetchedAt: number | null;       // FETCH_HEAD's modification time; null if never fetched
+}
+export interface HistoryRefs { branches: string[]; remotes: string[] }   // sorted; no */HEAD
 export interface ReviewData {
   groups: ReviewGroup[];          // reviewable entries, in project order
   notInReview: EntrySummary[];    // project scope only
@@ -1333,6 +1378,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_review` | `target: ReviewTarget` | `ReviewData` |
 | `get_commit_changes` | `repoId, sha` | `CommitChanges` |
 | `get_stash_changes` | `repoId, sha` | `StashChanges` |
+| `get_history` | `repoId, rev, base: string\|null, query, limit` | `HistoryPage` (§16) |
+| `get_history_refs` | `repoId` | `HistoryRefs` |
 | `read_file_pair` | `repoId, worktreePath: string\|null, change: FileChange` | `FilePair` |
 | `create_project` | `name, entries: EntryRef[]` | `ProjectConfig` |
 | `rename_project` | `projectId, name` | `Config` |
@@ -1617,6 +1664,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "History" (H1–H3; the canvas's H3 is `HistH4`): H1 Branches with the base branch rows (base row 43–55, data 89–98) and a row menu with "Open history" (99–104); H2 History of a checked-out `main` (header 21–41: branch button, search, "Fetched", refresh; list 43–85: day label 47–49, base line 50–55, Uncommitted row 56–64, commit row 65–73, file row 74–83; commit header 87–96; file bar 97–110; split diff 111+; avatar and row styles 136–160); `HistH4` the same screen for a feature branch with the base line (data 178–196) |
 | Stashes | `FlowP1`, `FlowP2`, `FlowP3`, `FlowP4.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog (planned, T19.4) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
@@ -1982,3 +2030,81 @@ Gitgel. Canvas flow P (P1–P4); boards `FlowP1`–`FlowP4.dc.html`.
 - **Writing stashes** (planned, T19.4): what Stash… (the P4 dialog), Apply to…, Pop to…, Apply,
   Pop and Drop… do. It needs the §0 read-only rule changed first, so it waits for a user
   decision.
+
+---
+
+## 16. History
+
+A branch's commits, newest first, each one shown on its own against its first parent, like
+GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "History", boards
+`HistH1`, `HistH2`, `HistH4.dc.html` (§11).
+
+- **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
+  branch, a remote-tracking branch or a SHA) and walks from it by committer time, newest first
+  (`Sort::TIME`, no topological pass, so the first page does not read the whole graph), returning
+  the first `limit` commits. A page further down is the same call with a larger `limit` (the list
+  asks for 200 more when scrolled near its end). `total` counts every commit reachable from the
+  tip; it is cached per (repo, tip). With `base` (the entry's base) the commits not reachable from
+  it are counted (`ahead`) and the rest are `inBase`. `query`: every word (the Branches filter
+  rule) must appear in the subject, body, author name or email, the full SHA, or a path the
+  commit changed against its first parent (read only when the text did not match); the walk goes
+  on until `limit` commits match; `total` is null then. `fetchedAt`: the modification time of
+  `FETCH_HEAD` in the common git dir. `get_history_refs` lists the local branches and the
+  remote-tracking ones. Every call logs one line with its timings.
+- **Opening:** "Open history" in a Branches row menu, and the base branch row's
+  name and History button. Route `history` with `repoId` and `rev`, pushed like Review
+  (back and forward work). History hides the sidebar as Review does.
+- **Header** (`HistH2` 21–41), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
+  ` · <~worktree>` when `rev` is a branch checked out in a worktree. On the right, gap 10:
+  - Branch button: 32px, `bg.elevated`, 1px `border`, radius 8, branch icon 13px `accent.text`,
+    mono 12 `text.strong` rev, chevron (tooltip `Pick a branch of <repo>`). It opens a menu:
+    label "Local", the local branches, label "Remote", the remote-tracking ones (the current one
+    checked; scrolls when long). Picking one replaces the route's `rev`.
+  - Search field: `Input` 32px, 200px, placeholder "Search commits", label "Search commit
+    messages, SHAs and paths", no keycap; ⌘K focuses it (also listed in Shortcuts). Typing
+    searches (debounced 200 ms); Esc clears it.
+  - `Fetched <age> ago` (12px `text.faint`; tooltip "Last fetch (FETCH_HEAD). Gitgel never
+    fetches; commits pushed since then are not shown."), only when `fetchedAt` is known.
+  - Refresh button.
+- **List** (`HistH2` 43–85): 380px, `bg.sidebar`, right border `border`, scrolls. Label (section
+  label style, padding 14px 16px 6px) `<rev> · N commits` (`total`), while searching `N matching
+  commits` (`N+` while there are more). Rows (padding 0 8px 8px, gap 2):
+  - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with
+    uncommitted files; never while searching): first, above the day labels. 1px dashed
+    `border.strong`, radius 8, padding 7px 8px; a 24px slot with an 8px `accent.text` dot; 13px/500
+    `accent.text` "Uncommitted changes"; mono 11 muted `N files · <age>` (the age of the newest
+    uncommitted file, as on Branches; left out when unknown). Picking it lists its files under it
+    and shows HEAD ↔ working tree (untracked files included), as Review's Uncommitted layer.
+  - **Day labels**: 11px `text.faint`, padding 10px 8px 4px: "Today", "Yesterday", else `Oct 2`
+    (this year) or `Oct 2, 2025`, by committer time.
+  - **Commit row** (`role="option"`, tooltip "Show this commit"): padding 7px 8px, radius 8, gap
+    10; picked: `bg.hover`. A 24px avatar: the author's initials (first letters of the first two
+    words, upper case), 10px/600 `text.strong` on `bg.pressed`; an author whose name contains
+    `[bot]` gets "BOT" in `text.muted` on `bg.band` with a 1px dashed `border.strong`. Then 13px
+    `text.strong` subject (ellipsis) with an outline sm pill "merge" for a merge commit; line 2
+    mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
+    below the base line: subject `text.muted`, row opacity 0.7.
+  - **Base line** (`HistH4`): when `ahead` > 0, after the last commit not in the base: a 1px
+    `border.strong` rule on both sides of mono 11 muted `base <base> · <short merge-base>`, and
+    under it 11px `text.faint` `Below: already in <base>`.
+  - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
+    file shown on `bg.hover`).
+  - Empty: "No commits"; while searching "No commits match “<query>”" with "Clear search"; a rev
+    that does not resolve: `<rev> not found`.
+- **Picking:** on opening, the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
+  anywhere (newer / older; past the loaded end it loads more) step through the rows,
+  Uncommitted included. After a refresh the picked commit stays when it is still listed, else
+  the newest is picked. Search picks the first match.
+- **Pane** (`HistH2` 87–110): a commit header (padding 14px 18px, bottom border `border`, gap 8):
+  15px/600 `text.strong` subject with, on the right, a 28px "Copy SHA" icon button (copy icon,
+  tooltip "Copy full SHA"); the body (13px, line-height 1.5, `text.muted`, `white-space:
+  pre-wrap`, max-width 720px; left out when empty); mono 11 muted meta: an 18px avatar, the author
+  (`text.body`), `·` the committer time (`today 11:42`, `yesterday 11:42`, `Oct 2, 11:42`, `Oct 2,
+  2025`), `·` the short SHA (`accent.text`), `·` `parent <short>` (`root commit` without one), `·`
+  `N files`, `+a` (`success`), `−d` (`danger`). For Uncommitted: "Uncommitted changes", meta
+  `<~worktree> · N files +a −d`. Then Review's file bar (compare label `<parent> ↔ <sha>` or `HEAD
+  ↔ working tree`, whitespace chip, view menu, change navigation over the picked row's files) and
+  the diff, with Review's view settings and ⌥V / ⌥C / ⌥W / ⌥↑ / ⌥↓.
+- **Refresh:** the page is fetched again when the repo is updated (`repo-updated`), keeping the
+  loaded length; the Uncommitted row follows the scan.
+

@@ -435,6 +435,8 @@ pub struct RepoScan {
     pub default_base: Option<String>,
     /// The `defaultBaseOrder` item that matched, e.g. "origin/HEAD".
     pub default_base_source: Option<String>,
+    /// Local name of the base branch, which `active` always lists (when it exists).
+    pub base_branch: Option<String>,
     /// Active branches and detached worktrees, newest first.
     pub active: Vec<EntrySummary>,
     /// All remaining local branches except the base branch.
@@ -582,6 +584,52 @@ pub struct StashChanges {
     pub sha: String,
     pub base: String,
     pub files: Vec<FileChange>,
+}
+
+/// One commit of a history page (§16).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryCommit {
+    pub sha: String,
+    pub short_sha: String,
+    pub subject: String,
+    /// The message after the subject, trimmed; empty when there is none.
+    pub body: String,
+    pub author: String,
+    pub author_email: String,
+    /// Committer time, unix seconds.
+    pub committed_at: i64,
+    /// More than one: a merge commit.
+    pub parents: u32,
+    /// Reachable from the base asked for (listed below the base line).
+    pub in_base: bool,
+}
+
+/// A branch's history, newest first (§16).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryPage {
+    pub rev: String,
+    /// `None` when `rev` does not resolve.
+    pub tip: Option<String>,
+    pub commits: Vec<HistoryCommit>,
+    /// More commits (or matches) past `limit`.
+    pub more: bool,
+    /// Commits reachable from the tip; `None` while searching.
+    pub total: Option<u32>,
+    /// Commits not reachable from the base; `None` without a base.
+    pub ahead: Option<u32>,
+    pub merge_base: Option<String>,
+    /// Modification time of `FETCH_HEAD`, unix seconds; `None` if never fetched.
+    pub fetched_at: Option<i64>,
+}
+
+/// The refs History's branch button lists.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryRefs {
+    pub branches: Vec<String>,
+    pub remotes: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

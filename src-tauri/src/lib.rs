@@ -7,6 +7,7 @@ pub mod config;
 pub mod error;
 pub mod files;
 pub mod git;
+pub mod history;
 pub mod logs;
 pub mod memory;
 pub mod menu;
@@ -106,6 +107,8 @@ pub fn run() {
             commands::get_review,
             commands::get_commit_changes,
             commands::get_stash_changes,
+            commands::get_history,
+            commands::get_history_refs,
             commands::read_file_pair,
             commands::create_project,
             commands::rename_project,

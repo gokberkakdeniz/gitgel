@@ -36,6 +36,7 @@ function scan(id: string, active: EntrySummary[], status: RepoScan['status'] = '
     error: null,
     defaultBase: 'main',
     defaultBaseSource: 'main',
+    baseBranch: null,
     active,
     others: [],
     stashes: [],
@@ -207,3 +208,27 @@ describe('stashes under a band', () => {
     expect(branchGroups(config, [empty], '')).toEqual([]);
   });
 });
+
+describe('base branch row', () => {
+  const withBase = (active: EntrySummary[]): RepoScan => ({ ...scan('r_1', active), baseBranch: 'main' });
+  const main = entry('r_1', 'main', 1, { ahead: 0 });
+  const fresh = entry('r_1', 'feature', 50);
+  const inProject = entry('r_1', 'in-project', 40);
+
+  it('comes first in its band and stays in "Not in a project"', () => {
+    const scans = [withBase([fresh, inProject, main])];
+    expect(branchGroups(config, scans, '')[0].rows.map((r) => r.branch)).toEqual(['main', 'feature', 'in-project']);
+    expect(branchGroups(config, scans, '', 'unassigned')[0].rows.map((r) => r.branch)).toEqual(['main', 'feature']);
+    expect(branchGroups(config, scans, 'feature')[0].rows.map((r) => r.branch)).toEqual(['feature']);
+  });
+
+  it('keeps a repo listed with nothing else active', () => {
+    expect(branchGroups(config, [withBase([main])], '').map((g) => g.rows.length)).toEqual([1]);
+  });
+
+  it('is left out of the counts', () => {
+    expect(scopeCounts(config, [withBase([fresh, inProject, main])])).toEqual({ all: 2, unassigned: 1 });
+    expect(branchCount(config, [withBase([main])])).toBe(0);
+  });
+});
+

@@ -15,6 +15,7 @@ import { Branches } from './screens/Branches/Branches';
 import { Palette } from './screens/Palette/Palette';
 import { Settings } from './screens/Settings/Settings';
 import { Project } from './screens/Project/Project';
+import { History } from './screens/History/History';
 import { Review } from './screens/Review/Review';
 import { selectRoute, useNav, type Route } from './state/nav';
 import { useData } from './state/data';
@@ -119,6 +120,8 @@ function Screen({ route }: { route: Route }) {
           keepSidebar={route.keepSidebar}
         />
       );
+    case 'history':
+      return <History key={`${route.repoId}:${route.rev}`} repoId={route.repoId} rev={route.rev} backLabel={route.backLabel} />;
     case 'settings':
       return <Settings />;
   }

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>H1 · Base branch always listed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input,textarea{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<dc-import name="Sidebar" theme="{{themeName}}" active="inbox" inbox-count="6" hint-size="260px,800px"></dc-import>
+<main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px 0 28px; border-bottom: 1px solid var(--border)">
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: var(--text-strong)">Branches</h1>
+<div style="font-size: 12px; color: var(--text-muted)">Active branches · 2 repos · checked out in a worktree, or committed in the last 14 days</div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><dc-import name="Icon" icon="refresh" size="14" hint-size="14px,14px"></dc-import></button>
+<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search" label="Search branches and worktrees" hint-size="200px,32px"></dc-import>
+</div>
+</header>
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; padding: 10px 26px 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-row)">
+<span></span><span>Branch</span><span style="justify-self: end">Projects</span><span></span>
+</div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column">
+<sc-for list="{{repos}}" as="repo" hint-placeholder-count="2">
+<div style="{{repo.bandStyle}}">
+<span style="display: flex; color: var(--accent)"><dc-import name="Icon" icon="folder" size="16" hint-size="16px,16px"></dc-import></span>
+<span style="font-size: 15px; font-weight: 600; color: var(--text-strong)">{{repo.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1">{{repo.path}}</span>
+<span style="margin-right: 32px; font-size: 12px; color: var(--text-muted)">{{repo.count}}</span>
+</div>
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; align-items: center; padding: 10px 26px 10px 28px; border-bottom: 1px solid var(--border-row); background: var(--bg-sunken)">
+<span title="Always listed" style="display: flex; justify-content: center; color: var(--text-faint)"><dc-import name="Icon" icon="branch" size="12" hint-size="12px,12px"></dc-import></span>
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0">
+<span style="display: flex; align-items: center; gap: 8px"><a href="HistH2.dc.html" title="Show history of main" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-strong); white-space: nowrap">main</a><span style="display: flex; align-items: center; height: 17px; padding: 0 7px; border-radius: 9999px; border: 1px solid var(--border-strong); font-size: 11px; font-weight: 500; color: var(--text-muted)">base</span></span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><span>base origin/main</span><span style="color: var(--text-faint)">·</span><span title="{{repo.syncTitle}}">↑{{repo.ahead}}{{repo.behind}}<span style="color: var(--text-faint)"> / </span>{{repo.files}}<span style="color: var(--text-faint)"> / </span><span style="{{repo.uncStyle}}">{{repo.unc}}</span></span><span style="color: var(--text-faint)">·</span><span title="{{repo.ageTitle}}">{{repo.baseAge}}</span></span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><span style="display: flex; color: var(--accent-text)"><dc-import name="Icon" icon="worktree" size="12" hint-size="12px,12px"></dc-import></span><span>{{repo.path}}</span></span>
+</div>
+<a href="HistH2.dc.html" title="Commit history of main" style="justify-self: end; display: flex; align-items: center; gap: 6px; height: 26px; box-sizing: border-box; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--accent-text)"><dc-import name="Icon" icon="history" size="12" hint-size="12px,12px"></dc-import>History</a>
+<button aria-label="Branch options" aria-haspopup="menu" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; background: transparent; color: var(--text-body); visibility: hidden"><dc-import name="Icon" icon="more-vertical" size="14" hint-size="14px,14px"></dc-import></button>
+</div>
+<sc-for list="{{repo.rows}}" as="r" hint-placeholder-count="2">
+<div style="{{r.rowStyle}}">
+<input type="checkbox" aria-label="Select {{r.name}}" style="width: 16px; height: 16px; margin: 0; accent-color: var(--accent); visibility: hidden">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-strong); white-space: nowrap">{{r.name}}</span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><span>base main</span><span style="color: var(--text-faint)">·</span><span>↑{{r.ahead}}<span style="color: var(--text-faint)"> / </span>{{r.files}}<span style="color: var(--text-faint)"> / </span><span style="{{r.uncStyle}}">{{r.unc}}</span></span><span style="color: var(--text-faint)">·</span><span>{{r.age}}</span></span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><span style="display: flex; color: var(--accent-text)"><dc-import name="Icon" icon="worktree" size="12" hint-size="12px,12px"></dc-import></span><span>{{r.path}}</span></span>
+</div>
+<span style="justify-self: end; display: flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--text-body)">1 project</span>
+<button aria-label="Branch options" aria-haspopup="menu" style="{{r.moreStyle}}"><dc-import name="Icon" icon="more-vertical" size="14" hint-size="14px,14px"></dc-import></button>
+</div>
+</sc-for>
+</sc-for>
+</div>
+<div style="position: absolute; top: 334px; left: 734px; z-index: 5"><dc-import name="Menu" theme="none" width="260" label="Branch options" items="{{rowMenu}}" hint-size="260px,220px"></dc-import></div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var t = this.props.theme || 'dark';
+    // The base branch (main) is always the first row (its ⋮ menu is the same, Open history included) of its repo band, on bg.sunken, with a
+    // "base" pill and a History button where other rows have Projects. Its name opens History too.
+    // The second web-app row has its menu open: "Open history" opens H3 (HistH4).
+    var row = function (name, ahead, files, unc, age, path, open) {
+      return { name: name, ahead: ahead, files: files, unc: unc, age: age, path: path,
+        uncStyle: unc > 0 ? 'font-weight: 500; color: var(--accent-text)' : 'color: var(--text-faint)',
+        rowStyle: 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; align-items: center; padding: 10px 26px 10px 28px; border-bottom: 1px solid var(--border-row); ' + (open ? 'background: var(--bg-elevated)' : ''),
+        moreStyle: 'width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; color: var(--text-body); ' + (open ? 'background: var(--bg-pressed)' : 'background: transparent; visibility: hidden') };
+    };
+    var band = function (first) {
+      return 'display: flex; align-items: center; gap: 10px; padding: 10px 26px 10px 28px; background: var(--bg-band); border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border)' + (first ? '' : '; margin-top: 14px');
+    };
+    return { themeClass: 'theme-' + t, themeName: t,
+      repos: [
+        { name: 'web-app', path: '~/code/web-app', count: '3 branches', bandStyle: band(true),
+          ahead: 0, behind: ' ↓3', files: 0, unc: 2, uncStyle: 'font-weight: 500; color: var(--accent-text)', baseAge: '4m', ageTitle: 'Last change to uncommitted files',
+          syncTitle: '0 ahead · 3 behind · 0 files · 2 uncommitted (against origin/main as of the last fetch, 3h ago)',
+          rows: [row('session-token-refresh', 4, 6, 3, '6m', '~/code/wt/token-refresh', false),
+            row('session-cookie-cleanup', 1, 2, 1, '25m', '~/code/wt/cookie-cleanup', true)] },
+        { name: 'api-server', path: '~/code/api-server', count: '3 branches', bandStyle: band(false),
+          ahead: 0, behind: '', files: 0, unc: 0, uncStyle: 'color: var(--text-faint)', baseAge: '1d', ageTitle: '',
+          syncTitle: '0 ahead · 0 files · 0 uncommitted (main and origin/main point at the same commit)',
+          rows: [row('token-rotation-job', 2, 4, 2, '20m', '~/code/wt/token-rotation', false),
+            row('session-revoke-endpoint', 3, 3, 0, '1h', '~/code/wt/revoke', false)] }
+      ],
+      rowMenu: [{ label: 'Copy branch name', icon: 'copy' },
+        { label: 'Open history', icon: 'history', active: true, href: 'HistH4.dc.html' }, { kind: 'sep' },
+        { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' }] };
+  }
+}
+</script>
+</body>
+</html>

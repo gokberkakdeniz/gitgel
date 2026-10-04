@@ -8,6 +8,8 @@ export type Route =
   | { name: 'project'; projectId: string } // 'draft' = unsaved draft project (T5.6)
   // keepSidebar: opened from the sidebar, so Review does not hide it
   | { name: 'review'; target: ReviewTarget; focusKey?: string; backLabel: string; keepSidebar?: boolean }
+  // rev: a local or remote-tracking branch, or a SHA (SPEC §16)
+  | { name: 'history'; repoId: string; rev: string; backLabel: string }
   | { name: 'settings' };
 
 interface NavState {

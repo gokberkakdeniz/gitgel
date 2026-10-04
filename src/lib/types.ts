@@ -161,6 +161,7 @@ export interface RepoScan {
   error: string | null;
   defaultBase: string | null; // e.g. "main"
   defaultBaseSource: string | null; // matching defaultBaseOrder item, e.g. "origin/HEAD"
+  baseBranch: string | null; // local name of the base branch, always in `active` (first row of its band)
   active: EntrySummary[]; // active branches + detached worktrees, newest first
   others: OtherBranch[]; // all other local branches except the base branch
   stashes: StashInfo[]; // the stash stack, newest first (one per repo, shared by its worktrees)
@@ -228,6 +229,32 @@ export interface StashChanges {
   sha: string;
   base: string;
   files: FileChange[];
+}
+/** One commit of a history page (SPEC §16). */
+export interface HistoryCommit {
+  sha: string;
+  shortSha: string;
+  subject: string;
+  body: string; // the message after the subject, trimmed; '' when none
+  author: string;
+  authorEmail: string;
+  committedAt: number; // committer time, unix seconds
+  parents: number; // > 1: a merge commit
+  inBase: boolean; // reachable from the base asked for (below the base line)
+}
+export interface HistoryPage {
+  rev: string;
+  tip: string | null; // null => the rev does not resolve
+  commits: HistoryCommit[]; // newest first, at most `limit`
+  more: boolean; // more commits (or matches) past `limit`
+  total: number | null; // commits reachable from the tip; null while searching
+  ahead: number | null; // commits not in the base; null without a base
+  mergeBase: string | null;
+  fetchedAt: number | null; // FETCH_HEAD's modification time; null if never fetched
+}
+export interface HistoryRefs {
+  branches: string[];
+  remotes: string[];
 }
 export interface CommitChanges {
   sha: string;

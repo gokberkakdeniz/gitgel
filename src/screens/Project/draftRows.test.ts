@@ -11,6 +11,7 @@ const scan: Record<string, RepoScan> = {
     error: null,
     defaultBase: 'main',
     defaultBaseSource: 'main',
+    baseBranch: null,
     active: [active],
     others: [{ repoId: 'r_1', repoName: 'web-app', branch: 'old', lastCommitAt: 42, merged: true }],
     stashes: [],

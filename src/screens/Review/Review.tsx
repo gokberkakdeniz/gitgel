@@ -11,36 +11,28 @@ import {
   PencilIcon,
   RefreshIcon,
   SidebarIcon,
-  SplitIcon,
-  UnifiedIcon,
 } from '../../components/icons';
-import { Menu, MenuCaption, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
-import { Popover } from '../../components/Popover';
 import { ProjectNameInput } from '../../components/ProjectNameInput';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
-import { KindBadge } from '../../components/KindBadge';
 import { Pill } from '../../components/Pill';
 import { RefreshButton } from '../../components/RefreshButton';
 import { Segmented } from '../../components/Segmented';
 import { entryKey } from '../../lib/entryKey';
 import { Icon } from '../../components/icons';
 import { formatAge, plural } from '../../lib/format';
-import { getCommitChanges, getReview, getStashChanges, updateSettings } from '../../lib/ipc';
+import { getCommitChanges, getReview, getStashChanges } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
 import type {
   CommitChanges,
   CommitInfo,
   FileChange,
-  DiffContext,
-  DiffLayout,
   DiffMode,
   EntrySummary,
   ReviewData,
   ReviewGroup,
   ReviewTarget,
-  Settings,
   StashChanges,
 } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
@@ -49,14 +41,14 @@ import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
 import { selectCanForward, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
-import { fileMatches, filterTerms, firstHit } from './fileFilter';
+import { fileMatches, filterTerms } from './fileFilter';
+import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, ViewMenu } from './parts';
 import { reviewStashes, stashHeading, stashMeta, type ReviewStash } from './stashes';
 import editable from '../../components/EditableTitle.module.css';
 import styles from './Review.module.css';
 import {
   compareLabel,
   defaultMode,
-  dirLabel,
   EMPTY_MESSAGES,
   resolveSelection,
   type FileRef,
@@ -294,35 +286,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   stepCommitRef.current = stepCommit;
 
   // Diff view settings (layout, context, whitespace), remembered in the config.
-  const settings = useData((st) => st.config?.settings);
-  const layout = settings?.diffView ?? 'split';
-  const ignoreWs = settings?.ignoreWhitespace ?? false;
-  const context = settings?.diffContext ?? 'changes';
-  const contextLines = settings?.diffContextLines ?? 3;
-  const saveView = (patch: Partial<Settings>) => {
-    if (settings) void updateSettings({ ...settings, ...patch });
-  };
-  const toggleLayout = () => saveView({ diffView: layout === 'split' ? 'unified' : 'split' });
-  const toggleWs = () => saveView({ ignoreWhitespace: !ignoreWs });
-  // Keeps the number of lines when switching back to changes only.
-  const toggleContext = () => saveView({ diffContext: context === 'changes' ? 'whole' : 'changes' });
-  const viewRef = useRef({ toggleLayout, toggleWs, toggleContext });
-  viewRef.current = { toggleLayout, toggleWs, toggleContext };
-  // ⌥V / ⌥C / ⌥W outside the diff (inside it Monaco handles them). ⌥ turns letters into other
-  // characters, so the physical key is checked. Listed in lib/shortcuts.ts.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (!e.altKey || e.metaKey || e.ctrlKey || !['KeyV', 'KeyC', 'KeyW'].includes(e.code)) return;
-      if ((e.target as HTMLElement | null)?.closest('.monaco-editor, input, textarea')) return;
-      if (useUi.getState().modalCount > 0) return;
-      e.preventDefault();
-      if (e.code === 'KeyV') viewRef.current.toggleLayout();
-      else if (e.code === 'KeyC') viewRef.current.toggleContext();
-      else viewRef.current.toggleWs();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  const { layout, ignoreWs, context, contextLines, saveView, toggleWs, viewRef } = useDiffView();
 
   const stepRef = useRef(step);
   stepRef.current = step;
@@ -618,174 +582,6 @@ function commitParent(g: ReviewGroup, sha: string | undefined, c: CommitChanges 
   if (c) return c.parent ? c.parent.slice(0, 7) : 'empty tree';
   const i = g.commits.findIndex((x) => x.sha === sha);
   return (g.commits[i + 1]?.sha ?? g.mergeBase ?? '').slice(0, 7);
-}
-
-const fileName = (id: string | undefined) => (id ? basename(id.split('\u0000')[1]) : '');
-
-/** Layout, context and Ignore whitespace; applies to every diff and is remembered. */
-function ViewMenu({
-  layout,
-  ignoreWs,
-  onLayout,
-  context,
-  contextLines,
-  onContext,
-  onToggleWs,
-}: {
-  layout: DiffLayout;
-  ignoreWs: boolean;
-  onLayout: (l: DiffLayout) => void;
-  context: DiffContext;
-  contextLines: number;
-  onContext: (context: DiffContext, lines: number) => void;
-  onToggleWs: () => void;
-}) {
-  const [at, setAt] = useState<DOMRect | null>(null);
-  return (
-    <>
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={!!at}
-        title="Diff view"
-        className={at ? `${styles.viewButton} ${styles.viewButtonOpen}` : styles.viewButton}
-        onClick={(e) => setAt(at ? null : e.currentTarget.getBoundingClientRect())}
-      >
-        {layout === 'split' ? <SplitIcon /> : <UnifiedIcon />}
-        <span>{layout === 'split' ? 'Split' : 'Unified'}</span>
-        <ChevronDownIcon size={9} />
-      </button>
-      {at && (
-        <Popover anchorRect={at} width={300} alignRight onClose={() => setAt(null)}>
-          <Menu aria-label="Diff view">
-            <MenuLabel>Layout</MenuLabel>
-            {(['split', 'unified'] as const).map((l) => (
-              <MenuItem
-                key={l}
-                checked={layout === l}
-                kbd="⌥V"
-                onSelect={() => {
-                  onLayout(l);
-                  setAt(null);
-                }}
-              >
-                {l === 'split' ? 'Split' : 'Unified'}
-              </MenuItem>
-            ))}
-            <MenuDivider />
-            <MenuLabel>Context</MenuLabel>
-            <MenuItem checked={context === 'changes'} kbd="⌥C" onSelect={() => onContext('changes', contextLines)}>
-              Changes only
-            </MenuItem>
-            <MenuSegmented
-              label="Lines around changes"
-              disabled={context === 'whole'}
-              value={String(contextLines)}
-              onChange={(n) => onContext('changes', Number(n))}
-              options={[3, 5, 10].map((n) => ({ value: String(n), label: String(n) }))}
-            />
-            <MenuItem
-              checked={context === 'whole'}
-              kbd="⌥C"
-              onSelect={() => {
-                onContext('whole', contextLines);
-                // Whole file closes the menu; changes only leaves it open to pick the lines.
-                setAt(null);
-              }}
-            >
-              Whole file
-            </MenuItem>
-            <MenuDivider />
-            <MenuItem
-              box={ignoreWs}
-              desc="Hide lines where only indentation or trailing spaces changed"
-              kbd="⌥W"
-              onSelect={onToggleWs}
-            >
-              Ignore whitespace
-            </MenuItem>
-            <MenuCaption>Applies to every diff and is remembered.</MenuCaption>
-          </Menu>
-        </Popover>
-      )}
-    </>
-  );
-}
-
-/** "Change 2 of 3" and ↑ ↓; past a file's first/last change they continue into the neighbour. */
-function ChangeNav({
-  onlyWhitespace,
-  nav,
-  prevFile,
-  nextFile,
-  onStep,
-}: {
-  /** Ignoring whitespace left this file with no changes. */
-  onlyWhitespace: boolean;
-  nav: NavInfo;
-  prevFile: string | undefined;
-  nextFile: string | undefined;
-  onStep: (dir: 1 | -1) => void;
-}) {
-  const i = nav.index ?? 0;
-  const atFirst = nav.count === 0 || i === 0;
-  const atLast = nav.count === 0 || i >= nav.count - 1;
-  const prevTitle = atFirst
-    ? prevFile
-      ? `Previous file: ${fileName(prevFile)} (⌥↑)`
-      : 'First change'
-    : 'Previous change (⌥↑)';
-  const nextTitle = atLast
-    ? nextFile
-      ? `Next file: ${fileName(nextFile)} (⌥↓)`
-      : 'Last change'
-    : 'Next change (⌥↓)';
-  const cls = (cross: boolean) => (cross ? `${styles.navButton} ${styles.navCross}` : styles.navButton);
-  return (
-    <>
-      <span aria-live="polite" className={styles.navLabel}>
-        {nav.count === 0
-          ? onlyWhitespace
-            ? 'Only whitespace changed'
-            : 'No line changes'
-          : `Change ${i + 1} of ${nav.count}`}
-        {nav.count > 0 && atLast && nextFile && <span className={styles.muted}> · next file {fileName(nextFile)}</span>}
-      </span>
-      <div role="group" aria-label="Jump between changes" className={styles.navGroup}>
-        <button
-          type="button"
-          aria-label="Previous change"
-          title={prevTitle}
-          className={cls(atFirst && !!prevFile)}
-          disabled={atFirst && !prevFile}
-          onClick={() => onStep(-1)}
-        >
-          <ChevronUpIcon size={14} />
-        </button>
-        <button
-          type="button"
-          aria-label="Next change"
-          title={nextTitle}
-          className={cls(atLast && !!nextFile)}
-          disabled={atLast && !nextFile}
-          onClick={() => onStep(1)}
-        >
-          <ChevronDownIcon size={14} />
-        </button>
-      </div>
-    </>
-  );
-}
-
-/** Review hides the sidebar (unless opened from it); leaving restores what it was. */
-function useSidebarHiddenWhileMounted(hide: boolean) {
-  useEffect(() => {
-    if (!hide) return;
-    const ui = useUi.getState();
-    const before = ui.sidebarVisible;
-    ui.setSidebarVisible(false);
-    return () => useUi.getState().setSidebarVisible(before);
-  }, [hide]);
 }
 
 /** Opens the project page: back to it when Review was opened from there, else a new step. */
@@ -1103,50 +899,6 @@ function StashBar({ stash, base }: { stash: ReviewStash; base: string }) {
   );
 }
 
-function FileRow({
-  file: f,
-  terms,
-  on,
-  onClick,
-}: {
-  file: FileChange;
-  terms: string[];
-  on: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={on ? `${styles.fileRow} ${styles.selected}` : styles.fileRow}
-      aria-current={on || undefined}
-      onClick={onClick}
-      title={f.path}
-    >
-      <KindBadge kind={f.kind} />
-      <span className={styles.fileName}>
-        <Highlighted text={basename(f.path)} terms={terms} />
-      </span>
-      <span className={styles.fileDir}>
-        <Highlighted text={dirLabel(f)} terms={terms} />
-      </span>
-      {!!f.add && <span className={styles.add}>+{f.add}</span>}
-      {!!f.del && <span className={styles.del}>−{f.del}</span>}
-    </button>
-  );
-}
-
-/** The first matching term in `text`, tinted. */
-function Highlighted({ text, terms }: { text: string; terms: string[] }) {
-  const hit = terms.length > 0 ? firstHit(text, terms) : null;
-  if (!hit) return <>{text}</>;
-  return (
-    <>
-      {hit[0]}
-      <mark className={styles.hit}>{hit[1]}</mark>
-      {hit[2]}
-    </>
-  );
-}
 
 /** The field above the file list (flow D8). */
 function FileFilter({

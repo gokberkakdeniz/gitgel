@@ -37,6 +37,7 @@ const scan: RepoScan = {
   error: null,
   defaultBase: 'main',
   defaultBaseSource: 'origin/HEAD',
+  baseBranch: null,
   active: [
     entry('session-token-refresh', { worktreePath: '/wt/token-refresh', uncommitted: 1 }),
     entry('feat/token-store', {}),

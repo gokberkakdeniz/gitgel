@@ -4,7 +4,17 @@ import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
 import { List, type ListSubPart } from '../../components/List';
-import { BranchLargeIcon, ChevronDownIcon, CloseIcon, CopyIcon, FolderIcon, MoreVerticalIcon, WorktreeIcon } from '../../components/icons';
+import {
+  BranchIcon,
+  BranchLargeIcon,
+  ChevronDownIcon,
+  CloseIcon,
+  CopyIcon,
+  FolderIcon,
+  HistoryIcon,
+  MoreVerticalIcon,
+  WorktreeIcon,
+} from '../../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
@@ -26,7 +36,16 @@ import { openSettings, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import styles from './Branches.module.css';
 import { FilterField } from './FilterField';
-import { afu, branchGroups, middleCut, projectsOf, scopeCounts, type BranchScope, type RepoGroup } from './rows';
+import {
+  afu,
+  branchGroups,
+  isBaseRow,
+  middleCut,
+  projectsOf,
+  scopeCounts,
+  type BranchScope,
+  type RepoGroup,
+} from './rows';
 
 export function Branches() {
   const config = useData((s) => s.config);
@@ -366,6 +385,7 @@ function RepoSection({
         <Row
           key={e.key}
           entry={e}
+          isBase={isBaseRow(scan, e)}
           projectNames={sortProjects(projectsOf(config, e.key), readProjectSort()).map((p) => p.name)}
           selected={selectedKeys.includes(e.key)}
           justAdded={justAdded.includes(e.key)}
@@ -457,6 +477,7 @@ function stashSub(st: StashInfo): ListSubPart[] {
 
 function Row({
   entry: e,
+  isBase,
   projectNames,
   selected,
   justAdded,
@@ -464,6 +485,8 @@ function Row({
   onPopover,
 }: {
   entry: EntrySummary;
+  /** The repo's base branch: always listed, opens History instead of Review (T20.3). */
+  isBase: boolean;
   projectNames: string[];
   selected: boolean;
   justAdded: boolean;
@@ -485,7 +508,10 @@ function Row({
     ui.setSelectedKeys(selected ? ui.selectedKeys.filter((k) => k !== e.key) : [...ui.selectedKeys, e.key]);
   };
   const hot = popover === 'projects' || popover === 'picker' || popover === 'menu';
-  const cls = [styles.grid, styles.row, selected && styles.selected, hot && styles.hot].filter(Boolean).join(' ');
+  const cls = [styles.grid, styles.row, isBase && styles.baseRow, selected && styles.selected, hot && styles.hot]
+    .filter(Boolean)
+    .join(' ');
+  const name = e.branch ?? e.shortSha ?? '';
   const n = projectNames.length;
   const cellCls = [
     styles.projects,
@@ -505,12 +531,29 @@ function Row({
         onPopover('menu', new DOMRect(ev.clientX, ev.clientY, 0, 0), true);
       }}
     >
-      <Checkbox aria-label={`Select ${e.branch ?? e.shortSha}`} className={styles.check} checked={selected} onChange={toggle} />
+      {isBase ? (
+        <span className={styles.baseMark} title="Always listed">
+          <BranchIcon size={12} />
+        </span>
+      ) : (
+        <Checkbox aria-label={`Select ${name}`} className={styles.check} checked={selected} onChange={toggle} />
+      )}
       <div className={styles.branchCell}>
-        <button type="button" className={styles.branchName} onClick={open} title={e.branch ?? e.headSha ?? ''}>
-          <span className={styles.nameHead}>{head}</span>
-          {tail && <span className={styles.nameTail}>{tail}</span>}
-        </button>
+        {isBase ? (
+          <span className={styles.nameLine}>
+            <button type="button" className={styles.branchName} onClick={() => openHistory(e)} title={`Show history of ${name}`}>
+              <span className={styles.nameHead}>{name}</span>
+            </button>
+            <Pill tone="outline" size="sm">
+              base
+            </Pill>
+          </span>
+        ) : (
+          <button type="button" className={styles.branchName} onClick={open} title={e.branch ?? e.headSha ?? ''}>
+            <span className={styles.nameHead}>{head}</span>
+            {tail && <span className={styles.nameTail}>{tail}</span>}
+          </button>
+        )}
         <span className={styles.subLine}>
           {e.base && <span className={styles.base}>base {e.base}</span>}
           {e.base && <span className={styles.sep}>·</span>}
@@ -540,25 +583,32 @@ function Row({
           </span>
         )}
       </div>
-      <button
-        type="button"
-        aria-haspopup="menu"
-        className={cellCls}
-        title={projectNames.join(', ') || undefined}
-        onClick={(ev) => onPopover(n > 0 ? 'projects' : 'picker', ev.currentTarget.getBoundingClientRect())}
-      >
-        {n > 0 ? (
-          <>
-            <span>{n === 1 ? '1 project' : `${n} projects`}</span>
-            <ChevronDownIcon size={10} />
-          </>
-        ) : (
-          <>
-            <span className={styles.projectsDash}>—</span>
-            <span className={styles.projectsAdd}>+ Add</span>
-          </>
-        )}
-      </button>
+      {isBase ? (
+        <button type="button" className={styles.historyButton} title={`Commit history of ${name}`} onClick={() => openHistory(e)}>
+          <HistoryIcon size={12} />
+          History
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-haspopup="menu"
+          className={cellCls}
+          title={projectNames.join(', ') || undefined}
+          onClick={(ev) => onPopover(n > 0 ? 'projects' : 'picker', ev.currentTarget.getBoundingClientRect())}
+        >
+          {n > 0 ? (
+            <>
+              <span>{n === 1 ? '1 project' : `${n} projects`}</span>
+              <ChevronDownIcon size={10} />
+            </>
+          ) : (
+            <>
+              <span className={styles.projectsDash}>—</span>
+              <span className={styles.projectsAdd}>+ Add</span>
+            </>
+          )}
+        </button>
+      )}
       <button
         type="button"
         aria-label="Branch options"
@@ -572,8 +622,8 @@ function Row({
   );
 }
 
-/** The row's ⋯ menu: Copy branch name, the always-listed open items, the Scripts group, then
- * the closing note. */
+/** The row's ⋯ menu: Copy branch name and Open history, the always-listed open items, the
+ * Scripts group, then the closing note. */
 function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void }) {
   return (
     <Menu aria-label="Branch options" autoFocus>
@@ -588,12 +638,29 @@ function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void 
           Copy branch name
         </MenuItem>
       )}
-      {entry.branch !== null && <MenuDivider />}
+      {(entry.branch ?? entry.headSha) && (
+        <MenuItem
+          icon={<HistoryIcon />}
+          onSelect={() => {
+            onClose();
+            openHistory(entry);
+          }}
+        >
+          Open history
+        </MenuItem>
+      )}
+      <MenuDivider />
       <OpenItems entry={entry} onDone={onClose} />
       <ScriptsMenu entry={entry} menu="branches" onDone={onClose} />
       <EntryMenuNote entry={entry} />
     </Menu>
   );
+}
+
+/** History (SPEC §16) of a row's branch, or of its SHA for a detached HEAD. */
+function openHistory(e: EntrySummary) {
+  const rev = e.branch ?? e.headSha;
+  if (rev) useNav.getState().push({ name: 'history', repoId: e.repoId, rev, backLabel: 'Back to Branches' });
 }
 
 /** Flow I: the projects a branch is in, and adding it to another one. */

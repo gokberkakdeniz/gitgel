@@ -1,0 +1,339 @@
+/* History (SPEC §16, HistH2.dc.html). Header, file bar and diff come from Review.module.css. */
+
+.search {
+  width: 200px;
+}
+
+.fetched {
+  font-size: 12px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* Branch button */
+
+.refButton {
+  height: 32px;
+  max-width: 240px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.refButtonOpen {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.refIcon {
+  flex-shrink: 0;
+  color: var(--accent-text);
+}
+
+.refName {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.refChevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* List */
+
+.list {
+  width: 380px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px 8px;
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+}
+
+/* The list scrolls; its rows keep their height (the label's overflow: hidden would let it shrink). */
+.list > * {
+  flex-shrink: 0;
+}
+
+.listLabel {
+  padding: 14px 8px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.day {
+  padding: 10px 8px 4px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.commit,
+.wip {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  text-align: left;
+  cursor: pointer;
+}
+
+.commit:hover,
+.wip:hover {
+  background: var(--bg-sunken);
+}
+
+.rowOn,
+.rowOn:hover {
+  background: var(--bg-hover);
+}
+
+.shared {
+  opacity: 0.7;
+}
+
+.shared .subject {
+  color: var(--text-muted);
+}
+
+.wip {
+  margin-top: 4px;
+  border: 1px dashed var(--border-strong);
+}
+
+.wipSlot {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wipDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-text);
+}
+
+.wipTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent-text);
+}
+
+.rowText {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.subjectLine {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subject {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta,
+.metaLine {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.metaLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metaWho {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sha {
+  font-family: var(--font-mono);
+  color: var(--accent-text);
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-pressed);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.avatarSmall {
+  width: 18px;
+  height: 18px;
+  font-size: 8px;
+}
+
+.avatarBot {
+  background: var(--bg-band);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-muted);
+  font-size: 8px;
+}
+
+.avatarSmall.avatarBot {
+  font-size: 6px;
+}
+
+/* Base line */
+
+.baseLine {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px 6px;
+}
+
+.baseRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.baseRule {
+  flex-grow: 1;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.baseLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.baseSub {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Commit header */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.headTop {
+  min-width: 0;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headSubject {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copy {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.body {
+  max-width: 720px;
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+
+.headMeta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.metaAuthor {
+  color: var(--text-body);
+}
+
+.dot {
+  color: var(--text-faint);
+}

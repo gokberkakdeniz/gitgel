@@ -6,7 +6,7 @@ use git2::{BranchType, ErrorCode, Oid, Repository, Sort};
 
 use crate::error::AppError;
 use crate::git::diff::{self, NewSide};
-use crate::model::{CommitInfo, StackHint};
+use crate::model::{CommitInfo, HistoryCommit, StackHint};
 
 /// Commits reachable from `tip` but not from `base`, newest first (topological), at most `limit`.
 pub fn commits(
@@ -333,6 +333,152 @@ pub fn committed_stats(
     })
 }
 
+/// One page of a branch's history (§16).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Walked {
+    pub commits: Vec<HistoryCommit>,
+    /// The walk has more commits (or matches) past the page.
+    pub more: bool,
+}
+
+/// What `base` does not hold of `tip`: the commits only on the tip side and the merge-base.
+pub struct BaseSplit {
+    pub ahead: HashSet<Oid>,
+    pub merge_base: Option<String>,
+}
+
+pub fn base_split(repo: &Repository, tip: &str, base: &str) -> Result<BaseSplit, AppError> {
+    let (tip, base) = (Oid::from_str(tip)?, Oid::from_str(base)?);
+    let mut walk = repo.revwalk()?;
+    walk.push(tip)?;
+    walk.hide(base)?;
+    let ahead = walk.collect::<Result<HashSet<_>, _>>()?;
+    let merge_base = match repo.merge_base(tip, base) {
+        Ok(oid) => Some(oid.to_string()),
+        Err(e) if e.code() == ErrorCode::NotFound => None,
+        Err(e) => return Err(e.into()),
+    };
+    Ok(BaseSplit { ahead, merge_base })
+}
+
+/// Commits reachable from `tip`, newest first by committer time (no topological pass, so the
+/// first page does not read the whole graph), at most `limit`. With `terms` (lower-case words)
+/// only commits whose text or changed paths hold every term. `ahead`: the commits not in the
+/// base; the others are `in_base`.
+pub fn walk(
+    repo: &Repository,
+    tip: &str,
+    ahead: Option<&HashSet<Oid>>,
+    terms: &[String],
+    limit: usize,
+) -> Result<Walked, AppError> {
+    let mut walk = repo.revwalk()?;
+    walk.set_sorting(Sort::TIME)?;
+    walk.push(Oid::from_str(tip)?)?;
+    let mut commits = Vec::new();
+    for oid in walk {
+        let oid = oid?;
+        let commit = repo.find_commit(oid)?;
+        if !terms.is_empty() && !matches_terms(repo, &commit, terms)? {
+            continue;
+        }
+        if commits.len() == limit {
+            return Ok(Walked {
+                commits,
+                more: true,
+            });
+        }
+        let in_base = ahead.is_some_and(|a| !a.contains(&oid));
+        commits.push(history_commit(&commit, in_base));
+    }
+    Ok(Walked {
+        commits,
+        more: false,
+    })
+}
+
+/// Every commit reachable from `tip`.
+pub fn commit_count(repo: &Repository, tip: &str) -> Result<u32, AppError> {
+    let mut walk = repo.revwalk()?;
+    walk.push(Oid::from_str(tip)?)?;
+    let mut n = 0u32;
+    for oid in walk {
+        oid?;
+        n += 1;
+    }
+    Ok(n)
+}
+
+fn history_commit(commit: &git2::Commit, in_base: bool) -> HistoryCommit {
+    let sha = commit.id().to_string();
+    let message = String::from_utf8_lossy(commit.message_bytes()).into_owned();
+    let (subject, body) = split_message(&message);
+    let author = commit.author();
+    HistoryCommit {
+        short_sha: sha[..7].to_string(),
+        sha,
+        subject,
+        body,
+        author: String::from_utf8_lossy(author.name_bytes()).into_owned(),
+        author_email: String::from_utf8_lossy(author.email_bytes()).into_owned(),
+        committed_at: commit.time().seconds(),
+        parents: commit.parent_count() as u32,
+        in_base,
+    }
+}
+
+/// The subject (the first paragraph, on one line, as git shows it) and the rest, trimmed.
+fn split_message(message: &str) -> (String, String) {
+    let message = message.trim();
+    let (head, body) = message.split_once("\n\n").unwrap_or((message, ""));
+    let subject = head.lines().map(str::trim).collect::<Vec<_>>().join(" ");
+    (subject, body.trim().to_string())
+}
+
+/// Lower case, with `-`, `/`, `_`, `.` and white space as single spaces (the Branches filter
+/// rule), so `token refresh` finds `token-refresh`.
+pub fn search_words(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut space = true;
+    for c in text.chars().flat_map(char::to_lowercase) {
+        if c.is_whitespace() || matches!(c, '-' | '/' | '_' | '.') {
+            if !space {
+                out.push(' ');
+                space = true;
+            }
+        } else {
+            out.push(c);
+            space = false;
+        }
+    }
+    out.trim_end().to_string()
+}
+
+fn matches_terms(
+    repo: &Repository,
+    commit: &git2::Commit,
+    terms: &[String],
+) -> Result<bool, AppError> {
+    let author = commit.author();
+    let text = search_words(&format!(
+        "{} {} {} {}",
+        String::from_utf8_lossy(commit.message_bytes()),
+        String::from_utf8_lossy(author.name_bytes()),
+        String::from_utf8_lossy(author.email_bytes()),
+        commit.id()
+    ));
+    let missing: Vec<&String> = terms
+        .iter()
+        .filter(|t| !text.contains(t.as_str()))
+        .collect();
+    if missing.is_empty() {
+        return Ok(true);
+    }
+    // The paths are read only when the text alone does not match.
+    let paths = search_words(&diff::commit_paths(repo, commit)?.join(" "));
+    Ok(missing.iter().all(|t| paths.contains(t.as_str())))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -518,5 +664,81 @@ mod tests {
         let orphan = t.commit_on("orphan", &[("b", Some(b"b"))], "b", 1);
         let s = committed_stats(&t.repo, &orphan.to_string(), &main.to_string()).unwrap();
         assert_eq!(s.merge_base, None);
+    }
+
+    fn subjects(w: &Walked) -> Vec<&str> {
+        w.commits.iter().map(|c| c.subject.as_str()).collect()
+    }
+
+    #[test]
+    fn history_walk_pages_newest_first() {
+        let t = TestRepo::new();
+        let root = t.commit_on("main", &[("a", Some(b"a"))], "init", 5);
+        t.commit_on("main", &[("b", Some(b"b"))], "second\n\nwith a body\n", 3);
+        let tip = t.commit_on("main", &[("c", Some(b"c"))], "third", 1);
+        let tip = tip.to_string();
+
+        let all = walk(&t.repo, &tip, None, &[], 200).unwrap();
+        assert_eq!(subjects(&all), ["third", "second", "init"]);
+        assert!(!all.more);
+        assert_eq!(all.commits[1].body, "with a body");
+        assert_eq!(all.commits[1].author_email, "test@example.com");
+        assert_eq!(all.commits[2].parents, 0);
+        assert_eq!(all.commits[2].sha, root.to_string());
+
+        let page = walk(&t.repo, &tip, None, &[], 2).unwrap();
+        assert_eq!(subjects(&page), ["third", "second"]);
+        assert!(page.more);
+        assert_eq!(commit_count(&t.repo, &tip).unwrap(), 3);
+    }
+
+    #[test]
+    fn history_marks_commits_in_the_base() {
+        let t = TestRepo::new();
+        let base = t.commit_on("main", &[("a", Some(b"a"))], "init", 5);
+        t.branch_from("feature", base);
+        t.commit_on("feature", &[("f", Some(b"f"))], "feature work", 2);
+        t.commit_on("main", &[("m", Some(b"m"))], "main moves", 1);
+        let tip = t.repo.revparse_single("feature").unwrap().id().to_string();
+        let main = t.repo.revparse_single("main").unwrap().id().to_string();
+
+        let split = base_split(&t.repo, &tip, &main).unwrap();
+        assert_eq!(split.ahead.len(), 1);
+        assert_eq!(split.merge_base, Some(base.to_string()));
+        let w = walk(&t.repo, &tip, Some(&split.ahead), &[], 200).unwrap();
+        let marks: Vec<_> = w.commits.iter().map(|c| (c.subject.as_str(), c.in_base)).collect();
+        assert_eq!(marks, [("feature work", false), ("init", true)]);
+    }
+
+    #[test]
+    fn history_search_matches_text_sha_and_paths() {
+        let t = TestRepo::new();
+        t.commit_on("main", &[("README", Some(b"r"))], "init", 5);
+        let fix = t.commit_on("main", &[("src/auth/refresh.ts", Some(b"x"))], "Fix token-refresh", 3);
+        t.commit_on("main", &[("docs/guide.md", Some(b"g"))], "Write the guide", 1);
+        t.merge_on("main", "main", &[], "Merge it");
+        let tip = t.repo.revparse_single("main").unwrap().id().to_string();
+        let find = |q: &str| {
+            let terms: Vec<String> = search_words(q).split(' ').map(str::to_string).collect();
+            let w = walk(&t.repo, &tip, None, &terms, 200).unwrap();
+            subjects(&w).iter().map(|s| s.to_string()).collect::<Vec<_>>()
+        };
+        assert_eq!(find("token refresh"), ["Fix token-refresh"]);
+        assert_eq!(find("guide.md"), ["Write the guide"]);
+        assert_eq!(find("AUTH fix"), ["Fix token-refresh"]);
+        assert_eq!(find(&fix.to_string()[..10]), ["Fix token-refresh"]);
+        assert_eq!(find("test@example").len(), 4);
+        assert!(find("nothing-like-this").is_empty());
+        let merge = walk(&t.repo, &tip, None, &[], 1).unwrap();
+        assert_eq!(merge.commits[0].parents, 2);
+    }
+
+    #[test]
+    fn subject_joins_the_first_paragraph() {
+        assert_eq!(
+            split_message("Line one\nline two\n\nBody\n\nMore\n"),
+            ("Line one line two".to_string(), "Body\n\nMore".to_string())
+        );
+        assert_eq!(split_message("Only\n"), ("Only".to_string(), String::new()));
     }
 }

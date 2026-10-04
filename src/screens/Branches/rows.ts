@@ -21,6 +21,11 @@ export function projectsOf(config: Config, key: string): ProjectConfig[] {
   return config.projects.filter((p) => p.entries.some((e) => entryKey(e) === key));
 }
 
+/** The repo's base branch row: always listed, first in its band (SPEC §5, T20.3). */
+export function isBaseRow(scan: RepoScan, e: EntrySummary): boolean {
+  return e.branch !== null && e.branch === scan.baseBranch;
+}
+
 /** Lowercase words; `-`, `/`, `_` and `.` count as spaces, so `to be` finds `to-be-deleted`. */
 function words(text: string): string {
   return text.toLowerCase().replace(/[-/_.\s]+/g, ' ').trim();
@@ -70,9 +75,11 @@ export function branchGroups(
       if (!filter.trim() && scope === 'all') missing.push({ scan, rows: [], stashes: [] });
       continue;
     }
-    const rows = scan.active.filter(
-      (e) => (scope === 'all' || !inProject.has(e.key)) && matchesFilter(e, filter),
+    // The base branch row comes first and stays in "Not in a project".
+    const shown = scan.active.filter(
+      (e) => (scope === 'all' || isBaseRow(scan, e) || !inProject.has(e.key)) && matchesFilter(e, filter),
     );
+    const rows = [...shown.filter((e) => isBaseRow(scan, e)), ...shown.filter((e) => !isBaseRow(scan, e))];
     if (rows.length > 0 || scan.repo.id === keepRepoId || (scan.status === 'error' && !filter.trim())) {
       const stashes = rows.length > 0 ? scan.stashes.filter((st) => matchesStash(st, scan.name, filter)) : [];
       groups.push({ scan, rows, stashes });
@@ -83,7 +90,7 @@ export function branchGroups(
   return [...groups, ...missing];
 }
 
-/** Counts for the scope selector, independent of the text filter. */
+/** Counts for the scope selector, independent of the text filter; base branch rows are left out. */
 export function scopeCounts(config: Config | null, scans: RepoScan[]): Record<BranchScope, number> {
   if (!config) return { all: 0, unassigned: 0 };
   const inProject = projectKeys(config);
@@ -91,6 +98,7 @@ export function scopeCounts(config: Config | null, scans: RepoScan[]): Record<Br
   let unassigned = 0;
   for (const s of scans) {
     for (const e of s.active) {
+      if (isBaseRow(s, e)) continue;
       all++;
       if (!inProject.has(e.key)) unassigned++;
     }

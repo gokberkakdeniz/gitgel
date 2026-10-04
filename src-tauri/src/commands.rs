@@ -6,12 +6,12 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
-    BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, OpenApp,
-    ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun,
-    Settings, StashChanges, TerminalOption,
+    BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, HistoryPage,
+    HistoryRefs, OpenApp, ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult,
+    ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
-use crate::{apps, base, files, projects, repos, review, scan, scripts, updates, watch};
+use crate::{apps, base, files, history, projects, repos, review, scan, scripts, updates, watch};
 
 /// Runs git or disk work off the async runtime.
 pub async fn blocking<T, F>(state: &AppState, f: F) -> Result<T, AppError>
@@ -134,6 +134,33 @@ pub async fn get_stash_changes(
 ) -> Result<StashChanges, AppError> {
     blocking(&state, move |state| {
         review::get_stash_changes(state, &repo_id, &sha)
+    })
+    .await
+}
+
+/// A page of a branch's history (§16).
+#[tauri::command]
+pub async fn get_history(
+    state: State<'_, AppState>,
+    repo_id: String,
+    rev: String,
+    base: Option<String>,
+    query: String,
+    limit: usize,
+) -> Result<HistoryPage, AppError> {
+    blocking(&state, move |state| {
+        history::get_history(state, &repo_id, &rev, base.as_deref(), &query, limit)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn get_history_refs(
+    state: State<'_, AppState>,
+    repo_id: String,
+) -> Result<HistoryRefs, AppError> {
+    blocking(&state, move |state| {
+        history::get_history_refs(state, &repo_id)
     })
     .await
 }

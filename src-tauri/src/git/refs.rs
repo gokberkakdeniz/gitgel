@@ -144,6 +144,19 @@ pub fn default_base(repo: &Repository, order: &[String]) -> Option<DefaultBase> 
     })
 }
 
+/// When the repository was last fetched: the modification time of `FETCH_HEAD` in the common
+/// git dir, unix seconds. `None` if it was never fetched.
+pub fn fetched_at(repo: &Repository) -> Option<i64> {
+    let modified = std::fs::metadata(repo.commondir().join("FETCH_HEAD"))
+        .and_then(|m| m.modified())
+        .ok()?;
+    let secs = modified
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()?
+        .as_secs();
+    i64::try_from(secs).ok()
+}
+
 /// Remote-tracking branch names (`origin/x`), without `*/HEAD`, sorted.
 pub fn remote_branches(repo: &Repository) -> Result<Vec<String>, AppError> {
     let mut out = Vec::new();
