@@ -12,11 +12,16 @@
   align-items: center;
   gap: 6px;
   height: 26px;
-  margin-bottom: 4px;
+  margin-bottom: 0;
   padding: 0;
   background: transparent;
   border: 0;
   cursor: pointer;
+}
+
+/* The gap above the card goes with it, so a collapsed list has nothing under its heading. */
+.heading[aria-expanded='true'] {
+  margin-bottom: 4px;
 }
 
 .chevron {

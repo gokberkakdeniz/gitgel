@@ -870,19 +870,16 @@ function StashSection({
   );
 }
 
-/** Above a stash's diff: which stash, where it was taken and on what. */
+/** Above a stash's diff: its message and actions, then which stash, where it was taken and on
+ * what. Two lines, so a long message does not push the rest out. */
 function StashBar({ stash, base }: { stash: ReviewStash; base: string }) {
   const branch = stash.branch ?? 'detached HEAD';
   return (
     <div className={styles.entryBar}>
       <div className={styles.entryLine}>
-        <div className={styles.entryNames}>
-          <span className={styles.repoName}>stash@{`{${stash.index}}`}</span>
-          <span className={styles.entryBranch}>{stash.message}</span>
-          <span className={styles.entryRange}>
-            {stash.repoName} / {branch} · from {base.slice(0, 7)} · {formatAge(stash.createdAt)} ago
-          </span>
-        </div>
+        <span className={styles.stashTitle} title={stash.message}>
+          {stash.message}
+        </span>
         <span className={styles.grow} />
         {/* Writing stashes comes later (T19.4). */}
         <Button size={28} disabled title={NOT_YET}>
@@ -894,6 +891,18 @@ function StashBar({ stash, base }: { stash: ReviewStash; base: string }) {
         <Button size={28} disabled title={NOT_YET} className={styles.dropButton}>
           Drop…
         </Button>
+      </div>
+      <div className={styles.stashBarMeta}>
+        <Icon name="package" size={12} strokeWidth={1.7} className={styles.stashBarIcon} />
+        <span className={styles.stashBarRef}>stash@{`{${stash.index}}`}</span>
+        <span className={styles.dot}>·</span>
+        <span className={styles.stashBarWhere}>
+          {stash.repoName} / {branch}
+        </span>
+        <span className={styles.dot}>·</span>
+        <span>from {base.slice(0, 7)}</span>
+        <span className={styles.dot}>·</span>
+        <span>{formatAge(stash.createdAt)} ago</span>
       </div>
     </div>
   );

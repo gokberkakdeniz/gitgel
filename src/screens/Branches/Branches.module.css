@@ -107,6 +107,11 @@
   border-bottom: 1px solid var(--border-row);
 }
 
+/* Collapsed: as much space under the heading as above it. */
+.stashes:has([aria-expanded='false']) {
+  padding-bottom: 8px;
+}
+
 .stashRow {
   cursor: default;
 }

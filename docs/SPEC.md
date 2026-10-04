@@ -384,7 +384,7 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   `actionsOnHover` hides until the row is hovered or holds focus. `active` (hovered, or its menu
   is open): `bg.hover`; `off` dims the tile (0.45) and the title (`text.muted`). Around the card:
   an optional disclosure `heading` above it (12px chevron, 12px/500 label, mono 11 muted count;
-  collapsing hides the card), one muted row when it is empty, and a last row with a link button
+  4px above the card; collapsing hides the card and that gap), one muted row when it is empty, and a last row with a link button
   ("+ Add …") that becomes a 28px mono `Input` while adding. Used by Settings › Repositories,
   Default base and Scripts; no screen draws its own card list.
 - `Checkbox`: a drawn 16px box, radius 4: accent fill with an 11px check when on, 1.5px
@@ -2000,8 +2000,8 @@ Gitgel. Canvas flow P (P1–P4); boards `FlowP1`–`FlowP4.dc.html`.
   sides are read from the object database (`read_file_pair` with `worktreePath` null). Every scan
   lists the stack with each stash's file count (cached per stash).
 - **Branches** (P1): under a repo band's rows (only while the band has rows), a `List` with the
-  heading "Stashes" and its count (collapsible), padding 8px 16px 14px 52px, bottom border
-  `border.row`. Rows: lead `package` icon, prefix `stash@{n}`, the message; sub line: the branch
+  heading "Stashes" and its count (collapsible), padding 8px 16px 14px 52px (8px at the bottom
+  while collapsed, as at the top), bottom border `border.row`. Rows: lead `package` icon, prefix `stash@{n}`, the message; sub line: the branch
   as an `accent` sm Pill (`<branch> · deleted` as `outline`; `detached HEAD` as `outline`),
   `N files`, the age. The text filter applies (message, branch, repo name). Clicking a row opens
   the stash review (P3) on it; the ⋮ button ("Stash options") opens a 280px menu: "Review
@@ -2014,15 +2014,19 @@ Gitgel. Canvas flow P (P1–P4); boards `FlowP1`–`FlowP4.dc.html`.
   rule: section label `Stashes of this project · N` (branch scope `Stashes of this branch · N`),
   the stashes taken on one of the review's branches (project order). Rows (padding 6px 8px,
   radius 8, hover `bg.sunken`): 13px `package` icon (muted; `accent.text` when picked), 13px
-  `text.strong` message (ellipsis), mono 11 muted `stash@{n}`; line 2 (indent 21) mono 11 muted
+  `text.strong` message (line-height 18px, up to two lines, then ellipsis; the icon and
+  `stash@{n}` sit on its first line), mono 11 muted `stash@{n}`; line 2 (indent 21) mono 11 muted
   `<repo> / <branch> · N files · <age>` (`<branch> (deleted)`, `detached HEAD`). Picking one lists
   its files under it (file rows as in a group) and opens its first file; the right pane shows
   it. Picking an entry's file, switching mode or typing in the file filter leaves the stash; the
   section is hidden while filtering.
-- **Stash pane:** an entry bar with 14px/600 `stash@{n}`, mono 12 message, mono 11 muted
-  `<repo> / <branch> · from <short base> · <age> ago`; then the file bar (compare label
+- **Stash pane:** an entry bar of two lines (P3): 15px/600 `text.strong` message (one line,
+  ellipsis, tooltip the whole message) with the buttons on the right; under it a mono 11 muted
+  meta line, gap 8, faint `·` between: 12px `package` icon and `stash@{n}` in `accent.text`,
+  `<repo> / <branch>` (the part that gives way when short of room), `from <short base>`,
+  `<age> ago`. Then the file bar (compare label
   `<short base> ↔ stash@{n}`, view menu, change navigation over the stash's files) and the diff.
-  On the right of the entry bar 28px buttons Apply, Pop (secondary) and Drop… (danger text), all
+  On the right of the message 28px buttons Apply, Pop (secondary) and Drop… (danger text), all
   disabled with the tooltip "Not available yet". No uncommitted banner while a
   stash is shown.
 - **Stash review** (P3, `ReviewTarget` `stashes`): from Branches; title "Stashes", subtitle
@@ -2095,8 +2099,10 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Histo
     that does not resolve: `<rev> not found`.
 - **Picking:** on opening, the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,
-  Uncommitted included. After a refresh the picked commit stays when it is still listed, else
-  the newest is picked. Search picks the first match.
+  Uncommitted included. Clicking the picked row again folds its file list, and opens it again;
+  picking another row opens its files. A row brought into view (stepping, or rows above it
+  folding) keeps 8px, the list's side padding, above or below it. After a refresh the picked
+  commit stays when it is still listed, else the newest is picked. Search picks the first match.
 - **Pane** (`HistH2` 87–110): a commit header (padding 14px 18px, bottom border `border`, gap 8):
   15px/600 `text.strong` subject with, on the right, a 28px "Copy SHA" icon button (copy icon,
   tooltip "Copy full SHA"); the body (13px, line-height 1.5, `text.muted`, `white-space:

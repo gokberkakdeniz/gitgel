@@ -397,6 +397,10 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Review's entry bar: the branch name and the base in "N commits ahead of
   <base>" open their History; the range shows only in Uncommitted or with a commit picked
   — 2026-10-04
+- [x] (on request) Stash pane header on two lines (message and actions, then stash@{n} · repo /
+  branch · from · age); stash messages in lists wrap to two lines; History: clicking the picked
+  row folds its files, a row scrolled into view keeps 8px above it; a collapsed `List` heading
+  drops its gap and Branches' collapsed stash list has equal top and bottom padding — 2026-10-04
 
 ---
 

@@ -110,11 +110,15 @@ export function History({ repoId, rev, backLabel }: Props) {
   const [path, setPath] = useState<string | null>(null);
   const file = files.find((f) => f.path === path) ?? files[0];
   const [land, setLand] = useState<'first' | 'last'>('first');
+  // The picked row lists its files under it; clicking it again folds them (and back).
+  const [filesOpen, setFilesOpen] = useState(true);
   const pick = (row: string) => {
     setPicked(row);
     setPath(null);
     setLand('first');
+    setFilesOpen(true);
   };
+  const click = (row: string) => (row === current ? setFilesOpen((o) => !o) : pick(row));
 
   // Stepping rows: ↑ / ↓ in the list, ⌥⇧↑ / ⌥⇧↓ anywhere. Past the loaded end it loads more.
   const stepRow = (dir: 1 | -1) => {
@@ -252,9 +256,9 @@ export function History({ repoId, rev, backLabel }: Props) {
               base={base}
               wipCount={entry?.uncommitted ?? 0}
               wipAge={entry?.changedAt ?? null}
-              files={files}
+              files={filesOpen ? files : []}
               file={file?.path}
-              onPick={pick}
+              onPick={click}
               onFile={(p) => {
                 setPath(p);
                 setLand('first');

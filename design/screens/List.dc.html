@@ -17,7 +17,7 @@ body{margin:0}
 </helmet>
 <div class="{{themeClass}}" style="{{wrapStyle}}">
 <sc-if value="{{hasHeading}}" hint-placeholder-val="{{false}}">
-<button type="button" aria-expanded="{{open}}" onClick="{{toggle}}" style="display: flex; align-items: center; gap: 6px; height: 26px; padding: 0; margin-bottom: 4px; background: transparent; border: 0; font-family: 'Instrument Sans', -apple-system, sans-serif; cursor: pointer">
+<button type="button" aria-expanded="{{open}}" onClick="{{toggle}}" style="display: flex; align-items: center; gap: 6px; height: 26px; padding: 0; margin-bottom: {{headingGap}}; background: transparent; border: 0; font-family: 'Instrument Sans', -apple-system, sans-serif; cursor: pointer">
 <span style="{{chevronStyle}}"><dc-import name="Icon" icon="chevron-down" size="12" hint-size="12px,12px"></dc-import></span>
 <span style="font-size: 12px; font-weight: 500; color: var(--text-body)">{{heading}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{count}}</span>
@@ -70,6 +70,8 @@ class Component extends DCLogic {
       wrapStyle: 'box-sizing: border-box; width: ' + (p.width || '100%') + '; display: flex; flex-direction: column; font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-body)',
       hasHeading: !!p.heading, heading: p.heading || '', count: String(items.length),
       open: !collapsed,
+      // Collapsed, the heading drops its gap so the space under it matches the space above.
+      headingGap: collapsed ? '0' : '4px',
       toggle: function (e) { if (onToggle) onToggle(e); else self.setState({ collapsed: !collapsed }); },
       chevronStyle: 'display: flex; color: var(--text-muted); transition: transform 120ms; ' + (collapsed ? 'transform: rotate(-90deg)' : ''),
       label: p.label || p.heading || 'List',

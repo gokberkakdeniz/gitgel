@@ -81,7 +81,7 @@ button,input,textarea{font-family:inherit}
 </div>
 <span style="justify-self: end; display: flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--text-body)">1 project</span>
 <button aria-label="Branch options" aria-haspopup="menu" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; background: transparent; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
-</div><div style="padding: 8px 26px 14px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Stashes" heading="Stashes" items="{{stashesApi}}" hint-size="100%,150px"></dc-import></div>
+</div><div style="padding: 8px 26px 8px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Stashes" heading="Stashes" collapsed="{{true}}" items="{{stashesApi}}" hint-size="100%,150px"></dc-import></div>
 </div>
 <div style="position: absolute; top: 364px; left: 701px; z-index: 5"><dc-import name="Menu" theme="none" width="280" label="Stash actions" items="{{stashMenu}}" hint-size="280px,200px"></dc-import></div>
 </main>
@@ -92,6 +92,7 @@ class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
     // Stashes per repo: the shared List (List.dc.html) with a heading; row 1 has its menu open.
+    // api-server's list is collapsed: its bottom padding drops to the top's 8px.
     var more = function (open) { return [{ icon: 'more-vertical', ariaLabel: 'Stash options', active: open }]; };
     var stash = function (n, msg, branch, gone, files, age, open) {
       return { lead: 'icon', icon: 'package', prefix: 'stash@{' + n + '}', title: msg, active: open, actions: more(open),

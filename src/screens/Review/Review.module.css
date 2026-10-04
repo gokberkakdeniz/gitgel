@@ -746,13 +746,14 @@
 
 .stashLine {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   min-width: 0;
 }
 
 .stashIcon {
   flex-shrink: 0;
+  margin-top: 2px;
   color: var(--text-muted);
 }
 
@@ -764,16 +765,21 @@
   flex-grow: 1;
   min-width: 0;
   font-size: 13px;
+  line-height: 18px;
   color: var(--text-strong);
-  white-space: nowrap;
+  /* Up to two lines, so "WIP on <branch>: <sha> <subject>" stays readable. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .stashRef,
 .stashMeta {
   font-family: var(--font-mono);
   font-size: 11px;
+  line-height: 18px;
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -795,4 +801,46 @@
   font-family: inherit;
   font-size: inherit;
   color: inherit;
+}
+
+/* The stash pane's header (flows P2–P3): message and actions, then a meta line. */
+.stashTitle {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stashBarMeta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.stashBarIcon {
+  flex-shrink: 0;
+  color: var(--accent-text);
+}
+
+.stashBarRef {
+  color: var(--accent-text);
+}
+
+.stashBarWhere {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dot {
+  color: var(--text-faint);
 }
