@@ -394,6 +394,9 @@ rather than as a task is listed the same way, marked "(on request)".
     projects chip.
 - [x] T20.4 ✋ Checkpoint — phase 20 — 2026-10-04
   - note: user feedback: the list label was cut off once the list scrolled (fixed).
+- [x] (on request) Review's entry bar: the branch name and the base in "N commits ahead of
+  <base>" open their History; the range shows only in Uncommitted or with a commit picked
+  — 2026-10-04
 
 ---
 

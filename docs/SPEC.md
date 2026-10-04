@@ -655,9 +655,11 @@ Layout:
   - Opening from a project row focuses that entry: its first file is selected and the other
     groups are collapsed.
 - **Entry bar** (padding 12px 18px, bottom border): 14px/600 repo name (link: goes to Branches,
-  scrolls to that repo's band and highlights it briefly), mono 12 branch, mono 11 muted range
-  (`<base>..<branch>` or `working tree <~path>`), and on the right 12px muted
-  `N commits ahead of <base>` (Uncommitted: `HEAD ↔ working tree`).
+  scrolls to that repo's band and highlights it briefly), mono 12 branch (link: opens its History,
+  §16; tooltip `Show history of <branch>`), a mono 11 muted range only when it adds something
+  (`working tree <~path>` in Uncommitted, `<parent>..<sha>` with a commit picked), and on the
+  right 12px muted `N commits ahead of <base>`, the base a link to its History (Uncommitted:
+  `HEAD ↔ working tree`). Links take `accent.hover` on hover.
 - **Commit list** (max ≈132px, scrolls; hidden in Uncommitted): rows with mono 12
   `accent.text` short SHA, subject, and mono 11 muted age. Commits that belong to another branch
   (stacked) are at 60% opacity with a mono 11 warning pill naming the branch.
@@ -2051,8 +2053,8 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Histo
   on until `limit` commits match; `total` is null then. `fetchedAt`: the modification time of
   `FETCH_HEAD` in the common git dir. `get_history_refs` lists the local branches and the
   remote-tracking ones. Every call logs one line with its timings.
-- **Opening:** "Open history" in a Branches row menu, and the base branch row's
-  name and History button. Route `history` with `repoId` and `rev`, pushed like Review
+- **Opening:** "Open history" in a Branches row menu, the base branch row's name and History
+  button, and in Review's entry bar the branch name and the base in "N commits ahead of <base>". Route `history` with `repoId` and `rev`, pushed like Review
   (back and forward work). History hides the sidebar as Review does.
 - **Header** (`HistH2` 21–41), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
   ` · <~worktree>` when `rev` is a branch checked out in a worktree. On the right, gap 10:

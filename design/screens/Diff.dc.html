@@ -130,11 +130,11 @@ button,input{font-family:inherit}
 <div style="display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 28px">
 <div style="display: flex; align-items: baseline; gap: 10px; min-width: 0">
 <span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">{{entry.repo}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap">{{entry.branch}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{entry.where}}</span>
+<a href="HistH4.dc.html" title="Show history of {{entry.branch}}" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap">{{entry.branch}}</a>
+<sc-if value="{{entry.rangePlain}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{entry.where}}</span></sc-if>
 </div>
 <div style="flex-grow: 1"></div>
-<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{entry.commitLabel}}</span>
+<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap"><sc-if value="{{entry.rangeLinked}}" hint-placeholder-val="{{true}}">{{entry.aheadText}} <a href="HistH2.dc.html" title="Show history of {{entry.rangeBase}}" style="color: var(--text-muted)">{{entry.rangeBase}}</a></sc-if><sc-if value="{{entry.rangePlain}}" hint-placeholder-val="{{false}}">{{entry.commitLabel}}</sc-if></span>
 <sc-if value="{{commitOn}}" hint-placeholder-val="{{false}}">
 <div role="group" aria-label="Step through commits" style="display: flex; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
 <button onClick="{{newerCommit}}" disabled="{{newerDisabled}}" aria-label="Newer commit" title="Newer commit (⌥⇧↑)" style="{{newerStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"></path></svg></button>
@@ -745,6 +745,10 @@ class Component extends DCLogic {
       entry: {
         repo: selGroup.repo, branch: selGroup.branch,
         where: mode === 'Uncommitted' ? 'working tree ' + selGroup.wt : gSha ? parentSha + '..' + gSha : selGroup.base + '..' + selGroup.branch,
+        // The range shows only in Uncommitted or with a commit picked; the branch and the base in
+        // "N commits ahead of <base>" link to their History (SPEC §16).
+        rangeLinked: !(mode === 'Uncommitted' || gSha), rangePlain: mode === 'Uncommitted' || !!gSha, rangeBase: selGroup.base,
+        aheadText: cm.length + ' commits ahead of',
         commitLabel: mode === 'Uncommitted' ? 'HEAD ↔ working tree' : gSha ? 'Commit ' + (cAll.length - cIdx) + ' of ' + cAll.length : cm.length + ' commits ahead of ' + selGroup.base
       },
       commitOn: !!gSha,

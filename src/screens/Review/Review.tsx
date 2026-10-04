@@ -899,7 +899,6 @@ function StashBar({ stash, base }: { stash: ReviewStash; base: string }) {
   );
 }
 
-
 /** The field above the file list (flow D8). */
 function FileFilter({
   inputRef,
@@ -987,14 +986,25 @@ function EntryBar({
           >
             {e.repoName}
           </button>
-          <span className={styles.entryBranch}>{name}</span>
-          <span className={styles.entryRange}>
-            {workingTree && e.worktreePath
-              ? `working tree ${tildifyHome(e.worktreePath)}`
-              : on
-                ? `${parent}..${sha!.slice(0, 7)}`
-                : `${e.base}..${name}`}
-          </span>
+          {/* The branch, and the base on the right, open their History (SPEC §16). */}
+          <button
+            type="button"
+            className={`${styles.entryBranch} ${styles.repoLink}`}
+            title={`Show history of ${name}`}
+            onClick={() => openHistory(e.repoId, e.branch ?? e.headSha)}
+          >
+            {name}
+          </button>
+          {/* The range only when it says something the line does not (flow D7, Uncommitted). */}
+          {workingTree && e.worktreePath ? (
+            <span className={styles.entryRange}>working tree {tildifyHome(e.worktreePath)}</span>
+          ) : (
+            on && (
+              <span className={styles.entryRange}>
+                {parent}..{sha!.slice(0, 7)}
+              </span>
+            )
+          )}
         </div>
         <span className={styles.grow} />
         <span className={styles.muted}>
@@ -1002,7 +1012,19 @@ function EntryBar({
             ? 'HEAD ↔ working tree'
             : on
               ? `Commit ${total - index} of ${total}`
-              : `${ahead} ${ahead === 1 ? 'commit' : 'commits'} ahead of ${e.base}`}
+              : (
+                <>
+                  {ahead} {ahead === 1 ? 'commit' : 'commits'} ahead of{' '}
+                  <button
+                    type="button"
+                    className={`${styles.baseLink} ${styles.repoLink}`}
+                    title={`Show history of ${e.base}`}
+                    onClick={() => openHistory(e.repoId, e.base)}
+                  >
+                    {e.base}
+                  </button>
+                </>
+              )}
         </span>
         {on && !workingTree && (
           <>
@@ -1066,6 +1088,10 @@ function EntryBar({
       )}
     </div>
   );
+}
+
+function openHistory(repoId: string, rev: string | null) {
+  if (rev) useNav.getState().push({ name: 'history', repoId, rev, backLabel: 'Back to Review' });
 }
 
 /** Which working trees the Uncommitted layer shows. */
