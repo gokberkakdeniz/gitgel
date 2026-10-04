@@ -1,16 +1,12 @@
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { useState } from 'react';
 import { Button } from '../../components/Button';
-import { IconButton } from '../../components/IconButton';
-import { Pill } from '../../components/Pill';
-import { Switch } from '../../components/Switch';
-import { CloseIcon, EditIcon } from '../../components/icons';
+import { isIconName } from '../../components/icons';
+import { List } from '../../components/List';
 import { deleteScript, exportScripts, readScriptsFile, reorderScripts, saveScript } from '../../lib/ipc';
 import type { AppError, Config, ScriptConfig } from '../../lib/types';
 import { ImportScripts } from '../../scripts/ImportScripts';
-import { DragHandle } from '../../scripts/DragHandle';
 import { newScript, ScriptEditor } from '../../scripts/ScriptEditor';
-import { ScriptIcon } from '../../scripts/ScriptIcon';
 import { useReorder } from '../../scripts/useReorder';
 import { useUi } from '../../state/ui';
 import styles from './Settings.module.css';
@@ -98,41 +94,33 @@ export function Scripts({ config }: { config: Config }) {
             </Button>
           </div>
         </div>
-        <ul ref={listRef} aria-label="Scripts" className={`${styles.card} ${styles.scriptList}`}>
-          {shown.map((s) => (
-            <li
-              key={s.id}
-              data-reorder
-              className={s.id === dragId ? `${styles.scriptRow} ${styles.dragging}` : styles.scriptRow}
-            >
-              <DragHandle aria-label={`Move ${s.name}`} {...handleProps(s.id)} />
-              <ScriptIcon name={s.icon} className={s.disabled ? styles.scriptOff : undefined} />
-              <span className={styles.scriptNameCell}>
-                <span className={s.disabled ? `${styles.scriptName} ${styles.scriptNameOff}` : styles.scriptName}>
-                  {s.name}
-                </span>
-                {s.disabled && (
-                  <Pill tone="neutral" size="sm">
-                    off
-                  </Pill>
-                )}
-              </span>
-              <Switch
-                checked={!s.disabled}
-                aria-label={`${s.name} on`}
-                title={s.disabled ? 'Off: in no menu. Switch on to show it' : 'On: shown in its menus. Switch off to hide it'}
-                onChange={(e) => setOn(s, e.target.checked)}
-              />
-              <IconButton aria-label={`Edit ${s.name}`} onClick={() => setEditing(s)}>
-                <EditIcon />
-              </IconButton>
-              <IconButton aria-label={`Remove ${s.name}`} onClick={() => void remove(s)}>
-                <CloseIcon size={13} />
-              </IconButton>
-            </li>
-          ))}
-          {config.scripts.length === 0 && <li className={styles.scriptsEmpty}>No scripts yet</li>}
-        </ul>
+        <List
+          label="Scripts"
+          listRef={listRef}
+          empty="No scripts yet"
+          items={shown.map((s) => ({
+            key: s.id,
+            rowProps: { 'data-reorder': true, className: s.id === dragId ? styles.dragging : undefined },
+            handle: { 'aria-label': `Move ${s.name}`, ...handleProps(s.id) },
+            lead: 'tile',
+            icon: isIconName(s.icon) ? s.icon : 'prompt',
+            title: s.name,
+            titleWeight: 500,
+            off: s.disabled,
+            badges: s.disabled ? [{ label: 'off', tone: 'neutral' }] : undefined,
+            actions: [
+              {
+                kind: 'switch',
+                checked: !s.disabled,
+                ariaLabel: `${s.name} on`,
+                title: s.disabled ? 'Off: in no menu. Switch on to show it' : 'On: shown in its menus. Switch off to hide it',
+                onToggle: (on) => setOn(s, on),
+              },
+              { icon: 'edit', ariaLabel: `Edit ${s.name}`, onPress: () => setEditing(s) },
+              { icon: 'close', ariaLabel: `Remove ${s.name}`, onPress: () => void remove(s) },
+            ],
+          }))}
+        />
         {error && <div className={styles.scriptsError}>{error}</div>}
         <span className={styles.settingHint}>
           Scripts run as you, with your permissions. Gitgel itself still only reads the repositories.

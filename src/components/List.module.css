@@ -1,0 +1,279 @@
+.wrap {
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Disclosure heading above the card. */
+.heading {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin-bottom: 4px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.chevron {
+  display: flex;
+  color: var(--text-muted);
+  transition: transform 120ms;
+}
+
+.chevronShut {
+  transform: rotate(-90deg);
+}
+
+.headingLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-body);
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pop);
+}
+
+.r10 {
+  border-radius: var(--radius-seg);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item + .item {
+  border-top: 1px solid var(--border-row);
+}
+
+.row {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.regular {
+  gap: 10px;
+  min-height: 48px;
+  padding: 8px 10px 8px 12px;
+}
+
+.compact {
+  gap: 8px;
+  height: 34px;
+  padding: 0 6px 0 12px;
+}
+
+.row:hover,
+.active {
+  background: var(--bg-hover);
+}
+
+/* Lead */
+.index {
+  width: 14px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.icon {
+  width: 16px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.tile {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+}
+
+.tileOff {
+  opacity: 0.45;
+}
+
+/* Lines */
+.body {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.line {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prefix {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  color: var(--text-strong);
+}
+
+.titleMono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-code);
+}
+
+.titleStrong {
+  font-weight: 500;
+}
+
+.titleFixed {
+  flex-shrink: 0;
+}
+
+.titleOff {
+  color: var(--text-muted);
+}
+
+.detail {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sub {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dot {
+  color: var(--text-faint);
+}
+
+.aside {
+  flex-shrink: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.faint {
+  color: var(--text-faint);
+}
+
+.warning {
+  color: var(--warning-text);
+}
+
+.danger {
+  color: var(--danger-text);
+}
+
+/* Actions */
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.compact .actions {
+  gap: 1px;
+}
+
+.switch {
+  display: flex;
+  padding: 0 6px;
+}
+
+/* Hidden but in place until the row is hovered or holds focus, so keyboard users reach them. */
+.hoverActions:not(:hover, :focus-within, .active) .actions {
+  visibility: hidden;
+}
+
+/* Empty and add rows */
+.empty {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.emptyCompact {
+  min-height: 34px;
+}
+
+.add {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
+}
+
+.addCompact {
+  height: 34px;
+}
+
+.addField {
+  padding: 4px;
+}
+
+.ruled {
+  border-top: 1px solid var(--border-row);
+}

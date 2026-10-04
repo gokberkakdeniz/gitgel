@@ -163,7 +163,7 @@ gitgel/
 │  ├─ state/    nav.ts  ui.ts  data.ts
 │  ├─ components/                 # Button, IconButton, Pill, Checkbox, Switch, Input, Kbd,
 │  │                              # Popover, Menu, Modal, Toast, Segmented, Select, SettingsNav,
-│  │                              # KindBadge, Banner, icons.tsx (Icon by name),
+│  │                              # KindBadge, Banner, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
@@ -355,11 +355,29 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   border, `text.strong`), `ghost`, `danger` (`danger.fill`), `link` (`accent.text`); optional
   `kbd` hint on the right in mono 11px. Also 28px (Locate…), `chevron` for a dropdown trigger and
   `active` for its open state (`bg.pressed`, `border.strong`); a modal's Cancel is a plain
-  `secondary`. Icon-only buttons are `IconButton` (28 plain, 32 boxed).
+  `secondary`. Icon-only buttons are `IconButton` (28 plain, 24 in compact list rows, 32 boxed).
 - `Pill`: `success | warning | danger | neutral`, 11px/500, padding 3px 10px. Neutral: `#d8d4cc`
   on `#302e2a`. Also `accent` (`accent.text` on `rgba(accent,0.14)`), `size="sm"` (16px tall,
   padding 0 7px: Branches line 2, a badge next to a name), `mono` (exit codes, SHAs) and a
-  clickable form (Review's "Whitespace ignored").
+  clickable form (Review's "Whitespace ignored"). Also `outline`: `text.faint` in
+  a 1px dashed `border.strong` ring, transparent, for a thing that is gone (a stash's deleted
+  branch).
+- `List`: a card of rows (`List.dc.html`, `ListRow.dc.html`,
+  `ListSpec.dc.html`): `bg.sunken`, 1px border, radius 12 (10 for a narrow list), 1px
+  `border.row` rules between rows and none after the last. `density` regular (min 48px, padding
+  8px 10px 8px 12px, gap 10) or compact (34px, padding 0 6px 0 12px, gap 8). A row, left to right,
+  every part optional: a drag `handle`; a `lead` (mono 11 faint `index` · 16px slot with a 14px
+  line `icon` · 28px boxed `tile`); line 1: mono 12 muted `prefix`, `title` (13px, or mono 12
+  `text.code`; weight 400 or 500; a fixed `titleWidth` so a `detail` column lines up), sm `Pill`
+  `badges`, a mono 12 muted `detail` that takes the rest (ellipsis); line 2: a mono 11 muted `sub`
+  line of sm mono Pills and texts with `·` between; a 12px `aside` (muted, faint, warning,
+  danger); `actions` (`Button`s, 24px compact / 28px regular, a `Switch`, a md `Pill`), which
+  `actionsOnHover` hides until the row is hovered or holds focus. `active` (hovered, or its menu
+  is open): `bg.hover`; `off` dims the tile (0.45) and the title (`text.muted`). Around the card:
+  an optional disclosure `heading` above it (12px chevron, 12px/500 label, mono 11 muted count;
+  collapsing hides the card), one muted row when it is empty, and a last row with a link button
+  ("+ Add …") that becomes a 28px mono `Input` while adding. Used by Settings › Repositories,
+  Default base and Scripts; no screen draws its own card list.
 - `Checkbox`: a drawn 16px box, radius 4: accent fill with an 11px check when on, 1.5px
   `border.strong` when off; optional `label` (13px `text.strong`), a 12px muted `sub` line, and
   `card` (a `bg.sunken` box, radius 12, padding 12px 14px).
@@ -830,19 +848,19 @@ Layout:
   Settings opens on the section shown last (General at first; kept for the session).
   The sidebar's "N repositories" row and every "path not found" link open Repositories; the
   gear and ⌘, open the last one.
-- **Repositories:** serif 18px heading; card (`bg.sunken`, radius 12). Row: 500-weight name
+- **Repositories:** serif 18px heading; a `List`. Row: 500-weight name
   (96px), mono 12 muted path (ellipsis), a note (`base <defaultBase>`, "no base found", or a
   danger pill "path not found" + 28px "Locate…", or "git error"), ✕ remove. "+ Add repository…"
   (last row, `accent.text`) opens the folder picker and sheet (flow A).
   - Locate…: the picked folder must be a repository (or resolve to one) not already added under
-    another id; errors show under the row in 12px danger ("Not a git repository",
-    "Already added as <name>"). Fixes every entry of that repo.
+    another id; errors show as a failed toast with the picked folder under the message ("Not a git
+    repository", "Already added as <name>"). Fixes every entry of that repo.
   - ✕ asks first only when projects use the repo: `Remove <name>?` · "Its N project entries are
     removed too. Nothing on disk is touched." · Cancel / danger "Remove". Removing drops the repo,
     its branch bases and its project entries.
   - Under the card, "Default base" ("Tried in order when a branch has no base set"; label level with the first
     row): an ordered list, one branch per row, so no separator is ever typed (flow M4/M5). A 280px
-    card (`bg.sunken`, radius 10); 34px rows: mono 11 faint position, mono 12 name (ellipsis),
+    compact `List` (radius 10); 34px rows: mono 11 faint position, mono 12 name (ellipsis),
     then ↑ / ↓ / ✕ (24px icon buttons, shown while the row is hovered or holds focus): move up,
     move down, remove. ↑ is disabled on the first row, ↓ on the last, ✕ when only one is left
     (the list is never empty). The last row "+ Add branch" (`accent.text` 500) becomes a 28px
@@ -1567,7 +1585,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 438–482 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–290 (sections, Default pair, pills, disabled rows, hint), base menu data per case 695–737 (`baseCase`: stacked / behind / unrelated / remote; effective base 307–308), commit selection 404–417, filter logic 419–429, 440–444, 475 and 608–609, segmented 483–490, context and fold logic 581–596 (sample hidden lines 495–503), view values 759–782 (context 766–781), commit values 785–795, theme and `embedded` values 743–744, filter values 798–809 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–101, open-item entry menu 102–116 (`openMenu`: worktree / notCheckedOut / repoMissing, 147–152; items 184–195; note and position 211–215), project menu 117–123, delete modal 126–137, rename 180–202, pills 153–162 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
-| Settings | `Settings.dc.html` | section list 30–38 (data 262–274), Repositories 43–100 (repo card 44–62, Default base list 64–92 with rows, actions and add states 276–301, Active threshold 94–99), General 102–153 (Theme 104–122, tile builder 238–261; Terminal 124–146, options with disabled flag 304–308; Check for updates 147–152), Shortcuts 155–179, shortcut data and keycap style 189–237. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
+| Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
@@ -1821,7 +1839,7 @@ export interface ScriptRun {
 - Serif 18px "Scripts" and 12px muted "Your own items in the branch menus. Each runs a shell
   command for that branch. Drag to reorder; switch one off to take it out of the menus." On the right: Import…,
   Export…, primary "+ New script".
-- A card (`bg.sunken`, radius 12) of 48px rows: drag handle, 28px icon tile, name (500), an
+- A `List` of 48px rows: drag handle, 28px icon tile, name (500), an
   on/off `Switch` (tooltip "On: shown in its menus. Switch off to hide it" /
   "Off: in no menu. Switch on to show it"), ✎ edit (opens N6), ✕ remove (at once, with an Undo
   toast).

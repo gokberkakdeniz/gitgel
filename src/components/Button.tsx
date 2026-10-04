@@ -6,8 +6,8 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'link
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
-  /** 32px default, 28px in rows, 36px in modals, 40px on empty states. */
-  size?: 28 | 32 | 36 | 40;
+  /** 32px default, 28px in rows (24px in compact list rows), 36px in modals, 40px on empty states. */
+  size?: 24 | 28 | 32 | 36 | 40;
   /** A 12px icon before the label. Icon-only buttons are `IconButton`. */
   icon?: IconName;
   /** Shortcut hint shown on the right, e.g. "⌘K". */

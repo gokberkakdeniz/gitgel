@@ -51,3 +51,10 @@
   color: var(--accent-text);
   background: rgba(var(--accent-rgb), 0.14);
 }
+
+.outline {
+  color: var(--text-faint);
+  background: transparent;
+  outline: 1px dashed var(--border-strong);
+  outline-offset: -1px;
+}

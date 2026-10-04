@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>List · variants</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>body{margin:0;background:#141311}</style>
+</helmet>
+<div style="width: 1040px; height: 1320px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; padding: 40px 48px; background: #141311; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc; font-size: 13px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">List</h1>
+<p style="margin: 0; max-width: 860px; color: #a09d96; line-height: 1.55">A card of rows: bg.sunken, 1px border, radius 12 (10 for a narrow list), border.row rules between rows. Each row is a <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">ListRow</span>: <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">lead</span> (handle · index · icon · tile), a first line (<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">prefix</span>, <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">title</span>, <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">badges</span>, <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">detail</span>), an optional mono <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">sub</span> line, an <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">aside</span> and <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">actions</span> (Button, Switch, Pill). <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">density</span> regular (48px) or compact (34px). Optional disclosure <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">heading</span> with a count, an <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">empty</span> row and an add row (link, or an Input while adding).</p>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Settings › Repositories · regular</h2>
+<dc-import name="List" label="Repositories" items="{{repos}}" add-label="+ Add repository…" hint-size="100%,250px"></dc-import>
+<span style="font-size: 12px; color: #75726b">titleWeight 500 + titleWidth 96 so the paths line up; aside "base main"; a missing repo: danger Pill + Locate… as actions; ✕ ghost button</span>
+</section>
+
+<section style="display: flex; gap: 40px; align-items: flex-start">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Default base · compact, radius 10</h2>
+<dc-import name="List" label="Default base order" density="compact" radius="10" width="280px" items="{{bases}}" add-label="+ Add branch" hint-size="280px,140px"></dc-import>
+<span style="font-size: 12px; color: #75726b">index lead, titleMono; ↑ ↓ ✕ show on hover (row 2)</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Adding · invalid</h2>
+<dc-import name="List" label="Default base order" density="compact" radius="10" width="280px" items="{{bases}}" add-label="Add a base branch" adding="invalid" add-value="release candidate" add-placeholder="Branch name, e.g. develop" hint-size="280px,140px"></dc-import>
+<span style="font-size: 12px; color: #75726b">the add row becomes a 28px mono Input</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Empty</h2>
+<dc-import name="List" label="Scripts" items="{{none}}" empty="No scripts yet" width="300px" hint-size="300px,50px"></dc-import>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Settings › Scripts · regular, tile lead</h2>
+<dc-import name="List" label="Scripts" items="{{scripts}}" hint-size="100%,250px"></dc-import>
+<span style="font-size: 12px; color: #75726b">handle + tile; Switch, ✎, ✕; an off script dims its tile and title and gets a neutral "off" badge</span>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Stashes · heading, icon lead, sub line</h2>
+<dc-import name="List" label="Stashes" heading="Stashes" items="{{stashes}}" hint-size="100%,150px"></dc-import>
+<span style="font-size: 12px; color: #75726b">prefix stash@{n}; sub: branch as an accent Pill (outline when the branch is gone) · files · age; ⋮ opens the stash menu (row 1 open)</span>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Light</h2>
+<div style="padding: 20px 24px; background: #fbfaf7; border-radius: 12px">
+<dc-import name="List" theme="light" label="Stashes" heading="Stashes" items="{{stashes}}" hint-size="100%,150px"></dc-import>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1040,"height":1320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var x = function (label) { return { icon: 'close', ariaLabel: label }; };
+    var bases = ['origin/HEAD', 'main', 'master'].map(function (n, i, all) {
+      return { lead: 'index', leadText: String(i + 1), title: n, titleMono: true, active: i === 1, actionsOnHover: true,
+        actions: [{ icon: 'arrow-up', ariaLabel: 'Move ' + n + ' up', disabled: i === 0 }, { icon: 'arrow-down', ariaLabel: 'Move ' + n + ' down', disabled: i === all.length - 1 }, x('Remove ' + n)] };
+    });
+    var script = function (name, icon, off) {
+      return { lead: 'tile', icon: icon, title: name, titleWeight: '500', off: off, badges: off ? [{ label: 'off', tone: 'neutral' }] : [],
+        actions: [{ kind: 'switch', checked: !off, ariaLabel: 'On', title: off ? 'Off: in no menu. Switch on to show it' : 'On: shown in its menus. Switch off to hide it' }, { icon: 'edit', ariaLabel: 'Edit script' }, x('Remove script')] };
+    };
+    return {
+      none: [],
+      repos: [
+        { title: 'web-app', titleWeight: '500', titleWidth: 96, detail: '~/code/web-app', aside: 'base main', actions: [x('Remove repository')] },
+        { title: 'api-server', titleWeight: '500', titleWidth: 96, detail: '~/code/api-server', aside: 'base main', actions: [x('Remove repository')] },
+        { title: 'admin-panel', titleWeight: '500', titleWidth: 96, detail: '~/old/admin-panel', actions: [{ kind: 'pill', label: 'path not found', tone: 'danger' }, { label: 'Locate…', variant: 'secondary' }, x('Remove repository')] }
+      ],
+      bases: bases,
+      scripts: [script('Open pull request', 'pull-request'), script('Run tests', 'test'), script('Copy Linear link', 'link', true)].map(function (s) { s.lead = 'tile'; s.handle = true; return s; }),
+      stashes: [
+        { lead: 'icon', icon: 'package', prefix: 'stash@{0}', title: 'debug logging for refresh', sub: [{ pill: 'session-token-refresh', tone: 'accent' }, { text: '1 file' }, { text: '20m' }], active: true, actions: [{ icon: 'more-vertical', ariaLabel: 'Stash options', active: true }] },
+        { lead: 'icon', icon: 'package', prefix: 'stash@{1}', title: 'WIP on old-login: 71be0c2 Try new login form', sub: [{ pill: 'old-login · deleted', tone: 'outline' }, { text: '5 files' }, { text: '3w' }], actions: [{ icon: 'more-vertical', ariaLabel: 'Stash options' }] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

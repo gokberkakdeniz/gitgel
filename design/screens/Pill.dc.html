@@ -24,13 +24,14 @@ body{margin:0}
 </sc-if>
 </span>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"label":{"editor":"text","default":"merged"},"tone":{"editor":"enum","options":["success","warning","danger","neutral","accent"],"default":"success"},"size":{"editor":"enum","options":["sm","md"],"default":"md"},"mono":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"title":{"editor":null},"onPress":{"editor":null},"$preview":{"width":80,"height":22}}'>
+<script type="text/x-dc" data-dc-script data-props='{"label":{"editor":"text","default":"merged"},"tone":{"editor":"enum","options":["success","warning","danger","neutral","accent","outline"],"default":"success"},"size":{"editor":"enum","options":["sm","md"],"default":"md"},"mono":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"title":{"editor":null},"onPress":{"editor":null},"$preview":{"width":80,"height":22}}'>
 class Component extends DCLogic {
   renderVals() {
     // The app's Pill (src/components/Pill.tsx): state labels, script results, import badges.
     // md: padding 3px 10px (tables, lists, dialog headers); sm: 16px tall, no vertical padding,
     // inside a mono meta line (Branches line 2) or next to a name. onPress makes it a button
-    // (Review's "Whitespace ignored").
+    // (Review's "Whitespace ignored"). outline: faint text in a dashed ring, for a thing that is gone
+    // (a stash's deleted branch).
     var p = this.props;
     var tone = p.tone || 'success';
     var c = {
@@ -38,7 +39,8 @@ class Component extends DCLogic {
       warning: 'color: var(--warning); background: rgba(var(--warning-rgb), 0.14);',
       danger: 'color: var(--danger); background: rgba(var(--danger-rgb), 0.16);',
       neutral: 'color: var(--text-body); background: var(--border);',
-      accent: 'color: var(--accent-text); background: rgba(var(--accent-rgb), 0.14);'
+      accent: 'color: var(--accent-text); background: rgba(var(--accent-rgb), 0.14);',
+      outline: 'color: var(--text-faint); background: transparent; outline: 1px dashed var(--border-strong); outline-offset: -1px;'
     }[tone];
     var sm = p.size === 'sm';
     var press = p.onPress;

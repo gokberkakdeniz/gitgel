@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>List</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="{{wrapStyle}}">
+<sc-if value="{{hasHeading}}" hint-placeholder-val="{{false}}">
+<button type="button" aria-expanded="{{open}}" onClick="{{toggle}}" style="display: flex; align-items: center; gap: 6px; height: 26px; padding: 0; margin-bottom: 4px; background: transparent; border: 0; font-family: 'Instrument Sans', -apple-system, sans-serif; cursor: pointer">
+<span style="{{chevronStyle}}"><dc-import name="Icon" icon="chevron-down" size="12" hint-size="12px,12px"></dc-import></span>
+<span style="font-size: 12px; font-weight: 500; color: var(--text-body)">{{heading}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{count}}</span>
+</button>
+</sc-if>
+<sc-if value="{{open}}" hint-placeholder-val="{{true}}">
+<div role="list" aria-label="{{label}}" style="{{cardStyle}}">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+<dc-import name="ListRow" theme="none" lead="{{r.lead}}" handle="{{r.handle}}" icon="{{r.icon}}" lead-text="{{r.leadText}}" prefix="{{r.prefix}}" title="{{r.title}}" title-mono="{{r.titleMono}}" title-weight="{{r.titleWeight}}" title-width="{{r.titleWidth}}" badges="{{r.badges}}" detail="{{r.detail}}" sub="{{r.sub}}" aside="{{r.aside}}" aside-tone="{{r.asideTone}}" actions="{{r.actions}}" actions-on-hover="{{r.actionsOnHover}}" density="{{density}}" active="{{r.active}}" off="{{r.off}}" first="{{r.first}}" hint-size="100%,48px"></dc-import>
+</sc-for>
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+<div style="{{emptyStyle}}">{{empty}}</div>
+</sc-if>
+<sc-if value="{{hasAddLink}}" hint-placeholder-val="{{false}}">
+<div style="{{addStyle}}"><dc-import name="Button" theme="none" variant="link" label="{{addLabel}}" href="{{addHref}}" on-press="{{onAdd}}" hint-size="120px,16px"></dc-import></div>
+</sc-if>
+<sc-if value="{{hasAddInput}}" hint-placeholder-val="{{false}}">
+<div style="padding: 4px; border-top: 1px solid var(--border-row)"><dc-import name="Input" theme="none" size="28" width="100%" mono="{{true}}" value="{{addValue}}" placeholder="{{addPlaceholder}}" label="{{addLabel}}" left-icon="none" right-text="" clearable="{{false}}" state="{{addState}}" hint-size="100%,28px"></dc-import></div>
+</sc-if>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"density": {"editor": "enum", "options": ["regular", "compact"], "default": "regular"}, "radius": {"editor": "enum", "options": ["10", "12"], "default": "12"}, "width": {"editor": "text", "default": "100%"}, "heading": {"editor": "text", "default": ""}, "collapsed": {"editor": "boolean", "default": false}, "empty": {"editor": "text", "default": "Nothing here yet"}, "addLabel": {"editor": "text", "default": ""}, "adding": {"editor": "enum", "options": ["none", "focus", "invalid"], "default": "none"}, "theme": {"editor": "enum", "options": ["dark", "light", "none"], "default": "dark"}, "items": {"editor": null}, "label": {"editor": null}, "addHref": {"editor": null}, "onAdd": {"editor": null}, "addValue": {"editor": null}, "addPlaceholder": {"editor": null}, "onToggle": {"editor": null}, "$preview": {"width": 560, "height": 180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The app's List (src/components/List.tsx): a card of rows. bg.sunken, 1px border, radius
+    // 12 (10 for a narrow list such as Default base), 1px border.row rules between rows, no rule
+    // after the last. Each item is a ListRow (its own artboard; see its props). Used by
+    // Settings › Repositories, Default base and Scripts, and by the stash lists.
+    //   heading: an optional disclosure above the card: chevron, 12px/500 label, mono 11 count
+    //            (items.length); collapsed hides the card (onToggle).
+    //   empty: one muted row when there are no items.
+    //   addLabel: a last row with a link button ("+ Add repository…"); adding = 'focus' |
+    //            'invalid' turns it into a 28px mono Input (addValue, addPlaceholder).
+    // The importer gives width (default 100%) and density (regular 48px rows, compact 34px).
+    var p = this.props;
+    var self = this;
+    var sample = [
+      { lead: 'icon', icon: 'package', prefix: 'stash@{0}', title: 'debug logging for refresh', sub: [{ pill: 'session-token-refresh', tone: 'accent' }, { text: '1 file' }, { text: '20m' }], actions: [{ icon: 'more-vertical', ariaLabel: 'Stash options' }], active: true },
+      { lead: 'icon', icon: 'package', prefix: 'stash@{1}', title: 'WIP on old-login: 71be0c2 Try new login form', sub: [{ pill: 'old-login · deleted', tone: 'outline' }, { text: '5 files' }, { text: '3w' }], actions: [{ icon: 'more-vertical', ariaLabel: 'Stash options' }] }
+    ];
+    var items = p.items || sample;
+    var compact = p.density === 'compact';
+    var collapsed = this.state && this.state.collapsed != null ? this.state.collapsed : !!p.collapsed;
+    var adding = p.adding && p.adding !== 'none' ? p.adding : '';
+    var onToggle = p.onToggle;
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      wrapStyle: 'box-sizing: border-box; width: ' + (p.width || '100%') + '; display: flex; flex-direction: column; font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-body)',
+      hasHeading: !!p.heading, heading: p.heading || '', count: String(items.length),
+      open: !collapsed,
+      toggle: function (e) { if (onToggle) onToggle(e); else self.setState({ collapsed: !collapsed }); },
+      chevronStyle: 'display: flex; color: var(--text-muted); transition: transform 120ms; ' + (collapsed ? 'transform: rotate(-90deg)' : ''),
+      label: p.label || p.heading || 'List',
+      cardStyle: 'display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: ' + (p.radius || 12) + 'px; overflow: hidden',
+      density: compact ? 'compact' : 'regular',
+      rows: items.map(function (it, i) {
+        return {
+          lead: it.lead || 'none', handle: !!it.handle, icon: it.icon || 'package', leadText: it.leadText || '', prefix: it.prefix || '',
+          title: it.title || '', titleMono: !!it.titleMono, titleWeight: it.titleWeight || '400', titleWidth: it.titleWidth || 0,
+          badges: it.badges || [], detail: it.detail || '', sub: it.sub || [], aside: it.aside || '', asideTone: it.asideTone || 'muted',
+          actions: it.actions || [], actionsOnHover: !!it.actionsOnHover, active: !!it.active, off: !!it.off, first: i === 0
+        };
+      }),
+      isEmpty: items.length === 0, empty: p.empty || 'Nothing here yet',
+      emptyStyle: 'display: flex; align-items: center; ' + (compact ? 'height: 34px; ' : 'min-height: 48px; ') + 'padding: 0 12px; font-size: 13px; color: var(--text-muted)',
+      hasAddLink: !!p.addLabel && !adding,
+      hasAddInput: !!adding,
+      addLabel: p.addLabel || '', addHref: p.addHref, onAdd: p.onAdd,
+      addValue: p.addValue || '', addPlaceholder: p.addPlaceholder || '', addState: adding || 'default',
+      addStyle: 'display: flex; align-items: center; ' + (compact ? 'height: 34px; ' : 'height: 44px; ') + 'padding: 0 12px; ' + (items.length ? 'border-top: 1px solid var(--border-row)' : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

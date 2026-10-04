@@ -21,6 +21,12 @@
   color: var(--text-strong);
 }
 
+.s24 {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
 .boxed {
   width: 32px;
   height: 32px;

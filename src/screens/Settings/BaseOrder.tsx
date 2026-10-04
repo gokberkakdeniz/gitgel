@@ -1,8 +1,7 @@
 // Settings › Repositories › Default base: an ordered list edited one branch at a time, so
 // there is no separator to type (docs/SPEC.md §5, design flow M4/M5).
 import { useState } from 'react';
-import { ArrowDownIcon, ArrowUpIcon, CloseIcon } from '../../components/icons';
-import { Input } from '../../components/Input';
+import { List } from '../../components/List';
 import { updateSettings } from '../../lib/ipc';
 import type { Config } from '../../lib/types';
 import styles from './Settings.module.css';
@@ -43,79 +42,58 @@ export function BaseOrder({ config }: { config: Config }) {
         <span className={styles.settingHint}>Tried in order when a branch has no base set</span>
       </span>
       <div className={styles.baseColumn}>
-        <div className={styles.baseCard}>
-          <ol aria-label="Default base order" className={styles.baseList}>
-            {list.map((name, i) => (
-              <li key={name} className={styles.baseRow}>
-                <span className={styles.baseIndex}>{i + 1}</span>
-                <span className={styles.baseName} title={name}>
-                  {name}
-                </span>
-                <span className={styles.baseActions}>
-                  <button
-                    type="button"
-                    aria-label={`Move ${name} up`}
-                    className={styles.baseAction}
-                    disabled={i === 0}
-                    onClick={() => move(i, -1)}
-                  >
-                    <ArrowUpIcon />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Move ${name} down`}
-                    className={styles.baseAction}
-                    disabled={i === list.length - 1}
-                    onClick={() => move(i, 1)}
-                  >
-                    <ArrowDownIcon />
-                  </button>
-                  {/* The list is never empty: the last branch cannot be removed. */}
-                  <button
-                    type="button"
-                    aria-label={`Remove ${name}`}
-                    className={styles.baseAction}
-                    disabled={list.length === 1}
-                    onClick={() => save(list.filter((_, j) => j !== i))}
-                  >
-                    <CloseIcon size={12} />
-                  </button>
-                </span>
-              </li>
-            ))}
-          </ol>
-          {draft === null ? (
-            <button type="button" className={styles.baseAdd} onClick={() => setDraft('')}>
-              + Add branch
-            </button>
-          ) : (
-            <div className={styles.baseAddField}>
-              <Input
-                autoFocus
-                mono
-                size={28}
-                aria-label="Add a base branch"
-                placeholder="Branch name, e.g. develop"
-                value={draft}
-                invalid={!!error}
-                onChange={(v) => {
-                  setDraft(v);
-                  setError(null);
-                }}
-                onBlur={() => {
-                  if (draft.trim() === '') cancel();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') add();
-                  else if (e.key === 'Escape') {
-                    e.stopPropagation();
-                    cancel();
-                  }
-                }}
-              />
-            </div>
-          )}
-        </div>
+        <List
+          label="Default base order"
+          ordered
+          density="compact"
+          radius={10}
+          items={list.map((name, i) => ({
+            key: name,
+            lead: 'index',
+            leadText: String(i + 1),
+            title: name,
+            titleMono: true,
+            actionsOnHover: true,
+            actions: [
+              { icon: 'arrow-up', ariaLabel: `Move ${name} up`, disabled: i === 0, onPress: () => move(i, -1) },
+              { icon: 'arrow-down', ariaLabel: `Move ${name} down`, disabled: i === list.length - 1, onPress: () => move(i, 1) },
+              // The list is never empty: the last branch cannot be removed.
+              {
+                icon: 'close',
+                ariaLabel: `Remove ${name}`,
+                disabled: list.length === 1,
+                onPress: () => save(list.filter((_, j) => j !== i)),
+              },
+            ],
+          }))}
+          addLabel="+ Add branch"
+          onAdd={() => setDraft('')}
+          adding={
+            draft === null
+              ? undefined
+              : {
+                  autoFocus: true,
+                  'aria-label': 'Add a base branch',
+                  placeholder: 'Branch name, e.g. develop',
+                  value: draft,
+                  invalid: !!error,
+                  onChange: (v) => {
+                    setDraft(v);
+                    setError(null);
+                  },
+                  onBlur: () => {
+                    if (draft.trim() === '') cancel();
+                  },
+                  onKeyDown: (e) => {
+                    if (e.key === 'Enter') add();
+                    else if (e.key === 'Escape') {
+                      e.stopPropagation();
+                      cancel();
+                    }
+                  },
+                }
+          }
+        />
         {draft !== null && (
           <span className={error ? styles.baseError : styles.settingHint}>{error ?? '↵ add · esc cancel'}</span>
         )}

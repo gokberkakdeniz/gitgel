@@ -1,8 +1,11 @@
 import type { HTMLAttributes, MouseEventHandler } from 'react';
 import styles from './Pill.module.css';
 
+export type PillTone = 'success' | 'warning' | 'danger' | 'neutral' | 'accent' | 'outline';
+
 interface Props extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> {
-  tone: 'success' | 'warning' | 'danger' | 'neutral' | 'accent';
+  /** `outline`: faint text in a dashed ring, for a thing that is gone (a stash's deleted branch). */
+  tone: PillTone;
   /** `md` (padding 3px 10px) in tables, lists and headers; `sm` (16px tall) inside a meta line. */
   size?: 'sm' | 'md';
   /** Exit codes, SHAs, branch names. */

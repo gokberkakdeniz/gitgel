@@ -35,49 +35,13 @@ button,input{font-family:inherit}
 <sc-if value="{{isRepos}}" hint-placeholder-val="{{false}}">
 <section style="display: flex; flex-direction: column; gap: 12px">
 <h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Repositories</h2>
-<div style="display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 12px; overflow: hidden">
-<sc-for list="{{repos}}" as="r" hint-placeholder-count="4">
-<div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border)">
-<span style="font-weight: 500; color: var(--text-strong); width: 96px; flex-shrink: 0">{{r.name}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.path}}</span>
-<sc-if value="{{r.found}}" hint-placeholder-val="{{true}}"><span style="{{r.noteStyle}}">{{r.note}}</span></sc-if>
-<sc-if value="{{r.missing}}" hint-placeholder-val="{{false}}">
-<dc-import name="Pill" theme="{{themeName}}" label="{{r.note}}" tone="danger" hint-size="100px,20px"></dc-import>
-<dc-import name="Button" theme="{{themeName}}" size="28" label="Locate…" hint-size="72px,28px"></dc-import>
-</sc-if>
-<dc-import name="Button" theme="{{themeName}}" variant="ghost" size="28" icon="close" label="" aria-label="Remove repository" hint-size="28px,28px"></dc-import>
-</div>
-</sc-for>
-<div style="display: flex; padding: 12px 14px"><dc-import name="Button" theme="{{themeName}}" variant="link" label="+ Add repository…" hint-size="130px,16px"></dc-import></div>
-</div>
+<dc-import name="List" theme="none" label="Repositories" items="{{repoItems}}" add-label="+ Add repository…" hint-size="100%,250px"></dc-import>
 </section>
 <section style="display: flex; flex-direction: column; gap: 14px">
 <div role="group" aria-labelledby="base-title" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 2px; padding-top: 8px"><span id="base-title" style="color: var(--text-strong)">Default base</span><span style="font-size: 12px; color: var(--text-muted)">Tried in order when a branch has no base set</span></span>
 <div style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px">
-<div style="display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 10px; overflow: hidden">
-<ol aria-label="Default base order" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
-<sc-for list="{{bases}}" as="b" hint-placeholder-count="3">
-<li style="{{b.rowStyle}}">
-<span style="width: 14px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">{{b.n}}</span>
-<span style="flex-grow: 1; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-code); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{b.name}}</span>
-<span style="{{b.actionsStyle}}">
-<button aria-label="{{b.upLabel}}" disabled="{{b.first}}" onClick="{{b.up}}" style="{{b.upStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"></path></svg></button>
-<button aria-label="{{b.downLabel}}" disabled="{{b.last}}" onClick="{{b.down}}" style="{{b.downStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></button>
-<button aria-label="{{b.removeLabel}}" disabled="{{b.only}}" onClick="{{b.remove}}" style="{{b.removeStyle}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
-</span>
-</li>
-</sc-for>
-</ol>
-<sc-if value="{{baseAdding}}" hint-placeholder-val="{{false}}">
-<div style="padding: 4px">
-<dc-import name="Input" theme="{{themeName}}" size="28" width="100%" value="{{baseDraft}}" placeholder="Branch name, e.g. develop" label="Add a base branch" left-icon="none" right-text="" clearable="{{false}}" state="{{baseInputState}}" hint-size="100%,28px"></dc-import>
-</div>
-</sc-if>
-<sc-if value="{{baseNotAdding}}" hint-placeholder-val="{{true}}">
-<div style="height: 34px; display: flex; align-items: center; padding: 0 12px"><dc-import name="Button" theme="{{themeName}}" variant="link" label="+ Add branch" on-press="{{startAdd}}" hint-size="90px,16px"></dc-import></div>
-</sc-if>
-</div>
+<dc-import name="List" theme="none" label="Default base order" density="compact" radius="10" width="280px" items="{{baseItems}}" add-label="{{baseAddLabel}}" adding="{{baseAddState}}" add-value="{{baseDraft}}" add-placeholder="Branch name, e.g. develop" on-add="{{startAdd}}" hint-size="280px,140px"></dc-import>
 <sc-if value="{{baseAdding}}" hint-placeholder-val="{{false}}">
 <span style="{{baseNoteStyle}}">{{baseNote}}</span>
 </sc-if>
@@ -150,21 +114,7 @@ button,input{font-family:inherit}
 </div>
 </div>
 
-<ul aria-label="Scripts" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 12px; overflow: hidden">
-<sc-for list="{{scripts}}" as="sc" hint-placeholder-count="4">
-<li style="display: flex; align-items: center; gap: 12px; min-height: 48px; box-sizing: border-box; padding: 0 10px 0 8px; border-bottom: 1px solid var(--border)">
-<span aria-hidden="true" style="width: 14px; flex-shrink: 0; display: flex; justify-content: center; color: var(--text-faint)"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2.5" cy="2.5" r="1.2"></circle><circle cx="7.5" cy="2.5" r="1.2"></circle><circle cx="2.5" cy="7" r="1.2"></circle><circle cx="7.5" cy="7" r="1.2"></circle><circle cx="2.5" cy="11.5" r="1.2"></circle><circle cx="7.5" cy="11.5" r="1.2"></circle></svg></span>
-<span style="width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); opacity: {{sc.opacity}}"><dc-import name="Icon" icon="{{sc.icon}}" size="14" hint-size="14px,14px"></dc-import></span>
-<span style="flex-grow: 1; min-width: 0; display: flex; align-items: center; gap: 8px">
-<span style="min-width: 0; font-weight: 500; color: {{sc.color}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{sc.name}}</span>
-<sc-if value="{{sc.off}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="{{themeName}}" label="off" tone="neutral" size="sm" hint-size="28px,16px"></dc-import></sc-if>
-</span>
-<dc-import name="Switch" theme="{{themeName}}" checked="{{sc.on}}" aria-label="On" title="{{sc.switchTitle}}" on-toggle="{{sc.toggle}}" hint-size="28px,16px"></dc-import>
-<dc-import name="Button" theme="{{themeName}}" variant="ghost" size="28" icon="edit" label="" aria-label="Edit script" href="FlowN6.dc.html" hint-size="28px,28px"></dc-import>
-<dc-import name="Button" theme="{{themeName}}" variant="ghost" size="28" icon="close" label="" aria-label="Remove script" hint-size="28px,28px"></dc-import>
-</li>
-</sc-for>
-</ul>
+<dc-import name="List" theme="none" label="Scripts" items="{{scriptItems}}" empty="No scripts yet" hint-size="100%,250px"></dc-import>
 </section>
 
 <span style="font-size: 12px; color: var(--text-muted)">Scripts run as you, with your permissions. Gitgel itself still only reads the repositories.</span>
@@ -314,7 +264,7 @@ class Component extends DCLogic {
       // Not installed (here iTerm2): the option cannot be picked; Automatic and Other always can.
       return { value: x[0], label: x[1], on: termKind === x[0], disabled: x[0] === 'iterm' };
     });
-    return {
+    var out = {
       themeClass: 'theme-' + theme, themeName: theme, themes: themes,
       sections: sections,
       bases: bases, baseAdding: baseAdd !== 'none', baseNotAdding: baseAdd === 'none',
@@ -341,6 +291,28 @@ class Component extends DCLogic {
         { name: 'admin-panel', path: '~/old/admin-panel', note: 'path not found', found: false, missing: true }
       ]
     };
+    // Settings' three card lists are the shared List (List.dc.html, ListRow.dc.html).
+    var x = function (label) { return { icon: 'close', ariaLabel: label }; };
+    out.repoItems = out.repos.map(function (r) {
+      return { title: r.name, titleWeight: '500', titleWidth: 96, detail: r.path,
+        aside: r.found ? r.note : '',
+        actions: (r.missing ? [{ kind: 'pill', label: r.note, tone: 'danger' }, { label: 'Locate…', variant: 'secondary' }] : []).concat([x('Remove repository')]) };
+    });
+    out.baseItems = bases.map(function (b, i) {
+      return { lead: 'index', leadText: b.n, title: b.name, titleMono: true, active: hover === i, actionsOnHover: true,
+        actions: [{ icon: 'arrow-up', ariaLabel: b.upLabel, disabled: b.first, onPress: b.up },
+          { icon: 'arrow-down', ariaLabel: b.downLabel, disabled: b.last, onPress: b.down },
+          { icon: 'close', ariaLabel: b.removeLabel, disabled: b.only, onPress: b.remove }] };
+    });
+    out.baseAddLabel = baseAdd !== 'none' ? 'Add a base branch' : '+ Add branch';
+    out.baseAddState = baseAdd !== 'none' ? bn[3] : 'none';
+    out.scriptItems = out.scripts.map(function (sc) {
+      return { handle: true, lead: 'tile', icon: sc.icon, title: sc.name, titleWeight: '500', off: sc.off,
+        badges: sc.off ? [{ label: 'off', tone: 'neutral' }] : [],
+        actions: [{ kind: 'switch', checked: sc.on, ariaLabel: 'On', title: sc.switchTitle, onPress: sc.toggle },
+          { icon: 'edit', ariaLabel: 'Edit script', href: 'FlowN6.dc.html' }, x('Remove script')] };
+    });
+    return out;
   }
 }
 </script>

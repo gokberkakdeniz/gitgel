@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>List row</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div role="listitem" class="{{themeClass}}" style="{{rowStyle}}">
+<sc-if value="{{isHandle}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="width: 14px; flex-shrink: 0; display: flex; justify-content: center; color: var(--text-faint); cursor: grab"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2.5" cy="2.5" r="1.2"></circle><circle cx="7.5" cy="2.5" r="1.2"></circle><circle cx="2.5" cy="7" r="1.2"></circle><circle cx="7.5" cy="7" r="1.2"></circle><circle cx="2.5" cy="11.5" r="1.2"></circle><circle cx="7.5" cy="11.5" r="1.2"></circle></svg></span></sc-if>
+<sc-if value="{{isIndex}}" hint-placeholder-val="{{false}}"><span style="width: 14px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">{{leadText}}</span></sc-if>
+<sc-if value="{{isIcon}}" hint-placeholder-val="{{true}}"><span style="width: 16px; flex-shrink: 0; display: flex; justify-content: center; color: var(--text-muted)"><dc-import name="Icon" icon="{{icon}}" size="14" stroke="1.6" hint-size="14px,14px"></dc-import></span></sc-if>
+<sc-if value="{{isTile}}" hint-placeholder-val="{{false}}"><span style="{{tileStyle}}"><dc-import name="Icon" icon="{{icon}}" size="14" hint-size="14px,14px"></dc-import></span></sc-if>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<sc-if value="{{hasPrefix}}" hint-placeholder-val="{{true}}"><span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">{{prefix}}</span></sc-if>
+<span style="{{titleStyle}}">{{title}}</span>
+<sc-for list="{{badges}}" as="bd" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{bd.label}}" tone="{{bd.tone}}" size="sm" mono="{{bd.mono}}" hint-size="40px,16px"></dc-import></sc-for>
+<sc-if value="{{hasDetail}}" hint-placeholder-val="{{false}}"><span style="flex-grow: 1; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{detail}}</span></sc-if>
+</span>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{true}}"><span style="display: flex; align-items: center; gap: 6px; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">
+<sc-for list="{{sub}}" as="sp" hint-placeholder-count="3">
+<sc-if value="{{sp.isPill}}" hint-placeholder-val="{{true}}"><dc-import name="Pill" theme="none" label="{{sp.label}}" tone="{{sp.tone}}" size="sm" mono="{{true}}" hint-size="120px,16px"></dc-import></sc-if>
+<sc-if value="{{sp.isText}}" hint-placeholder-val="{{false}}"><span>{{sp.label}}</span></sc-if>
+<sc-if value="{{sp.isDot}}" hint-placeholder-val="{{false}}"><span style="color: var(--text-faint)">·</span></sc-if>
+</sc-for>
+</span></sc-if>
+</span>
+<sc-if value="{{hasAside}}" hint-placeholder-val="{{false}}"><span style="{{asideStyle}}">{{aside}}</span></sc-if>
+<span style="{{actionsStyle}}">
+<sc-for list="{{actions}}" as="a" hint-placeholder-count="1">
+<sc-if value="{{a.isPill}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{a.label}}" tone="{{a.tone}}" hint-size="100px,20px"></dc-import></sc-if>
+<sc-if value="{{a.isSwitch}}" hint-placeholder-val="{{false}}"><span style="display: flex; padding: 0 6px"><dc-import name="Switch" theme="none" checked="{{a.checked}}" aria-label="{{a.ariaLabel}}" title="{{a.title}}" on-toggle="{{a.onPress}}" hint-size="28px,16px"></dc-import></span></sc-if>
+<sc-if value="{{a.isButton}}" hint-placeholder-val="{{true}}"><dc-import name="Button" theme="none" variant="{{a.variant}}" size="{{a.size}}" icon="{{a.icon}}" label="{{a.label}}" aria-label="{{a.ariaLabel}}" title="{{a.title}}" href="{{a.href}}" disabled="{{a.disabled}}" active="{{a.active}}" on-press="{{a.onPress}}" hint-size="28px,28px"></dc-import></sc-if>
+</sc-for>
+</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lead": {"editor": "enum", "options": ["none", "handle", "index", "icon", "tile"], "default": "icon"}, "icon": {"editor": "enum", "options": ["sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"], "default": "package"}, "leadText": {"editor": "text", "default": "1"}, "handle": {"editor": "boolean", "default": false}, "prefix": {"editor": "text", "default": "stash@{0}"}, "title": {"editor": "text", "default": "debug logging for refresh"}, "titleMono": {"editor": "boolean", "default": false}, "titleWeight": {"editor": "enum", "options": ["400", "500"], "default": "400"}, "titleWidth": {"editor": "int", "default": 0}, "detail": {"editor": "text", "default": ""}, "aside": {"editor": "text", "default": ""}, "asideTone": {"editor": "enum", "options": ["muted", "faint", "warning", "danger"], "default": "muted"}, "density": {"editor": "enum", "options": ["regular", "compact"], "default": "regular"}, "active": {"editor": "boolean", "default": false}, "off": {"editor": "boolean", "default": false}, "actionsOnHover": {"editor": "boolean", "default": false}, "first": {"editor": "boolean", "default": true}, "theme": {"editor": "enum", "options": ["dark", "light", "none"], "default": "dark"}, "badges": {"editor": null}, "sub": {"editor": null}, "actions": {"editor": null}, "$preview": {"width": 560, "height": 52}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // One row of a List (src/components/List.tsx ListRow). Left to right, every part optional:
+    //   handle: a drag grip before the lead (a list the user reorders).
+    //   lead: handle (grip only) · index (mono 11 faint, leadText) · icon (16px slot, a 14px line
+    //         icon of the Icon set) · tile (28px boxed icon, Settings › Scripts)
+    //   line 1: prefix (mono 12 muted, e.g. stash@{0}) · title (13px; titleMono for branches and
+    //         refs, titleWeight 500 for names; titleWidth fixes it so detail columns line up) ·
+    //         badges (sm Pills after the title: [{ label, tone, mono? }]) · detail (mono 12 muted,
+    //         takes the rest, ellipsis: a path)
+    //   line 2: sub, a mono 11 muted meta line: [{ pill, tone } | { text }], '·' between parts
+    //   aside: 12px text before the actions (asideTone muted · faint · warning · danger)
+    //   actions: [{ kind: 'button', icon?, label?, variant?, size?, href?, disabled?, active? }
+    //            | { kind: 'switch', checked, title } | { kind: 'pill', label, tone }], each with
+    //            ariaLabel and onPress. actionsOnHover keeps them hidden until the row is hovered
+    //            or holds focus (active shows them).
+    // density: regular (min 48px, padding 8px 10px 8px 12px, gap 10) or compact (34px, padding
+    // 0 6px 0 12px, gap 8). active = hovered / its menu is open (bg.hover); off dims the lead and
+    // the title (a script switched off). first: no top rule (the List draws rules between rows).
+    var p = this.props;
+    var lead = p.lead || 'none';
+    var compact = p.density === 'compact';
+    var off = !!p.off;
+    var w = Number(p.titleWidth) || 0;
+    var mono = !!p.titleMono;
+    var titleStyle = 'min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ' +
+      (mono ? 'font-family: \'JetBrains Mono\', monospace; font-size: 12px; ' : 'font-size: 13px; ') +
+      'font-weight: ' + (p.titleWeight || '400') + '; color: ' + (off ? 'var(--text-muted)' : mono ? 'var(--text-code)' : 'var(--text-strong)') + '; ' +
+      (w ? 'width: ' + w + 'px; flex-shrink: 0; ' : '');
+    var parts = [];
+    (p.sub || []).forEach(function (s, i) {
+      if (i) parts.push({ isDot: true });
+      if (s.pill != null) parts.push({ isPill: true, label: s.pill, tone: s.tone || 'neutral' });
+      else parts.push({ isText: true, label: s.text });
+    });
+    var acts = (p.actions || []).map(function (a) {
+      var k = a.kind || 'button';
+      return {
+        isButton: k === 'button', isSwitch: k === 'switch', isPill: k === 'pill',
+        label: a.label || '', icon: a.icon || 'none', variant: a.variant || 'ghost', size: String(a.size || (compact ? 24 : 28)),
+        tone: a.tone || 'neutral', checked: !!a.checked, href: a.href, disabled: !!a.disabled, active: !!a.active,
+        ariaLabel: a.ariaLabel, title: a.title, onPress: a.onPress
+      };
+    });
+    var tones = { muted: 'var(--text-muted)', faint: 'var(--text-faint)', warning: 'var(--warning)', danger: 'var(--danger)' };
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      rowStyle: 'box-sizing: border-box; display: flex; align-items: center; ' +
+        (compact ? 'gap: 8px; height: 34px; padding: 0 6px 0 12px; ' : 'gap: 10px; min-height: 48px; padding: 8px 10px 8px 12px; ') +
+        (p.first === false ? 'border-top: 1px solid var(--border-row); ' : '') +
+        'background: ' + (p.active ? 'var(--bg-hover)' : 'transparent') + '; ' +
+        'font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-body)',
+      isHandle: lead === 'handle' || !!p.handle, isIndex: lead === 'index', isIcon: lead === 'icon', isTile: lead === 'tile',
+      leadText: p.leadText || '',
+      icon: p.icon || 'package',
+      tileStyle: 'width: 28px; height: 28px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); opacity: ' + (off ? 0.45 : 1),
+      hasPrefix: !!p.prefix, prefix: p.prefix || '',
+      title: p.title == null ? '' : p.title,
+      titleStyle: titleStyle,
+      badges: (p.badges || []).map(function (b) { return { label: b.label, tone: b.tone || 'neutral', mono: !!b.mono }; }),
+      hasDetail: !!p.detail, detail: p.detail || '',
+      hasSub: parts.length > 0, sub: parts,
+      hasAside: !!p.aside, aside: p.aside || '',
+      asideStyle: 'flex-shrink: 0; font-size: 12px; white-space: nowrap; color: ' + (tones[p.asideTone] || tones.muted),
+      actions: acts,
+      actionsStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: ' + (compact ? 1 : 2) + 'px; ' + (acts.length ? '' : 'display: none; ') + (p.actionsOnHover && !p.active ? 'visibility: hidden' : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

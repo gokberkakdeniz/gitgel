@@ -12,8 +12,22 @@ import './styles/tokens.css';
 import './styles/global.css';
 import App from './App';
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+
+// Dev only: /#list (or /#list-light) shows the List variants (components/List.story.tsx)
+// instead of the app.
+if (import.meta.env.DEV && window.location.hash.startsWith('#list')) {
+  void import('./components/List.story').then(({ ListStory }) =>
+    root.render(
+      <React.StrictMode>
+        <ListStory />
+      </React.StrictMode>,
+    ),
+  );
+} else {
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+}

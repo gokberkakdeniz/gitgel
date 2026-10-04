@@ -355,6 +355,18 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) The script command grows with its text (up to 360px) and can be dragged taller
   (`src/lib/useAutoGrow.ts`) — 2026-10-04
 
+### Phase 18 — Shared List
+- [x] T18.1 `List` component and the Pill `outline` tone — 2026-10-04
+  - note: the variants are checked on a dev-only page (`pnpm dev`, `/#list` or `/#list-light`;
+    `src/components/List.story.tsx`). `ListItem` takes a `key` and `rowProps` for its `<li>`
+    (`data-reorder`), `List` a `listRef` and `ordered`, so T18.2 can keep `useReorder`; the grip
+    is the scripts' `DragHandle`. Button and IconButton gained a 24px size for compact rows.
+- [x] T18.2 Settings lists use `List` — 2026-10-04
+  - note: Locate…'s error ("Not a git repository", …) is a failed toast with the picked folder,
+    not a line under the row (user decision 2026-10-04). Rows now take `bg.hover` on hover like
+    every `List` row (Repositories and Scripts did not before).
+- [x] T18.3 ✋ Checkpoint — phase 18 — 2026-10-04
+
 ---
 
 ## Open

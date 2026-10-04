@@ -2,12 +2,10 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { useEffect, useState } from 'react';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
-import { IconButton } from '../../components/IconButton';
-import { CloseIcon } from '../../components/icons';
+import { List, type ListAction, type ListItem } from '../../components/List';
 import { Modal } from '../../components/Modal';
 import { Input } from '../../components/Input';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
-import { Pill } from '../../components/Pill';
 import { Select } from '../../components/Select';
 import { SettingsNav, type SettingsNavSection } from '../../components/SettingsNav';
 import { openAddRepos } from '../../lib/addRepos';
@@ -78,7 +76,6 @@ export function Settings() {
 
 function Repositories({ config }: { config: Config }) {
   const scan = useData((s) => s.scan);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [removing, setRemoving] = useState<RepoConfig | null>(null);
 
   const locate = async (repo: RepoConfig) => {
@@ -87,14 +84,13 @@ function Repositories({ config }: { config: Config }) {
     if (!path) return;
     try {
       await locateRepo(repo.id, path);
-      setErrors(({ [repo.id]: _, ...rest }) => rest);
     } catch (e) {
-      setErrors((errs) => ({ ...errs, [repo.id]: (e as AppError).message }));
+      useUi.getState().showToast({ status: 'failed', message: (e as AppError).message, sub: tildifyHome(path) });
     }
   };
   const entriesOf = (repoId: string) =>
     config.projects.reduce((n, p) => n + p.entries.filter((e) => e.repoId === repoId).length, 0);
-  const remove = (repo: RepoConfig) => {
+  const removeRow = (repo: RepoConfig) => {
     // Only ask when projects would lose entries.
     if (entriesOf(repo.id) > 0) setRemoving(repo);
     else void removeRepo(repo.id);
@@ -103,47 +99,34 @@ function Repositories({ config }: { config: Config }) {
   return (
     <section className={styles.section}>
       <h2 className={styles.heading}>Repositories</h2>
-      <div className={styles.card}>
-        {config.repos.map((repo) => {
+      <List
+        label="Repositories"
+        addLabel="+ Add repository…"
+        onAdd={() => void openAddRepos()}
+        items={config.repos.map((repo): ListItem => {
           const s = scan[repo.id];
-          const missing = s?.status === 'missing';
-          return (
-            <div key={repo.id} className={styles.repoRow}>
-              <div className={styles.repoLine}>
-                <span className={styles.repoName} title={basename(repo.path)}>
-                  {basename(repo.path)}
-                </span>
-                <span className={styles.repoPath} title={repo.path}>
-                  {tildifyHome(repo.path)}
-                </span>
-                {missing ? (
-                  <>
-                    <Pill tone="danger">path not found</Pill>
-                    <Button size={28} onClick={() => void locate(repo)}>
-                      Locate…
-                    </Button>
-                  </>
-                ) : s?.status === 'error' ? (
-                  <Pill tone="danger" title={s.error ?? undefined}>
-                    git error
-                  </Pill>
-                ) : (
-                  <span className={styles.note}>{s?.defaultBase ? `base ${s.defaultBase}` : s ? 'no base found' : ''}</span>
-                )}
-                <IconButton aria-label="Remove repository" onClick={() => remove(repo)}>
-                  <CloseIcon size={13} />
-                </IconButton>
-              </div>
-              {errors[repo.id] && <div className={styles.error}>{errors[repo.id]}</div>}
-            </div>
-          );
+          const name = basename(repo.path);
+          const remove: ListAction = { icon: 'close', ariaLabel: 'Remove repository', onPress: () => removeRow(repo) };
+          return {
+            key: repo.id,
+            title: name,
+            titleWeight: 500,
+            titleWidth: 96,
+            detail: tildifyHome(repo.path),
+            aside: s?.status === 'missing' || s?.status === 'error' ? undefined : s?.defaultBase ? `base ${s.defaultBase}` : s ? 'no base found' : undefined,
+            actions:
+              s?.status === 'missing'
+                ? [
+                    { kind: 'pill', label: 'path not found', tone: 'danger' },
+                    { label: 'Locate…', variant: 'secondary', ariaLabel: `Locate ${name}`, onPress: () => void locate(repo) },
+                    remove,
+                  ]
+                : s?.status === 'error'
+                  ? [{ kind: 'pill', label: 'git error', tone: 'danger', title: s.error ?? undefined }, remove]
+                  : [remove],
+          };
         })}
-        <div className={styles.addRow}>
-          <Button variant="link" onClick={() => void openAddRepos()}>
-            + Add repository…
-          </Button>
-        </div>
-      </div>
+      />
 
       {removing && (
         <Modal aria-label="Remove repository" width={440} paddingTop={180} onClose={() => setRemoving(null)}>
