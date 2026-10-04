@@ -1,5 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
-import { CheckIcon, Icon, InfoIcon, type IconName } from './icons';
+import { CheckIcon, ChevronRightIcon, Icon, InfoIcon, type IconName } from './icons';
 import { Segmented, type SegmentedOption } from './Segmented';
 import styles from './Menu.module.css';
 
@@ -37,7 +37,8 @@ export function Menu({ children, 'aria-label': label, autoFocus }: MenuProps) {
 
 interface ItemProps {
   children: ReactNode;
-  onSelect: () => void;
+  /** Gets the item's element (a submenu opens beside it). */
+  onSelect: (el: HTMLElement) => void;
   danger?: boolean;
   /** Muted text on the right, e.g. "double-click title". */
   hint?: string;
@@ -56,9 +57,28 @@ interface ItemProps {
   box?: boolean;
   /** Tooltip, e.g. why it is disabled. */
   title?: string;
+  /** Opens a submenu: a chevron on the right; → opens it from the keyboard. */
+  submenu?: boolean;
+  /** The pointer came onto the item (a submenu opens on hover; other items close it). */
+  onHover?: (el: HTMLElement) => void;
 }
 
-export function MenuItem({ children, onSelect, danger, hint, kbd, sub, desc, disabled, icon, checked, box, title }: ItemProps) {
+export function MenuItem({
+  children,
+  onSelect,
+  danger,
+  hint,
+  kbd,
+  sub,
+  desc,
+  disabled,
+  icon,
+  checked,
+  box,
+  title,
+  submenu,
+  onHover,
+}: ItemProps) {
   const second = sub ?? desc;
   const radio = checked !== undefined;
   const check = box !== undefined;
@@ -77,7 +97,18 @@ export function MenuItem({ children, onSelect, danger, hint, kbd, sub, desc, dis
       role={radio ? 'menuitemradio' : check ? 'menuitemcheckbox' : 'menuitem'}
       aria-checked={radio ? checked : check ? box : undefined}
       className={cls}
-      onClick={onSelect}
+      onClick={(e) => onSelect(e.currentTarget)}
+      onMouseEnter={onHover && ((e) => onHover(e.currentTarget))}
+      onKeyDown={
+        submenu
+          ? (e) => {
+              if (e.key !== 'ArrowRight') return;
+              e.preventDefault();
+              onSelect(e.currentTarget);
+            }
+          : undefined
+      }
+      aria-haspopup={submenu ? 'menu' : undefined}
       disabled={disabled}
       title={title}
     >
@@ -99,6 +130,7 @@ export function MenuItem({ children, onSelect, danger, hint, kbd, sub, desc, dis
       {text}
       {hint && <span className={styles.hint}>{hint}</span>}
       {kbd && <span className={second ? `${styles.kbd} ${styles.kbdTop}` : styles.kbd}>{kbd}</span>}
+      {submenu && <ChevronRightIcon size={12} className={styles.submenu} />}
     </button>
   );
 }

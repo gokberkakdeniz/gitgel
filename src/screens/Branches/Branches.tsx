@@ -405,7 +405,6 @@ function RepoSection({
           repoId={scan.repo.id}
           repoName={scan.name}
           stashes={stashes}
-          checkedOut={scan.active.filter((e) => e.worktreePath).map((e) => e.branch ?? e.shortSha ?? '')}
         />
       )}
     </section>
@@ -417,16 +416,20 @@ function StashList({
   repoId,
   repoName,
   stashes,
-  checkedOut,
 }: {
   repoId: string;
   repoName: string;
   stashes: StashInfo[];
-  checkedOut: string[];
 }) {
   const push = useNav((s) => s.push);
-  // `pick`: Apply to… / Pop to… turned the menu into the worktree picker (P5).
-  const [menu, setMenu] = useState<{ sha: string; rect: DOMRect; pick?: 'apply' | 'pop' } | null>(null);
+  const [menu, setMenu] = useState<{ sha: string; rect: DOMRect } | null>(null);
+  // Apply to… / Pop to…: the worktree picker (P5) beside the item, on hover or click.
+  // `focus`: opened by click or keyboard, so its first item takes the focus (not on hover).
+  const [sub, setSub] = useState<{ pop: boolean; el: HTMLElement; focus?: boolean } | null>(null);
+  const closeMenu = () => {
+    setSub(null);
+    setMenu(null);
+  };
   const picked = stashes.find((st) => st.sha === menu?.sha);
   const stash = picked && { ...picked, repoId, repoName };
   const open = (sha: string) =>
@@ -459,32 +462,55 @@ function StashList({
         }))}
       />
       {menu && stash && (
-        <Popover anchorRect={menu.rect} width={280} alignRight onClose={() => setMenu(null)}>
-          {menu.pick ? (
-            <StashTargetMenu stash={stash} pop={menu.pick === 'pop'} onDone={() => setMenu(null)} />
-          ) : (
-            <Menu aria-label="Stash actions">
-              <MenuItem kbd="↵" onSelect={() => open(menu.sha)}>
-                Review changes
-              </MenuItem>
-              <MenuItem desc={checkedOut.join(', ')} onSelect={() => setMenu({ ...menu, pick: 'apply' })}>
-                Apply to…
-              </MenuItem>
-              <MenuItem desc="Apply, then drop if it applied cleanly" onSelect={() => setMenu({ ...menu, pick: 'pop' })}>
-                Pop to…
-              </MenuItem>
-              <MenuDivider />
-              <MenuItem
-                kbd="⌫"
-                danger
-                onSelect={() => {
-                  setMenu(null);
-                  askDrop(stash);
+        <Popover anchorRect={menu.rect} width={240} alignRight onClose={closeMenu}>
+          <Menu aria-label="Stash actions">
+            <MenuItem kbd="↵" onHover={() => setSub(null)} onSelect={() => open(menu.sha)}>
+              Review changes
+            </MenuItem>
+            <MenuItem submenu onHover={(el) => setSub({ pop: false, el })} onSelect={(el) => setSub({ pop: false, el, focus: true })}>
+              Apply to…
+            </MenuItem>
+            <MenuItem submenu onHover={(el) => setSub({ pop: true, el })} onSelect={(el) => setSub({ pop: true, el, focus: true })}>
+              Pop to…
+            </MenuItem>
+            <MenuDivider />
+            <MenuItem
+              kbd="⌫"
+              danger
+              onHover={() => setSub(null)}
+              onSelect={() => {
+                closeMenu();
+                askDrop(stash);
+              }}
+            >
+              Drop…
+            </MenuItem>
+          </Menu>
+          {sub && (
+            <Popover
+              anchor={sub.el}
+              anchorRect={sub.el.getBoundingClientRect()}
+              side="right"
+              width={280}
+              onClose={() => setSub(null)}
+            >
+              <div
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowLeft') return;
+                  e.preventDefault();
+                  sub.el.focus();
+                  setSub(null);
                 }}
               >
-                Drop…
-              </MenuItem>
-            </Menu>
+                <StashTargetMenu
+                  key={String(sub.pop)}
+                  stash={stash}
+                  pop={sub.pop}
+                  autoFocus={!!sub.focus}
+                  onDone={closeMenu}
+                />
+              </div>
+            </Popover>
           )}
         </Popover>
       )}

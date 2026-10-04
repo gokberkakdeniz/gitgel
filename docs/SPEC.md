@@ -2026,9 +2026,10 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1–P6); boards `FlowP1`
   as an `accent` sm Pill (`<branch> · deleted` as `outline`; `detached HEAD` as `outline`),
   `N files`, the age. The text filter applies (message, branch, repo name). Clicking a row opens
   the stash review (P3) on it; the ⋮ button ("Stash options") opens a 280px menu: "Review
-  changes ↵", "Apply to…" (desc: the checked-out branches of the repo), "Pop to…" (desc "Apply,
-  then drop if it applied cleanly"), divider, danger "Drop…" (`⌫`). Apply to… and Pop to… turn
-  the menu into the worktree picker (P5), Drop… opens the confirmation (P6).
+  changes ↵", "Apply to…", "Pop to…" (no second line; a chevron on the right), divider,
+  danger "Drop…" (`⌫`). Apply to… and Pop to… open the worktree picker (P5) beside the item on
+  hover or click (→ from the keyboard, ← back), Drop… opens the confirmation (P6). Popovers follow
+  their anchor when the page scrolls or resizes (scroll listener and `ResizeObserver`).
 - **Review header** (P2, project and branch scope; History of a checked-out branch too, §16, which
   also lists the branch's stashes under its commits): a 32px secondary "Stash…" button with the
   `package` icon before the refresh button; it opens the Stash changes dialog (P4). Disabled,

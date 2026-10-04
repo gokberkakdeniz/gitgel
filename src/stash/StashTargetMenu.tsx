@@ -13,11 +13,22 @@ export function stashTargets(st: ReviewStash, active: EntrySummary[]): EntrySumm
 }
 
 /** Apply to… / Pop to… (flow P5): where the stash goes. */
-export function StashTargetMenu({ stash, pop, onDone }: { stash: ReviewStash; pop: boolean; onDone: () => void }) {
+export function StashTargetMenu({
+  stash,
+  pop,
+  autoFocus = true,
+  onDone,
+}: {
+  stash: ReviewStash;
+  pop: boolean;
+  /** Focus the first item (not when it opened on hover). */
+  autoFocus?: boolean;
+  onDone: () => void;
+}) {
   const active = useData((s) => s.scan[stash.repoId]?.active);
   const targets = stashTargets(stash, active ?? []);
   return (
-    <Menu aria-label={`${pop ? 'Pop' : 'Apply'} stash to`} autoFocus>
+    <Menu aria-label={`${pop ? 'Pop' : 'Apply'} stash to`} autoFocus={autoFocus}>
       <MenuLabel>
         {pop ? 'Pop' : 'Apply'} stash@{`{${stash.index}}`} to
       </MenuLabel>

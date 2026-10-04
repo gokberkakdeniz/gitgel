@@ -67,6 +67,11 @@
   color: var(--danger-text);
 }
 
+.submenu {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
 .hint {
   margin-left: 2px;
   font-size: 12px;
