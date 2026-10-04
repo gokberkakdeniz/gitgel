@@ -380,6 +380,11 @@ rather than as a task is listed the same way, marked "(on request)".
   - note: approved with the request to do T19.3.
 - [x] T19.3 Stash actions, disabled — 2026-10-04
   - note: `MenuItem` gained a `title` (tooltip) for the disabled items.
+- [x] T19.4 Writing stashes: what Stash…, Apply, Pop and Drop do — 2026-10-04
+  - note: user decision 2026-10-04: git2 still only reads; every write is a git action, the
+    user's `git` CLI with a fixed command run on the scripts' runner (login shell, pty, toast,
+    output panel, rescan), in `src-tauri/src/scripts/git.rs`. New boards P5 (worktree picker)
+    and P6 (Drop confirmation).
 
 ### Phase 20 — History
 - [x] T20.1 History backend: pages, search, refs — 2026-10-04
@@ -406,20 +411,13 @@ rather than as a task is listed the same way, marked "(on request)".
   History boards relabelled Hi1–Hi3 so they no longer clash with flow H — 2026-10-04
 - [x] (on request) Branches: the base row's menu has "Open review" (Review against its upstream)
   instead of "Open history", which its name and History button already open — 2026-10-04
+- [x] (on request) Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree
+  the stash's branch is checked out in (the picker only when it is not); History has Stash… and
+  the branch's stashes in a section pinned under its commits; fixtures: master with changes and a
+  "worker draft" stash (clean apply on master, conflict elsewhere) — 2026-10-04
 
 ---
 
 ## Open
 
-#### T19.4 Writing stashes: what Stash…, Apply, Pop and Drop do
-- **Note:** on hold: start it only when the user asks (user decision 2026-10-04). Until then,
-  new tasks are added after it and taken before it.
-- **Depends on:** T19.3, and a user decision to change the read-only rule (CLAUDE.md, SPEC §0,
-  §1 "Out of scope", §10, `src-tauri/clippy.toml`).
-- **Why:** canvas W3 (user request 2026-10-04); left out of T19.1 because Gitgel is read-only.
-- **Spec:** SPEC §15 "Writing stashes" (to be written with the decision: git2 `stash_save2` /
-  `stash_apply` / `stash_pop` / `stash_drop` in an allow-listed module, or another way).
-- **Reference:** `FlowP4.dc.html` (Stash… dialog); the controls from T19.3.
-- **Steps:** to be written once the decision is made (enabling the T19.3 controls, the Stash…
-  dialog, picking the worktree for Apply to… / Pop to…, the Drop… confirmation, conflicts).
-- **Acceptance:** to be written once the decision is made.
+No open tasks.

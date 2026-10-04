@@ -3,7 +3,8 @@
 //! kept per run (2 MB), streamed as `script-output`, and the end is `script-exited`, after which
 //! the repo is rescanned.
 //!
-//! User scripts are started here (SPEC §0), never git by Gitgel itself.
+//! User scripts are started here, and Gitgel's own git actions (`super::git`, SPEC §0) through
+//! `launch`.
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::io::{Read, Write};
@@ -57,6 +58,22 @@ struct Run {
     /// Bytes of output so far, dropped ones included.
     written: u64,
     started: Instant,
+    /// Repositories rescanned when it ends besides `info.repo_id` (a git action over several).
+    also_rescan: Vec<String>,
+}
+
+/// A run to start: what its toast and panel show, and the command.
+pub(super) struct Launch {
+    pub script_id: String,
+    pub name: String,
+    pub icon: String,
+    pub entry_key: String,
+    pub repo_label: String,
+    pub repo_id: String,
+    pub also_rescan: Vec<String>,
+    pub folder: PathBuf,
+    pub command: String,
+    pub env: Vec<(String, String)>,
 }
 
 /// What the menu knows about the branch besides the entry itself.
@@ -209,15 +226,35 @@ pub fn run_script(
         }
     }
 
+    launch(
+        state,
+        Launch {
+            script_id: script.id.clone(),
+            name: p.name,
+            icon: script.icon.clone(),
+            entry_key: p.entry_key,
+            repo_label: p.repo_label,
+            repo_id: p.repo_id,
+            also_rescan: Vec::new(),
+            folder: p.folder,
+            command: script.command.clone(),
+            env: p.env,
+        },
+    )
+}
+
+/// Starts a command in a pty and records its run. A process that cannot start gives a `failed`
+/// run.
+pub(super) fn launch(state: &AppState, l: Launch) -> Result<ScriptRun, AppError> {
     let info = ScriptRun {
         run_id: config::new_id("run"),
-        script_id: script.id.clone(),
-        name: p.name.clone(),
-        icon: script.icon.clone(),
-        entry_key: p.entry_key.clone(),
-        repo_label: p.repo_label.clone(),
-        repo_id: p.repo_id.clone(),
-        folder: p.folder.to_string_lossy().into_owned(),
+        script_id: l.script_id,
+        name: l.name.clone(),
+        icon: l.icon,
+        entry_key: l.entry_key,
+        repo_label: l.repo_label.clone(),
+        repo_id: l.repo_id,
+        folder: l.folder.to_string_lossy().into_owned(),
         status: ScriptRunStatus::Running,
         exit_code: None,
         signal: None,
@@ -239,10 +276,11 @@ pub fn run_script(
             master: None,
             written: 0,
             started: Instant::now(),
+            also_rescan: l.also_rescan,
         },
     );
-    log::info!("script “{}” started in {}", p.name, p.repo_label);
-    let started = spawn_pty(&script.command, &p.folder, &p.env, events(state, &run_id)).map(
+    log::info!("script “{}” started in {}", l.name, l.repo_label);
+    let started = spawn_pty(&l.command, &l.folder, &l.env, events(state, &run_id)).map(
         |(pid, writer, master)| {
             if let Some(run) = lock(&state.runs).runs.get_mut(&run_id) {
                 run.pid = pid;
@@ -252,7 +290,7 @@ pub fn run_script(
         },
     );
     if let Err(e) = started {
-        log::warn!("script “{}” could not start: {e}", p.name);
+        log::warn!("script “{}” could not start: {e}", l.name);
         finish(state, &run_id, Ended::Failed(e.to_string()));
     }
     get_run(state, &run_id).map(|r| ScriptRun {
@@ -498,7 +536,7 @@ enum Ended {
 }
 
 fn finish(state: &AppState, run_id: &str, ended: Ended) {
-    let info = {
+    let (info, also_rescan) = {
         let mut guard = lock(&state.runs);
         let runs = &mut *guard;
         let Some(run) = runs.runs.get_mut(run_id) else {
@@ -533,20 +571,23 @@ fn finish(state: &AppState, run_id: &str, ended: Ended) {
             run.started.elapsed().as_secs_f64()
         );
         let info = run.info.clone();
+        let also_rescan = std::mem::take(&mut run.also_rescan);
         runs.finished.push_back(run_id.to_string());
         while runs.finished.len() > KEEP_FINISHED {
             if let Some(old) = runs.finished.pop_front() {
                 runs.runs.remove(&old);
             }
         }
-        info
+        (info, also_rescan)
     };
     if let Err(e) = state.app.emit(SCRIPT_EXITED, &info) {
         log::warn!("cannot emit {SCRIPT_EXITED}: {e}");
     }
     // The script may have committed, rebased or pushed (SPEC §14 "Decisions").
     if info.status == ScriptRunStatus::Exited {
-        scan::rescan_repo(state, &info.repo_id, UpdateReason::Rescan, None);
+        for repo_id in std::iter::once(&info.repo_id).chain(&also_rescan) {
+            scan::rescan_repo(state, repo_id, UpdateReason::Rescan, None);
+        }
     }
 }
 
@@ -634,6 +675,15 @@ pub fn resize(state: &AppState, run_id: &str, cols: u16, rows: u16) -> Result<()
             .map_err(io_error)?;
     }
     Ok(())
+}
+
+/// A running git action (`script_id` `git:…`) in this repository, by name.
+pub(super) fn git_action_running(state: &AppState, repo_id: &str) -> bool {
+    lock(&state.runs).runs.values().any(|r| {
+        r.info.status == ScriptRunStatus::Running
+            && r.info.script_id.starts_with(super::git::ACTION_PREFIX)
+            && (r.info.repo_id == repo_id || r.also_rescan.iter().any(|id| id == repo_id))
+    })
 }
 
 pub fn running_count(state: &AppState) -> usize {
@@ -747,6 +797,10 @@ mod tests {
 
     fn pty(command: &str, env: &[(&str, &str)]) -> (String, Ended) {
         let dir = tempfile::TempDir::new().unwrap();
+        pty_in(dir.path(), command, env)
+    }
+
+    fn pty_in(dir: &Path, command: &str, env: &[(&str, &str)]) -> (String, Ended) {
         let env: Vec<(String, String)> = env
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
@@ -754,7 +808,7 @@ mod tests {
         let parts = std::cell::RefCell::new(None);
         let result = collect(
             |on| {
-                let (pid, writer, master) = spawn_pty(command, dir.path(), &env, on).unwrap();
+                let (pid, writer, master) = spawn_pty(command, dir, &env, on).unwrap();
                 *parts.borrow_mut() = Some((writer, master));
                 pid
             },
@@ -762,6 +816,42 @@ mod tests {
         );
         drop(parts);
         result
+    }
+
+    /// The git actions' commands, through the user's shell and real git (SPEC §15).
+    #[test]
+    fn git_actions_stash_apply_and_drop() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a.txt", Some(b"a\n"))], "base", 1);
+        t.checkout_main();
+        t.write_file(t.path(), "a.txt", b"changed\n");
+        t.write_file(t.path(), "new.txt", b"new\n");
+        let folder = t.path().to_string_lossy().into_owned();
+        let message = "before $(echo hacked) 'it' \"q\"";
+
+        let (out, ended) = pty(
+            &super::super::git::push_command(1, true, true),
+            &[("GITGEL_FOLDER_1", &folder), ("GITGEL_MESSAGE", message)],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        let stack = crate::git::stash::list(&t.repo).unwrap();
+        assert_eq!(stack.len(), 1);
+        assert_eq!(stack[0].message, message);
+        assert!(!t.path().join("new.txt").exists());
+
+        let (out, ended) = pty_in(
+            t.path(),
+            "git stash apply 'stash@{0}'",
+            &[("GIT_PAGER", "cat")],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        assert_eq!(std::fs::read(t.path().join("a.txt")).unwrap(), b"changed\n");
+        assert!(t.path().join("new.txt").exists());
+
+        let (out, ended) = pty_in(t.path(), "git stash drop 'stash@{0}'", &[]);
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        assert!(crate::git::stash::list(&t.repo).unwrap().is_empty());
     }
 
     #[test]

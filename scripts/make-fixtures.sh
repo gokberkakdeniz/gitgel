@@ -224,6 +224,17 @@ make_api_server() {
   git -C "$ROOT/wt/token-rotation" stash push -q
   put "$ROOT/wt/token-rotation" src/jobs/rotate-tokens.ts 'export function rotate() { return true; }'
   git -C "$repo" worktree add -q --detach "$ROOT/wt/detached" feat/job-queue~1
+
+  # Stash actions on the base branch (SPEC §15). "worker draft" adds src/queue/worker.ts on master:
+  # it applies cleanly to master, and conflicts (add/add) in wt/detached and wt/token-rotation,
+  # which have their own worker.ts. Then master gets changes for Stash…: a modified and an
+  # untracked file, neither touched by the stash.
+  put "$repo" src/queue/worker.ts 'export function work() { return "draft"; }'
+  git -C "$repo" add src/queue/worker.ts
+  at 0
+  git -C "$repo" stash push -q -m "worker draft"
+  put "$repo" src/config/schedule.ts 'export const schedule = { every: "1h" };'
+  put "$repo" notes/todo.md '- rotate tokens nightly'
 }
 
 # Nearest default (T13.1): local master and origin/master differ. Local master has an unpushed

@@ -464,3 +464,47 @@ pub async fn resize_script(
     })
     .await
 }
+
+/// Git actions (SPEC §15 "Writing stashes"): `git stash push` in each entry's worktree.
+#[tauri::command]
+pub async fn stash_push(
+    state: State<'_, AppState>,
+    entries: Vec<EntryRef>,
+    message: String,
+    untracked: bool,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::stash_push(state, entries, message, untracked)
+    })
+    .await
+}
+
+/// `git stash apply` (or `pop`) of `stash@{index}`, which must still be `sha`, in a worktree.
+#[tauri::command]
+pub async fn stash_apply(
+    state: State<'_, AppState>,
+    repo_id: String,
+    index: u32,
+    sha: String,
+    worktree_path: String,
+    pop: bool,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::stash_apply(state, &repo_id, index, &sha, &worktree_path, pop)
+    })
+    .await
+}
+
+/// `git stash drop` of `stash@{index}`, which must still be `sha`.
+#[tauri::command]
+pub async fn stash_drop(
+    state: State<'_, AppState>,
+    repo_id: String,
+    index: u32,
+    sha: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::stash_drop(state, &repo_id, index, &sha)
+    })
+    .await
+}

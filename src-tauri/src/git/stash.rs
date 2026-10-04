@@ -43,6 +43,16 @@ pub fn list(repo: &Repository) -> Result<Vec<RawStash>, AppError> {
         .collect())
 }
 
+/// The SHA `stash@{index}` points at now; `None` past the end of the stack. Checked before a
+/// git action names a stash by its index (SPEC §15 "Writing stashes").
+pub fn sha_at(repo: &Repository, index: u32) -> Result<Option<String>, AppError> {
+    if repo.find_reference("refs/stash").is_err() {
+        return Ok(None);
+    }
+    let reflog = repo.reflog("refs/stash")?;
+    Ok(reflog.get(index as usize).map(|e| e.id_new().to_string()))
+}
+
 /// Splits `WIP on <branch>: <sha> <subject>` / `On <branch>: <message>`.
 fn parse_message(msg: &str) -> (Option<String>, String) {
     let msg = msg.trim_end();
@@ -56,7 +66,11 @@ fn parse_message(msg: &str) -> (Option<String>, String) {
         return (None, msg.to_string());
     };
     let branch = (branch != "(no branch)").then(|| branch.to_string());
-    let message = if wip { msg.to_string() } else { text.to_string() };
+    let message = if wip {
+        msg.to_string()
+    } else {
+        text.to_string()
+    };
     (branch, message)
 }
 
@@ -118,6 +132,21 @@ mod tests {
         let t = TestRepo::new();
         t.commit_on("main", &[("a.txt", Some(b"a\n"))], "base", 1);
         assert_eq!(list(&t.repo).unwrap(), Vec::new());
+    }
+
+    #[test]
+    fn sha_at_follows_the_stack() {
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a.txt", Some(b"a\n"))], "base", 1);
+        t.checkout_main();
+        assert_eq!(sha_at(&t.repo, 0).unwrap(), None);
+        t.write_file(t.path(), "a.txt", b"one\n");
+        let first = t.stash(false, "first");
+        t.write_file(t.path(), "a.txt", b"two\n");
+        let second = t.stash(false, "second");
+        assert_eq!(sha_at(&t.repo, 0).unwrap(), Some(second.to_string()));
+        assert_eq!(sha_at(&t.repo, 1).unwrap(), Some(first.to_string()));
+        assert_eq!(sha_at(&t.repo, 2).unwrap(), None);
     }
 
     #[test]

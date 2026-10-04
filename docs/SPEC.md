@@ -21,17 +21,21 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 
 ### Rules
 
-- **Git only through git2 (libgit2).** The git CLI is never run; `std::process::Command` is
-  banned in app code. The one exception is `src-tauri/src/apps.rs`, which starts
-  the terminal the user set in Settings (WezTerm, or an Other command); it never runs git. The
-  user's own scripts (§14) run in a pty (`portable-pty`, `src-tauri/src/scripts/run.rs`) when
-  they click one. git2 is used only under `src-tauri/src/git/`; other modules use the
-  functions there and the types in §8.
-- **Read-only.** The app never calls a git2 API that writes to a repository: no checkout,
+- **Reads through git2, writes through the git CLI.** Everything Gitgel reads comes from git2
+  (libgit2); the git binary is never run to read. Everything that changes a repository (the stash
+  actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
+  command line built in `src-tauri/src/scripts/git.rs` and run like a script (§14: login shell,
+  pty, toast, output panel, rescan when it ends). Values (a message, folders) go in `GITGEL_*`
+  environment variables, never into the command text. `std::process::Command` is banned in app
+  code; the one exception is `src-tauri/src/apps.rs`, which starts the terminal the user set in
+  Settings (WezTerm, or an Other command). Scripts and git actions run in a pty (`portable-pty`,
+  `src-tauri/src/scripts/run.rs`). git2 is used only under `src-tauri/src/git/`; other modules
+  use the functions there and the types in §8.
+- **git2 never writes.** The app never calls a git2 API that writes to a repository: no checkout,
   set_head, commit, stash, reset, merge, cherry-pick, revert, branch/reference/tag
   create/delete/rename, worktree add/prune/lock, index writes, blob/odb writes, fetch/push or
   config writes. `update_index` is never enabled on diff or status options. `src-tauri/clippy.toml`
-  enforces this at compile time (§10).
+  enforces this at compile time (§10). A new write is a new git action, never a git2 call.
 - **pnpm only.** Never npm, npx or yarn; no `package-lock.json` or `yarn.lock`. Add packages
   with `pnpm add -E <pkg>` (`pnpm add -D -E` for dev); one-off CLIs with `pnpm dlx`.
 - Versions are exact: no `^`/`~` in `package.json`, `=X.Y.Z` in `Cargo.toml`. Before adding a
@@ -76,8 +80,9 @@ This file describes the app as it is, plus what open tasks will add:
 
 ## 1. Product
 
-**Goal:** a read-only macOS desktop app for reviewing branches and worktrees across several git
-repositories from one place, without checking anything out. Built for looking at what coding
+**Goal:** a macOS desktop app for reviewing branches and worktrees across several git
+repositories from one place, without checking anything out. It reads without writing; it changes
+a repository only when asked to (the stash actions, §15), through the git CLI. Built for looking at what coding
 agents (Cursor, Codex, Claude Code) leave in their worktrees. Not for the App Store: ad-hoc
 signed, not notarized, no sandbox.
 
@@ -98,10 +103,10 @@ signed, not notarized, no sandbox.
   **nearest default** (§10 "Nearest default"). The UI always names the ref
   actually used, e.g. `origin/master`.
 - **Script:** a shell command the user defines in Settings › Scripts and runs from a branch's
-  menu, with the branch as context (§14). It runs as the user's own process;
-  Gitgel itself still never writes to a repository.
+  menu, with the branch as context (§14). It runs as the user's own process.
 - **Stash:** an entry of the repository's stash stack (`stash@{n}`), one stack per repository
-  shared by all its worktrees. Gitgel lists and reviews them (§15).
+  shared by all its worktrees. Gitgel lists and reviews them, and stashes, applies, pops and
+  drops through git actions (§15).
 - **Active branch:** checked out in a worktree, or committed in the last N days (Settings,
   default 14) and ahead of its base (or with a base picked by hand, even when not ahead of it:
   otherwise picking a base at its own tip would hide it; user decision 2026-09-28).
@@ -114,9 +119,10 @@ signed, not notarized, no sandbox.
 
 **Screens:** Branches (including the first-run empty state), Project, Review, History (§16), Add palette (⌘K), Settings.
 
-**Out of scope:** writing to repositories (a user's script may; Gitgel does not), review comments, GitHub/PR integration, fetch/pull,
-launching agents, multiple windows, LSP, the git CLI (even as a fallback), agent labels, a light
-theme, configurable refresh.
+**Out of scope:** writing to repositories beyond the git actions (§15; a user's script may do
+anything), review comments, GitHub/PR integration, fetch/pull, launching agents, multiple
+windows, LSP, the git CLI for reading (even as a fallback), agent labels, a light theme,
+configurable refresh.
 
 ---
 
@@ -124,7 +130,7 @@ theme, configurable refresh.
 
 | Topic | Decision |
 |---|---|
-| Git access | **git2** (libgit2 bindings), `vendored-libgit2` (static, no system libgit2 or OpenSSL), default features (ssh/https) off. The git binary is never looked for; there is no "git not found" screen and the app works on a Mac without git. |
+| Git access | **git2** (libgit2 bindings), `vendored-libgit2` (static, no system libgit2 or OpenSSL), default features (ssh/https) off, for every read. Writes are git actions (§0): the user's `git` through their login shell, as scripts run. Reading never needs git, so the app works on a Mac without it; there is no "git not found" screen: a git action then fails and its toast shows the shell's message. |
 | Repository objects | One `git2::Repository` per repo or worktree path, kept in a pool, never reopened per request. `Repository` is not `Sync`, so each sits in its own `Mutex`. |
 | Refresh | **File watching** (`notify-debouncer-full`, FSEvents, 300 ms debounce). **No polling, no timers.** An event recomputes only the affected repo or worktree; the backend pushes the result to the frontend as an event. A full rescan runs when the window gains focus and on the refresh button (which also rereads every working tree). Refresh is not configurable and no UI text mentions it. Details in §10. |
 | Performance | Results are cached so that a branch whose tip and base did not move is never recomputed, and a working tree is reread only after the watcher reports a change in it (§10 "Caches"). A full scan runs repos in parallel and emits each repo as soon as it is done, only if its result changed. Every scan, review, file read and watch round logs one line with its step timings (`src-tauri/src/timing.rs`). |
@@ -172,6 +178,8 @@ gitgel/
 │  │            # Review/parts.tsx: view menu, change navigation, file row, diff view settings
 │  │            #   (shared with History, §16)
 │  │            # History/: the History screen and its list rows (§16)
+│  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashButton + StashDialog (P4), StashTargetMenu
+│  │            # (Apply to… / Pop to…, P5), DropStashModal (P6)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
@@ -189,6 +197,7 @@ gitgel/
       ├─ memory.rs                # frees libgit2 memory after full scans
       ├─ updates.rs               # in-app updates: check, install, restart
       ├─ scripts/   mod.rs  run.rs # the user's scripts: config, import/export; running, output, stop
+      │             git.rs        # git actions: stash push / apply / pop / drop (§0, §15)
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
       ├─ git/                     # the ONLY place git2 is used
@@ -1016,8 +1025,9 @@ open.
   "Ask before running" and nothing to fill in asks in a short confirmation (O3); ⌘↵ runs it.
 - **P · Stashes.** Each repo band on Branches lists its stash stack (P1); a stash opens the
   stash review (P3). Project and branch reviews list the stashes taken on their branches under
-  the files (P2). Picking one shows what it holds, against the commit it was taken on. Stash…,
-  Apply, Pop and Drop are shown disabled; what they do comes later (planned, T19.4).
+  the files (P2). Picking one shows what it holds, against the commit it was taken on. Stash…
+  stashes the review's entries (P4); Apply / Pop pick a worktree (P5); Drop asks first (P6).
+  Each runs git like a script: a toast, and its output on click.
 - **J · Open elsewhere.** The ⋯ menu of an entry (Project) or
   row (Branches) opens its worktree folder in Finder or in an installed editor or terminal; a
   branch that is not checked out opens the repository folder instead, with a note saying so.
@@ -1413,6 +1423,9 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `stop_script` | `runId` | `null` |
 | `get_script_run` | `runId` | `ScriptRun` with its buffered output and `bufferedEnd` |
 | `resize_script` | `runId, cols, rows` | `null` (the run's pty) |
+| `stash_push` | `entries: EntryRef[], message: string, untracked: boolean` | `ScriptRun` (one git action for all entries, §15) |
+| `stash_apply` | `repoId, index, sha, worktreePath, pop: boolean` | `ScriptRun` |
+| `stash_drop` | `repoId, index, sha` | `ScriptRun` |
 
 Notes:
 
@@ -1489,6 +1502,8 @@ Notes:
   - Types: `build::CheckoutBuilder`, `build::RepoBuilder`, `build::TreeUpdateBuilder`,
     `TreeBuilder`, `Rebase`.
   - The only exception is `git/testutil.rs` (`#[cfg(test)]`, inside its own `TempDir`).
+- Writes are never made here: they are git actions (`scripts/git.rs`, §0, §15). Before one, the
+  stash it names is checked here (`stash@{n}` still points at the SHA the screen showed).
 
 ### Repository pool
 
@@ -1668,8 +1683,8 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: branch button, search, "Fetched", refresh; list 43–85: day label 47–49, base line 50–55, Uncommitted row 56–64, commit row 65–73, file row 74–83; commit header 87–96; file bar 97–110; split diff 111+; avatar and row styles 136–160); `HistH4` the same screen for a feature branch with the base line (data 178–196) |
-| Stashes | `FlowP1`, `FlowP2`, `FlowP3`, `FlowP4.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog (planned, T19.4) |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, "Fetched", Stash… 39, refresh; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
+| Stashes | `FlowP1`–`FlowP6.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog, P5 worktree picker (Apply to…), P6 Drop confirmation |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -1716,8 +1731,12 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
     `session-token-refresh`, `stash@{1}` a WIP one with an untracked file on `old-login` (deleted).
   - **api-server** (default `master`, no origin): `feat/job-queue` (3 commits),
     `token-rotation-job` (stacked on it, checked out in `wt/token-rotation` with a change),
-    a detached worktree `wt/detached` at `feat/job-queue~1`, `to-be-deleted`; a WIP stash with
-    2 files on `token-rotation-job`.
+    a detached worktree `wt/detached` at `feat/job-queue~1`, `to-be-deleted`. `master` has a
+    modified `src/config/schedule.ts` and an untracked `notes/todo.md` (Stash… on the base
+    branch). Stashes: `stash@{0}` "worker draft" on `master` (adds `src/queue/worker.ts`: applies
+    cleanly to master, conflicts in `wt/detached` and `wt/token-rotation`); `stash@{1}` a WIP one
+    with 2 files on `token-rotation-job`, whose apply git refuses there (its worktree has
+    uncommitted changes to `rotate-tokens.ts`, which the stash also changes).
   - `not-a-repo/`.
   - Subcommands: `delete-branch` (deletes `to-be-deleted`), `remove-repo` / `restore-repo` (moves
     web-app away and back).
@@ -1726,7 +1745,7 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   instant; an event storm (hundreds of files) is merged into a few jobs without freezing the UI.
 - **Read-only audit:** `grep -rn "Command::new" src-tauri/src` is empty; git2 appears only under
   `src-tauri/src/git/`; `disallowed` only in `git/testutil.rs`; clippy passes; after using the app
-  on the fixtures (with file edits, focus changes and refreshes),
+  on the fixtures (with file edits, focus changes and refreshes, but no git action),
   `find ~/gitgel-fixtures -path '*/.git/*' -newer <marker>` is empty.
 - **Build:** `pnpm tauri build --bundles app` → `src-tauri/target/release/bundle/macos/Gitgel.app`,
   ad-hoc signed (`bundle.macOS.signingIdentity: "-"`), not notarized. The version comes from
@@ -1776,8 +1795,8 @@ N (N1–N7) and O (O1–O3); boards `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `Flo
 
 - A script is a **shell command** (bash/zsh, or any file with a shebang), not a JS API: the jobs
   people want are shell jobs (`gh pr create`, `pnpm test`, `git rebase`), and the context goes in
-  environment variables. Gitgel stays read-only: git2 still writes nothing; a script is the user's
-  own process, started only by a click.
+  environment variables. git2 still writes nothing; a script is the user's own process, started
+  only by a click. Gitgel's own writes (§15) reuse the same runner as git actions (§0).
 - One branch at a time: no script in the selection bar, no per-script shortcuts (user decisions
   2026-10-04).
 - When a script exits, the repo it ran in is rescanned (as after `set_branch_base`), which also
@@ -1991,8 +2010,8 @@ export interface ScriptRun {
 
 ## 15. Stashes
 
-Read-only: the stash stack is listed and reviewed; nothing is stashed, applied or dropped by
-Gitgel. Canvas flow P (P1–P4); boards `FlowP1`–`FlowP4.dc.html`.
+The stash stack is listed and reviewed with git2; stashing, applying, popping and dropping are git
+actions (§0, "Writing stashes" below). Canvas flow P (P1–P6); boards `FlowP1`–`FlowP6.dc.html`.
 
 - **Reading** (§10): the `refs/stash` reflog, newest first. The message `On <branch>: <text>`
   shows `<text>`; `WIP on <branch>: <sha> <subject>` shows whole. `<branch>` is the branch it was
@@ -2008,10 +2027,12 @@ Gitgel. Canvas flow P (P1–P4); boards `FlowP1`–`FlowP4.dc.html`.
   `N files`, the age. The text filter applies (message, branch, repo name). Clicking a row opens
   the stash review (P3) on it; the ⋮ button ("Stash options") opens a 280px menu: "Review
   changes ↵", "Apply to…" (desc: the checked-out branches of the repo), "Pop to…" (desc "Apply,
-  then drop if it applied cleanly"), divider, danger "Drop…" (`⌫`). Apply to…, Pop to… and Drop…
-  are disabled, tooltip "Not available yet".
-- **Review header** (P2, project and branch scope): a 32px secondary "Stash…" button with the
-  `package` icon before the refresh button, disabled, tooltip "Not available yet".
+  then drop if it applied cleanly"), divider, danger "Drop…" (`⌫`). Apply to… and Pop to… turn
+  the menu into the worktree picker (P5), Drop… opens the confirmation (P6).
+- **Review header** (P2, project and branch scope; History of a checked-out branch too, §16, which
+  also lists the branch's stashes under its commits): a 32px secondary "Stash…" button with the
+  `package` icon before the refresh button; it opens the Stash changes dialog (P4). Disabled,
+  tooltip "No uncommitted changes", when no checked-out entry of the review has any.
 - **Review list** (P2): after the groups (and the "not reviewable" line), under a 1px `bg.hover`
   rule: section label `Stashes of this project · N` (branch scope `Stashes of this branch · N`),
   the stashes taken on one of the review's branches (project order). Rows (padding 6px 8px,
@@ -2028,16 +2049,60 @@ Gitgel. Canvas flow P (P1–P4); boards `FlowP1`–`FlowP4.dc.html`.
   `<repo> / <branch>` (the part that gives way when short of room), `from <short base>`,
   `<age> ago`. Then the file bar (compare label
   `<short base> ↔ stash@{n}`, view menu, change navigation over the stash's files) and the diff.
-  On the right of the message 28px buttons Apply, Pop (secondary) and Drop… (danger text), all
-  disabled with the tooltip "Not available yet". No uncommitted banner while a
-  stash is shown.
+  On the right of the message 28px buttons Apply, Pop (secondary) and Drop… (danger text): Apply
+  and Pop run at once in the worktree the stash's branch is checked out in (tooltip `Apply to
+  <branch> (<~folder>)`), and open the worktree picker (P5) under the button only when that
+  branch is not checked out (or deleted, or detached); Drop… opens the confirmation (P6). No
+  uncommitted banner while a stash is shown.
 - **Stash review** (P3, `ReviewTarget` `stashes`): from Branches; title "Stashes", subtitle
   `<repo> · N stashes`; no mode segmented and no file filter; the list is the section only
   (`Stashes in <repo> · N`, no rule above, line 2 without the repo), with the clicked stash
   picked (else the newest; also when the picked one is dropped). Empty stack: "No stashes".
-- **Writing stashes** (planned, T19.4): what Stash… (the P4 dialog), Apply to…, Pop to…, Apply,
-  Pop and Drop… do. It needs the §0 read-only rule changed first, so it waits for a user
-  decision.
+
+### Writing stashes
+
+Every write is a git action (§0): a run on the scripts' runner (§14 "Running": `$SHELL -l -c`, a
+pty, `TERM=xterm-256color`) whose command is fixed by Gitgel; values are only in `GITGEL_*`
+variables, quoted (`"$GITGEL_MESSAGE"`), and the stash as `'stash@{n}'`, so the command reads the
+same in sh, bash, zsh and fish. It has the run toast and output panel of a script (name and
+`package` icon below; no "Run again"), and its repositories are rescanned when it ends.
+
+- **Checks before running** (backend): the folders come from the repository's worktree list
+  (git2), never from the frontend; `stash@{n}` must still point at the SHA the screen showed,
+  else "The stash list changed. Pick the stash again." (and the repo is rescanned); one git
+  action at a time per repository, else "Another git action is running in <repo>." A refused
+  action shows a failed toast `“<name>” could not start` with that text.
+- **Stash changes** (P4, the Review header's Stash…): a 400px popover under the button, padding
+  16, gap 12: serif 18px "Stash changes"; "In" (12px/500) and one row per entry of the review
+  that is checked out, in review order (26px: `Checkbox`, repo 12px/600 `text.strong`, mono 11
+  branch, muted `N files` = its uncommitted files; "no changes" and disabled when it has none);
+  entries that are not checked out are not listed. Every entry with changes starts checked.
+  "Message" `Input` 32px, focused (empty: git writes its own "WIP on <branch>: …"). "Include
+  untracked files (N)" `Checkbox`, on, N = untracked (`U`) files of the checked entries; hidden
+  when N is 0. A 12px muted note: "One stash per entry, same message." plus, for each repo with
+  2+ checked entries, "Both are in <repo>, so its stack gets 2 new stashes." (3+: "N are in
+  <repo>, so its stack gets N new stashes."). Footer: Cancel and primary "Stash N entries ↵"
+  ("Stash 1 entry ↵"), disabled with nothing checked. ↵ stashes, Esc cancels.
+  One git action "Stash changes" for all checked entries, one after another, stopping at the
+  first failure: `git -C "$GITGEL_FOLDER_1" stash push [--include-untracked] [--message
+  "$GITGEL_MESSAGE"] && git -C "$GITGEL_FOLDER_2" …`, run in the first folder; toast sub line
+  `repo / branch` for one entry, else `N entries`.
+- **Worktree picker** (P5; Apply to… / Pop to… in the Branches stash menu, Apply / Pop in the
+  stash pane when its branch is not checked out): a 280px menu, label "Apply stash@{n} to" (or "Pop stash@{n} to"), then one item
+  per checked-out entry of the repository (scan order, the branch the stash was taken on first):
+  `branch` icon, the branch (short SHA when detached), desc the folder (`~/…`) plus
+  ` · N uncommitted` when it has changes. A pick runs `git stash apply 'stash@{n}'` (or `pop`) in
+  that folder, named "Apply stash@{n}" / "Pop stash@{n}", sub line `repo / branch`. With
+  conflicts git leaves the markers in the files and keeps the stash (also for pop); the toast is
+  failed with git's last line, and Gitgel does nothing more.
+  When the folder has uncommitted changes to a file the stash also changes, git refuses before
+  touching anything ("Your local changes to the following files would be overwritten by merge");
+  that is git's own guard and is shown as is.
+- **Drop** (P6; Drop… in the menu or the pane): a 460px confirmation laid out like O3: serif 22px
+  `Drop stash@{n}?`, a `bg.sunken` card with a `package` row (the message) and a `branch` row
+  `repo / branch · N files`, 13px muted "Its changes are lost unless they are somewhere else.",
+  then Cancel (focused) and danger "Drop stash". Runs `git stash drop 'stash@{n}'` in the
+  repository folder, named "Drop stash@{n}". The stash review then picks the newest stash (above).
 
 ---
 
@@ -2062,7 +2127,7 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
 - **Opening:** "Open history" in a Branches row menu (not the base row's), the base branch row's name and History
   button, and in Review's entry bar the branch name and the base in "N commits ahead of <base>". Route `history` with `repoId` and `rev`, pushed like Review
   (back and forward work). History hides the sidebar as Review does.
-- **Header** (`HistH2` 21–41), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
+- **Header** (`HistH2` 21–42), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
   ` · <~worktree>` when `rev` is a branch checked out in a worktree. On the right, gap 10:
   - Branch button: 32px, `bg.elevated`, 1px `border`, radius 8, branch icon 13px `accent.text`,
     mono 12 `text.strong` rev, chevron (tooltip `Pick a branch of <repo>`). It opens a menu:
@@ -2073,8 +2138,10 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
     searches (debounced 200 ms); Esc clears it.
   - `Fetched <age> ago` (12px `text.faint`; tooltip "Last fetch (FETCH_HEAD). Gitgel never
     fetches; commits pushed since then are not shown."), only when `fetchedAt` is known.
+  - "Stash…" (§15, the Review header's button and P4 dialog, with this one entry), only when
+    `rev` is checked out in a worktree; disabled, tooltip "No uncommitted changes", without any.
   - Refresh button.
-- **List** (`HistH2` 43–85): 380px, `bg.sidebar`, right border `border`, scrolls. Label (section
+- **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Label (section
   label style, padding 14px 16px 6px) `<rev> · N commits` (`total`), while searching `N matching
   commits` (`N+` while there are more). Rows (padding 0 8px 8px, gap 2):
   - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with
@@ -2099,13 +2166,20 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
     file shown on `bg.hover`).
   - Empty: "No commits"; while searching "No commits match “<query>”" with "Clear search"; a rev
     that does not resolve: `<rev> not found`.
+  - **Stashes** (`HistH2` 86–98; the stashes taken on `rev`, never while searching): Review's
+    stash section (§15, "Stashes of this branch · N", rows without the repo), under the commits
+    but pinned to the bottom of the list column (top border `bg.hover`, padding 2px 8px 8px, at
+    most 40% of its height, scrolls on its own), since the commits keep loading as they scroll.
+    Picking one lists its files under it and shows Review's stash pane (P2: message, Apply / Pop /
+    Drop…, meta line), then the file bar (`<short base> ↔ stash@{n}`) and the diff. ↑ / ↓ do not
+    step into it; a dropped or popped stash leaves the newest commit picked.
 - **Picking:** on opening, the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,
   Uncommitted included. Clicking the picked row again folds its file list, and opens it again;
   picking another row opens its files. A row brought into view (stepping, or rows above it
   folding) keeps 8px, the list's side padding, above or below it. After a refresh the picked
   commit stays when it is still listed, else the newest is picked. Search picks the first match.
-- **Pane** (`HistH2` 87–110): a commit header (padding 14px 18px, bottom border `border`, gap 8):
+- **Pane** (`HistH2` 101–124): a commit header (padding 14px 18px, bottom border `border`, gap 8):
   15px/600 `text.strong` subject with, on the right, a 28px "Copy SHA" icon button (copy icon,
   tooltip "Copy full SHA"); the body (13px, line-height 1.5, `text.muted`, `white-space:
   pre-wrap`, max-width 720px; left out when empty); mono 11 muted meta: an 18px avatar, the author

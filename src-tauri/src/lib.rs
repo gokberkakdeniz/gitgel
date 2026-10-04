@@ -140,6 +140,9 @@ pub fn run() {
             commands::stop_script,
             commands::get_script_run,
             commands::resize_script,
+            commands::stash_push,
+            commands::stash_apply,
+            commands::stash_drop,
         ])
         .build(tauri::generate_context!())
         .map(|app| {

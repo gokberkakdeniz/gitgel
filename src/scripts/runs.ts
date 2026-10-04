@@ -168,6 +168,21 @@ export async function startScript(
   }
 }
 
+/** Starts a git action (SPEC §15): its run gets the toast and output panel of a script's, but
+ * no Run again. `name` is for the toast when it cannot start. */
+export async function startGitAction(name: string, start: () => Promise<ScriptRun>): Promise<void> {
+  try {
+    const run = await start();
+    const runs = useRuns.getState();
+    // A quick action can end (`script-exited`) before this answer arrives; keep the end.
+    if (runs.runs[run.runId]) return;
+    runs.put(run);
+    showRunToast(run);
+  } catch (err) {
+    useUi.getState().showToast({ status: 'failed', message: `“${name}” could not start`, sub: (err as AppError).message });
+  }
+}
+
 /** The toast for a run: running (stays), then finished or failed; a click opens its output.
  * One toast at a time. */
 export function showRunToast(run: ScriptRun): void {

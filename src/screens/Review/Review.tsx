@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '../../components/Banner';
-import { Button } from '../../components/Button';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import {
   BackIcon,
@@ -36,6 +35,8 @@ import type {
   StashChanges,
 } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
+import { StashButton } from '../../stash/StashButton';
+import { StashBar } from '../../stash/StashBar';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
@@ -398,12 +399,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   return (
     <div className={styles.screen}>
       <ReviewHeader entry={entry} target={target} backLabel={backLabel} data={data} stashes={stashes}>
-        {/* Writing stashes comes later (T19.4). */}
-        {target.kind !== 'stashes' && (
-          <Button icon="package" disabled title={NOT_YET}>
-            Stash…
-          </Button>
-        )}
+        {target.kind !== 'stashes' && <StashButton groups={data?.groups ?? []} />}
         <RefreshButton />
         {target.kind !== 'stashes' && (
           <Segmented
@@ -565,8 +561,6 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     </div>
   );
 }
-
-const NOT_YET = 'Not available yet';
 
 function fileId(entryKey: string, path: string): string {
   return `${entryKey}\u0000${path}`;
@@ -811,13 +805,14 @@ function FileGroup({
 }
 
 /** The stash section under the files (flows P2–P3); the picked stash lists its files. */
-function StashSection({
+export function StashSection({
   heading,
   stashes,
   picked,
   changes,
   file,
   divider,
+  withRepo = divider,
   onPick,
   onFile,
 }: {
@@ -830,6 +825,8 @@ function StashSection({
   file: string | undefined;
   /** A rule above it, under the entries. */
   divider: boolean;
+  /** `repo / branch` on line 2 (default: with the rule; stash scope names the repo in its header). */
+  withRepo?: boolean;
   onPick: (sha: string) => void;
   onFile: (path: string) => void;
 }) {
@@ -854,7 +851,7 @@ function StashSection({
                 <span className={styles.stashMessage}>{st.message}</span>
                 <span className={styles.stashRef}>stash@{`{${st.index}}`}</span>
               </span>
-              <span className={styles.stashMeta}>{stashMeta(st, divider)}</span>
+              <span className={styles.stashMeta}>{stashMeta(st, withRepo)}</span>
             </button>
             {on && changes && (
               <div className={styles.fileRows}>
@@ -867,44 +864,6 @@ function StashSection({
         );
       })}
     </section>
-  );
-}
-
-/** Above a stash's diff: its message and actions, then which stash, where it was taken and on
- * what. Two lines, so a long message does not push the rest out. */
-function StashBar({ stash, base }: { stash: ReviewStash; base: string }) {
-  const branch = stash.branch ?? 'detached HEAD';
-  return (
-    <div className={styles.entryBar}>
-      <div className={styles.entryLine}>
-        <span className={styles.stashTitle} title={stash.message}>
-          {stash.message}
-        </span>
-        <span className={styles.grow} />
-        {/* Writing stashes comes later (T19.4). */}
-        <Button size={28} disabled title={NOT_YET}>
-          Apply
-        </Button>
-        <Button size={28} disabled title={NOT_YET}>
-          Pop
-        </Button>
-        <Button size={28} disabled title={NOT_YET} className={styles.dropButton}>
-          Drop…
-        </Button>
-      </div>
-      <div className={styles.stashBarMeta}>
-        <Icon name="package" size={12} strokeWidth={1.7} className={styles.stashBarIcon} />
-        <span className={styles.stashBarRef}>stash@{`{${stash.index}}`}</span>
-        <span className={styles.dot}>·</span>
-        <span className={styles.stashBarWhere}>
-          {stash.repoName} / {branch}
-        </span>
-        <span className={styles.dot}>·</span>
-        <span>from {base.slice(0, 7)}</span>
-        <span className={styles.dot}>·</span>
-        <span>{formatAge(stash.createdAt)} ago</span>
-      </div>
-    </div>
   );
 }
 

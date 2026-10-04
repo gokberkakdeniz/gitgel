@@ -1,11 +1,12 @@
 # Gitgel
 
-A read-only macOS app for reviewing branches and worktrees across several git repositories,
-without checking anything out. Built for looking at what coding agents (Cursor, Codex,
+A macOS app for reviewing branches and worktrees across several git repositories, without
+checking anything out. Built for looking at what coding agents (Cursor, Codex,
 Claude Code) left in their worktrees.
 
-- Reads git through libgit2 (the `git2` crate, bundled). It never runs the git binary and never
-  writes to a repository: no checkout, stash, commit, fetch or index writes.
+- Reads git through libgit2 (the `git2` crate, bundled), which never writes. The only writes are
+  the stash actions (stash, apply, pop, drop), which run your `git` in your login shell when you
+  click them. No checkout, commit, fetch or other writes.
 - Updates on its own from file-system events (FSEvents), plus a full rescan when the window
   gains focus and on the refresh button. No polling.
 

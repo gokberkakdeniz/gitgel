@@ -19,6 +19,8 @@ import {
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
+import { askDrop } from '../../stash/actions';
+import { StashTargetMenu } from '../../stash/StashTargetMenu';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
@@ -401,6 +403,7 @@ function RepoSection({
       {stashes.length > 0 && (
         <StashList
           repoId={scan.repo.id}
+          repoName={scan.name}
           stashes={stashes}
           checkedOut={scan.active.filter((e) => e.worktreePath).map((e) => e.branch ?? e.shortSha ?? '')}
         />
@@ -410,9 +413,22 @@ function RepoSection({
 }
 
 /** The repo's stash stack under its rows (flow P1); a row or its menu opens the stash review. */
-function StashList({ repoId, stashes, checkedOut }: { repoId: string; stashes: StashInfo[]; checkedOut: string[] }) {
+function StashList({
+  repoId,
+  repoName,
+  stashes,
+  checkedOut,
+}: {
+  repoId: string;
+  repoName: string;
+  stashes: StashInfo[];
+  checkedOut: string[];
+}) {
   const push = useNav((s) => s.push);
-  const [menu, setMenu] = useState<{ sha: string; rect: DOMRect } | null>(null);
+  // `pick`: Apply to… / Pop to… turned the menu into the worktree picker (P5).
+  const [menu, setMenu] = useState<{ sha: string; rect: DOMRect; pick?: 'apply' | 'pop' } | null>(null);
+  const picked = stashes.find((st) => st.sha === menu?.sha);
+  const stash = picked && { ...picked, repoId, repoName };
   const open = (sha: string) =>
     push({ name: 'review', target: { kind: 'stashes', repoId }, focusKey: sha, backLabel: 'Back to Branches' });
   return (
@@ -442,31 +458,39 @@ function StashList({ repoId, stashes, checkedOut }: { repoId: string; stashes: S
           rowProps: { className: styles.stashRow, onClick: () => open(st.sha) },
         }))}
       />
-      {menu && (
+      {menu && stash && (
         <Popover anchorRect={menu.rect} width={280} alignRight onClose={() => setMenu(null)}>
-          <Menu aria-label="Stash actions">
-            <MenuItem kbd="↵" onSelect={() => open(menu.sha)}>
-              Review changes
-            </MenuItem>
-            {/* Writing stashes comes later (T19.4). */}
-            <MenuItem desc={checkedOut.join(', ')} disabled title={NOT_YET} onSelect={() => {}}>
-              Apply to…
-            </MenuItem>
-            <MenuItem desc="Apply, then drop if it applied cleanly" disabled title={NOT_YET} onSelect={() => {}}>
-              Pop to…
-            </MenuItem>
-            <MenuDivider />
-            <MenuItem kbd="⌫" danger disabled title={NOT_YET} onSelect={() => {}}>
-              Drop…
-            </MenuItem>
-          </Menu>
+          {menu.pick ? (
+            <StashTargetMenu stash={stash} pop={menu.pick === 'pop'} onDone={() => setMenu(null)} />
+          ) : (
+            <Menu aria-label="Stash actions">
+              <MenuItem kbd="↵" onSelect={() => open(menu.sha)}>
+                Review changes
+              </MenuItem>
+              <MenuItem desc={checkedOut.join(', ')} onSelect={() => setMenu({ ...menu, pick: 'apply' })}>
+                Apply to…
+              </MenuItem>
+              <MenuItem desc="Apply, then drop if it applied cleanly" onSelect={() => setMenu({ ...menu, pick: 'pop' })}>
+                Pop to…
+              </MenuItem>
+              <MenuDivider />
+              <MenuItem
+                kbd="⌫"
+                danger
+                onSelect={() => {
+                  setMenu(null);
+                  askDrop(stash);
+                }}
+              >
+                Drop…
+              </MenuItem>
+            </Menu>
+          )}
         </Popover>
       )}
     </div>
   );
 }
-
-const NOT_YET = 'Not available yet';
 
 function stashSub(st: StashInfo): ListSubPart[] {
   const branch: ListSubPart = st.branch

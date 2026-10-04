@@ -1,6 +1,6 @@
 [package]
 name = "gitgel"
-description = "Read-only reviewer for git branches and worktrees"
+description = "Reviewer for git branches and worktrees"
 authors = ["Gökberk Akdeniz"]
 edition = "2021"
 publish = false

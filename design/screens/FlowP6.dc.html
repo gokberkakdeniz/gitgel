@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>P6 · Drop a stash</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input,textarea{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="FlowP3" theme="{{themeName}}" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div role="dialog" aria-labelledby="drop-title" style="position: relative; margin-top: 180px; width: 460px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px 18px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow)">
+
+<div id="drop-title" style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong)">Drop stash@{0}?</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-code)">
+<span style="display: flex; align-items: center; gap: 10px; min-width: 0"><span style="flex-shrink: 0; display: flex; color: var(--text-muted)"><dc-import name="Icon" icon="package" size="14" hint-size="14px,14px"></dc-import></span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">debug logging for refresh</span></span>
+<span style="display: flex; align-items: center; gap: 10px; min-width: 0"><span style="flex-shrink: 0; display: flex; color: var(--text-muted)"><dc-import name="Icon" icon="branch" size="14" hint-size="14px,14px"></dc-import></span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">web-app / session-token-refresh · 1 file</span></span>
+</div>
+
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted)">Its changes are lost unless they are somewhere else.</p>
+
+<div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px">
+<dc-import name="Button" theme="{{themeName}}" size="36" label="Cancel" hint-size="80px,36px"></dc-import>
+<dc-import name="Button" theme="{{themeName}}" variant="danger" size="36" label="Drop stash" hint-size="104px,36px"></dc-import>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+renderVals() {
+// Drop… (Branches stash menu, or the stash pane's button): a confirmation laid out like O3.
+// Cancel has the focus; "Drop stash" runs `git stash drop 'stash@{0}'` in the repository folder,
+// then the stash review picks the newest stash.
+var theme = this.props.theme ?? 'dark';
+return { themeClass: 'theme-' + theme, themeName: theme };
+}
+}
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 //! The user's scripts (SPEC §14): stored in the config, imported and exported as one file;
 //! `run` starts them.
 
+pub mod git;
 pub mod run;
 
 use std::collections::HashSet;

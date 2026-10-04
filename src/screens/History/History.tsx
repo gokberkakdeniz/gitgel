@@ -7,10 +7,12 @@ import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
 import { RefreshButton } from '../../components/RefreshButton';
+import { StashBar } from '../../stash/StashBar';
+import { StashButton } from '../../stash/StashButton';
 import { formatAge, plural } from '../../lib/format';
-import { getCommitChanges, getHistory, getHistoryRefs, getReview } from '../../lib/ipc';
+import { getCommitChanges, getHistory, getHistoryRefs, getReview, getStashChanges } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
-import type { CommitChanges, EntrySummary, FileChange, HistoryCommit } from '../../lib/types';
+import type { CommitChanges, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
@@ -18,6 +20,8 @@ import { useData } from '../../state/data';
 import { selectCanForward, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, ViewMenu } from '../Review/parts';
+import { StashSection } from '../Review/Review';
+import type { ReviewStash } from '../Review/stashes';
 import review from '../Review/Review.module.css';
 import styles from './History.module.css';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
@@ -25,6 +29,8 @@ import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows
 /** Commits asked for at a time; scrolling near the end asks for this many more. */
 const PAGE = 200;
 const WIP = 'wip';
+/** A stash row's id in the list: `stash:<sha>`. */
+const stashRow = (sha: string) => `stash:${sha}`;
 
 interface Props {
   repoId: string;
@@ -72,22 +78,36 @@ export function History({ repoId, rev, backLabel }: Props) {
         tipOverride: null,
       }),
     [repoId, entry?.key],
-    { repoIds: [repoId], enabled: wip },
+    // Also while searching: the Stash… button needs the files.
+    { repoIds: [repoId], enabled: !!entry?.worktreePath && (entry.uncommitted ?? 0) > 0 },
   );
   const wipFiles = wipReview?.groups[0]?.files.uncommitted ?? [];
+
+  // The stashes taken on this branch (§15), under the list; not while searching.
+  const allStashes = repoScan?.stashes;
+  const stashes: ReviewStash[] = useMemo(
+    () =>
+      search || !allStashes
+        ? []
+        : allStashes.filter((s) => s.branch === rev).map((s) => ({ ...s, repoId, repoName })),
+    [search, allStashes, rev, repoId, repoName],
+  );
 
   const rows = useMemo(
     () => historyRows(commits, { wip, base, ahead: data?.ahead ?? null, mergeBase: data?.mergeBase ?? null }),
     [commits, wip, base, data],
   );
-  // The rows that can be picked, top to bottom: Uncommitted, then the commits.
+  // The rows ↑ / ↓ step through, top to bottom: Uncommitted, then the commits. The stashes, in
+  // their own section under the list (as in Review), are picked by click.
   const order = useMemo(() => [...(wip ? [WIP] : []), ...commits.map((c) => c.sha)], [wip, commits]);
 
   // The picked row: the one asked for while it is listed, else the newest commit.
   const [picked, setPicked] = useState<string | null>(null);
   useEffect(() => setPicked(null), [search]);
-  const current = picked && order.includes(picked) ? picked : (commits[0]?.sha ?? (wip ? WIP : null));
+  const listed = (row: string) => order.includes(row) || stashes.some((s) => stashRow(s.sha) === row);
+  const current = picked && listed(picked) ? picked : (commits[0]?.sha ?? (wip ? WIP : null));
   const commit = commits.find((c) => c.sha === current);
+  const stash = stashes.find((s) => stashRow(s.sha) === current);
 
   // A commit's files are fetched once (a commit never changes).
   const [changes, setChanges] = useState<Record<string, CommitChanges>>({});
@@ -104,7 +124,26 @@ export function History({ repoId, rev, backLabel }: Props) {
     );
   }, [commit, repoId]);
   const commitChanges = commit ? changes[commit.sha] : undefined;
-  const files: FileChange[] = current === WIP ? wipFiles : (commitChanges?.files ?? []);
+
+  // A stash's files, fetched once too (a stash never changes).
+  const [stashData, setStashData] = useState<Record<string, StashChanges>>({});
+  const stashRequested = useRef(new Set<string>());
+  useEffect(() => {
+    if (!stash || stashRequested.current.has(stash.sha)) return;
+    stashRequested.current.add(stash.sha);
+    getStashChanges(repoId, stash.sha).then(
+      (c) => setStashData((d) => ({ ...d, [c.sha]: c })),
+      (e) => {
+        console.error('stash changes failed', e);
+        stashRequested.current.delete(stash.sha);
+      },
+    );
+  }, [stash, repoId]);
+  const stashChanges = stash ? stashData[stash.sha] : undefined;
+  const stashBase = stashChanges?.base ?? stash?.base ?? '';
+
+  const files: FileChange[] =
+    current === WIP ? wipFiles : stash ? (stashChanges?.files ?? []) : (commitChanges?.files ?? []);
 
   // The file shown: the one picked while the row lists it, else its first.
   const [path, setPath] = useState<string | null>(null);
@@ -231,73 +270,98 @@ export function History({ repoId, rev, backLabel }: Props) {
             Fetched {formatAge(data.fetchedAt)} ago
           </span>
         )}
+        {entry?.worktreePath && <StashButton groups={wipReview?.groups ?? []} />}
         <RefreshButton />
       </Header>
 
       <div className={review.body}>
-        <aside
-          ref={list}
-          role="listbox"
-          aria-label="Commits"
-          className={styles.list}
-          onScroll={onScroll}
-          onKeyDown={(e) => {
-            if (e.altKey || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
-            e.preventDefault();
-            stepRow(e.key === 'ArrowDown' ? 1 : -1);
-          }}
-        >
-          {label && <div className={styles.listLabel}>{label}</div>}
-          {rows.map((r) => (
-            <ListRow
-              key={rowKey(r)}
-              row={r}
-              current={current}
-              base={base}
-              wipCount={entry?.uncommitted ?? 0}
-              wipAge={entry?.changedAt ?? null}
-              files={filesOpen ? files : []}
-              file={file?.path}
-              onPick={click}
-              onFile={(p) => {
-                setPath(p);
-                setLand('first');
-              }}
-            />
-          ))}
-          {data && !data.tip && <div className={styles.listEmpty}>{rev} not found</div>}
-          {data?.tip && commits.length === 0 && !wip && (
-            <div className={styles.listEmpty}>
-              {search ? (
-                <>
-                  <span>No commits match “{search}”</span>
-                  <button type="button" className={review.linkButton} onClick={() => setQuery('')}>
-                    Clear search
-                  </button>
-                </>
-              ) : (
-                'No commits'
-              )}
+        <div className={styles.listPane}>
+          <aside
+            ref={list}
+            role="listbox"
+            aria-label="Commits"
+            className={styles.list}
+            onScroll={onScroll}
+            onKeyDown={(e) => {
+              if (e.altKey || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+              e.preventDefault();
+              stepRow(e.key === 'ArrowDown' ? 1 : -1);
+            }}
+          >
+            {label && <div className={styles.listLabel}>{label}</div>}
+            {rows.map((r) => (
+              <ListRow
+                key={rowKey(r)}
+                row={r}
+                current={current}
+                base={base}
+                wipCount={entry?.uncommitted ?? 0}
+                wipAge={entry?.changedAt ?? null}
+                files={filesOpen ? files : []}
+                file={file?.path}
+                onPick={click}
+                onFile={(p) => {
+                  setPath(p);
+                  setLand('first');
+                }}
+              />
+            ))}
+            {data && !data.tip && <div className={styles.listEmpty}>{rev} not found</div>}
+            {data?.tip && commits.length === 0 && !wip && (
+              <div className={styles.listEmpty}>
+                {search ? (
+                  <>
+                    <span>No commits match “{search}”</span>
+                    <button type="button" className={review.linkButton} onClick={() => setQuery('')}>
+                      Clear search
+                    </button>
+                  </>
+                ) : (
+                  'No commits'
+                )}
+              </div>
+            )}
+          </aside>
+          {stashes.length > 0 && (
+            <div className={styles.stashPane}>
+              <StashSection
+                heading="Stashes of this branch"
+                stashes={stashes}
+                picked={stash?.sha}
+                changes={filesOpen ? stashChanges : undefined}
+                file={file?.path}
+                divider={false}
+                withRepo={false}
+                onPick={(sha) => click(stashRow(sha))}
+                onFile={(p) => {
+                  setPath(p);
+                  setLand('first');
+                }}
+              />
             </div>
           )}
-        </aside>
+        </div>
 
         <section className={review.main}>
           {error ? (
             <div className={review.empty}>{error.message}</div>
           ) : current === WIP ? (
             <WipHeader worktree={worktree} files={wipFiles} />
+          ) : stash ? (
+            <StashBar stash={stash} base={stashBase} />
           ) : commit ? (
             <CommitHeader commit={commit} changes={commitChanges} />
           ) : null}
-          {!error && file && (current === WIP || commitChanges) && (
+          {!error && file && (current === WIP || commitChanges || stashChanges) && (
             <>
               <div className={review.fileBar}>
                 <span className={review.filePath}>{file.path}</span>
                 <span className={review.muted}>
                   {current === WIP
                     ? 'HEAD ↔ working tree'
-                    : `${commitChanges?.parent?.slice(0, 7) ?? 'empty tree'} ↔ ${commit?.shortSha}`}
+                    : stash
+                      ? `${stashBase.slice(0, 7)} ↔ stash@{${stash.index}}`
+                      : `${commitChanges?.parent?.slice(0, 7) ?? 'empty tree'} ↔ ${commit?.shortSha}`}
                 </span>
                 {ignoreWs && (
                   <Pill tone="accent" title="Show whitespace changes (⌥W)" onClick={toggleWs}>
@@ -345,7 +409,7 @@ export function History({ repoId, rev, backLabel }: Props) {
               />
             </>
           )}
-          {!error && commitChanges && files.length === 0 && current !== WIP && (
+          {!error && (commitChanges || stashChanges) && files.length === 0 && current !== WIP && (
             <div className={review.empty}>No changes</div>
           )}
         </section>
