@@ -1,0 +1,61 @@
+.panel {
+  height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.titles {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sub {
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The terminal; xterm fills it. */
+.terminal {
+  flex-grow: 1;
+  min-height: 0;
+  padding: 14px 20px;
+  background: var(--bg-sunken);
+}
+
+.focused {
+  box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), 0.55);
+}
+
+.terminal :global(.xterm),
+.terminal :global(.xterm-viewport) {
+  background: var(--bg-sunken) !important;
+}
+
+.stop {
+  color: var(--danger-text);
+}

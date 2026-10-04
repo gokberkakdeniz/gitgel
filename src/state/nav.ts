@@ -39,3 +39,7 @@ export function openSettings(section?: SettingsSection) {
   const nav = useNav.getState();
   if (selectRoute(nav).name !== 'settings') nav.push({ name: 'settings' });
 }
+
+// Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a
+// change here reloads the page instead.
+import.meta.hot?.accept(() => window.location.reload());

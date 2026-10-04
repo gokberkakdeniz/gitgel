@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>N4 · Script output</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-hover:#2a2825;--border:#302e2a;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--accent-rgb:79,143,163;--success:#8fcf9c;--success-bg:rgba(93,184,114,0.14);--danger:#ee9a90;--danger-bg:rgba(198,69,69,0.16);--neutral-bg:#302e2a;--shadow:rgba(0,0,0,0.5);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-hover:#ebe8e1;--border:#e2ded6;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--accent-rgb:58,123,143;--success:#2e7a45;--success-bg:rgba(46,140,78,0.14);--danger:#b3463b;--danger-bg:rgba(200,72,60,0.16);--neutral-bg:#e2ded6;--shadow:rgba(40,32,20,0.18);--scrim:rgba(30,26,20,0.28)}
+@keyframes gg-blink{50%{opacity:0}}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Main" theme="{{themeName}}" popover="none" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div role="dialog" aria-labelledby="out-title" style="position: relative; margin-top: 110px; width: 760px; height: 520px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
+
+<div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px 14px 20px; border-bottom: 1px solid var(--border)">
+<span style="width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"></path><path d="M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"></path><path d="M7 15h10"></path></svg></span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<h2 id="out-title" style="margin: 0; font-size: 14px; font-weight: 600; color: var(--text-strong)">Run tests</h2>
+<span title="~/code/web-app-wt/session-token-refresh" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">web-app / session-token-refresh · ~/code/web-app-wt/session-token-refresh</span>
+</div>
+<dc-import name="Pill" theme="{{themeName}}" label="{{pill}}" tone="{{pillTone}}" mono="{{true}}" hint-size="96px,22px"></dc-import>
+<dc-import name="Button" theme="{{themeName}}" variant="ghost" size="28" icon="close" label="" aria-label="Close" hint-size="28px,28px"></dc-import>
+</div>
+
+<div role="log" aria-label="Output" tabindex="0" style="{{logStyle}}">
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="8">
+<div style="{{l.style}}">{{l.text}}<sc-if value="{{l.cursor}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="{{cursorStyle}}"></span></sc-if></div>
+</sc-for>
+</div>
+
+<dc-import name="ModalFooter" theme="{{themeName}}" note="" aside="{{asideHint}}" buttons="{{footerButtons}}" hint-size="100%,64px"></dc-import>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "state": {"editor": "enum", "options": ["running", "prompt", "success", "failed"], "default": "failed"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+renderVals() {
+var theme = this.props.theme ?? 'dark';
+var state = this.props.state ?? 'failed';
+var running = state === 'running' || state === 'prompt';
+var focused = state === 'prompt';
+var C = 'color: var(--text-code);', M = 'color: var(--text-muted);', F = 'color: var(--text-faint);', S = 'color: var(--success);', D = 'color: var(--danger);', A = 'color: var(--accent-text);';
+var head = [
+  ['$ pnpm install --frozen-lockfile', A],
+  ['Lockfile is up to date, resolution step is skipped', M],
+  ['Already up to date', M],
+  ['$ pnpm test --run', A],
+  ['', C],
+  [' RUN  v2.1.4 ~/code/web-app-wt/session-token-refresh', M],
+  ['', C],
+  [' ✓ src/auth/session.test.ts (12 tests) 84ms', S]
+];
+var prompt = [
+  ['$ pnpm install --frozen-lockfile', A],
+  ['? The modules directory at "node_modules" will be removed and reinstalled from scratch. Proceed? (Y/n) ', C, true]
+];
+var rest = {
+  running: [['', C, true]],
+  success: [
+    [' ✓ src/auth/refresh.test.ts (8 tests) 61ms', S],
+    [' ✓ src/api/client.test.ts (15 tests) 112ms', S],
+    ['', C],
+    [' Test Files  3 passed (3)', C],
+    ['      Tests  35 passed (35)', C],
+    ['   Duration  2.41s', F]
+  ],
+  failed: [
+    [' ✗ src/auth/refresh.test.ts (8 tests | 1 failed) 73ms', D],
+    ['   ✗ refreshes an expired token', D],
+    ['     AssertionError: expected 401 to be 200', D],
+    [' ✓ src/api/client.test.ts (15 tests) 112ms', S],
+    ['', C],
+    [' Test Files  1 failed | 2 passed (3)', C],
+    ['      Tests  1 failed | 34 passed (35)', C],
+    ['   Duration  2.38s', F]
+  ]
+}[state] || [];
+var pill = { running: 'running · 0:14', prompt: 'running · 0:03', success: 'exit 0 · 0:42', failed: 'exit 1 · 0:38' }[state];
+return {
+  themeClass: 'theme-' + theme,
+  themeName: theme,
+  lines: (state === 'prompt' ? prompt : head.concat(rest)).map(function (l) { return { text: l[0] || (l[2] ? '' : ' '), cursor: !!l[2], style: 'white-space: pre-wrap; word-break: break-word; min-height: 20px; ' + l[1] }; }),
+  logStyle: 'flex-grow: 1; min-height: 0; overflow: auto; padding: 14px 20px; background: var(--bg-sunken); font-family: \'JetBrains Mono\', monospace; font-size: 12px; line-height: 20px; color: var(--text-code); outline: none;' + (focused ? ' box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), 0.55);' : ''),
+  cursorStyle: 'display: inline-block; width: 7px; height: 14px; vertical-align: -2px; animation: gg-blink 1s step-end infinite; background: ' + (focused ? 'var(--text-strong)' : 'var(--text-muted)'),
+  asideHint: running ? (focused ? 'Type to answer · ⌃C stops' : 'Click the output to type') : '',
+  pill: pill,
+  pillTone: state === 'success' ? 'success' : state === 'failed' ? 'danger' : 'neutral',
+  footerButtons: [{ label: 'Copy output' }].concat(running ? [{ label: 'Stop' }] : [{ label: 'Run again', variant: 'primary' }]),
+  isRunning: running,
+  isDone: !running
+};
+}
+}
+</script>
+</body>
+</html>

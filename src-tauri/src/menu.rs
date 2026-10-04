@@ -36,13 +36,7 @@ pub fn install(app: &App) -> tauri::Result<()> {
     // The first submenu is the app menu; Check for Updates and Settings go after "About Gitgel".
     if let Some(app_menu) = menu.items()?.first().and_then(|k| k.as_submenu().cloned()) {
         app_menu.insert(
-            &MenuItem::with_id(
-                app,
-                CHECK_UPDATES,
-                "Check for Updates…",
-                true,
-                None::<&str>,
-            )?,
+            &MenuItem::with_id(app, CHECK_UPDATES, "Check for Updates…", true, None::<&str>)?,
             1,
         )?;
         app_menu.insert(&PredefinedMenuItem::separator(app)?, 2)?;

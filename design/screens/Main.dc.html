@@ -137,6 +137,11 @@ button,input{font-family:inherit}
 <dc-import name="Toast" theme="{{themeName}}" code="session-token-refresh" message="added to Session auth refresh" action-label="Undo" link-label="Open project →" link-href="Projects.dc.html" hint-size="520px,50px"></dc-import>
 </div>
 </sc-if>
+<sc-if value="{{showRunToast}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%)">
+<dc-import name="Toast" theme="{{themeName}}" status="{{scriptRun}}" code="" message="{{runMessage}}" sub="{{runSub}}" action-label="" link-label="" href="FlowN4.dc.html" hint-size="400px,52px"></dc-import>
+</div>
+</sc-if>
 <sc-if value="{{showSelBar}}" hint-placeholder-val="{{false}}">
 <div role="toolbar" aria-label="Selection" style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; background: var(--bg-hover); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); white-space: nowrap">
 <span style="font-size: 13px; color: var(--text-strong); font-weight: 500">3 branches selected</span>
@@ -179,7 +184,7 @@ Drop folders to add repositories
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;draft&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;rowMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;worktree&quot;,&quot;notCheckedOut&quot;,&quot;terminalMissing&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props='{"popover": {"editor": "enum", "options": ["none", "pick", "new"], "default": "pick"}, "added": {"editor": "boolean", "default": false}, "empty": {"editor": "boolean", "default": false}, "sheet": {"editor": "boolean", "default": false}, "draft": {"editor": "boolean", "default": false}, "select": {"editor": "boolean", "default": false}, "dropping": {"editor": "boolean", "default": false}, "repoHover": {"editor": "boolean", "default": false}, "projMenu": {"editor": "boolean", "default": false}, "rowMenu": {"editor": "enum", "options": ["none", "worktree", "notCheckedOut", "terminalMissing"], "default": "none"}, "scripts": {"editor": "boolean", "default": false}, "scriptRun": {"editor": "enum", "options": ["none", "running", "success", "failed"], "default": "none"}, "scope": {"editor": "enum", "options": ["all", "unassigned"], "default": "all"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
   renderVals() {
     var popover = this.props.popover ?? 'none';
@@ -203,6 +208,34 @@ class Component extends DCLogic {
     var selectMode = !!this.props.select;
     var projMenu = !!this.props.projMenu && popover === 'none' && !added && !selectMode;
     var rowMenu = popover === 'none' && !added && !selectMode && !projMenu ? (this.props.rowMenu ?? 'none') : 'none';
+    // Scripts (flow N): the user's own items after the open items, filtered by their Show when.
+    var scripts = !!this.props.scripts;
+    var scriptRun = rowMenu === 'none' ? (this.props.scriptRun || 'none') : 'none';
+    var noWt = rowMenu === 'notCheckedOut';
+    // Real app icons (from macOS), drawn grayscale; the Menu's app placeholders stand in for them.
+    var rowMenuItems = [{ label: 'Copy branch name', icon: 'copy', active: !scripts }, { kind: 'sep' }].concat(
+      // Items that cannot be used are left out: a terminal that is not installed is not listed.
+      [['Open in Finder', 'finder'], ['Open in Cursor', 'cursor'], ['Open in VS Code', 'vscode']].concat(rowMenu === 'terminalMissing' ? [] : [['Open in Terminal', 'terminal']]).map(function (o) {
+        return { label: o[0], app: o[1] };
+      }));
+    if (scripts) {
+      // Open pull request and Copy Linear link run in the repository folder; Run tests, Rebase and
+      // Start dev server need the worktree, so they are left out when it is not checked out.
+      // Start dev server also has Show when branch.repo == 'web-app' && branch.checkedOut.
+      rowMenuItems = rowMenuItems.concat(
+        [{ kind: 'sep' }, { kind: 'label', label: 'Scripts' },
+         { label: 'Open pull request', icon: 'pull-request', active: noWt }],
+        noWt ? [] : [{ label: 'Run tests', icon: 'test', active: true }, { label: 'Rebase on main…', icon: 'rebase' }],
+        [{ label: 'Copy Linear link', icon: 'link' }],
+        noWt ? [] : [{ label: 'Start dev server', icon: 'prompt' }]);
+    }
+    // One note closes the menu, after a divider: why some items are missing.
+    var menuNote = rowMenu === 'terminalMissing' ? 'iTerm2 is not installed; pick another terminal in Settings.'
+      : noWt ? 'Not checked out in a worktree, so some items may be unavailable.'
+      : '';
+    if (menuNote) rowMenuItems = rowMenuItems.concat([{ kind: 'sep' }, { kind: 'note', label: menuNote, tall: menuNote.length > 90 }]);
+    var menuHeight = 14;
+    rowMenuItems.forEach(function (it) { menuHeight += it.kind === 'sep' ? 9 : it.kind === 'label' ? 25 : it.kind === 'note' ? (it.tall ? 64 : 46) : 33; });
     var menuTarget = rowMenu === 'worktree' || rowMenu === 'terminalMissing' ? 'session-token-refresh' : rowMenu === 'notCheckedOut' ? 'feat/billing-v2' : null;
     var grid = 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; align-items: center; padding: 10px 26px 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body); ';
     var chip = 'justify-self: end; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 8px; font-family: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; ';
@@ -301,13 +334,14 @@ class Component extends DCLogic {
       showProjMenu: !empty && projMenu,
       showRowMenu: !empty && menuTarget !== null,
       // Not checked out: the items stay enabled and open the repository folder (the note says so).
-      rowMenuStyle: 'position: absolute; top: ' + (rowMenu === 'notCheckedOut' ? 364 : 214) + 'px; right: 26px',
-      // Real app icons (from macOS), drawn grayscale; the Menu's app placeholders stand in for them.
-      rowMenuItems: [{ label: 'Copy branch name', icon: 'copy', active: true }, { kind: 'sep' }].concat(
-        [['Open in Finder', 'finder'], ['Open in Cursor', 'cursor'], ['Open in VS Code', 'vscode'], [rowMenu === 'terminalMissing' ? 'Open in iTerm2' : 'Open in Terminal', 'terminal']].map(function (o, i) {
-          return { label: o[0], app: o[1], disabled: rowMenu === 'terminalMissing' && i === 3 };
-        }),
-        rowMenu === 'notCheckedOut' || rowMenu === 'terminalMissing' ? [{ kind: 'note', label: rowMenu === 'terminalMissing' ? 'iTerm2 is not installed; pick another terminal in Settings.' : 'Not checked out in a worktree, so this opens the repository folder.' }] : []),
+      // Kept inside the window like the app's Popover: below the ⋮, moved up when it would not fit.
+      rowMenuStyle: 'position: absolute; top: ' + Math.min(rowMenu === 'notCheckedOut' ? 364 : 214, 800 - menuHeight - 12) + 'px; right: 26px',
+      rowMenuItems: rowMenuItems,
+      scriptRun: scriptRun,
+      showRunToast: !empty && !added && scriptRun !== 'none',
+      runMessage: { running: 'Running “Run tests”…', success: '“Run tests” finished', failed: '“Run tests” failed · exit 1' }[scriptRun] || '',
+      // Running: repo / branch; ended: the last output line. Clicking the toast opens the output (N4).
+      runSub: { running: 'web-app / session-token-refresh', success: 'Tests  35 passed (35)', failed: 'Tests  1 failed | 34 passed (35)' }[scriptRun] || '',
       projMenuItems: [
         { kind: 'label', label: 'In 2 projects' },
         { label: 'Session auth refresh', dot: 'on', arrow: true, href: 'Projects.dc.html', active: true },

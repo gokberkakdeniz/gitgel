@@ -173,6 +173,10 @@ pub struct Config {
     pub branch_bases: BTreeMap<String, String>,
     pub projects: Vec<ProjectConfig>,
     pub settings: Settings,
+    /// The user's scripts, in menu order (SPEC §14).
+    pub scripts: Vec<ScriptConfig>,
+    /// `<scriptId>|<entryKey>` -> the input values last run with.
+    pub script_input_values: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 impl Default for Config {
@@ -183,8 +187,168 @@ impl Default for Config {
             branch_bases: BTreeMap::new(),
             projects: Vec::new(),
             settings: Settings::default(),
+            scripts: Vec::new(),
+            script_input_values: BTreeMap::new(),
         }
     }
+}
+
+// ---- Scripts (SPEC §14) ----
+
+/// A value asked for before a script runs; it reaches the script as `GITGEL_INPUT_<ID>`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct ScriptInput {
+    /// `A–Z`, `0–9`, `_`; unique in its script.
+    pub id: String,
+    pub label: String,
+    #[serde(rename = "type")]
+    pub kind: ScriptInputKind,
+    /// A checkbox's is `"1"` or empty.
+    pub default: String,
+    /// Select only.
+    pub options: Vec<String>,
+    pub required: bool,
+    /// CEL; empty shows it always.
+    pub when: String,
+}
+
+impl Default for ScriptInput {
+    fn default() -> Self {
+        ScriptInput {
+            id: String::new(),
+            label: String::new(),
+            kind: ScriptInputKind::Text,
+            default: String::new(),
+            options: Vec::new(),
+            required: false,
+            when: String::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ScriptInputKind {
+    #[default]
+    Text,
+    Textarea,
+    Checkbox,
+    Select,
+    Branch,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct ScriptConfig {
+    /// `s_` + 8 hex; empty for a new script and in an exported file.
+    pub id: String,
+    /// `{branch}`, `{base}` and `{repo}` are filled in on the menu.
+    pub name: String,
+    /// A name from the icon set (`src/components/icons.tsx`).
+    pub icon: String,
+    pub command: String,
+    pub inputs: Vec<ScriptInput>,
+    pub runs_in: ScriptFolder,
+    pub show_in: Vec<ScriptMenu>,
+    /// CEL; empty shows it always.
+    pub when: String,
+    /// "Open the output panel automatically": the panel opens as it starts.
+    pub open_output: bool,
+    /// "Ask before running": the run dialog opens even without inputs.
+    pub ask_first: bool,
+    /// Turned off in Settings › Scripts: kept, but in no menu.
+    pub disabled: bool,
+}
+
+impl Default for ScriptConfig {
+    fn default() -> Self {
+        ScriptConfig {
+            id: String::new(),
+            name: String::new(),
+            icon: "prompt".into(),
+            command: String::new(),
+            inputs: Vec::new(),
+            runs_in: ScriptFolder::Worktree,
+            show_in: vec![ScriptMenu::Branches, ScriptMenu::Project],
+            when: String::new(),
+            open_output: false,
+            ask_first: false,
+            disabled: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ScriptFolder {
+    /// The branch's worktree folder; disabled when it is not checked out.
+    #[default]
+    Worktree,
+    /// The repository folder.
+    Repo,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ScriptMenu {
+    /// The Branches row menu.
+    Branches,
+    /// The Project entry menu.
+    Project,
+}
+
+/// One run of a script (SPEC §14 "Running").
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScriptRun {
+    pub run_id: String,
+    pub script_id: String,
+    /// The filled-in name.
+    pub name: String,
+    pub icon: String,
+    pub entry_key: String,
+    /// `web-app / session-token-refresh`.
+    pub repo_label: String,
+    pub repo_id: String,
+    pub folder: String,
+    pub status: ScriptRunStatus,
+    pub exit_code: Option<i32>,
+    /// Set when a signal ended it, e.g. `SIGINT` after Stop.
+    pub signal: Option<String>,
+    /// Stop was asked for.
+    pub stopped: bool,
+    /// ISO 8601 UTC.
+    pub started_at: String,
+    pub ended_at: Option<String>,
+    /// The last non-empty output line.
+    pub last_line: String,
+    /// `get_script_run` only: the output so far (at most 2 MB, oldest dropped).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub buffered: Option<String>,
+    /// `get_script_run` only: bytes of output so far, dropped ones included; a `script-output`
+    /// chunk whose `end` is not past it is already in `buffered`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub buffered_end: Option<u64>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ScriptRunStatus {
+    Running,
+    Exited,
+    /// Could not start (the shell or the folder is missing).
+    Failed,
+}
+
+/// Payload of `script-output`.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScriptOutputChunk {
+    pub run_id: String,
+    pub data: String,
+    /// Bytes of output so far, this chunk included.
+    pub end: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

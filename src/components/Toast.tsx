@@ -20,6 +20,16 @@ export function ToastHost() {
   if (!toast) return null;
   return (
     <div role="status" className={styles.toast}>
+      {/* A script run's toast opens its output wherever it is clicked; its ✕ sits above this. */}
+      {toast.onClick && (
+        <button
+          type="button"
+          className={styles.hit}
+          aria-label="Show output"
+          title="Show output"
+          onClick={toast.onClick}
+        />
+      )}
       <span className={styles.main}>
         {toast.status === 'running' && <SpinnerIcon className={`${styles.status} ${styles.running}`} />}
         {toast.status === 'success' && <CheckIcon className={`${styles.status} ${styles.success}`} />}
@@ -55,6 +65,18 @@ export function ToastHost() {
           }}
         >
           {toast.linkLabel}
+        </button>
+      )}
+      {/* A script run's toast can be put away; the script keeps running. */}
+      {toast.status && (
+        <button
+          type="button"
+          className={styles.close}
+          aria-label="Dismiss"
+          title="Dismiss (the script keeps running)"
+          onClick={dismiss}
+        >
+          <CloseIcon size={12} />
         </button>
       )}
     </div>

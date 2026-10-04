@@ -1,0 +1,399 @@
+.body {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 24px 22px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  color: var(--text-strong);
+  font-weight: 500;
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* The icon button inside the Name field. */
+/* The name field's two controls sit 3px inside its edges (36px field, 28px controls). */
+.iconButton {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: -9px;
+  padding: 0 7px 0 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+/* "+ Variable" at the end of the name field. */
+.nameVar {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: -3px;
+  padding: 0 9px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.open {
+  background: var(--bg-pressed);
+  border-color: var(--border-strong);
+}
+
+.areaWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.area {
+  box-sizing: border-box;
+  resize: none;
+  padding: 10px 92px 10px 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  outline: none;
+  color: var(--text-code);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.area:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+.area::placeholder {
+  color: var(--text-faint);
+}
+
+.invalid,
+.invalid:focus {
+  border-color: var(--danger-text);
+  box-shadow: 0 0 0 2px rgba(var(--danger-rgb), 0.2);
+}
+
+/* Grows with its text (useAutoGrow); the handle at the bottom right makes it taller. */
+.grow {
+  resize: vertical;
+  overflow-y: auto;
+}
+
+.areaSmall {
+  padding: 8px 10px;
+  background: var(--bg-elevated);
+  line-height: 18px;
+}
+
+/* A small textarea with "+ Variable" in its corner. */
+.areaSmall.withCorner {
+  padding-right: 92px;
+}
+
+/* "+ Variable" in the corner of a textarea. */
+.corner {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.corner.open {
+  color: var(--text-strong);
+}
+
+.result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.bad {
+  color: var(--danger-text);
+}
+
+.ok {
+  flex-shrink: 0;
+  color: var(--success-text);
+}
+
+/* Inputs */
+.card {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pop);
+}
+
+.input {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+}
+
+.dragging {
+  background: var(--bg-elevated);
+}
+
+.inputRow {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 0 6px;
+}
+
+.inputToggle {
+  flex-grow: 1;
+  min-width: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--text-strong);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.12s;
+}
+
+.turned {
+  transform: rotate(90deg);
+}
+
+.typeChip {
+  width: 64px;
+  height: 20px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.inputLabel {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.envName {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+  padding: 4px 16px 16px 36px;
+}
+
+.small {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.span {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+}
+
+.full {
+  width: 100%;
+}
+
+.defaultCheck {
+  height: 32px;
+}
+
+.addRow {
+  display: flex;
+  padding: 12px 14px;
+}
+
+/* Runs in / Show in */
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--text-body);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dot {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+}
+
+.dotOn {
+  border: 5px solid var(--accent);
+}
+
+.radioText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.strong {
+  color: var(--text-strong);
+}
+
+/* Footer */
+.problem {
+  color: var(--danger-text);
+}
+
+/* Popovers */
+.iconPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.pickerLabel {
+  padding: 0 2px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.iconGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.iconOption {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.iconOption:hover {
+  background: var(--bg-hover);
+}
+
+.picked,
+.picked:hover {
+  background: rgba(var(--accent-rgb), 0.14);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.varName {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-text);
+}
+
+.nameVar.open {
+  color: var(--text-strong);
+}

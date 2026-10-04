@@ -62,3 +62,7 @@ export function selectRepoScans(s: Pick<DataState, 'config' | 'scan'>): RepoScan
   if (!s.config) return [];
   return s.config.repos.flatMap((r) => (s.scan[r.id] ? [s.scan[r.id]] : []));
 }
+
+// Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a
+// change here reloads the page instead.
+import.meta.hot?.accept(() => window.location.reload());

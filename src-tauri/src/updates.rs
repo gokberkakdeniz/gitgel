@@ -56,7 +56,10 @@ pub fn current(app: &AppHandle) -> Option<UpdateInfo> {
 
 /// Checks in the background when Settings allows it and the last check is old enough.
 pub fn check_if_due(app: &AppHandle) {
-    if !config::snapshot(&app.state::<AppState>()).settings.check_updates {
+    if !config::snapshot(&app.state::<AppState>())
+        .settings
+        .check_updates
+    {
         return;
     }
     {
@@ -182,7 +185,9 @@ pub async fn install(app: AppHandle) -> Result<(), AppError> {
     let update = {
         let mut inner = inner(&app);
         if inner.installing {
-            return Err(AppError::Forbidden("an update is already installing".into()));
+            return Err(AppError::Forbidden(
+                "an update is already installing".into(),
+            ));
         }
         let update = inner
             .update

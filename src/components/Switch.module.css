@@ -1,0 +1,55 @@
+.switch {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+/* The native input draws the track (appearance: none) and keeps focus and keyboard. */
+.input {
+  position: absolute;
+  inset: 0;
+  width: 28px;
+  height: 16px;
+  margin: 0;
+  box-sizing: border-box;
+  appearance: none;
+  background: var(--bg-track);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.input:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.input:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--text-faint);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  transition: left 120ms;
+}
+
+.input:checked + .knob {
+  left: 14px;
+  background: var(--on-accent);
+}

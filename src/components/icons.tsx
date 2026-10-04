@@ -550,6 +550,11 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
+/** A stored name (e.g. an imported script's icon) that is in the set. */
+export function isIconName(name: string): name is IconName {
+  return Object.prototype.hasOwnProperty.call(ICONS, name);
+}
+
 /** An icon by name, at its own size and stroke unless given. */
 export function Icon({ name, ...props }: IconProps & { name: IconName }) {
   const Glyph = ICONS[name];

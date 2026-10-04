@@ -1,5 +1,7 @@
 // Shared with the backend (src-tauri/src/model.rs). Keep field names in sync.
 
+import type { IconName } from '../components/icons';
+
 // ---- Config (stored on disk) ----
 
 export interface RepoConfig {
@@ -45,6 +47,67 @@ export interface Config {
   branchBases: Record<string, string>; // entryKey -> base ref name
   projects: ProjectConfig[];
   settings: Settings;
+  scripts: ScriptConfig[]; // the user's scripts, in menu order (SPEC §14)
+  scriptInputValues: Record<string, Record<string, string>>; // `${scriptId}|${entryKey}` -> last input values
+}
+
+// ---- Scripts (SPEC §14) ----
+
+export type ScriptInputType = 'text' | 'textarea' | 'checkbox' | 'select' | 'branch';
+export interface ScriptInput {
+  id: string; // A–Z, 0–9, _; env GITGEL_INPUT_<ID>
+  label: string;
+  type: ScriptInputType;
+  default: string; // checkbox: '1' or ''
+  options: string[]; // select only
+  required: boolean;
+  when: string; // CEL; '' = always shown
+}
+export type ScriptFolder = 'worktree' | 'repo';
+export type ScriptMenu = 'branches' | 'project';
+export interface ScriptConfig {
+  id: string; // "s_" + 8 hex; '' for a new script and in an exported file
+  name: string; // {branch}, {base}, {repo} are filled in on the menu
+  icon: IconName;
+  command: string;
+  inputs: ScriptInput[];
+  runsIn: ScriptFolder;
+  showIn: ScriptMenu[];
+  when: string; // CEL; '' = always shown
+  openOutput: boolean; // "Open the output panel automatically"
+  askFirst: boolean; // "Ask before running"
+  disabled: boolean; // turned off in Settings › Scripts: in no menu
+}
+/** One run of a script (scripts/run.rs). */
+export interface ScriptRun {
+  runId: string;
+  scriptId: string;
+  name: string; // filled-in name
+  icon: string;
+  entryKey: string;
+  repoLabel: string; // "web-app / session-token-refresh"
+  repoId: string;
+  folder: string;
+  status: 'running' | 'exited' | 'failed'; // failed: could not start
+  exitCode: number | null;
+  signal: string | null; // e.g. "SIGINT" after Stop
+  stopped: boolean; // Stop was asked for
+  startedAt: string;
+  endedAt: string | null;
+  lastLine: string;
+  buffered?: string; // getScriptRun only: the output so far (≤ 2 MB)
+  bufferedEnd?: number; // getScriptRun only: bytes so far; a chunk whose `end` is not past it is in `buffered`
+}
+/** Payload of `script-output`. */
+export interface ScriptOutputChunk {
+  runId: string;
+  data: string;
+  end: number; // bytes of output so far, this chunk included
+}
+/** What a menu knows about the branch besides the entry. */
+export interface RunContext {
+  base: string | null;
+  project: string | null;
 }
 export interface EntryRef {
   repoId: string;

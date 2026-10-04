@@ -6,7 +6,8 @@ import { openSettings } from '../state/nav';
 import { useUi } from '../state/ui';
 import * as ipc from './ipc';
 import { loadHome } from './paths';
-import type { Config, RepoUpdated, UpdateInfo } from './types';
+import { applyRunExited, applyRunOutput } from '../scripts/runs';
+import type { Config, RepoUpdated, ScriptOutputChunk, ScriptRun, UpdateInfo } from './types';
 
 let started: Promise<void> | null = null;
 
@@ -31,6 +32,9 @@ async function start() {
     }
   });
   await listen<RepoUpdated>('repo-updated', (e) => data.applyRepoUpdated(e.payload));
+  // A script ended (scripts/run.rs); its toast says how.
+  await listen<ScriptRun>('script-exited', (e) => applyRunExited(e.payload));
+  await listen<ScriptOutputChunk>('script-output', (e) => applyRunOutput(e.payload));
   // The backend checks for updates at launch and on focus (updates.rs).
   await listen<UpdateInfo | null>('update-available', (e) => data.setUpdate(e.payload));
   await listen<number | null>('update-progress', (e) => data.setUpdateProgress(e.payload ?? 'unknown'));

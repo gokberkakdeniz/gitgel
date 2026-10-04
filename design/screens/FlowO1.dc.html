@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>O1 · Inputs: Create pull request…</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--accent-rgb:79,143,163;--shadow:rgba(0,0,0,0.5);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--accent-rgb:58,123,143;--shadow:rgba(40,32,20,0.18);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Main" theme="{{themeName}}" popover="none" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div role="dialog" aria-labelledby="pr-title" style="position: relative; margin-top: 110px; width: 600px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
+
+<dc-import name="ModalHeader" theme="{{themeName}}" title="Create pull request…" sub="web-app / {{branch}} · ~/code/web-app-wt/{{branch}}" sub-mono="{{true}}" close="{{true}}" title-id="pr-title" hint-size="100%,72px"></dc-import>
+
+<div style="display: flex; flex-direction: column; gap: 16px; padding: 4px 24px 22px">
+
+<sc-if value="{{showIssue}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="color: var(--text-strong); font-weight: 500">Linear issue</span>
+<dc-import name="Input" theme="{{themeName}}" size="36" width="100%" value="ENG-412" label="Linear issue" left-icon="none" right-text="" clearable="{{false}}" hint-size="100%,36px"></dc-import>
+<span style="font-size: 12px; color: var(--text-muted)">Asked because the branch name has no issue key</span>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="color: var(--text-strong); font-weight: 500">Title</span>
+<dc-import name="Input" theme="{{themeName}}" size="36" width="100%" value="{{branch}}" label="Title" left-icon="none" right-text="" mono="{{false}}" clearable="{{false}}" state="focus" hint-size="100%,36px"></dc-import>
+</div>
+
+<div style="align-self: flex-start"><dc-import name="Checkbox" theme="{{themeName}}" checked="{{draft}}" label="Draft" on-toggle="{{toggleDraft}}" hint-size="70px,16px"></dc-import></div>
+
+<sc-if value="{{showReviewer}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="color: var(--text-strong); font-weight: 500">Reviewer</span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="260px" value="team/web" label="Reviewer" hint-size="260px,36px"></dc-import>
+</div>
+</sc-if>
+
+</div>
+
+<dc-import name="ModalFooter" theme="{{themeName}}" note="" buttons="{{footerButtons}}" hint-size="100%,64px"></dc-import>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "branch": {"editor": "enum", "options": ["session-token-refresh", "eng-412-token-refresh"], "default": "session-token-refresh"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { draft: true }; }
+renderVals() {
+var self = this;
+var theme = this.props.theme ?? 'dark';
+var branch = this.props.branch ?? 'session-token-refresh';
+var draft = this.state.draft;
+return {
+  themeClass: 'theme-' + theme,
+  themeName: theme,
+  branch: branch,
+  showIssue: !/^[a-z]+-[0-9]+/.test(branch),
+  draft: draft,
+  showReviewer: !draft,
+  toggleDraft: function () { self.setState({ draft: !self.state.draft }); },
+  footerButtons: [{ label: 'Cancel' }, { label: 'Run', variant: 'primary', kbd: '⌘↵' }]
+};
+}
+}
+</script>
+</body>
+</html>

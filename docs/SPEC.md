@@ -23,7 +23,9 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 
 - **Git only through git2 (libgit2).** The git CLI is never run; `std::process::Command` is
   banned in app code. The one exception is `src-tauri/src/apps.rs`, which starts
-  the terminal the user set in Settings (WezTerm, or an Other command); it never runs git. git2 is used only under `src-tauri/src/git/`; other modules use the
+  the terminal the user set in Settings (WezTerm, or an Other command); it never runs git. The
+  user's own scripts (§14) run in a pty (`portable-pty`, `src-tauri/src/scripts/run.rs`) when
+  they click one. git2 is used only under `src-tauri/src/git/`; other modules use the
   functions there and the types in §8.
 - **Read-only.** The app never calls a git2 API that writes to a repository: no checkout,
   set_head, commit, stash, reset, merge, cherry-pick, revert, branch/reference/tag
@@ -95,6 +97,9 @@ signed, not notarized, no sandbox.
   `origin/master`), the branch uses whichever of the two shares the most history with it — the
   **nearest default** (§10 "Nearest default"). The UI always names the ref
   actually used, e.g. `origin/master`.
+- **Script:** a shell command the user defines in Settings › Scripts and runs from a branch's
+  menu, with the branch as context (§14). It runs as the user's own process;
+  Gitgel itself still never writes to a repository.
 - **Active branch:** checked out in a worktree, or committed in the last N days (Settings,
   default 14) and ahead of its base (or with a base picked by hand, even when not ahead of it:
   otherwise picking a base at its own tip would hide it; user decision 2026-09-28).
@@ -107,7 +112,7 @@ signed, not notarized, no sandbox.
 **Screens:** Branches (including the first-run empty state), Project, Review, Add palette (⌘K),
 Settings.
 
-**Out of scope:** writing to repositories, review comments, GitHub/PR integration, fetch/pull,
+**Out of scope:** writing to repositories (a user's script may; Gitgel does not), review comments, GitHub/PR integration, fetch/pull,
 launching agents, multiple windows, LSP, the git CLI (even as a fallback), agent labels, a light
 theme, configurable refresh.
 
@@ -124,7 +129,8 @@ theme, configurable refresh.
 | Base | Stored per branch: `branchBases["<repoId>:<branch>"]`. |
 | Deleted branches | Entries keep `lastKnownTip` (SHA + when it was last seen), so a deleted branch can still show its last diff while the commit exists. |
 | Review | One screen for a whole project, files grouped per entry, one mode toggle. Single-branch review is the same screen with one group. |
-| Settings | Three sections in a list: General (theme, terminal, update checks), Repositories (repos, default base order, active threshold) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
+| Settings | Sections in a list: General (theme, terminal, update checks), Repositories (repos, default base order, active threshold), Scripts (the user's scripts) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
+| Scripts | User shell commands run from branch menus (§14): `$SHELL -l -c`, context in `GITGEL_*` env vars; every run in a pty (`portable-pty`) with a toast that opens its output panel (drawn with `@xterm/xterm`); Show when conditions in CEL, evaluated in the frontend. |
 | Config owner | Only Rust reads and writes the config. The frontend never writes files; every change is a Tauri command. |
 | Config path | `~/Library/Application Support/com.gitgel.desktop/config.json` (Tauri `app_data_dir()`). |
 | Logs | `tauri-plugin-log` → `~/Library/Logs/com.gitgel.desktop/Gitgel.log`, up to 3 × 2 MB. Git errors are logged with `log::warn!`. Debug level (watch rounds) only in dev builds. Every line ends with the process's memory footprint. |
@@ -155,11 +161,14 @@ gitgel/
 │  ├─ lib/      types.ts  ipc.ts  events.ts  useInvoke.ts  format.ts  paths.ts  entryKey.ts
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts
 │  ├─ state/    nav.ts  ui.ts  data.ts
-│  ├─ components/                 # Button, IconButton, Pill, Checkbox, Input, Kbd, Popover,
-│  │                              # Menu, Modal, Toast, Segmented, Select, SettingsNav,
+│  ├─ components/                 # Button, IconButton, Pill, Checkbox, Switch, Input, Kbd,
+│  │                              # Popover, Menu, Modal, Toast, Segmented, Select, SettingsNav,
 │  │                              # KindBadge, Banner, icons.tsx (Icon by name),
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
+│  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
+│  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
+│  │            # useReorder, describe.ts
 │  └─ monaco/   setup.ts  theme.ts  language.ts  DiffView.tsx  changeNav.ts
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
@@ -173,6 +182,7 @@ gitgel/
       ├─ nearest.rs               # nearest default: local vs remote default base
       ├─ memory.rs                # frees libgit2 memory after full scans
       ├─ updates.rs               # in-app updates: check, install, restart
+      ├─ scripts/   mod.rs  run.rs # the user's scripts: config, import/export; running, output, stop
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
       ├─ git/                     # the ONLY place git2 is used
@@ -353,6 +363,10 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
 - `Checkbox`: a drawn 16px box, radius 4: accent fill with an 11px check when on, 1.5px
   `border.strong` when off; optional `label` (13px `text.strong`), a 12px muted `sub` line, and
   `card` (a `bg.sunken` box, radius 12, padding 12px 14px).
+- `Switch`: turns a thing on or off at once, with no Save (a `Checkbox` picks
+  options in a form or rows to act on). A 28×16 track, radius 8, 12px knob: `accent` with the knob
+  right when on, `bg.track` with a 1px `border.strong` outline and the knob left when off. No
+  label of its own: an aria-label and a tooltip (`Switch.dc.html`, `SwitchSpec.dc.html`).
 - `Select`: `bg.elevated`, 1px border, radius 8, 32 or 36px, a 12px chevron 12px from the right;
   a native `<select>` (Settings › Terminal) with an optional 14px leading icon; focused: accent
   border + 2px ring. The listbox trigger with a faint placeholder (`Select.dc.html` without
@@ -361,12 +375,13 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   radius 8, `size` 28 / 30 (default) / 32 / 36; focused: accent border + 2px `rgba(accent,0.2)`
   ring; `invalid`: the same in danger. `leftIcon` / `rightIcon` slots (muted, 11px: a 13px search
   icon, a `⌘K` hint, a match count); either slot takes any icon of the set, and the hint text
-  becomes its own `rightText`; `mono` for branches, files, paths and commands;
+  becomes its own `rightText` (and a control before the text its `leftText`); `mono` for branches, files, paths and commands;
   `clearable` (filters): while it has text it keeps the accent border and ends with an 18px round
   ✕, and Esc clears it before anything else. In-place editors (page titles, the sidebar rename)
   are not `Input`s.
-- `Popover`: positioned under an anchor rect, kept inside the viewport, `bg.elevated`, radius 12,
-  popover shadow; outside click and Esc close it.
+- `Popover`: positioned under an anchor rect, kept inside the viewport (flips above; when it fits
+  on neither side it takes the roomier one and scrolls, since the webview cannot draw outside the
+  window), `bg.elevated`, radius 12, popover shadow; outside click and Esc close it.
 - `Menu`: padding 6, items 8px 10px, radius 8, active item `bg.hover`; `danger`, `hint`, `sub`
   lines and dividers; ↑/↓ move between the enabled items. Items may carry an icon on the left:
   a 16px slot, gap 10; line icons are 14px, stroke 1.8, `text.muted` (danger
@@ -380,6 +395,8 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   muted note (or a lead link button) on the left, buttons on the right, primary last.
 - `Toast`: bottom centre, `#2a2825` on `#383631` border, radius 12; one at a time. Optional
   status icon (spinner, success, failed), a mono part before the message and a mono sub line.
+  A toast with a status (a script run) ends with a 24px ✕ (12px icon, `text.muted`, `bg.pressed`
+  on hover) that dismisses it.
 - `Segmented`: padding 3, gap 2, `bg.elevated`, radius 10; buttons 26–28px, 12px/500; active
   `bg.pressed` + `text.strong`; a mono 11px count after the label. Also `bordered` (on
   `bg.elevated` surfaces), `xs` (22px mono buttons inside a menu) and radio semantics in forms.
@@ -502,7 +519,8 @@ Every active branch, whether or not it is in a project.
     `bg.elevated`). It opens a 260px menu, right-aligned under the button (right-clicking
     anywhere on the row opens it at the pointer): "Copy branch name"
     (hidden for a detached HEAD), then the open items as in the Project entry menu (with a divider
-    between the two groups); icons as there. ↑/↓/↵/Esc work.
+    between the two groups); icons as there; then the Scripts group (§14, flow N1–N2). ↑/↓/↵/Esc
+    work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
 - Repos sorted by their newest row, rows newest first (by the age shown).
 - While the first scan runs: muted "Scanning repositories…" (the list fills in repo by repo).
@@ -734,6 +752,8 @@ Layout:
   - "Point to another branch…": a branch picker (local branches of the entry's repo); repoints
     the entry and refreshes its last known tip.
   - "Copy branch name" (hidden for detached entries).
+  - After the open items, the Scripts group for scripts shown in the Project entry menu (§14);
+    there `branch.project` and `GITGEL_PROJECT` are the project's name (none in a draft).
   - **Open items**: divider, "Open in Finder" (the worktree folder, or the repository folder
     when the branch is not checked out), then "Open in <App>" for
     each installed editor, in this order: Cursor, VS Code, Windsurf, Zed, Sublime Text, then one
@@ -742,15 +762,18 @@ Layout:
     not listed. Each item's icon is the app's own macOS icon, 16px, drawn grayscale
     (`filter: grayscale(1)`), Finder's too; without one, a terminal line icon.
     A pick closes the menu; a failure is logged (`log::warn!`), nothing is shown.
-    - Always listed. A branch that is not checked out still opens its repository folder, with a
-      warning note closing the group: "Not checked out in a worktree, so this opens the
-      repository folder." Only a missing repo or a deleted branch has nothing to open: every
-      open item is then disabled (text `text.faint`, icon at 40%) and the note says "Repository
-      not found, so there is nothing to open." / "The branch was deleted, so there is nothing to
-      open." (a gone detached worktree counts as deleted). The note is 12px `warning.text`,
-      line-height 1.45, padding 6px 10px 4px, with a 14px circle-i icon. When only the chosen
-      terminal is not installed, its item alone is disabled and the note says "<Name> is not
-      installed; pick another terminal in Settings."
+    - Items that cannot be used are left out, not shown disabled. A branch that is not checked
+      out still opens its repository folder, and the menu's closing note says "Not checked out
+      in a worktree, so some items may be unavailable." (it covers the worktree scripts too,
+      §14). A missing repo or a deleted branch has nothing to open: no open items, and the note
+      says "Repository not found, so there is nothing to open." / "The branch was deleted, so
+      there is nothing to open." (a gone detached worktree counts as deleted). A chosen terminal
+      that is not installed is left out and the note says "<Name> is not installed; pick
+      another terminal in Settings." The note is 12px `warning.text`, line-height 1.45, padding
+      6px 10px 4px, with a 14px circle-i icon.
+    - One note at most per menu, at its very end after a divider (below Remove from project in
+      the Project entry menu), never inside a group. A group left empty takes its divider with
+      it (no divider at either end of a menu or twice in a row).
   - Divider, danger "Remove from project".
 - **Project menu** (230px; also on the sidebar's right-click): "Rename" (hint "F2"), divider,
   danger "Delete project…".
@@ -801,7 +824,8 @@ Layout:
   (padding 16px 10px, 1px `border.row` on its right) and the chosen section's pane (scrolls on
   its own; content max 760px, padding 28px 32px 40px, groups 28px apart). Sections: 34px rows
   (radius 8, 13px, 16px muted icon, gap 10): **General** (sliders), **Repositories** (folder icon,
-  repo count in mono 12 muted on the right), **Shortcuts** (keyboard). The chosen one:
+  repo count in mono 12 muted on the right), **Scripts** (prompt icon, script count; §14),
+  **Shortcuts** (keyboard). The chosen one:
   `bg.sidebarActive`, `text.strong` 500, `aria-current="page"`; others hover `bg.sunken`.
   Settings opens on the section shown last (General at first; kept for the session).
   The sidebar's "N repositories" row and every "path not found" link open Repositories; the
@@ -854,6 +878,7 @@ Layout:
     Saved at once (`settings.terminal`, `settings.terminalCommand`).
   - "Check for updates" ("At launch and every 6 hours; a new version shows in the sidebar"): a
     checkbox, on by default (`settings.checkUpdates`). Off hides a found update; on checks at once.
+- **Scripts:** see §14 "Settings › Scripts".
 - **Shortcuts:** serif 18px heading "Keyboard shortcuts" + muted "Not editable yet"; four cards
   (`bg.sunken`, radius 12, padding 6px 0) in a `repeat(2, minmax(max-content, 1fr))` grid, gap 12
   (a narrow window scrolls instead of squeezing): **General**, **Branches and projects**,
@@ -930,6 +955,14 @@ open.
 - **I · Which projects a branch is in.** The Projects column counts them; clicking the count
   lists them and offers "+ Add to another project…". The "Not in a project" filter shows only
   branches in no project.
+- **N · Scripts**. Settings › Scripts lists the user's scripts (N5); "+ New
+  script" or ✎ opens the editor (N6); Import… previews a file first (N7). A branch's menu (Branches
+  row or Project entry) lists the scripts whose Show when matches (N1); worktree scripts are
+  left out when the branch is not checked out (N2). Running shows a toast (N3) and, for output
+  clicking the toast opens the output panel (N4); "Open the output panel automatically" opens it
+  as the script starts. When a script exits its repo is rescanned.
+- **O · Script inputs.** A script with inputs opens the run dialog first (O1, O2); one with
+  "Ask before running" and nothing to fill in asks in a short confirmation (O3); ⌘↵ runs it.
 - **J · Open elsewhere.** The ⋯ menu of an entry (Project) or
   row (Branches) opens its worktree folder in Finder or in an installed editor or terminal; a
   branch that is not checked out opens the repository folder instead, with a note saying so.
@@ -962,6 +995,7 @@ own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free).
 | | Changes only / Whole file | ⌥C | |
 | Lists and dialogs | Move | ↑ / ↓ | |
 | | Mark row | Space | Add palette |
+| | Run script | ⌘↵ | script run dialog |
 | | Confirm | ↵ | |
 | | Cancel | Esc | |
 
@@ -1036,6 +1070,9 @@ export interface Config {
   branchBases: Record<string, string>;   // entryKey -> base ref name
   projects: ProjectConfig[];
   settings: Settings;
+  scripts: ScriptConfig[];               // §14, menu order
+  scriptInputValues: Record<string, Record<string, string>>; // `${scriptId}|${entryKey}` -> last
+                                         // input values 
 }
 export interface EntryRef { repoId: string; branch: string | null; worktreePath: string | null }
 ```
@@ -1210,6 +1247,7 @@ pub enum AppError {
     #[error("not found: {0}")] NotFound(String),
     #[error("forbidden: {0}")] Forbidden(String),
     #[error("io: {0}")] Io(String),
+    #[error("invalid: {0}")] Invalid(String), // input the user can fix (a script without a name)
 }
 ```
 
@@ -1269,6 +1307,17 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
 | `get_terminal_options` | – | `TerminalOption[]` (Terminal/iTerm2/WezTerm with install state) |
 | `open_folder` | `path, app: string` | `null` (`app`: an `OpenApp` id) |
+| `save_script` | `script: ScriptConfig` | `Config` (a new id when `id` is empty; an unknown id is added back) |
+| `delete_script` | `scriptId` | `Config` |
+| `reorder_scripts` | `ids: string[]` | `Config` |
+| `export_scripts` | `path` | `null` |
+| `read_scripts_file` | `path` | `ScriptConfig[]` (ids empty) |
+| `import_scripts` | `scripts: ScriptConfig[], replace: string[]` | `Config` |
+| `run_script` | `script: ScriptConfig, entry: EntryRef, inputs: Record<string,string>, context: { base, project }` | `ScriptRun` (a running one for the same script and entry is returned instead of a second start) |
+| `write_script_input` | `runId, data: string` | `null` |
+| `stop_script` | `runId` | `null` |
+| `get_script_run` | `runId` | `ScriptRun` with its buffered output and `bufferedEnd` |
+| `resize_script` | `runId, cols, rows` | `null` (the run's pty) |
 
 Notes:
 
@@ -1317,6 +1366,8 @@ Notes:
 | `config-changed` | `Config` | every `config::update` (user actions, `lastKnownTip` refresh, font size) |
 | `repo-updated` | `RepoUpdated` | after the watcher handles a change, and after a command or scan rescans a repo whose result changed |
 | `open-settings` | – | Gitgel › Settings… (⌘,) |
+| `script-output` | `{ runId, data, end }` | output from a running script (`end`: bytes so far) |
+| `script-exited` | `ScriptRun` | a script ended (exit code or signal) or could not start |
 
 ---
 
@@ -1517,6 +1568,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–101, open-item entry menu 102–116 (`openMenu`: worktree / notCheckedOut / repoMissing, 147–152; items 184–195; note and position 211–215), project menu 117–123, delete modal 126–137, rename 180–202, pills 153–162 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30–38 (data 262–274), Repositories 43–100 (repo card 44–62, Default base list 64–92 with rows, actions and add states 276–301, Active threshold 94–99), General 102–153 (Theme 104–122, tile builder 238–261; Terminal 124–146, options with disabled flag 304–308; Check for updates 147–152), Shortcuts 155–179, shortcut data and keycap style 189–237. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
+| Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -1609,3 +1661,225 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
 - **Renamed branch detection:** the reflog's "Branch: renamed …" entry (`repo.reflog(...)`), or
   local branches whose tip equals an entry's `lastKnownTip`.
 - **Intel builds:** the release and cask are arm64 only.
+
+---
+
+## 14. Scripts
+
+The user's own items in the branch menus: each runs a shell command for that branch. Canvas flow
+N (N1–N7) and O (O1–O3); boards `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`.
+
+### Decisions
+
+- A script is a **shell command** (bash/zsh, or any file with a shebang), not a JS API: the jobs
+  people want are shell jobs (`gh pr create`, `pnpm test`, `git rebase`), and the context goes in
+  environment variables. Gitgel stays read-only: git2 still writes nothing; a script is the user's
+  own process, started only by a click.
+- One branch at a time: no script in the selection bar, no per-script shortcuts (user decisions
+  2026-10-04).
+- When a script exits, the repo it ran in is rescanned (as after `set_branch_base`), which also
+  catches what the watcher ignores (`.git/config`, `info/exclude`, dropped FSEvents) (user
+  decision 2026-10-04).
+
+### Definition
+
+```ts
+export interface ScriptInput {
+  id: string;            // A–Z, 0–9, _; unique in the script; env GITGEL_INPUT_<ID>
+  label: string;
+  type: 'text' | 'textarea' | 'checkbox' | 'select' | 'branch';
+  default: string;       // checkbox: '1' or ''
+  options: string[];     // select only
+  required: boolean;
+  when: string;          // CEL; '' = always shown
+}
+export interface ScriptConfig {
+  id: string;            // "s_" + 8 hex
+  name: string;          // {branch}, {base}, {repo} are filled in on the menu
+  icon: IconName;        // the Icon set (Icons page, src/components/icons.tsx)
+  command: string;
+  inputs: ScriptInput[];
+  runsIn: 'worktree' | 'repo';         // the branch's worktree folder, or the repository folder
+  showIn: ('branches' | 'project')[];  // Branches row menu, Project entry menu
+  when: string;          // CEL; '' = always shown
+  openOutput: boolean;   // "Open the output panel automatically"
+  askFirst: boolean;     // "Ask before running"
+  disabled: boolean;     // turned off in Settings › Scripts: in no menu
+}
+export interface ScriptRun {
+  runId: string;
+  scriptId: string;
+  name: string;          // filled-in name
+  icon: string;
+  entryKey: string;
+  repoLabel: string;     // "web-app / session-token-refresh"
+  repoId: string;
+  folder: string;
+  status: 'running' | 'exited' | 'failed';  // failed: could not start (lastLine says why)
+  exitCode: number | null;                  // null when a signal ended it
+  signal: string | null;                    // e.g. "SIGINT"
+  stopped: boolean;                         // Stop was asked for
+  startedAt: string; endedAt: string | null;
+  lastLine: string;      // last non-empty output line, terminal escapes removed
+  buffered?: string;     // get_script_run only: the output so far (at most 2 MB, oldest dropped)
+}
+```
+
+### Show when (CEL)
+
+- `when` is a CEL expression the user writes; empty shows the script always. Fields:
+  `branch.name`, `branch.repo` (repo name), `branch.base`, `branch.checkedOut`, `branch.detached`,
+  `branch.uncommitted` (int), `branch.ahead`, `branch.behind`, `branch.merged`, `branch.project`
+  (Project entry menu only; test with `has(branch.project)`), `branch.menu`
+  (`'branches' | 'project'`); an input's `when` also sees the inputs before it as
+  `inputs.<id in lower case>` (a checkbox as a bool, the others as strings).
+- Evaluated in the frontend (`src/scripts/when.ts`, `@marcbachmann/cel-js`) from the entry
+  summary, when the menu opens; no process starts. Conditions are type-checked; one that does not
+  give a bool is an error ("Must be true or false, not int").
+- A `when` that is false or fails hides the script. An unknown field is an error in the editor
+  ("No such field: branch.checkedOt (did you mean checkedOut?)"), and the script cannot be saved.
+
+### In the branch menus (N1–N3)
+
+- After the open items: divider, section label "Scripts", then each script that is not turned
+  off, whose `showIn` has this menu and whose `when` matches, in the Settings order, with its icon
+  and filled-in name. No group (and no "Scripts" label) when none is left.
+- Scripts that cannot run are left out, not shown disabled: every script when the repo is
+  missing, and `runsIn: 'worktree'` scripts when the branch is not checked out; the menu's closing
+  note (§6 open items) covers them: "Not checked out in a worktree, so some items may be
+  unavailable."
+- A pick: inputs or `askFirst` → the run dialog (O); otherwise it runs at once. With `openOutput`
+  its output panel opens as it starts. A script already running for that entry is not started
+  twice: its output panel opens instead.
+- Every run shows a toast. While running: spinner, "Running “<name>”…", mono `repo / branch` sub
+  line; it stays until the run ends. Then ✓ "“<name>” finished" or ✕ "“<name>” failed · exit
+  <code>" (or "· stopped") with the last output line as the sub line (`repo / branch` when there
+  is none). Clicking the toast opens the run's output panel. While that panel is open the run has
+  no toast (the panel's pill says the same); closing the panel while it still runs brings the
+  running toast back, closing it after the end shows none. One toast at a time: a newer one
+  replaces it. Its ✕ dismisses the toast only; the script keeps running.
+- Quitting (⌘Q or closing the window) with scripts running asks first in a native dialog:
+  "2 scripts are running. Quit anyway?" (Quit / Cancel); Quit stops them.
+
+### Running (`scripts.rs`)
+
+- `$SHELL -l -c <command>` (`/bin/zsh` without `$SHELL`) in the worktree folder or the repository
+  folder. Environment: `GITGEL_BRANCH` (empty when detached), `GITGEL_BASE` (the base in use),
+  `GITGEL_WORKTREE` (empty when not checked out), `GITGEL_REPO` (repository folder),
+  `GITGEL_REPO_NAME`, `GITGEL_PROJECT` (Project entry menu only), `GITGEL_HEAD` (tip SHA),
+  `GITGEL_INPUT_<ID>` for each shown input (hidden inputs are not set). Values are never pasted
+  into the command, so they cannot inject shell.
+- Every script runs in a pty (`portable-pty`, `TERM=xterm-256color`), so tools see a terminal:
+  colours, progress bars and prompts work. A script that asks a question waits for an answer in
+  its output panel (the toast stays on running; a click opens it). Output streams as `script-output`; the backend keeps
+  the last 2 MB per run, so a reopened panel shows it all. Finished runs are kept until the app
+  quits (at most 20; the oldest go first).
+- Stop: SIGINT to the process group, SIGKILL after 3 s if it is still running. A script is the
+  session leader in its pty.
+- The worktree is found from the repository's worktree list (git2), never taken from the
+  frontend; a worktree script on a branch that is not checked out is refused (`invalid`).
+- On exit: `script-exited`, then the repo is rescanned (`repo-updated` if the result changed).
+- Logged: start, exit code and duration per run (`log::info!`), never the output or the inputs.
+
+### Output panel (N4)
+
+- A 760 × 520 modal: header with a 28px icon tile, the name (14px 600) and a mono sub line
+  `repo / branch · folder` (one line, ellipsis; the folder as tooltip), a mono pill (running:
+  `running · m:ss`, neutral; exited: `exit N · m:ss`, success for 0, danger otherwise), ✕. Body:
+  the terminal (`@xterm/xterm`, pinned; JetBrains Mono 12px, 20px lines, colours from the theme
+  tokens, `bg.sunken`). Footer (`ModalFooter`): while running "Click the output to type"
+  (focused: "Type to answer · ⌃C stops"), Copy output, Stop; when done Copy output and primary
+  "Run again" (same inputs).
+- Clicking the output focuses it; typed keys go to the script (`write_script_input`); ⌃C goes
+  through the pty (SIGINT). Closing the panel does not stop the script. The pty takes the
+  terminal's size (`resize_script`). The panel reads the output so far (`get_script_run`), then
+  appends `script-output` chunks whose `end` is past `bufferedEnd`, so nothing shows twice.
+
+### Run dialog: inputs and Ask before running (O1, O2)
+
+- A 600px modal: `ModalHeader` with the filled-in name and a mono sub line
+  `repo / branch · <folder it runs in>`, ✕. One field per
+  shown input, in order: text (36px `Input`), textarea, checkbox (`Checkbox` with the label),
+  select (≤ 4 options: bordered radio `Segmented`; more: `Select`), branch (a `Select` with a
+  branch icon listing the repo's local branches; mono; placeholder "Pick a branch"; read from
+  disk with git2 when the dialog opens, through `get_base_options` as the "Point to another
+  branch…" picker does; no fetch, so a branch only on the remote is not listed). The command is
+  not shown (the user saw it when writing the script). Footer: a note only when Run is disabled
+  ("Pick a branch to run"), then Cancel and primary "Run ⌘↵".
+- "Ask before running" with no shown input (O3): a 460px confirmation laid out like Delete
+  project: serif 22px `Run “<name>”?`, a `bg.sunken` card (radius 10, padding 12px 14px, mono
+  12px) with a branch-icon row `repo / branch` and a folder-icon row with the folder it runs in
+  (ellipsis; full path as tooltip), then Cancel and primary "Run ⌘↵" (focused).
+- Each input's `when` is evaluated again on every change; a hidden input is not validated and not
+  set. A `when` that fails keeps the field shown with the error under it. Required inputs must be
+  filled for Run.
+- Last values are remembered per script and entry (`scriptInputValues`), saved on Run. ⌘↵ runs,
+  Esc cancels. With no shown input and `askFirst` off, no dialog opens.
+
+### Settings › Scripts (N5)
+
+- Serif 18px "Scripts" and 12px muted "Your own items in the branch menus. Each runs a shell
+  command for that branch. Drag to reorder; switch one off to take it out of the menus." On the right: Import…,
+  Export…, primary "+ New script".
+- A card (`bg.sunken`, radius 12) of 48px rows: drag handle, 28px icon tile, name (500), an
+  on/off `Switch` (tooltip "On: shown in its menus. Switch off to hide it" /
+  "Off: in no menu. Switch on to show it"), ✎ edit (opens N6), ✕ remove (at once, with an Undo
+  toast).
+  Dragging a row reorders (`reorder_scripts`). Empty: one muted row "No scripts yet".
+- Switching off turns the script off at once (saved, no toast): it leaves every menu but keeps its
+  place, command, inputs and remembered values. An off row dims its icon tile (0.45), shows the
+  name in `text.muted` and a small neutral "off" `Pill` after it; switching on brings it back. The
+  section's count in the list counts all scripts.
+- Under the card, 12px muted: "Scripts run as you, with your permissions. Gitgel itself still only
+  reads the repositories."
+
+### Editor (N6)
+
+- 600px modal, `ModalHeader` "New script" / "Edit script" with ✕; the body scrolls when the
+  window is short. Fields, top to bottom:
+  - **Name** (36px `Input`) with an icon button inside on the left that opens a 6-column grid of
+    18 icons from the set (play, prompt, test, pull-request, rebase, link, upload, download,
+    refresh, undo, code, package, rocket, bug, search, copy, folder, bolt; picked: accent
+    outline), and a "+ Variable" menu on the right inserting `{branch}`, `{base}` or `{repo}` at
+    the cursor. Hint: "{branch}, {base} and {repo} in the name are filled in on the menu."
+  - **Command** (mono textarea, "Runs in your login shell"; grows with the command up to 360px,
+    then scrolls; its corner handle drags it taller, and it never shrinks below that),
+    "+ Variable" menu inserting `$GITGEL_…` names (with a short note each, inputs included) at the
+    cursor.
+  - **Inputs** (card): rows with drag handle, chevron, type chip, label, `$GITGEL_INPUT_<ID>`,
+    a "when" pill if set, ✕. Expanded: Label, ID (upper-cased as typed), Type (`Select`), Default
+    (a checkbox input: a "Checked" checkbox), Options (select:
+    one per line, "4 or fewer show as buttons"), Show when (a mono textarea like Options, "Can use
+    branch and the inputs above", with its live result and a "+ Variable" menu of the branch
+    fields and the inputs above it as `inputs.<id>` with their types), Required. "+ Add input".
+  - **Runs in** (radio: Worktree folder "Hidden when the branch is not checked out" /
+    Repository folder "Always available") and **Show in** (checkboxes: Branches row menu,
+    Project entry menu) side by side.
+  - **Show when** (mono textarea, "+ Variable" listing the fields with their types), with the
+    live result under it: ✓ "Shows for N of M branches: <names>" / ✕ the error (danger; the
+    field turns invalid) / "Always shown".
+  - **Open the output panel automatically** (`Checkbox` card): "Every run shows a toast; click it
+    for the output, to answer prompts or to stop the script. Turn this on to open the output as
+    soon as it starts (long jobs, scripts that ask questions)."
+  - **Ask before running** (`Checkbox` card): "Opens the run dialog first, even without inputs,
+    so nothing runs on one click. Turn it on for scripts that change the branch (rebase, push,
+    reset)."
+  - Footer: Cancel, primary "Save script". Save needs a name, a command, at least one
+    menu under Show in, unique valid input ids and no `when` error; the footer note says what is
+    missing.
+
+### Import and export (N7)
+
+- Export…: native save panel, one file `gitgel-scripts.json`: `{"version": 1, "scripts": [...]}`
+  (no ids, no paths of this machine). An off script is exported with `"disabled": true` and
+  imported off.
+- Import…: native open panel, then the preview modal: `ModalHeader` "Import scripts" with the
+  mono file path and count; a card with one row per script: `Checkbox`, icon tile, name with a
+  "new" (accent) or "same name exists" (warning) `Pill`, the full command in mono, a 12px meta
+  line (runs in · menus, then "Opens the output" when `openOutput`); a conflicting row has Replace / Keep both / Skip (bordered
+  radio `Segmented`). A warning note: "Scripts run as you, with your permissions. Read each
+  command before importing. Imported scripts ask before running; you can turn that off per
+  script." Footer: "N of M selected", Cancel, primary "Import N scripts". Imported scripts get
+  `askFirst: true`; "Keep both" adds " (2)" to the name.
+- Teams share a file by keeping it in the repo; everyone imports it. There is no "trust this
+  repo" flow.

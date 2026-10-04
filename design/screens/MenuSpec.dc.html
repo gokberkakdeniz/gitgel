@@ -60,16 +60,15 @@ class Component extends DCLogic {
       branch: [
         { label: 'Copy branch name', icon: 'copy' }, { kind: 'sep' },
         { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
-        { kind: 'note', label: 'Not checked out in a worktree, so this opens the repository folder.' },
         { kind: 'sep' }, { kind: 'label', label: 'Scripts' },
-        { label: 'Open pull request', icon: 'pull-request' }, { label: 'Run tests', icon: 'test', active: true, disabled: false }, { label: 'Rebase on main…', icon: 'rebase', disabled: true }
+        { label: 'Open pull request', icon: 'pull-request', active: true }, { label: 'Copy Linear link', icon: 'link' },
+        { kind: 'sep' }, { kind: 'note', label: 'Not checked out in a worktree, so some items may be unavailable.' }
       ],
       entry: [
         { label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true },
         { label: 'Point to another branch…', icon: 'branch' }, { label: 'Copy branch name', icon: 'copy' }, { kind: 'sep' },
-        { label: 'Open in Finder', app: 'finder', disabled: true }, { label: 'Open in Cursor', app: 'cursor', disabled: true },
-        { kind: 'note', label: 'The branch was deleted, so there is nothing to open.' },
-        { kind: 'sep' }, { label: 'Remove from project', icon: 'remove', danger: true }
+        { kind: 'sep' }, { label: 'Remove from project', icon: 'remove', danger: true },
+        { kind: 'sep' }, { kind: 'note', label: 'The branch was deleted, so there is nothing to open.' }
       ],
       projects: [
         { kind: 'label', label: 'In 2 projects' },

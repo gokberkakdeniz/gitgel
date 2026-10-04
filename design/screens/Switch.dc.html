@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Switch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<button type="button" role="switch" class="{{themeClass}}" aria-checked="{{checked}}" aria-label="{{ariaLabel}}" title="{{title}}" disabled="{{disabled}}" onClick="{{toggle}}" style="{{trackStyle}}">
+<span style="{{knobStyle}}"></span>
+</button>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"checked":{"editor":"boolean","default":true},"disabled":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"ariaLabel":{"editor":null},"title":{"editor":null},"onToggle":{"editor":null},"$preview":{"width":28,"height":16}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The app's Switch (src/components/Switch.tsx): turns a thing on or off at once (Settings ›
+    // Scripts rows). A 28×16 track, radius 8: accent with the knob on the right when on,
+    // bg.track with a border.strong outline and the knob on the left when off. 12px knob. Give
+    // ariaLabel; title is the tooltip.
+    var p = this.props;
+    var on = !!p.checked;
+    var toggle = p.onToggle;
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      checked: on,
+      ariaLabel: p.ariaLabel,
+      title: p.title,
+      disabled: !!p.disabled,
+      toggle: toggle ? function (e) { toggle(e); } : undefined,
+      trackStyle: 'position: relative; width: 28px; height: 16px; flex-shrink: 0; box-sizing: border-box; padding: 0; border-radius: 8px; cursor: pointer; transition: background 120ms; ' +
+        (on ? 'background: var(--accent); border: 0; ' : 'background: var(--bg-track); border: 1px solid var(--border-strong); ') +
+        (p.disabled ? 'opacity: 0.55; cursor: default; ' : ''),
+      knobStyle: 'position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 6px; transform: translateY(-50%); transition: left 120ms; box-shadow: 0 1px 2px rgba(0,0,0,0.25); ' +
+        (on ? 'left: 14px; background: var(--on-accent);' : 'left: 1px; background: var(--text-faint);')
+    };
+  }
+}
+</script>
+</body>
+</html>

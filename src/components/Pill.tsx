@@ -12,7 +12,8 @@ interface Props extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> {
 }
 
 export function Pill({ tone, size = 'md', mono, onClick, className, ...rest }: Props) {
-  const cls = [styles.pill, styles[tone], size === 'sm' && styles.sm, mono && styles.mono, onClick && styles.button, className]
+  const cls = [styles.pill, styles[tone], size === 'sm' && styles.sm, mono && styles.mono, onClick && styles.button]
+    .concat(className)
     .filter(Boolean)
     .join(' ');
   if (onClick) return <button type="button" className={cls} onClick={onClick} {...rest} />;

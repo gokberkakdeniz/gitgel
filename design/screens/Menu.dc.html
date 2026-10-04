@@ -49,7 +49,7 @@ class Component extends DCLogic {
     //   { label, icon? | app? | check? | box? | dot?, sub?, desc?, hint?, kbd?, arrow?, active?,
     //     disabled?, danger?, accent?, href?, onSelect?, role? }   an item (active = hovered)
     //   { kind: 'sep' } · { kind: 'label', label } (section heading) · { kind: 'note', label }
-    //   (warning closing a group) · { kind: 'caption', label } · { kind: 'segmented', label,
+    //   (the warning closing the menu, after a sep) · { kind: 'caption', label } · { kind: 'segmented', label,
     //   options, disabled? } (a choice under the item above, e.g. Lines around changes).
     // Each item is a MenuItem (its own artboard): icon (a name of the Icon set), app (finder,
     // cursor, vscode, terminal), check (radio slot, true / false), box (checkbox), dot ('on' / 'off');
@@ -58,11 +58,18 @@ class Component extends DCLogic {
     var sample = [
       { label: 'Copy branch name', icon: 'copy', active: true }, { kind: 'sep' },
       { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
-      { kind: 'note', label: 'Not checked out in a worktree, so this opens the repository folder.' },
-      { kind: 'sep' }, { label: 'Remove from project', icon: 'remove', danger: true }
+      { kind: 'sep' }, { label: 'Remove from project', icon: 'remove', danger: true },
+      { kind: 'sep' }, { kind: 'note', label: 'Not checked out in a worktree, so some items may be unavailable.' }
     ];
     var font = 'font-family: \'Instrument Sans\', -apple-system, sans-serif; ';
-    var rows = (p.items || sample).map(function (it) {
+    // Like the app: a group left empty takes its divider with it (none at either end or twice in a row).
+    var list = (p.items || sample).filter(function (it, i, all) {
+      if (it.kind !== 'sep') return true;
+      var prev = all.slice(0, i).filter(function (x) { return x.kind !== 'sep'; }).length;
+      var next = all[i + 1];
+      return prev > 0 && next && next.kind !== 'sep';
+    });
+    var rows = list.map(function (it) {
       var k = it.kind || 'item';
       if (k !== 'item') {
         return {

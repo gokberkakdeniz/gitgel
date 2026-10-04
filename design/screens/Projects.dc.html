@@ -147,9 +147,10 @@ class Component extends DCLogic {
     var projectMenu = !!this.props.projectMenu;
     var ring = conflict ? '#ee9a90' : '#4f8fa3';
     // Real app icons (from macOS), drawn grayscale; the Menu's app placeholders stand in for them.
+    // Nothing to open (missing repo, deleted branch): the open items are left out.
     var apps = function (off) {
-      return [['Open in Finder', 'finder'], ['Open in Cursor', 'cursor'], ['Open in VS Code', 'vscode'], ['Open in Terminal', 'terminal']].map(function (a, i) {
-        return { label: a[0], app: a[1], disabled: off, active: i === 0 && !off };
+      return off ? [] : [['Open in Finder', 'finder'], ['Open in Cursor', 'cursor'], ['Open in VS Code', 'vscode'], ['Open in Terminal', 'terminal']].map(function (a, i) {
+        return { label: a[0], app: a[1], active: i === 0 };
       });
     };
     var sep = { kind: 'sep' };
@@ -178,10 +179,11 @@ class Component extends DCLogic {
       // Real app icons (from macOS), drawn grayscale; the placeholders stand in for them.
       openMenuTop: openCase === 'notCheckedOut' ? 267 : openCase === 'repoMissing' ? 432 : 157,
       openMenuItems: [point, copy, sep].concat(apps(openCase === 'repoMissing'),
-        openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [{ kind: 'note', label: openCase === 'repoMissing' ? 'Repository not found, so there is nothing to open.' : 'Not checked out in a worktree, so this opens the repository folder.' }] : [],
-        [sep, remove]),
+        [sep, remove],
+        // One note closes the menu, after a divider.
+        openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [sep, { kind: 'note', label: openCase === 'repoMissing' ? 'Repository not found, so there is nothing to open.' : 'Not checked out in a worktree, so some items may be unavailable.' }] : []),
       deletedMenuItems: [{ label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true }, point, copy, sep].concat(apps(true),
-        [{ kind: 'note', label: 'The branch was deleted, so there is nothing to open.' }, sep, remove]),
+        [sep, remove, sep, { kind: 'note', label: 'The branch was deleted, so there is nothing to open.' }]),
       inboxCount: variant === 'full' ? '7' : '6',
       subtitle: fromSel ? '3 entries across 2 repos · name your project · ↵ save' : fresh ? 'Name your project · ↵ save · esc discards it' : conflict ? 'A project named “Rate limiting rollout” already exists' : rename === 'edit' ? '↵ save · esc cancel' : subtitle,
       sidebarProjects: fresh ? [{ name: 'Rate limiting rollout', count: '2' }, { name: 'Untitled project', count: '0' }] : [{ name: 'Session auth refresh', count: count }, { name: 'Rate limiting rollout', count: '2' }],

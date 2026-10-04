@@ -282,6 +282,8 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Design: shared components (Button, Segmented, Pill, Checkbox, Select, Menu,
   Toast, ModalHeader, ModalFooter, SettingsNav) as canvas artboards with a variants board each
   on the Components page, mounted by the Flow and Scripts screens; code follows in T16.1 — 2026-10-04
+- [x] (on request) Menus and popovers too tall for the window scroll inside it instead of being
+  cut off; script editor's Save needs at least one Show in menu — 2026-10-04
 
 ### Phase 16 — Shared components
 - [x] T16.1 Shared components from the design — 2026-10-04
@@ -289,6 +291,69 @@ rather than as a task is listed the same way, marked "(on request)".
     Scripts work. Settings' Remove repository dialog keeps the Delete project layout (title, text,
     actions), not `ModalHeader` / `ModalFooter`.
 - [x] T16.2 ✋ Checkpoint — phase 16 — 2026-10-04
+
+### Phase 17 — Scripts
+- [x] T17.1 Script config, Settings › Scripts, import and export — 2026-10-04
+  - note: "+ New script" and ✎ are disabled until the editor (T17.2). Reorder is a pointer drag on
+    the handle (HTML5 drag and drop is not used), and ↑ / ↓ on the focused handle.
+- [x] T17.2 Script editor and Show when — 2026-10-04
+  - note: CEL via `@marcbachmann/cel-js` 8.0.0 (no dependencies). Input conditions see
+    `inputs.<id in lower case>`. "Try on <branch>" is disabled until T17.3/T17.4.
+- [x] T17.3 Running scripts (backend) — 2026-10-04
+  - note: `scripts.rs` became `scripts/mod.rs` + `scripts/run.rs`. `run_script` takes a
+    `context` (base, project) besides the entry. The ⌘Q / window close guard is not tried by hand
+    yet (T17.5).
+- [x] T17.4 Scripts in the branch menus and the run toast — 2026-10-04
+  - note: until T17.6 a script with inputs runs with the defaults of its shown inputs, and
+    "Ask before running" has no dialog yet; "Show output" is hidden until T17.7. A repo that is
+    missing disables every script.
+- [x] T17.5 ✋ Checkpoint — scripts run — 2026-10-04
+  - note: user feedback: a quick script stayed on the running toast (its end arrived before the
+    start was answered; fixed); the output panel was missed, so T17.7 is done before T17.6 (user
+    decision 2026-10-04).
+- [x] T17.7 Output panel — 2026-10-04
+  - note: done before T17.6 (user decision). `@xterm/xterm` 6.0.0 + `@xterm/addon-fit` 0.11.0; a
+    panel script opens its panel as it starts; new `resize_script` and chunk offsets
+    (`end` / `bufferedEnd`).
+- [x] T17.6 Run dialog: inputs and Ask before running — 2026-10-04
+  - note: the backend saves the last input values on Run (`scriptInputValues`). ⌘↵ is listed in
+    Settings › Shortcuts under Lists and dialogs.
+- [x] T17.8 ✋ Checkpoint — phase 17 — 2026-10-04
+  - note: user feedback: Select options could not take a new line (fixed); Save now needs a Show in
+    menu; turning a script off became T17.9.
+- [x] T17.9 Turn a script off — 2026-10-04
+  - note: `disabled` is always written (no `skip_serializing_if`), so the frontend type stays a
+    plain boolean; a missing field still loads as on. The menu filter is `menuScripts` in
+    `src/scripts/when.ts`.
+- [x] T17.10 ✋ Checkpoint — turning scripts off, one run mode — 2026-10-04
+- [x] (on request) Entry menus have one warning note, at the very end after a divider; not checked
+  out: "Not checked out in a worktree, so some items may be unavailable." Items that cannot be
+  used (open items, scripts) are left out instead of disabled; an empty Scripts group has no
+  label — 2026-10-04
+- [x] (on request) Script run toasts have a ✕ that dismisses them; the script keeps running
+  — 2026-10-04
+- [x] (on request) Output panel: the folder moved from the footer to the header's sub line
+  (`repo / branch · folder`), like the run dialog — 2026-10-04
+- [x] (on request) One run mode: every script runs in a pty and shows a toast that opens its
+  output panel when clicked (no "Show output" link); the editor's Output choice became "Open the
+  output panel automatically" (`openOutput`); "Try on <branch>" removed; the pipe runner
+  (`spawn_plain`) is gone, so `scripts/run.rs` no longer uses `std::process::Command` — 2026-10-04
+  - note: a script that asks a question now waits for an answer in its panel instead of reading
+    EOF. Scripts were never released, so a saved `output` is not migrated. portable-pty's signal
+    text ("Interrupt: 2") is turned into "SIGINT".
+- [x] (on request) "Ask before running" with nothing to fill in is a short confirmation (O3)
+  instead of an empty run dialog — 2026-10-04
+- [x] (on request) A run's toast is hidden while its output panel is open; closing the panel
+  while it runs brings the toast back — 2026-10-04
+- [x] (on request) Dev: a change to a store module (`state/*.ts`, `scripts/runs.ts`) reloads the
+  page instead of hot-swapping it, which left the event listeners on the old store (runs stuck
+  on running) — 2026-10-04
+- [x] (on request) An input's Show when is a mono textarea like Options, with a "+ Variable"
+  menu (branch fields and the inputs above it) — 2026-10-04
+- [x] (on request) Script name field: the icon picker moved to the left, a "+ Variable" menu
+  (`{branch}`, `{base}`, `{repo}`) on the right; `Input` takes a `leftText` control — 2026-10-04
+- [x] (on request) The script command grows with its text (up to 360px) and can be dragged taller
+  (`src/lib/useAutoGrow.ts`) — 2026-10-04
 
 ---
 

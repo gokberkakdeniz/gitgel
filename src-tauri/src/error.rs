@@ -16,6 +16,9 @@ pub enum AppError {
     Forbidden(String),
     #[error("io: {0}")]
     Io(String),
+    /// Input the user can fix, e.g. a script without a name.
+    #[error("invalid: {0}")]
+    Invalid(String),
 }
 
 impl From<std::io::Error> for AppError {

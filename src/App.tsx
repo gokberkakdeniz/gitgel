@@ -4,6 +4,8 @@ import { FolderPlusIcon } from './components/icons';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { ToastHost } from './components/Toast';
+import { OutputPanelHost } from './scripts/OutputPanel';
+import { RunDialogHost } from './scripts/RunDialog';
 import { startDraftProject } from './lib/draft';
 import { startEventBridge } from './lib/events';
 import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from './lib/theme';
@@ -86,6 +88,8 @@ export default function App() {
       <AddReposSheet />
       <DeleteProjectModal />
       <Palette />
+      <RunDialogHost />
+      <OutputPanelHost />
       <ToastHost />
       {dropping && (
         <div className={styles.drop} aria-hidden>

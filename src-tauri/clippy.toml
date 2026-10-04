@@ -1,6 +1,8 @@
 # Gitgel is read-only: it never runs the git CLI and never calls a git2 API that writes to a
-# repository. These bans turn such calls into errors under `clippy -D warnings`. The only
-# exception is `src/git/testutil.rs` (tests, inside their own temp folder).
+# repository. These bans turn such calls into errors under `clippy -D warnings`. The exceptions,
+# each marked `#[allow]` where it happens: `src/git/testutil.rs` (tests, inside their own temp
+# folder) and `src/apps.rs` (starts the user's terminal). The user's scripts run in a pty
+# (`portable-pty`, `src/scripts/run.rs`).
 
 disallowed-methods = [
   { path = "std::process::Command::new", reason = "no git CLI; use git2" },

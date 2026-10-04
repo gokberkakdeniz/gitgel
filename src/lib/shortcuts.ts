@@ -51,6 +51,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'Move', keys: ['↑', '/', '↓'] },
       { label: 'Mark row', keys: ['space'], note: 'Add palette' },
       { label: 'Confirm', keys: ['↵'] },
+      { label: 'Run script', keys: ['⌘', '↵'], note: 'Script inputs' },
       { label: 'Cancel', keys: ['esc'] },
     ],
   },

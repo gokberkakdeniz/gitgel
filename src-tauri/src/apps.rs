@@ -78,15 +78,18 @@ pub fn open_folder(path: &str, app: &str, settings: &Settings) -> Result<(), App
 fn open_in_terminal(folder: &str, settings: &Settings) -> Result<(), AppError> {
     let term = resolve_terminal(settings);
     match term.action {
-        Some(TerminalAction::OpenApp(path)) => {
-            tauri_plugin_opener::open_path(folder, Some(path)).map_err(|e| {
+        Some(TerminalAction::OpenApp(path)) => tauri_plugin_opener::open_path(folder, Some(path))
+            .map_err(|e| {
                 log::warn!("cannot open {folder} in {}: {e}", term.name);
                 AppError::Io(e.to_string())
-            })
-        }
+            }),
         Some(TerminalAction::Wezterm(bundle)) => {
             let binary = Path::new(&bundle).join("Contents/MacOS/wezterm");
-            spawn_detached(&binary.to_string_lossy(), &["start", "--cwd", folder], folder)
+            spawn_detached(
+                &binary.to_string_lossy(),
+                &["start", "--cwd", folder],
+                folder,
+            )
         }
         Some(TerminalAction::Shell(template)) => run_command(&template, folder),
         None => Err(AppError::NotFound(format!("terminal {}", term.name))),
@@ -142,7 +145,10 @@ fn reset_missing_terminal_with(
             .iter()
             .any(|(choice, _, _)| *choice == settings.terminal)
     {
-        log::info!("terminal {:?} is not installed; falling back to Automatic", settings.terminal);
+        log::info!(
+            "terminal {:?} is not installed; falling back to Automatic",
+            settings.terminal
+        );
         settings.terminal = TerminalChoice::Auto;
         return true;
     }
@@ -275,7 +281,11 @@ fn shell_quote(s: &str) -> String {
 /// (`/bin/zsh` without `$SHELL`). Detached: stdio is null and a thread reaps the child.
 fn run_command(template: &str, folder: &str) -> Result<(), AppError> {
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into());
-    spawn_detached(&shell, &["-l", "-c", &fill_command(template, folder)], folder)
+    spawn_detached(
+        &shell,
+        &["-l", "-c", &fill_command(template, folder)],
+        folder,
+    )
 }
 
 // The one `Command` exception (SPEC §0): terminals are started here and never run git.
@@ -491,10 +501,7 @@ mod tests {
 
         let resolved = resolve_terminal_with(&auto, wezterm, no_app);
         assert_eq!(resolved.name, "WezTerm");
-        assert!(matches!(
-            resolved.action,
-            Some(TerminalAction::Wezterm(_))
-        ));
+        assert!(matches!(resolved.action, Some(TerminalAction::Wezterm(_))));
 
         let resolved = resolve_terminal_with(&auto, term, no_app);
         assert_eq!(resolved.name, "Terminal");
@@ -557,9 +564,8 @@ mod tests {
         assert!(resolved.action.is_none());
 
         // A word or path that resolves to an app opens with it.
-        let ghostty = |input: &str| {
-            (input == "Ghostty").then(|| "/Applications/Ghostty.app".into())
-        };
+        let ghostty =
+            |input: &str| (input == "Ghostty").then(|| "/Applications/Ghostty.app".into());
         let app = with_terminal(TerminalChoice::Other, "Ghostty");
         let resolved = resolve_terminal_with(&app, no_bundle, ghostty);
         assert_eq!(resolved.name, "Ghostty");
@@ -596,7 +602,10 @@ mod tests {
         assert_eq!(find_in_dirs("Notes", &dirs), None);
         assert_eq!(find_in_dirs("Alacritty", &dirs), None);
         assert_eq!(find_other(app.to_str().unwrap()), found);
-        assert_eq!(find_other(dir.path().join("Notes.app").to_str().unwrap()), None);
+        assert_eq!(
+            find_other(dir.path().join("Notes.app").to_str().unwrap()),
+            None
+        );
         assert_eq!(find_other("  "), None);
     }
 

@@ -14,6 +14,9 @@ import type {
   ReviewData,
   ReviewTarget,
   ScanResult,
+  RunContext,
+  ScriptConfig,
+  ScriptRun,
   Settings,
   TerminalOption,
   UpdateInfo,
@@ -88,3 +91,39 @@ export const getUpdate = () => invoke<UpdateInfo | null>('get_update');
 
 /** Downloads and installs that update, then the app restarts; rejects if it fails. */
 export const installUpdate = () => invoke<void>('install_update');
+
+// ---- Scripts (SPEC §14) ----
+
+/** Adds a script (empty `id`) or replaces the one with that id. */
+export const saveScript = (script: ScriptConfig) => invoke<Config>('save_script', { script });
+
+export const deleteScript = (scriptId: string) => invoke<Config>('delete_script', { scriptId });
+
+/** `ids` lists every script once, in the new order. */
+export const reorderScripts = (ids: string[]) => invoke<Config>('reorder_scripts', { ids });
+
+export const exportScripts = (path: string) => invoke<null>('export_scripts', { path });
+
+/** An exported file's scripts, for the import preview (ids empty). */
+export const readScriptsFile = (path: string) => invoke<ScriptConfig[]>('read_scripts_file', { path });
+
+/** `replace`: names whose existing script is replaced; other clashes are kept as "<name> (2)". */
+export const importScripts = (scripts: ScriptConfig[], replace: string[]) =>
+  invoke<Config>('import_scripts', { scripts, replace });
+
+/** Starts a script; `inputs` holds only the inputs the dialog showed. */
+export const runScript = (script: ScriptConfig, entry: EntryRef, inputs: Record<string, string>, context: RunContext) =>
+  invoke<ScriptRun>('run_script', { script, entry, inputs, context });
+
+/** Typed text for a running script. */
+export const writeScriptInput = (runId: string, data: string) => invoke<null>('write_script_input', { runId, data });
+
+/** SIGINT, then SIGKILL after 3 s. */
+export const stopScript = (runId: string) => invoke<null>('stop_script', { runId });
+
+/** A run with its output so far (`buffered`). */
+export const getScriptRun = (runId: string) => invoke<ScriptRun>('get_script_run', { runId });
+
+/** The output panel's terminal size, for the run's pty. */
+export const resizeScript = (runId: string, cols: number, rows: number) =>
+  invoke<null>('resize_script', { runId, cols, rows });

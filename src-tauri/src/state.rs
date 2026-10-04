@@ -10,6 +10,7 @@ use crate::cache::Cache;
 use crate::git::pool::RepoPool;
 use crate::model::{Config, RepoScan};
 use crate::scan::RepoLayout;
+use crate::scripts::run::Runs;
 use crate::watch::Watcher;
 
 #[derive(Clone)]
@@ -27,6 +28,8 @@ pub struct Inner {
     /// Git dir and worktrees per repo id, from the latest scan.
     pub layouts: Mutex<HashMap<String, RepoLayout>>,
     pub watch: Watcher,
+    /// Scripts running or recently finished.
+    pub runs: Mutex<Runs>,
 }
 
 impl AppState {
@@ -40,6 +43,7 @@ impl AppState {
             last_scan: Mutex::new(HashMap::new()),
             layouts: Mutex::new(HashMap::new()),
             watch: Watcher::default(),
+            runs: Mutex::new(Runs::default()),
         }))
     }
 }

@@ -54,6 +54,8 @@ const config: Config = {
     },
   ],
   settings: { defaultBaseOrder: ['main'], activeDays: 14, diffView: 'split', ignoreWhitespace: false, diffContext: 'changes', diffContextLines: 3, zoom: 100, appearance: 'system', terminal: 'auto', terminalCommand: '', checkUpdates: true },
+  scripts: [],
+  scriptInputValues: {},
 };
 
 const scans = [

@@ -7,10 +7,11 @@ use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
     BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, OpenApp,
-    ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, Settings, TerminalOption,
+    ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun,
+    Settings, TerminalOption,
 };
 use crate::state::AppState;
-use crate::{apps, base, files, projects, repos, review, scan, updates, watch};
+use crate::{apps, base, files, projects, repos, review, scan, scripts, updates, watch};
 
 /// Runs git or disk work off the async runtime.
 pub async fn blocking<T, F>(state: &AppState, f: F) -> Result<T, AppError>
@@ -305,4 +306,122 @@ pub fn get_update(app: AppHandle) -> Option<updates::UpdateInfo> {
 #[tauri::command]
 pub async fn install_update(app: AppHandle) -> Result<(), AppError> {
     updates::install(app).await
+}
+
+// ---- Scripts (SPEC §14) ----
+
+/// Adds a script (empty `id`) or replaces the one with that id.
+#[tauri::command]
+pub async fn save_script(
+    state: State<'_, AppState>,
+    script: ScriptConfig,
+) -> Result<Config, AppError> {
+    blocking(&state, move |state| scripts::save_script(state, script)).await
+}
+
+#[tauri::command]
+pub async fn delete_script(
+    state: State<'_, AppState>,
+    script_id: String,
+) -> Result<Config, AppError> {
+    blocking(&state, move |state| {
+        scripts::delete_script(state, &script_id)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn reorder_scripts(
+    state: State<'_, AppState>,
+    ids: Vec<String>,
+) -> Result<Config, AppError> {
+    blocking(&state, move |state| scripts::reorder_scripts(state, &ids)).await
+}
+
+#[tauri::command]
+pub async fn export_scripts(state: State<'_, AppState>, path: String) -> Result<(), AppError> {
+    blocking(&state, move |state| {
+        scripts::export_scripts(state, std::path::Path::new(&path))
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn read_scripts_file(
+    state: State<'_, AppState>,
+    path: String,
+) -> Result<Vec<ScriptConfig>, AppError> {
+    blocking(&state, move |_| {
+        scripts::read_scripts_file(std::path::Path::new(&path))
+    })
+    .await
+}
+
+/// `replace`: names whose existing script is replaced; other name clashes are kept as both.
+#[tauri::command]
+pub async fn import_scripts(
+    state: State<'_, AppState>,
+    scripts: Vec<ScriptConfig>,
+    replace: Vec<String>,
+) -> Result<Config, AppError> {
+    blocking(&state, move |state| {
+        scripts::import_scripts(state, scripts, &replace)
+    })
+    .await
+}
+
+/// Starts a script for an entry (SPEC §14 "Running"); `inputs` holds only the shown inputs.
+#[tauri::command]
+pub async fn run_script(
+    state: State<'_, AppState>,
+    script: ScriptConfig,
+    entry: EntryRef,
+    inputs: std::collections::BTreeMap<String, String>,
+    context: scripts::run::RunContext,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::run::run_script(state, script, entry, inputs, context)
+    })
+    .await
+}
+
+/// Typed text for a running script.
+#[tauri::command]
+pub async fn write_script_input(
+    state: State<'_, AppState>,
+    run_id: String,
+    data: String,
+) -> Result<(), AppError> {
+    blocking(&state, move |state| {
+        scripts::run::write_input(state, &run_id, &data)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn stop_script(state: State<'_, AppState>, run_id: String) -> Result<(), AppError> {
+    blocking(&state, move |state| scripts::run::stop(state, &run_id)).await
+}
+
+/// A run with its output so far.
+#[tauri::command]
+pub async fn get_script_run(
+    state: State<'_, AppState>,
+    run_id: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| scripts::run::get_run(state, &run_id)).await
+}
+
+/// The output panel's terminal size, for the run's pty.
+#[tauri::command]
+pub async fn resize_script(
+    state: State<'_, AppState>,
+    run_id: String,
+    cols: u16,
+    rows: u16,
+) -> Result<(), AppError> {
+    blocking(&state, move |state| {
+        scripts::run::resize(state, &run_id, cols, rows)
+    })
+    .await
 }

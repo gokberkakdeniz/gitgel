@@ -19,12 +19,14 @@ import { useUi, type SettingsSection } from '../../state/ui';
 import styles from './Settings.module.css';
 import { Appearance } from './Appearance';
 import { BaseOrder } from './BaseOrder';
+import { Scripts } from './Scripts';
 import { parseDays } from './parse';
 import { SHORTCUTS } from '../../lib/shortcuts';
 
 const SECTIONS: SettingsNavSection<SettingsSection>[] = [
   { id: 'general', label: 'General', icon: 'tune' },
   { id: 'repositories', label: 'Repositories', icon: 'folder' },
+  { id: 'scripts', label: 'Scripts', icon: 'prompt' },
   { id: 'shortcuts', label: 'Shortcuts', icon: 'keyboard' },
 ];
 
@@ -39,7 +41,13 @@ export function Settings() {
       <PageHeader title="Settings" />
       <div className={styles.body}>
         <SettingsNav
-          sections={SECTIONS.map((s) => (s.id === 'repositories' ? { ...s, count: config.repos.length } : s))}
+          sections={SECTIONS.map((s) =>
+            s.id === 'repositories'
+              ? { ...s, count: config.repos.length }
+              : s.id === 'scripts'
+                ? { ...s, count: config.scripts.length }
+                : s,
+          )}
           current={section}
           onPick={setSection}
         />
@@ -56,6 +64,8 @@ export function Settings() {
               </>
             ) : section === 'general' ? (
               <General config={config} />
+            ) : section === 'scripts' ? (
+              <Scripts config={config} />
             ) : (
               <Shortcuts />
             )}

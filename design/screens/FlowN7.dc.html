@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>N7 · Import scripts</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--accent-rgb:79,143,163;--warning:#e8c071;--warning-bg:rgba(212,160,23,0.14);--shadow:rgba(0,0,0,0.5);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--accent-rgb:58,123,143;--warning:#8a6212;--warning-bg:rgba(196,146,20,0.14);--shadow:rgba(40,32,20,0.18);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Settings" theme="{{themeName}}" section="scripts" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div role="dialog" aria-labelledby="imp-title" style="position: relative; margin-top: 110px; width: 680px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
+
+<dc-import name="ModalHeader" theme="{{themeName}}" title="Import scripts" sub="~/code/web-app/tools/gitgel-scripts.json · 4 scripts" sub-mono="{{true}}" close="{{true}}" title-id="imp-title" hint-size="100%,72px"></dc-import>
+
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 4px 24px 22px">
+
+<ul aria-label="Scripts in the file" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 12px; overflow: hidden">
+<sc-for list="{{scripts}}" as="sc" hint-placeholder-count="4">
+<li style="{{sc.rowStyle}}">
+<span style="flex-shrink: 0; margin-top: 6px; display: flex"><dc-import name="Checkbox" theme="{{themeName}}" label="" checked="{{sc.on}}" aria-label="{{sc.checkLabel}}" on-toggle="{{sc.toggle}}" hint-size="16px,16px"></dc-import></span>
+<span style="width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{sc.icon}}"></path></svg></span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="display: flex; align-items: center; gap: 8px; min-height: 22px">
+<span style="font-weight: 500; color: var(--text-strong)">{{sc.name}}</span>
+<sc-if value="{{sc.isNew}}" hint-placeholder-val="{{true}}"><dc-import name="Pill" theme="{{themeName}}" label="new" tone="accent" size="sm" hint-size="36px,16px"></dc-import></sc-if>
+<sc-if value="{{sc.conflict}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="{{themeName}}" label="same name exists" tone="warning" size="sm" hint-size="110px,16px"></dc-import></sc-if>
+</span>
+<code style="font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 17px; color: var(--text-code); white-space: pre-wrap; word-break: break-all">{{sc.cmd}}</code>
+<span style="font-size: 12px; color: var(--text-muted)">{{sc.meta}}</span>
+</span>
+<sc-if value="{{sc.conflict}}" hint-placeholder-val="{{false}}">
+<dc-import name="Segmented" theme="{{themeName}}" size="sm" bordered="{{true}}" role="radio" label="{{sc.conflictLabel}}" options="{{sc.choices}}" hint-size="220px,34px"></dc-import>
+</sc-if>
+</li>
+</sc-for>
+</ul>
+
+<div style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45; color: var(--warning)">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 8h.01"></path></svg>
+<span>Scripts run as you, with your permissions. Read each command before importing. Imported scripts ask before running; you can turn that off per script.</span>
+</div>
+
+</div>
+
+<dc-import name="ModalFooter" theme="{{themeName}}" note="{{selectedNote}}" buttons="{{footerButtons}}" hint-size="100%,64px"></dc-import>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { off: { reset: true }, choice: 'replace' }; }
+renderVals() {
+var self = this;
+var theme = this.props.theme ?? 'dark';
+var list = [
+  { id: 'tests', name: 'Run tests', conflict: true, icon: 'M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3M7 15h10', cmd: 'pnpm install --frozen-lockfile && pnpm test --run --coverage', meta: 'Worktree folder · Branches, Projects · Opens the output' },
+  { id: 'preview', name: 'Deploy preview', icon: 'M12 3v12M7 8l5-5 5 5M5 21h14', cmd: 'vercel deploy --yes --meta branch="$GITGEL_BRANCH"', meta: 'Worktree folder · Branches' },
+  { id: 'reset', name: 'Reset to origin…', icon: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5', cmd: 'git fetch origin && git reset --hard "origin/$GITGEL_BRANCH"', meta: 'Worktree folder · Branches · Opens the output' },
+  { id: 'linear', name: 'Open in Linear', icon: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1', cmd: 'open "https://linear.app/[TEAM]/issue/${GITGEL_BRANCH%%/*}"', meta: 'Repository folder · Branches, Projects' }
+];
+var count = 0;
+var scripts = list.map(function (s, i) {
+  var on = !self.state.off[s.id];
+  if (on) count++;
+  var choices = [['replace', 'Replace'], ['both', 'Keep both'], ['skip', 'Skip']].map(function (c) {
+    var picked = self.state.choice === c[0];
+    return { label: c[1], on: picked, pick: function () { self.setState({ choice: c[0] }); } };
+  });
+  return {
+    name: s.name, icon: s.icon, cmd: s.cmd, meta: s.meta, on: on,
+    isNew: !s.conflict, conflict: !!s.conflict, choices: choices,
+    checkLabel: 'Import ' + s.name, conflictLabel: 'When ' + s.name + ' already exists',
+    toggle: function () { var off = Object.assign({}, self.state.off); off[s.id] = on; self.setState({ off: off }); },
+    rowStyle: 'display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;' + (i < list.length - 1 ? ' border-bottom: 1px solid var(--border);' : '') + (on ? '' : ' opacity: 0.6;')
+  };
+});
+return {
+  themeClass: 'theme-' + theme,
+  themeName: theme,
+  scripts: scripts,
+  footerButtons: [{ label: 'Cancel', href: 'FlowN5.dc.html' }, { label: count === 1 ? 'Import 1 script' : 'Import ' + count + ' scripts', variant: 'primary', href: 'FlowN5.dc.html' }],
+  selectedNote: count + ' of ' + list.length + ' selected',
+  importLabel: count === 1 ? 'Import 1 script' : 'Import ' + count + ' scripts'
+};
+}
+}
+</script>
+</body>
+</html>

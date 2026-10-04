@@ -85,6 +85,14 @@
   background: var(--border);
 }
 
+/* Items that are not available are left out, so a group can end up empty: no divider at either
+   end or twice in a row. */
+.divider:first-child,
+.divider:last-child,
+.divider + .divider {
+  display: none;
+}
+
 /* Warning note closing a group: 12px warning.text with a 14px circle-i. */
 .note {
   display: flex;

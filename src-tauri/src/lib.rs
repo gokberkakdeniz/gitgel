@@ -16,12 +16,13 @@ pub mod projects;
 pub mod repos;
 pub mod review;
 pub mod scan;
+pub mod scripts;
 pub mod state;
 pub mod timing;
 pub mod updates;
 pub mod watch;
 
-use tauri::{Manager, WindowEvent};
+use tauri::{Manager, RunEvent, WindowEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -84,10 +85,17 @@ pub fn run() {
             Ok(())
         })
         // Automatic update checks run at launch and on focus, at most every 6 hours.
-        .on_window_event(|window, event| {
-            if let WindowEvent::Focused(true) = event {
-                updates::check_if_due(window.app_handle());
+        .on_window_event(|window, event| match event {
+            WindowEvent::Focused(true) => updates::check_if_due(window.app_handle()),
+            // Closing with scripts running asks first (SPEC §14).
+            WindowEvent::CloseRequested { api, .. } => {
+                let app = window.app_handle();
+                if scripts::run::running_count(&app.state::<state::AppState>()) > 0 {
+                    api.prevent_close();
+                    scripts::run::confirm_quit(app);
+                }
             }
+            _ => {}
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_config,
@@ -117,8 +125,35 @@ pub fn run() {
             commands::open_folder,
             commands::get_update,
             commands::install_update,
+            commands::save_script,
+            commands::delete_script,
+            commands::reorder_scripts,
+            commands::export_scripts,
+            commands::read_scripts_file,
+            commands::import_scripts,
+            commands::run_script,
+            commands::write_script_input,
+            commands::stop_script,
+            commands::get_script_run,
+            commands::resize_script,
         ])
-        .run(tauri::generate_context!());
+        .build(tauri::generate_context!())
+        .map(|app| {
+            app.run(|app, event| {
+                // ⌘Q with scripts running asks first; `exit(0)` after the answer passes.
+                if let RunEvent::ExitRequested {
+                    api, code: None, ..
+                } = event
+                {
+                    if let Some(state) = app.try_state::<state::AppState>() {
+                        if scripts::run::running_count(&state) > 0 {
+                            api.prevent_exit();
+                            scripts::run::confirm_quit(app);
+                        }
+                    }
+                }
+            })
+        });
     if let Err(e) = result {
         log::error!("gitgel stopped: {e}");
         eprintln!("gitgel stopped: {e}");

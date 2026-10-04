@@ -3,7 +3,7 @@ import { CheckIcon, Icon, InfoIcon, type IconName } from './icons';
 import { Segmented, type SegmentedOption } from './Segmented';
 import styles from './Menu.module.css';
 
-const ITEMS = '[role="menuitem"]:not(:disabled), [role="menuitemradio"]:not(:disabled), [role="menuitemcheckbox"]:not(:disabled)';
+const ITEMS = ['menuitem', 'menuitemradio', 'menuitemcheckbox'].map((r) => `[role="${r}"]:not(:disabled)`).join(', ');
 
 interface MenuProps {
   children: ReactNode;
@@ -78,7 +78,11 @@ export function MenuItem({ children, onSelect, danger, hint, kbd, sub, desc, dis
       onClick={onSelect}
       disabled={disabled}
     >
-      {icon && <span className={styles.icon}>{typeof icon === 'string' ? <Icon name={icon as IconName} size={14} strokeWidth={1.8} /> : icon}</span>}
+      {icon && (
+        <span className={styles.icon}>
+          {typeof icon === 'string' ? <Icon name={icon as IconName} size={14} strokeWidth={1.8} /> : icon}
+        </span>
+      )}
       {radio && (
         <span className={checked ? styles.check : `${styles.check} ${styles.unchecked}`}>
           <CheckIcon />
@@ -132,7 +136,7 @@ export function MenuSegmented<T extends string>({
   );
 }
 
-/** Warning note closing a menu group, e.g. why the open items are disabled. */
+/** The warning note closing a menu, e.g. why some items are missing. */
 export function MenuNote({ children }: { children: ReactNode }) {
   return (
     <div className={styles.note}>

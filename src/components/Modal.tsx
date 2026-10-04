@@ -24,8 +24,8 @@ export function Modal({ onClose, width, paddingTop = 110, closeOnScrim, children
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Listed in lib/shortcuts.ts.
-      if (e.key === 'Escape') {
+      // Listed in lib/shortcuts.ts. A popover open over the modal takes Esc first.
+      if (e.key === 'Escape' && !document.querySelector('[data-popover]')) {
         e.stopPropagation();
         onClose();
       }

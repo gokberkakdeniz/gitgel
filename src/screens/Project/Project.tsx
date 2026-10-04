@@ -5,7 +5,8 @@ import { Button } from '../../components/Button';
 import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
 import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
-import { OpenItems } from '../../components/OpenItems';
+import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
+import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
@@ -388,6 +389,7 @@ function EntryTable({
   footer: ReactNode;
 }) {
   const push = useNav((s) => s.push);
+  const projectName = useData((s) => s.config?.projects.find((p) => p.id === projectId)?.name);
   const [menu, setMenu] = useState<{ key: string; rect: DOMRect } | null>(null);
   const menuEntry = rows.find((r) => r.key === menu?.key);
   const [baseMenu, setBaseMenu] = useState<{ entry: EntrySummary; rect: DOMRect } | null>(null);
@@ -493,6 +495,7 @@ function EntryTable({
             entry={menuEntry}
             stored={stored.find((c) => entryKey(c) === menuEntry.key)}
             saved={projectId !== null}
+            projectName={projectName}
             onRepoint={() => {
               setRepoint({ entry: menuEntry, rect: menu.rect });
               setMenu(null);
@@ -563,11 +566,12 @@ function StatePill({
 }
 
 /** Entry options: [View last known state], Point to another branch…, Copy branch name, [open
- * items], Remove. */
+ * items], [Scripts], Remove, [the closing note]. */
 function EntryMenu({
   entry,
   stored,
   saved,
+  projectName,
   onRepoint,
   onRemove,
   onClose,
@@ -575,6 +579,8 @@ function EntryMenu({
   entry: EntrySummary;
   stored: EntryConfig | undefined;
   saved: boolean;
+  /** For scripts (`branch.project`, `GITGEL_PROJECT`); none for a draft project. */
+  projectName: string | undefined;
   onRepoint: () => void;
   onRemove: () => void;
   onClose: () => void;
@@ -628,10 +634,12 @@ function EntryMenu({
       )}
       {hasFirst && <MenuDivider />}
       <OpenItems entry={entry} onDone={onClose} />
+      <ScriptsMenu entry={entry} menu="project" project={projectName} onDone={onClose} />
       <MenuDivider />
       <MenuItem danger icon={<RemoveIcon />} onSelect={onRemove}>
         Remove from project
       </MenuItem>
+      <EntryMenuNote entry={entry} />
     </Menu>
   );
 }

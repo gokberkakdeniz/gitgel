@@ -20,21 +20,27 @@ const MARGIN = 8;
 
 export function Popover({ anchorRect, onClose, width, alignRight, above, className, children }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; maxHeight?: number } | null>(null);
 
-  // Place below the anchor; flip above or clamp so it stays inside the viewport.
+  // Place below the anchor; flip above or clamp so it stays inside the viewport. When it fits on
+  // neither side it takes the roomier one and scrolls (a webview cannot draw outside the window).
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const { offsetWidth: w, offsetHeight: h } = el;
+    const { offsetWidth: w, scrollHeight: h } = el;
     let left = alignRight ? anchorRect.right - w : anchorRect.left;
     left = Math.max(MARGIN, Math.min(left, window.innerWidth - w - MARGIN));
-    const below = anchorRect.bottom + GAP;
-    const over = anchorRect.top - GAP - h;
-    let top = above ? over : below;
-    if (!above && top + h > window.innerHeight - MARGIN && over >= MARGIN) top = over;
-    if (above && top < MARGIN) top = below;
-    setPos({ top, left });
+    const roomBelow = window.innerHeight - MARGIN - (anchorRect.bottom + GAP);
+    const roomAbove = anchorRect.top - GAP - MARGIN;
+    const fitsBelow = h <= roomBelow;
+    const fitsAbove = h <= roomAbove;
+    const up = above
+      ? fitsAbove || (!fitsBelow && roomAbove >= roomBelow)
+      : !fitsBelow && (fitsAbove || roomAbove > roomBelow);
+    const room = up ? roomAbove : roomBelow;
+    const height = Math.min(h, room);
+    const top = up ? anchorRect.top - GAP - height : anchorRect.bottom + GAP;
+    setPos({ top, left, maxHeight: h > room ? room : undefined });
   }, [anchorRect, alignRight, above]);
 
   useEffect(() => {
@@ -59,8 +65,15 @@ export function Popover({ anchorRect, onClose, width, alignRight, above, classNa
   return createPortal(
     <div
       ref={ref}
+      data-popover
       className={[styles.popover, className].filter(Boolean).join(' ')}
-      style={{ width, top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
+      style={{
+        width,
+        top: pos?.top ?? -9999,
+        left: pos?.left ?? -9999,
+        maxHeight: pos?.maxHeight,
+        overflowY: pos?.maxHeight ? 'auto' : undefined,
+      }}
     >
       {children}
     </div>,

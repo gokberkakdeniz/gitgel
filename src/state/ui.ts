@@ -24,10 +24,14 @@ export interface Toast {
   onAction?: () => void;
   linkLabel?: string;
   onLink?: () => void;
+  /** The whole toast is a button (a script run: opens its output). */
+  onClick?: () => void;
+  /** What the toast is about (a run id), so it can be taken down with it. */
+  owner?: string;
 }
 
 /** The Settings section on the right of its section list (flow M). */
-export type SettingsSection = 'general' | 'repositories' | 'shortcuts';
+export type SettingsSection = 'general' | 'repositories' | 'scripts' | 'shortcuts';
 
 interface UiState {
   sidebarVisible: boolean;
@@ -80,3 +84,7 @@ export const useUi = create<UiState>()((set) => ({
   setDeletingProjectId: (deletingProjectId) => set({ deletingProjectId }),
   setSettingsSection: (settingsSection) => set({ settingsSection }),
 }));
+
+// Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a
+// change here reloads the page instead.
+import.meta.hot?.accept(() => window.location.reload());
