@@ -6,6 +6,7 @@ pub mod history;
 pub mod inspect;
 pub mod pool;
 pub mod refs;
+pub mod stash;
 #[cfg(test)]
 pub mod testutil;
 pub mod worktrees;

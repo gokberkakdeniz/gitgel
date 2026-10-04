@@ -370,8 +370,30 @@ rather than as a task is listed the same way, marked "(on request)".
   defaults; `scriptInputValues` is gone from the config (an old file's key is ignored and dropped
   on the next save) — 2026-10-04
 
+### Phase 19 — Stashes
+- [x] T19.1 Stashes: list and review (read-only) — 2026-10-04
+  - note: user decision 2026-10-04: the read-only part first; the actions come disabled in
+    T19.3, what they do in T19.4. Canvas W3 moved to the Flow page as flow P (P1–P4); P3 (stash review from Branches) is new.
+    Stashes show only under a Branches band that has rows; the Review list hides them while the
+    file filter has text. The fixtures gained three stashes.
+- [x] T19.2 ✋ Checkpoint — stashes (read-only) — 2026-10-04
+  - note: approved with the request to do T19.3.
+- [x] T19.3 Stash actions, disabled — 2026-10-04
+  - note: `MenuItem` gained a `title` (tooltip) for the disabled items.
+
 ---
 
 ## Open
 
-No open tasks.
+#### T19.4 Writing stashes: what Stash…, Apply, Pop and Drop do
+- **Note:** on hold: start it only when the user asks (user decision 2026-10-04). Until then,
+  new tasks are added after it and taken before it.
+- **Depends on:** T19.3, and a user decision to change the read-only rule (CLAUDE.md, SPEC §0,
+  §1 "Out of scope", §10, `src-tauri/clippy.toml`).
+- **Why:** canvas W3 (user request 2026-10-04); left out of T19.1 because Gitgel is read-only.
+- **Spec:** SPEC §15 "Writing stashes" (to be written with the decision: git2 `stash_save2` /
+  `stash_apply` / `stash_pop` / `stash_drop` in an allow-listed module, or another way).
+- **Reference:** `FlowP4.dc.html` (Stash… dialog); the controls from T19.3.
+- **Steps:** to be written once the decision is made (enabling the T19.3 controls, the Stash…
+  dialog, picking the worktree for Apply to… / Pop to…, the Drop… confirmation, conflicts).
+- **Acceptance:** to be written once the decision is made.

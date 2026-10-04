@@ -241,6 +241,14 @@ impl TestRepo {
         index.add_path(Path::new(rel_path)).unwrap();
         index.write().unwrap();
     }
+
+    /// `git stash push -m <msg>` in the main working directory (`-u` with `untracked`).
+    pub fn stash(&self, untracked: bool, msg: &str) -> Oid {
+        let mut repo = Repository::open(&self.workdir).unwrap();
+        let sig = Signature::now("Test", "test@example.com").unwrap();
+        let flags = untracked.then_some(git2::StashFlags::INCLUDE_UNTRACKED);
+        repo.stash_save(&sig, msg, flags).unwrap()
+    }
 }
 
 #[cfg(test)]

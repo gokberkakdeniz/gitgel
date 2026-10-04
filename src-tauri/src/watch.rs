@@ -150,6 +150,8 @@ pub fn classify(index: &WatchIndex, path: &Path) -> Option<Change> {
             match parts.as_slice() {
                 ["HEAD"] | ["packed-refs"] => refs(),
                 ["refs", ..] => refs(),
+                // Dropping a stash below the top only rewrites its reflog.
+                ["logs", "refs", "stash"] => refs(),
                 ["index"] => worktree(main_worktree.as_ref()?),
                 // A worktree was added or removed.
                 ["worktrees", _] => refs(),
@@ -414,6 +416,7 @@ mod tests {
         assert_eq!(c("/r/app/.git/worktrees/feat/index"), wt("/wt/feat", ""));
         assert_eq!(c("/r/app/.git/worktrees/new"), refs());
         assert_eq!(c("/r/app/.git/worktrees/new/index"), refs());
+        assert_eq!(c("/r/app/.git/logs/refs/stash"), refs());
         for dropped in [
             "/r/app/.git/objects/ab/cdef",
             "/r/app/.git/logs/HEAD",

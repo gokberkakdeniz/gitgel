@@ -100,6 +100,8 @@ signed, not notarized, no sandbox.
 - **Script:** a shell command the user defines in Settings › Scripts and runs from a branch's
   menu, with the branch as context (§14). It runs as the user's own process;
   Gitgel itself still never writes to a repository.
+- **Stash:** an entry of the repository's stash stack (`stash@{n}`), one stack per repository
+  shared by all its worktrees. Gitgel lists and reviews them (§15).
 - **Active branch:** checked out in a worktree, or committed in the last N days (Settings,
   default 14) and ahead of its base (or with a base picked by hand, even when not ahead of it:
   otherwise picking a base at its own tip would hide it; user decision 2026-09-28).
@@ -166,6 +168,7 @@ gitgel/
 │  │                              # KindBadge, Banner, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
+│  │            # Review/stashes.ts: which stashes a review lists (§15)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
@@ -193,6 +196,7 @@ gitgel/
       │  ├─ worktrees.rs          # main + linked worktrees, ignore check
       │  ├─ diff.rs               # tree/workdir/commit diffs, FileChange conversion, blobs
       │  ├─ history.rs            # merge-base, ahead, revwalk, merged state, stack candidates
+      │  ├─ stash.rs              # stash stack from the refs/stash reflog, a stash's changes
       │  └─ testutil.rs           # #[cfg(test)] only: throwaway repos in a TempDir
       ├─ scan.rs                  # branch/worktree discovery, entry summaries, stored scan
       ├─ watch.rs                 # file watching, event classification, targeted recompute
@@ -540,6 +544,7 @@ Every active branch, whether or not it is in a project.
     between the two groups); icons as there; then the Scripts group (§14, flow N1–N2). ↑/↓/↵/Esc
     work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
+- **Stashes** of the repo under its rows (flow P1, §15).
 - Repos sorted by their newest row, rows newest first (by the age shown).
 - While the first scan runs: muted "Scanning repositories…" (the list fills in repo by repo).
   With repos but no rows: serif 22px "No active branches" and "Branches checked out in a worktree
@@ -743,6 +748,7 @@ Layout:
   "Base missing: …".
 - The review refreshes in place when a related repo changes (the open file stays selected if it
   is still listed).
+- **Stashes** under the file list, and the stash scope opened from Branches (flows P2–P3, §15).
 
 ### Project (`Projects.dc.html`)
 
@@ -981,6 +987,10 @@ open.
   as the script starts. When a script exits its repo is rescanned.
 - **O · Script inputs.** A script with inputs opens the run dialog first (O1, O2); one with
   "Ask before running" and nothing to fill in asks in a short confirmation (O3); ⌘↵ runs it.
+- **P · Stashes.** Each repo band on Branches lists its stash stack (P1); a stash opens the
+  stash review (P3). Project and branch reviews list the stashes taken on their branches under
+  the files (P2). Picking one shows what it holds, against the commit it was taken on. Stash…,
+  Apply, Pop and Drop are shown disabled; what they do comes later (planned, T19.4).
 - **J · Open elsewhere.** The ⋯ menu of an entry (Project) or
   row (Branches) opens its worktree folder in Finder or in an installed editor or terminal; a
   branch that is not checked out opens the repository folder instead, with a note saying so.
@@ -1139,6 +1149,17 @@ export interface RepoScan {
   defaultBaseSource: string | null;  // matching defaultBaseOrder item, e.g. "origin/HEAD"
   active: EntrySummary[];            // active branches + detached worktrees, newest first
   others: OtherBranch[];             // all other local branches except the base branch
+  stashes: StashInfo[];              // the stash stack, newest first (§15)
+}
+export interface StashInfo {
+  index: number;                     // n in stash@{n}; 0 is the newest
+  sha: string;
+  message: string;                   // text after "On <branch>: ", or the whole "WIP on …" line
+  branch: string | null;             // taken on; null on a detached HEAD
+  branchExists: boolean;
+  base: string;                      // the commit it was taken on (first parent)
+  files: number | null;              // null when its changes could not be read
+  createdAt: number;
 }
 export interface ScanResult { repos: RepoScan[]; scannedAt: number }
 
@@ -1191,6 +1212,11 @@ export interface CommitChanges {           // one commit against its first paren
   parent: string | null;                   // null => root commit (empty tree)
   files: FileChange[];
 }
+export interface StashChanges {            // a stash against its first parent; untracked = U
+  sha: string;
+  base: string;
+  files: FileChange[];
+}
 export interface ReviewData {
   groups: ReviewGroup[];          // reviewable entries, in project order
   notInReview: EntrySummary[];    // project scope only
@@ -1199,7 +1225,8 @@ export interface ReviewData {
 export type ReviewTarget =
   | { kind: 'project'; projectId: string }
   | { kind: 'branch'; repoId: string; branch: string | null;
-      worktreePath: string | null; tipOverride: string | null };
+      worktreePath: string | null; tipOverride: string | null }
+  | { kind: 'stashes'; repoId: string };   // a repo's stash stack: no groups (§15)
 export interface FilePair { original: string; modified: string; binary: boolean; tooLarge: boolean }
 ```
 
@@ -1305,6 +1332,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `rescan_all` | `force: boolean` | `ScanResult` (always scans; `force` also rereads every working tree) |
 | `get_review` | `target: ReviewTarget` | `ReviewData` |
 | `get_commit_changes` | `repoId, sha` | `CommitChanges` |
+| `get_stash_changes` | `repoId, sha` | `StashChanges` |
 | `read_file_pair` | `repoId, worktreePath: string\|null, change: FileChange` | `FilePair` |
 | `create_project` | `name, entries: EntryRef[]` | `ProjectConfig` |
 | `rename_project` | `projectId, name` | `Config` |
@@ -1446,6 +1474,8 @@ Notes:
 | Line counts | `Patch::from_diff(&diff, i)?` → `line_stats()` | `None` = binary or no content change |
 | Blob size / content | `odb()?.read_header(oid)?.0` / `find_blob(oid)?.content()` | |
 | Commit exists | `find_commit(oid).is_ok()` | |
+| Stash stack | `find_reference("refs/stash")`, then `reflog("refs/stash")` → `id_new()`, `message_bytes()`, `committer().when()` | index 0 = `stash@{0}`; not `stash_foreach` (needs `&mut`) |
+| Stash changes | `diff_tree_to_tree(first parent tree, stash tree)` + `find_similar`, plus `diff_tree_to_tree(None, third parent tree)` as `U` | the third parent holds the untracked files (`-u`) |
 | Ignore check | `is_path_ignored(rel)` from the path's top-most ancestor down | watcher filter |
 
 ### Diff options
@@ -1527,11 +1557,12 @@ No polling. The backend watches the file system, recomputes what changed and pus
   | Path under a git dir | Change |
   |---|---|
   | `HEAD`, `packed-refs`, `refs/**` | `Refs` |
+  | `logs/refs/stash` | `Refs` (dropping a stash below the top only rewrites it) |
   | `index` | `Worktree` (main worktree) |
   | `worktrees/<name>/HEAD` | `Refs` |
   | `worktrees/<name>/index` | `Worktree` (that worktree) |
   | adding/removing `worktrees/<name>` | `Refs` (worktree list changed) |
-  | anything else (`objects/`, `logs/`, `*.lock`, `FETCH_HEAD`, …) | ignored |
+  | anything else (`objects/`, other `logs/`, `*.lock`, `FETCH_HEAD`, …) | ignored |
 
   Under a worktree root, the `.git` file is ignored and everything else is `Worktree` after the
   `.gitignore` filter (checked from the top-most ancestor down and cached per batch, so thousands
@@ -1564,6 +1595,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
   working tree list per merge-base (computed only on the paths the committed and uncommitted
   lists touch). The refresh button clears it; window focus does not.
 - **Commit changes** per `(repo, sha)`, kept until the repo is removed (commits never change).
+- **Stash changes** per `(repo, stash sha)`; a scan drops the ones no longer on the stack.
 - After a repo scan, entries for tips no branch has any more are pruned; past 5000 entries the
   cache is dropped.
 - libgit2's own object cache (up to 256 MB across repositories) speeds a scan up but is not
@@ -1585,6 +1617,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
+| Stashes | `FlowP1`, `FlowP2`, `FlowP3`, `FlowP4.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog (planned, T19.4) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -1627,10 +1660,12 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
     untracked `scripts/token-debug.ts`; `feat/billing-v2` (3 commits, a binary PNG, not checked
     out); `feat/search` (started before main's last commit, then main merged in: a merge commit
     for commit review); `old-feature` (60 days old, unmerged); `merged-ff` (fast-forwarded);
-    `squashed` (squash-merged).
+    `squashed` (squash-merged). Stashes: `stash@{0}` "debug logging for refresh" on
+    `session-token-refresh`, `stash@{1}` a WIP one with an untracked file on `old-login` (deleted).
   - **api-server** (default `master`, no origin): `feat/job-queue` (3 commits),
     `token-rotation-job` (stacked on it, checked out in `wt/token-rotation` with a change),
-    a detached worktree `wt/detached` at `feat/job-queue~1`, `to-be-deleted`.
+    a detached worktree `wt/detached` at `feat/job-queue~1`, `to-be-deleted`; a WIP stash with
+    2 files on `token-rotation-job`.
   - `not-a-repo/`.
   - Subcommands: `delete-branch` (deletes `to-be-deleted`), `remove-repo` / `restore-repo` (moves
     web-app away and back).
@@ -1899,3 +1934,51 @@ export interface ScriptRun {
   `askFirst: true`; "Keep both" adds " (2)" to the name.
 - Teams share a file by keeping it in the repo; everyone imports it. There is no "trust this
   repo" flow.
+
+---
+
+## 15. Stashes
+
+Read-only: the stash stack is listed and reviewed; nothing is stashed, applied or dropped by
+Gitgel. Canvas flow P (P1–P4); boards `FlowP1`–`FlowP4.dc.html`.
+
+- **Reading** (§10): the `refs/stash` reflog, newest first. The message `On <branch>: <text>`
+  shows `<text>`; `WIP on <branch>: <sha> <subject>` shows whole. `<branch>` is the branch it was
+  taken on (`(no branch)` = detached HEAD); a branch that no longer exists is "deleted". A
+  stash's changes are its tree against its first parent (the commit it was taken on), staged and
+  unstaged together, plus its untracked files (the third parent, `stash push -u`) as `U`; both
+  sides are read from the object database (`read_file_pair` with `worktreePath` null). Every scan
+  lists the stack with each stash's file count (cached per stash).
+- **Branches** (P1): under a repo band's rows (only while the band has rows), a `List` with the
+  heading "Stashes" and its count (collapsible), padding 8px 16px 14px 52px, bottom border
+  `border.row`. Rows: lead `package` icon, prefix `stash@{n}`, the message; sub line: the branch
+  as an `accent` sm Pill (`<branch> · deleted` as `outline`; `detached HEAD` as `outline`),
+  `N files`, the age. The text filter applies (message, branch, repo name). Clicking a row opens
+  the stash review (P3) on it; the ⋮ button ("Stash options") opens a 280px menu: "Review
+  changes ↵", "Apply to…" (desc: the checked-out branches of the repo), "Pop to…" (desc "Apply,
+  then drop if it applied cleanly"), divider, danger "Drop…" (`⌫`). Apply to…, Pop to… and Drop…
+  are disabled, tooltip "Not available yet".
+- **Review header** (P2, project and branch scope): a 32px secondary "Stash…" button with the
+  `package` icon before the refresh button, disabled, tooltip "Not available yet".
+- **Review list** (P2): after the groups (and the "not reviewable" line), under a 1px `bg.hover`
+  rule: section label `Stashes of this project · N` (branch scope `Stashes of this branch · N`),
+  the stashes taken on one of the review's branches (project order). Rows (padding 6px 8px,
+  radius 8, hover `bg.sunken`): 13px `package` icon (muted; `accent.text` when picked), 13px
+  `text.strong` message (ellipsis), mono 11 muted `stash@{n}`; line 2 (indent 21) mono 11 muted
+  `<repo> / <branch> · N files · <age>` (`<branch> (deleted)`, `detached HEAD`). Picking one lists
+  its files under it (file rows as in a group) and opens its first file; the right pane shows
+  it. Picking an entry's file, switching mode or typing in the file filter leaves the stash; the
+  section is hidden while filtering.
+- **Stash pane:** an entry bar with 14px/600 `stash@{n}`, mono 12 message, mono 11 muted
+  `<repo> / <branch> · from <short base> · <age> ago`; then the file bar (compare label
+  `<short base> ↔ stash@{n}`, view menu, change navigation over the stash's files) and the diff.
+  On the right of the entry bar 28px buttons Apply, Pop (secondary) and Drop… (danger text), all
+  disabled with the tooltip "Not available yet". No uncommitted banner while a
+  stash is shown.
+- **Stash review** (P3, `ReviewTarget` `stashes`): from Branches; title "Stashes", subtitle
+  `<repo> · N stashes`; no mode segmented and no file filter; the list is the section only
+  (`Stashes in <repo> · N`, no rule above, line 2 without the repo), with the clicked stash
+  picked (else the newest; also when the picked one is dropped). Empty stack: "No stashes".
+- **Writing stashes** (planned, T19.4): what Stash… (the P4 dialog), Apply to…, Pop to…, Apply,
+  Pop and Drop… do. It needs the §0 read-only rule changed first, so it waits for a user
+  decision.

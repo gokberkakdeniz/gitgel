@@ -4,7 +4,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::git::history::{CommittedStats, MergedState};
-use crate::model::{CommitChanges, CommitInfo, FileChange, StackHint};
+use crate::model::{CommitChanges, CommitInfo, FileChange, StackHint, StashChanges};
 use crate::nearest::NearestDefault;
 
 /// What a worktree's working tree holds, valid while its HEAD stays `head` and the watcher
@@ -47,6 +47,8 @@ pub struct Cache {
     workdirs: HashMap<std::path::PathBuf, WorkdirState>,
     /// Per (repo, commit): a commit never changes, so these are kept until the repo is removed.
     commits: HashMap<(String, String), CommitChanges>,
+    /// Per (repo, stash commit): like commits, a stash never changes.
+    stashes: HashMap<(String, String), StashChanges>,
     /// The nearest-default pick per (repo, tip, local default tip, remote default tip).
     nearest: HashMap<(String, String, String, String), NearestDefault>,
 }
@@ -149,6 +151,23 @@ impl Cache {
             .insert((repo_id.to_string(), changes.sha.clone()), changes);
     }
 
+    pub fn stash(&self, repo_id: &str, sha: &str) -> Option<StashChanges> {
+        self.stashes
+            .get(&(repo_id.to_string(), sha.to_string()))
+            .cloned()
+    }
+
+    pub fn put_stash(&mut self, repo_id: &str, changes: StashChanges) {
+        self.stashes
+            .insert((repo_id.to_string(), changes.sha.clone()), changes);
+    }
+
+    /// Keeps only the stashes still on `repo_id`'s stack.
+    pub fn prune_stashes(&mut self, repo_id: &str, live: &HashSet<String>) {
+        self.stashes
+            .retain(|k, _| k.0 != repo_id || live.contains(&k.1));
+    }
+
     /// Something in the worktree changed (file-watch event).
     pub fn invalidate_workdir(&mut self, path: &std::path::Path) {
         self.workdirs.remove(path);
@@ -181,6 +200,7 @@ impl Cache {
     pub fn forget_repo(&mut self, repo_id: &str) {
         self.prune(repo_id, &HashSet::new());
         self.commits.retain(|k, _| k.0 != repo_id);
+        self.stashes.retain(|k, _| k.0 != repo_id);
     }
 }
 

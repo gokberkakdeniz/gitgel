@@ -8,7 +8,7 @@ use crate::git::inspect;
 use crate::model::{
     BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, OpenApp,
     ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun,
-    Settings, TerminalOption,
+    Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{apps, base, files, projects, repos, review, scan, scripts, updates, watch};
@@ -122,6 +122,18 @@ pub async fn get_commit_changes(
 ) -> Result<CommitChanges, AppError> {
     blocking(&state, move |state| {
         review::get_commit_changes(state, &repo_id, &sha)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn get_stash_changes(
+    state: State<'_, AppState>,
+    repo_id: String,
+    sha: String,
+) -> Result<StashChanges, AppError> {
+    blocking(&state, move |state| {
+        review::get_stash_changes(state, &repo_id, &sha)
     })
     .await
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '../../components/Banner';
+import { Button } from '../../components/Button';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import {
   BackIcon,
@@ -24,8 +25,9 @@ import { Pill } from '../../components/Pill';
 import { RefreshButton } from '../../components/RefreshButton';
 import { Segmented } from '../../components/Segmented';
 import { entryKey } from '../../lib/entryKey';
-import { formatAge } from '../../lib/format';
-import { getCommitChanges, getReview, updateSettings } from '../../lib/ipc';
+import { Icon } from '../../components/icons';
+import { formatAge, plural } from '../../lib/format';
+import { getCommitChanges, getReview, getStashChanges, updateSettings } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
 import type {
   CommitChanges,
@@ -39,6 +41,7 @@ import type {
   ReviewGroup,
   ReviewTarget,
   Settings,
+  StashChanges,
 } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
@@ -47,6 +50,7 @@ import { useData } from '../../state/data';
 import { selectCanForward, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { fileMatches, filterTerms, firstHit } from './fileFilter';
+import { reviewStashes, stashHeading, stashMeta, type ReviewStash } from './stashes';
 import editable from '../../components/EditableTitle.module.css';
 import styles from './Review.module.css';
 import {
@@ -78,7 +82,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   const targetKey = JSON.stringify(target);
   const projects = useData((s) => s.config?.projects);
   const repoIds = useMemo(() => {
-    if (target.kind === 'branch') return [target.repoId];
+    if (target.kind !== 'project') return [target.repoId];
     const project = projects?.find((p) => p.id === target.projectId);
     return [...new Set(project?.entries.map((e) => e.repoId) ?? [])];
   }, [target, projects]);
@@ -90,6 +94,34 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
 
   const groups = data?.groups ?? [];
   const mode = chosenMode ?? defaultMode(groups);
+
+  // Stashes (flows P2–P3): listed under the files; picking one shows what it holds instead of
+  // an entry's file. Its changes are fetched once (a stash never changes).
+  const scans = useData((s) => s.scan);
+  const stashes = useMemo(() => reviewStashes(target, projects, scans), [target, projects, scans]);
+  const [stashSel, setStashSel] = useState<string | null>(target.kind === 'stashes' ? (focusKey ?? null) : null);
+  const [stashPath, setStashPath] = useState<string | null>(null);
+  const [stashData, setStashData] = useState<Record<string, StashChanges>>({});
+  // Stash scope always shows one: the one asked for, else the newest (also after it was dropped).
+  const stash =
+    stashes.find((s) => s.sha === stashSel) ?? (target.kind === 'stashes' ? stashes[0] : undefined);
+  const stashChanges = stash ? stashData[commitId(stash.repoId, stash.sha)] : undefined;
+  const stashFile = stashChanges?.files.find((f) => f.path === stashPath) ?? stashChanges?.files[0];
+  const stashId = stash ? `stash\u0001${stash.sha}` : null;
+  const stashRequested = useRef(new Set<string>());
+  useEffect(() => {
+    if (!stash) return;
+    const id = commitId(stash.repoId, stash.sha);
+    if (stashRequested.current.has(id)) return;
+    stashRequested.current.add(id);
+    getStashChanges(stash.repoId, stash.sha).then(
+      (c) => setStashData((d) => ({ ...d, [id]: c })),
+      (e) => {
+        console.error('stash changes failed', e);
+        stashRequested.current.delete(id);
+      },
+    );
+  }, [stash]);
 
   // One commit at a time (flow D7): the commit picked per entry, for this visit only. Not in
   // Uncommitted; in All the commit alone is shown.
@@ -110,6 +142,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   const setMode = (m: DiffMode) => {
     setChosenMode(m);
     setSelected(null);
+    setStashSel(null);
     if (m === 'uncommitted') setCommitSel({});
   };
   // Entries with nothing in this mode are hidden, except the one group of a branch review: its
@@ -139,8 +172,17 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   }, []);
 
   // Jumping between changes (flow D4): listed files in order, collapsed groups included.
-  const files = listed.flatMap((g) => shownOf(g).map((f) => fileId(g.entry.key, f.path)));
-  const currentId = current ? fileId(current.key, current.path) : null;
+  // With a stash picked they are its files.
+  const files = stashId
+    ? (stashChanges?.files ?? []).map((f) => fileId(stashId, f.path))
+    : listed.flatMap((g) => shownOf(g).map((f) => fileId(g.entry.key, f.path)));
+  const currentId = stashId
+    ? stashFile
+      ? fileId(stashId, stashFile.path)
+      : null
+    : current
+      ? fileId(current.key, current.path)
+      : null;
   // Keep the file on screen in the list when it changes from outside the list (next / previous
   // change, a commit's first file); a row clicked in view does not scroll.
   const fileList = useRef<HTMLElement>(null);
@@ -152,8 +194,18 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   const [nav, setNav] = useState<NavInfo>({ index: null, count: 0 });
   const diffNav = useRef<DiffNav | null>(null);
   const select = (f: FileRef, where: 'first' | 'last' = 'first') => {
-    setSelected(f);
+    if (stashId && f.key === stashId) {
+      setStashPath(f.path);
+    } else {
+      setStashSel(null);
+      setSelected(f);
+    }
     setLand({ id: fileId(f.key, f.path), where });
+  };
+  const pickStash = (sha: string) => {
+    setStashSel(sha);
+    setStashPath(null);
+    setLand({ id: null, where: 'first' });
   };
   const step = (dir: 1 | -1) => {
     const state = { index: nav.index, count: nav.count, files, fileIndex };
@@ -161,11 +213,12 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     if (r?.kind === 'hunk') diffNav.current?.goTo(r.index);
     if (r?.kind === 'file') {
       const [key, path] = r.key.split('\u0000');
-      setCollapsed((c) => {
-        const open = new Set(c);
-        open.delete(key);
-        return open;
-      });
+      if (key !== stashId)
+        setCollapsed((c) => {
+          const open = new Set(c);
+          open.delete(key);
+          return open;
+        });
       select({ key, path }, r.land);
     }
   };
@@ -294,7 +347,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   const [baseSaved, setBaseSaved] = useState<string | null>(null);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   useEffect(() => setPendingKey(null), [data]);
-  const banner = mode === 'uncommitted' ? uncommittedBanner(target, groups) : null;
+  const banner = mode === 'uncommitted' && !stash ? uncommittedBanner(target, groups) : null;
 
   // Coming from a project row: open that entry, collapse the others (once).
   const focused = useRef(false);
@@ -320,20 +373,86 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
       return next;
     });
 
+  // The file bar and the diff, for an entry's file or a stash's.
+  const fileBar = (file: FileChange, label: string) => (
+    <div className={styles.fileBar}>
+      <span className={styles.filePath}>{file.path}</span>
+      <span className={styles.muted}>{label}</span>
+      {ignoreWs && (
+        <Pill tone="accent" title="Show whitespace changes (⌥W)" onClick={toggleWs}>
+          Whitespace ignored
+        </Pill>
+      )}
+      <span className={styles.grow} />
+      <ViewMenu
+        layout={layout}
+        ignoreWs={ignoreWs}
+        onLayout={(l) => saveView({ diffView: l })}
+        context={context}
+        contextLines={contextLines}
+        onContext={(c, lines) => saveView({ diffContext: c, diffContextLines: lines })}
+        onToggleWs={toggleWs}
+      />
+      <span className={styles.barDivider} />
+      <ChangeNav
+        onlyWhitespace={
+          ignoreWs && !file.binary && (file.add ?? 0) + (file.del ?? 0) > 0
+        }
+        nav={nav}
+        prevFile={fileIndex >= 0 ? files[fileIndex - 1] : files[files.length - 1]}
+        nextFile={files[fileIndex + 1]}
+        onStep={step}
+      />
+    </div>
+  );
+  const diffView = (repoId: string, worktreePath: string | null, file: FileChange, diffMode: DiffMode, fileKey: string) => (
+    <DiffView
+      repoId={repoId}
+      worktreePath={worktreePath}
+      change={file}
+      mode={diffMode}
+      fileKey={fileKey}
+      land={land.id === currentId ? land.where : 'first'}
+      onNav={setNav}
+      onStep={(dir) => stepRef.current(dir)}
+      navRef={diffNav}
+      layout={layout}
+      ignoreWhitespace={ignoreWs}
+      onToggleLayout={() => viewRef.current.toggleLayout()}
+      onToggleWhitespace={() => viewRef.current.toggleWs()}
+      context={context}
+      contextLines={contextLines}
+      onToggleContext={() => viewRef.current.toggleContext()}
+      onCommitStep={(dir) => stepCommitRef.current(dir)}
+      onFocusFilter={() => {
+        filterInput.current?.focus();
+        filterInput.current?.select();
+      }}
+    />
+  );
+
   return (
     <div className={styles.screen}>
-      <ReviewHeader entry={entry} target={target} backLabel={backLabel} data={data}>
+      <ReviewHeader entry={entry} target={target} backLabel={backLabel} data={data} stashes={stashes}>
+        {/* Writing stashes comes later (T19.4). */}
+        {target.kind !== 'stashes' && (
+          <Button icon="package" disabled title={NOT_YET}>
+            Stash…
+          </Button>
+        )}
         <RefreshButton />
-        <Segmented
-          aria-label="Diff layer"
-          value={mode}
-          onChange={setMode}
-          options={(['committed', 'uncommitted', 'all'] as const).map((m) => ({
-            value: m,
-            label: MODE_LABELS[m],
-            count: data ? counts(m) : undefined,
-          }))}
-        />
+        {target.kind !== 'stashes' && (
+          <Segmented
+            aria-label="Diff layer"
+            value={mode}
+            onChange={setMode}
+            options={(['committed', 'uncommitted', 'all'] as const).map((m) => ({
+              value: m,
+              label: MODE_LABELS[m],
+              count: data ? counts(m) : undefined,
+            }))}
+          />
+        )}
         {target.kind === 'project' && <EditProjectButton projectId={target.projectId} />}
       </ReviewHeader>
       {banner ? (
@@ -344,16 +463,22 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
 
       <div className={styles.body}>
         <aside ref={fileList} className={sidebarShown ? `${styles.files} ${styles.filesNarrow}` : styles.files}>
-          <FileFilter
-            inputRef={filterInput}
-            query={fileQuery}
-            onQuery={setFileQuery}
-            count={files.length}
-            onOpenFirst={() => {
-              const [key, path] = files[0]?.split('\u0000') ?? [];
-              if (key) select({ key, path });
-            }}
-          />
+          {target.kind !== 'stashes' && (
+            <FileFilter
+              inputRef={filterInput}
+              query={fileQuery}
+              onQuery={(q) => {
+                setFileQuery(q);
+                // The stashes are hidden while filtering, so the entries' file comes back.
+                if (q.trim()) setStashSel(null);
+              }}
+              count={files.length}
+              onOpenFirst={() => {
+                const [key, path] = files[0]?.split('\u0000') ?? [];
+                if (key) select({ key, path });
+              }}
+            />
+          )}
           {filtering && files.length === 0 && (
             <div className={styles.noMatch}>
               <span className={styles.noMatchTitle}>No files match “{fileQuery}”</span>
@@ -372,7 +497,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
               terms={terms}
               open={filtering || !collapsed.has(g.entry.key)}
               onToggle={() => toggle(g.entry.key)}
-              selected={current}
+              selected={stash ? null : current}
               onSelect={(f) => select(f)}
               pending={pendingKey === g.entry.key}
               onBase={(rect) => setBaseMenu({ group: g, rect })}
@@ -393,12 +518,38 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
               </button>
             </div>
           )}
+          {stashes.length > 0 && !filtering && (
+            <StashSection
+              heading={stashHeading(target, stashes[0].repoName)}
+              stashes={stashes}
+              picked={stash?.sha}
+              changes={stashChanges}
+              file={stashFile?.path}
+              divider={target.kind !== 'stashes'}
+              onPick={pickStash}
+              onFile={(path) => stashId && select({ key: stashId, path })}
+            />
+          )}
         </aside>
 
         <section className={styles.main}>
           {error ? (
             <div className={styles.empty}>{error.message}</div>
-          ) : !data ? null : groups.length === 0 ? (
+          ) : !data ? null : stash ? (
+            <>
+              <StashBar stash={stash} base={stashChanges?.base ?? stash.base} />
+              {stashFile ? (
+                <>
+                  {fileBar(stashFile, `${(stashChanges?.base ?? stash.base).slice(0, 7)} ↔ stash@{${stash.index}}`)}
+                  {diffView(stash.repoId, null, stashFile, 'committed', `${currentId}\u0000stash`)}
+                </>
+              ) : (
+                stashChanges && <div className={styles.empty}>No changes</div>
+              )}
+            </>
+          ) : target.kind === 'stashes' ? (
+            <div className={styles.empty}>No stashes</div>
+          ) : groups.length === 0 ? (
             <div className={styles.empty}>
               {target.kind === 'branch' ? notReviewable(entry) : EMPTY_MESSAGES[mode]}
             </div>
@@ -412,62 +563,19 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
                 onPick={(sha) => pickCommit(group, sha)}
                 onStep={stepCommit}
               />
-              <div className={styles.fileBar}>
-                <span className={styles.filePath}>{change.path}</span>
-                <span className={styles.muted}>
-                  {shaOf(group)
-                    ? `${commitParent(group, shaOf(group), commitOf(group))} ↔ ${shaOf(group)!.slice(0, 7)}`
-                    : compareLabel(mode, group.entry)}
-                </span>
-                {ignoreWs && (
-                  <Pill tone="accent" title="Show whitespace changes (⌥W)" onClick={toggleWs}>
-                    Whitespace ignored
-                  </Pill>
-                )}
-                <span className={styles.grow} />
-                <ViewMenu
-                  layout={layout}
-                  ignoreWs={ignoreWs}
-                  onLayout={(l) => saveView({ diffView: l })}
-                  context={context}
-                  contextLines={contextLines}
-                  onContext={(c, lines) => saveView({ diffContext: c, diffContextLines: lines })}
-                  onToggleWs={toggleWs}
-                />
-                <span className={styles.barDivider} />
-                <ChangeNav
-                  onlyWhitespace={
-                    ignoreWs && !change.binary && (change.add ?? 0) + (change.del ?? 0) > 0
-                  }
-                  nav={nav}
-                  prevFile={fileIndex >= 0 ? files[fileIndex - 1] : files[files.length - 1]}
-                  nextFile={files[fileIndex + 1]}
-                  onStep={step}
-                />
-              </div>
-              <DiffView
-                repoId={group.entry.repoId}
-                worktreePath={commitOf(group) ? null : group.entry.worktreePath}
-                change={change}
-                mode={commitOf(group) ? 'committed' : mode}
-                fileKey={`${currentId}\u0000${mode}\u0000${commitOf(group)?.sha ?? ''}`}
-                land={land.id === currentId ? land.where : 'first'}
-                onNav={setNav}
-                onStep={(dir) => stepRef.current(dir)}
-                navRef={diffNav}
-                layout={layout}
-                ignoreWhitespace={ignoreWs}
-                onToggleLayout={() => viewRef.current.toggleLayout()}
-                onToggleWhitespace={() => viewRef.current.toggleWs()}
-                context={context}
-                contextLines={contextLines}
-                onToggleContext={() => viewRef.current.toggleContext()}
-                onCommitStep={(dir) => stepCommitRef.current(dir)}
-                onFocusFilter={() => {
-                  filterInput.current?.focus();
-                  filterInput.current?.select();
-                }}
-              />
+              {fileBar(
+                change,
+                shaOf(group)
+                  ? `${commitParent(group, shaOf(group), commitOf(group))} ↔ ${shaOf(group)!.slice(0, 7)}`
+                  : compareLabel(mode, group.entry),
+              )}
+              {diffView(
+                group.entry.repoId,
+                commitOf(group) ? null : group.entry.worktreePath,
+                change,
+                commitOf(group) ? 'committed' : mode,
+                `${currentId}\u0000${mode}\u0000${commitOf(group)?.sha ?? ''}`,
+              )}
             </>
           ) : (
             <div className={styles.empty}>{EMPTY_MESSAGES[mode]}</div>
@@ -493,6 +601,8 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     </div>
   );
 }
+
+const NOT_YET = 'Not available yet';
 
 function fileId(entryKey: string, path: string): string {
   return `${entryKey}\u0000${path}`;
@@ -698,12 +808,14 @@ function ReviewHeader({
   target,
   backLabel,
   data,
+  stashes,
   children,
 }: {
   entry: EntrySummary | undefined;
   target: ReviewTarget;
   backLabel: string;
   data: ReviewData | undefined;
+  stashes: ReviewStash[];
   children: React.ReactNode;
 }) {
   const sidebarVisible = useUi((s) => s.sidebarVisible);
@@ -729,6 +841,10 @@ function ReviewHeader({
       : project
         ? `${repo} · in ${project.name}`
         : `${repo} · not in a project`;
+  } else if (target.kind === 'stashes') {
+    title = 'Stashes';
+    const repo = config?.repos.find((r) => r.id === target.repoId);
+    subtitle = `${repo ? basename(repo.path) : ''} · ${plural(stashes.length, 'stash', 'stashes')}`;
   } else {
     title = project?.name ?? '';
     if (data) {
@@ -883,32 +999,139 @@ function FileGroup({
       )}
       {open && (
         <div className={loading ? `${styles.fileRows} ${styles.stale}` : styles.fileRows}>
-          {shown.map((f) => {
-            const on = selected?.key === e.key && selected.path === f.path;
-            return (
-              <button
-                key={f.path}
-                type="button"
-                className={on ? `${styles.fileRow} ${styles.selected}` : styles.fileRow}
-                aria-current={on || undefined}
-                onClick={() => onSelect({ key: e.key, path: f.path })}
-                title={f.path}
-              >
-                <KindBadge kind={f.kind} />
-                <span className={styles.fileName}>
-                  <Highlighted text={basename(f.path)} terms={terms} />
-                </span>
-                <span className={styles.fileDir}>
-                  <Highlighted text={dirLabel(f)} terms={terms} />
-                </span>
-                {!!f.add && <span className={styles.add}>+{f.add}</span>}
-                {!!f.del && <span className={styles.del}>−{f.del}</span>}
-              </button>
-            );
-          })}
+          {shown.map((f) => (
+            <FileRow
+              key={f.path}
+              file={f}
+              terms={terms}
+              on={selected?.key === e.key && selected.path === f.path}
+              onClick={() => onSelect({ key: e.key, path: f.path })}
+            />
+          ))}
         </div>
       )}
     </section>
+  );
+}
+
+/** The stash section under the files (flows P2–P3); the picked stash lists its files. */
+function StashSection({
+  heading,
+  stashes,
+  picked,
+  changes,
+  file,
+  divider,
+  onPick,
+  onFile,
+}: {
+  heading: string;
+  stashes: ReviewStash[];
+  picked: string | undefined;
+  /** The picked stash's files, once loaded. */
+  changes: StashChanges | undefined;
+  /** The file shown. */
+  file: string | undefined;
+  /** A rule above it, under the entries. */
+  divider: boolean;
+  onPick: (sha: string) => void;
+  onFile: (path: string) => void;
+}) {
+  return (
+    <section aria-label="Stashes" className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
+      <div className={styles.stashHeading}>
+        {heading} · {stashes.length}
+      </div>
+      {stashes.map((st) => {
+        const on = st.sha === picked;
+        return (
+          <div key={`${st.repoId}:${st.sha}`} className={styles.stash}>
+            <button
+              type="button"
+              className={on ? `${styles.stashRow} ${styles.stashOn}` : styles.stashRow}
+              aria-expanded={on}
+              title={st.message}
+              onClick={() => onPick(st.sha)}
+            >
+              <span className={styles.stashLine}>
+                <Icon name="package" size={13} strokeWidth={1.6} className={styles.stashIcon} />
+                <span className={styles.stashMessage}>{st.message}</span>
+                <span className={styles.stashRef}>stash@{`{${st.index}}`}</span>
+              </span>
+              <span className={styles.stashMeta}>{stashMeta(st, divider)}</span>
+            </button>
+            {on && changes && (
+              <div className={styles.fileRows}>
+                {changes.files.map((f) => (
+                  <FileRow key={f.path} file={f} terms={[]} on={f.path === file} onClick={() => onFile(f.path)} />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+/** Above a stash's diff: which stash, where it was taken and on what. */
+function StashBar({ stash, base }: { stash: ReviewStash; base: string }) {
+  const branch = stash.branch ?? 'detached HEAD';
+  return (
+    <div className={styles.entryBar}>
+      <div className={styles.entryLine}>
+        <div className={styles.entryNames}>
+          <span className={styles.repoName}>stash@{`{${stash.index}}`}</span>
+          <span className={styles.entryBranch}>{stash.message}</span>
+          <span className={styles.entryRange}>
+            {stash.repoName} / {branch} · from {base.slice(0, 7)} · {formatAge(stash.createdAt)} ago
+          </span>
+        </div>
+        <span className={styles.grow} />
+        {/* Writing stashes comes later (T19.4). */}
+        <Button size={28} disabled title={NOT_YET}>
+          Apply
+        </Button>
+        <Button size={28} disabled title={NOT_YET}>
+          Pop
+        </Button>
+        <Button size={28} disabled title={NOT_YET} className={styles.dropButton}>
+          Drop…
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function FileRow({
+  file: f,
+  terms,
+  on,
+  onClick,
+}: {
+  file: FileChange;
+  terms: string[];
+  on: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={on ? `${styles.fileRow} ${styles.selected}` : styles.fileRow}
+      aria-current={on || undefined}
+      onClick={onClick}
+      title={f.path}
+    >
+      <KindBadge kind={f.kind} />
+      <span className={styles.fileName}>
+        <Highlighted text={basename(f.path)} terms={terms} />
+      </span>
+      <span className={styles.fileDir}>
+        <Highlighted text={dirLabel(f)} terms={terms} />
+      </span>
+      {!!f.add && <span className={styles.add}>+{f.add}</span>}
+      {!!f.del && <span className={styles.del}>−{f.del}</span>}
+    </button>
   );
 }
 

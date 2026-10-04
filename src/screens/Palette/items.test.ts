@@ -47,6 +47,7 @@ const scan: RepoScan = {
     { repoId: 'r_1', repoName: 'web-app', branch: 'fix/token-expiry', lastCommitAt: NOW - 41 * DAY, merged: true },
     { repoId: 'r_1', repoName: 'web-app', branch: 'old-feature', lastCommitAt: NOW - 60 * DAY, merged: false },
   ],
+  stashes: [],
 };
 
 const items = paletteItems([scan], new Set(['r_1:in-project']), 'Session auth', NOW);

@@ -120,6 +120,21 @@ make_web_app() {
   commit "$repo" 1 "Reprice the catalog"
   git -C "$repo" switch -q main
   git -C "$repo" worktree add -q "$ROOT/wt/token-refresh" session-token-refresh
+  # Stashes (flow P): one on session-token-refresh, a WIP one (with an untracked file) on a branch
+  # deleted since.
+  git -C "$repo" switch -q -c old-login main
+  put "$repo" src/auth/login.ts 'export function login() { return "new form"; }'
+  put "$repo" src/auth/login-form.ts 'export const form = {};'
+  commit "$repo" 21 "Try new login form"
+  put "$repo" src/auth/login.ts 'export function login(user = "") { return user; }'
+  put "$repo" src/auth/login.test.ts 'test("login", () => {});'
+  at 21
+  git -C "$repo" stash push -q -u
+  git -C "$repo" switch -q main
+  git -C "$repo" branch -q -D old-login
+  put "$ROOT/wt/token-refresh" src/auth/refresh.ts "$(printf '%s\n' 'export function refresh() {' '  console.debug("[refresh] rotating");' '  return null;' '}')"
+  at 0
+  git -C "$ROOT/wt/token-refresh" stash push -q -m "debug logging for refresh"
   put "$ROOT/wt/token-refresh" src/auth/refresh.ts 'export function refresh() { return getSession(); }'
   put "$ROOT/wt/token-refresh" scripts/token-debug.ts 'console.log("token debug");'
 
@@ -203,6 +218,10 @@ make_api_server() {
 
   git -C "$repo" switch -q master
   git -C "$repo" worktree add -q "$ROOT/wt/token-rotation" token-rotation-job
+  put "$ROOT/wt/token-rotation" src/jobs/rotate-tokens.ts 'export function rotate() { return true; }'
+  put "$ROOT/wt/token-rotation" src/config/schedule.ts 'export const schedule = { rotate: "daily" };'
+  at 1
+  git -C "$ROOT/wt/token-rotation" stash push -q
   put "$ROOT/wt/token-rotation" src/jobs/rotate-tokens.ts 'export function rotate() { return true; }'
   git -C "$repo" worktree add -q --detach "$ROOT/wt/detached" feat/job-queue~1
 }

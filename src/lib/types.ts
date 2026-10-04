@@ -163,6 +163,18 @@ export interface RepoScan {
   defaultBaseSource: string | null; // matching defaultBaseOrder item, e.g. "origin/HEAD"
   active: EntrySummary[]; // active branches + detached worktrees, newest first
   others: OtherBranch[]; // all other local branches except the base branch
+  stashes: StashInfo[]; // the stash stack, newest first (one per repo, shared by its worktrees)
+}
+/** One stash@{n} (flow P). */
+export interface StashInfo {
+  index: number; // n in stash@{n}; 0 is the newest
+  sha: string;
+  message: string; // the text after "On <branch>: ", or the whole "WIP on …" line
+  branch: string | null; // the branch it was taken on; null on a detached HEAD
+  branchExists: boolean;
+  base: string; // the commit it was taken on (its first parent)
+  files: number | null; // null when its changes could not be read
+  createdAt: number; // unix seconds
 }
 export interface ScanResult {
   repos: RepoScan[];
@@ -211,6 +223,12 @@ export interface ReviewGroup {
   stackHint: StackHint | null;
 }
 // One commit's own changes against its first parent (flow D7).
+/** What a stash holds, against the commit it was taken on; untracked files are U. */
+export interface StashChanges {
+  sha: string;
+  base: string;
+  files: FileChange[];
+}
 export interface CommitChanges {
   sha: string;
   parent: string | null; // null => root commit, compared with an empty tree
@@ -229,7 +247,8 @@ export type ReviewTarget =
       branch: string | null;
       worktreePath: string | null;
       tipOverride: string | null;
-    };
+    }
+  | { kind: 'stashes'; repoId: string }; // a repo's stash stack (flow P3)
 export interface FilePair {
   original: string;
   modified: string;

@@ -105,6 +105,7 @@ pub fn run() {
             commands::rescan_all,
             commands::get_review,
             commands::get_commit_changes,
+            commands::get_stash_changes,
             commands::read_file_pair,
             commands::create_project,
             commands::rename_project,

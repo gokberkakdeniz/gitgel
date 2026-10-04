@@ -698,3 +698,94 @@
   line-height: 1.4;
   color: var(--text-muted);
 }
+
+/* Stashes under the files (flows P2–P3). */
+.stashes {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stashesRuled {
+  margin-top: 8px;
+  border-top: 1px solid var(--bg-hover);
+  padding-top: 2px;
+}
+
+.stashHeading {
+  padding: 10px 8px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stash {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stashRow {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  text-align: left;
+  cursor: pointer;
+}
+
+.stashRow:hover {
+  background: var(--bg-sunken);
+}
+
+.stashLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.stashIcon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.stashOn .stashIcon {
+  color: var(--accent-text);
+}
+
+.stashMessage {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stashRef,
+.stashMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.stashMeta {
+  padding-left: 21px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Beats Button's own secondary colours. */
+.entryBar .dropButton {
+  background: transparent;
+  color: var(--danger);
+}

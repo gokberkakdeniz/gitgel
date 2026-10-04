@@ -17,6 +17,7 @@ import type {
   RunContext,
   ScriptConfig,
   ScriptRun,
+  StashChanges,
   Settings,
   TerminalOption,
   UpdateInfo,
@@ -37,6 +38,9 @@ export const getReview = (target: ReviewTarget) => invoke<ReviewData>('get_revie
 
 export const getCommitChanges = (repoId: string, sha: string) =>
   invoke<CommitChanges>('get_commit_changes', { repoId, sha });
+
+export const getStashChanges = (repoId: string, sha: string) =>
+  invoke<StashChanges>('get_stash_changes', { repoId, sha });
 
 export const readFilePair = (repoId: string, worktreePath: string | null, change: FileChange) =>
   invoke<FilePair>('read_file_pair', { repoId, worktreePath, change });

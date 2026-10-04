@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Config, EntrySummary, RepoScan } from '../../lib/types';
+import type { Config, EntrySummary, RepoScan, StashInfo } from '../../lib/types';
 import { afu, branchCount, branchGroups, matchesFilter, middleCut, projectsOf, scopeCounts } from './rows';
 
 function entry(repoId: string, branch: string | null, at: number, extra: Partial<EntrySummary> = {}): EntrySummary {
@@ -38,6 +38,7 @@ function scan(id: string, active: EntrySummary[], status: RepoScan['status'] = '
     defaultBaseSource: 'main',
     active,
     others: [],
+    stashes: [],
   };
 }
 
@@ -179,5 +180,30 @@ describe('middleCut', () => {
 
   it('takes the last 16 characters when they have no separator', () => {
     expect(middleCut('abcdefghijklmnopqrstuvwxyz0123')).toEqual(['abcdefghijklmn', 'opqrstuvwxyz0123']);
+  });
+});
+
+describe('stashes under a band', () => {
+  const st = (index: number, message: string, branch: string): StashInfo => ({
+    index,
+    sha: `s${index}`,
+    message,
+    branch,
+    branchExists: true,
+    base: 'b',
+    files: 1,
+    createdAt: 0,
+  });
+  const repo = { ...scan('r_1', [entry('r_1', 'feat/x', 5)]), stashes: [st(0, 'debug logging', 'feat/x'), st(1, 'wip', 'old')] };
+  const empty = { ...scan('r_2', []), stashes: [st(0, 'lonely', 'gone')] };
+
+  it('lists the stack with the rows, filtered like the rows', () => {
+    expect(branchGroups(config, [repo], '')[0].stashes.map((s) => s.index)).toEqual([0, 1]);
+    expect(branchGroups(config, [repo], 'logging')).toEqual([]);
+    expect(branchGroups(config, [repo], 'feat')[0].stashes.map((s) => s.index)).toEqual([0]);
+  });
+
+  it('keeps a band without rows hidden', () => {
+    expect(branchGroups(config, [empty], '')).toEqual([]);
   });
 });

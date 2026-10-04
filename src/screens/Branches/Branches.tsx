@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
+import { List, type ListSubPart } from '../../components/List';
 import { BranchLargeIcon, ChevronDownIcon, CloseIcon, CopyIcon, FolderIcon, MoreVerticalIcon, WorktreeIcon } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
@@ -19,7 +20,7 @@ import { formatAge, plural } from '../../lib/format';
 import { tildifyHome } from '../../lib/paths';
 import { readProjectSort, sortProjects } from '../../lib/projectSort';
 import { refOf } from '../../lib/projects';
-import type { Config, EntrySummary } from '../../lib/types';
+import type { Config, EntrySummary, StashInfo } from '../../lib/types';
 import { selectRepoScans, useData } from '../../state/data';
 import { openSettings, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
@@ -327,7 +328,7 @@ function SelectionBar({ selected, onAdded }: { selected: EntrySummary[]; onAdded
 }
 
 function RepoSection({
-  group: { scan, rows },
+  group: { scan, rows, stashes },
   config,
   flash,
   selectedKeys,
@@ -372,8 +373,86 @@ function RepoSection({
           onPopover={(kind, rect, atPointer) => onPopover({ kind, key: e.key, rect, atPointer })}
         />
       ))}
+      {stashes.length > 0 && (
+        <StashList
+          repoId={scan.repo.id}
+          stashes={stashes}
+          checkedOut={scan.active.filter((e) => e.worktreePath).map((e) => e.branch ?? e.shortSha ?? '')}
+        />
+      )}
     </section>
   );
+}
+
+/** The repo's stash stack under its rows (flow P1); a row or its menu opens the stash review. */
+function StashList({ repoId, stashes, checkedOut }: { repoId: string; stashes: StashInfo[]; checkedOut: string[] }) {
+  const push = useNav((s) => s.push);
+  const [menu, setMenu] = useState<{ sha: string; rect: DOMRect } | null>(null);
+  const open = (sha: string) =>
+    push({ name: 'review', target: { kind: 'stashes', repoId }, focusKey: sha, backLabel: 'Back to Branches' });
+  return (
+    <div className={styles.stashes}>
+      <List
+        heading="Stashes"
+        label="Stashes"
+        items={stashes.map((st) => ({
+          key: st.sha,
+          lead: 'icon',
+          icon: 'package',
+          prefix: `stash@{${st.index}}`,
+          title: st.message,
+          active: menu?.sha === st.sha,
+          sub: stashSub(st),
+          actions: [
+            {
+              icon: 'more-vertical',
+              ariaLabel: 'Stash options',
+              active: menu?.sha === st.sha,
+              onPress: (e) => {
+                e.stopPropagation();
+                setMenu({ sha: st.sha, rect: e.currentTarget.getBoundingClientRect() });
+              },
+            },
+          ],
+          rowProps: { className: styles.stashRow, onClick: () => open(st.sha) },
+        }))}
+      />
+      {menu && (
+        <Popover anchorRect={menu.rect} width={280} alignRight onClose={() => setMenu(null)}>
+          <Menu aria-label="Stash actions">
+            <MenuItem kbd="↵" onSelect={() => open(menu.sha)}>
+              Review changes
+            </MenuItem>
+            {/* Writing stashes comes later (T19.4). */}
+            <MenuItem desc={checkedOut.join(', ')} disabled title={NOT_YET} onSelect={() => {}}>
+              Apply to…
+            </MenuItem>
+            <MenuItem desc="Apply, then drop if it applied cleanly" disabled title={NOT_YET} onSelect={() => {}}>
+              Pop to…
+            </MenuItem>
+            <MenuDivider />
+            <MenuItem kbd="⌫" danger disabled title={NOT_YET} onSelect={() => {}}>
+              Drop…
+            </MenuItem>
+          </Menu>
+        </Popover>
+      )}
+    </div>
+  );
+}
+
+const NOT_YET = 'Not available yet';
+
+function stashSub(st: StashInfo): ListSubPart[] {
+  const branch: ListSubPart = st.branch
+    ? st.branchExists
+      ? { pill: st.branch, tone: 'accent' }
+      : { pill: `${st.branch} · deleted`, tone: 'outline' }
+    : { pill: 'detached HEAD', tone: 'outline' };
+  const parts: ListSubPart[] = [branch];
+  if (st.files !== null) parts.push({ text: plural(st.files, 'file', 'files') });
+  parts.push({ text: formatAge(st.createdAt) });
+  return parts;
 }
 
 function Row({

@@ -101,6 +101,16 @@
   flex-direction: column;
 }
 
+.stashes {
+  /* Under the rows of its band, past the checkbox column (StashList, flow P1). */
+  padding: 8px 16px 14px 52px;
+  border-bottom: 1px solid var(--border-row);
+}
+
+.stashRow {
+  cursor: default;
+}
+
 .band {
   display: flex;
   align-items: center;

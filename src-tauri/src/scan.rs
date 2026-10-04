@@ -14,10 +14,10 @@ use crate::error::AppError;
 use crate::git::history::{self, CommittedStats};
 use crate::git::pool::RepoPool;
 use crate::git::refs::DefaultBase;
-use crate::git::{diff, refs, worktrees, Repo};
+use crate::git::{diff, refs, stash, worktrees, Repo};
 use crate::model::{
     entry_key, Config, EntryState, EntrySummary, FileChange, OtherBranch, RepoConfig, RepoScan,
-    RepoStatus, RepoUpdated, ScanResult, UpdateReason,
+    RepoStatus, RepoUpdated, ScanResult, StashInfo, UpdateReason,
 };
 use crate::nearest;
 use crate::state::{lock, AppState};
@@ -109,6 +109,7 @@ pub fn scan_repo(
         default_base_source: None,
         active: Vec::new(),
         others: Vec::new(),
+        stashes: Vec::new(),
     };
     let path = Path::new(&repo_cfg.path);
     if !path.exists() {
@@ -137,6 +138,7 @@ pub fn scan_repo(
             scan.error = Some(e.to_string());
             scan.active.clear();
             scan.others.clear();
+            scan.stashes.clear();
             RepoResult { scan, layout: None }
         }
     }
@@ -196,6 +198,7 @@ fn fill(
         ctx.timings.borrow_mut().add("branches", started.elapsed());
         branches
     };
+    let branch_names: HashSet<String> = branches.iter().map(|b| b.name.clone()).collect();
     let mut other_tips: Vec<(String, i64)> = Vec::new();
     for branch in branches {
         live_tips.insert(branch.tip.clone());
@@ -286,6 +289,10 @@ fn fill(
         ));
     }
 
+    scan.stashes = ctx.timings.borrow_mut().time("stashes", || {
+        stashes(cache, repo, &repo_cfg.id, &branch_names)
+    });
+
     scan.active
         .sort_by_key(|e| std::cmp::Reverse(e.changed_at.or(e.last_commit_at)));
     scan.others
@@ -300,6 +307,47 @@ fn fill(
         layout.worktrees.len()
     );
     Ok(layout)
+}
+
+/// The stash stack, each stash with its file count (its changes are cached by stash commit).
+fn stashes(
+    cache: &Mutex<Cache>,
+    repo: &Repo,
+    repo_id: &str,
+    branches: &HashSet<String>,
+) -> Vec<StashInfo> {
+    let raw = match stash::list(repo) {
+        Ok(raw) => raw,
+        Err(e) => {
+            log::warn!("stashes of {repo_id}: {e}");
+            return Vec::new();
+        }
+    };
+    let live: HashSet<String> = raw.iter().map(|s| s.sha.clone()).collect();
+    lock(cache).prune_stashes(repo_id, &live);
+    raw.into_iter()
+        .map(|s| {
+            let cached = lock(cache).stash(repo_id, &s.sha);
+            let changes = cached.map(Ok).unwrap_or_else(|| {
+                let c = stash::changes(repo, &s.sha)?;
+                lock(cache).put_stash(repo_id, c.clone());
+                Ok::<_, AppError>(c)
+            });
+            if let Err(e) = &changes {
+                log::warn!("stash@{{{}}} of {repo_id}: {e}", s.index);
+            }
+            StashInfo {
+                index: s.index,
+                branch_exists: s.branch.as_ref().is_some_and(|b| branches.contains(b)),
+                branch: s.branch,
+                base: changes.as_ref().map(|c| c.base.clone()).unwrap_or_default(),
+                files: changes.ok().map(|c| c.files.len() as u32),
+                sha: s.sha,
+                message: s.message,
+                created_at: s.created_at,
+            }
+        })
+        .collect()
 }
 
 /// Summary of one entry: a branch (`branch` set) or a detached worktree (`branch` `None`).
@@ -976,6 +1024,7 @@ fn failed_scan(repo_cfg: &RepoConfig, error: &str) -> RepoScan {
         default_base_source: None,
         active: Vec::new(),
         others: Vec::new(),
+        stashes: Vec::new(),
     }
 }
 

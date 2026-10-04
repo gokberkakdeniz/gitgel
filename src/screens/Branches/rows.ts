@@ -1,13 +1,15 @@
 // Which entries the Branches screen lists: every active entry, optionally only those in no
 // project ("Not in a project").
 import { entryKey } from '../../lib/entryKey';
-import type { Config, EntrySummary, ProjectConfig, RepoScan } from '../../lib/types';
+import type { Config, EntrySummary, ProjectConfig, RepoScan, StashInfo } from '../../lib/types';
 
 export type BranchScope = 'all' | 'unassigned';
 
 export interface RepoGroup {
   scan: RepoScan;
   rows: EntrySummary[];
+  /** Listed under the rows (flow P1); only while the band has rows. */
+  stashes: StashInfo[];
 }
 
 export function projectKeys(config: Config): Set<string> {
@@ -29,9 +31,18 @@ function words(text: string): string {
  * path or repo name: `feat queue` finds `feat/job-queue`, `api queue` finds it in api-server.
  */
 export function matchesFilter(e: EntrySummary, filter: string): boolean {
+  return matchesWords([e.branch, e.shortSha, e.headSha, e.worktreePath, e.repoName], filter);
+}
+
+/** The same filter for a stash: its message, branch or repo name. */
+export function matchesStash(s: StashInfo, repoName: string, filter: string): boolean {
+  return matchesWords([s.message, s.branch, repoName], filter);
+}
+
+function matchesWords(fields: (string | null)[], filter: string): boolean {
   const terms = words(filter).split(' ').filter(Boolean);
   if (terms.length === 0) return true;
-  const haystack = [e.branch, e.shortSha, e.headSha, e.worktreePath, e.repoName]
+  const haystack = fields
     .filter((s): s is string => !!s)
     .map(words)
     .join(' ');
@@ -56,14 +67,15 @@ export function branchGroups(
   const missing: RepoGroup[] = [];
   for (const scan of scans) {
     if (scan.status === 'missing') {
-      if (!filter.trim() && scope === 'all') missing.push({ scan, rows: [] });
+      if (!filter.trim() && scope === 'all') missing.push({ scan, rows: [], stashes: [] });
       continue;
     }
     const rows = scan.active.filter(
       (e) => (scope === 'all' || !inProject.has(e.key)) && matchesFilter(e, filter),
     );
     if (rows.length > 0 || scan.repo.id === keepRepoId || (scan.status === 'error' && !filter.trim())) {
-      groups.push({ scan, rows });
+      const stashes = rows.length > 0 ? scan.stashes.filter((st) => matchesStash(st, scan.name, filter)) : [];
+      groups.push({ scan, rows, stashes });
     }
   }
   const newest = (g: RepoGroup) => Math.max(0, ...g.rows.map((r) => r.changedAt ?? r.lastCommitAt ?? 0));

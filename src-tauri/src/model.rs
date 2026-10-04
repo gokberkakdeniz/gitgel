@@ -439,6 +439,29 @@ pub struct RepoScan {
     pub active: Vec<EntrySummary>,
     /// All remaining local branches except the base branch.
     pub others: Vec<OtherBranch>,
+    /// The repository's stash stack, newest first (one stack for all its worktrees).
+    pub stashes: Vec<StashInfo>,
+}
+
+/// One `stash@{n}` (flow P).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StashInfo {
+    /// `n` in `stash@{n}`; 0 is the newest.
+    pub index: u32,
+    pub sha: String,
+    /// The text after `On <branch>: `, or the whole `WIP on …` line.
+    pub message: String,
+    /// The branch it was taken on; `None` on a detached HEAD.
+    pub branch: Option<String>,
+    /// That branch still exists.
+    pub branch_exists: bool,
+    /// The commit it was taken on (its first parent).
+    pub base: String,
+    /// `None` when its changes could not be read.
+    pub files: Option<u32>,
+    /// Unix seconds.
+    pub created_at: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -552,6 +575,15 @@ pub struct CommitChanges {
     pub files: Vec<FileChange>,
 }
 
+/// What a stash holds, against the commit it was taken on; untracked files are `U`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StashChanges {
+    pub sha: String,
+    pub base: String,
+    pub files: Vec<FileChange>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewData {
@@ -577,6 +609,10 @@ pub enum ReviewTarget {
         branch: Option<String>,
         worktree_path: Option<String>,
         tip_override: Option<String>,
+    },
+    /// A repository's stash stack (flow P3): no entries, only its stashes.
+    Stashes {
+        repo_id: String,
     },
 }
 

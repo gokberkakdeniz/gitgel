@@ -5,10 +5,10 @@ use std::path::Path;
 use crate::cache::CommittedDetail;
 use crate::config;
 use crate::error::AppError;
-use crate::git::{diff, history, refs, Repo};
+use crate::git::{diff, history, refs, stash, Repo};
 use crate::model::{
     CommitChanges, Config, EntryState, EntrySummary, FilesByMode, RepoConfig, ReviewData,
-    ReviewGroup, ReviewTarget,
+    ReviewGroup, ReviewTarget, StashChanges,
 };
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -58,6 +58,12 @@ pub fn get_review(state: &AppState, target: &ReviewTarget) -> Result<ReviewData,
             log::info!("review {key}: {t}");
             Ok(data)
         }
+        // The stashes come from the stored scan; there is no entry to review.
+        ReviewTarget::Stashes { .. } => Ok(ReviewData {
+            groups: Vec::new(),
+            not_in_review: Vec::new(),
+            total_entries: 0,
+        }),
         ReviewTarget::Project { project_id } => {
             let project = config
                 .projects
@@ -150,6 +156,30 @@ pub fn get_commit_changes(
         changes.files.len()
     );
     lock(&state.cache).put_commit(repo_id, changes.clone());
+    Ok(changes)
+}
+
+/// What a stash holds (flow P2), cached by stash commit.
+pub fn get_stash_changes(
+    state: &AppState,
+    repo_id: &str,
+    sha: &str,
+) -> Result<StashChanges, AppError> {
+    if let Some(c) = lock(&state.cache).stash(repo_id, sha) {
+        return Ok(c);
+    }
+    let config = config::snapshot(state);
+    let repo_cfg = config
+        .repos
+        .iter()
+        .find(|r| r.id == repo_id)
+        .ok_or_else(|| AppError::NotFound(format!("repository {repo_id}")))?;
+    let changes = {
+        let shared = state.pool.get(Path::new(&repo_cfg.path))?;
+        let repo = lock(&shared);
+        stash::changes(&repo, sha)?
+    };
+    lock(&state.cache).put_stash(repo_id, changes.clone());
     Ok(changes)
 }
 

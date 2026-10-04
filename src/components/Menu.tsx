@@ -54,9 +54,11 @@ interface ItemProps {
   checked?: boolean;
   /** A checkbox item: a drawn box on the left. */
   box?: boolean;
+  /** Tooltip, e.g. why it is disabled. */
+  title?: string;
 }
 
-export function MenuItem({ children, onSelect, danger, hint, kbd, sub, desc, disabled, icon, checked, box }: ItemProps) {
+export function MenuItem({ children, onSelect, danger, hint, kbd, sub, desc, disabled, icon, checked, box, title }: ItemProps) {
   const second = sub ?? desc;
   const radio = checked !== undefined;
   const check = box !== undefined;
@@ -77,6 +79,7 @@ export function MenuItem({ children, onSelect, danger, hint, kbd, sub, desc, dis
       className={cls}
       onClick={onSelect}
       disabled={disabled}
+      title={title}
     >
       {icon && (
         <span className={styles.icon}>

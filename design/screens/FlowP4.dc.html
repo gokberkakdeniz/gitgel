@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>P4 · Stash several entries (planned)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input,textarea{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div style="width: 1280px; height: 800px; display: flex; flex-direction: column">
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--bg-main)">
+<div style="display: flex; gap: 8px; margin-right: -4px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="M9.5 4.5v15"></path></svg></button>
+<a href="Projects.dc.html" aria-label="Back to project" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m11 6-6 6 6 6"></path></svg></a>
+<button aria-label="Forward" disabled="{true}" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></button>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-left: 4px">
+<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap">Session auth refresh</span>
+<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">Project review · 4 entries in 2 repositories</span>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; align-items: center; gap: 10px">
+<button style="height: 32px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; border-radius: 8px; font-size: 13px; white-space: nowrap; cursor: pointer; background: var(--bg-hover); border: 1px solid var(--border-strong); color: var(--text-strong); font-size: 12px; padding: 0 12px; background: var(--bg-pressed)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 4l8 3.5v9L12 20l-8-3.5Z"></path><path d="M4 7.5 12 11l8-3.5M12 11v9"></path></svg>Stash…</button>
+<button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); "><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg></button>
+<div role="group" aria-label="Diff layer" style="display: flex; padding: 3px; gap: 2px; background: var(--bg-track); border-radius: 10px"><button aria-pressed="false" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: transparent; color: var(--text-muted)">Committed <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">15</span></button><button aria-pressed="true" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--bg-pressed); color: var(--text-strong)">Uncommitted <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">6</span></button><button aria-pressed="false" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: transparent; color: var(--text-muted)">All <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">18</span></button></div>
+</div>
+</header>
+<div style="flex-grow: 1; display: flex; min-height: 0">
+<aside style="width: 310px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; overflow: hidden">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; padding: 8px; min-height: 0; overflow: hidden">
+<div style="flex-shrink: 0; margin: 0 0 6px"><dc-import name="Input" theme="{{themeName}}" width="100%" placeholder="Search" label="Search files" hint-size="100%,30px"></dc-import></div>
+<section style="display: flex; flex-direction: column; gap: 1px; border-radius: 10px; padding-bottom: 4px; background: rgba(var(--accent-rgb), 0.07); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.45)">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px">
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--text-muted); flex-shrink: 0"><path d="m6 9 6 6 6-6"></path></svg>
+<span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">web-app</span>
+
+<button aria-haspopup="listbox" style="flex-shrink: 0; margin-left: auto; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--bg-elevated); border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)"><span style="color: var(--text-muted)">base</span> main <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">session-token-refresh</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+29</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">−1</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: var(--bg-hover)">
+<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--warning); background: rgba(var(--warning-rgb), 0.15)">M</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">refresh.ts</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">src/auth</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+2</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">−1</span>
+</div><div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
+<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--warning); background: rgba(var(--warning-rgb), 0.15)">M</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">refresh.test.ts</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">test/auth</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+5</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)"></span>
+</div><div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
+<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--kind-u); background: rgba(var(--kind-u-rgb), 0.16)">U</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">token-debug.ts</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">scripts · untracked</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+22</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)"></span>
+</div>
+</section><section style="display: flex; flex-direction: column; gap: 1px; border-radius: 10px; padding-bottom: 4px; ">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px">
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--text-muted); flex-shrink: 0"><path d="m6 9 6 6 6-6"></path></svg>
+<span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">web-app</span>
+
+<button aria-haspopup="listbox" style="flex-shrink: 0; margin-left: auto; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--bg-elevated); border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)"><span style="color: var(--text-muted)">base</span> main <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">session-cookie-cleanup</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+4</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">−6</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
+<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--warning); background: rgba(var(--warning-rgb), 0.15)">M</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">cookies.ts</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">src/http</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+4</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">−6</span>
+</div>
+</section><section style="display: flex; flex-direction: column; gap: 1px; border-radius: 10px; padding-bottom: 0px; ">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px">
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--text-muted); flex-shrink: 0; transform: rotate(-90deg)"><path d="m6 9 6 6 6-6"></path></svg>
+<span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">api-server</span>
+
+<button aria-haspopup="listbox" style="flex-shrink: 0; margin-left: auto; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--bg-elevated); border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)"><span style="color: var(--text-muted)">base</span> main <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">token-rotation-job</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+4</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">−2</span>
+</div>
+</div>
+
+</section><section style="display: flex; flex-direction: column; gap: 1px; border-radius: 10px; padding-bottom: 0px; ">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px">
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--text-muted); flex-shrink: 0; transform: rotate(-90deg)"><path d="m6 9 6 6 6-6"></path></svg>
+<span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">api-server</span>
+
+<button aria-haspopup="listbox" style="flex-shrink: 0; margin-left: auto; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--bg-elevated); border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)"><span style="color: var(--text-muted)">base</span> main <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">session-revoke-endpoint</span>
+<span style="font-size: 11px; color: var(--text-faint)">no changes</span>
+</div>
+</div>
+
+</section>
+
+</div>
+
+</aside>
+<section style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+<div style="border-bottom: 1px solid var(--border); padding: 12px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 28px">
+<div style="display: flex; align-items: baseline; gap: 10px; min-width: 0">
+<span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">web-app</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap">session-token-refresh</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">~/code/wt/token-refresh</span>
+</div>
+<div style="flex-grow: 1"></div>
+<span style="font-size: 12px; color: var(--text-muted)">3 uncommitted files · vs HEAD d81f03a</span>
+</div>
+
+</div><div style="display: flex; align-items: center; gap: 10px; min-height: 36px; box-sizing: border-box; padding: 5px 10px 5px 18px; border-bottom: 1px solid var(--border); background: var(--bg-sunken)">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">src/auth/refresh.ts</span>
+<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">working tree vs HEAD</span>
+<div style="flex-grow: 1"></div>
+
+</div><div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: var(--bg-main); min-height: 0">
+<div style="border-right: 1px solid var(--border); padding-top: 6px; overflow: hidden">
+<div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">18</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)"></span><span style="white-space: pre">import { issueToken } from './tokens';</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">19</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)"></span><span style="white-space: pre"></span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">20</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)"></span><span style="white-space: pre">export async function refreshSession(s: Session) {</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); background: rgba(var(--danger-rgb), 0.17)"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">21</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)">−</span><span style="white-space: pre">  const next = await issueToken(s.userId);</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">22</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)"></span><span style="white-space: pre">  await store.set(next.id, next);</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); background: repeating-linear-gradient(135deg, var(--bg-band) 0 4px, var(--bg-main) 4px 8px)"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)"></span><span style="width: 14px; flex-shrink: 0; color: var(--danger)"></span><span style="white-space: pre"></span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">23</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)"></span><span style="white-space: pre">  return next;</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">24</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)"></span><span style="white-space: pre">}</span></div>
+</div>
+<div style="padding-top: 6px; overflow: hidden">
+<div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">18</span><span style="width: 14px; flex-shrink: 0; color: var(--success)"></span><span style="white-space: pre">import { issueToken } from './tokens';</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">19</span><span style="width: 14px; flex-shrink: 0; color: var(--success)"></span><span style="white-space: pre"></span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">20</span><span style="width: 14px; flex-shrink: 0; color: var(--success)"></span><span style="white-space: pre">export async function refreshSession(s: Session) {</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); background: rgba(var(--success-rgb), 0.15)"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">21</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">+</span><span style="white-space: pre">  const next = await issueToken(s.userId, { rotate: true });</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">22</span><span style="width: 14px; flex-shrink: 0; color: var(--success)"></span><span style="white-space: pre">  await store.set(next.id, next);</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); background: rgba(var(--success-rgb), 0.15)"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">23</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">+</span><span style="white-space: pre">  await store.delete(s.id);</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">24</span><span style="width: 14px; flex-shrink: 0; color: var(--success)"></span><span style="white-space: pre">  return next;</span></div><div style="display: flex; padding-right: 12px; color: var(--text-code); "><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">25</span><span style="width: 14px; flex-shrink: 0; color: var(--success)"></span><span style="white-space: pre">}</span></div>
+</div>
+</div>
+</section>
+</div>
+<div role="dialog" aria-label="Stash changes" style="position: absolute; top: 60px; left: 560px; width: 400px; box-sizing: border-box; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; gap: 12px; padding: 16px; z-index: 5">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; letter-spacing: -0.3px; color: var(--text-strong)">Stash changes</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 12px; font-weight: 500; color: var(--text-body); padding-bottom: 4px">In</span>
+<label style="display: flex; align-items: center; gap: 8px; height: 26px; color: var(--text-body)"><input type="checkbox" aria-label="Stash session-token-refresh" checked="{{true}}" style="width: 15px; height: 15px; margin: 0; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; "><span style="font-size: 12px; font-weight: 600; color: var(--text-strong)">web-app</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-grow: 1">session-token-refresh</span><span style="font-size: 12px; color: var(--text-muted)">3 files</span></label>
+<label style="display: flex; align-items: center; gap: 8px; height: 26px; color: var(--text-body)"><input type="checkbox" aria-label="Stash session-cookie-cleanup" checked="{{true}}" style="width: 15px; height: 15px; margin: 0; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; "><span style="font-size: 12px; font-weight: 600; color: var(--text-strong)">web-app</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-grow: 1">session-cookie-cleanup</span><span style="font-size: 12px; color: var(--text-muted)">1 file</span></label>
+<label style="display: flex; align-items: center; gap: 8px; height: 26px; color: var(--text-body)"><input type="checkbox" aria-label="Stash token-rotation-job" style="width: 15px; height: 15px; margin: 0; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; "><span style="font-size: 12px; font-weight: 600; color: var(--text-strong)">api-server</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-grow: 1">token-rotation-job</span><span style="font-size: 12px; color: var(--text-muted)">2 files</span></label>
+<label style="display: flex; align-items: center; gap: 8px; height: 26px; color: var(--text-disabled)"><input type="checkbox" aria-label="Stash session-revoke-endpoint" style="width: 15px; height: 15px; margin: 0; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; opacity: 0.35"><span style="font-size: 12px; font-weight: 600; color: var(--text-disabled)">api-server</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-grow: 1">session-revoke-endpoint</span><span style="font-size: 12px; color: var(--text-muted)">no changes</span></label>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12px; font-weight: 500; color: var(--text-body)">Message</span>
+<input aria-label="Message" value="before rebasing on main" style="height: 32px; box-sizing: border-box; width: 100%; padding: 0 10px; background: var(--bg-elevated); border: 1px solid var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.22); border-radius: 8px; color: var(--text-strong); font-size: 13px; outline: none">
+</div>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-body)"><input type="checkbox" aria-label="Include untracked files" checked="{{true}}" style="width: 15px; height: 15px; margin: 0; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; ">Include untracked files <span style="color: var(--text-muted)">(1)</span></label>
+<div style="font-size: 12px; color: var(--text-muted); line-height: 1.45">One stash per entry, same message. Both are in web-app, so its stack gets 2 new stashes.</div>
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<button style="height: 32px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; border-radius: 8px; font-size: 13px; white-space: nowrap; cursor: pointer; background: var(--bg-hover); border: 1px solid var(--border-strong); color: var(--text-strong); ">Cancel</button>
+<button style="height: 32px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; border-radius: 8px; font-size: 13px; white-space: nowrap; cursor: pointer; background: var(--accent); border: 0; color: var(--on-accent); font-weight: 600; ">Stash 2 entries ↵</button>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var t = this.props.theme || 'dark';
+    return { themeClass: 'theme-' + t, themeName: t };
+  }
+}
+</script>
+</body>
+</html>
