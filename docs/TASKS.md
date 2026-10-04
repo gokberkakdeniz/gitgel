@@ -401,6 +401,9 @@ rather than as a task is listed the same way, marked "(on request)".
   branch · from · age); stash messages in lists wrap to two lines; History: clicking the picked
   row folds its files, a row scrolled into view keeps 8px above it; a collapsed `List` heading
   drops its gap and Branches' collapsed stash list has equal top and bottom padding — 2026-10-04
+- [x] (on request) Canvas: the Flow page split into topic pages (Ekranlar; Repos A, F; Projects
+  B, C, G, H, I; Review & History D, E, Hi; Branch actions J, K, P; Settings & Scripts M, N, O);
+  History boards relabelled Hi1–Hi3 so they no longer clash with flow H — 2026-10-04
 
 ---
 
