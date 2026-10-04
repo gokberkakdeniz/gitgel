@@ -13,6 +13,7 @@ import {
   FolderIcon,
   HistoryIcon,
   MoreVerticalIcon,
+  SplitIcon,
   WorktreeIcon,
 } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
@@ -286,7 +287,11 @@ function BranchList() {
       )}
       {popover?.kind === 'menu' && popoverEntry && (
         <Popover anchorRect={popover.rect} width={260} alignRight={!popover.atPointer} onClose={() => setPopover(null)}>
-          <RowMenu entry={popoverEntry} onClose={() => setPopover(null)} />
+          <RowMenu
+            entry={popoverEntry}
+            isBase={scans.some((s) => s.repo.id === popoverEntry.repoId && isBaseRow(s, popoverEntry))}
+            onClose={() => setPopover(null)}
+          />
         </Popover>
       )}
       {popover?.kind === 'base' && popoverEntry && (
@@ -493,16 +498,10 @@ function Row({
   popover: RowPopover['kind'] | null;
   onPopover: (kind: RowPopover['kind'], rect: DOMRect, atPointer?: boolean) => void;
 }) {
-  const push = useNav((s) => s.push);
   const wt = e.worktreePath ? tildifyHome(e.worktreePath) : null;
   const counts = afu(e);
   const [head, tail] = middleCut(e.branch ?? e.shortSha ?? '');
-  const open = () =>
-    push({
-      name: 'review',
-      target: { kind: 'branch', repoId: e.repoId, branch: e.branch, worktreePath: e.worktreePath, tipOverride: null },
-      backLabel: 'Back to Branches',
-    });
+  const open = () => openReview(e);
   const toggle = () => {
     const ui = useUi.getState();
     ui.setSelectedKeys(selected ? ui.selectedKeys.filter((k) => k !== e.key) : [...ui.selectedKeys, e.key]);
@@ -622,9 +621,9 @@ function Row({
   );
 }
 
-/** The row's ⋯ menu: Copy branch name and Open history, the always-listed open items, the
- * Scripts group, then the closing note. */
-function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void }) {
+/** The row's ⋯ menu: Copy branch name and Open history (Open review on the base row, whose name
+ * already opens History), the always-listed open items, the Scripts group, then the closing note. */
+function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: boolean; onClose: () => void }) {
   return (
     <Menu aria-label="Branch options" autoFocus>
       {entry.branch !== null && (
@@ -638,16 +637,28 @@ function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void 
           Copy branch name
         </MenuItem>
       )}
-      {(entry.branch ?? entry.headSha) && (
+      {isBase ? (
         <MenuItem
-          icon={<HistoryIcon />}
+          icon={<SplitIcon />}
           onSelect={() => {
             onClose();
-            openHistory(entry);
+            openReview(entry);
           }}
         >
-          Open history
+          Open review
         </MenuItem>
+      ) : (
+        (entry.branch ?? entry.headSha) && (
+          <MenuItem
+            icon={<HistoryIcon />}
+            onSelect={() => {
+              onClose();
+              openHistory(entry);
+            }}
+          >
+            Open history
+          </MenuItem>
+        )
       )}
       <MenuDivider />
       <OpenItems entry={entry} onDone={onClose} />
@@ -655,6 +666,15 @@ function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void 
       <EntryMenuNote entry={entry} />
     </Menu>
   );
+}
+
+/** Review (SPEC §5) of a row: the branch against its base, or the base branch against its upstream. */
+function openReview(e: EntrySummary) {
+  useNav.getState().push({
+    name: 'review',
+    target: { kind: 'branch', repoId: e.repoId, branch: e.branch, worktreePath: e.worktreePath, tipOverride: null },
+    backLabel: 'Back to Branches',
+  });
 }
 
 /** History (SPEC §16) of a row's branch, or of its SHA for a detached HEAD. */

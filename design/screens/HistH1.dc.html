@@ -73,8 +73,9 @@ button,input,textarea{font-family:inherit}
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
-    // The base branch (main) is always the first row (its ⋮ menu is the same, Open history included) of its repo band, on bg.sunken, with a
-    // "base" pill and a History button where other rows have Projects. Its name opens History too.
+    // The base branch (main) is always the first row of its repo band, on bg.sunken, with a
+    // "base" pill and a History button where other rows have Projects. Its name opens History too, so its ⋮ menu has
+    // "Open review" (icon split; Review against its upstream) where other rows have "Open history".
     // The second web-app row has its menu open: "Open history" opens Hi3 (HistH4).
     var row = function (name, ahead, files, unc, age, path, open) {
       return { name: name, ahead: ahead, files: files, unc: unc, age: age, path: path,

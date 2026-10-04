@@ -404,6 +404,8 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Canvas: the Flow page split into topic pages (Ekranlar; Repos A, F; Projects
   B, C, G, H, I; Review & History D, E, Hi; Branch actions J, K, P; Settings & Scripts M, N, O);
   History boards relabelled Hi1–Hi3 so they no longer clash with flow H — 2026-10-04
+- [x] (on request) Branches: the base row's menu has "Open review" (Review against its upstream)
+  instead of "Open history", which its name and History button already open — 2026-10-04
 
 ---
 

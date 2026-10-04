@@ -563,8 +563,10 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     "—". Never the "merged" pill.
   - Projects cell: a 26px "History" button (12px history icon, 12px `accent.text`, `bg.elevated`,
     1px `border`, radius 8; tooltip `Commit history of <name>`) that opens History.
-  - The row menu is the same as other rows'.
-- **Open history**: every row menu has "Open history" (history icon) right
+  - The row menu is the same as other rows', except that "Open review" (split icon) takes the
+    place of "Open history" (its name already opens History): Review of the branch against its
+    upstream.
+- **Open history**: every other row menu has "Open history" (history icon) right
   under "Copy branch name" (first for a detached HEAD, which opens the history of its SHA). It
   opens History (§16) on the row's branch.
 - **Stashes** of the repo under its rows (flow P1, §15).
@@ -1666,7 +1668,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 89–98) and a row menu with "Open history" (99–104); Hi2 History of a checked-out `main` (header 21–41: branch button, search, "Fetched", refresh; list 43–85: day label 47–49, base line 50–55, Uncommitted row 56–64, commit row 65–73, file row 74–83; commit header 87–96; file bar 97–110; split diff 111+; avatar and row styles 136–160); `HistH4` the same screen for a feature branch with the base line (data 178–196) |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: branch button, search, "Fetched", refresh; list 43–85: day label 47–49, base line 50–55, Uncommitted row 56–64, commit row 65–73, file row 74–83; commit header 87–96; file bar 97–110; split diff 111+; avatar and row styles 136–160); `HistH4` the same screen for a feature branch with the base line (data 178–196) |
 | Stashes | `FlowP1`, `FlowP2`, `FlowP3`, `FlowP4.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog (planned, T19.4) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
@@ -2057,7 +2059,7 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
   on until `limit` commits match; `total` is null then. `fetchedAt`: the modification time of
   `FETCH_HEAD` in the common git dir. `get_history_refs` lists the local branches and the
   remote-tracking ones. Every call logs one line with its timings.
-- **Opening:** "Open history" in a Branches row menu, the base branch row's name and History
+- **Opening:** "Open history" in a Branches row menu (not the base row's), the base branch row's name and History
   button, and in Review's entry bar the branch name and the base in "N commits ahead of <base>". Route `history` with `repoId` and `rev`, pushed like Review
   (back and forward work). History hides the sidebar as Review does.
 - **Header** (`HistH2` 21–41), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
