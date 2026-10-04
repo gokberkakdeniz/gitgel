@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Modal header and footer · variants</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>body{margin:0;background:#141311}</style>
+</helmet>
+<div style="width: 1040px; height: 1040px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; padding: 40px 48px; background: #141311; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc; font-size: 13px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">Modal header and footer</h1>
+<p style="margin: 0; max-width: 820px; color: #a09d96; line-height: 1.55">The top and bottom of every modal. The box itself (scrim, <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">bg.elevated</span>, radius 16, modal shadow, placed from the top) and its body stay in the screen. <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">ModalHeader</span>: serif 22px title, a 13px muted <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">sub</span> (<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">subMono</span> 11px for a repo / branch or a path), padding 20px 24px 14px, optional ✕. <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">ModalFooter</span>: <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">bg.sunken</span>, padding 14px 24px, a 12px muted <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">note</span> or a <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">lead</span> link button on the left, an optional <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">aside</span>, then <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">buttons</span> (Button props, 36px), the primary last; <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">ruled</span> false when the list above ends in a row border.</p>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Headers and footers</h2>
+<div style="display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="width: 440px; display: flex; flex-direction: column; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden"><dc-import name="ModalHeader" title="Add repositories" sub="3 folders selected. Repositories already in Gitgel are skipped." hint-size="440px,76px"></dc-import><div style="height: 56px; margin: 0 24px 22px; border: 1px dashed #383631; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 12px">Body (in the screen)</div><dc-import name="ModalFooter" note="" ruled="{{false}}" buttons="{{addRepos}}" hint-size="440px,64px"></dc-import></div><span style="font-size: 12px; color: #75726b">sans sub · no ✕ (Add repositories)</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="width: 440px; display: flex; flex-direction: column; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden"><dc-import name="ModalHeader" title="Create pull request…" sub="web-app / session-token-refresh" sub-mono="{{true}}" close="{{true}}" hint-size="440px,76px"></dc-import><div style="height: 56px; margin: 0 24px 22px; border: 1px dashed #383631; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 12px">Body (in the screen)</div><dc-import name="ModalFooter" note="Last values are kept for this branch" buttons="{{run}}" hint-size="440px,64px"></dc-import></div><span style="font-size: 12px; color: #75726b">mono sub, ✕ · note + kbd</span></div>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Footer forms</h2>
+<div style="display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="ModalFooter" note="" lead="{{tryLead}}" buttons="{{save}}" hint-size="440px,64px"></dc-import><span style="font-size: 12px; color: #75726b">lead link button</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="ModalFooter" note="~/code/web-app-wt/session-token-refresh" note-mono="{{true}}" aside="Click the output to type" buttons="{{output}}" hint-size="440px,64px"></dc-import><span style="font-size: 12px; color: #75726b">mono note, aside</span></div>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Light</h2>
+<div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap; padding: 20px 24px; background: #fbfaf7; border-radius: 12px">
+<div style="width: 440px; display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2ded6; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.14); overflow: hidden"><dc-import name="ModalHeader" theme="light" title="Import scripts" sub="~/code/web-app/tools/gitgel-scripts.json · 4 scripts" sub-mono="{{true}}" close="{{true}}" hint-size="440px,76px"></dc-import><div style="height: 56px; margin: 0 24px 22px; border: 1px dashed #d5d0c7; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 12px">Body (in the screen)</div><dc-import name="ModalFooter" theme="light" note="3 of 4 selected" buttons="{{importBtns}}" hint-size="440px,64px"></dc-import></div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1040,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      addRepos: [{ label: 'Cancel' }, { label: 'Add 1 repository', variant: 'primary' }],
+      run: [{ label: 'Cancel' }, { label: 'Run', variant: 'primary', kbd: '⌘↵' }],
+      save: [{ label: 'Cancel' }, { label: 'Save script', variant: 'primary' }],
+      output: [{ label: 'Copy output' }, { label: 'Stop' }],
+      importBtns: [{ label: 'Cancel' }, { label: 'Import 3 scripts', variant: 'primary' }],
+      tryLead: { label: 'Try on session-token-refresh', icon: 'play' }
+    };
+  }
+}
+</script>
+</body>
+</html>

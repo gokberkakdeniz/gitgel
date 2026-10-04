@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getBaseOptions, setBranchBase, verifyRef } from '../../lib/ipc';
 import { useInvoke } from '../../lib/useInvoke';
 import { useData } from '../../state/data';
-import { CheckIcon, SearchIcon } from '../icons';
+import { CheckIcon } from '../icons';
 import { Input } from '../Input';
 import { Popover } from '../Popover';
 import { AUTO_TITLE, baseRows, initialRow, looksLikeSha, type BaseRow } from './baseRows';
@@ -80,7 +80,7 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, onClose, on
         <div className={styles.filterRow}>
           <Input
             autoFocus
-            leftIcon={<SearchIcon size={13} />}
+            leftIcon="search"
             mono
             clearable
             size={32}

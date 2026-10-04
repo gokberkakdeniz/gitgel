@@ -1,12 +1,15 @@
 import { open } from '@tauri-apps/plugin-dialog';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
-import { CloseIcon, FolderIcon, KeyboardIcon, TuneIcon } from '../../components/icons';
+import { IconButton } from '../../components/IconButton';
+import { CloseIcon } from '../../components/icons';
 import { Modal } from '../../components/Modal';
 import { Input } from '../../components/Input';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
+import { Select } from '../../components/Select';
+import { SettingsNav, type SettingsNavSection } from '../../components/SettingsNav';
 import { openAddRepos } from '../../lib/addRepos';
 import { locateRepo, removeRepo, updateSettings } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
@@ -19,10 +22,10 @@ import { BaseOrder } from './BaseOrder';
 import { parseDays } from './parse';
 import { SHORTCUTS } from '../../lib/shortcuts';
 
-const SECTIONS: { id: SettingsSection; label: string; icon: ReactNode }[] = [
-  { id: 'general', label: 'General', icon: <TuneIcon /> },
-  { id: 'repositories', label: 'Repositories', icon: <FolderIcon size={16} /> },
-  { id: 'shortcuts', label: 'Shortcuts', icon: <KeyboardIcon /> },
+const SECTIONS: SettingsNavSection<SettingsSection>[] = [
+  { id: 'general', label: 'General', icon: 'tune' },
+  { id: 'repositories', label: 'Repositories', icon: 'folder' },
+  { id: 'shortcuts', label: 'Shortcuts', icon: 'keyboard' },
 ];
 
 /** A section list on the left, the chosen section's settings on the right (flow M). */
@@ -35,21 +38,11 @@ export function Settings() {
     <>
       <PageHeader title="Settings" />
       <div className={styles.body}>
-        <nav aria-label="Settings sections" className={styles.sections}>
-          {SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              aria-current={s.id === section ? 'page' : undefined}
-              className={s.id === section ? `${styles.sectionItem} ${styles.sectionItemOn}` : styles.sectionItem}
-              onClick={() => setSection(s.id)}
-            >
-              <span className={styles.sectionIcon}>{s.icon}</span>
-              <span className={styles.grow}>{s.label}</span>
-              {s.id === 'repositories' && <span className={styles.sectionCount}>{config.repos.length}</span>}
-            </button>
-          ))}
-        </nav>
+        <SettingsNav
+          sections={SECTIONS.map((s) => (s.id === 'repositories' ? { ...s, count: config.repos.length } : s))}
+          current={section}
+          onPick={setSection}
+        />
         {/* Keyed so each section starts scrolled to the top. */}
         <div key={section} className={styles.pane}>
           <div className={styles.paneInner}>
@@ -116,9 +109,9 @@ function Repositories({ config }: { config: Config }) {
                 {missing ? (
                   <>
                     <Pill tone="danger">path not found</Pill>
-                    <button type="button" className={styles.locate} onClick={() => void locate(repo)}>
+                    <Button size={28} onClick={() => void locate(repo)}>
                       Locate…
-                    </button>
+                    </Button>
                   </>
                 ) : s?.status === 'error' ? (
                   <Pill tone="danger" title={s.error ?? undefined}>
@@ -127,22 +120,19 @@ function Repositories({ config }: { config: Config }) {
                 ) : (
                   <span className={styles.note}>{s?.defaultBase ? `base ${s.defaultBase}` : s ? 'no base found' : ''}</span>
                 )}
-                <button
-                  type="button"
-                  aria-label="Remove repository"
-                  className={styles.remove}
-                  onClick={() => remove(repo)}
-                >
+                <IconButton aria-label="Remove repository" onClick={() => remove(repo)}>
                   <CloseIcon size={13} />
-                </button>
+                </IconButton>
               </div>
               {errors[repo.id] && <div className={styles.error}>{errors[repo.id]}</div>}
             </div>
           );
         })}
-        <button type="button" className={styles.addRepo} onClick={() => void openAddRepos()}>
-          + Add repository…
-        </button>
+        <div className={styles.addRow}>
+          <Button variant="link" onClick={() => void openAddRepos()}>
+            + Add repository…
+          </Button>
+        </div>
       </div>
 
       {removing && (
@@ -154,7 +144,7 @@ function Repositories({ config }: { config: Config }) {
               removed too. Nothing on disk is touched.
             </p>
             <div className={styles.modalActions}>
-              <Button size={36} className={styles.cancel} onClick={() => setRemoving(null)}>
+              <Button size={36} onClick={() => setRemoving(null)}>
                 Cancel
               </Button>
               <Button
@@ -305,39 +295,18 @@ function TerminalSetting({ config }: { config: Config }) {
           <span className={styles.settingName}>Terminal</span>
           <span className={styles.settingHint}>Used by “Open in …” in the branch menus</span>
         </span>
-        <span className={styles.terminalWrap}>
-          <select
-            aria-label="Terminal"
-            className={styles.terminalSelect}
-            value={terminal}
-            onChange={(e) => void updateSettings({ ...config.settings, terminal: e.target.value as TerminalChoice })}
-          >
-            <option value="auto">Automatic{termApp ? ` (${termApp.name})` : ''}</option>
-            <option value="terminal" disabled={missing('terminal')}>
-              Terminal
-            </option>
-            <option value="iterm" disabled={missing('iterm')}>
-              iTerm2
-            </option>
-            <option value="wezterm" disabled={missing('wezterm')}>
-              WezTerm
-            </option>
-            <option value="other">Other…</option>
-          </select>
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            className={styles.terminalChevron}
-            aria-hidden="true"
-          >
-            <path d="m6 9 6 6 6-6"></path>
-          </svg>
-        </span>
+        <Select<TerminalChoice>
+          aria-label="Terminal"
+          value={terminal}
+          onChange={(t) => void updateSettings({ ...config.settings, terminal: t })}
+          options={[
+            { value: 'auto', label: `Automatic${termApp ? ` (${termApp.name})` : ''}` },
+            { value: 'terminal', label: 'Terminal', disabled: missing('terminal') },
+            { value: 'iterm', label: 'iTerm2', disabled: missing('iterm') },
+            { value: 'wezterm', label: 'WezTerm', disabled: missing('wezterm') },
+            { value: 'other', label: 'Other…' },
+          ]}
+        />
       </label>
       {terminal === 'other' && (
         <label className={styles.terminalOther}>

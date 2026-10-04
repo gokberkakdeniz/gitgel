@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Toast</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+a.gg-toast-link{color:var(--accent-text);text-decoration:none}a.gg-toast-link:hover{color:var(--accent-hover)}
+@keyframes gg-spin{to{transform:rotate(360deg)}}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div role="status" class="{{themeClass}}" style="display: inline-flex; align-items: center; gap: 16px; padding: 10px 12px 10px 16px; background: var(--bg-hover); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); white-space: nowrap; font-family: 'Instrument Sans', -apple-system, sans-serif; font-size: 13px; color: var(--text-strong)">
+<span style="display: flex; align-items: center; gap: 10px">
+<sc-if value="{{isRunning}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="spinner" size="14" spin="{{true}}" color="var(--accent-text)" hint-size="14px,14px"></dc-import></sc-if>
+<sc-if value="{{isSuccess}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="check" size="14" stroke="2.2" color="var(--success)" hint-size="14px,14px"></dc-import></sc-if>
+<sc-if value="{{isFailed}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="close" size="14" stroke="2.2" color="var(--danger)" hint-size="14px,14px"></dc-import></sc-if>
+<span style="display: flex; flex-direction: column; gap: 1px">
+<span><sc-if value="{{hasCode}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px">{{code}}</span> </sc-if>{{message}}</span>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{sub}}</span></sc-if>
+</span>
+</span>
+<sc-if value="{{hasAction}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{action}}" style="height: 28px; padding: 0 12px; background: var(--bg-pressed); border: 0; border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 12px; cursor: pointer">{{actionLabel}}</button>
+</sc-if>
+<sc-if value="{{hasLink}}" hint-placeholder-val="{{false}}">
+<a class="gg-toast-link" href="{{linkHref}}" style="font-size: 12px; font-weight: 500">{{linkLabel}}</a>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"message":{"editor":"text","default":"added to Session auth refresh"},"code":{"editor":"text","default":"session-token-refresh"},"sub":{"editor":"text","default":""},"status":{"editor":"enum","options":["none","running","success","failed"],"default":"none"},"actionLabel":{"editor":"text","default":"Undo"},"linkLabel":{"editor":"text","default":"Open project →"},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"linkHref":{"editor":null},"onAction":{"editor":null},"$preview":{"width":480,"height":50}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The app's Toast (src/components/Toast.tsx): one at a time, bottom centre (the importer
+    // positions it). An optional status icon (running spinner, success, failed), the message with
+    // an optional mono part first (code) and a mono sub line, then an action button and a link.
+    var p = this.props;
+    var status = p.status || 'none';
+    var code = p.code == null ? '' : String(p.code);
+    var sub = p.sub == null ? '' : String(p.sub);
+    var actionLabel = p.actionLabel == null ? '' : String(p.actionLabel);
+    var linkLabel = p.linkLabel == null ? '' : String(p.linkLabel);
+    var onAction = p.onAction;
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      isRunning: status === 'running', isSuccess: status === 'success', isFailed: status === 'failed',
+      hasCode: !!code, code: code,
+      message: p.message == null ? '' : p.message,
+      hasSub: !!sub, sub: sub,
+      hasAction: !!actionLabel, actionLabel: actionLabel,
+      action: onAction ? function (e) { onAction(e); } : undefined,
+      hasLink: !!linkLabel, linkLabel: linkLabel,
+      linkHref: p.linkHref || '#'
+    };
+  }
+}
+</script>
+</body>
+</html>

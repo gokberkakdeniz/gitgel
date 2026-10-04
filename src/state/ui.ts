@@ -14,6 +14,12 @@ export interface DraftProject {
 export interface Toast {
   id: number;
   message: ReactNode;
+  /** A mono part before the message (a branch name). */
+  code?: string;
+  /** A mono line under the message (repo / branch). */
+  sub?: string;
+  /** An icon before the message; a running toast stays until replaced. */
+  status?: 'running' | 'success' | 'failed';
   actionLabel?: string;
   onAction?: () => void;
   linkLabel?: string;

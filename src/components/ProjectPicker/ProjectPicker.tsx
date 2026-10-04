@@ -6,14 +6,13 @@ import { useData } from '../../state/data';
 import { useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { Button } from '../Button';
-import { SearchIcon } from '../icons';
 import { Input } from '../Input';
 import styles from './ProjectPicker.module.css';
 
 interface Props {
   entries: EntryRef[];
-  /** Toast text naming what was added, e.g. the branch or "3 branches". */
-  label: React.ReactNode;
+  /** Toast text naming what was added: a branch (shown mono) or e.g. "3 branches". */
+  label: ToastLabel;
   /** Shown in the new-project form under "First entry". */
   firstEntry: string;
   /** Replaces the in-place form for "+ New project…" (selection bar: flow H2). */
@@ -61,7 +60,7 @@ function PickView({
   onDone,
 }: {
   entries: EntryRef[];
-  label: React.ReactNode;
+  label: ToastLabel;
   exclude: string[];
   onNew: () => void;
   onDone: () => void;
@@ -90,7 +89,7 @@ function PickView({
       <div className={styles.filterRow}>
         <Input
           autoFocus
-          leftIcon={<SearchIcon size={13} />}
+          leftIcon="search"
           clearable
           size={32}
           aria-label="Search projects"
@@ -129,7 +128,7 @@ function NewView({
   onDone,
 }: {
   entries: EntryRef[];
-  label: React.ReactNode;
+  label: ToastLabel;
   firstEntry: string;
   onCancel: () => void;
   onDone: () => void;
@@ -185,14 +184,14 @@ function NewView({
   );
 }
 
+/** A branch name (the toast's mono part) or plain text such as "3 branches". */
+export type ToastLabel = { branch: string } | string;
+
 /** Toast after adding: Undo reverses exactly this action; "Open project →" goes there. */
-function announce(label: React.ReactNode, project: ProjectConfig, undo: () => Promise<unknown>) {
+function announce(label: ToastLabel, project: ProjectConfig, undo: () => Promise<unknown>) {
   useUi.getState().showToast({
-    message: (
-      <>
-        {label} added to {project.name}
-      </>
-    ),
+    code: typeof label === 'string' ? undefined : label.branch,
+    message: typeof label === 'string' ? `${label} added to ${project.name}` : `added to ${project.name}`,
     actionLabel: 'Undo',
     onAction: () => void undo(),
     linkLabel: 'Open project →',

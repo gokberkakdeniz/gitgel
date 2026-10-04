@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../../components/Button';
-import { Modal } from '../../components/Modal';
+import { Modal, ModalFooter, ModalHeader } from '../../components/Modal';
 import { plural } from '../../lib/format';
 import { addRepos, inspectFolders } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
@@ -40,15 +40,12 @@ function Sheet({ paths }: { paths: string[] }) {
 
   return (
     <Modal aria-label="Add repositories" width={600} paddingTop={110} onClose={close}>
-      <div className={styles.head}>
-        <div className={styles.title}>Add repositories</div>
-        <div className={styles.subtitle}>
-          {plural(paths.length, 'folder', 'folders')} selected.{' '}
-          {hasRepos
-            ? 'Repositories already in Gitgel are skipped.'
-            : 'Worktree folders resolve to their main repository.'}
-        </div>
-      </div>
+      <ModalHeader
+        title="Add repositories"
+        sub={`${plural(paths.length, 'folder', 'folders')} selected. ${
+          hasRepos ? 'Repositories already in Gitgel are skipped.' : 'Worktree folders resolve to their main repository.'
+        }`}
+      />
       <div className={styles.list}>
         {checks?.map((c, i) => (
           <div key={i} className={styles.row}>
@@ -61,14 +58,14 @@ function Sheet({ paths }: { paths: string[] }) {
         ))}
         {(error ?? addError) && <div className={styles.error}>{(error ?? addError)!.message}</div>}
       </div>
-      <div className={styles.footer}>
-        <Button size={36} className={styles.cancel} onClick={close}>
+      <ModalFooter ruled={false}>
+        <Button size={36} onClick={close}>
           Cancel
         </Button>
         <Button variant="primary" size={36} disabled={!checks || addable === 0 || adding} onClick={add}>
           Add {plural(addable, 'repository', 'repositories')}
         </Button>
-      </div>
+      </ModalFooter>
     </Modal>
   );
 }

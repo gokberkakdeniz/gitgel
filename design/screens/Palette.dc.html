@@ -35,46 +35,36 @@ button,input{font-family:inherit}
 <div style="display: flex; flex-direction: column">
 <div style="padding: 10px 12px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">{{g.title}}</div>
 <sc-for list="{{g.items}}" as="it" hint-placeholder-count="2">
-<label style="{{it.rowStyle}}">
-<input type="checkbox" checked="{{it.checked}}" disabled="{{it.disabled}}" style="width: 16px; height: 16px; accent-color: #4f8fa3; margin: 0; flex-shrink: 0">
+<div style="{{it.rowStyle}}">
+<dc-import name="Checkbox" label="" aria-label="{{it.branch}}" checked="{{it.checked}}" disabled="{{it.disabled}}" hint-size="16px,16px"></dc-import>
 <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #faf9f5">{{it.branch}}</span>
 <span style="font-size: 12px; color: #a09d96">{{it.meta}}</span>
 </span>
-<span style="{{it.tagStyle}}">{{it.tag}}</span>
-</label>
+<sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" label="{{it.tag}}" tone="{{it.tagTone}}" hint-size="80px,20px"></dc-import></sc-if>
+</div>
 </sc-for>
 </div>
 </sc-for>
 </div>
 
-<div style="display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #302e2a; background: #1a1917">
-<span style="font-size: 13px; color: #d8d4cc">2 selected</span>
-<div style="flex-grow: 1"></div>
-<button style="height: 32px; padding: 0 16px; background: #4f8fa3; border: 0; border-radius: 8px; color: #141311; font-size: 13px; font-weight: 600">Add ↵</button>
-</div>
+<dc-import name="ModalFooter" note="2 selected" buttons="{{footerButtons}}" hint-size="100%,60px"></dc-import>
 </div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
-    var pill = function (c, bg) {
-      return 'flex-shrink: 0; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 9999px; white-space: nowrap; color: ' + c + '; background: ' + bg;
-    };
-    var T = {
-      '': 'display: none',
-      'in project': pill('#d8d4cc', '#302e2a'),
-      'merged': pill('#8fcf9c', 'rgba(93,184,114,0.14)')
-    };
+    // Tags are Pills: in project neutral, merged success.
+    var T = { 'in project': 'neutral', 'merged': 'success' };
     var row = function (b, meta, t, checked, active, tagLabel) {
       var inProject = t === 'in project';
       return {
-        branch: b, meta: meta, tag: tagLabel || t, tagStyle: T[t], checked: checked, disabled: inProject,
+        branch: b, meta: meta, tag: tagLabel || t, hasTag: !!t, tagTone: T[t] || 'neutral', checked: checked, disabled: inProject,
         rowStyle: 'display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px; cursor: pointer; ' + (active ? 'background: #2a2825; ' : '') + (inProject ? 'opacity: 0.55; cursor: default' : '')
       };
     };
-    return { groups: [
+    return { footerButtons: [{ label: 'Add ↵', variant: 'primary', size: 32 }], groups: [
       { title: 'Worktrees', items: [
         row('token-rotation-job', 'api-server · ↑2 · 4 files · ● 1 uncommitted', '', true, true),
         row('refresh-endpoint', 'api-server · ↑3 · 6 files', '', true, false),

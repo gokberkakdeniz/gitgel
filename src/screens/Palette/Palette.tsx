@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
 import { SearchIcon } from '../../components/icons';
-import { Modal } from '../../components/Modal';
+import { Modal, ModalFooter } from '../../components/Modal';
 import { Pill } from '../../components/Pill';
 import { entryKey } from '../../lib/entryKey';
 import { addEntries } from '../../lib/ipc';
@@ -151,13 +151,11 @@ function PaletteDialog({ projectId }: { projectId: string }) {
         {shown.length === 0 && <div className={styles.empty}>No matches</div>}
       </div>
 
-      <div className={styles.footer}>
-        <span>{checked.size} selected</span>
-        <span className={styles.grow} />
+      <ModalFooter note={`${checked.size} selected`}>
         <Button variant="primary" disabled={checked.size === 0} onClick={() => void add(false)}>
           Add ↵
         </Button>
-      </div>
+      </ModalFooter>
       </div>
     </Modal>
   );

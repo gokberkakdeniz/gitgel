@@ -1,8 +1,90 @@
-.checkbox {
+.only {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.box {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The native input draws the box itself (appearance: none) and keeps focus and keyboard. */
+.input {
+  position: absolute;
+  inset: 0;
   width: 16px;
   height: 16px;
   margin: 0;
-  flex-shrink: 0;
-  accent-color: var(--accent);
+  box-sizing: border-box;
+  appearance: none;
+  background: transparent;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
   cursor: pointer;
+}
+
+.input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.input:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.input:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.tick {
+  position: relative;
+  color: var(--on-accent);
+  pointer-events: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.top {
+  align-items: flex-start;
+}
+
+.top .box {
+  margin-top: 1px;
+}
+
+.card {
+  padding: 12px 14px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pop);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  color: var(--text-strong);
+}
+
+.sub {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
 }

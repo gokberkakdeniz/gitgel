@@ -27,15 +27,7 @@ button,input{font-family:inherit}
 
 <div style="flex-grow: 1; min-height: 0; display: flex">
 
-<nav aria-label="Settings sections" style="width: 200px; flex-shrink: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; padding: 16px 10px; border-right: 1px solid var(--border-row)">
-<sc-for list="{{sections}}" as="s" hint-placeholder-count="3">
-<button aria-current="{{s.current}}" onClick="{{s.pick}}" style="{{s.style}}">
-<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--text-muted)"><path d="{{s.icon}}"></path></svg>
-<span style="flex-grow: 1">{{s.label}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">{{s.count}}</span>
-</button>
-</sc-for>
-</nav>
+<dc-import name="SettingsNav" theme="{{themeName}}" current="{{section}}" sections="{{sections}}" hint-size="200px,100%"></dc-import>
 
 <div style="flex-grow: 1; min-width: 0; overflow: auto">
 <div style="max-width: 760px; box-sizing: border-box; padding: 28px 32px 40px; display: flex; flex-direction: column; gap: 28px">
@@ -48,16 +40,15 @@ button,input{font-family:inherit}
 <div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border)">
 <span style="font-weight: 500; color: var(--text-strong); width: 96px; flex-shrink: 0">{{r.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.path}}</span>
-<span style="{{r.noteStyle}}">{{r.note}}</span>
+<sc-if value="{{r.found}}" hint-placeholder-val="{{true}}"><span style="{{r.noteStyle}}">{{r.note}}</span></sc-if>
 <sc-if value="{{r.missing}}" hint-placeholder-val="{{false}}">
-<button style="height: 28px; padding: 0 12px; background: var(--bg-hover); border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text-strong); font-size: 12px">Locate…</button>
+<dc-import name="Pill" theme="{{themeName}}" label="{{r.note}}" tone="danger" hint-size="100px,20px"></dc-import>
+<dc-import name="Button" theme="{{themeName}}" size="28" label="Locate…" hint-size="72px,28px"></dc-import>
 </sc-if>
-<button aria-label="Remove repository" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 8px; color: var(--text-muted)">
-<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
-</button>
+<dc-import name="Button" theme="{{themeName}}" variant="ghost" size="28" icon="close" label="" aria-label="Remove repository" hint-size="28px,28px"></dc-import>
 </div>
 </sc-for>
-<button style="padding: 12px 14px; background: transparent; border: 0; color: var(--accent-text); font-size: 13px; font-weight: 500; text-align: left">+ Add repository…</button>
+<div style="display: flex; padding: 12px 14px"><dc-import name="Button" theme="{{themeName}}" variant="link" label="+ Add repository…" hint-size="130px,16px"></dc-import></div>
 </div>
 </section>
 <section style="display: flex; flex-direction: column; gap: 14px">
@@ -80,11 +71,11 @@ button,input{font-family:inherit}
 </ol>
 <sc-if value="{{baseAdding}}" hint-placeholder-val="{{false}}">
 <div style="padding: 4px">
-<dc-import name="Input" theme="{{themeName}}" size="28" width="100%" value="{{baseDraft}}" placeholder="Branch name, e.g. develop" label="Add a base branch" left-icon="none" right-icon="" clearable="{{false}}" state="{{baseInputState}}" hint-size="100%,28px"></dc-import>
+<dc-import name="Input" theme="{{themeName}}" size="28" width="100%" value="{{baseDraft}}" placeholder="Branch name, e.g. develop" label="Add a base branch" left-icon="none" right-text="" clearable="{{false}}" state="{{baseInputState}}" hint-size="100%,28px"></dc-import>
 </div>
 </sc-if>
 <sc-if value="{{baseNotAdding}}" hint-placeholder-val="{{true}}">
-<button onClick="{{startAdd}}" style="height: 34px; padding: 0 12px; background: transparent; border: 0; color: var(--accent-text); font-family: inherit; font-size: 13px; font-weight: 500; text-align: left; cursor: pointer">+ Add branch</button>
+<div style="height: 34px; display: flex; align-items: center; padding: 0 12px"><dc-import name="Button" theme="{{themeName}}" variant="link" label="+ Add branch" on-press="{{startAdd}}" hint-size="90px,16px"></dc-import></div>
 </sc-if>
 </div>
 <sc-if value="{{baseAdding}}" hint-placeholder-val="{{false}}">
@@ -94,7 +85,7 @@ button,input{font-family:inherit}
 </div>
 <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Active threshold</span><span style="font-size: 12px; color: var(--text-muted)">Branches without a worktree are listed if committed within</span></span>
-<span style="display: flex; align-items: center; gap: 8px"><dc-import name="Input" theme="{{themeName}}" size="36" width="60px" value="14" label="Active threshold in days" left-icon="none" right-icon="" clearable="{{false}}" align="right" hint-size="60px,36px"></dc-import><span style="color: var(--text-muted)">days</span></span>
+<span style="display: flex; align-items: center; gap: 8px"><dc-import name="Input" theme="{{themeName}}" size="36" width="60px" value="14" label="Active threshold in days" left-icon="none" right-text="" clearable="{{false}}" align="right" hint-size="60px,36px"></dc-import><span style="color: var(--text-muted)">days</span></span>
 </label>
 </section>
 </sc-if>
@@ -123,21 +114,14 @@ button,input{font-family:inherit}
 </section>
 <section style="display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; flex-direction: column; gap: 10px">
-<label style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Terminal</span><span style="font-size: 12px; color: var(--text-muted)">Used by “Open in …” in the branch menus</span></span>
-<span style="position: relative; display: flex; flex-shrink: 0">
-<select aria-label="Terminal" style="width: 230px; height: 36px; box-sizing: border-box; padding: 0 30px 0 12px; appearance: none; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 13px">
-<sc-for list="{{terminals}}" as="tm" hint-placeholder-count="5">
-<option value="{{tm.value}}" selected="{{tm.on}}" disabled="{{tm.disabled}}">{{tm.label}}</option>
-</sc-for>
-</select>
-<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position: absolute; right: 12px; top: 12px; color: var(--text-muted); pointer-events: none"><path d="m6 9 6 6 6-6"></path></svg>
-</span>
-</label>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Terminal" options="{{terminals}}" hint-size="230px,36px"></dc-import>
+</div>
 <sc-if value="{{terminalOther}}" hint-placeholder-val="{{false}}">
 <label style="display: flex; flex-direction: column; gap: 6px">
 <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Terminal command</span>
-<dc-import name="Input" theme="{{themeName}}" size="36" width="100%" value="wezterm start --cwd %" placeholder="wezterm start --cwd %" label="Terminal command" left-icon="none" right-icon="" clearable="{{false}}" hint-size="100%,36px"></dc-import>
+<dc-import name="Input" theme="{{themeName}}" size="36" width="100%" value="wezterm start --cwd %" placeholder="wezterm start --cwd %" label="Terminal command" left-icon="none" right-text="" clearable="{{false}}" hint-size="100%,36px"></dc-import>
 <span style="font-size: 12px; line-height: 1.5; color: var(--text-muted)">A command, or an app name such as Ghostty. <span style="font-family: 'JetBrains Mono', monospace; color: var(--text-code)">%</span> becomes the worktree folder; the command runs in your login shell, in that folder.</span>
 </label>
 </sc-if>
@@ -145,10 +129,10 @@ button,input{font-family:inherit}
 <span style="align-self: flex-end; font-size: 12px; color: var(--warning)">iTerm2 is not installed; the menus show it disabled</span>
 </sc-if>
 </div>
-<label style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Check for updates</span><span style="font-size: 12px; color: var(--text-muted)">At launch and every 6 hours; a new version shows in the sidebar</span></span>
-<input type="checkbox" checked="{{true}}" style="width: 16px; height: 16px; margin: 0; flex-shrink: 0; accent-color: var(--accent)">
-</label>
+<dc-import name="Checkbox" theme="{{themeName}}" label="" aria-label="Check for updates" checked="{{true}}" hint-size="16px,16px"></dc-import>
+</div>
 </section>
 </sc-if>
 
@@ -259,18 +243,9 @@ class Component extends DCLogic {
       };
     });
     var section = (this.state && this.state.section) || this.props.section || 'general';
-    var sections = [
-      ['general', 'General', 'M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4', ''],
-      ['repositories', 'Repositories', 'M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z', '4'],
-      ['shortcuts', 'Shortcuts', 'M3.5 6.5h17v11h-17ZM7 10h.01M10.5 10h.01M14 10h.01M17 10h.01M8 14h8', '']
-    ].map(function (s) {
-      var on = section === s[0];
-      return {
-        label: s[1], icon: s[2], count: s[3], current: on ? 'page' : 'false',
-        pick: function () { self.setState({ section: s[0] }); },
-        style: 'display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; border-radius: 8px; font-family: inherit; font-size: 13px; text-align: left; cursor: pointer; ' +
-          (on ? 'background: var(--bg-sidebar-active); color: var(--text-strong); font-weight: 500' : 'background: transparent; color: var(--text-code)')
-      };
+    // Section list (SettingsNav): icons by id.
+    var sections = [['general', 'General', ''], ['repositories', 'Repositories', '4'], ['shortcuts', 'Shortcuts', '']].map(function (x) {
+      return { id: x[0], label: x[1], count: x[2], pick: function () { self.setState({ section: x[0] }); } };
     });
     // Default base: an ordered list edited one branch at a time, so there is no separator to type.
     var list = (this.state && this.state.bases) || ['origin/HEAD', 'main', 'master'];
@@ -311,16 +286,17 @@ class Component extends DCLogic {
       bases: bases, baseAdding: baseAdd !== 'none', baseNotAdding: baseAdd === 'none',
       baseNote: bn[0], baseNoteStyle: bn[1], baseDraft: bn[2], baseInputState: bn[3],
       startAdd: function () { self.setState({ baseAdd: 'typing' }); },
+      section: section,
       isRepos: section === 'repositories', isGeneral: section === 'general', isShortcuts: section === 'shortcuts',
       terminals: terminals,
       terminalOther: termKind === 'other',
       terminalMissing: term === 'missing',
       shortcutGroups: shortcutGroups,
       repos: [
-        { name: 'web-app', path: '~/code/web-app', note: 'base main', noteStyle: ok, missing: false },
-        { name: 'api-server', path: '~/code/api-server', note: 'base main', noteStyle: ok, missing: false },
-        { name: 'shared-ui', path: '~/code/shared-ui', note: 'base main', noteStyle: ok, missing: false },
-        { name: 'admin-panel', path: '~/old/admin-panel', note: 'path not found', noteStyle: 'font-size: 11px; font-weight: 500; white-space: nowrap; color: var(--danger); background: rgba(var(--danger-rgb), 0.16); border-radius: 9999px; padding: 3px 10px', missing: true }
+        { name: 'web-app', path: '~/code/web-app', note: 'base main', noteStyle: ok, found: true, missing: false },
+        { name: 'api-server', path: '~/code/api-server', note: 'base main', noteStyle: ok, found: true, missing: false },
+        { name: 'shared-ui', path: '~/code/shared-ui', note: 'base main', noteStyle: ok, found: true, missing: false },
+        { name: 'admin-panel', path: '~/old/admin-panel', note: 'path not found', found: false, missing: true }
       ]
     };
   }

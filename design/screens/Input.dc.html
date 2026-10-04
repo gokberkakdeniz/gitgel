@@ -18,23 +18,28 @@ body{margin:0}
 </helmet>
 <div class="{{themeClass}}" style="{{boxStyle}}">
 <sc-if value="{{hasLeft}}" hint-placeholder-val="{{true}}">
-<span style="flex-shrink: 0; display: flex; align-items: center; color: var(--text-muted)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></span>
+<span style="flex-shrink: 0; display: flex; align-items: center; color: var(--text-muted)"><dc-import name="Icon" icon="{{leftIcon}}" size="13" stroke="1.8" hint-size="13px,13px"></dc-import></span>
 </sc-if>
 <input class="gg-input" value="{{value}}" onChange="{{change}}" onKeyDown="{{keyDown}}" placeholder="{{placeholder}}" aria-label="{{label}}" aria-invalid="{{invalid}}" spellcheck="false" style="{{inputStyle}}">
+<sc-if value="{{hasRightIcon}}" hint-placeholder-val="{{false}}">
+<span style="flex-shrink: 0; display: flex; align-items: center; color: var(--text-muted)"><dc-import name="Icon" icon="{{rightIcon}}" size="13" stroke="1.8" hint-size="13px,13px"></dc-import></span>
+</sc-if>
 <sc-if value="{{hasRight}}" hint-placeholder-val="{{false}}">
 <span style="{{rightStyle}}">{{right}}</span>
 </sc-if>
 <sc-if value="{{showClear}}" hint-placeholder-val="{{false}}">
-<button aria-label="Clear" title="Clear (esc)" onClick="{{clear}}" style="width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 9999px; background: var(--bg-hover); color: var(--text-muted); cursor: pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+<button aria-label="Clear" title="Clear (esc)" onClick="{{clear}}" style="width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 9999px; background: var(--bg-hover); color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="close" size="10" stroke="2.4" hint-size="10px,10px"></dc-import></button>
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"value":{"editor":"text","default":""},"placeholder":{"editor":"text","default":"Search"},"label":{"editor":"text","default":"Search"},"size":{"editor":"enum","options":["28","30","32","36"],"default":"30"},"width":{"editor":"text","default":"240px"},"leftIcon":{"editor":"enum","options":["search","none"],"default":"search"},"rightIcon":{"editor":"text","default":"⌘K"},"rightKind":{"editor":"enum","options":["kbd","text"],"default":"kbd"},"mono":{"editor":"boolean","default":true},"clearable":{"editor":"boolean","default":true},"state":{"editor":"enum","options":["default","focus","invalid"],"default":"default"},"align":{"editor":"enum","options":["left","right"],"default":"left"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"onValue":{"editor":null},"onKey":{"editor":null},"$preview":{"width":240,"height":30}}'>
+<script type="text/x-dc" data-dc-script data-props='{"value": {"editor": "text", "default": ""}, "placeholder": {"editor": "text", "default": "Search"}, "label": {"editor": "text", "default": "Search"}, "size": {"editor": "enum", "options": ["28", "30", "32", "36"], "default": "30"}, "width": {"editor": "text", "default": "240px"}, "leftIcon": {"editor": "enum", "options": ["none", "sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"], "default": "search"}, "rightIcon": {"editor": "enum", "options": ["none", "sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"], "default": "none"}, "rightText": {"editor": "text", "default": "⌘K"}, "rightKind": {"editor": "enum", "options": ["kbd", "text"], "default": "kbd"}, "mono": {"editor": "boolean", "default": true}, "clearable": {"editor": "boolean", "default": true}, "state": {"editor": "enum", "options": ["default", "focus", "invalid"], "default": "default"}, "align": {"editor": "enum", "options": ["left", "right"], "default": "left"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "onValue": {"editor": null}, "onKey": {"editor": null}, "$preview": {"width": 240, "height": 30}}'>
 class Component extends DCLogic {
   renderVals() {
     // The app's text field (src/components/Input.tsx). size: 28 beside 28px icon buttons, 30 by
-    // default, 32 beside 32px header controls, 36 in forms. leftIcon / rightIcon are muted slots;
-    // clearable (filters) keeps the accent border while it has text and ends with a clear button.
+    // default, 32 beside 32px header controls, 36 in forms. leftIcon / rightIcon: any name from
+    // the Icon set (Icons page), 13px muted; rightText: a muted hint at the end (a ⌘K keycap, or
+    // text such as a match count); clearable (filters) keeps the accent border while it has text
+    // and ends with a clear button.
     var p = this.props;
     var size = Number(p.size || 30);
     var value = p.value == null ? '' : String(p.value);
@@ -48,15 +53,22 @@ class Component extends DCLogic {
       : (state === 'focus' || filled)
         ? 'border: 1px solid var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2)'
         : 'border: 1px solid var(--border)';
-    var right = p.rightIcon == null ? '⌘K' : String(p.rightIcon);
+    var NAMES = ["sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"];
+    // A rightIcon that is not an icon name is read as rightText (older imports).
+    var rightIcon = p.rightIcon && NAMES.indexOf(p.rightIcon) >= 0 ? p.rightIcon : '';
+    var right = p.rightText != null ? String(p.rightText) : (p.rightIcon != null && !rightIcon && p.rightIcon !== 'none' ? String(p.rightIcon) : '⌘K');
     var hasRight = right.length > 0;
+    var leftIcon = p.leftIcon == null ? 'search' : (p.leftIcon === 'none' ? '' : String(p.leftIcon));
     var kbd = (p.rightKind || 'kbd') === 'kbd';
     var padX = size === 36 ? 12 : 10;
-    var padR = hasRight || filled ? 6 : padX;
+    var padR = hasRight || rightIcon || filled ? 6 : padX;
     return {
       themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
       boxStyle: 'width: ' + (p.width || '240px') + '; height: ' + size + 'px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 ' + padR + 'px 0 ' + padX + 'px; background: var(--bg-sunken); border-radius: 8px; font-family: \'Instrument Sans\', -apple-system, sans-serif; ' + ring,
-      hasLeft: (p.leftIcon || 'search') === 'search',
+      hasLeft: !!leftIcon,
+      leftIcon: leftIcon,
+      hasRightIcon: !!rightIcon,
+      rightIcon: rightIcon,
       value: value,
       placeholder: p.placeholder == null ? 'Search' : p.placeholder,
       label: p.label || p.placeholder || 'Search',

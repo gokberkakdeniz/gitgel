@@ -547,12 +547,6 @@
   opacity: 0.6;
 }
 
-.fromPill {
-  padding: 1px 8px;
-  font-family: var(--font-mono);
-  font-weight: 400;
-}
-
 .pending {
   flex-shrink: 0;
   color: var(--text-muted);
@@ -631,21 +625,7 @@
   color: var(--accent-hover);
 }
 
-/* Diff view menu (flow D5–D6) */
-.wsChip {
-  flex-shrink: 0;
-  height: 20px;
-  padding: 0 8px;
-  background: rgba(var(--accent-rgb), 0.16);
-  border: 0;
-  border-radius: var(--radius-pill);
-  color: var(--accent-hover);
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
+/* Diff view menu trigger (flow D5–D6); the menu is a Menu. */
 .viewButton {
   flex-shrink: 0;
   height: 28px;
@@ -667,111 +647,6 @@
   background: var(--bg-hover);
   border-color: var(--accent);
   color: var(--text-strong);
-}
-
-.viewMenu {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 6px;
-}
-
-.viewTitle {
-  padding: 6px 10px 4px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.viewRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-control);
-  color: var(--text-strong);
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.viewRow:hover,
-.viewRowOn {
-  background: var(--bg-hover);
-}
-
-.viewRowTop {
-  align-items: flex-start;
-}
-
-.viewCheck {
-  width: 16px;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  color: var(--accent-text);
-}
-
-.hidden {
-  visibility: hidden;
-}
-
-.viewBox {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  margin-top: 1px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid var(--text-disabled);
-  border-radius: 4px;
-  color: transparent;
-}
-
-.viewBoxOn {
-  background: var(--accent);
-  border: 0;
-  color: var(--text-strong);
-}
-
-.viewText {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.viewHint {
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
-.viewKey {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-faint);
-}
-
-.viewKeyTop {
-  padding-top: 2px;
-}
-
-.viewDivider {
-  height: 1px;
-  margin: 5px 4px;
-  background: var(--border);
-}
-
-.viewFoot {
-  padding: 6px 10px 4px;
-  font-size: 11px;
-  color: var(--text-faint);
 }
 
 /* File filter (flow D8): an Input, sticky above the groups. A shadow strip covers the list's top
@@ -822,49 +697,4 @@
   font-size: 12px;
   line-height: 1.4;
   color: var(--text-muted);
-}
-
-/* Diff view menu: Context (flow D9). The lines row starts at the label column. */
-.viewLines {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px 6px 36px;
-}
-
-.viewLinesOff {
-  opacity: 0.45;
-  pointer-events: none;
-}
-
-.viewLinesLabel {
-  flex-grow: 1;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.viewLinesTrack {
-  display: flex;
-  gap: 2px;
-  padding: 2px;
-  background: var(--bg-track);
-  border-radius: 7px;
-}
-
-.viewLinesBtn {
-  min-width: 28px;
-  height: 22px;
-  padding: 0 6px;
-  background: transparent;
-  border: 0;
-  border-radius: 5px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.viewLinesBtnOn {
-  background: var(--bg-pressed);
-  color: var(--text-strong);
 }

@@ -2,7 +2,7 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
-import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon, SearchIcon } from '../../components/icons';
+import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
 import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { OpenItems } from '../../components/OpenItems';
@@ -529,16 +529,16 @@ function StatePill({
   onMenu: (rect: DOMRect) => void;
   onSettings: () => void;
 }) {
-  const cls = styles.pill;
+  const cls = styles.stateCell;
   const clickable = (tone: 'warning' | 'danger', label: string, onClick: (rect: DOMRect) => void) => (
-    <button
-      type="button"
-      className={`${styles.pillButton} ${cls}`}
+    <Pill
+      tone={tone}
+      className={cls}
       title={e.error ?? undefined}
       onClick={(ev) => onClick(ev.currentTarget.getBoundingClientRect())}
     >
-      <Pill tone={tone}>{label}</Pill>
-    </button>
+      {label}
+    </Pill>
   );
   switch (e.state) {
     case 'merged':
@@ -662,7 +662,7 @@ function BranchPicker({
         <div className={styles.pickerFilterRow}>
           <Input
             autoFocus
-            leftIcon={<SearchIcon size={13} />}
+            leftIcon="search"
             mono
             clearable
             size={32}

@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef, type InputHTMLAttributes, type ReactNode } from 'react';
-import { CloseIcon } from './icons';
+import { CloseIcon, Icon, type IconName } from './icons';
 import styles from './Input.module.css';
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'size'> {
@@ -7,10 +7,12 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   onChange: (value: string) => void;
   /** 30 default; 28 beside 28px icon buttons, 32 beside 32px header controls, 36 in forms. */
   size?: 28 | 30 | 32 | 36;
-  /** Before the text, muted (e.g. a search icon). */
-  leftIcon?: ReactNode;
-  /** After the text, muted (e.g. a ⌘K hint or a match count). */
-  rightIcon?: ReactNode;
+  /** A 13px muted icon before the text (e.g. search). */
+  leftIcon?: IconName;
+  /** A 13px muted icon after the text. */
+  rightIcon?: IconName;
+  /** Muted text at the end, 11px (e.g. a ⌘K hint or a match count). */
+  rightText?: ReactNode;
   /** Mono text, for branches, files, paths and commands. */
   mono?: boolean;
   /** Danger border and ring (e.g. a name that is taken). */
@@ -27,7 +29,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
  * In-place editors (page titles, the sidebar rename) are not fields and keep their own look.
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { value, onChange, size = 30, leftIcon, rightIcon, mono, invalid, clearable, className, onKeyDown, ...rest },
+  { value, onChange, size = 30, leftIcon, rightIcon, rightText, mono, invalid, clearable, className, onKeyDown, ...rest },
   ref,
 ) {
   const input = useRef<HTMLInputElement>(null);
@@ -56,7 +58,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         }
       }}
     >
-      {leftIcon && <span className={styles.slot}>{leftIcon}</span>}
+      {leftIcon && (
+        <span className={styles.slot}>
+          <Icon name={leftIcon} size={13} strokeWidth={1.8} />
+        </span>
+      )}
       <input
         ref={input}
         className={styles.input}
@@ -75,7 +81,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         }}
         {...rest}
       />
-      {rightIcon && <span className={styles.slot}>{rightIcon}</span>}
+      {rightIcon && (
+        <span className={styles.slot}>
+          <Icon name={rightIcon} size={13} strokeWidth={1.8} />
+        </span>
+      )}
+      {rightText && <span className={styles.slot}>{rightText}</span>}
       {filled && (
         <button
           type="button"

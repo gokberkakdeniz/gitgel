@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Menu item</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<span class="{{themeClass}}" style="display: contents">
+<sc-if value="{{isButton}}" hint-placeholder-val="{{true}}">
+<button type="button" role="{{role}}" aria-checked="{{checked}}" disabled="{{disabled}}" onClick="{{select}}" title="{{title}}" style="{{style}}">
+<sc-if value="{{hasIcon}}" hint-placeholder-val="{{true}}"><span style="{{slotStyle}}"><dc-import name="Icon" icon="{{icon}}" size="14" stroke="1.8" hint-size="14px,14px"></dc-import></span></sc-if>
+<sc-if value="{{hasApp}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="{{appStyle}}"></span></sc-if>
+<sc-if value="{{hasCheck}}" hint-placeholder-val="{{false}}"><span style="{{checkStyle}}"><dc-import name="Icon" icon="check" size="14" hint-size="14px,14px"></dc-import></span></sc-if>
+<sc-if value="{{hasBox}}" hint-placeholder-val="{{false}}"><span style="{{boxStyle}}"><sc-if value="{{checked}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="check" size="11" stroke="3" hint-size="11px,11px"></dc-import></sc-if></span></sc-if>
+<sc-if value="{{hasDot}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="{{dotStyle}}"></span></sc-if>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span>{{label}}</span>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{sub}}</span></sc-if>
+<sc-if value="{{hasDesc}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; line-height: 1.4; color: var(--text-muted)">{{desc}}</span></sc-if>
+</span>
+<sc-if value="{{hasAside}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; font-size: 12px; color: var(--text-muted)">{{aside}}</span></sc-if>
+<sc-if value="{{hasKbd}}" hint-placeholder-val="{{false}}"><span style="{{kbdStyle}}">{{kbd}}</span></sc-if>
+<sc-if value="{{arrow}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; color: var(--text-muted)">→</span></sc-if>
+</button>
+</sc-if>
+<sc-if value="{{isLink}}" hint-placeholder-val="{{false}}">
+<a href="{{href}}" role="{{role}}" title="{{title}}" style="{{style}}">
+<sc-if value="{{hasIcon}}" hint-placeholder-val="{{true}}"><span style="{{slotStyle}}"><dc-import name="Icon" icon="{{icon}}" size="14" stroke="1.8" hint-size="14px,14px"></dc-import></span></sc-if>
+<sc-if value="{{hasApp}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="{{appStyle}}"></span></sc-if>
+<sc-if value="{{hasCheck}}" hint-placeholder-val="{{false}}"><span style="{{checkStyle}}"><dc-import name="Icon" icon="check" size="14" hint-size="14px,14px"></dc-import></span></sc-if>
+<sc-if value="{{hasBox}}" hint-placeholder-val="{{false}}"><span style="{{boxStyle}}"><sc-if value="{{checked}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="check" size="11" stroke="3" hint-size="11px,11px"></dc-import></sc-if></span></sc-if>
+<sc-if value="{{hasDot}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="{{dotStyle}}"></span></sc-if>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span>{{label}}</span>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{sub}}</span></sc-if>
+<sc-if value="{{hasDesc}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; line-height: 1.4; color: var(--text-muted)">{{desc}}</span></sc-if>
+</span>
+<sc-if value="{{hasAside}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; font-size: 12px; color: var(--text-muted)">{{aside}}</span></sc-if>
+<sc-if value="{{hasKbd}}" hint-placeholder-val="{{false}}"><span style="{{kbdStyle}}">{{kbd}}</span></sc-if>
+<sc-if value="{{arrow}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; color: var(--text-muted)">→</span></sc-if>
+</a>
+</sc-if>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"label": {"editor": "text", "default": "Copy branch name"}, "lead": {"editor": "enum", "options": ["none", "icon", "app", "check", "box", "dot"], "default": "icon"}, "icon": {"editor": "enum", "options": ["sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"], "default": "copy"}, "app": {"editor": "enum", "options": ["finder", "cursor", "vscode", "terminal"], "default": "finder"}, "checked": {"editor": "boolean", "default": true}, "sub": {"editor": "text", "default": ""}, "desc": {"editor": "text", "default": ""}, "aside": {"editor": "text", "default": ""}, "kbd": {"editor": "text", "default": ""}, "arrow": {"editor": "boolean", "default": false}, "tone": {"editor": "enum", "options": ["default", "danger", "accent"], "default": "default"}, "active": {"editor": "boolean", "default": false}, "disabled": {"editor": "boolean", "default": false}, "theme": {"editor": "enum", "options": ["dark", "light", "none"], "default": "dark"}, "href": {"editor": null}, "role": {"editor": null}, "title": {"editor": null}, "onSelect": {"editor": null}, "$preview": {"width": 248, "height": 34}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // One row of a Menu (src/components/Menu.tsx MenuItem): 8px 10px, radius 8, 13px, on the
+    // menu's bg.elevated; active (hovered) on bg.hover. lead: a 14px line icon (any name of the Icon set), a 16px app icon
+    // placeholder, a radio check slot (checked shows it), a checkbox, or a 7px dot (checked = the
+    // current one). sub: a mono 11px second line; desc: a 12px muted one. aside: muted text on the
+    // right (the code's hint); kbd: a mono shortcut; arrow: →. tone danger or accent; disabled
+    // greys it and dims its icon. href makes it a link to an artboard.
+    var p = this.props;
+    var APP = { finder: '#b8b4ac, #6e6a62', cursor: '#3b3934, #1d1c19', vscode: '#8f8b83, #4a4843', terminal: '#5c5a55, #2b2925' };
+    var lead = p.lead || 'none';
+    var on = p.checked == null ? true : !!p.checked;
+    var two = !!(p.sub || p.desc);
+    var dis = !!p.disabled;
+    var tone = p.tone || 'default';
+    var color = dis ? 'var(--text-faint)' : tone === 'danger' ? 'var(--danger)' : tone === 'accent' ? 'var(--accent-text)' : 'var(--text-strong)';
+    var select = p.onSelect;
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      isButton: !p.href, isLink: !!p.href, href: p.href,
+      role: p.role || (lead === 'check' ? 'menuitemradio' : lead === 'box' ? 'menuitemcheckbox' : 'menuitem'),
+      checked: lead === 'check' || lead === 'box' ? on : undefined,
+      disabled: dis, title: p.title,
+      select: select ? function (e) { select(e); } : undefined,
+      label: p.label == null ? 'Copy branch name' : p.label,
+      style: 'box-sizing: border-box; width: 100%; display: flex; align-items: ' + (two ? 'flex-start' : 'center') + '; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; line-height: 17px; text-align: left; text-decoration: none; color: ' + color + '; ' + (tone === 'accent' ? 'font-weight: 500; ' : '') + 'background: ' + (p.active && !dis ? 'var(--bg-hover)' : 'var(--bg-elevated)') + '; cursor: ' + (dis ? 'default' : 'pointer'),
+      hasIcon: lead === 'icon', icon: p.icon || 'copy',
+      slotStyle: 'width: 16px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: ' + (tone === 'danger' ? 'var(--danger)' : dis ? 'var(--text-faint)' : 'var(--text-muted)') + (dis ? '; opacity: 0.4' : ''),
+      hasApp: lead === 'app',
+      appStyle: 'width: 16px; height: 16px; flex-shrink: 0; border-radius: 4px; background: linear-gradient(160deg, ' + (APP[p.app] || APP.finder) + ')' + (dis ? '; opacity: 0.4' : ''),
+      hasCheck: lead === 'check',
+      checkStyle: 'width: 16px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--accent-text); ' + (on ? '' : 'visibility: hidden'),
+      hasBox: lead === 'box',
+      boxStyle: 'width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 4px; ' + (on ? 'background: var(--accent); color: var(--on-accent); border: 0' : 'border: 1.5px solid var(--border-strong)'),
+      hasDot: lead === 'dot',
+      dotStyle: 'width: 7px; height: 7px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 1.5px solid ' + (on ? 'var(--text-code)' : 'var(--text-faint)'),
+      hasSub: !!p.sub, sub: p.sub || '',
+      hasDesc: !!p.desc, desc: p.desc || '',
+      hasAside: !!p.aside, aside: p.aside || '',
+      hasKbd: !!p.kbd, kbd: p.kbd || '',
+      kbdStyle: 'flex-shrink: 0; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--text-faint)' + (two ? '; padding-top: 2px' : ''),
+      arrow: !!p.arrow
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pill</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<span class="{{themeClass}}" style="display: contents">
+<sc-if value="{{isButton}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{press}}" title="{{title}}" style="{{style}}">{{label}}</button>
+</sc-if>
+<sc-if value="{{isSpan}}" hint-placeholder-val="{{true}}">
+<span title="{{title}}" style="{{style}}">{{label}}</span>
+</sc-if>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"label":{"editor":"text","default":"merged"},"tone":{"editor":"enum","options":["success","warning","danger","neutral","accent"],"default":"success"},"size":{"editor":"enum","options":["sm","md"],"default":"md"},"mono":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"title":{"editor":null},"onPress":{"editor":null},"$preview":{"width":80,"height":22}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The app's Pill (src/components/Pill.tsx): state labels, script results, import badges.
+    // md: padding 3px 10px (tables, lists, dialog headers); sm: 16px tall, no vertical padding,
+    // inside a mono meta line (Branches line 2) or next to a name. onPress makes it a button
+    // (Review's "Whitespace ignored").
+    var p = this.props;
+    var tone = p.tone || 'success';
+    var c = {
+      success: 'color: var(--success); background: rgba(var(--success-rgb), 0.14);',
+      warning: 'color: var(--warning); background: rgba(var(--warning-rgb), 0.14);',
+      danger: 'color: var(--danger); background: rgba(var(--danger-rgb), 0.16);',
+      neutral: 'color: var(--text-body); background: var(--border);',
+      accent: 'color: var(--accent-text); background: rgba(var(--accent-rgb), 0.14);'
+    }[tone];
+    var sm = p.size === 'sm';
+    var press = p.onPress;
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      isButton: !!press,
+      isSpan: !press,
+      press: press ? function (e) { press(e); } : undefined,
+      title: p.title,
+      label: p.label == null ? 'merged' : p.label,
+      style: 'box-sizing: border-box; flex-shrink: 0; display: inline-flex; align-items: center; border: 0; border-radius: 9999px; font-size: 11px; font-weight: 500; white-space: nowrap; ' +
+        (sm ? 'height: 16px; padding: 0 7px; ' : 'padding: 3px 10px; line-height: 1.3; ') +
+        (p.mono ? 'font-family: \'JetBrains Mono\', monospace; ' : 'font-family: \'Instrument Sans\', -apple-system, sans-serif; ') +
+        (press ? 'cursor: pointer; ' : '') + c
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -16,6 +16,12 @@
   cursor: default;
 }
 
+.h28 {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
 .h32 {
   height: 32px;
 }
@@ -75,6 +81,14 @@
 
 .link:not(:disabled):hover {
   color: var(--accent-hover);
+}
+
+/* A dropdown trigger whose menu is open. */
+.active,
+.active:not(:disabled):hover {
+  background: var(--bg-pressed);
+  border-color: var(--border-strong);
+  color: var(--text-strong);
 }
 
 .kbd {

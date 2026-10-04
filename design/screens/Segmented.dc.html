@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Segmented</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" role="{{groupRole}}" aria-label="{{label}}" style="{{groupStyle}}">
+<sc-for list="{{options}}" as="o" hint-placeholder-count="3">
+<button type="button" role="{{o.role}}" aria-checked="{{o.checked}}" aria-pressed="{{o.pressed}}" disabled="{{o.disabled}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}<sc-if value="{{o.hasCount}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">{{o.count}}</span></sc-if></button>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"size":{"editor":"enum","options":["xs","sm","md"],"default":"md"},"bordered":{"editor":"boolean","default":false},"role":{"editor":"enum","options":["pressed","radio"],"default":"pressed"},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"options":{"editor":null},"label":{"editor":null},"$preview":{"width":240,"height":34}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The app's Segmented (src/components/Segmented.tsx). options: [{ label, count?, on, pick?,
+    // disabled? }]. md 28px buttons (Review layer), sm 26px (Branches scope, dialog choices), xs
+    // 22px mono numbers inside a menu row. bordered: on bg.elevated surfaces (dialogs), where the
+    // track would vanish. role radio for a choice inside a form, pressed for a view toggle.
+    var p = this.props;
+    var size = p.size || 'md';
+    var radio = p.role === 'radio';
+    var xs = size === 'xs';
+    var h = { xs: 22, sm: 26, md: 28 }[size] || 28;
+    var opts = p.options || [{ label: 'Committed', count: '12', on: true }, { label: 'Uncommitted', count: '3' }, { label: 'All', count: '15' }];
+    var item = 'box-sizing: border-box; height: ' + h + 'px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; white-space: nowrap; cursor: pointer; ' +
+      (xs ? 'min-width: 28px; padding: 0 6px; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 11px; ' : 'padding: 0 ' + (size === 'sm' ? 10 : 12) + 'px; border-radius: 8px; font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 12px; font-weight: 500; ');
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      groupRole: radio ? 'radiogroup' : 'group',
+      label: p.label,
+      groupStyle: 'flex-shrink: 0; align-self: flex-start; display: flex; gap: 2px; padding: ' + (xs ? 2 : 3) + 'px; background: var(--bg-track); border-radius: ' + (xs ? 7 : 10) + 'px;' + (p.bordered ? ' border: 1px solid var(--border);' : ''),
+      options: opts.map(function (o) {
+        var on = !!o.on;
+        var hasCount = o.count != null && o.count !== '';
+        return {
+          label: o.label, count: hasCount ? String(o.count) : '', hasCount: hasCount,
+          role: radio ? 'radio' : undefined,
+          checked: radio ? on : undefined,
+          pressed: radio ? undefined : on,
+          disabled: !!o.disabled,
+          pick: o.pick,
+          style: item + (on ? 'background: var(--bg-pressed); color: var(--text-strong);' : 'background: transparent; color: var(--text-muted);') + (o.disabled ? ' opacity: 0.45; cursor: default;' : '')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Button</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<span class="{{themeClass}}" style="display: contents">
+<sc-if value="{{isLink}}" hint-placeholder-val="{{false}}">
+<a href="{{href}}" aria-label="{{ariaLabel}}" title="{{title}}" style="{{style}}">
+<sc-if value="{{hasIcon}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="{{icon}}" size="{{iconSize}}" hint-size="14px,14px"></dc-import></sc-if>
+<sc-if value="{{hasLabel}}" hint-placeholder-val="{{true}}"><span>{{label}}</span></sc-if>
+<sc-if value="{{hasKbd}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; opacity: 0.75">{{kbd}}</span></sc-if>
+<sc-if value="{{chevron}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="chevron-down" size="12" hint-size="12px,12px"></dc-import></sc-if>
+</a>
+</sc-if>
+<sc-if value="{{isButton}}" hint-placeholder-val="{{true}}">
+<button type="button" onClick="{{press}}" disabled="{{disabled}}" aria-label="{{ariaLabel}}" aria-haspopup="{{hasPopup}}" aria-expanded="{{expanded}}" title="{{title}}" style="{{style}}">
+<sc-if value="{{hasIcon}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="{{icon}}" size="{{iconSize}}" hint-size="14px,14px"></dc-import></sc-if>
+<sc-if value="{{hasLabel}}" hint-placeholder-val="{{true}}"><span>{{label}}</span></sc-if>
+<sc-if value="{{hasKbd}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; opacity: 0.75">{{kbd}}</span></sc-if>
+<sc-if value="{{chevron}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="chevron-down" size="12" hint-size="12px,12px"></dc-import></sc-if>
+</button>
+</sc-if>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"label":{"editor":"text","default":"Button"},"variant":{"editor":"enum","options":["primary","secondary","ghost","danger","link"],"default":"secondary"},"size":{"editor":"enum","options":["28","32","36","40"],"default":"32"},"icon":{"editor":"enum","options":["none", "sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"],"default":"none"},"kbd":{"editor":"text","default":""},"chevron":{"editor":"boolean","default":false},"active":{"editor":"boolean","default":false},"disabled":{"editor":"boolean","default":false},"hidden":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"href":{"editor":null},"ariaLabel":{"editor":null},"title":{"editor":null},"width":{"editor":null},"onPress":{"editor":null},"$preview":{"width":120,"height":32}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The app's Button and IconButton (src/components/Button.tsx, IconButton.tsx). variant:
+    // primary · secondary · ghost · danger · link; size 28 / 32 (default) / 36 in modals / 40 on
+    // empty states. No label + an icon = an icon button (ghost: plain, secondary: boxed). kbd is a
+    // mono hint after the label; icon is any name from the Icon set (Icons page); chevron marks a dropdown trigger; active is its open state;
+    // hidden keeps its place but shows on row hover only (row ⋮ buttons).
+    var p = this.props;
+    var size = Number(p.size || 32);
+    var v = p.variant || 'secondary';
+    var label = p.label == null ? '' : String(p.label);
+    var icon = p.icon && p.icon !== 'none' ? p.icon : '';
+    var iconOnly = !label && !!icon;
+    var link = v === 'link';
+    var pad = { 24: 8, 28: 12, 32: 14, 36: 16, 40: 20 }[size] || 14;
+    var font = size >= 40 ? 14 : size <= 28 ? 12 : 13;
+    var s = 'box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: ' + (link ? 6 : 8) + 'px; flex-shrink: 0; border-radius: 8px; font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: ' + font + 'px; line-height: 1; white-space: nowrap; text-decoration: none; text-align: left; cursor: pointer; ';
+    if (link) s += 'height: auto; padding: 0; ';
+    else if (iconOnly) s += 'width: ' + size + 'px; height: ' + size + 'px; padding: 0; ';
+    else s += 'height: ' + size + 'px; padding: 0 ' + pad + 'px; ';
+    if (p.width) s += 'width: ' + p.width + '; ';
+    var look = {
+      primary: 'background: var(--accent); border: 1px solid var(--accent); color: var(--on-accent); font-weight: 600; ',
+      secondary: 'background: var(--bg-elevated); border: 1px solid var(--border); color: ' + (iconOnly ? 'var(--text-body)' : 'var(--text-strong)') + '; ',
+      ghost: 'background: transparent; border: 1px solid transparent; color: var(--text-muted); ',
+      danger: 'background: var(--danger-fill); border: 1px solid var(--danger-fill); color: #ffffff; font-weight: 600; ',
+      link: 'background: transparent; border: 0; color: var(--accent-text); font-weight: 500; '
+    }[v] || '';
+    if (p.active && !link) look = 'background: var(--bg-pressed); border: 1px solid var(--border-strong); color: var(--text-strong); ' + (v === 'primary' ? 'font-weight: 600; ' : '');
+    s += look;
+    if (p.disabled) s += 'opacity: 0.5; cursor: default; ';
+    if (p.hidden) s += 'opacity: 0; ';
+    var press = p.onPress;
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      isLink: !!p.href && !p.disabled,
+      isButton: !p.href || !!p.disabled,
+      href: p.href,
+      press: press ? function (e) { press(e); } : undefined,
+      disabled: !!p.disabled,
+      ariaLabel: p.ariaLabel || (iconOnly ? icon : undefined),
+      hasPopup: p.chevron ? 'menu' : undefined,
+      expanded: p.chevron ? !!p.active : undefined,
+      title: p.title,
+      style: s,
+      hasIcon: !!icon,
+      icon: icon,
+      iconSize: iconOnly ? (size >= 32 ? 15 : 13) : 12,
+      hasLabel: !!label,
+      label: label,
+      hasKbd: !!p.kbd,
+      kbd: p.kbd || '',
+      chevron: !!p.chevron
+    };
+  }
+}
+</script>
+</body>
+</html>

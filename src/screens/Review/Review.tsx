@@ -3,18 +3,17 @@ import { Banner } from '../../components/Banner';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import {
   BackIcon,
-  CheckIcon,
   ChevronDownIcon,
   CloseIcon,
   ChevronUpIcon,
   ForwardIcon,
   PencilIcon,
   RefreshIcon,
-  SearchIcon,
   SidebarIcon,
   SplitIcon,
   UnifiedIcon,
 } from '../../components/icons';
+import { Menu, MenuCaption, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
 import { Popover } from '../../components/Popover';
 import { ProjectNameInput } from '../../components/ProjectNameInput';
 import { IconButton } from '../../components/IconButton';
@@ -421,14 +420,9 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
                     : compareLabel(mode, group.entry)}
                 </span>
                 {ignoreWs && (
-                  <button
-                    type="button"
-                    className={styles.wsChip}
-                    title="Show whitespace changes (⌥W)"
-                    onClick={toggleWs}
-                  >
+                  <Pill tone="accent" title="Show whitespace changes (⌥W)" onClick={toggleWs}>
                     Whitespace ignored
-                  </button>
+                  </Pill>
                 )}
                 <span className={styles.grow} />
                 <ViewMenu
@@ -537,43 +531,6 @@ function ViewMenu({
   onToggleWs: () => void;
 }) {
   const [at, setAt] = useState<DOMRect | null>(null);
-  const contextRadio = (value: DiffContext, label: string) => (
-    <button
-      type="button"
-      role="menuitemradio"
-      aria-checked={context === value}
-      className={context === value ? `${styles.viewRow} ${styles.viewRowOn}` : styles.viewRow}
-      onClick={() => {
-        onContext(value, contextLines);
-        // Whole file closes the menu; changes only leaves it open to pick the lines.
-        if (value === 'whole') setAt(null);
-      }}
-    >
-      <span className={context === value ? styles.viewCheck : `${styles.viewCheck} ${styles.hidden}`}>
-        <CheckIcon />
-      </span>
-      <span className={styles.grow}>{label}</span>
-      <span className={styles.viewKey}>⌥C</span>
-    </button>
-  );
-  const radio = (value: DiffLayout, label: string) => (
-    <button
-      type="button"
-      role="menuitemradio"
-      aria-checked={layout === value}
-      className={layout === value ? `${styles.viewRow} ${styles.viewRowOn}` : styles.viewRow}
-      onClick={() => {
-        onLayout(value);
-        setAt(null);
-      }}
-    >
-      <span className={layout === value ? styles.viewCheck : `${styles.viewCheck} ${styles.hidden}`}>
-        <CheckIcon />
-      </span>
-      <span className={styles.grow}>{label}</span>
-      <span className={styles.viewKey}>⌥V</span>
-    </button>
-  );
   return (
     <>
       <button
@@ -590,55 +547,55 @@ function ViewMenu({
       </button>
       {at && (
         <Popover anchorRect={at} width={300} alignRight onClose={() => setAt(null)}>
-          <div role="menu" aria-label="Diff view" className={styles.viewMenu}>
-            <div className={styles.viewTitle}>Layout</div>
-            {radio('split', 'Split')}
-            {radio('unified', 'Unified')}
-            <div className={styles.viewDivider} />
-            <div className={styles.viewTitle}>Context</div>
-            {contextRadio('changes', 'Changes only')}
-            <div
-              role="group"
-              aria-label="Lines around each change"
-              aria-disabled={context === 'whole'}
-              className={context === 'whole' ? `${styles.viewLines} ${styles.viewLinesOff}` : styles.viewLines}
+          <Menu aria-label="Diff view">
+            <MenuLabel>Layout</MenuLabel>
+            {(['split', 'unified'] as const).map((l) => (
+              <MenuItem
+                key={l}
+                checked={layout === l}
+                kbd="⌥V"
+                onSelect={() => {
+                  onLayout(l);
+                  setAt(null);
+                }}
+              >
+                {l === 'split' ? 'Split' : 'Unified'}
+              </MenuItem>
+            ))}
+            <MenuDivider />
+            <MenuLabel>Context</MenuLabel>
+            <MenuItem checked={context === 'changes'} kbd="⌥C" onSelect={() => onContext('changes', contextLines)}>
+              Changes only
+            </MenuItem>
+            <MenuSegmented
+              label="Lines around changes"
+              disabled={context === 'whole'}
+              value={String(contextLines)}
+              onChange={(n) => onContext('changes', Number(n))}
+              options={[3, 5, 10].map((n) => ({ value: String(n), label: String(n) }))}
+            />
+            <MenuItem
+              checked={context === 'whole'}
+              kbd="⌥C"
+              onSelect={() => {
+                onContext('whole', contextLines);
+                // Whole file closes the menu; changes only leaves it open to pick the lines.
+                setAt(null);
+              }}
             >
-              <span className={styles.viewLinesLabel}>Lines around changes</span>
-              <div className={styles.viewLinesTrack}>
-                {[3, 5, 10].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    aria-pressed={contextLines === n}
-                    tabIndex={context === 'whole' ? -1 : undefined}
-                    className={contextLines === n ? `${styles.viewLinesBtn} ${styles.viewLinesBtnOn}` : styles.viewLinesBtn}
-                    onClick={() => onContext('changes', n)}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {contextRadio('whole', 'Whole file')}
-            <div className={styles.viewDivider} />
-            <button
-              type="button"
-              role="menuitemcheckbox"
-              aria-checked={ignoreWs}
-              className={`${styles.viewRow} ${styles.viewRowTop}`}
-              onClick={onToggleWs}
+              Whole file
+            </MenuItem>
+            <MenuDivider />
+            <MenuItem
+              box={ignoreWs}
+              desc="Hide lines where only indentation or trailing spaces changed"
+              kbd="⌥W"
+              onSelect={onToggleWs}
             >
-              <span className={ignoreWs ? `${styles.viewBox} ${styles.viewBoxOn}` : styles.viewBox}>
-                <CheckIcon />
-              </span>
-              <span className={styles.viewText}>
-                <span>Ignore whitespace</span>
-                <span className={styles.viewHint}>Hide lines where only indentation or trailing spaces changed</span>
-              </span>
-              <span className={`${styles.viewKey} ${styles.viewKeyTop}`}>⌥W</span>
-            </button>
-            <div className={styles.viewFoot}>Applies to every diff and is remembered.</div>
-          </div>
+              Ignore whitespace
+            </MenuItem>
+            <MenuCaption>Applies to every diff and is remembered.</MenuCaption>
+          </Menu>
         </Popover>
       )}
     </>
@@ -987,8 +944,8 @@ function FileFilter({
   return (
     <Input
       ref={inputRef}
-      leftIcon={<SearchIcon size={13} />}
-      rightIcon={query ? `${count} ${count === 1 ? 'file' : 'files'}` : <Kbd>⌘K</Kbd>}
+      leftIcon="search"
+      rightText={query ? `${count} ${count === 1 ? 'file' : 'files'}` : <Kbd>⌘K</Kbd>}
       mono
       clearable
       className={styles.filter}
@@ -1122,7 +1079,7 @@ function EntryBar({
                 <span className={styles.sha}>{c.shortSha}</span>
                 <span className={styles.subject}>{c.subject}</span>
                 {c.fromBranch && (
-                  <Pill tone="warning" className={styles.fromPill}>
+                  <Pill tone="warning" size="sm" mono>
                     {c.fromBranch}
                   </Pill>
                 )}

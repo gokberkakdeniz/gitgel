@@ -32,14 +32,10 @@ button{font-family:inherit}
 </sc-if>
 <div style="{{subtitleStyle}}">{{subtitle}}</div>
 </div>
-<button aria-label="Refresh" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #d8d4cc">
-<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
-</button>
-<a href="Palette.dc.html" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; color: #faf9f5; font-weight: 500; font-size: 13px">Add entries <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">⌘K</span></a>
-<a href="Diff.dc.html" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #4f8fa3; border-radius: 8px; color: #141311; font-weight: 600; font-size: 13px">Review changes</a>
-<button aria-label="Project options" aria-haspopup="menu" style="{{optionsBtnStyle}}">
-<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
-</button>
+<dc-import name="Button" variant="secondary" size="32" icon="refresh" label="" aria-label="Refresh" hint-size="32px,32px"></dc-import>
+<dc-import name="Button" label="Add entries" kbd="⌘K" href="Palette.dc.html" hint-size="126px,32px"></dc-import>
+<dc-import name="Button" variant="primary" label="Review changes" href="Diff.dc.html" hint-size="130px,32px"></dc-import>
+<dc-import name="Button" variant="secondary" size="32" icon="more" label="" aria-label="Project options" active="{{projectMenu}}" hint-size="32px,32px"></dc-import>
 </header>
 
 <sc-if value="{{hasRows}}" hint-placeholder-val="{{true}}">
@@ -55,8 +51,8 @@ button{font-family:inherit}
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{r.ahead}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{r.files}}</span>
 <span style="{{r.dirtyStyle}}">{{r.dirtyLabel}}</span>
-<span style="{{r.stateStyle}}">{{r.state}}</span>
-<button aria-label="Entry options" style="{{r.menuBtnStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
+<span style="justify-self: start; display: flex"><sc-if value="{{r.hasState}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" label="{{r.state}}" tone="{{r.stateTone}}" hint-size="110px,20px"></dc-import></sc-if><sc-if value="{{r.noState}}" hint-placeholder-val="{{true}}"><span style="font-size: 12px; color: #75726b">—</span></sc-if></span>
+<dc-import name="Button" variant="ghost" size="28" icon="more" label="" aria-label="Entry options" active="{{r.hot}}" hint-size="28px,28px"></dc-import>
 </div>
 </sc-for>
 <sc-if value="{{showHint}}" hint-placeholder-val="{{false}}">
@@ -74,51 +70,24 @@ button{font-family:inherit}
 <div style="width: 420px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
 <h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">No entries yet</h2>
 <p style="margin: 0; font-size: 14px; color: #d8d4cc; line-height: 1.55">A project groups branches that belong to one piece of work, across any of your repositories.</p>
-<a href="Palette.dc.html" style="margin-top: 8px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 20px; background: #4f8fa3; border-radius: 8px; color: #141311; font-weight: 600; font-size: 14px">Add branches <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; opacity: 0.8">⌘K</span></a>
+<div style="margin-top: 8px; display: flex"><dc-import name="Button" variant="primary" size="40" label="Add branches" kbd="⌘K" href="Palette.dc.html" hint-size="170px,40px"></dc-import></div>
 </div>
 </div>
 </sc-if>
 
 <sc-if value="{{showMenu}}" hint-placeholder-val="{{false}}">
-<div role="menu" aria-label="Entry options" style="position: absolute; top: 377px; right: 28px; width: 260px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; padding: 6px">
-<button role="menuitem" style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: #2a2825; text-align: left; cursor: pointer">
-<span style="width: 16px; height: 17px; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: #a09d96"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 8v4l3 2"></path></svg></span>
-<span style="display: flex; flex-direction: column; gap: 2px">
-<span style="color: #faf9f5; font-size: 13px">View last known state</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96">tip 3be91a0 · seen 2d ago</span>
-</span>
-</button>
-<button role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #faf9f5; font-size: 13px; text-align: left"><span style="width: 16px; display: flex; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: #a09d96"><circle cx="6" cy="6" r="2.5"></circle><circle cx="6" cy="18" r="2.5"></circle><circle cx="18" cy="9" r="2.5"></circle><path d="M6 8.5v7"></path><path d="M18 11.5c0 3-3 4.5-9.5 5.2"></path></svg></span>Point to another branch…</button>
-<button role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #faf9f5; font-size: 13px; text-align: left"><span style="width: 16px; display: flex; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: #a09d96"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></span>Copy branch name</button>
-<div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
-<sc-for list="{{deletedApps}}" as="o" hint-placeholder-count="4">
-<button role="menuitem" disabled="{{true}}" style="{{o.style}}"><span aria-hidden="true" style="{{o.iconStyle}}"></span>{{o.label}}</button>
-</sc-for>
-<div style="display: flex; gap: 8px; padding: 6px 10px 4px; font-size: 12px; line-height: 1.45; color: #e8c071"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg><span>The branch was deleted, so there is nothing to open.</span></div>
-<div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
-<button role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #ee9a90; font-size: 13px; text-align: left"><span style="width: 16px; display: flex; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: #ee9a90"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg></span>Remove from project</button>
+<div style="position: absolute; top: 377px; right: 28px">
+<dc-import name="Menu" width="260" label="Entry options" items="{{deletedMenuItems}}" hint-size="260px,380px"></dc-import>
 </div>
 </sc-if>
 <sc-if value="{{showOpenMenu}}" hint-placeholder-val="{{false}}">
-<div role="menu" aria-label="Entry options" style="position: absolute; top: {{openMenuTop}}px; right: 28px; width: 260px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; padding: 6px">
-<button role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #faf9f5; font-size: 13px; text-align: left"><span style="width: 16px; display: flex; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: #a09d96"><circle cx="6" cy="6" r="2.5"></circle><circle cx="6" cy="18" r="2.5"></circle><circle cx="18" cy="9" r="2.5"></circle><path d="M6 8.5v7"></path><path d="M18 11.5c0 3-3 4.5-9.5 5.2"></path></svg></span>Point to another branch…</button>
-<button role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #faf9f5; font-size: 13px; text-align: left"><span style="width: 16px; display: flex; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: #a09d96"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></span>Copy branch name</button>
-<div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
-<sc-for list="{{openApps}}" as="o" hint-placeholder-count="4">
-<button role="menuitem" disabled="{{o.disabled}}" style="{{o.style}}"><span aria-hidden="true" style="{{o.iconStyle}}"></span>{{o.label}}</button>
-</sc-for>
-<sc-if value="{{openNote}}" hint-placeholder-val="{{false}}">
-<div style="display: flex; gap: 8px; padding: 6px 10px 4px; font-size: 12px; line-height: 1.45; color: #e8c071"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg><span>{{openNoteText}}</span></div>
-</sc-if>
-<div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
-<button role="menuitem" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #ee9a90; font-size: 13px; text-align: left"><span style="width: 16px; display: flex; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: #ee9a90"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg></span>Remove from project</button>
+<div style="position: absolute; top: {{openMenuTop}}px; right: 28px">
+<dc-import name="Menu" width="260" label="Entry options" items="{{openMenuItems}}" hint-size="260px,320px"></dc-import>
 </div>
 </sc-if>
 <sc-if value="{{showProjectMenu}}" hint-placeholder-val="{{false}}">
-<div role="menu" aria-label="Project options" style="position: absolute; top: 56px; right: 16px; width: 230px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; padding: 6px">
-<button role="menuitem" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 0; border-radius: 8px; background: #2a2825; color: #faf9f5; font-size: 13px; text-align: left; cursor: pointer">Rename <span style="font-size: 12px; color: #a09d96">click the title</span></button>
-<div style="height: 1px; background: #302e2a; margin: 4px 4px"></div>
-<button role="menuitem" style="display: flex; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #ee9a90; font-size: 13px; text-align: left">Delete project…</button>
+<div style="position: absolute; top: 56px; right: 16px">
+<dc-import name="Menu" width="230" label="Project options" items="{{projectMenuItems}}" hint-size="230px,100px"></dc-import>
 </div>
 </sc-if>
 </main>
@@ -129,8 +98,8 @@ button{font-family:inherit}
 <div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: #faf9f5">Delete “Session auth refresh”?</div>
 <p style="margin: 0; font-size: 14px; line-height: 1.55; color: #d8d4cc">The project and its 6 entries are removed from this app. Branches, worktrees and repositories are not touched.</p>
 <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px">
-<button style="height: 36px; padding: 0 16px; background: #2a2825; border: 1px solid #383631; border-radius: 8px; color: #faf9f5; font-size: 13px">Cancel</button>
-<button style="height: 36px; padding: 0 16px; background: #c64545; border: 0; border-radius: 8px; color: #ffffff; font-size: 13px; font-weight: 600">Delete project</button>
+<dc-import name="Button" size="36" label="Cancel" hint-size="84px,36px"></dc-import>
+<dc-import name="Button" variant="danger" size="36" label="Delete project" hint-size="124px,36px"></dc-import>
 </div>
 </div>
 </div>
@@ -150,15 +119,12 @@ class Component extends DCLogic {
     if (menu || (variant !== 'full' && variant !== 'one') || (variant === 'one' && openCase !== 'worktree')) openCase = 'none';
     var openMenu = openCase !== 'none';
     var openRow = openCase === 'notCheckedOut' ? 'refresh-endpoint' : openCase === 'repoMissing' ? 'session-ui' : 'session-token-refresh';
-    var pill = function (c, bg) {
-      return 'justify-self: start; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 9999px; white-space: nowrap; color: ' + c + '; background: ' + bg;
-    };
+    // State pills (Pill tones).
     var S = {
-      '': 'font-size: 12px; color: #75726b',
-      'merged into main': pill('#8fcf9c', 'rgba(93,184,114,0.14)'),
-      'base missing': pill('#e8c071', 'rgba(212,160,23,0.14)'),
-      'branch deleted': pill('#ee9a90', 'rgba(198,69,69,0.16)'),
-      'repo path not found': pill('#ee9a90', 'rgba(198,69,69,0.16)')
+      'merged into main': 'success',
+      'base missing': 'warning',
+      'branch deleted': 'danger',
+      'repo path not found': 'danger'
     };
     var data = [
       { repo: 'web-app', branch: 'session-token-refresh', base: 'main', ahead: '↑4', files: '6', dirty: 3 },
@@ -180,17 +146,16 @@ class Component extends DCLogic {
     var conflict = rename === 'conflict';
     var projectMenu = !!this.props.projectMenu;
     var ring = conflict ? '#ee9a90' : '#4f8fa3';
-    // Real app icons (from macOS), drawn grayscale; the placeholders stand in for them.
+    // Real app icons (from macOS), drawn grayscale; the Menu's app placeholders stand in for them.
     var apps = function (off) {
-      var tones = ['#b8b4ac, #6e6a62', '#3b3934, #1d1c19', '#8f8b83, #4a4843', '#5c5a55, #2b2925'];
-      return ['Open in Finder', 'Open in Cursor', 'Open in VS Code', 'Open in Terminal'].map(function (label, i) {
-        return {
-          label: label, disabled: off,
-          style: 'display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; font-size: 13px; text-align: left; background: ' + (i === 0 && !off ? '#2a2825' : 'transparent') + '; ' + (off ? 'color: #75726b; cursor: default' : 'color: #faf9f5; cursor: pointer'),
-          iconStyle: 'width: 16px; height: 16px; flex-shrink: 0; border-radius: 4px; background: linear-gradient(160deg, ' + tones[i] + ')' + (off ? '; opacity: 0.4' : '')
-        };
+      return [['Open in Finder', 'finder'], ['Open in Cursor', 'cursor'], ['Open in VS Code', 'vscode'], ['Open in Terminal', 'terminal']].map(function (a, i) {
+        return { label: a[0], app: a[1], disabled: off, active: i === 0 && !off };
       });
     };
+    var sep = { kind: 'sep' };
+    var point = { label: 'Point to another branch…', icon: 'branch' };
+    var copy = { label: 'Copy branch name', icon: 'copy' };
+    var remove = { label: 'Remove from project', icon: 'remove', danger: true };
     var subtitle = variant === 'full' ? '6 entries across 4 repos' : variant === 'one' ? '1 entry · web-app' : 'Empty';
     return {
       renaming: rename !== 'none',
@@ -203,7 +168,8 @@ class Component extends DCLogic {
       subtitleStyle: 'font-size: 12px; ' + (conflict ? 'color: #ee9a90' : 'color: #a09d96'),
       showProjectMenu: projectMenu,
       showDelete: !!this.props.confirmDelete,
-      optionsBtnStyle: 'width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #d8d4cc; ' + (projectMenu ? 'background: #383631; border: 1px solid #4a4741' : 'background: #211f1c; border: 1px solid #302e2a'),
+      projectMenu: projectMenu,
+      projectMenuItems: [{ label: 'Rename', hint: 'click the title', active: true }, sep, { label: 'Delete project…', danger: true }],
       hasRows: data.length > 0,
       isEmpty: data.length === 0,
       showHint: variant === 'one',
@@ -211,10 +177,11 @@ class Component extends DCLogic {
       showOpenMenu: openMenu,
       // Real app icons (from macOS), drawn grayscale; the placeholders stand in for them.
       openMenuTop: openCase === 'notCheckedOut' ? 267 : openCase === 'repoMissing' ? 432 : 157,
-      openNote: openCase === 'notCheckedOut' || openCase === 'repoMissing',
-      openNoteText: openCase === 'repoMissing' ? 'Repository not found, so there is nothing to open.' : 'Not checked out in a worktree, so this opens the repository folder.',
-      openApps: apps(openCase === 'repoMissing'),
-      deletedApps: apps(true),
+      openMenuItems: [point, copy, sep].concat(apps(openCase === 'repoMissing'),
+        openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [{ kind: 'note', label: openCase === 'repoMissing' ? 'Repository not found, so there is nothing to open.' : 'Not checked out in a worktree, so this opens the repository folder.' }] : [],
+        [sep, remove]),
+      deletedMenuItems: [{ label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true }, point, copy, sep].concat(apps(true),
+        [{ kind: 'note', label: 'The branch was deleted, so there is nothing to open.' }, sep, remove]),
       inboxCount: variant === 'full' ? '7' : '6',
       subtitle: fromSel ? '3 entries across 2 repos · name your project · ↵ save' : fresh ? 'Name your project · ↵ save · esc discards it' : conflict ? 'A project named “Rate limiting rollout” already exists' : rename === 'edit' ? '↵ save · esc cancel' : subtitle,
       sidebarProjects: fresh ? [{ name: 'Rate limiting rollout', count: '2' }, { name: 'Untitled project', count: '0' }] : [{ name: 'Session auth refresh', count: count }, { name: 'Rate limiting rollout', count: '2' }],
@@ -222,11 +189,12 @@ class Component extends DCLogic {
         var d = r.dirty > 0;
         var hot = (menu && r.target) || (openMenu && r.branch === openRow);
         return Object.assign({}, r, {
-          state: r.state || '—',
-          stateStyle: S[r.state || ''],
+          state: r.state || '',
+          hasState: !!r.state, noState: !r.state,
+          stateTone: S[r.state] || 'neutral',
+          hot: hot,
           dirtyLabel: d ? '● ' + r.dirty + ' changed' : '—',
           dirtyStyle: d ? 'font-size: 12px; font-weight: 500; color: #7fb3c4' : 'font-size: 12px; color: #75726b',
-          menuBtnStyle: 'width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #d8d4cc; border: 0; ' + (hot ? 'background: #383631' : 'background: transparent'),
           rowStyle: 'display: grid; grid-template-columns: 104px minmax(0, 1fr) 160px 56px 56px 116px 160px 32px; column-gap: 12px; align-items: center; padding: 12px 28px; border-bottom: 1px solid #262420; color: #d8d4cc; ' + (hot ? 'background: #211f1c; ' : '') + (r.dim && !hot ? 'opacity: 0.6' : '')
         });
       })

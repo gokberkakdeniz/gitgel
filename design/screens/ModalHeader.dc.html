@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Modal header</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="{{rowStyle}}">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<h2 id="{{titleId}}" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: var(--text-strong)">{{title}}</h2>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{true}}"><span style="{{subStyle}}">{{sub}}</span></sc-if>
+</div>
+<sc-if value="{{close}}" hint-placeholder-val="{{false}}">
+<dc-import name="Button" theme="none" variant="ghost" size="28" icon="close" aria-label="Close" on-press="{{onClose}}" hint-size="28px,28px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Add repositories"},"sub":{"editor":"text","default":"3 folders selected. Repositories already in Gitgel are skipped."},"subMono":{"editor":"boolean","default":false},"close":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"titleId":{"editor":null},"onClose":{"editor":null},"$preview":{"width":600,"height":80}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The top of every Modal: serif 22px title, a 13px muted sub line (mono 11px for a
+    // repo / branch or a file path), padding 20px 24px 14px, and an optional ✕ (28px ghost) on
+    // the right. The modal box itself (scrim, bg.elevated, radius 16, modal shadow, positioned
+    // from the top) stays in the screen: an import cannot hold the body.
+    var p = this.props;
+    var sub = p.sub == null ? '' : String(p.sub);
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      title: p.title == null ? 'Add repositories' : p.title,
+      titleId: p.titleId,
+      hasSub: !!sub, sub: sub,
+      subStyle: p.subMono ? 'font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--text-muted)' : 'font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-muted)',
+      close: !!p.close,
+      onClose: p.onClose,
+      rowStyle: 'box-sizing: border-box; width: 100%; background: var(--bg-elevated); display: flex; align-items: flex-start; gap: 12px; padding: 20px ' + (p.close ? 16 : 24) + 'px 14px 24px'
+    };
+  }
+}
+</script>
+</body>
+</html>

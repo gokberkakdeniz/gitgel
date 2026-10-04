@@ -38,7 +38,7 @@ export function DeleteProjectModal() {
           Branches, worktrees and repositories are not touched.
         </p>
         <div className={styles.actions}>
-          <Button size={36} className={styles.cancel} onClick={close}>
+          <Button size={36} onClick={close}>
             Cancel
           </Button>
           <Button variant="danger" size={36} disabled={busy} onClick={confirm}>

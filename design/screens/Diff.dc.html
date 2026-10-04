@@ -42,18 +42,10 @@ button,input{font-family:inherit}
 </div>
 <div style="flex-grow: 1"></div>
 <div style="display: flex; align-items: center; gap: 10px">
-<button aria-label="Refresh" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)">
-<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
-</button>
-<div role="group" aria-label="Diff layer" style="display: flex; padding: 3px; gap: 2px; background: var(--bg-track); border-radius: 10px">
-<sc-for list="{{modes}}" as="m" hint-placeholder-count="3">
-<button onClick="{{m.pick}}" style="{{m.style}}">{{m.label}} <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">{{m.count}}</span></button>
-</sc-for>
-</div>
+<dc-import name="Button" theme="{{themeName}}" variant="secondary" size="32" icon="refresh" label="" aria-label="Refresh" hint-size="32px,32px"></dc-import>
+<dc-import name="Segmented" theme="{{themeName}}" size="md" label="Diff layer" options="{{modes}}" hint-size="300px,34px"></dc-import>
 <sc-if value="{{showEditProject}}" hint-placeholder-val="{{true}}">
-<a href="Projects.dc.html" aria-label="Edit project" title="Edit project" style="width: 32px; height: 32px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)">
-<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>
-</a>
+<dc-import name="Button" theme="{{themeName}}" variant="secondary" size="32" icon="pencil" label="" aria-label="Edit project" title="Edit project" href="Projects.dc.html" hint-size="32px,32px"></dc-import>
 </sc-if>
 </div>
 </header>
@@ -65,7 +57,7 @@ button,input{font-family:inherit}
 <div style="flex-grow: 1; display: flex; min-height: 0">
 <aside style="width: {{asideW}}px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; background: var(--bg-sidebar); padding: 8px; box-sizing: border-box; overflow: hidden">
 <div style="flex-shrink: 0; margin: 0 0 6px">
-<dc-import name="Input" theme="{{themeName}}" width="100%" value="{{fileQuery}}" on-value="{{setQ}}" on-key="{{onFilterKey}}" placeholder="Search" label="Search files" right-icon="{{filterRight}}" right-kind="{{filterRightKind}}" hint-size="100%,30px"></dc-import>
+<dc-import name="Input" theme="{{themeName}}" width="100%" value="{{fileQuery}}" on-value="{{setQ}}" on-key="{{onFilterKey}}" placeholder="Search" label="Search files" right-text="{{filterRight}}" right-kind="{{filterRightKind}}" hint-size="100%,30px"></dc-import>
 </div>
 <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
 <section style="display: flex; flex-direction: column; gap: 1px">
@@ -126,7 +118,7 @@ button,input{font-family:inherit}
 <span style="font-size: 12px; font-weight: 500; color: var(--text-body)">{{a.repo}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{a.branch}}</span>
 </span>
-<span style="{{a.tagStyle}}">{{a.tag}}</span>
+<dc-import name="Pill" theme="{{themeName}}" label="{{a.tag}}" tone="{{a.tagTone}}" hint-size="80px,20px"></dc-import>
 </a>
 </sc-for>
 </div>
@@ -157,7 +149,7 @@ button,input{font-family:inherit}
 <button role="option" aria-selected="{{c.on}}" onClick="{{c.pick}}" title="{{c.title}}" style="{{c.style}}">
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-text)">{{c.sha}}</span>
 <span style="{{c.msgStyle}}">{{c.msg}}</span>
-<span style="{{c.fromStyle}}">{{c.from}}</span>
+<sc-if value="{{c.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="{{themeName}}" label="{{c.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="120px,16px"></dc-import></sc-if>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{c.age}}</span>
 </button>
 </sc-for>
@@ -169,7 +161,7 @@ button,input{font-family:inherit}
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{filePath}}</span>
 <span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{compare}}</span>
 <sc-if value="{{ignoreWs}}" hint-placeholder-val="{{false}}">
-<button onClick="{{toggleWs}}" title="Show whitespace changes (⌥W)" style="flex-shrink: 0; height: 20px; padding: 0 8px; border: 0; border-radius: 9999px; background: rgba(var(--accent-rgb), 0.16); color: var(--accent-hover); font-size: 11px; font-weight: 500; white-space: nowrap; cursor: pointer">Whitespace ignored</button>
+<dc-import name="Pill" theme="{{themeName}}" label="Whitespace ignored" tone="accent" title="Show whitespace changes (⌥W)" on-press="{{toggleWs}}" hint-size="120px,20px"></dc-import>
 </sc-if>
 <div style="flex-grow: 1"></div>
 <div style="position: relative; z-index: 20; flex-shrink: 0">
@@ -180,45 +172,8 @@ button,input{font-family:inherit}
 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg>
 </button>
 <sc-if value="{{viewMenuOpen}}" hint-placeholder-val="{{false}}">
-<div role="menu" aria-label="Diff view" style="position: absolute; top: 34px; right: 0; width: 300px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); padding: 6px; display: flex; flex-direction: column; gap: 1px">
-<div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">Layout</div>
-<button role="menuitemradio" aria-checked="{{isSplit}}" onClick="{{pickSplit}}" style="{{splitRowStyle}}">
-<span style="{{splitCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
-<span style="flex-grow: 1">Split</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">⌥V</span>
-</button>
-<button role="menuitemradio" aria-checked="{{isUnified}}" onClick="{{pickUnified}}" style="{{unifiedRowStyle}}">
-<span style="{{unifiedCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
-<span style="flex-grow: 1">Unified</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">⌥V</span>
-</button>
-<div style="height: 1px; background: var(--border); margin: 5px 4px"></div>
-<div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">Context</div>
-<button role="menuitemradio" aria-checked="{{isChangesOnly}}" onClick="{{pickChangesOnly}}" style="{{changesRowStyle}}">
-<span style="{{changesCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
-<span style="flex-grow: 1">Changes only</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">⌥C</span>
-</button>
-<div role="group" aria-label="Lines around each change" style="{{ctxLinesRowStyle}}">
-<span style="flex-grow: 1; font-size: 12px; color: var(--text-muted)">Lines around changes</span>
-<div style="display: flex; padding: 2px; gap: 2px; background: var(--bg-track); border-radius: 7px">
-<sc-for list="{{ctxOptions}}" as="o" hint-placeholder-count="3">
-<button onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="{{o.style}}">{{o.label}}</button>
-</sc-for>
-</div>
-</div>
-<button role="menuitemradio" aria-checked="{{isWholeFile}}" onClick="{{pickWholeFile}}" style="{{wholeRowStyle}}">
-<span style="{{wholeCheckStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
-<span style="flex-grow: 1">Whole file</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">⌥C</span>
-</button>
-<div style="height: 1px; background: var(--border); margin: 5px 4px"></div>
-<button role="menuitemcheckbox" aria-checked="{{ignoreWs}}" onClick="{{toggleWs}}" style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--text-strong); font-size: 13px; text-align: left; cursor: pointer">
-<span style="{{wsBoxStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
-<span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1"><span>Ignore whitespace</span><span style="font-size: 12px; line-height: 1.4; color: var(--text-muted)">Hide lines where only indentation or trailing spaces changed</span></span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); padding-top: 2px">⌥W</span>
-</button>
-<div style="padding: 6px 10px 4px; font-size: 11px; color: var(--text-faint)">Applies to every diff and is remembered.</div>
+<div style="position: absolute; top: 34px; right: 0">
+<dc-import name="Menu" theme="{{themeName}}" width="300" label="Diff view" items="{{viewMenuItems}}" hint-size="300px,400px"></dc-import>
 </div>
 </sc-if>
 </div>
@@ -264,7 +219,7 @@ button,input{font-family:inherit}
 <sc-if value="{{showBaseMenu}}" hint-placeholder-val="{{false}}">
 <div role="listbox" aria-label="{{bm.label}}" style="{{bm.style}}">
 <div style="display: flex; padding: 10px; border-bottom: 1px solid var(--border)">
-<dc-import name="Input" theme="{{themeName}}" size="32" width="100%" value="{{bm.query}}" placeholder="Search" label="Search branches, tags, SHAs" right-icon="" state="focus" hint-size="100%,32px"></dc-import>
+<dc-import name="Input" theme="{{themeName}}" size="32" width="100%" value="{{bm.query}}" placeholder="Search" label="Search branches, tags, SHAs" right-text="" state="focus" hint-size="100%,32px"></dc-import>
 </div>
 <sc-for list="{{bm.sections}}" as="bs" hint-placeholder-count="3">
 <div style="{{bs.headStyle}}">
@@ -474,12 +429,11 @@ class Component extends DCLogic {
       G.forEach(function (g) { counts[m] += listFor(g, true).length; });
       mode = saved;
     });
-    var btn = 'height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ';
     var modes = ['Committed', 'Uncommitted', 'All'].map(function (m) {
       return {
         label: m, count: String(counts[m]),
         pick: function () { self.setState({ mode: m, file: null, hunk: null, commitSel: m === 'Uncommitted' ? {} : commitSel }); },
-        style: btn + (m === mode ? 'background: var(--bg-pressed); color: var(--text-strong)' : 'background: transparent; color: var(--text-muted)')
+        on: m === mode
       };
     });
     var S = {
@@ -655,8 +609,6 @@ class Component extends DCLogic {
       uRow(r[0], r[2], '', r[3], '', false);
     });
     flush();
-    var menuRow = function (on) { return 'display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 8px; color: var(--text-strong); font-size: 13px; text-align: left; cursor: pointer; ' + (on ? 'background: var(--bg-hover)' : 'background: transparent'); };
-    var checkStyle = function (on) { return 'width: 16px; flex-shrink: 0; display: flex; justify-content: center; color: var(--accent-text); ' + (on ? '' : 'visibility: hidden'); };
     var setView = function (v) { self.setState({ view: v, viewMenu: false }); };
     var gSha = mode !== 'Uncommitted' ? commitSel[selGroup.id] : null;
     var cAll = (selGroup.commits || []).concat(selGroup.parent || []);
@@ -682,7 +634,7 @@ class Component extends DCLogic {
         style: 'display: flex; gap: 12px; align-items: baseline; width: 100%; padding: 3px 8px; border: 0; border-radius: 6px; font-size: 13px; text-align: left; cursor: pointer; ' +
           (on ? 'background: var(--bg-hover); box-shadow: inset 2px 0 0 var(--accent-text); ' : 'background: transparent; ') +
           (c.from ? 'opacity: ' + (on ? '0.85' : '0.6') : ''),
-        fromStyle: c.from ? 'font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--warning); background: rgba(var(--warning-rgb), 0.14); border-radius: 9999px; padding: 1px 8px' : 'display: none'
+        hasFrom: !!c.from
       });
     });
     var dir = selFile ? String(selFile[2] || '').split(' ')[0] : '';
@@ -736,7 +688,6 @@ class Component extends DCLogic {
       label: 'Choose base for ' + bmBranch, query: bmQuery, sections: bmSections,
       style: 'position: absolute; top: ' + bmTop + 'px; left: 150px; width: 340px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; overflow: hidden; padding-bottom: 6px; z-index: 30'
     };
-    var pill = function (c, bg) { return 'flex-shrink: 0; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 9999px; white-space: nowrap; color: ' + c + '; background: ' + bg; };
     var project = scope === 'project';
     var baseChanged = project && apiBase !== 'main';
     var embedded = !!this.props.embedded;
@@ -770,23 +721,26 @@ class Component extends DCLogic {
       toggleViewMenu: function () { self.setState({ viewMenu: !viewMenuOpen }); },
       pickSplit: function () { setView('split'); }, pickUnified: function () { setView('unified'); },
       toggleWs: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); },
-      splitRowStyle: menuRow(view === 'split'), unifiedRowStyle: menuRow(view === 'unified'),
       isChangesOnly: context === 'changes', isWholeFile: context === 'whole',
       pickChangesOnly: function () { self.setState({ context: 'changes' }); },
       pickWholeFile: function () { self.setState({ context: 'whole', viewMenu: false }); },
-      changesRowStyle: menuRow(context === 'changes'), wholeRowStyle: menuRow(context === 'whole'),
-      changesCheckStyle: checkStyle(context === 'changes'), wholeCheckStyle: checkStyle(context === 'whole'),
-      ctxLinesRowStyle: 'display: flex; align-items: center; gap: 10px; padding: 0 10px 6px 36px; ' + (context === 'whole' ? 'opacity: 0.45; pointer-events: none' : ''),
-      ctxOptions: [3, 5, 10].map(function (n) {
-        var on = ctxLines === n;
-        return {
-          label: String(n), on: on,
-          pick: function () { self.setState({ ctxLines: n, context: 'changes' }); },
-          style: 'min-width: 28px; height: 22px; padding: 0 6px; border: 0; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 11px; cursor: pointer; ' + (on ? 'background: var(--bg-pressed); color: var(--text-strong)' : 'background: transparent; color: var(--text-muted)')
-        };
-      }),
-      splitCheckStyle: checkStyle(view === 'split'), unifiedCheckStyle: checkStyle(view === 'unified'),
-      wsBoxStyle: 'width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 4px; ' + (ignoreWs ? 'background: var(--accent); color: var(--text-strong); border: 0' : 'border: 1.5px solid var(--text-disabled); color: transparent'),
+      // The View menu (Menu): Layout and Context radio items with their shortcuts, the lines
+      // choice under Changes only, and Ignore whitespace as a checkbox item.
+      viewMenuItems: [
+        { kind: 'label', label: 'Layout' },
+        { label: 'Split', check: view === 'split', active: view === 'split', kbd: '⌥V', onSelect: function () { setView('split'); } },
+        { label: 'Unified', check: view === 'unified', active: view === 'unified', kbd: '⌥V', onSelect: function () { setView('unified'); } },
+        { kind: 'sep' },
+        { kind: 'label', label: 'Context' },
+        { label: 'Changes only', check: context === 'changes', active: context === 'changes', kbd: '⌥C', onSelect: function () { self.setState({ context: 'changes' }); } },
+        { kind: 'segmented', label: 'Lines around changes', disabled: context === 'whole', options: [3, 5, 10].map(function (n) {
+          return { label: String(n), on: ctxLines === n, pick: function () { self.setState({ ctxLines: n, context: 'changes' }); } };
+        }) },
+        { label: 'Whole file', check: context === 'whole', active: context === 'whole', kbd: '⌥C', onSelect: function () { self.setState({ context: 'whole', viewMenu: false }); } },
+        { kind: 'sep' },
+        { label: 'Ignore whitespace', box: ignoreWs, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W', onSelect: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); } },
+        { kind: 'caption', label: 'Applies to every diff and is remembered.' }
+      ],
       viewBtnStyle: 'display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ' + (viewMenuOpen ? 'background: var(--bg-hover); color: var(--text-strong); border: 1px solid var(--accent)' : 'background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)'),
       entry: {
         repo: selGroup.repo, branch: selGroup.branch,
@@ -816,10 +770,10 @@ class Component extends DCLogic {
         else if (e.key === 'Enter' && navKeys.length) { e.preventDefault(); self.setState({ file: navKeys[0], hunk: 0 }); }
       },
       attention: [
-        { repo: 'api-server', branch: 'refresh-endpoint', tag: 'merged', tagStyle: pill('var(--success)', 'rgba(var(--success-rgb), 0.14)') },
-        { repo: 'mobile', branch: 'feat/token-store', tag: 'base missing', tagStyle: pill('var(--warning)', 'rgba(var(--warning-rgb), 0.14)') },
-        { repo: 'web-app', branch: 'logout-flow', tag: 'deleted', tagStyle: pill('var(--danger)', 'rgba(var(--danger-rgb), 0.16)') },
-        { repo: 'admin-panel', branch: 'session-ui', tag: 'repo missing', tagStyle: pill('var(--danger)', 'rgba(var(--danger-rgb), 0.16)') }
+        { repo: 'api-server', branch: 'refresh-endpoint', tag: 'merged', tagTone: 'success' },
+        { repo: 'mobile', branch: 'feat/token-store', tag: 'base missing', tagTone: 'warning' },
+        { repo: 'web-app', branch: 'logout-flow', tag: 'deleted', tagTone: 'danger' },
+        { repo: 'admin-panel', branch: 'session-ui', tag: 'repo missing', tagTone: 'danger' }
       ],
       showBaseMenu: menu && project, bm: bm,
       showBanner: mode === 'Uncommitted' || baseChanged,

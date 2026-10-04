@@ -40,3 +40,50 @@
 .link:hover {
   color: var(--accent-hover);
 }
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* The mono part before the message (a branch name). */
+.code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.status {
+  flex-shrink: 0;
+}
+
+.running {
+  color: var(--accent-text);
+  animation: toast-spin 0.9s linear infinite;
+}
+
+.success {
+  color: var(--success-text);
+}
+
+.failed {
+  color: var(--danger-text);
+}
+
+@keyframes toast-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

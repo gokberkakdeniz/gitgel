@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Select</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<span class="{{themeClass}}" style="{{wrapStyle}}">
+<sc-if value="{{isNative}}" hint-placeholder-val="{{false}}">
+<select aria-label="{{label}}" disabled="{{disabled}}" style="{{selectStyle}}">
+<sc-for list="{{options}}" as="o" hint-placeholder-count="4">
+<option value="{{o.value}}" selected="{{o.on}}" disabled="{{o.disabled}}">{{o.label}}</option>
+</sc-for>
+</select>
+</sc-if>
+<sc-if value="{{isTrigger}}" hint-placeholder-val="{{true}}">
+<button type="button" aria-haspopup="listbox" aria-expanded="{{open}}" aria-label="{{label}}" disabled="{{disabled}}" onClick="{{press}}" style="{{triggerStyle}}">
+<sc-if value="{{hasIcon}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="{{icon}}" size="14" color="var(--text-muted)" hint-size="14px,14px"></dc-import></sc-if>
+<span style="{{valueStyle}}">{{value}}</span>
+</button>
+</sc-if>
+<span style="{{chevronStyle}}"><dc-import name="Icon" icon="chevron-down" size="12" hint-size="12px,12px"></dc-import></span>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"value":{"editor":"text","default":"Automatic (iTerm2)"},"size":{"editor":"enum","options":["32","36"],"default":"36"},"width":{"editor":"text","default":"230px"},"icon":{"editor":"enum","options":["none", "sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"],"default":"none"},"mono":{"editor":"boolean","default":false},"placeholder":{"editor":"boolean","default":false},"state":{"editor":"enum","options":["default","open","attention"],"default":"default"},"disabled":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"options":{"editor":null},"label":{"editor":null},"onPress":{"editor":null},"$preview":{"width":230,"height":36}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // A dropdown field: bg.elevated, 1px border, radius 8, chevron 12px on the right. With options
+    // ([{ label, value, on, disabled }]) it is a native <select> (Settings › Terminal); without, a
+    // trigger that opens a listbox (script inputs: Type, Reviewer, Hotfix onto). icon: any name
+    // from the Icon set (Icons page), drawn 14px muted before the value. placeholder shows
+    // the value faint ("Pick a branch"); state open / attention give it the accent ring.
+    var p = this.props;
+    var size = Number(p.size || 36);
+    var padX = size === 36 ? 12 : 10;
+    var state = p.state || 'default';
+    var ring = state === 'default' ? 'border: 1px solid var(--border);' : 'border: 1px solid var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);';
+    var font = p.mono ? 'font-family: \'JetBrains Mono\', monospace; font-size: 12px;' : 'font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px;';
+    var box = 'width: 100%; height: ' + size + 'px; box-sizing: border-box; background: var(--bg-elevated); border-radius: 8px; color: var(--text-strong); outline: none; ' + font + ring + (p.disabled ? ' opacity: 0.5;' : ' cursor: pointer;');
+    var icon = p.icon && p.icon !== 'none' ? p.icon : '';
+    var press = p.onPress;
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      wrapStyle: 'position: relative; display: flex; flex-shrink: 0; width: ' + (p.width || '230px'),
+      isNative: !!p.options,
+      isTrigger: !p.options,
+      options: (p.options || []).map(function (o) { return { label: o.label, value: o.value || o.label, on: !!o.on, disabled: !!o.disabled }; }),
+      label: p.label || 'Select',
+      disabled: !!p.disabled,
+      open: state === 'open',
+      press: press ? function (e) { press(e); } : undefined,
+      selectStyle: box + ' appearance: none; -webkit-appearance: none; padding: 0 30px 0 ' + padX + 'px;',
+      triggerStyle: box + ' display: flex; align-items: center; gap: 8px; padding: 0 30px 0 ' + padX + 'px; text-align: left;',
+      hasIcon: !!icon,
+      icon: icon,
+      value: p.value == null ? 'Automatic (iTerm2)' : p.value,
+      valueStyle: 'flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ' + (p.placeholder ? 'color: var(--text-faint)' : 'color: var(--text-strong)'),
+      chevronStyle: 'display: flex; position: absolute; right: ' + padX + 'px; top: ' + ((size - 12) / 2) + 'px; color: var(--text-muted); pointer-events: none'
+    };
+  }
+}
+</script>
+</body>
+</html>

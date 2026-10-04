@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Icons</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>body{margin:0;background:#141311}</style>
+</helmet>
+<div style="width: 1040px; height: 1536px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; padding: 40px 48px; background: #141311; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc; font-size: 13px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">Icons</h1>
+<p style="margin: 0; max-width: 820px; color: #a09d96; line-height: 1.55">Every icon in Gitgel, from one component (<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">Icon.dc.html</span>, by name; the names match <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">src/components/icons.tsx</span>). Button, Menu, Select, Input (leftIcon, rightIcon), Settings sections and Toast take any of these names. Outline on a 24px grid, round caps, 1.6–2.2 stroke, currentColor. Shown at 20px; under each, its name and default size · stroke. No emoji.</p>
+</div>
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">{{g.title}}</h2>
+<div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{g.icons}}" as="ic" hint-placeholder-count="8">
+<div style="height: 92px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: #1a1917; border: 1px solid #262420; border-radius: 10px; color: #faf9f5">
+<dc-import name="Icon" icon="{{ic.name}}" size="20" hint-size="20px,20px"></dc-import>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 2px"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #e0ddd6">{{ic.name}}</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #75726b">{{ic.meta}}</span></span>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-for>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">In use: colour comes from the parent</h2>
+<div style="display: flex; gap: 16px">
+<div style="flex: 1; display: flex; align-items: center; gap: 18px; padding: 18px 22px; background: #211f1c; border-radius: 12px">
+<dc-import name="Icon" icon="folder" color="#4f8fa3" hint-size="16px,16px"></dc-import>
+<dc-import name="Icon" icon="copy" color="#a09d96" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="remove" color="#ee9a90" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="info" color="#e8c071" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="check" color="#8fcf9c" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="spinner" spin="{{true}}" color="#7fb3c4" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="sliders" color="#a09d96" hint-size="16px,16px"></dc-import>
+<span style="font-size: 12px; color: #75726b">dark</span>
+</div>
+<div style="flex: 1; display: flex; align-items: center; gap: 18px; padding: 18px 22px; background: #fbfaf7; border-radius: 12px; --icon-knob: #fbfaf7">
+<dc-import name="Icon" icon="folder" color="#3a7b8f" hint-size="16px,16px"></dc-import>
+<dc-import name="Icon" icon="copy" color="#6e6a62" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="remove" color="#b3463b" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="info" color="#8a6212" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="check" color="#2e7a45" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="spinner" spin="{{true}}" color="#2c6a7d" hint-size="14px,14px"></dc-import>
+<dc-import name="Icon" icon="sliders" color="#6e6a62" hint-size="16px,16px"></dc-import>
+<span style="font-size: 12px; color: #99958c">light</span>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1040,"height":1536}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // Names and default size · stroke, as in Icon.dc.html.
+    var META = { 'sidebar': '17 · 1.6', 'back': '17 · 1.6', 'forward': '17 · 1.6', 'chevron-down': '12 · 2', 'chevron-up': '12 · 2', 'chevron-right': '12 · 2', 'arrow-up': '13 · 2', 'arrow-down': '13 · 2', 'arrow-right': '14 · 1.8', 'plus': '14 · 2', 'close': '14 · 2', 'check': '14 · 2.2', 'search': '16 · 1.7', 'refresh': '15 · 1.8', 'pencil': '15 · 1.8', 'edit': '13 · 1.8', 'copy': '14 · 1.8', 'remove': '14 · 1.8', 'trash': '14 · 1.8', 'undo': '14 · 1.8', 'history': '14 · 1.8', 'download': '14 · 1.8', 'upload': '14 · 1.8', 'play': '12 · filled', 'more': '15 · filled', 'more-vertical': '15 · filled', 'folder': '16 · 1.6', 'folder-plus': '18 · 1.7', 'branch': '14 · 1.8', 'worktree': '14 · 1.8', 'terminal': '14 · 1.8', 'prompt': '14 · 1.8', 'code': '14 · 1.8', 'pull-request': '14 · 1.8', 'rebase': '14 · 1.8', 'test': '14 · 1.8', 'link': '14 · 1.8', 'package': '14 · 1.8', 'rocket': '14 · 1.8', 'bug': '14 · 1.8', 'bolt': '14 · 1.8', 'gear': '18 · 1.6', 'sliders': '16 · 1.7', 'tune': '16 · 1.7', 'keyboard': '16 · 1.7', 'split': '14 · 1.7', 'unified': '14 · 1.7', 'info': '14 · 1.8', 'update': '16 · 1.8', 'spinner': '14 · 2.2' };
+    var groups = [
+      ['Navigation', ['sidebar', 'back', 'forward', 'chevron-down', 'chevron-up', 'chevron-right', 'arrow-up', 'arrow-down', 'arrow-right']],
+      ['Actions', ['plus', 'close', 'check', 'search', 'refresh', 'pencil', 'edit', 'copy', 'remove', 'trash', 'undo', 'history', 'download', 'upload', 'play', 'more', 'more-vertical']],
+      ['Objects', ['folder', 'folder-plus', 'branch', 'worktree', 'terminal', 'prompt', 'code', 'pull-request', 'rebase', 'test', 'link', 'package', 'rocket', 'bug', 'bolt']],
+      ['Settings and views', ['gear', 'sliders', 'tune', 'keyboard', 'split', 'unified']],
+      ['Status', ['info', 'update', 'spinner']]
+    ];
+    return { groups: groups.map(function (g) { return { title: g[0], icons: g[1].map(function (n) { return { name: n, meta: META[n] }; }) }; }) };
+  }
+}
+</script>
+</body>
+</html>

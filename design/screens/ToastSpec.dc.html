@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Toast · variants</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>body{margin:0;background:#141311}</style>
+</helmet>
+<div style="width: 1040px; height: 700px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; padding: 40px 48px; background: #141311; font-family: 'Instrument Sans', -apple-system, sans-serif; color: #d8d4cc; font-size: 13px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">Toast</h1>
+<p style="margin: 0; max-width: 820px; color: #a09d96; line-height: 1.55">One at a time, bottom centre (<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">bg.hover</span> on <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">border.strong</span>, radius 12, popover shadow); the screen positions it. An optional <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">status</span> icon (running spinner, success, failed), the message with an optional mono part first (<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">code</span>), a mono <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">sub</span> line, then an action button and a link.</p>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Message, action, link</h2>
+<dc-import name="Toast" code="session-token-refresh" message="added to Session auth refresh" action-label="Undo" link-label="Open project →" hint-size="520px,50px"></dc-import><span style="font-size: 12px; color: #75726b">Branches after Add to project (B3)</span>
+</section>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Status</h2>
+<div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Toast" status="running" code="" message="Running “Run tests”…" sub="web-app / session-token-refresh" action-label="" link-label="Show output" hint-size="380px,52px"></dc-import><span style="font-size: 12px; color: #75726b">running</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Toast" status="success" code="" message="“Run tests” finished" sub="web-app / session-token-refresh" action-label="" link-label="Show output" hint-size="380px,52px"></dc-import><span style="font-size: 12px; color: #75726b">success</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Toast" status="failed" code="" message="“Run tests” failed · exit 1" sub="web-app / session-token-refresh" action-label="" link-label="Show output" hint-size="380px,52px"></dc-import><span style="font-size: 12px; color: #75726b">failed</span></div>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Light</h2>
+<div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap; padding: 20px 24px; background: #fbfaf7; border-radius: 12px">
+<dc-import name="Toast" theme="light" code="session-token-refresh" message="added to Session auth refresh" action-label="Undo" link-label="Open project →" hint-size="520px,50px"></dc-import>
+<dc-import name="Toast" theme="light" status="failed" code="" message="“Run tests” failed · exit 1" sub="web-app / session-token-refresh" action-label="" link-label="Show output" hint-size="380px,52px"></dc-import>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1040,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

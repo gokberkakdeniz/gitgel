@@ -156,7 +156,8 @@ gitgel/
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts
 │  ├─ state/    nav.ts  ui.ts  data.ts
 │  ├─ components/                 # Button, IconButton, Pill, Checkbox, Input, Kbd, Popover,
-│  │                              # Menu, Modal, Toast, Segmented, KindBadge, Banner, icons.tsx,
+│  │                              # Menu, Modal, Toast, Segmented, Select, SettingsNav,
+│  │                              # KindBadge, Banner, icons.tsx (Icon by name),
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
 │  └─ monaco/   setup.ts  theme.ts  language.ts  DiffView.tsx  changeNav.ts
@@ -330,19 +331,37 @@ italic, everything else `#2b2925`.
 - Popover shadow `0 16px 40px rgba(0,0,0,0.45)`; modal shadow `0 24px 60px rgba(0,0,0,0.5)`;
   modal scrim `rgba(0,0,0,0.5)`.
 - Icons: 1.6–1.8px stroke outline SVGs in `src/components/icons.tsx`, copied from the reference
-  screens (§11). No emoji.
+  screens (§11). No emoji. The full set is `Icon.dc.html` (Icons page of the canvas,
+  `IconsSpec.dc.html`); components take an icon by its name there, and the names match
+  `icons.tsx` (`SidebarIcon` → `sidebar`, `MoreVerticalIcon` → `more-vertical`).
 
 ### Shared components
 
+Each has its own artboard in `design/screens/` (`Button.dc.html`, `Menu.dc.html`, …) that the
+screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.dc.html`, …, as
+`InputSpec.dc.html`), so a screen never draws its own copy.
+
 - `Button`: `primary` (accent fill, `--on-accent` text, 600), `secondary` (`bg.elevated`, 1px
   border, `text.strong`), `ghost`, `danger` (`danger.fill`), `link` (`accent.text`); optional
-  `kbd` hint on the right in mono 11px.
+  `kbd` hint on the right in mono 11px. Also 28px (Locate…), `chevron` for a dropdown trigger and
+  `active` for its open state (`bg.pressed`, `border.strong`); a modal's Cancel is a plain
+  `secondary`. Icon-only buttons are `IconButton` (28 plain, 32 boxed).
 - `Pill`: `success | warning | danger | neutral`, 11px/500, padding 3px 10px. Neutral: `#d8d4cc`
-  on `#302e2a`.
+  on `#302e2a`. Also `accent` (`accent.text` on `rgba(accent,0.14)`), `size="sm"` (16px tall,
+  padding 0 7px: Branches line 2, a badge next to a name), `mono` (exit codes, SHAs) and a
+  clickable form (Review's "Whitespace ignored").
+- `Checkbox`: a drawn 16px box, radius 4: accent fill with an 11px check when on, 1.5px
+  `border.strong` when off; optional `label` (13px `text.strong`), a 12px muted `sub` line, and
+  `card` (a `bg.sunken` box, radius 12, padding 12px 14px).
+- `Select`: `bg.elevated`, 1px border, radius 8, 32 or 36px, a 12px chevron 12px from the right;
+  a native `<select>` (Settings › Terminal) with an optional 14px leading icon; focused: accent
+  border + 2px ring. The listbox trigger with a faint placeholder (`Select.dc.html` without
+  options: the script inputs) comes with the Scripts work.
 - `Input`: every text field (filters, Settings, New project name). `bg.sunken`, 1px border,
   radius 8, `size` 28 / 30 (default) / 32 / 36; focused: accent border + 2px `rgba(accent,0.2)`
   ring; `invalid`: the same in danger. `leftIcon` / `rightIcon` slots (muted, 11px: a 13px search
-  icon, a `⌘K` hint, a match count); `mono` for branches, files, paths and commands;
+  icon, a `⌘K` hint, a match count); either slot takes any icon of the set, and the hint text
+  becomes its own `rightText`; `mono` for branches, files, paths and commands;
   `clearable` (filters): while it has text it keeps the accent border and ends with an 18px round
   ✕, and Esc clears it before anything else. In-place editors (page titles, the sidebar rename)
   are not `Input`s.
@@ -352,10 +371,19 @@ italic, everything else `#2b2925`.
   lines and dividers; ↑/↓ move between the enabled items. Items may carry an icon on the left:
   a 16px slot, gap 10; line icons are 14px, stroke 1.8, `text.muted` (danger
   items: `danger.text`); an item with a `sub` line keeps the icon beside its first line.
+  Also section labels (11px uppercase muted), radio items with a check slot, checkbox items, a
+  12px `desc` line, a mono 11px `kbd` hint, faint captions and a segmented row: Review's View
+  menu is built from these.
 - `Modal`: scrim, `bg.elevated`, radius 16, positioned from the top; Esc closes it.
-- `Toast`: bottom centre, `#2a2825` on `#383631` border, radius 12; one at a time.
+  `ModalHeader`: serif 22px title, a 13px muted sub line (mono 11px for repo / branch or a path),
+  padding 20px 24px 14px, optional ✕; `ModalFooter`: `bg.sunken`, padding 14px 24px, a 12px
+  muted note (or a lead link button) on the left, buttons on the right, primary last.
+- `Toast`: bottom centre, `#2a2825` on `#383631` border, radius 12; one at a time. Optional
+  status icon (spinner, success, failed), a mono part before the message and a mono sub line.
 - `Segmented`: padding 3, gap 2, `bg.elevated`, radius 10; buttons 26–28px, 12px/500; active
-  `bg.pressed` + `text.strong`; a mono 11px count after the label.
+  `bg.pressed` + `text.strong`; a mono 11px count after the label. Also `bordered` (on
+  `bg.elevated` surfaces), `xs` (22px mono buttons inside a menu) and radio semantics in forms.
+- `SettingsNav`: Settings' 200px section list (§5 Settings).
 - `Banner`: `warning | neutral`, padding 9px 20px, 12px, bottom border.
 - `Kbd` keycaps: see Settings (§5).
 

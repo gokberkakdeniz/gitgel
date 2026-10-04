@@ -253,7 +253,7 @@ function BranchList() {
         <Popover anchorRect={popover.rect} alignRight onClose={() => setPopover(null)}>
           <ProjectPicker
             entries={[refOf(popoverEntry)]}
-            label={<span className={styles.toastBranch}>{popoverEntry.branch ?? popoverEntry.shortSha}</span>}
+            label={{ branch: popoverEntry.branch ?? popoverEntry.shortSha ?? '' }}
             firstEntry={`${popoverEntry.repoName} / ${popoverEntry.branch ?? popoverEntry.shortSha}${
               popoverEntry.base ? ` · base ${popoverEntry.base}` : ''
             }`}
@@ -349,9 +349,9 @@ function RepoSection({
         <span className={styles.repoName}>{scan.name}</span>
         <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
         {scan.status === 'missing' ? (
-          <button type="button" className={styles.pillButton} onClick={() => openSettings('repositories')}>
-            <Pill tone="danger">path not found</Pill>
-          </button>
+          <Pill tone="danger" onClick={() => openSettings('repositories')}>
+            path not found
+          </Pill>
         ) : scan.status === 'error' ? (
           <Pill tone="danger" title={scan.error ?? undefined}>
             git error
@@ -572,29 +572,33 @@ function StateCell({ entry: e, onBase }: { entry: EntrySummary; onBase: (rect: D
   switch (e.state) {
     case 'merged':
       return (
-        <Pill tone="success" className={styles.pill} title={`merged into ${e.base}`}>
+        <Pill tone="success" size="sm" title={`merged into ${e.base}`}>
           merged
         </Pill>
       );
     case 'detached':
       return (
-        <Pill tone="warning" className={styles.pill}>
+        <Pill tone="warning" size="sm">
           detached HEAD
         </Pill>
       );
     case 'base_missing':
       return (
-        <button
-          type="button"
-          className={styles.pillButton}
+        <Pill
+          tone="warning"
+          size="sm"
           title={e.error ?? undefined}
           onClick={(ev) => onBase(ev.currentTarget.getBoundingClientRect())}
         >
-          <Pill tone="warning" className={styles.pill}>base missing</Pill>
-        </button>
+          base missing
+        </Pill>
       );
     case 'git_error':
-      return <Pill tone="danger" className={styles.pill} title={e.error ?? undefined}>git error</Pill>;
+      return (
+        <Pill tone="danger" size="sm" title={e.error ?? undefined}>
+          git error
+        </Pill>
+      );
     default:
       return null;
   }

@@ -1,5 +1,4 @@
 import { forwardRef } from 'react';
-import { SearchIcon } from '../../components/icons';
 import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
 import styles from './Branches.module.css';
@@ -14,8 +13,8 @@ export const FilterField = forwardRef<HTMLInputElement, Props>(function FilterFi
   return (
     <Input
       ref={ref}
-      leftIcon={<SearchIcon size={13} />}
-      rightIcon={!value && <Kbd>⌘K</Kbd>}
+      leftIcon="search"
+      rightText={!value && <Kbd>⌘K</Kbd>}
       mono
       clearable
       size={32}

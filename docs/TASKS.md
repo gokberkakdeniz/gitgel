@@ -279,6 +279,16 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Settings: VS Code-style section list (General / Repositories / Shortcuts) with
   the chosen section's settings beside it; Default base is an ordered list (↑ ↓ ✕, "+ Add branch"
   with ref-name and duplicate checks) instead of a `→`-separated text field — 2026-09-30
+- [x] (on request) Design: shared components (Button, Segmented, Pill, Checkbox, Select, Menu,
+  Toast, ModalHeader, ModalFooter, SettingsNav) as canvas artboards with a variants board each
+  on the Components page, mounted by the Flow and Scripts screens; code follows in T16.1 — 2026-10-04
+
+### Phase 16 — Shared components
+- [x] T16.1 Shared components from the design — 2026-10-04
+  - note: `Select` is the native form only; the listbox trigger (script inputs) comes with the
+    Scripts work. Settings' Remove repository dialog keeps the Delete project layout (title, text,
+    actions), not `ModalHeader` / `ModalFooter`.
+- [x] T16.2 ✋ Checkpoint — phase 16 — 2026-10-04
 
 ---
 

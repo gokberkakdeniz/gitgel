@@ -162,7 +162,7 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
           <Input
             ref={filterRef}
             autoFocus
-            leftIcon={<SearchIcon size={13} />}
+            leftIcon="search"
             clearable
             size={28}
             className={styles.projectFilter}
