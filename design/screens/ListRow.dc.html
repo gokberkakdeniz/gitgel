@@ -96,7 +96,9 @@ class Component extends DCLogic {
       rowStyle: 'box-sizing: border-box; display: flex; align-items: center; ' +
         (compact ? 'gap: 8px; height: 34px; padding: 0 6px 0 12px; ' : 'gap: 10px; min-height: 48px; padding: 8px 10px 8px 12px; ') +
         (p.first === false ? 'border-top: 1px solid var(--border-row); ' : '') +
-        'background: ' + (p.active ? 'var(--bg-hover)' : 'transparent') + '; ' +
+        // Inside a List (theme none) the row is transparent on the card; on its own (its artboard) it
+        // draws the card's bg.sunken so its theme's text has the right ground.
+        'background: ' + (p.active ? 'var(--bg-hover)' : p.theme === 'none' ? 'transparent' : 'var(--bg-sunken)') + '; ' +
         'font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-body)',
       isHandle: lead === 'handle' || !!p.handle, isIndex: lead === 'index', isIcon: lead === 'icon', isTile: lead === 'tile',
       leadText: p.leadText || '',

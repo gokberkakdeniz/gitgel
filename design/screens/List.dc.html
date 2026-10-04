@@ -67,7 +67,8 @@ class Component extends DCLogic {
     var onToggle = p.onToggle;
     return {
       themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
-      wrapStyle: 'box-sizing: border-box; width: ' + (p.width || '100%') + '; display: flex; flex-direction: column; font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-body)',
+      // On its own (theme dark / light) it sits on that theme's bg.main, so the heading reads.
+      wrapStyle: 'box-sizing: border-box; width: ' + (p.width || '100%') + '; display: flex; flex-direction: column; ' + (p.theme === 'none' ? '' : 'background: var(--bg-main); ') + 'font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-body)',
       hasHeading: !!p.heading, heading: p.heading || '', count: String(items.length),
       open: !collapsed,
       // Collapsed, the heading drops its gap so the space under it matches the space above.
