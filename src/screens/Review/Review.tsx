@@ -1,20 +1,29 @@
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '../../components/Banner';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import {
   BackIcon,
+  BranchIcon,
   ChevronDownIcon,
   CloseIcon,
   ChevronUpIcon,
+  CopyIcon,
   ForwardIcon,
+  HistoryIcon,
+  MoreVerticalIcon,
   PencilIcon,
   RefreshIcon,
   SidebarIcon,
 } from '../../components/icons';
 import { ProjectNameInput } from '../../components/ProjectNameInput';
+import { ResizeHandle, useStoredWidth } from '../../components/ResizeHandle';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
+import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
+import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
+import { Popover } from '../../components/Popover';
 import { Pill } from '../../components/Pill';
 import { RefreshButton } from '../../components/RefreshButton';
 import { Segmented } from '../../components/Segmented';
@@ -35,6 +44,7 @@ import type {
   StashChanges,
 } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
+import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { StashButton } from '../../stash/StashButton';
 import { StashBar } from '../../stash/StashBar';
 import { next, prev } from '../../monaco/changeNav';
@@ -139,7 +149,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     if (m === 'uncommitted') setCommitSel({});
   };
   // Entries with nothing in this mode are hidden, except the one group of a branch review: its
-  // header holds the base button, the way out of a base that leaves nothing to show.
+  // header holds the menu with "Change base…", the way out of a base that leaves nothing to show.
   const visible = viewGroups.filter((g) => g.files[mode].length > 0 || !!shaOf(g) || target.kind === 'branch');
   const current = resolveSelection(visible, mode, selected);
   const group = visible.find((g) => g.entry.key === current?.key);
@@ -308,8 +318,10 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   }, []);
   const entry = group?.entry ?? groups[0]?.entry ?? data?.notInReview[0];
   // Base menu, the "saved" banner after a change and the group waiting for its recompute.
-  const [baseMenu, setBaseMenu] = useState<{ group: ReviewGroup; rect: DOMRect } | null>(null);
+  const [baseMenu, setBaseMenu] = useState<{ entry: EntrySummary; rect: DOMRect; alignRight: boolean } | null>(null);
   const [baseSaved, setBaseSaved] = useState<string | null>(null);
+  // An entry's ⋯ menu; `atPointer` when opened by right-clicking its header.
+  const [entryMenu, setEntryMenu] = useState<{ entry: EntrySummary; rect: DOMRect; atPointer?: boolean } | null>(null);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   useEffect(() => setPendingKey(null), [data]);
   const banner = mode === 'uncommitted' && !stash ? uncommittedBanner(target, groups) : null;
@@ -332,6 +344,8 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   // With the sidebar shown next to Review the header drops its traffic-light space and the
   // file list narrows (ReviewSidebar.dc.html).
   const sidebarShown = useUi((s) => s.sidebarVisible);
+  // The file list's width once dragged; until then 310px, or 280px beside the sidebar.
+  const [filesWidth, setFilesWidth] = useStoredWidth('gitgel.reviewFilesWidth');
   const toggle = (key: string) =>
     setCollapsed((c) => {
       const next = new Set(c);
@@ -424,7 +438,11 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
       )}
 
       <div className={styles.body}>
-        <aside ref={fileList} className={sidebarShown ? `${styles.files} ${styles.filesNarrow}` : styles.files}>
+        <aside
+          ref={fileList}
+          className={sidebarShown ? `${styles.files} ${styles.filesNarrow}` : styles.files}
+          style={filesWidth ? { width: filesWidth } : undefined}
+        >
           {target.kind !== 'stashes' && (
             <FileFilter
               inputRef={filterInput}
@@ -462,7 +480,8 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
               selected={stash ? null : current}
               onSelect={(f) => select(f)}
               pending={pendingKey === g.entry.key}
-              onBase={(rect) => setBaseMenu({ group: g, rect })}
+              menuOpen={entryMenu?.entry.key === g.entry.key}
+              onMenu={(rect, atPointer) => setEntryMenu({ entry: g.entry, rect, atPointer })}
               commit={g.commits.find((c) => c.sha === shaOf(g))}
               loading={!!shaOf(g) && !commitOf(g)}
               onClearCommit={() => pickCommit(g, null)}
@@ -493,6 +512,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
             />
           )}
         </aside>
+        <ResizeHandle pane={fileList} min={220} max={640} onResize={setFilesWidth} onReset={() => setFilesWidth(null)} />
 
         <section className={styles.main}>
           {error ? (
@@ -544,15 +564,29 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
           )}
         </section>
       </div>
+      {entryMenu && (
+        <Popover anchorRect={entryMenu.rect} width={260} alignRight={!entryMenu.atPointer} onClose={() => setEntryMenu(null)}>
+          <EntryMenu
+            entry={entryMenu.entry}
+            target={target}
+            onClose={() => setEntryMenu(null)}
+            onChangeBase={() => {
+              setEntryMenu(null);
+              setBaseMenu({ entry: entryMenu.entry, rect: entryMenu.rect, alignRight: !entryMenu.atPointer });
+            }}
+          />
+        </Popover>
+      )}
       {baseMenu && (
         <BaseMenu
-          repoId={baseMenu.group.entry.repoId}
-          entryKey={baseMenu.group.entry.key}
-          branchName={baseMenu.group.entry.branch ?? baseMenu.group.entry.shortSha ?? ''}
+          repoId={baseMenu.entry.repoId}
+          entryKey={baseMenu.entry.key}
+          branchName={baseMenu.entry.branch ?? baseMenu.entry.shortSha ?? ''}
           anchorRect={baseMenu.rect}
+          alignRight={baseMenu.alignRight}
           onClose={() => setBaseMenu(null)}
           onChosen={(base) => {
-            const e = baseMenu.group.entry;
+            const e = baseMenu.entry;
             if (base !== e.base) setPendingKey(e.key);
             setBaseSaved(
               `Base for ${e.branch ?? e.shortSha} set to ${base}. Saved for this branch; Branches and projects use it too.`,
@@ -697,6 +731,65 @@ function ReviewHeader({
   );
 }
 
+/** An entry's ⋯ menu: "Change base…", then Branches' row menu without "Open review", since this is it. */
+function EntryMenu({
+  entry,
+  target,
+  onClose,
+  onChangeBase,
+}: {
+  entry: EntrySummary;
+  target: ReviewTarget;
+  onClose: () => void;
+  onChangeBase: () => void;
+}) {
+  const project = useData((s) =>
+    target.kind === 'project' ? s.config?.projects.find((p) => p.id === target.projectId)?.name : undefined,
+  );
+  const rev = entry.branch ?? entry.headSha;
+  return (
+    <Menu aria-label="Branch options" autoFocus>
+      <MenuItem
+        icon={<BranchIcon size={14} />}
+        sub={`base ${entry.base ?? 'none'}${entry.baseIsCustom ? ' · set for this branch' : ''}`}
+        onSelect={onChangeBase}
+      >
+        Change base…
+      </MenuItem>
+      {entry.branch !== null && (
+        <MenuItem
+          icon={<CopyIcon />}
+          onSelect={() => {
+            void writeText(entry.branch!);
+            onClose();
+          }}
+        >
+          Copy branch name
+        </MenuItem>
+      )}
+      {rev && (
+        <MenuItem
+          icon={<HistoryIcon />}
+          onSelect={() => {
+            onClose();
+            useNav.getState().push({ name: 'history', repoId: entry.repoId, rev, backLabel: 'Back to Review' });
+          }}
+        >
+          Open history
+        </MenuItem>
+      )}
+      <MenuDivider />
+      <OpenItems entry={entry} onDone={onClose} />
+      {project !== undefined ? (
+        <ScriptsMenu entry={entry} menu="project" project={project} onDone={onClose} />
+      ) : (
+        <ScriptsMenu entry={entry} menu="branches" onDone={onClose} />
+      )}
+      <EntryMenuNote entry={entry} />
+    </Menu>
+  );
+}
+
 function FileGroup({
   group: g,
   mode,
@@ -707,7 +800,8 @@ function FileGroup({
   selected,
   onSelect,
   pending,
-  onBase,
+  menuOpen,
+  onMenu,
   commit,
   loading,
   onClearCommit,
@@ -722,7 +816,8 @@ function FileGroup({
   selected: FileRef | null;
   onSelect: (f: FileRef) => void;
   pending: boolean;
-  onBase: (rect: DOMRect) => void;
+  menuOpen: boolean;
+  onMenu: (rect: DOMRect, atPointer?: boolean) => void;
   /** The commit this entry is scoped to (flow D7). */
   commit: CommitInfo | undefined;
   /** Its files are on the way; the previous list stays, dimmed. */
@@ -735,24 +830,36 @@ function FileGroup({
   const e = g.entry;
   return (
     <section className={styles.group}>
-      <div className={styles.groupHead}>
+      <div
+        className={styles.groupHead}
+        onContextMenu={(ev) => {
+          ev.preventDefault();
+          onMenu(new DOMRect(ev.clientX, ev.clientY, 0, 0), true);
+        }}
+      >
         <div className={styles.groupLine}>
           <button type="button" className={styles.groupToggle} aria-expanded={open} onClick={onToggle}>
             <ChevronDownIcon className={open ? styles.chevron : `${styles.chevron} ${styles.closed}`} />
             <span className={styles.repoName}>{e.repoName}</span>
           </button>
           {pending && <RefreshIcon size={11} className={styles.pending} />}
-          <button
-            type="button"
-            aria-haspopup="listbox"
-            title={`base ${e.base ?? 'none'}`}
-            className={e.baseIsCustom ? `${styles.baseButton} ${styles.baseCustom}` : styles.baseButton}
-            onClick={(ev) => onBase(ev.currentTarget.getBoundingClientRect())}
-          >
-            <span className={styles.muted}>base</span>
-            <span className={styles.baseName}>{e.base ?? 'none'}</span>
-            <ChevronDownIcon size={9} />
-          </button>
+          {/* The totals give way to the ⋯ button while the header is hovered or the menu is open. */}
+          <span className={menuOpen ? `${styles.groupEnd} ${styles.groupEndOpen}` : styles.groupEnd}>
+            <span className={styles.totals}>
+              {/* An empty group (a branch review with nothing in this mode) shows no "+0". */}
+              {files.length > 0 && <span className={styles.add}>+{add}</span>}
+              {del > 0 && <span className={styles.del}>−{del}</span>}
+            </span>
+            <button
+              type="button"
+              aria-label="Branch options"
+              aria-haspopup="menu"
+              className={styles.groupMenu}
+              onClick={(ev) => onMenu(ev.currentTarget.getBoundingClientRect())}
+            >
+              <MoreVerticalIcon size={14} />
+            </button>
+          </span>
         </div>
         <div className={styles.groupLine2}>
           <span className={styles.branch}>{e.branch ?? e.shortSha}</span>
@@ -766,9 +873,6 @@ function FileGroup({
               {shown.length} of {files.length}
             </span>
           )}
-          {/* An empty group (a branch review with nothing in this mode) shows no "+0". */}
-          {files.length > 0 && <span className={styles.add}>+{add}</span>}
-          {del > 0 && <span className={styles.del}>−{del}</span>}
         </div>
         {commit && (
           <div className={styles.commitChip}>

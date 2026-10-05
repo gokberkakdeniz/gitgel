@@ -171,7 +171,7 @@ gitgel/
 │  ├─ state/    nav.ts  ui.ts  data.ts
 │  ├─ components/                 # Button, IconButton, Pill, Checkbox, Switch, Input, Kbd,
 │  │                              # Popover, Menu, Modal, Toast, Segmented, Select, SettingsNav,
-│  │                              # KindBadge, Banner, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
+│  │                              # KindBadge, Banner, ResizeHandle (+ useStoredWidth), List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  History/  Settings/  Palette/  AddRepos/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
@@ -252,7 +252,7 @@ each file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(
 | `accent` | `#4f8fa3` | Primary button fill, focus ring, checkboxes, key icons. Text on it: `#141311` (`--on-accent`) |
 | `accent.text` | `#7fb3c4` | Links, SHAs, "● N changed", text actions |
 | `accent.hover` | `#a3cad6` | Link hover |
-| `focus.ring` | `0 0 0 1px #4f8fa3, 0 0 0 3px rgba(79,143,163,0.25)` | Focused inputs, active base button |
+| `focus.ring` | `0 0 0 1px #4f8fa3, 0 0 0 3px rgba(79,143,163,0.25)` | Focused inputs |
 | `success` | text `#8fcf9c` on `rgba(93,184,114,0.14)` | merged |
 | `warning` | text `#e8c071` on `rgba(212,160,23,0.14)` | detached HEAD, base missing, commits from another branch |
 | `danger` | text `#ee9a90` on `rgba(198,69,69,0.16)` | deleted, repo missing, destructive menu items |
@@ -631,9 +631,12 @@ Layout:
   it when Review was opened from there).
 - Default mode Committed; Uncommitted if there are no committed changes but some uncommitted.
   Switching mode resets the selection to that mode's first file. Groups with no files in the
-  mode are hidden, except the one group of a branch review (its base button stays reachable).
-- **Left file list** (310px, `bg.sidebar`, padding 8, scrolls), one group per entry (two entries
-  from the same repo are two groups):
+  mode are hidden, except the one group of a branch review (its menu, with "Change base…", stays reachable).
+- **Left file list** (310px, 280px beside the sidebar; `bg.sidebar`, padding 8, scrolls), one
+  group per entry (two entries from the same repo are two groups):
+  - **Resizing**: its right border is a drag handle (8px hit area, `col-resize`; a 2px accent
+    line on hover, focus and drag); 220–640px, ←/→ by 16px when focused, double-click resets.
+    The width is remembered on this machine (`localStorage`) and used with or without the sidebar.
   - **File filter** (flow D8): a clearable mono `Input` at the top of the list, above the
     groups (margin-bottom 6, sticky): search icon, placeholder "Search", and on the right `Kbd`
     "⌘K" while empty, or `N files` (`aria-live`) plus the ✕ while it has text. ⌘K focuses it (Review only; the Branches ⌘K is unchanged).
@@ -653,11 +656,18 @@ Layout:
       showing it. Change navigation (⌥↓ / ⌥↑, "next file") moves through the visible files only;
       from a filtered-out file it goes to the first / last visible one.
     - The text survives mode switches, commit picks and refreshes; leaving Review clears it.
-  - Line 1: collapse chevron + 14px/600 repo name, then the right-aligned **base button** (22px,
-    `bg.elevated`, mono 11, muted "base" + name + chevron; accent border and ring when the base
-    is custom). A small spinner shows while that group recomputes after a base change.
-  - Line 2 (indent 20): mono 12 branch (ellipsis), mono 11 green `+add` and red `−del` (del
-    hidden when 0).
+  - Line 1: collapse chevron + 14px/600 repo name (ellipsis), then right-aligned mono 11 green
+    `+add` and red `−del` (del hidden when 0). A small spinner shows while that group recomputes
+    after a base change. While the header is hovered or keyboard-focused, or its menu is open,
+    the totals give way to a 22×20 "⋮" button (`aria-label` "Branch options"; `bg.pressed` while
+    open).
+  - Line 2 (indent 20): mono 12 branch (ellipsis), the conflicts pill.
+  - **Entry menu** (260px, right-aligned under "⋮"; right-clicking the header opens it at the
+    pointer): "Change base…" (sub `base <ref>`, plus ` · set for this branch` when the base is
+    custom) opens the Base menu at the same anchor; then the Branches row menu without "Open
+    review": "Copy branch name", "Open history" (back label "Back to Review"), the open items,
+    then the Scripts group as the Branches menu (the Project menu in a project review). The
+    header has no base control: the entry bar shows the base in use.
   - Commit chip (when the entry is scoped to one commit, see below).
   - Stacked warning (margin 0 8px 6px 28px, padding 7px 10px, radius 8, warning tone):
     `N of M commits come from <branch>. A different base may fit better.`
@@ -751,7 +761,7 @@ Layout:
   merge conflicts in M entries. Resolve them …` for several); the group's line 2 has the same
   danger sm `N conflicts` pill as its Branches row (P7). The files are `C` in the
   Uncommitted and All lists; their diff is HEAD ↔ the working tree file with its markers.
-- **Base menu** (340px popover, from a group's base button, the Project table's Base button or a
+- **Base menu** (340px popover, from a Review group's "Change base…", the Project table's Base button or a
   "base missing" pill): "Search" input; **Suggested** (mono 13 name +
   `Contains N of the M commits shown`); **Default** (see "Default and remote rows" below);
   **Other branches**; **Remote branches**; **Tags** when the filter
@@ -785,9 +795,9 @@ Layout:
     (`refs/remotes/*`, without `*/HEAD` and without the Default candidates), same row style as
     Other branches. The one whose short name equals the entry's branch comes first, with a muted
     `same name` note. Filtered by the menu input like the other sections; hidden when empty.
-  - The group's base button and the entry bar range always show the ref in use
-    (`base origin/master`, `origin/master..feat/x`); the accent border of the base button still
-    means "stored custom base" only.
+  - The entry menu's "Change base…" and the entry bar always show the ref in use
+    (`base origin/master`, `ahead of origin/master`); "set for this branch" still means
+    "stored custom base" only.
 - Empty states: "No committed changes" / "No uncommitted changes" / "No changes". Branch scope
   on an entry that cannot be reviewed: "This branch no longer exists", "Repository not found",
   "Base missing: …".
@@ -1012,7 +1022,7 @@ open.
   7. Clicking a commit shows only that commit's changes against its parent; ↑ ↓ (⌥⇧↑ / ⌥⇧↓)
      step through commits.
 - **E · Stacked branch.** With base main, the entry lists another branch's commits dimmed and
-  labelled, plus the warning note. The base button's menu suggests that branch. After choosing,
+  labelled, plus the warning note. The entry menu's "Change base…" suggests that branch. After choosing,
   only that group recomputes and the banner confirms. The base is stored per branch.
 - **F · Broken entries.** Labels, not errors: a deleted branch offers its last known state; a
   missing repo is fixed with Locate… in Settings (fixes all its entries); "base missing" opens the
@@ -1037,7 +1047,7 @@ open.
   the files (P2). Picking one shows what it holds, against the commit it was taken on. Stash…
   stashes the review's entries (P4); Apply / Pop pick a worktree (P5); Drop asks first (P6).
   Each runs git like a script: a toast, and its output on click.
-- **J · Open elsewhere.** The ⋯ menu of an entry (Project) or
+- **J · Open elsewhere.** The ⋯ menu of an entry (Project, Review) or
   row (Branches) opens its worktree folder in Finder or in an installed editor or terminal; a
   branch that is not checked out opens the repository folder instead, with a note saying so.
 

@@ -422,6 +422,10 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Merge conflicts shown: unmerged files are `C`, entries carry `conflicts` (a
   danger pill on Branches and in Review, a danger banner in Review, `· N conflicts` in History);
   Stash… leaves out entries with conflicts; canvas P7 — 2026-10-05
+- [x] (on request) Review: the file list is resizable (drag its border, 220–640px, remembered;
+  double-click resets); each entry header has a menu (⋮ in place of the +/− totals on hover, or
+  right-click): "Change base…" (the base button left the header), then the Branches row menu
+  without "Open review"; canvas D10 — 2026-10-05
 
 ---
 

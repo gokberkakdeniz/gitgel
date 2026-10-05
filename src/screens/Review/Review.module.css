@@ -167,51 +167,10 @@
   white-space: nowrap;
 }
 
-.baseButton {
-  flex-shrink: 1;
-  min-width: 0;
-  max-width: 62%;
-  margin-left: auto;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 8px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-body);
-  cursor: pointer;
-}
-
-.baseButton .muted {
-  flex-shrink: 0;
-  font-size: 11px;
-}
-
-.baseButton svg {
-  flex-shrink: 0;
-}
-
-/* A long base (origin/release/…) and a long repo name share the line: both end in an ellipsis. */
-.baseName {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .groupToggle .repoName {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.baseCustom {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.25);
 }
 
 .groupLine2 {
@@ -843,4 +802,58 @@
 
 .dot {
   color: var(--text-faint);
+}
+
+/* The entry's totals and its ⋯ button share one cell; the button shows on hover (flow D). */
+.groupEnd {
+  flex-shrink: 0;
+  display: grid;
+  align-items: center;
+  justify-items: end;
+}
+
+.groupEnd > * {
+  grid-area: 1 / 1;
+}
+
+.totals {
+  display: flex;
+  gap: 8px;
+}
+
+.groupMenu {
+  width: 22px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -2px 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-body);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.groupHead:hover .groupMenu,
+.groupHead:has(:focus-visible) .groupMenu,
+.groupEndOpen .groupMenu {
+  opacity: 1;
+}
+
+.groupHead:hover .totals,
+.groupHead:has(:focus-visible) .totals,
+.groupEndOpen .totals {
+  visibility: hidden;
+}
+
+.groupMenu:hover {
+  background: var(--bg-hover);
+}
+
+.groupEndOpen .groupMenu,
+.groupEndOpen .groupMenu:hover {
+  background: var(--bg-pressed);
 }

@@ -61,19 +61,30 @@ button,input{font-family:inherit}
 </div>
 <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
 <section style="display: flex; flex-direction: column; gap: 1px">
-<div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px">
+<div style="{{g.headStyle}}">
 <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
 <button onClick="{{g.toggle}}" aria-expanded="{{g.open}}" style="display: flex; align-items: center; gap: 8px; flex-grow: 1; min-width: 0; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: left">
 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--text-muted); {{g.chevStyle}}"><path d="m6 9 6 6 6-6"></path></svg>
-<span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">{{g.repo}}</span>
+<span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{g.repo}}</span>
 </button>
-<button aria-haspopup="listbox" style="{{g.baseStyle}}"><span style="color: var(--text-muted)">base</span> {{g.base}} <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+<sc-if value="{{g.totalsOn}}" hint-placeholder-val="{{true}}">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); flex-shrink: 0">{{g.add}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger); flex-shrink: 0">{{g.del}}</span>
+</sc-if>
+<sc-if value="{{g.dotsOn}}" hint-placeholder-val="{{false}}">
+<span style="position: relative; z-index: 30; flex-shrink: 0; display: flex">
+<button aria-label="Branch options" aria-haspopup="menu" aria-expanded="true" style="width: 22px; height: 20px; margin: -2px 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: var(--bg-pressed); color: var(--text-body); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5.5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="18.5" r="1.6"></circle></svg></button>
+<sc-if value="{{g.menuOn}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; top: 24px; right: 0">
+<dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch options" items="{{g.menuItems}}" hint-size="260px,260px"></dc-import>
+</div>
+</sc-if>
+</span>
+</sc-if>
 </div>
 <div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{g.branch}}</span>
 <span style="font-size: 11px; color: var(--text-muted); flex-shrink: 0; white-space: nowrap">{{g.matchLabel}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); flex-shrink: 0">{{g.add}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger); flex-shrink: 0">{{g.del}}</span>
 </div>
 <sc-if value="{{g.commitOn}}" hint-placeholder-val="{{false}}">
 <div style="display: flex; align-items: center; gap: 6px; margin: 2px 0 0 20px; padding: 3px 3px 3px 8px; border-radius: 7px; background: rgba(var(--accent-rgb), 0.14); min-width: 0">
@@ -124,6 +135,11 @@ button,input{font-family:inherit}
 </div>
 </sc-if>
 </aside>
+<sc-if value="{{resizing}}" hint-placeholder-val="{{false}}">
+<div role="separator" aria-orientation="vertical" aria-label="Resize file list" style="position: relative; z-index: 2; width: 0; flex-shrink: 0; cursor: col-resize">
+<div style="position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--accent)"></div>
+</div>
+</sc-if>
 
 <section style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0">
 <div style="border-bottom: 1px solid var(--border); padding: 12px 18px; display: flex; flex-direction: column; gap: 8px">
@@ -243,7 +259,7 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;project&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;project&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Committed&quot;,&quot;Uncommitted&quot;,&quot;All&quot;],&quot;default&quot;:&quot;Committed&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;web&quot;,&quot;api&quot;],&quot;default&quot;:&quot;web&quot;},&quot;stacked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;base&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;main&quot;,&quot;feat/job-queue&quot;],&quot;default&quot;:&quot;main&quot;},&quot;baseMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;hunk&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;first&quot;,&quot;last&quot;],&quot;default&quot;:&quot;first&quot;},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;split&quot;,&quot;unified&quot;],&quot;default&quot;:&quot;split&quot;},&quot;ignoreWs&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;viewMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;commit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;d81f03a&quot;,&quot;4b7e2c9&quot;,&quot;9a13f60&quot;,&quot;2cc0d48&quot;],&quot;default&quot;:&quot;&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;embedded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;fileQuery&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;},&quot;context&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;changes&quot;,&quot;whole&quot;],&quot;default&quot;:&quot;changes&quot;},&quot;contextLines&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;3&quot;,&quot;5&quot;,&quot;10&quot;],&quot;default&quot;:&quot;3&quot;},&quot;baseCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;stacked&quot;,&quot;behind&quot;,&quot;unrelated&quot;,&quot;remote&quot;],&quot;default&quot;:&quot;remote&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;project&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;project&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Committed&quot;,&quot;Uncommitted&quot;,&quot;All&quot;],&quot;default&quot;:&quot;Committed&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;web&quot;,&quot;api&quot;],&quot;default&quot;:&quot;web&quot;},&quot;stacked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;base&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;main&quot;,&quot;feat/job-queue&quot;],&quot;default&quot;:&quot;main&quot;},&quot;baseMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;hunk&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;first&quot;,&quot;last&quot;],&quot;default&quot;:&quot;first&quot;},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;split&quot;,&quot;unified&quot;],&quot;default&quot;:&quot;split&quot;},&quot;ignoreWs&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;viewMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;commit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;d81f03a&quot;,&quot;4b7e2c9&quot;,&quot;9a13f60&quot;,&quot;2cc0d48&quot;],&quot;default&quot;:&quot;&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;embedded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;fileQuery&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;},&quot;context&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;changes&quot;,&quot;whole&quot;],&quot;default&quot;:&quot;changes&quot;},&quot;contextLines&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;3&quot;,&quot;5&quot;,&quot;10&quot;],&quot;default&quot;:&quot;3&quot;},&quot;baseCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;stacked&quot;,&quot;behind&quot;,&quot;unrelated&quot;,&quot;remote&quot;],&quot;default&quot;:&quot;remote&quot;},&quot;entryMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;resizing&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   constructor(p) { super(p); this.state = { mode: null, file: null, collapsed: null, hunk: null, view: null, ignoreWs: null, viewMenu: null, commitSel: null, q: null, context: null, ctxLines: null }; }
   renderVals() {
@@ -254,6 +270,10 @@ class Component extends DCLogic {
     var apiBase = this.props.base ?? 'main';
     var extra = stacked && apiBase === 'main';
     var menu = !!this.props.baseMenu;
+    var entryMenu = !!this.props.entryMenu;
+    // The entry whose base menu is open (Change base… in its ⋮ menu).
+    var bmGroup = menu && scope === 'project' ? (baseCase === 'stacked' ? 'api' : 'web') : null;
+    var resizing = !!this.props.resizing;
     var baseCase = this.props.baseCase || 'stacked';
     var webBase = baseCase === 'behind' || baseCase === 'remote' ? 'origin/main' : 'main';
     var mode = this.state.mode || this.props.mode || 'Committed';
@@ -392,12 +412,20 @@ class Component extends DCLogic {
       var open = !collapsed[g.id] || terms.length > 0;
       var add = 0, del = 0;
       list.forEach(function (f) { add += num(f[3]); del += num(f[4]); });
-      var baseActive = (g.id === 'api' && ((menu && baseCase === 'stacked') || apiBase !== 'main')) || (g.id === 'web' && menu && baseCase !== 'stacked');
       return {
         repo: g.repo, branch: g.branch, base: g.base,
         hidden: terms.length > 0 && shown.length === 0,
         matchLabel: terms.length ? shown.length + ' of ' + list.length : '',
         add: '+' + add, del: del ? '−' + del : '',
+        // D10: the first entry's header is hovered with its ⋮ menu open; the totals give way to it.
+        // With the base menu open (from the menu's Change base…) its entry keeps ⋮ pressed.
+        menuOn: entryMenu && g === G[0],
+        dotsOn: (entryMenu && g === G[0]) || g.id === bmGroup,
+        totalsOn: !((entryMenu && g === G[0]) || g.id === bmGroup),
+        menuItems: [{ label: 'Change base…', icon: 'branch', sub: 'base ' + g.base + (g.id === 'api' && apiBase !== 'main' ? ' · set for this branch' : ''), active: true },
+          { label: 'Copy branch name', icon: 'copy' }, { label: 'Open history', icon: 'history' }, { kind: 'sep' },
+          { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' }],
+        headStyle: 'display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px',
         open: open,
         chevStyle: 'flex-shrink: 0; transition: transform 0.15s; ' + (open ? '' : 'transform: rotate(-90deg)'),
         toggle: function () { var c = Object.assign({}, collapsed); c[g.id] = open; self.setState({ collapsed: c }); },
@@ -406,7 +434,6 @@ class Component extends DCLogic {
         commitSha: commitSel[g.id] || '',
         commitMsg: (function () { var all = (g.commits || []).concat(g.parent || []); for (var i = 0; i < all.length; i++) if (all[i].sha === commitSel[g.id]) return all[i].msg; return ''; })(),
         clearCommit: function () { var ns = Object.assign({}, commitSel); delete ns[g.id]; self.setState({ commitSel: ns, hunk: 0 }); },
-        baseStyle: 'flex-shrink: 0; margin-left: auto; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--bg-elevated); font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--text-body); cursor: pointer; ' + (baseActive ? 'border: 1px solid var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.25)' : 'border: 1px solid var(--border)'),
         files: shown.map(function (f) {
           var key = keyOf(g, f);
           var on = key === sel;
@@ -686,14 +713,15 @@ class Component extends DCLogic {
     }
     var bm = {
       label: 'Choose base for ' + bmBranch, query: bmQuery, sections: bmSections,
-      style: 'position: absolute; top: ' + bmTop + 'px; left: 150px; width: 340px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; overflow: hidden; padding-bottom: 6px; z-index: 30'
+      style: 'position: absolute; top: ' + bmTop + 'px; left: ' + Math.max(8, (resizing ? 380 : this.props.embedded ? 280 : 310) - 16 - 340) + 'px; width: 340px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); display: flex; flex-direction: column; overflow: hidden; padding-bottom: 6px; z-index: 30'
     };
     var project = scope === 'project';
     var baseChanged = project && apiBase !== 'main';
     var embedded = !!this.props.embedded;
     return {
       themeClass: 'theme-' + (this.props.theme || 'dark'), themeName: this.props.theme || 'dark',
-      rootW: embedded ? 1020 : 1280, asideW: embedded ? 280 : 310, showChrome: !embedded,
+      rootW: embedded ? 1020 : 1280, asideW: resizing ? 380 : embedded ? 280 : 310, resizing: resizing,
+ showChrome: !embedded,
       // As the other page headers: 64px, 28px left (16px when the sidebar is hidden and the chrome
       // starts the header), 16px right, actions 10px apart. With the sidebar shown its top row has
       // back and forward, so the header has none.

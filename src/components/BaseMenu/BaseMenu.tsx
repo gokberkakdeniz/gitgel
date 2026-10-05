@@ -13,6 +13,8 @@ interface Props {
   entryKey: string;
   branchName: string;
   anchorRect: DOMRect;
+  /** Line its right edge up with the anchor's (opened from a ⋯ button). */
+  alignRight?: boolean;
   onClose: () => void;
   /** After the base was saved. */
   onChosen?: (base: string) => void;
@@ -20,7 +22,7 @@ interface Props {
 
 /** Choose the base of one branch: suggested (stacked), default (local and remote forms), other
  * branches, remote branches, tags or a SHA. */
-export function BaseMenu({ repoId, entryKey, branchName, anchorRect, onClose, onChosen }: Props) {
+export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight, onClose, onChosen }: Props) {
   const { data } = useInvoke(() => getBaseOptions(repoId, entryKey), [repoId, entryKey]);
   // A base stored for this branch (else the nearest default applies).
   const custom = useData((s) => !!s.config?.branchBases[entryKey]);
@@ -75,7 +77,7 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, onClose, on
 
   let lastSection: string | null = null;
   return (
-    <Popover anchorRect={anchorRect} width={340} onClose={onClose}>
+    <Popover anchorRect={anchorRect} width={340} alignRight={alignRight} onClose={onClose}>
       <div role="listbox" aria-label={`Choose base for ${branchName}`} className={styles.menu}>
         <div className={styles.filterRow}>
           <Input
