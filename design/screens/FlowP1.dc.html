@@ -83,7 +83,7 @@ button,input,textarea{font-family:inherit}
 <button aria-label="Branch options" aria-haspopup="menu" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; background: transparent; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
 </div><div style="padding: 8px 26px 8px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Stashes" heading="Stashes" collapsed="{{true}}" items="{{stashesApi}}" hint-size="100%,150px"></dc-import></div>
 </div>
-<div style="position: absolute; top: 364px; left: 701px; z-index: 5"><dc-import name="Menu" theme="none" width="280" label="Stash actions" items="{{stashMenu}}" hint-size="280px,200px"></dc-import></div>
+<div style="position: absolute; top: 364px; left: 741px; z-index: 5"><dc-import name="Menu" theme="none" width="240" label="Stash actions" items="{{stashMenu}}" hint-size="240px,170px"></dc-import></div>
 </main>
 </div>
 </x-dc>
@@ -92,7 +92,7 @@ class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
     // Stashes per repo: the shared List (List.dc.html) with a heading; row 1 has its menu open.
-    // Apply to… / Pop to… turn the menu into the worktree picker (P5); Drop… asks first (P6).
+    // Apply to… / Pop to… open the worktree picker beside them on hover or click (P5); Drop… asks first (P6).
     // api-server's list is collapsed: its bottom padding drops to the top's 8px.
     var more = function (open) { return [{ icon: 'more-vertical', ariaLabel: 'Stash options', active: open }]; };
     var stash = function (n, msg, branch, gone, files, age, open) {
@@ -101,8 +101,8 @@ class Component extends DCLogic {
     };
     return { themeClass: 'theme-' + t, themeName: t,
       stashMenu: [{ label: 'Review changes', kbd: '↵', active: true },
-        { label: 'Apply to…', desc: 'session-token-refresh, session-cookie-cleanup, main', href: 'FlowP5.dc.html' },
-        { label: 'Pop to…', desc: 'Apply, then drop if it applied cleanly' },
+        { label: 'Apply to…', submenu: true, href: 'FlowP5.dc.html' },
+        { label: 'Pop to…', submenu: true },
         { kind: 'sep' }, { label: 'Drop…', kbd: '⌫', danger: true, href: 'FlowP6.dc.html' }],
       stashesWeb: [stash(0, 'debug logging for refresh', 'session-token-refresh', false, '1 file', '20m', true),
         stash(1, 'WIP on old-login: 71be0c2 Try new login form', 'old-login', true, '5 files', '3w', false)],

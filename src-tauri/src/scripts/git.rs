@@ -5,6 +5,8 @@
 
 use std::path::{Path, PathBuf};
 
+use serde::Deserialize;
+
 use crate::config;
 use crate::error::AppError;
 use crate::git::{stash, worktrees};
@@ -106,19 +108,55 @@ impl Repo {
     }
 }
 
+/// One entry of Stash changes (P4): what to stash in its worktree.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StashPush {
+    #[serde(flatten)]
+    pub entry: EntryRef,
+    /// The files picked, relative to the worktree (a rename's old path too); `None`: all of them.
+    pub paths: Option<Vec<String>>,
+    /// Untracked files go too (`--include-untracked`).
+    pub untracked: bool,
+}
+
+/// How one `git stash push` of the command is built.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct PushStep {
+    pub untracked: bool,
+    /// Pathspecs (`$GITGEL_PATH_<step>_<n>`); 0: the whole worktree.
+    pub paths: usize,
+}
+
 /// `git stash push` in each entry's worktree, one after another, stopping at the first failure.
 pub fn stash_push(
     state: &AppState,
-    entries: Vec<EntryRef>,
+    pushes: Vec<StashPush>,
     message: String,
-    untracked: bool,
 ) -> Result<ScriptRun, AppError> {
-    if entries.is_empty() {
+    if pushes.is_empty() {
         return Err(AppError::Invalid("Nothing to stash.".into()));
     }
     let mut repos: Vec<Repo> = Vec::new();
     let mut steps: Vec<(PathBuf, String, String)> = Vec::new(); // folder, label, entry key
-    for entry in &entries {
+    let mut env: Vec<(String, String)> = Vec::new();
+    let mut shape: Vec<PushStep> = Vec::new();
+    for (i, push) in pushes.iter().enumerate() {
+        let entry = &push.entry;
+        let paths = push.paths.as_deref().unwrap_or_default();
+        if push.paths.is_some() && paths.is_empty() {
+            return Err(AppError::Invalid("Pick at least one file.".into()));
+        }
+        if paths.iter().any(|p| p.is_empty() || p.contains('\0')) {
+            return Err(AppError::Invalid("A picked file has no valid path.".into()));
+        }
+        for (j, path) in paths.iter().enumerate() {
+            env.push((format!("GITGEL_PATH_{}_{}", i + 1, j + 1), path.clone()));
+        }
+        shape.push(PushStep {
+            untracked: push.untracked,
+            paths: paths.len(),
+        });
         if !repos.iter().any(|r| r.id == entry.repo_id) {
             let repo = open_repo(state, &entry.repo_id)?;
             repo.not_busy(state)?;
@@ -146,16 +184,14 @@ pub fn stash_push(
         ));
     }
     let message = message.trim().to_string();
-    let mut env: Vec<(String, String)> = steps
-        .iter()
-        .enumerate()
-        .map(|(i, (folder, _, _))| {
-            (
-                format!("GITGEL_FOLDER_{}", i + 1),
-                folder.to_string_lossy().into_owned(),
-            )
-        })
-        .collect();
+    env.extend(steps.iter().enumerate().map(|(i, (folder, _, _))| {
+        (
+            format!("GITGEL_FOLDER_{}", i + 1),
+            folder.to_string_lossy().into_owned(),
+        )
+    }));
+    // Picked paths are file names, never pathspec magic (`:(glob)`, `*`).
+    env.push(("GIT_LITERAL_PATHSPECS".into(), "1".into()));
     if !message.is_empty() {
         env.push(("GITGEL_MESSAGE".into(), message.clone()));
     }
@@ -179,7 +215,7 @@ pub fn stash_push(
             repo_id: repos[0].id.clone(),
             also_rescan: repos[1..].iter().map(|r| r.id.clone()).collect(),
             folder: steps[0].0.clone(),
-            command: push_command(steps.len(), untracked, !message.is_empty()),
+            command: push_command(&shape, !message.is_empty()),
             env: with_git_env(env),
         },
     )
@@ -257,24 +293,29 @@ pub fn stash_drop(
     )
 }
 
-/// `git -C "$GITGEL_FOLDER_1" stash push … && git -C "$GITGEL_FOLDER_2" …`: only fixed text and
-/// quoted variables, which sh, bash, zsh and fish all read the same way.
-pub(super) fn push_command(n: usize, untracked: bool, message: bool) -> String {
-    let flags = format!(
-        "{}{}",
-        if untracked {
-            " --include-untracked"
-        } else {
-            ""
-        },
-        if message {
-            " --message \"$GITGEL_MESSAGE\""
-        } else {
-            ""
-        }
-    );
-    (1..=n)
-        .map(|i| format!("git -C \"$GITGEL_FOLDER_{i}\" stash push{flags}"))
+/// `git -C "$GITGEL_FOLDER_1" stash push … [-- "$GITGEL_PATH_1_1" …] && git -C "$GITGEL_FOLDER_2" …`:
+/// only fixed text and quoted variables, which sh, bash, zsh and fish all read the same way.
+pub(super) fn push_command(steps: &[PushStep], message: bool) -> String {
+    steps
+        .iter()
+        .enumerate()
+        .map(|(i, step)| {
+            let n = i + 1;
+            let mut cmd = format!("git -C \"$GITGEL_FOLDER_{n}\" stash push");
+            if step.untracked {
+                cmd.push_str(" --include-untracked");
+            }
+            if message {
+                cmd.push_str(" --message \"$GITGEL_MESSAGE\"");
+            }
+            if step.paths > 0 {
+                cmd.push_str(" --");
+                for j in 1..=step.paths {
+                    cmd.push_str(&format!(" \"$GITGEL_PATH_{n}_{j}\""));
+                }
+            }
+            cmd
+        })
         .collect::<Vec<_>>()
         .join(" && ")
 }
@@ -291,13 +332,21 @@ mod tests {
 
     #[test]
     fn push_commands_hold_no_values() {
+        let all = PushStep {
+            untracked: false,
+            paths: 0,
+        };
         assert_eq!(
-            push_command(1, false, false),
+            push_command(&[all], false),
             r#"git -C "$GITGEL_FOLDER_1" stash push"#
         );
+        let picked = PushStep {
+            untracked: true,
+            paths: 2,
+        };
         assert_eq!(
-            push_command(2, true, true),
-            r#"git -C "$GITGEL_FOLDER_1" stash push --include-untracked --message "$GITGEL_MESSAGE" && git -C "$GITGEL_FOLDER_2" stash push --include-untracked --message "$GITGEL_MESSAGE""#
+            push_command(&[picked, all], true),
+            r#"git -C "$GITGEL_FOLDER_1" stash push --include-untracked --message "$GITGEL_MESSAGE" -- "$GITGEL_PATH_1_1" "$GITGEL_PATH_1_2" && git -C "$GITGEL_FOLDER_2" stash push --message "$GITGEL_MESSAGE""#
         );
     }
 }

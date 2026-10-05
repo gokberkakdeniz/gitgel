@@ -166,6 +166,11 @@ export interface RepoScan {
   others: OtherBranch[]; // all other local branches except the base branch
   stashes: StashInfo[]; // the stash stack, newest first (one per repo, shared by its worktrees)
 }
+/** One entry of Stash changes (P4, `stash_push`). */
+export interface StashPush extends EntryRef {
+  paths: string[] | null; // the files picked (a rename's old path too); null: all of them
+  untracked: boolean; // --include-untracked
+}
 /** One stash@{n} (flow P). */
 export interface StashInfo {
   index: number; // n in stash@{n}; 0 is the newest

@@ -19,6 +19,7 @@ import type {
   RunContext,
   ScriptConfig,
   ScriptRun,
+  StashPush,
   StashChanges,
   Settings,
   TerminalOption,
@@ -128,8 +129,8 @@ export const runScript = (script: ScriptConfig, entry: EntryRef, inputs: Record<
   invoke<ScriptRun>('run_script', { script, entry, inputs, context });
 
 /** Git actions (SPEC §15 "Writing stashes"): runs like a script's. */
-export const stashPush = (entries: EntryRef[], message: string, untracked: boolean) =>
-  invoke<ScriptRun>('stash_push', { entries, message, untracked });
+export const stashPush = (entries: StashPush[], message: string) =>
+  invoke<ScriptRun>('stash_push', { entries, message });
 
 export const stashApply = (repoId: string, index: number, sha: string, worktreePath: string, pop: boolean) =>
   invoke<ScriptRun>('stash_apply', { repoId, index, sha, worktreePath, pop });

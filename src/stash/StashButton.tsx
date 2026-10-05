@@ -7,7 +7,7 @@ import { StashDialog, stashRows } from './StashDialog';
  * uncommitted changes. */
 export function StashButton({ groups }: { groups: ReviewGroup[] }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const any = stashRows(groups).some((r) => r.files > 0);
+  const any = stashRows(groups).some((r) => r.files.length > 0);
   return (
     <>
       <Button

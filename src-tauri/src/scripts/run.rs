@@ -830,8 +830,12 @@ mod tests {
         let folder = t.path().to_string_lossy().into_owned();
         let message = "before $(echo hacked) 'it' \"q\"";
 
+        let step = super::super::git::PushStep {
+            untracked: true,
+            paths: 0,
+        };
         let (out, ended) = pty(
-            &super::super::git::push_command(1, true, true),
+            &super::super::git::push_command(&[step], true),
             &[("GITGEL_FOLDER_1", &folder), ("GITGEL_MESSAGE", message)],
         );
         assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
@@ -852,6 +856,45 @@ mod tests {
         let (out, ended) = pty_in(t.path(), "git stash drop 'stash@{0}'", &[]);
         assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
         assert!(crate::git::stash::list(&t.repo).unwrap().is_empty());
+    }
+
+    /// Stash changes with files picked: only those go, literally (SPEC §15).
+    #[test]
+    fn git_action_stashes_picked_files_only() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on(
+            "main",
+            &[("a.txt", Some(b"a\n")), ("b*.txt", Some(b"b\n"))],
+            "base",
+            1,
+        );
+        t.checkout_main();
+        t.write_file(t.path(), "a.txt", b"A\n");
+        t.write_file(t.path(), "b*.txt", b"B\n");
+        t.write_file(t.path(), "new.txt", b"new\n");
+        t.write_file(t.path(), "keep.txt", b"keep\n");
+        let folder = t.path().to_string_lossy().into_owned();
+        let step = super::super::git::PushStep {
+            untracked: true,
+            paths: 2,
+        };
+        let (out, ended) = pty(
+            &super::super::git::push_command(&[step], false),
+            &[
+                ("GITGEL_FOLDER_1", &folder),
+                ("GITGEL_PATH_1_1", "b*.txt"),
+                ("GITGEL_PATH_1_2", "new.txt"),
+                ("GIT_LITERAL_PATHSPECS", "1"),
+            ],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        let read = |p: &str| std::fs::read(t.path().join(p)).ok();
+        assert_eq!(read("b*.txt").as_deref(), Some(&b"b\n"[..]));
+        assert_eq!(read("new.txt"), None);
+        assert_eq!(read("a.txt").as_deref(), Some(&b"A\n"[..]));
+        assert_eq!(read("keep.txt").as_deref(), Some(&b"keep\n"[..]));
+        assert_eq!(crate::git::stash::list(&t.repo).unwrap().len(), 1);
     }
 
     #[test]

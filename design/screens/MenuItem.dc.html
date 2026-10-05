@@ -31,6 +31,7 @@ body{margin:0}
 <sc-if value="{{hasAside}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; font-size: 12px; color: var(--text-muted)">{{aside}}</span></sc-if>
 <sc-if value="{{hasKbd}}" hint-placeholder-val="{{false}}"><span style="{{kbdStyle}}">{{kbd}}</span></sc-if>
 <sc-if value="{{arrow}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; color: var(--text-muted)">→</span></sc-if>
+<sc-if value="{{submenu}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; display: flex; color: var(--text-muted)"><dc-import name="Icon" icon="chevron-right" size="12" hint-size="12px,12px"></dc-import></span></sc-if>
 </button>
 </sc-if>
 <sc-if value="{{isLink}}" hint-placeholder-val="{{false}}">
@@ -48,18 +49,20 @@ body{margin:0}
 <sc-if value="{{hasAside}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; font-size: 12px; color: var(--text-muted)">{{aside}}</span></sc-if>
 <sc-if value="{{hasKbd}}" hint-placeholder-val="{{false}}"><span style="{{kbdStyle}}">{{kbd}}</span></sc-if>
 <sc-if value="{{arrow}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; color: var(--text-muted)">→</span></sc-if>
+<sc-if value="{{submenu}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; display: flex; color: var(--text-muted)"><dc-import name="Icon" icon="chevron-right" size="12" hint-size="12px,12px"></dc-import></span></sc-if>
 </a>
 </sc-if>
 </span>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"label": {"editor": "text", "default": "Copy branch name"}, "lead": {"editor": "enum", "options": ["none", "icon", "app", "check", "box", "dot"], "default": "icon"}, "icon": {"editor": "enum", "options": ["sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"], "default": "copy"}, "app": {"editor": "enum", "options": ["finder", "cursor", "vscode", "terminal"], "default": "finder"}, "checked": {"editor": "boolean", "default": true}, "sub": {"editor": "text", "default": ""}, "desc": {"editor": "text", "default": ""}, "aside": {"editor": "text", "default": ""}, "kbd": {"editor": "text", "default": ""}, "arrow": {"editor": "boolean", "default": false}, "tone": {"editor": "enum", "options": ["default", "danger", "accent"], "default": "default"}, "active": {"editor": "boolean", "default": false}, "disabled": {"editor": "boolean", "default": false}, "theme": {"editor": "enum", "options": ["dark", "light", "none"], "default": "dark"}, "href": {"editor": null}, "role": {"editor": null}, "title": {"editor": null}, "onSelect": {"editor": null}, "$preview": {"width": 248, "height": 34}}'>
+<script type="text/x-dc" data-dc-script data-props='{"label": {"editor": "text", "default": "Copy branch name"}, "lead": {"editor": "enum", "options": ["none", "icon", "app", "check", "box", "dot"], "default": "icon"}, "icon": {"editor": "enum", "options": ["sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "history", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "update", "spinner"], "default": "copy"}, "app": {"editor": "enum", "options": ["finder", "cursor", "vscode", "terminal"], "default": "finder"}, "checked": {"editor": "boolean", "default": true}, "sub": {"editor": "text", "default": ""}, "desc": {"editor": "text", "default": ""}, "aside": {"editor": "text", "default": ""}, "kbd": {"editor": "text", "default": ""}, "arrow": {"editor": "boolean", "default": false}, "submenu": {"editor": "boolean", "default": false}, "tone": {"editor": "enum", "options": ["default", "danger", "accent"], "default": "default"}, "active": {"editor": "boolean", "default": false}, "disabled": {"editor": "boolean", "default": false}, "theme": {"editor": "enum", "options": ["dark", "light", "none"], "default": "dark"}, "href": {"editor": null}, "role": {"editor": null}, "title": {"editor": null}, "onSelect": {"editor": null}, "$preview": {"width": 248, "height": 34}}'>
 class Component extends DCLogic {
   renderVals() {
     // One row of a Menu (src/components/Menu.tsx MenuItem): 8px 10px, radius 8, 13px, on the
     // menu's bg.elevated; active (hovered) on bg.hover. lead: a 14px line icon (any name of the Icon set), a 16px app icon
     // placeholder, a radio check slot (checked shows it), a checkbox, or a 7px dot (checked = the
     // current one). sub: a mono 11px second line; desc: a 12px muted one. aside: muted text on the
-    // right (the code's hint); kbd: a mono shortcut; arrow: →. tone danger or accent; disabled
+    // right (the code's hint); kbd: a mono shortcut; arrow: → (goes somewhere); submenu: a 12px
+    // chevron-right (opens a submenu beside it, on hover or click). tone danger or accent; disabled
     // greys it and dims its icon. href makes it a link to an artboard.
     var p = this.props;
     var APP = { finder: '#b8b4ac, #6e6a62', cursor: '#3b3934, #1d1c19', vscode: '#8f8b83, #4a4843', terminal: '#5c5a55, #2b2925' };
@@ -94,7 +97,7 @@ class Component extends DCLogic {
       hasAside: !!p.aside, aside: p.aside || '',
       hasKbd: !!p.kbd, kbd: p.kbd || '',
       kbdStyle: 'flex-shrink: 0; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--text-faint)' + (two ? '; padding-top: 2px' : ''),
-      arrow: !!p.arrow
+      arrow: !!p.arrow, submenu: !!p.submenu
     };
   }
 }

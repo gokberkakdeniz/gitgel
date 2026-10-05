@@ -1,7 +1,7 @@
 // Writing stashes (SPEC §15): each is a git action, run and shown like a script.
 import { create } from 'zustand';
 import { stashApply, stashDrop, stashPush } from '../lib/ipc';
-import type { EntrySummary } from '../lib/types';
+import type { EntrySummary, StashPush } from '../lib/types';
 import type { ReviewStash } from '../screens/Review/stashes';
 import { startGitAction } from '../scripts/runs';
 
@@ -27,11 +27,6 @@ export function applyStash(st: ReviewStash, target: EntrySummary, pop: boolean):
 }
 
 /** One stash per entry, one after another (P4). */
-export function pushStashes(entries: EntrySummary[], message: string, untracked: boolean): Promise<void> {
-  const refs = entries.map((e) => ({
-    repoId: e.repoId,
-    branch: e.branch,
-    worktreePath: e.branch === null ? e.worktreePath : null,
-  }));
-  return startGitAction('Stash changes', () => stashPush(refs, message, untracked));
+export function pushStashes(entries: StashPush[], message: string): Promise<void> {
+  return startGitAction('Stash changes', () => stashPush(entries, message));
 }

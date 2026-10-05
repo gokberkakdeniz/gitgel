@@ -18,7 +18,7 @@ body{margin:0}
 <div role="menu" aria-label="{{label}}" class="{{themeClass}}" style="{{boxStyle}}">
 <sc-for list="{{rows}}" as="m" hint-placeholder-count="6">
 <sc-if value="{{m.isItem}}" hint-placeholder-val="{{true}}">
-<dc-import name="MenuItem" theme="none" label="{{m.label}}" lead="{{m.lead}}" icon="{{m.icon}}" app="{{m.app}}" checked="{{m.on}}" sub="{{m.sub}}" desc="{{m.desc}}" aside="{{m.aside}}" kbd="{{m.kbd}}" arrow="{{m.arrow}}" tone="{{m.tone}}" active="{{m.active}}" disabled="{{m.disabled}}" href="{{m.href}}" role="{{m.role}}" title="{{m.title}}" on-select="{{m.onSelect}}" hint-size="100%,33px"></dc-import>
+<dc-import name="MenuItem" theme="none" label="{{m.label}}" lead="{{m.lead}}" icon="{{m.icon}}" app="{{m.app}}" checked="{{m.on}}" sub="{{m.sub}}" desc="{{m.desc}}" aside="{{m.aside}}" kbd="{{m.kbd}}" arrow="{{m.arrow}}" submenu="{{m.submenu}}" tone="{{m.tone}}" active="{{m.active}}" disabled="{{m.disabled}}" href="{{m.href}}" role="{{m.role}}" title="{{m.title}}" on-select="{{m.onSelect}}" hint-size="100%,33px"></dc-import>
 </sc-if>
 <sc-if value="{{m.isSep}}" hint-placeholder-val="{{false}}">
 <div role="separator" style="height: 1px; margin: 4px; background: var(--border)"></div>
@@ -46,7 +46,7 @@ class Component extends DCLogic {
   renderVals() {
     // The app's Menu (src/components/Menu.tsx): bg.elevated, radius 12, padding 6, popover shadow;
     // the importer positions it. items, top to bottom:
-    //   { label, icon? | app? | check? | box? | dot?, sub?, desc?, hint?, kbd?, arrow?, active?,
+    //   { label, icon? | app? | check? | box? | dot?, sub?, desc?, hint?, kbd?, arrow?, submenu?, active?,
     //     disabled?, danger?, accent?, href?, onSelect?, role? }   an item (active = hovered)
     //   { kind: 'sep' } · { kind: 'label', label } (section heading) · { kind: 'note', label }
     //   (the warning closing the menu, after a sep) · { kind: 'caption', label } · { kind: 'segmented', label,
@@ -84,7 +84,7 @@ class Component extends DCLogic {
       return {
         isItem: true, label: it.label, lead: lead, icon: it.icon || 'copy', app: it.app || 'finder',
         on: hasCheck ? it.check : hasBox ? it.box : it.dot === 'on',
-        sub: it.sub || '', desc: it.desc || '', aside: it.hint || '', kbd: it.kbd || '', arrow: !!it.arrow,
+        sub: it.sub || '', desc: it.desc || '', aside: it.hint || '', kbd: it.kbd || '', arrow: !!it.arrow, submenu: !!it.submenu,
         tone: it.danger ? 'danger' : it.accent ? 'accent' : 'default',
         active: !!it.active, disabled: !!it.disabled, href: it.href, role: it.role, title: it.title, onSelect: it.onSelect
       };

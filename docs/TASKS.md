@@ -415,6 +415,10 @@ rather than as a task is listed the same way, marked "(on request)".
   the stash's branch is checked out in (the picker only when it is not); History has Stash… and
   the branch's stashes in a section pinned under its commits; fixtures: master with changes and a
   "worker draft" stash (clean apply on master, conflict elsewhere) — 2026-10-04
+- [x] (on request) Stash menu: Apply to… / Pop to… have a chevron and no second line and open
+  the worktree picker beside them on hover; popovers follow their anchor on scroll and resize;
+  Stash changes picks files per entry (`git stash push -- <paths>`, literal pathspecs; the
+  untracked option became picking the files) — 2026-10-05
 
 ---
 

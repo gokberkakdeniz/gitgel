@@ -1423,7 +1423,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `stop_script` | `runId` | `null` |
 | `get_script_run` | `runId` | `ScriptRun` with its buffered output and `bufferedEnd` |
 | `resize_script` | `runId, cols, rows` | `null` (the run's pty) |
-| `stash_push` | `entries: EntryRef[], message: string, untracked: boolean` | `ScriptRun` (one git action for all entries, §15) |
+| `stash_push` | `entries: StashPush[]` (an `EntryRef` with `paths: string[] \| null`, `untracked`), `message: string` | `ScriptRun` (one git action for all entries, §15) |
 | `stash_apply` | `repoId, index, sha, worktreePath, pop: boolean` | `ScriptRun` |
 | `stash_drop` | `repoId, index, sha` | `ScriptRun` |
 
@@ -1684,7 +1684,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, "Fetched", Stash… 39, refresh; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
-| Stashes | `FlowP1`–`FlowP6.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog, P5 worktree picker (Apply to…), P6 Drop confirmation |
+| Stashes | `FlowP1`–`FlowP6.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog (entries with their files to pick), P5 worktree submenu beside Apply to…, P6 Drop confirmation |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -2073,21 +2073,28 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   else "The stash list changed. Pick the stash again." (and the repo is rescanned); one git
   action at a time per repository, else "Another git action is running in <repo>." A refused
   action shows a failed toast `“<name>” could not start` with that text.
-- **Stash changes** (P4, the Review header's Stash…): a 400px popover under the button, padding
-  16, gap 12: serif 18px "Stash changes"; "In" (12px/500) and one row per entry of the review
-  that is checked out, in review order (26px: `Checkbox`, repo 12px/600 `text.strong`, mono 11
-  branch, muted `N files` = its uncommitted files; "no changes" and disabled when it has none);
-  entries that are not checked out are not listed. Every entry with changes starts checked.
-  "Message" `Input` 32px, focused (empty: git writes its own "WIP on <branch>: …"). "Include
-  untracked files (N)" `Checkbox`, on, N = untracked (`U`) files of the checked entries; hidden
-  when N is 0. A 12px muted note: "One stash per entry, same message." plus, for each repo with
-  2+ checked entries, "Both are in <repo>, so its stack gets 2 new stashes." (3+: "N are in
-  <repo>, so its stack gets N new stashes."). Footer: Cancel and primary "Stash N entries ↵"
-  ("Stash 1 entry ↵"), disabled with nothing checked. ↵ stashes, Esc cancels.
-  One git action "Stash changes" for all checked entries, one after another, stopping at the
-  first failure: `git -C "$GITGEL_FOLDER_1" stash push [--include-untracked] [--message
-  "$GITGEL_MESSAGE"] && git -C "$GITGEL_FOLDER_2" …`, run in the first folder; toast sub line
-  `repo / branch` for one entry, else `N entries`.
+- **Stash changes** (P4, the Stash… button of Review and History): a 420px popover under the
+  button, padding 16, gap 12: serif 18px "Stash changes"; "In" (12px/500) and one group per entry
+  of the review that is checked out, in review order. The entry row (26px): a `Checkbox` (on when
+  every file is picked, mixed with a dash when some are, off with none; a click picks all or
+  none), repo 12px/600 `text.strong`, mono 11 branch, then on the right a 22px button `N files ›`
+  (`k of N files` when only some are picked; chevron down while open; tooltip "Pick files" /
+  "Hide files") that shows the entry's uncommitted files under it; "no changes" and disabled when
+  it has none. File rows (26px, indent 24): `Checkbox`, kind badge, mono 12 `text.strong` name,
+  mono 11 `text.faint` folder as in Review (`· untracked`, `← old path`). Every file starts
+  picked; the files of a review with one entry start shown. Entries that are not checked out are
+  not listed. "Message" `Input` 32px, focused (empty: git writes its own "WIP on <branch>: …"). A
+  12px muted note: "One stash per entry, same message." plus, for each repo with 2+ entries with
+  files picked, "Both are in <repo>, so its stack gets 2 new stashes." (3+: "N are in <repo>, so
+  its stack gets N new stashes."). Footer: Cancel and primary "Stash N entries ↵" ("Stash 1 entry
+  ↵"; N = entries with a file picked), disabled with none. ↵ stashes, Esc cancels.
+  One git action "Stash changes" for those entries, one after another, stopping at the first
+  failure: `git -C "$GITGEL_FOLDER_1" stash push [--include-untracked] [--message
+  "$GITGEL_MESSAGE"] [-- "$GITGEL_PATH_1_1" …] && git -C "$GITGEL_FOLDER_2" …`, run in the first
+  folder, with `GIT_LITERAL_PATHSPECS=1` (a picked name is never a glob). An entry with every file
+  picked has no paths; otherwise the picked paths (a rename's old path too).
+  `--include-untracked` when an untracked file is picked. Toast sub line `repo / branch` for one
+  entry, else `N entries`.
 - **Worktree picker** (P5; Apply to… / Pop to… in the Branches stash menu, Apply / Pop in the
   stash pane when its branch is not checked out): a 280px menu, label "Apply stash@{n} to" (or "Pop stash@{n} to"), then one item
   per checked-out entry of the repository (scan order, the branch the stash was taken on first):

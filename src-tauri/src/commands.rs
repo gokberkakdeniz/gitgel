@@ -465,16 +465,16 @@ pub async fn resize_script(
     .await
 }
 
-/// Git actions (SPEC §15 "Writing stashes"): `git stash push` in each entry's worktree.
+/// Git actions (SPEC §15 "Writing stashes"): `git stash push` in each entry's worktree (all its
+/// changes, or the files picked).
 #[tauri::command]
 pub async fn stash_push(
     state: State<'_, AppState>,
-    entries: Vec<EntryRef>,
+    entries: Vec<scripts::git::StashPush>,
     message: String,
-    untracked: bool,
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
-        scripts::git::stash_push(state, entries, message, untracked)
+        scripts::git::stash_push(state, entries, message)
     })
     .await
 }

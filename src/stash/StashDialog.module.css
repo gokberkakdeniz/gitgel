@@ -26,16 +26,31 @@
   color: var(--text-body);
 }
 
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
 .entry {
   height: 26px;
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--text-body);
+}
+
+/* The box, repo and branch toggle the whole entry. */
+.entryPick {
+  min-width: 0;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
 }
 
-.off {
+.off,
+.off .entryPick {
   color: var(--text-disabled);
   cursor: default;
 }
@@ -66,6 +81,60 @@
   color: var(--text-muted);
 }
 
+/* "3 files ›" / "2 of 3 files ⌄": shows or hides the entry's files. */
+.countButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 6px;
+  margin-right: -6px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.countButton:hover,
+.countButton[aria-expanded='true'] {
+  background: var(--bg-hover);
+  color: var(--text-body);
+}
+
+.file {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 24px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.fileName {
+  flex-shrink: 0;
+  max-width: 60%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-strong);
+}
+
+.fileDir {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -74,10 +143,6 @@
 
 .field .label {
   padding-bottom: 0;
-}
-
-.muted {
-  color: var(--text-muted);
 }
 
 .note {

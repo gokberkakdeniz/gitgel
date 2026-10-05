@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EntrySummary, FileChange, ReviewGroup } from '../lib/types';
 import type { ReviewStash } from '../screens/Review/stashes';
-import { stashNote, stashRows } from './StashDialog';
+import { stashNote, stashPayload, stashRows } from './StashDialog';
 import { stashTargets } from './StashTargetMenu';
 
 const entry = (repoName: string, branch: string | null, worktreePath: string | null): EntrySummary => ({
@@ -52,9 +52,9 @@ describe('stashRows', () => {
       group(entry('web-app', 'b', null), []),
       group(entry('api', 'c', '/wt/c'), []),
     ]);
-    expect(rows.map((r) => [r.entry.branch, r.files, r.untracked])).toEqual([
-      ['a', 2, 1],
-      ['c', 0, 0],
+    expect(rows.map((r) => [r.entry.branch, r.files.map((f) => f.path)])).toEqual([
+      ['a', ['x.ts', 'new.ts']],
+      ['c', []],
     ]);
   });
 });
@@ -76,5 +76,28 @@ describe('stashTargets', () => {
     const stash = { branch: 'b' } as ReviewStash;
     const active = [entry('web-app', 'main', '/main'), entry('web-app', 'x', null), entry('web-app', 'b', '/b')];
     expect(stashTargets(stash, active).map((e) => e.branch)).toEqual(['b', 'main']);
+  });
+});
+
+describe('stashPayload', () => {
+  const a = entry('web-app', 'a', '/wt/a');
+  const b = entry('api', 'b', '/wt/b');
+  const renamed: FileChange = { ...file('new-name.ts', 'R'), oldPath: 'old-name.ts' };
+  const rows = stashRows([
+    group(a, [file('x.ts', 'M'), file('new.ts', 'U'), renamed]),
+    group(b, [file('y.ts', 'M')]),
+  ]);
+
+  it('sends no paths for an entry with every file picked, and leaves out entries with none', () => {
+    expect(stashPayload(rows, { [a.key]: ['x.ts', 'new.ts', 'new-name.ts'], [b.key]: [] })).toEqual([
+      { repoId: 'web-app', branch: 'a', worktreePath: null, paths: null, untracked: true },
+    ]);
+  });
+
+  it('sends the picked paths, a rename with its old path, untracked only when one is picked', () => {
+    expect(stashPayload(rows, { [a.key]: ['x.ts', 'new-name.ts'], [b.key]: ['y.ts'] })).toEqual([
+      { repoId: 'web-app', branch: 'a', worktreePath: null, paths: ['x.ts', 'old-name.ts', 'new-name.ts'], untracked: false },
+      { repoId: 'api', branch: 'b', worktreePath: null, paths: null, untracked: false },
+    ]);
   });
 });
