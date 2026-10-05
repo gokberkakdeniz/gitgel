@@ -54,10 +54,10 @@ export function EntryMenuNote({ entry }: { entry: EntrySummary }) {
   const apps = useData((s) => s.openApps);
   const missingTerminal = apps.find((a) => a.id === 'terminal' && !a.found);
   const note = (() => {
-    if (entry.state === 'repo_missing') return 'Repository not found, so there is nothing to open.';
-    if (entry.state === 'branch_deleted') return 'The branch was deleted, so there is nothing to open.';
-    if (!openableFolder(entry)) return 'Not checked out in a worktree, so some items may be unavailable.';
-    if (missingTerminal) return `${missingTerminal.name} is not installed; pick another terminal in Settings.`;
+    if (entry.state === 'repo_missing') return 'Repository not found';
+    if (entry.state === 'branch_deleted') return 'Branch deleted';
+    if (!openableFolder(entry)) return 'Not checked out';
+    if (missingTerminal) return `${missingTerminal.name} not installed`;
     return null;
   })();
   if (!note) return null;

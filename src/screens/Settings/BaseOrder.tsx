@@ -39,7 +39,7 @@ export function BaseOrder({ config }: { config: Config }) {
         <span id="base-title" className={styles.settingName}>
           Default base
         </span>
-        <span className={styles.settingHint}>Tried in order when a branch has no base set</span>
+        <span className={styles.settingHint}>Used when a branch has no base</span>
       </span>
       <div className={styles.baseColumn}>
         <List
@@ -94,9 +94,7 @@ export function BaseOrder({ config }: { config: Config }) {
                 }
           }
         />
-        {draft !== null && (
-          <span className={error ? styles.baseError : styles.settingHint}>{error ?? '↵ add · esc cancel'}</span>
-        )}
+        {error && <span className={styles.baseError}>{error}</span>}
       </div>
     </div>
   );

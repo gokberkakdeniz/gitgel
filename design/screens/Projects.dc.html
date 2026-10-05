@@ -55,13 +55,6 @@ button{font-family:inherit}
 <dc-import name="Button" variant="ghost" size="28" icon="more" label="" aria-label="Entry options" active="{{r.hot}}" hint-size="28px,28px"></dc-import>
 </div>
 </sc-for>
-<sc-if value="{{showHint}}" hint-placeholder-val="{{false}}">
-<a href="Palette.dc.html" style="display: flex; align-items: center; gap: 12px; margin: 20px 28px; padding: 18px 20px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px; color: #d8d4cc">
-<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 20px; color: #7fb3c4">+</span>
-<span style="flex-grow: 1; font-size: 14px">Add related branches from other repositories</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a09d96; background: #2a2825; border-radius: 5px; padding: 1px 6px">⌘K</span>
-</a>
-</sc-if>
 </div>
 </sc-if>
 
@@ -96,7 +89,7 @@ button{font-family:inherit}
 <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: flex-start; padding-top: 180px">
 <div role="alertdialog" aria-label="Delete project" style="width: 440px; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 10px; padding: 22px 24px 18px">
 <div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: #faf9f5">Delete “Session auth refresh”?</div>
-<p style="margin: 0; font-size: 14px; line-height: 1.55; color: #d8d4cc">The project and its 6 entries are removed from this app. Branches, worktrees and repositories are not touched.</p>
+<p style="margin: 0; font-size: 14px; line-height: 1.55; color: #d8d4cc">Removes the project and its 6 entries. Nothing on disk is touched.</p>
 <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px">
 <dc-import name="Button" size="36" label="Cancel" hint-size="84px,36px"></dc-import>
 <dc-import name="Button" variant="danger" size="36" label="Delete project" hint-size="124px,36px"></dc-import>
@@ -173,7 +166,6 @@ class Component extends DCLogic {
       projectMenuItems: [{ label: 'Rename', hint: 'click the title', active: true }, sep, { label: 'Delete project…', danger: true }],
       hasRows: data.length > 0,
       isEmpty: data.length === 0,
-      showHint: variant === 'one',
       showMenu: menu,
       showOpenMenu: openMenu,
       // Real app icons (from macOS), drawn grayscale; the placeholders stand in for them.
@@ -181,11 +173,11 @@ class Component extends DCLogic {
       openMenuItems: [point, copy, sep].concat(apps(openCase === 'repoMissing'),
         [sep, remove],
         // One note closes the menu, after a divider.
-        openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [sep, { kind: 'note', label: openCase === 'repoMissing' ? 'Repository not found, so there is nothing to open.' : 'Not checked out in a worktree, so some items may be unavailable.' }] : []),
+        openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [sep, { kind: 'note', label: openCase === 'repoMissing' ? 'Repository not found' : 'Not checked out' }] : []),
       deletedMenuItems: [{ label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true }, point, copy, sep].concat(apps(true),
-        [sep, remove, sep, { kind: 'note', label: 'The branch was deleted, so there is nothing to open.' }]),
+        [sep, remove, sep, { kind: 'note', label: 'Branch deleted' }]),
       inboxCount: variant === 'full' ? '7' : '6',
-      subtitle: fromSel ? '3 entries across 2 repos · name your project · ↵ save' : fresh ? 'Name your project · ↵ save · esc discards it' : conflict ? 'A project named “Rate limiting rollout” already exists' : rename === 'edit' ? '↵ save · esc cancel' : subtitle,
+      subtitle: fromSel ? '3 entries across 2 repos · name your project' : fresh ? 'Name your project' : conflict ? 'A project named “Rate limiting rollout” already exists' : subtitle,
       sidebarProjects: fresh ? [{ name: 'Rate limiting rollout', count: '2' }, { name: 'Untitled project', count: '0' }] : [{ name: 'Session auth refresh', count: count }, { name: 'Rate limiting rollout', count: '2' }],
       rows: data.map(function (r) {
         var d = r.dirty > 0;

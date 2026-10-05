@@ -6,7 +6,6 @@ import { Checkbox } from '../../components/Checkbox';
 import { IconButton } from '../../components/IconButton';
 import { List, type ListSubPart } from '../../components/List';
 import {
-  BranchIcon,
   BranchLargeIcon,
   ChevronDownIcon,
   CloseIcon,
@@ -201,12 +200,18 @@ function BranchList() {
     return () => window.removeEventListener('keydown', onKey);
   }, [popover]);
 
-  const shownRepos = groups.filter((g) => g.rows.length > 0).length;
-  const subtitle = `${scope === 'all' ? 'Active branches' : 'Active branches not in any project'} · ${plural(
-    shownRepos,
-    'repo',
-    'repos',
-  )} · checked out in a worktree, or committed in the last ${days} days`;
+  // What is listed: repos with rows, their branches (base rows left out, as in the scope counts)
+  // and stashes; stashes only when there are any.
+  const shown = groups.filter((g) => g.rows.length > 0);
+  const shownBranches = shown.reduce((n, g) => n + g.rows.filter((r) => !isBaseRow(g.scan, r)).length, 0);
+  const shownStashes = shown.reduce((n, g) => n + g.stashes.length, 0);
+  const subtitle = [
+    plural(shown.length, 'repo', 'repos'),
+    plural(shownBranches, 'branch', 'branches'),
+    shownStashes > 0 && plural(shownStashes, 'stash', 'stashes'),
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   let body;
   // Repos appear as they finish scanning; the rest are counted below the list.
@@ -430,7 +435,9 @@ function RepoSection({
             git error
           </Pill>
         ) : (
-          <span className={styles.count}>{plural(rows.length, 'branch', 'branches')}</span>
+          <span className={styles.count} title={plural(rows.length, 'branch', 'branches')}>
+            {rows.length}
+          </span>
         )}
         <IconButton
           size={24}
@@ -644,9 +651,7 @@ function Row({
       }}
     >
       {isBase ? (
-        <span className={styles.baseMark} title="Always listed">
-          <BranchIcon size={12} />
-        </span>
+        <span />
       ) : (
         <Checkbox aria-label={`Select ${name}`} className={styles.check} checked={selected} onChange={toggle} />
       )}

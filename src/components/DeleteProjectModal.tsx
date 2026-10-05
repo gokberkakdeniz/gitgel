@@ -34,8 +34,8 @@ export function DeleteProjectModal() {
       <div className={styles.body}>
         <div className={styles.title}>Delete “{project.name}”?</div>
         <p className={styles.text}>
-          The project and its {n === 1 ? '1 entry' : `${n} entries`} are removed from this app.
-          Branches, worktrees and repositories are not touched.
+          Removes the project and its {n === 1 ? '1 entry' : `${n} entries`}. Nothing on disk is
+          touched.
         </p>
         <div className={styles.actions}>
           <Button size={36} onClick={close}>

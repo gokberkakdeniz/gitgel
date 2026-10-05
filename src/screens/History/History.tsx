@@ -265,7 +265,7 @@ export function History({ repoId, rev, backLabel }: Props) {
         {data?.fetchedAt != null && (
           <span
             className={styles.fetched}
-            title="Last fetch (FETCH_HEAD). Gitgel never fetches; commits pushed since then are not shown."
+            title="Gitgel never fetches"
           >
             Fetched {formatAge(data.fetchedAt)} ago
           </span>

@@ -46,7 +46,7 @@
 <section style="display: flex; flex-direction: column; gap: 12px">
 <h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Choices</h2>
 <div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap">
-<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="300" label="Diff view" items="{{view}}" hint-size="300px,400px"></dc-import><span style="font-size: 12px; color: #75726b">Review › View: radio, segmented row, checkbox, caption</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="300" label="Diff view" items="{{view}}" hint-size="300px,400px"></dc-import><span style="font-size: 12px; color: #75726b">Review › View: radio, segmented row, checkbox</span></div>
 <div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="230" label="Project options" items="{{project}}" hint-size="230px,100px"></dc-import><span style="font-size: 12px; color: #75726b">hint, danger</span></div>
 <div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; background: #fbfaf7; border-radius: 12px"><dc-import name="Menu" theme="light" width="230" label="Project options" items="{{project}}" hint-size="230px,100px"></dc-import><span style="font-size: 12px; color: #75726b">light</span></div>
 </div>
@@ -62,13 +62,13 @@ class Component extends DCLogic {
         { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
         { kind: 'sep' }, { kind: 'label', label: 'Scripts' },
         { label: 'Open pull request', icon: 'pull-request', active: true }, { label: 'Copy Linear link', icon: 'link' },
-        { kind: 'sep' }, { kind: 'note', label: 'Not checked out in a worktree, so some items may be unavailable.' }
+        { kind: 'sep' }, { kind: 'note', label: 'Not checked out' }
       ],
       entry: [
         { label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true },
         { label: 'Point to another branch…', icon: 'branch' }, { label: 'Copy branch name', icon: 'copy' }, { kind: 'sep' },
         { kind: 'sep' }, { label: 'Remove from project', icon: 'remove', danger: true },
-        { kind: 'sep' }, { kind: 'note', label: 'The branch was deleted, so there is nothing to open.' }
+        { kind: 'sep' }, { kind: 'note', label: 'Branch deleted' }
       ],
       projects: [
         { kind: 'label', label: 'In 2 projects' },
@@ -84,8 +84,7 @@ class Component extends DCLogic {
         { kind: 'segmented', label: 'Lines around changes', options: [{ label: '3', on: true }, { label: '5' }, { label: '10' }] },
         { label: 'Whole file', check: false, kbd: '⌥C' },
         { kind: 'sep' },
-        { label: 'Ignore whitespace', box: true, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W' },
-        { kind: 'caption', label: 'Applies to every diff and is remembered.' }
+        { label: 'Ignore whitespace', box: true, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W' }
       ],
       project: [{ label: 'Rename', hint: 'click the title', active: true }, { kind: 'sep' }, { label: 'Delete project…', danger: true }]
     };

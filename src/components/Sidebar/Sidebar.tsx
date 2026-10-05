@@ -274,7 +274,7 @@ function UpdateRow() {
       ? 'Update failed · Retry'
       : `Update to ${update.version}`;
   const title =
-    error ?? `Downloads Gitgel ${update.version} and restarts the app (you have ${update.currentVersion})`;
+    error ?? `You have ${update.currentVersion}`;
   return (
     <button
       type="button"

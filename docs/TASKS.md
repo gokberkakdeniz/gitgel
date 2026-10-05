@@ -434,6 +434,11 @@ rather than as a task is listed the same way, marked "(on request)".
   top (pin button on the band, `pinnedRepos` in the config, `set_repo_pinned`); `pin` icon;
   canvas Main, Icons — 2026-10-05
   - note: pin chosen over a sort option, so the newest-activity order stays the default.
+- [x] (on request) Leaner UI text: Branches subtitle `N repos · M branches · K stashes`, band
+  count as a bare number, no base-row icon; no keyboard hints in subtitles or under fields; the
+  Project one-entry card removed; shorter Review subtitles, base banner, nav tooltips, History
+  fetch tooltip, delete confirmation, Settings hint and update tooltip; entry menu notes cut to
+  a few words ("Not checked out", "Branch deleted", …) — 2026-10-05
 
 ---
 

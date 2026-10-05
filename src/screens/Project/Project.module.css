@@ -230,38 +230,6 @@
   background: var(--bg-pressed);
 }
 
-/* One entry: invite to add related branches */
-
-.relatedCard {
-  width: calc(100% - 56px);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 28px;
-  padding: 18px 20px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pop);
-  color: var(--text-body);
-  text-align: left;
-  cursor: pointer;
-}
-
-.relatedCard:hover {
-  background: var(--bg-hover);
-}
-
-.relatedPlus {
-  font-family: var(--font-serif);
-  font-size: 20px;
-  color: var(--accent-text);
-}
-
-.relatedText {
-  flex-grow: 1;
-  font-size: 14px;
-}
-
 /* Point to another branch… */
 .picker {
   display: flex;

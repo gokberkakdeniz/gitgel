@@ -54,7 +54,7 @@ export function ProjectNameInput({
       spellCheck={false}
       autoComplete="off"
       aria-invalid={!!conflict}
-      title={conflict ? `A project named “${conflict}” already exists` : '↵ save · esc cancel'}
+      title={conflict ? `A project named “${conflict}” already exists` : undefined}
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onBlur={() => !saving && onDone()}

@@ -477,8 +477,8 @@ inputs, textareas and the diff.
   project (flow C) shows as an active row at the end.
 - **Update row** (only while a newer version is known, above the footer): 36px button, margin
   8px 10px 10px, radius 10, `rgba(accent, 0.12)` with a 1px `rgba(accent, 0.3)` border,
-  `accent.text` 13px: 16px arrow-up-in-circle icon + "Update to <version>" (title "Downloads
-  Gitgel <version> and restarts the app (you have <current>)"). A click downloads, checks and
+  `accent.text` 13px: 16px arrow-up-in-circle icon + "Update to <version>" (title "You have
+  <current>"). A click downloads, checks and
   installs it, then the app restarts; meanwhile "Updating… N%" (disabled). A failure turns it
   danger: "Update failed · Retry", the error as its title.
 - **Footer** (56px, top border `#2a2825`): a 36px link row (folder icon + "N repositories",
@@ -491,16 +491,15 @@ inputs, textareas and the diff.
 
 Every active branch, whether or not it is in a project, and each repo's base branch.
 
-- **Header** (64px, drag region): title "Branches"; subtitle
-  `Active branches · N repos · checked out in a worktree, or committed in the last D days`
-  ("1 repo"); refresh button; **All / Not in a project** segmented control with counts; filter
+- **Header** (64px, drag region): title "Branches"; subtitle `N repos · M branches · K stashes`
+  ("1 repo", "1 branch", "1 stash"): what is listed now (scope and filter applied; base rows
+  not counted; the stash part only above 0); refresh button; **All / Not in a project** segmented control with counts; filter
   field.
   - "All" (default) lists every active branch. "Not in a project" hides rows that are in any
-    project and repo bands left empty; the subtitle becomes `Active branches not in any project ·
-    N repos · …` (N = visible repos). Counts ignore the text filter. The choice is remembered in
+    project and repo bands left empty. Counts ignore the text filter. The choice is remembered in
     `localStorage` (`gitgel.branches.scope`). If nothing is left: centred serif 22px "Every active
     branch is in a project". The sidebar count always shows all active branches. Base branch rows
-    are left out of every count except the band's "N branches", and "Not in a project" still
+    are left out of every count except the band's, and "Not in a project" still
     lists them.
   - Filter field: 200 × 32px, `bg.sunken`, search icon, placeholder "Search",
     `Kbd` "⌘K" (⌘K focuses it). It is a real filter, word-based: `-`, `/`, `_`, `.` count as
@@ -514,16 +513,16 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 - **Repo band** per repo: `bg.band`, top border `border.strong`, bottom border `border`, padding
   10px 16px 10px 6px; a 12px muted collapse chevron (in the left padding, so the folder icon
   stays over the checkbox column), folder icon in accent, 15px/600 repo name, mono 11px muted
-  path, "N branches" on the right, ending where the Projects column does (32px in); 14px between
+  path, its row count on the right (12px muted, tooltip "N branches"), ending where the Projects column does (32px in); 14px between
   bands. Repos with no rows are hidden, except when focused from a repo link
   (then "0 branches"). A missing repo shows a danger pill "path not found" (→ Settings); a repo
   git2 cannot open shows a danger "git error" pill.
   - Chevron, icon, name and path are one button that collapses the band: its rows and stashes
-    hide, the band and its "N branches" stay. ⌥-click collapses every band when the clicked
+    hide, the band and its count stay. ⌥-click collapses every band when the clicked
     one is open, and opens them all otherwise. Collapsed bands are remembered per repo in
     `localStorage` (`gitgel.branches.collapsedRepos`); they open while filtering, and a band
     focused from a repo link opens.
-  - **Pin**: a 24px icon button with a 13px `pin` icon in the ⋮ column, after "N branches"
+  - **Pin**: a 24px icon button with a 13px `pin` icon in the ⋮ column, after the count
     (tooltip "Pin to top" / "Unpin"). It shows while the band is hovered or the button has
     focus, and always on a pinned band, where it is `accent.text`. Pins are kept in the config
     (`pinnedRepos`); removing a repo drops its pin.
@@ -576,8 +575,8 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 - **Base branch row** (`HistH1.dc.html`): the repo's base branch (§1) is always
   the first row of its band, whatever its age or work, so every repo that can be read has a band.
   It differs from other rows:
-  - Same background as other rows (the icon, pill and History button set it apart); no checkbox: a 12px `text.faint` branch icon in
-    its place, tooltip "Always listed". It cannot be selected.
+  - Same background as other rows (the pill and History button set it apart); no checkbox (the
+    column is left empty). It cannot be selected.
   - After the name, a compact `outline` pill "base". The name opens History (§16) on it, tooltip
     `Show history of <name>`.
   - Line 2 as other rows, against its upstream: `base origin/main · ↑0 ↓3 / 0 / 2 · 4m` (↓ as of
@@ -619,10 +618,10 @@ One screen for both scopes:
 
 - **Project scope** (a sidebar project with entries, Project → "Review changes" or ⌘R, or a
   project row's branch link): title =
-  project name, subtitle `Project review · X of Y entries have changes` (X = groups with a file in
+  project name, subtitle `X of Y changed` (X = groups with a file in
   any mode).
 - **Branch scope** (a Branches row): title = branch (short SHA if detached), subtitle
-  `<repo> · not in a project` or `<repo> · in <Project>`; `<repo> · last known state` when opened
+  `<repo>`; `<repo> · last known state` when opened
   on a deleted branch's last tip. One group.
 
 Layout:
@@ -738,7 +737,7 @@ Layout:
   radius 7; buttons min 28 × 22, mono 11, active `bg.pressed` + `text.strong`), then
   `menuitemradio` "Whole file" (⌥C); while Whole file is picked the lines row is at 45% opacity
   and inert; picking a number also selects Changes only), divider, `menuitemcheckbox` "Ignore whitespace" with "Hide lines where only indentation or trailing
-  spaces changed" (⌥W), and a muted footer "Applies to every diff and is remembered." Every row
+  spaces changed" (⌥W). Every row
   has a 16px indicator column (accent check for the picked layout, a checkbox for whitespace),
   the label, and the shortcut right-aligned; no icons inside the menu. Picking a layout closes
   the menu; the checkbox leaves it open. All of them are global and saved in the config.
@@ -755,7 +754,7 @@ Layout:
 - **Jump between changes** (flow D4): counter "Change i of n" (`aria-live="polite"`, tabular
   numbers) and a ↑ ↓ pair. The current change has the 3px accent bar in both panes; jumping
   scrolls it to the top third of the view. At the last change of a file, ↓ turns accent
-  (`rgba(79,143,163,0.18)`, `#a3cad6` icon), its tooltip becomes "Next file: <name> (⌥↓)", the
+  (`rgba(79,143,163,0.18)`, `#a3cad6` icon), its tooltip becomes "Next (⌥↓)", the
   counter adds muted "· next file <name>", and pressing it opens the next file in list order
   (expanding a collapsed group) at its first change. ↑ at the first change does the same
   backwards and lands on the previous file's last change. Disabled only at the very first / last
@@ -778,8 +777,7 @@ Layout:
   **Other branches**; **Remote branches**; **Tags** when the filter
   matches some; a "Use <shortSha>" row when the filter is a 7–40 hex SHA that resolves. Empty
   sections are hidden; ↑/↓/↵/Esc work. After a choice only that group recomputes (the others keep
-  their data) and a neutral banner says `Base for <branch> set to <base>. Saved for this branch;
-  Branches and projects use it too.` (the uncommitted banner takes precedence; the banner goes
+  their data) and a neutral banner says `Base set to <base>` (the uncommitted banner takes precedence; the banner goes
   away when leaving the screen).
 - **Default and remote rows** (flows E4–E6):
   - **Selection** (user decision 2026-09-28, replacing the `auto` / `current` pills and the "Use
@@ -853,13 +851,11 @@ Layout:
     (`filter: grayscale(1)`), Finder's too; without one, a terminal line icon.
     A pick closes the menu; a failure is logged (`log::warn!`), nothing is shown.
     - Items that cannot be used are left out, not shown disabled. A branch that is not checked
-      out still opens its repository folder, and the menu's closing note says "Not checked out
-      in a worktree, so some items may be unavailable." (it covers the worktree scripts too,
+      out still opens its repository folder, and the menu's closing note says "Not checked out"
+      (it covers the worktree scripts too,
       §14). A missing repo or a deleted branch has nothing to open: no open items, and the note
-      says "Repository not found, so there is nothing to open." / "The branch was deleted, so
-      there is nothing to open." (a gone detached worktree counts as deleted). A chosen terminal
-      that is not installed is left out and the note says "<Name> is not installed; pick
-      another terminal in Settings." The note is 12px `warning.text`, line-height 1.45, padding
+      says "Repository not found" / "Branch deleted" (a gone detached worktree counts as deleted). A chosen terminal
+      that is not installed is left out and the note says "<Name> not installed". The note is 12px `warning.text`, line-height 1.45, padding
       6px 10px 4px, with a 14px circle-i icon.
     - One note at most per menu, at its very end after a divider (below Remove from project in
       the Project entry menu), never inside a group. A group left empty takes its divider with
@@ -869,20 +865,17 @@ Layout:
   danger "Delete project…".
 - **Rename:** the title becomes an in-place input in the title's own box (at least 340px wide,
   30px, padding 0 6px, 1px border, serif 22px, `bg.sunken`), so the name does not move; only the
-  border turns accent, no ring; text selected; subtitle "↵ save · esc cancel". A name conflict
+  border turns accent, no ring; text selected; the subtitle stays. A name conflict
   (case-insensitive, itself excluded) turns the border and subtitle danger: `A project named "X" already exists`; ↵
   then does nothing, as with an empty name. Esc or a click elsewhere cancels.
-- **Delete confirm** (440px modal): serif 22px `Delete "Name"?`, "The project and its N entries
-  are removed from this app. Branches, worktrees and repositories are not touched." ("its 1
-  entry"), Cancel / danger "Delete project". Afterwards Branches.
-- **One entry:** a card under the table (`bg.elevated`, radius 12): serif 20px accent "+",
-  "Add related branches from other repositories", `Kbd` ⌘K; opens the palette.
+- **Delete confirm** (440px modal): serif 22px `Delete "Name"?`, "Removes the project and its N
+  entries. Nothing on disk is touched." ("its 1 entry"), Cancel / danger "Delete project". Afterwards Branches.
 - **Empty project:** centred serif 28px "No entries yet", "A project groups branches that belong
   to one piece of work, across any of your repositories.", 40px primary "Add branches ⌘K".
 - A project that no longer exists (deleted elsewhere) sends the screen back to Branches.
 - **Draft project** (flows C and H): not saved until named. Title in rename mode with the text
-  selected; subtitle "Name your project · ↵ save · esc discards it" (from a selection:
-  `N entries across M repos · name your project · ↵ save`); the sidebar shows it as an active
+  selected; subtitle "Name your project" (from a selection:
+  `N entries across M repos · name your project`); the sidebar shows it as an active
   row; rows come from the scan. ↵ with a valid name creates it; Esc, or going to another screen,
   discards it.
 
@@ -930,14 +923,13 @@ Layout:
   - ✕ asks first only when projects use the repo: `Remove <name>?` · "Its N project entries are
     removed too. Nothing on disk is touched." · Cancel / danger "Remove". Removing drops the repo,
     its branch bases and its project entries.
-  - Under the card, "Default base" ("Tried in order when a branch has no base set"; label level with the first
+  - Under the card, "Default base" ("Used when a branch has no base"; label level with the first
     row): an ordered list, one branch per row, so no separator is ever typed (flow M4/M5). A 280px
     compact `List` (radius 10); 34px rows: mono 11 faint position, mono 12 name (ellipsis),
     then ↑ / ↓ / ✕ (24px icon buttons, shown while the row is hovered or holds focus): move up,
     move down, remove. ↑ is disabled on the first row, ↓ on the last, ✕ when only one is left
     (the list is never empty). The last row "+ Add branch" (`accent.text` 500) becomes a 28px
-    mono `Input` ("Branch name, e.g. develop"), with a 12px muted "↵ add · esc cancel" under the
-    card. ↵ adds the trimmed name at the end; a name already in the list ("<name> is already in
+    mono `Input` ("Branch name, e.g. develop"). ↵ adds the trimmed name at the end; a name already in the list ("<name> is already in
     the list") or not a valid ref name ("Not a valid branch name": `git check-ref-format` rules,
     e.g. spaces, `~ ^ : ? * [ \`, `..`, `@{`, `//`, a leading `-` or `/`, a trailing `/` or `.`,
     a part starting with `.` or ending in `.lock`) is not added: the field turns invalid and the
@@ -1913,8 +1905,7 @@ export interface ScriptRun {
   and filled-in name. No group (and no "Scripts" label) when none is left.
 - Scripts that cannot run are left out, not shown disabled: every script when the repo is
   missing, and `runsIn: 'worktree'` scripts when the branch is not checked out; the menu's closing
-  note (§6 open items) covers them: "Not checked out in a worktree, so some items may be
-  unavailable."
+  note (§6 open items) covers them: "Not checked out".
 - A pick: inputs or `askFirst` → the run dialog (O); otherwise it runs at once. With `openOutput`
   its output panel opens as it starts. A script already running for that entry is not started
   twice: its output panel opens instead.
@@ -2198,8 +2189,7 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
   - Search field: `Input` 32px, 200px, placeholder "Search commits", label "Search commit
     messages, SHAs and paths", no keycap; ⌘K focuses it (also listed in Shortcuts). Typing
     searches (debounced 200 ms); Esc clears it.
-  - `Fetched <age> ago` (12px `text.faint`; tooltip "Last fetch (FETCH_HEAD). Gitgel never
-    fetches; commits pushed since then are not shown."), only when `fetchedAt` is known.
+  - `Fetched <age> ago` (12px `text.faint`; tooltip "Gitgel never fetches"), only when `fetchedAt` is known.
   - "Stash…" (§15, the Review header's button and P4 dialog, with this one entry), only when
     `rev` is checked out in a worktree; disabled, tooltip "No uncommitted changes", without any.
   - Refresh button.

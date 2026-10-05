@@ -50,7 +50,7 @@ button,input{font-family:inherit}
 <span style="font-size: 15px; font-weight: 600; color: var(--text-strong)">{{repo.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{repo.path}}</span>
 </button>
-<span style="margin-right: -2px; font-size: 12px; color: var(--text-muted)">{{repo.count}}</span>
+<span title="{{repo.countTitle}}" style="margin-right: -2px; font-size: 12px; color: var(--text-muted)">{{repo.count}}</span>
 <button type="button" aria-label="{{repo.pinLabel}}" aria-pressed="{{repo.pinned}}" title="{{repo.pinTitle}}" style="{{repo.pinStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-3 4v1h10v-1l-3-4V3M12 14v7"></path></svg></button>
 </div>
 <sc-if value="{{repo.open}}" hint-placeholder-val="{{true}}">
@@ -236,8 +236,8 @@ class Component extends DCLogic {
         noWt ? [] : [{ label: 'Start dev server', icon: 'prompt' }]);
     }
     // One note closes the menu, after a divider: why some items are missing.
-    var menuNote = rowMenu === 'terminalMissing' ? 'iTerm2 is not installed; pick another terminal in Settings.'
-      : noWt ? 'Not checked out in a worktree, so some items may be unavailable.'
+    var menuNote = rowMenu === 'terminalMissing' ? 'iTerm2 not installed'
+      : noWt ? 'Not checked out'
       : '';
     if (menuNote) rowMenuItems = rowMenuItems.concat([{ kind: 'sep' }, { kind: 'note', label: menuNote, tall: menuNote.length > 90 }]);
     var menuHeight = 14;
@@ -322,7 +322,7 @@ class Component extends DCLogic {
     var shownRepos = built.map(function (g) {
       var rows = unassigned ? g.rows.filter(function (r) { return !r.projCount; }) : g.rows;
       return {
-        name: g.name, path: g.path, rows: rows, count: rows.length + (rows.length === 1 ? ' branch' : ' branches'),
+        name: g.name, path: g.path, rows: rows, count: String(rows.length), countTitle: rows.length + (rows.length === 1 ? ' branch' : ' branches'),
         open: !g.collapsed,
         pinned: g.pinned,
         pinLabel: g.pinned ? 'Unpin ' + g.name : 'Pin ' + g.name + ' to top',
@@ -366,7 +366,8 @@ class Component extends DCLogic {
         { label: '+ Add to another project…', accent: true }
       ],
       sidebarProjects: empty ? [] : sidebarProjects,
-      subtitle: empty ? 'Nothing to review yet' : (unassigned ? 'Active branches not in any project · ' : 'Active branches · ') + shownRepos.length + ' repos · checked out in a worktree, or committed in the last 14 days',
+      // What is listed: repos · branches (· stashes when there are any; none in this mock).
+      subtitle: empty ? 'Nothing to review yet' : shownRepos.length + ' repos · ' + shownRepos.reduce(function (n, g) { return n + g.rows.length; }, 0) + ' branches',
       scopes: [['all', 'All', total], ['unassigned', 'Not in a project', free]].map(function (x) {
         var on = scope === x[0];
         return {

@@ -610,12 +610,6 @@
 }
 
 /* The base branch row (SPEC §5 "Base branch row", HistH1.dc.html): always listed, first. */
-.baseMark {
-  display: flex;
-  justify-content: center;
-  color: var(--text-faint);
-}
-
 .nameLine {
   max-width: 100%;
   min-width: 0;

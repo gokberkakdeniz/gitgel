@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
-import { Menu, MenuCaption, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
+import { Menu, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
 import { Popover } from '../../components/Popover';
 import { updateSettings } from '../../lib/ipc';
 import { basename } from '../../lib/paths';
@@ -133,7 +133,6 @@ export function ViewMenu({
             >
               Ignore whitespace
             </MenuItem>
-            <MenuCaption>Applies to every diff and is remembered.</MenuCaption>
           </Menu>
         </Popover>
       )}
@@ -161,12 +160,12 @@ export function ChangeNav({
   const atLast = nav.count === 0 || i >= nav.count - 1;
   const prevTitle = atFirst
     ? prevFile
-      ? `Previous file: ${fileName(prevFile)} (⌥↑)`
+      ? 'Previous (⌥↑)'
       : 'First change'
     : 'Previous change (⌥↑)';
   const nextTitle = atLast
     ? nextFile
-      ? `Next file: ${fileName(nextFile)} (⌥↓)`
+      ? 'Next (⌥↓)'
       : 'Last change'
     : 'Next change (⌥↓)';
   const cls = (cross: boolean) => (cross ? `${styles.navButton} ${styles.navCross}` : styles.navButton);

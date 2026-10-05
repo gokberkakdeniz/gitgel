@@ -27,7 +27,6 @@ import { Popover } from '../../components/Popover';
 import { Pill } from '../../components/Pill';
 import { RefreshButton } from '../../components/RefreshButton';
 import { Segmented } from '../../components/Segmented';
-import { entryKey } from '../../lib/entryKey';
 import { Icon } from '../../components/icons';
 import { formatAge, plural } from '../../lib/format';
 import { getCommitChanges, getReview, getStashChanges } from '../../lib/ipc';
@@ -588,9 +587,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
           onChosen={(base) => {
             const e = baseMenu.entry;
             if (base !== e.base) setPendingKey(e.key);
-            setBaseSaved(
-              `Base for ${e.branch ?? e.shortSha} set to ${base}. Saved for this branch; Branches and projects use it too.`,
-            );
+            setBaseSaved(`Base set to ${base}`);
           }}
         />
       )}
@@ -659,14 +656,8 @@ function ReviewHeader({
   let subtitle = '';
   if (target.kind === 'branch') {
     title = target.branch ?? entry?.shortSha ?? '';
-    const key = entryKey(target);
-    const project = config?.projects.find((p) => p.entries.some((e) => entryKey(e) === key));
     const repo = entry?.repoName ?? '';
-    subtitle = target.tipOverride
-      ? `${repo} · last known state`
-      : project
-        ? `${repo} · in ${project.name}`
-        : `${repo} · not in a project`;
+    subtitle = target.tipOverride ? `${repo} · last known state` : repo;
   } else if (target.kind === 'stashes') {
     title = 'Stashes';
     const repo = config?.repos.find((r) => r.id === target.repoId);
@@ -675,7 +666,7 @@ function ReviewHeader({
     title = project?.name ?? '';
     if (data) {
       const changed = data.groups.filter((g) => g.files.committed.length + g.files.uncommitted.length + g.files.all.length > 0).length;
-      subtitle = `Project review · ${changed} of ${data.totalEntries} entries have changes`;
+      subtitle = `${changed} of ${data.totalEntries} changed`;
     }
   }
 

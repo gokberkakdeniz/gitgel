@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
 import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
-import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
@@ -148,7 +147,6 @@ function SavedProject({ id }: { id: string }) {
           stored={project.entries}
           projectId={id}
           onRemove={(key) => void removeEntries(id, [key])}
-          footer={rows.length === 1 ? <AddRelatedCard /> : null}
         />
       )}
 
@@ -206,8 +204,8 @@ function DraftProject() {
         draft
         subtitle={
           rows.length === 0
-            ? 'Name your project · ↵ save · esc discards it'
-            : `${entriesSummary(rows)} · name your project · ↵ save`
+            ? 'Name your project'
+            : `${entriesSummary(rows)} · name your project`
         }
         onNameChange={(name) => useUi.getState().setDraftProject({ ...draft, name })}
         onRenameSave={save}
@@ -230,7 +228,6 @@ function DraftProject() {
           stored={[]}
           projectId={null}
           onRemove={(key) => setEntries(draft.entries.filter((_, i) => rows[i].key !== key))}
-          footer={rows.length === 1 ? <AddRelatedCard /> : null}
         />
       )}
     </>
@@ -337,9 +334,7 @@ function ProjectHeader(props: HeaderProps) {
 
   const sub = conflict
     ? `A project named “${conflict}” already exists`
-    : renaming && !draft
-      ? '↵ save · esc cancel'
-      : subtitle;
+    : subtitle;
 
   return (
     <PageHeader title={titleNode} subtitle={<span className={conflict ? styles.danger : undefined}>{sub}</span>} dragTitle={false}>
@@ -364,29 +359,17 @@ function EmptyProject() {
   );
 }
 
-function AddRelatedCard() {
-  return (
-    <button type="button" className={styles.relatedCard} onClick={openPalette}>
-      <span className={styles.relatedPlus}>+</span>
-      <span className={styles.relatedText}>Add related branches from other repositories</span>
-      <Kbd>⌘K</Kbd>
-    </button>
-  );
-}
-
 function EntryTable({
   rows,
   stored,
   projectId,
   onRemove,
-  footer,
 }: {
   rows: EntrySummary[];
   /** The project's stored entries (last known tips). */
   stored: EntryConfig[];
   projectId: string | null;
   onRemove: (key: string) => void;
-  footer: ReactNode;
 }) {
   const push = useNav((s) => s.push);
   const projectName = useData((s) => s.config?.projects.find((p) => p.id === projectId)?.name);
@@ -477,7 +460,6 @@ function EntryTable({
             </div>
           );
         })}
-        {footer}
       </div>
 
       {baseMenu && (

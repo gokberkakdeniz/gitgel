@@ -730,7 +730,7 @@ class Component extends DCLogic {
       titleStyle: 'font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap' + (project ? '; box-sizing: border-box; height: 30px; line-height: 28px; margin-left: -7px; padding: 0 6px; border: 1px solid transparent; border-radius: 8px' : ''),
       showEditProject: project,
       title: project ? 'Session auth refresh' : 'rate-limit-middleware',
-      subtitle: project ? 'Project review · 2 of 6 entries have changes' : 'api-server · not in a project',
+      subtitle: project ? '2 of 6 changed' : 'api-server',
       backHref: project ? 'Projects.dc.html' : 'Main.dc.html',
       backLabel: project ? 'Back to project' : 'Back to Branches',
       modes: modes, groups: groups, lines: lines,
@@ -738,8 +738,8 @@ class Component extends DCLogic {
       navNext: atLast && nextKey ? ' · next file ' + shortName(nextKey) : '',
       prevChange: prevChange, nextChange: nextChange,
       prevDisabled: atFirst && !prevKey, nextDisabled: atLast && !nextKey,
-      prevTitle: atFirst ? (prevKey ? 'Previous file: ' + shortName(prevKey) + ' (⌥↑)' : 'First change') : 'Previous change (⌥↑)',
-      nextTitle: atLast ? (nextKey ? 'Next file: ' + shortName(nextKey) + ' (⌥↓)' : 'Last change') : 'Next change (⌥↓)',
+      prevTitle: atFirst ? (prevKey ? 'Previous (⌥↑)' : 'First change') : 'Previous change (⌥↑)',
+      nextTitle: atLast ? (nextKey ? 'Next (⌥↓)' : 'Last change') : 'Next change (⌥↓)',
       prevStyle: navBtn(atFirst && !prevKey, atFirst && !!prevKey),
       nextStyle: navBtn(atLast && !nextKey, atLast && !!nextKey),
       hasSample: !!rows, noSample: !rows,
@@ -766,8 +766,7 @@ class Component extends DCLogic {
         }) },
         { label: 'Whole file', check: context === 'whole', active: context === 'whole', kbd: '⌥C', onSelect: function () { self.setState({ context: 'whole', viewMenu: false }); } },
         { kind: 'sep' },
-        { label: 'Ignore whitespace', box: ignoreWs, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W', onSelect: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); } },
-        { kind: 'caption', label: 'Applies to every diff and is remembered.' }
+        { label: 'Ignore whitespace', box: ignoreWs, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W', onSelect: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); } }
       ],
       viewBtnStyle: 'display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ' + (viewMenuOpen ? 'background: var(--bg-hover); color: var(--text-strong); border: 1px solid var(--accent)' : 'background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)'),
       entry: {
@@ -811,7 +810,7 @@ class Component extends DCLogic {
       showBanner: mode === 'Uncommitted' || baseChanged,
       banner: mode === 'Uncommitted'
         ? (project ? 'Uncommitted changes across 2 checked-out entries' : 'Working tree at ' + selGroup.wt)
-        : 'Base for token-rotation-job set to feat/job-queue. Saved for this branch; Branches and projects use it too.',
+        : 'Base set to feat/job-queue',
       bannerStyle: 'padding: 9px 20px; font-size: 12px; border-bottom: 1px solid var(--border); ' + (mode === 'Uncommitted' ? 'background: rgba(var(--warning-rgb), 0.12); color: var(--warning)' : 'background: var(--bg-elevated); color: var(--text-body)')
     };
   }
