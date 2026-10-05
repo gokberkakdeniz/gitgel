@@ -43,6 +43,7 @@
   background: var(--bg-sunken);
   border-color: var(--accent);
   outline: none;
+  caret-color: var(--accent-text);
 }
 
 .input.input[aria-invalid='true'] {

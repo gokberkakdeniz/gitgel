@@ -296,6 +296,9 @@
   border: 0;
   box-shadow: none;
   font-size: 14px;
+  /* The row's text colour (not the field default) and an accent caret, as on Project titles. */
+  color: inherit;
+  caret-color: var(--accent-text);
 }
 
 .projectName {
