@@ -620,7 +620,7 @@ function Row({
     ui.setSelectedKeys(selected ? ui.selectedKeys.filter((k) => k !== e.key) : [...ui.selectedKeys, e.key]);
   };
   const hot = popover === 'projects' || popover === 'picker' || popover === 'menu';
-  const cls = [styles.grid, styles.row, isBase && styles.baseRow, selected && styles.selected, hot && styles.hot]
+  const cls = [styles.grid, styles.row, selected && styles.selected, hot && styles.hot]
     .filter(Boolean)
     .join(' ');
   const name = e.branch ?? e.shortSha ?? '';

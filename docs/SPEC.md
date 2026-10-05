@@ -576,7 +576,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 - **Base branch row** (`HistH1.dc.html`): the repo's base branch (§1) is always
   the first row of its band, whatever its age or work, so every repo that can be read has a band.
   It differs from other rows:
-  - Background `bg.sunken` (hover `bg.hover`); no checkbox: a 12px `text.faint` branch icon in
+  - Same background as other rows (the icon, pill and History button set it apart); no checkbox: a 12px `text.faint` branch icon in
     its place, tooltip "Always listed". It cannot be selected.
   - After the name, a compact `outline` pill "base". The name opens History (§16) on it, tooltip
     `Show history of <name>`.
