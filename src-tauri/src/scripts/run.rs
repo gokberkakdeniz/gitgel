@@ -60,6 +60,8 @@ struct Run {
     started: Instant,
     /// Repositories rescanned when it ends besides `info.repo_id` (a git action over several).
     also_rescan: Vec<String>,
+    /// Temporary files removed when it ends (a git action's index copies).
+    cleanup: Vec<PathBuf>,
 }
 
 /// A run to start: what its toast and panel show, and the command.
@@ -74,6 +76,7 @@ pub(super) struct Launch {
     pub folder: PathBuf,
     pub command: String,
     pub env: Vec<(String, String)>,
+    pub cleanup: Vec<PathBuf>,
 }
 
 /// What the menu knows about the branch besides the entry itself.
@@ -239,6 +242,7 @@ pub fn run_script(
             folder: p.folder,
             command: script.command.clone(),
             env: p.env,
+            cleanup: Vec::new(),
         },
     )
 }
@@ -277,6 +281,7 @@ pub(super) fn launch(state: &AppState, l: Launch) -> Result<ScriptRun, AppError>
             written: 0,
             started: Instant::now(),
             also_rescan: l.also_rescan,
+            cleanup: l.cleanup,
         },
     );
     log::info!("script “{}” started in {}", l.name, l.repo_label);
@@ -572,6 +577,9 @@ fn finish(state: &AppState, run_id: &str, ended: Ended) {
         );
         let info = run.info.clone();
         let also_rescan = std::mem::take(&mut run.also_rescan);
+        for file in std::mem::take(&mut run.cleanup) {
+            let _ = std::fs::remove_file(file);
+        }
         runs.finished.push_back(run_id.to_string());
         while runs.finished.len() > KEEP_FINISHED {
             if let Some(old) = runs.finished.pop_front() {
@@ -833,6 +841,7 @@ mod tests {
         let step = super::super::git::PushStep {
             untracked: true,
             paths: 0,
+            unstage: 0,
         };
         let (out, ended) = pty(
             &super::super::git::push_command(&[step], true),
@@ -878,6 +887,7 @@ mod tests {
         let step = super::super::git::PushStep {
             untracked: true,
             paths: 2,
+            unstage: 0,
         };
         let (out, ended) = pty(
             &super::super::git::push_command(&[step], false),
@@ -895,6 +905,55 @@ mod tests {
         assert_eq!(read("a.txt").as_deref(), Some(&b"A\n"[..]));
         assert_eq!(read("keep.txt").as_deref(), Some(&b"keep\n"[..]));
         assert_eq!(crate::git::stash::list(&t.repo).unwrap().len(), 1);
+    }
+
+    /// Picked files while other files are staged: the stash holds the picked ones only, and the
+    /// staged ones that were not picked stay staged (git alone would put them in the stash too).
+    #[test]
+    fn git_action_leaves_unpicked_staged_files_out() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a.txt", Some(b"a\n"))], "base", 1);
+        t.checkout_main();
+        t.write_file(t.path(), "a.txt", b"A\n");
+        t.write_file(t.path(), "kept.txt", b"kept\n");
+        t.stage(t.path(), "kept.txt");
+        t.write_file(t.path(), "picked.txt", b"picked\n");
+        t.stage(t.path(), "picked.txt");
+        let (_, index) = crate::git::worktrees::staged(&t.repo).unwrap();
+        let dir = tempfile::TempDir::new().unwrap();
+        let copy = dir.path().join("index");
+        std::fs::copy(index, &copy).unwrap();
+        let folder = t.path().to_string_lossy().into_owned();
+        let step = super::super::git::PushStep {
+            untracked: false,
+            paths: 2,
+            unstage: 1,
+        };
+        let (out, ended) = pty(
+            &super::super::git::push_command(&[step], false),
+            &[
+                ("GITGEL_FOLDER_1", &folder),
+                ("GITGEL_PATH_1_1", "a.txt"),
+                ("GITGEL_PATH_1_2", "picked.txt"),
+                ("GITGEL_UNSTAGE_1_1", "kept.txt"),
+                ("GITGEL_INDEX_1", &copy.to_string_lossy()),
+                ("GIT_LITERAL_PATHSPECS", "1"),
+            ],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        let stash = crate::git::stash::list(&t.repo).unwrap();
+        let files: Vec<String> = crate::git::stash::changes(&t.repo, &stash[0].sha)
+            .unwrap()
+            .files
+            .into_iter()
+            .map(|f| f.path)
+            .collect();
+        assert_eq!(files, ["a.txt", "picked.txt"]);
+        let (still, _) = crate::git::worktrees::staged(&t.repo).unwrap();
+        assert_eq!(still, ["kept.txt"]);
+        assert!(!t.path().join("picked.txt").exists());
+        assert_eq!(std::fs::read(t.path().join("a.txt")).unwrap(), b"a\n");
     }
 
     #[test]

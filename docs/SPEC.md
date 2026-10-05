@@ -2093,7 +2093,12 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   "$GITGEL_MESSAGE"] [-- "$GITGEL_PATH_1_1" …] && git -C "$GITGEL_FOLDER_2" …`, run in the first
   folder, with `GIT_LITERAL_PATHSPECS=1` (a picked name is never a glob). An entry with every file
   picked has no paths; otherwise the picked paths (a rename's old path too).
-  `--include-untracked` when an untracked file is picked. Toast sub line `repo / branch` for one
+  `--include-untracked` when an untracked file is picked. git puts every staged change in a stash,
+  picked or not (and leaves the unpicked ones in place too), so when files are picked and other
+  files are staged (`worktrees::staged`, read with git2), the stash is made from a copy of the
+  index in the temp folder without them: `env GIT_INDEX_FILE="$GITGEL_INDEX_1" git … reset -q --
+  <unpicked staged>`, the same `stash push` with that variable, then `git … reset -q -- <picked>`
+  on the real index; the copy is deleted when the run ends. Toast sub line `repo / branch` for one
   entry, else `N entries`.
 - **Worktree picker** (P5; Apply to… / Pop to… in the Branches stash menu, Apply / Pop in the
   stash pane when its branch is not checked out): a 280px menu, label "Apply stash@{n} to" (or "Pop stash@{n} to"), then one item

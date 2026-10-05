@@ -88,6 +88,30 @@ pub fn head_sha(repo: &Repository) -> Result<Option<String>, AppError> {
     Ok(head_of(repo)?.map(|(tip, _)| tip))
 }
 
+/// Paths whose staged state differs from HEAD (both sides of a rename), and the worktree's index
+/// file. Read only: the index is reread from disk, never written. A stash of picked files uses
+/// them (SPEC §15): git keeps every staged change in a stash, picked or not.
+pub fn staged(wt_repo: &Repository) -> Result<(Vec<String>, PathBuf), AppError> {
+    let mut index = wt_repo.index()?;
+    index.read(false)?;
+    let head = match wt_repo.head() {
+        Ok(h) => Some(h.peel_to_tree()?),
+        Err(_) => None,
+    };
+    let diff = wt_repo.diff_tree_to_index(head.as_ref(), Some(&index), None)?;
+    let mut paths = Vec::new();
+    for d in diff.deltas() {
+        for f in [d.old_file(), d.new_file()] {
+            if let Some(p) = f.path().and_then(|p| p.to_str()) {
+                if !paths.iter().any(|x| x == p) {
+                    paths.push(p.to_string());
+                }
+            }
+        }
+    }
+    Ok((paths, wt_repo.path().join("index")))
+}
+
 /// Canonical common git dir (`<repo>/.git` for a normal repository).
 pub fn git_dir(repo: &Repository) -> PathBuf {
     canonical(repo.commondir())
@@ -131,6 +155,23 @@ fn canonical(path: &Path) -> PathBuf {
 mod tests {
     use super::*;
     use crate::git::testutil::TestRepo;
+
+    #[test]
+    fn staged_lists_only_what_the_index_changes() {
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a", Some(b"a")), ("c", Some(b"c"))], "init", 1);
+        t.checkout_main();
+        t.write_file(t.path(), "a", b"unstaged");
+        t.write_file(t.path(), "b", b"new");
+        t.stage(t.path(), "b");
+        t.write_file(t.path(), "c", b"staged");
+        t.stage(t.path(), "c");
+        let (paths, index) = staged(&t.repo).unwrap();
+        let mut paths = paths;
+        paths.sort();
+        assert_eq!(paths, ["b", "c"]);
+        assert!(index.ends_with("index") && index.exists());
+    }
 
     #[test]
     fn lists_main_linked_and_detached_worktrees() {

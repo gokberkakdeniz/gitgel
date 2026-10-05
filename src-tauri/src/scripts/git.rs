@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 
 use crate::config;
+use crate::config::new_id;
 use crate::error::AppError;
 use crate::git::{stash, worktrees};
 use crate::model::{entry_key, EntryRef, ScriptRun, UpdateReason};
@@ -126,6 +127,10 @@ pub(super) struct PushStep {
     pub untracked: bool,
     /// Pathspecs (`$GITGEL_PATH_<step>_<n>`); 0: the whole worktree.
     pub paths: usize,
+    /// Staged files that were not picked (`$GITGEL_UNSTAGE_<step>_<n>`). git puts every staged
+    /// change in a stash, so these are taken out of a copy of the index (`$GITGEL_INDEX_<step>`)
+    /// that the stash is made from; the real index then drops the picked files only.
+    pub unstage: usize,
 }
 
 /// `git stash push` in each entry's worktree, one after another, stopping at the first failure.
@@ -141,6 +146,7 @@ pub fn stash_push(
     let mut steps: Vec<(PathBuf, String, String)> = Vec::new(); // folder, label, entry key
     let mut env: Vec<(String, String)> = Vec::new();
     let mut shape: Vec<PushStep> = Vec::new();
+    let mut temp: Vec<PathBuf> = Vec::new(); // index copies, removed when the run ends
     for (i, push) in pushes.iter().enumerate() {
         let entry = &push.entry;
         let paths = push.paths.as_deref().unwrap_or_default();
@@ -156,6 +162,7 @@ pub fn stash_push(
         shape.push(PushStep {
             untracked: push.untracked,
             paths: paths.len(),
+            unstage: 0,
         });
         if !repos.iter().any(|r| r.id == entry.repo_id) {
             let repo = open_repo(state, &entry.repo_id)?;
@@ -182,6 +189,28 @@ pub fn stash_push(
                 entry.worktree_path.as_deref(),
             ),
         ));
+        // Picked files with other staged changes: stash from a copy of the index without them.
+        if !paths.is_empty() {
+            let (staged, index) = {
+                let shared = state.pool.get(&tree.path)?;
+                let wt = lock(&shared);
+                worktrees::staged(&wt)?
+            };
+            let keep: Vec<&String> = staged.iter().filter(|p| !paths.contains(p)).collect();
+            if !keep.is_empty() {
+                let copy = std::env::temp_dir().join(format!("gitgel-{}.index", new_id("stash")));
+                std::fs::copy(&index, &copy)?;
+                env.push((
+                    format!("GITGEL_INDEX_{}", i + 1),
+                    copy.to_string_lossy().into_owned(),
+                ));
+                for (k, p) in keep.iter().enumerate() {
+                    env.push((format!("GITGEL_UNSTAGE_{}_{}", i + 1, k + 1), (*p).clone()));
+                }
+                shape[i].unstage = keep.len();
+                temp.push(copy);
+            }
+        }
     }
     let message = message.trim().to_string();
     env.extend(steps.iter().enumerate().map(|(i, (folder, _, _))| {
@@ -217,6 +246,7 @@ pub fn stash_push(
             folder: steps[0].0.clone(),
             command: push_command(&shape, !message.is_empty()),
             env: with_git_env(env),
+            cleanup: temp,
         },
     )
 }
@@ -262,6 +292,7 @@ pub fn stash_apply(
             folder: tree.path.clone(),
             command: format!("git stash {verb} 'stash@{{{index}}}'"),
             env: with_git_env(Vec::new()),
+            cleanup: Vec::new(),
         },
     )
 }
@@ -289,6 +320,7 @@ pub fn stash_drop(
             folder: repo.main.clone(),
             command: format!("git stash drop 'stash@{{{index}}}'"),
             env: with_git_env(Vec::new()),
+            cleanup: Vec::new(),
         },
     )
 }
@@ -301,20 +333,33 @@ pub(super) fn push_command(steps: &[PushStep], message: bool) -> String {
         .enumerate()
         .map(|(i, step)| {
             let n = i + 1;
-            let mut cmd = format!("git -C \"$GITGEL_FOLDER_{n}\" stash push");
+            let git = format!("git -C \"$GITGEL_FOLDER_{n}\"");
+            let list = |name: &str, count: usize| {
+                (1..=count)
+                    .map(|j| format!(" \"${name}_{n}_{j}\""))
+                    .collect::<String>()
+            };
+            let mut push = String::from(" stash push");
             if step.untracked {
-                cmd.push_str(" --include-untracked");
+                push.push_str(" --include-untracked");
             }
             if message {
-                cmd.push_str(" --message \"$GITGEL_MESSAGE\"");
+                push.push_str(" --message \"$GITGEL_MESSAGE\"");
             }
             if step.paths > 0 {
-                cmd.push_str(" --");
-                for j in 1..=step.paths {
-                    cmd.push_str(&format!(" \"$GITGEL_PATH_{n}_{j}\""));
-                }
+                push.push_str(" --");
+                push.push_str(&list("GITGEL_PATH", step.paths));
             }
-            cmd
+            if step.unstage == 0 {
+                return format!("{git}{push}");
+            }
+            // `env` sets the variable the same way in every shell.
+            let copy = format!("env GIT_INDEX_FILE=\"$GITGEL_INDEX_{n}\" {git}");
+            format!(
+                "{copy} reset -q --{} && {copy}{push} && {git} reset -q --{}",
+                list("GITGEL_UNSTAGE", step.unstage),
+                list("GITGEL_PATH", step.paths)
+            )
         })
         .collect::<Vec<_>>()
         .join(" && ")
@@ -335,6 +380,7 @@ mod tests {
         let all = PushStep {
             untracked: false,
             paths: 0,
+            unstage: 0,
         };
         assert_eq!(
             push_command(&[all], false),
@@ -343,10 +389,20 @@ mod tests {
         let picked = PushStep {
             untracked: true,
             paths: 2,
+            unstage: 0,
         };
         assert_eq!(
             push_command(&[picked, all], true),
             r#"git -C "$GITGEL_FOLDER_1" stash push --include-untracked --message "$GITGEL_MESSAGE" -- "$GITGEL_PATH_1_1" "$GITGEL_PATH_1_2" && git -C "$GITGEL_FOLDER_2" stash push --message "$GITGEL_MESSAGE""#
+        );
+        let around = PushStep {
+            untracked: false,
+            paths: 1,
+            unstage: 1,
+        };
+        assert_eq!(
+            push_command(&[around], false),
+            r#"env GIT_INDEX_FILE="$GITGEL_INDEX_1" git -C "$GITGEL_FOLDER_1" reset -q -- "$GITGEL_UNSTAGE_1_1" && env GIT_INDEX_FILE="$GITGEL_INDEX_1" git -C "$GITGEL_FOLDER_1" stash push -- "$GITGEL_PATH_1_1" && git -C "$GITGEL_FOLDER_1" reset -q -- "$GITGEL_PATH_1_1""#
         );
     }
 }
