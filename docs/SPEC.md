@@ -279,7 +279,8 @@ everything else `#e0ddd6`.
 
 18px square, radius 5, mono 10px/500: A `#8fcf9c` on green tint, M `#e8c071` on amber tint,
 R `#93b8ee` on `rgba(90,140,220,0.16)`, D `#ee9a90` on red tint, U (untracked) `#c5b2f2` on
-`rgba(160,130,230,0.16)`.
+`rgba(160,130,230,0.16)`, C (merge conflict, unmerged in the index) D's colours with a 1px inset
+ring in its text colour; its folder label ends in ` · conflict`.
 
 ### Light theme
 
@@ -524,7 +525,9 @@ Every active branch, whether or not it is in a project, and each repo's base bra
        middle: the start shrinks with "…" and the end (at most the last 16 characters, from after
        a `-`, `/`, `_` or `.`) always shows, so names that differ only at the end stay apart.
     2. A 15px mono 11 muted line: `base <base> · <diff> · <age>` (faint `·`; only the base is cut
-       with "…" when the line runs out of room), then the state pill.
+       with "…" when the line runs out of room), then the state pill, then a danger sm pill
+       `N conflicts` (`1 conflict`; tooltip "Merge conflicts in the working tree") when its
+       working tree has unmerged files.
        - Diff: ahead · files · uncommitted as `↑4 / 9 / 3`, the ` / ` separators `text.faint`.
          Ahead carries ` ↓N` when the base has N commits the branch does not (it needs a
          rebase): `↑4 ↓2 / 9 / 3`. Uncommitted is 500 `accent.text` when above 0, faint
@@ -742,6 +745,12 @@ Layout:
 - **Uncommitted mode:** the commit list is hidden; a warning banner under the header says which
   working trees are shown: `Working tree at <~path>` (branch) or
   `Uncommitted changes across N checked-out entries` (project).
+- **Conflicts:** in every mode (not while a stash is shown), when an entry's working tree has
+  unmerged files, a danger banner above that one: `1 file has merge conflicts. Resolve it in your
+  editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.` (`N files have
+  merge conflicts in M entries. Resolve them …` for several); the group's line 2 has the same
+  danger sm `N conflicts` pill as its Branches row (P7). The files are `C` in the
+  Uncommitted and All lists; their diff is HEAD ↔ the working tree file with its markers.
 - **Base menu** (340px popover, from a group's base button, the Project table's Base button or a
   "base missing" pill): "Search" input; **Suggested** (mono 13 name +
   `Contains N of the M commits shown`); **Default** (see "Default and remote rows" below);
@@ -1168,6 +1177,7 @@ export interface EntrySummary {
   add: number | null;
   del: number | null;
   uncommitted: number | null;    // null if not checked out
+  conflicts: number;             // uncommitted files with merge conflicts (unmerged)
   lastCommitAt: number | null;   // committer time of the tip, unix seconds
   changedAt: number | null;      // newest uncommitted file mtime; only when newer than lastCommitAt
   state: EntryState;
@@ -1222,7 +1232,7 @@ message and a `log::warn!`; nothing panics (`unwrap`/`expect` only in tests).
 
 ```ts
 export type DiffMode = 'committed' | 'uncommitted' | 'all';
-export type FileKind = 'A' | 'M' | 'R' | 'D' | 'U';
+export type FileKind = 'A' | 'M' | 'R' | 'D' | 'U' | 'C'; // C: unmerged (git2 Delta::Conflicted)
 export interface FileChange {
   path: string;
   oldPath: string | null;        // R only
@@ -1684,7 +1694,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, "Fetched", Stash… 39, refresh; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
-| Stashes | `FlowP1`–`FlowP6.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog (entries with their files to pick), P5 worktree submenu beside Apply to…, P6 Drop confirmation |
+| Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog (entries with their files to pick), P5 worktree submenu beside Apply to…, P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -2011,7 +2021,7 @@ export interface ScriptRun {
 ## 15. Stashes
 
 The stash stack is listed and reviewed with git2; stashing, applying, popping and dropping are git
-actions (§0, "Writing stashes" below). Canvas flow P (P1–P6); boards `FlowP1`–`FlowP6.dc.html`.
+actions (§0, "Writing stashes" below). Canvas flow P (P1–P7); boards `FlowP1`–`FlowP7.dc.html`.
 
 - **Reading** (§10): the `refs/stash` reflog, newest first. The message `On <branch>: <text>`
   shows `<text>`; `WIP on <branch>: <sha> <subject>` shows whole. `<branch>` is the branch it was
@@ -2032,8 +2042,10 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1–P6); boards `FlowP1`
   their anchor when the page scrolls or resizes (scroll listener and `ResizeObserver`).
 - **Review header** (P2, project and branch scope; History of a checked-out branch too, §16, which
   also lists the branch's stashes under its commits): a 32px secondary "Stash…" button with the
-  `package` icon before the refresh button; it opens the Stash changes dialog (P4). Disabled,
-  tooltip "No uncommitted changes", when no checked-out entry of the review has any.
+  `package` icon before the refresh button; it opens the Stash changes dialog (P4). Disabled when
+  no checked-out entry without conflicts has uncommitted changes: tooltip "Resolve the merge
+  conflicts first; git cannot stash them" when an entry has conflicts, else "No uncommitted
+  changes".
 - **Review list** (P2): after the groups (and the "not reviewable" line), under a 1px `bg.hover`
   rule: section label `Stashes of this project · N` (branch scope `Stashes of this branch · N`),
   the stashes taken on one of the review's branches (project order). Rows (padding 6px 8px,
@@ -2080,7 +2092,8 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   none), repo 12px/600 `text.strong`, mono 11 branch, then on the right a 22px button `N files ›`
   (`k of N files` when only some are picked; chevron down while open; tooltip "Pick files" /
   "Hide files") that shows the entry's uncommitted files under it; "no changes" and disabled when
-  it has none. File rows (26px, indent 24): `Checkbox`, kind badge, mono 12 `text.strong` name,
+  it has none; with merge conflicts, disabled with a danger `N conflicts` (tooltip "Resolve its
+  merge conflicts first; git cannot stash them."), as git refuses to stash then. File rows (26px, indent 24): `Checkbox`, kind badge, mono 12 `text.strong` name,
   mono 11 `text.faint` folder as in Review (`· untracked`, `← old path`). Every file starts
   picked; the files of a review with one entry start shown. Entries that are not checked out are
   not listed. "Message" `Input` 32px, focused (empty: git writes its own "WIP on <branch>: …"). A
@@ -2160,7 +2173,8 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
   - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with
     uncommitted files; never while searching): first, above the day labels. 1px dashed
     `border.strong`, radius 8, padding 7px 8px; a 24px slot with an 8px `accent.text` dot; 13px/500
-    `accent.text` "Uncommitted changes"; mono 11 muted `N files · <age>` (the age of the newest
+    `accent.text` "Uncommitted changes"; mono 11 muted `N files · <age>` (plus ` · N conflicts`
+    after the files when some are unmerged; the age of the newest
     uncommitted file, as on Branches; left out when unknown). Picking it lists its files under it
     and shows HEAD ↔ working tree (untracked files included), as Review's Uncommitted layer.
   - **Day labels**: 11px `text.faint`, padding 10px 8px 4px: "Today", "Yesterday", else `Oct 2`

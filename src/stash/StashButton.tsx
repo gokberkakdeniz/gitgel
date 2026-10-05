@@ -7,13 +7,17 @@ import { StashDialog, stashRows } from './StashDialog';
  * uncommitted changes. */
 export function StashButton({ groups }: { groups: ReviewGroup[] }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const any = stashRows(groups).some((r) => r.files.length > 0);
+  const rows = stashRows(groups);
+  const any = rows.some((r) => r.files.length > 0 && r.entry.conflicts === 0);
+  const why = rows.some((r) => r.entry.conflicts > 0)
+    ? 'Resolve the merge conflicts first; git cannot stash them'
+    : 'No uncommitted changes';
   return (
     <>
       <Button
         icon="package"
         disabled={!any}
-        title={any ? undefined : 'No uncommitted changes'}
+        title={any ? undefined : why}
         active={!!rect}
         onClick={(e) => setRect(e.currentTarget.getBoundingClientRect())}
       >

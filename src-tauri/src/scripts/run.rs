@@ -907,6 +907,24 @@ mod tests {
         assert_eq!(crate::git::stash::list(&t.repo).unwrap().len(), 1);
     }
 
+    /// A stash apply that conflicts leaves the file unmerged: it is listed as `C` (SPEC §15).
+    #[test]
+    fn conflicted_files_are_listed_as_conflicts() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a.txt", Some(b"a\n"))], "base", 2);
+        t.checkout_main();
+        t.write_file(t.path(), "a.txt", b"stashed\n");
+        t.stash(false, "change");
+        t.commit_on("main", &[("a.txt", Some(b"committed\n"))], "move on", 1);
+        t.checkout_main();
+        let (out, ended) = pty_in(t.path(), "git stash apply 'stash@{0}'", &[("GIT_PAGER", "cat")]);
+        assert!(matches!(ended, Ended::Exited(Some(1), None)), "{out}");
+        let list = crate::git::diff::uncommitted(&t.repo).unwrap();
+        let kinds: Vec<_> = list.iter().map(|f| (f.path.as_str(), f.kind)).collect();
+        assert_eq!(kinds, [("a.txt", crate::model::FileKind::C)]);
+    }
+
     /// Picked files while other files are staged: the stash holds the picked ones only, and the
     /// staged ones that were not picked stay staged (git alone would put them in the stash too).
     #[test]

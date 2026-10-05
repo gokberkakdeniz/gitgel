@@ -20,6 +20,7 @@ const entry = (repoName: string, branch: string | null, worktreePath: string | n
   add: 1,
   del: 0,
   uncommitted: worktreePath ? 1 : null,
+  conflicts: 0,
   lastCommitAt: 0,
   changedAt: null,
   state: 'ok',
@@ -99,5 +100,13 @@ describe('stashPayload', () => {
       { repoId: 'web-app', branch: 'a', worktreePath: null, paths: ['x.ts', 'old-name.ts', 'new-name.ts'], untracked: false },
       { repoId: 'api', branch: 'b', worktreePath: null, paths: null, untracked: false },
     ]);
+  });
+});
+
+describe('stashPayload with conflicts', () => {
+  it('leaves out an entry with merge conflicts', () => {
+    const c = { ...entry('web-app', 'c', '/wt/c'), conflicts: 1 };
+    const rows = stashRows([group(c, [file('x.ts', 'C')])]);
+    expect(stashPayload(rows, { [c.key]: ['x.ts'] })).toEqual([]);
   });
 });

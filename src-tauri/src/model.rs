@@ -395,6 +395,9 @@ pub struct EntrySummary {
     pub del: Option<u32>,
     /// `None` if not checked out.
     pub uncommitted: Option<u32>,
+    /// Uncommitted files with merge conflicts (unmerged in the index); 0 when not checked out.
+    #[serde(default)]
+    pub conflicts: u32,
     /// Committer time of the tip commit, unix seconds.
     pub last_commit_at: Option<i64>,
     /// Newest modification time of the uncommitted files (staged, unstaged and untracked), unix
@@ -510,6 +513,8 @@ pub enum FileKind {
     R,
     D,
     U,
+    /// Unmerged: a merge, rebase or stash apply left it with conflicts (working tree only).
+    C,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

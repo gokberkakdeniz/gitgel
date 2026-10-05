@@ -296,6 +296,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 current={current}
                 base={base}
                 wipCount={entry?.uncommitted ?? 0}
+              wipConflicts={entry?.conflicts ?? 0}
                 wipAge={entry?.changedAt ?? null}
                 files={filesOpen ? files : []}
                 file={file?.path}
@@ -527,6 +528,7 @@ function ListRow({
   current,
   base,
   wipCount,
+  wipConflicts,
   wipAge,
   files,
   file,
@@ -537,6 +539,7 @@ function ListRow({
   current: string | null;
   base: string | null;
   wipCount: number;
+  wipConflicts: number;
   wipAge: number | null;
   /** The picked row's files, listed under it. */
   files: FileChange[];
@@ -587,6 +590,7 @@ function ListRow({
               <span className={styles.wipTitle}>Uncommitted changes</span>
               <span className={styles.meta}>
                 {plural(wipCount, 'file', 'files')}
+                {wipConflicts > 0 ? ` · ${wipConflicts === 1 ? '1 conflict' : `${wipConflicts} conflicts`}` : ''}
                 {wipAge ? ` · ${formatAge(wipAge)}` : ''}
               </span>
             </span>

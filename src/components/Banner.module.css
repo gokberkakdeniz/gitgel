@@ -12,6 +12,11 @@
   background: rgba(var(--warning-rgb), 0.12);
 }
 
+.danger {
+  color: var(--danger-text);
+  background: rgba(var(--danger-rgb), 0.12);
+}
+
 .neutral {
   color: var(--text-body);
   background: var(--bg-elevated);

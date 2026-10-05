@@ -16,7 +16,7 @@ use crate::git::pool::RepoPool;
 use crate::git::refs::DefaultBase;
 use crate::git::{diff, refs, stash, worktrees, Repo};
 use crate::model::{
-    entry_key, Config, EntryState, EntrySummary, FileChange, OtherBranch, RepoConfig, RepoScan,
+    entry_key, Config, EntryState, EntrySummary, FileChange, FileKind, OtherBranch, RepoConfig, RepoScan,
     RepoStatus, RepoUpdated, ScanResult, StashInfo, UpdateReason,
 };
 use crate::nearest;
@@ -388,6 +388,7 @@ fn summarize(
         add: None,
         del: None,
         uncommitted: None,
+        conflicts: 0,
         last_commit_at,
         changed_at: None,
         state: EntryState::Ok,
@@ -411,8 +412,9 @@ fn summarize(
 
     if let Some(wt) = &worktree_path {
         match uncommitted_count(ctx, wt, &tip) {
-            Ok((n, at)) => {
+            Ok((n, conflicts, at)) => {
                 s.uncommitted = Some(n);
+                s.conflicts = conflicts;
                 // Its age is its last edit when that is newer than the tip commit.
                 s.changed_at = at.filter(|&at| n > 0 && at > s.last_commit_at.unwrap_or(0));
             }
@@ -461,20 +463,20 @@ fn summarize(
     s
 }
 
-/// Uncommitted file count of a worktree whose HEAD is `head`, with the newest modification time
-/// of those files; cached until the watcher reports a change in it or HEAD moves.
+/// Uncommitted file count of a worktree whose HEAD is `head`, how many of them have conflicts,
+/// and the newest modification time of those files; cached until the watcher reports a change in
+/// it or HEAD moves.
 fn uncommitted_count(
     ctx: &RepoCtx,
     worktree: &Path,
     head: &str,
-) -> Result<(u32, Option<i64>), AppError> {
+) -> Result<(u32, u32, Option<i64>), AppError> {
     if let Some(w) = lock(ctx.cache).workdir(worktree, head) {
-        let n = w.count.or(w.uncommitted.as_ref().map(|u| u.len() as u32));
-        if let Some(n) = n {
+        if let Some(list) = &w.uncommitted {
             ctx.timings
                 .borrow_mut()
                 .add("status cached", std::time::Duration::ZERO);
-            return Ok((n, w.changed_at));
+            return Ok((list.len() as u32, conflicts(list), w.changed_at));
         }
     }
     let started = std::time::Instant::now();
@@ -491,7 +493,11 @@ fn uncommitted_count(
     let changed_at = lock(ctx.cache)
         .workdir(worktree, head)
         .and_then(|w| w.changed_at);
-    Ok((list.len() as u32, changed_at))
+    Ok((list.len() as u32, conflicts(&list), changed_at))
+}
+
+fn conflicts(list: &[FileChange]) -> u32 {
+    list.iter().filter(|c| c.kind == FileKind::C).count() as u32
 }
 
 /// HEAD ↔ working tree file list of a worktree, cached like `uncommitted_count`.
@@ -614,6 +620,7 @@ pub fn summarize_one(
             add: None,
             del: None,
             uncommitted: None,
+            conflicts: 0,
             last_commit_at: None,
             changed_at: None,
             state: pick_state(&flags),
@@ -742,6 +749,7 @@ pub fn removed_repo_summary(e: &crate::model::EntryConfig, config: &Config) -> E
         add: None,
         del: None,
         uncommitted: None,
+        conflicts: 0,
         last_commit_at: None,
         changed_at: None,
         state: EntryState::RepoMissing,

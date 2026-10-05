@@ -39,6 +39,8 @@ export function stashNote(entries: EntrySummary[]): string {
  * picked, else the picked ones with a rename's old path too. Untracked files go when one is picked. */
 export function stashPayload(rows: Row[], picks: Record<string, string[]>): StashPush[] {
   return rows.flatMap(({ entry: e, files }) => {
+    // git cannot stash a worktree with merge conflicts.
+    if (e.conflicts > 0) return [];
     const picked = files.filter((f) => picks[e.key]?.includes(f.path));
     if (picked.length === 0) return [];
     const all = picked.length === files.length;
@@ -59,7 +61,7 @@ export function stashPayload(rows: Row[], picks: Record<string, string[]>): Stas
 export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGroup[]; anchorRect: DOMRect; onClose: () => void }) {
   const rows = stashRows(groups);
   const [picks, setPicks] = useState<Record<string, string[]>>(() =>
-    Object.fromEntries(rows.map((r) => [r.entry.key, r.files.map((f) => f.path)])),
+    Object.fromEntries(rows.map((r) => [r.entry.key, r.entry.conflicts > 0 ? [] : r.files.map((f) => f.path)])),
   );
   const [open, setOpen] = useState<string[]>(() => (rows.length === 1 ? [rows[0].entry.key] : []));
   const [message, setMessage] = useState('');
@@ -97,7 +99,8 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
           <span className={styles.label}>In</span>
           {rows.map((r) => {
             const key = r.entry.key;
-            const off = r.files.length === 0;
+            const conflicted = r.entry.conflicts > 0;
+            const off = r.files.length === 0 || conflicted;
             const name = r.entry.branch ?? r.entry.shortSha ?? '';
             const n = r.files.filter((f) => picks[key]?.includes(f.path)).length;
             const all = !off && n === r.files.length;
@@ -116,7 +119,11 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
                     <span className={styles.repo}>{r.entry.repoName}</span>
                     <span className={styles.branch}>{name}</span>
                   </label>
-                  {off ? (
+                  {conflicted ? (
+                    <span className={styles.conflict} title="Resolve its merge conflicts first; git cannot stash them.">
+                      {r.entry.conflicts === 1 ? '1 conflict' : `${r.entry.conflicts} conflicts`}
+                    </span>
+                  ) : off ? (
                     <span className={styles.count}>no changes</span>
                   ) : (
                     <button

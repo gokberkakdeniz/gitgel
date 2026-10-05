@@ -419,6 +419,9 @@ rather than as a task is listed the same way, marked "(on request)".
   the worktree picker beside them on hover; popovers follow their anchor on scroll and resize;
   Stash changes picks files per entry (`git stash push -- <paths>`, literal pathspecs; the
   untracked option became picking the files) — 2026-10-05
+- [x] (on request) Merge conflicts shown: unmerged files are `C`, entries carry `conflicts` (a
+  danger pill on Branches and in Review, a danger banner in Review, `· N conflicts` in History);
+  Stash… leaves out entries with conflicts; canvas P7 — 2026-10-05
 
 ---
 

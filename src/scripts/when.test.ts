@@ -18,6 +18,7 @@ const entry = (over: Partial<EntrySummary> = {}): EntrySummary => ({
   add: 1,
   del: 1,
   uncommitted: 3,
+  conflicts: 0,
   lastCommitAt: 0,
   changedAt: null,
   state: 'ok',

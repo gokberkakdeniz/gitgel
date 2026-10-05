@@ -618,6 +618,11 @@ function Row({
             {e.changedAt ? formatAge(e.changedAt) : e.lastCommitAt ? formatAge(e.lastCommitAt) : '—'}
           </span>
           <StateCell entry={e} onBase={(rect) => onPopover('base', rect)} />
+          {e.conflicts > 0 && (
+            <Pill tone="danger" size="sm" title="Merge conflicts in the working tree">
+              {e.conflicts === 1 ? '1 conflict' : `${e.conflicts} conflicts`}
+            </Pill>
+          )}
         </span>
         {/* Line 3 is always there, so every row has the same height. */}
         {wt ? (

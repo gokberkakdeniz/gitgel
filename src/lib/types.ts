@@ -141,6 +141,7 @@ export interface EntrySummary {
   add: number | null;
   del: number | null;
   uncommitted: number | null; // null if not checked out
+  conflicts: number; // uncommitted files with merge conflicts
   lastCommitAt: number | null; // committer time of the tip, unix seconds
   changedAt: number | null; // newest uncommitted file mtime, only when newer than lastCommitAt
   state: EntryState;
@@ -198,7 +199,7 @@ export interface RepoUpdated {
 // ---- Review ----
 
 export type DiffMode = 'committed' | 'uncommitted' | 'all';
-export type FileKind = 'A' | 'M' | 'R' | 'D' | 'U';
+export type FileKind = 'A' | 'M' | 'R' | 'D' | 'U' | 'C'; // C: merge conflict (unmerged)
 export interface FileChange {
   path: string;
   oldPath: string | null; // R only

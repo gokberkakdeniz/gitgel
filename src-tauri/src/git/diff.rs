@@ -73,7 +73,8 @@ pub fn changes(diff: &Diff, side: NewSide) -> Result<Vec<FileChange>, AppError> 
     for (i, delta) in diff.deltas().enumerate() {
         let kind = match delta.status() {
             Delta::Added | Delta::Copied => FileKind::A,
-            Delta::Modified | Delta::Typechange | Delta::Conflicted => FileKind::M,
+            Delta::Modified | Delta::Typechange => FileKind::M,
+            Delta::Conflicted => FileKind::C,
             Delta::Renamed => FileKind::R,
             Delta::Deleted => FileKind::D,
             Delta::Untracked => FileKind::U,

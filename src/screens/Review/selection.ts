@@ -36,6 +36,7 @@ export function dirLabel(change: FileChange): string {
   const dir = dirname(change.path) || '.';
   if (change.kind === 'R' && change.oldPath) return `${dir} ← ${change.oldPath}`;
   if (change.kind === 'U') return `${dir} · untracked`;
+  if (change.kind === 'C') return `${dir} · conflict`;
   return dir;
 }
 

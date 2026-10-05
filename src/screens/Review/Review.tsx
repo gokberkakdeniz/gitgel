@@ -313,6 +313,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   useEffect(() => setPendingKey(null), [data]);
   const banner = mode === 'uncommitted' && !stash ? uncommittedBanner(target, groups) : null;
+  const conflictBanner = conflictsBanner(groups);
 
   // Coming from a project row: open that entry, collapse the others (once).
   const focused = useRef(false);
@@ -415,6 +416,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
         )}
         {target.kind === 'project' && <EditProjectButton projectId={target.projectId} />}
       </ReviewHeader>
+      {conflictBanner && !stash && <Banner tone="danger">{conflictBanner}</Banner>}
       {banner ? (
         <Banner tone="warning">{banner}</Banner>
       ) : (
@@ -754,6 +756,11 @@ function FileGroup({
         </div>
         <div className={styles.groupLine2}>
           <span className={styles.branch}>{e.branch ?? e.shortSha}</span>
+          {e.conflicts > 0 && (
+            <Pill tone="danger" size="sm" title="Merge conflicts in the working tree">
+              {e.conflicts === 1 ? '1 conflict' : `${e.conflicts} conflicts`}
+            </Pill>
+          )}
           {terms.length > 0 && (
             <span className={styles.matchLabel}>
               {shown.length} of {files.length}
@@ -1070,6 +1077,16 @@ function uncommittedBanner(target: ReviewTarget, groups: ReviewGroup[]): string 
   }
   const n = groups.filter((g) => g.entry.worktreePath).length;
   return `Uncommitted changes across ${n} checked-out ${n === 1 ? 'entry' : 'entries'}`;
+}
+
+/** Unmerged files (a merge, rebase or stash apply that conflicted), in every mode. */
+export function conflictsBanner(groups: ReviewGroup[]): string | null {
+  const hit = groups.filter((g) => g.entry.conflicts > 0);
+  const n = hit.reduce((s, g) => s + g.entry.conflicts, 0);
+  if (n === 0) return null;
+  const files = n === 1 ? '1 file has merge conflicts' : `${n} files have merge conflicts`;
+  const where = hit.length > 1 ? ` in ${hit.length} entries` : '';
+  return `${files}${where}. Resolve ${n === 1 ? 'it' : 'them'} in your editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.`;
 }
 
 function notReviewable(entry: EntrySummary | undefined): string {

@@ -20,6 +20,7 @@ function entry(repoId: string, branch: string | null, at: number, extra: Partial
     add: 1,
     del: 0,
     uncommitted: null,
+    conflicts: 0,
     lastCommitAt: at,
     changedAt: null,
     state: 'ok',
