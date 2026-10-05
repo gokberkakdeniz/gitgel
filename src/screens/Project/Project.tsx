@@ -5,6 +5,7 @@ import { Button } from '../../components/Button';
 import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
+import { SyncItems } from '../../sync/SyncButtons';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
@@ -547,7 +548,7 @@ function StatePill({
   }
 }
 
-/** Entry options: [View last known state], Point to another branch…, Copy branch name, [open
+/** Entry options: [View last known state], Point to another branch, Copy branch name, [open
  * items], [Scripts], Remove, [the closing note]. */
 function EntryMenu({
   entry,
@@ -600,7 +601,7 @@ function EntryMenu({
       )}
       {saved && entry.branch !== null && (
         <MenuItem icon={<BranchIcon size={14} />} onSelect={onRepoint}>
-          Point to another branch…
+          Point to another branch
         </MenuItem>
       )}
       {entry.branch !== null && (
@@ -616,6 +617,7 @@ function EntryMenu({
       )}
       {hasFirst && <MenuDivider />}
       <OpenItems entry={entry} onDone={onClose} />
+      <SyncItems entry={entry} onDone={onClose} />
       <ScriptsMenu entry={entry} menu="project" project={projectName} onDone={onClose} />
       <MenuDivider />
       <MenuItem danger icon={<RemoveIcon />} onSelect={onRemove}>
@@ -626,7 +628,7 @@ function EntryMenu({
   );
 }
 
-/** "Point to another branch…": the local branches of the entry's repo. */
+/** "Point to another branch": the local branches of the entry's repo. */
 function BranchPicker({
   entry,
   anchorRect,

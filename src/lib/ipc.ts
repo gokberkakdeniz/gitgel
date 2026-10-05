@@ -145,6 +145,11 @@ export const stashApply = (repoId: string, index: number, sha: string, worktreeP
 export const stashDrop = (repoId: string, index: number, sha: string) =>
   invoke<ScriptRun>('stash_drop', { repoId, index, sha });
 
+/** Sync (W4a): git actions too, one branch (or repository) each. */
+export const gitFetch = (repoId: string) => invoke<ScriptRun>('git_fetch', { repoId });
+export const gitPull = (entry: EntryRef, rebase: boolean) => invoke<ScriptRun>('git_pull', { entry, rebase });
+export const gitPush = (entry: EntryRef) => invoke<ScriptRun>('git_push', { entry });
+
 /** Typed text for a running script. */
 export const writeScriptInput = (runId: string, data: string) => invoke<null>('write_script_input', { runId, data });
 

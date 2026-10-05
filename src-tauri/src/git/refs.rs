@@ -53,6 +53,80 @@ pub fn upstream_of(repo: &Repository, branch: &str) -> Option<String> {
         .then_some(fallback)
 }
 
+/// Where a local branch is pushed to and pulled from (W4a).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Tracking {
+    /// The remote, e.g. `origin`.
+    pub remote: String,
+    /// The branch's name on the remote.
+    pub branch: String,
+    /// The remote-tracking branch (`origin/feat/x`); `None` when the remote does not have the
+    /// branch (as of the last fetch).
+    pub tracking: Option<String>,
+    /// The upstream is set in the branch's config (`branch.<name>.remote` / `.merge`).
+    pub configured: bool,
+}
+
+/// The configured upstream of `branch` when it is on a remote; otherwise the same name on the
+/// default remote (`origin`, else the only remote). `None` without a remote.
+pub fn tracking(repo: &Repository, branch: &str) -> Option<Tracking> {
+    let refname = format!("refs/heads/{branch}");
+    let configured = repo
+        .branch_upstream_remote(&refname)
+        .ok()
+        .and_then(|r| r.as_str().ok().map(str::to_string))
+        .filter(|r| r != ".")
+        .zip(
+            repo.branch_upstream_merge(&refname)
+                .ok()
+                .and_then(|m| m.as_str().ok().map(str::to_string))
+                .and_then(|m| m.strip_prefix("refs/heads/").map(str::to_string)),
+        );
+    if let Some((remote, merge)) = configured {
+        let tracking = repo
+            .find_branch(branch, BranchType::Local)
+            .ok()
+            .and_then(|b| b.upstream().ok())
+            .and_then(|up| up.name().ok().flatten().map(str::to_string));
+        return Some(Tracking {
+            remote,
+            branch: merge,
+            tracking,
+            configured: true,
+        });
+    }
+    let remote = default_remote(repo)?;
+    let name = format!("{remote}/{branch}");
+    let tracking = repo
+        .find_reference(&format!("refs/remotes/{name}"))
+        .is_ok()
+        .then_some(name);
+    Some(Tracking {
+        remote,
+        branch: branch.to_string(),
+        tracking,
+        configured: false,
+    })
+}
+
+/// `origin` when it is configured, else the only remote.
+fn default_remote(repo: &Repository) -> Option<String> {
+    if repo.find_remote("origin").is_ok() {
+        return Some("origin".into());
+    }
+    let remotes = repo.remotes().ok()?;
+    let names: Vec<String> = remotes
+        .iter()
+        .flatten()
+        .flatten()
+        .map(str::to_string)
+        .collect();
+    match names.as_slice() {
+        [only] => Some(only.clone()),
+        _ => None,
+    }
+}
+
 /// Tag names, sorted.
 pub fn tags(repo: &Repository) -> Result<Vec<String>, AppError> {
     let mut tags: Vec<String> = repo
@@ -245,6 +319,41 @@ mod tests {
         assert_eq!(
             upstream_of(&t.repo, "feature").as_deref(),
             Some("origin/main")
+        );
+    }
+
+    #[test]
+    fn tracking_is_the_configured_upstream_or_the_same_name_on_origin() {
+        let t = TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        t.branch_from("feature", tip);
+        // No remote: nowhere to push.
+        assert_eq!(tracking(&t.repo, "feature"), None);
+        t.add_origin();
+        assert_eq!(
+            tracking(&t.repo, "feature"),
+            Some(Tracking {
+                remote: "origin".into(),
+                branch: "feature".into(),
+                tracking: None,
+                configured: false,
+            })
+        );
+        t.set_remote("origin/feature", tip);
+        assert_eq!(
+            tracking(&t.repo, "feature").and_then(|t| t.tracking),
+            Some("origin/feature".into())
+        );
+        t.set_remote("origin/other", tip);
+        t.set_upstream("feature", "origin/other");
+        assert_eq!(
+            tracking(&t.repo, "feature"),
+            Some(Tracking {
+                remote: "origin".into(),
+                branch: "other".into(),
+                tracking: Some("origin/other".into()),
+                configured: true,
+            })
         );
     }
 

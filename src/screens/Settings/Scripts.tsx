@@ -85,9 +85,9 @@ export function Scripts({ config }: { config: Config }) {
             </span>
           </div>
           <div className={styles.scriptsActions}>
-            <Button onClick={() => void doImport()}>Import…</Button>
+            <Button onClick={() => void doImport()}>Import</Button>
             <Button disabled={config.scripts.length === 0} onClick={() => void doExport()}>
-              Export…
+              Export
             </Button>
             <Button variant="primary" onClick={() => setEditing(newScript())}>
               + New script

@@ -180,14 +180,19 @@ impl TestRepo {
         self.repo.set_head(&format!("refs/heads/{branch}")).unwrap();
     }
 
-    /// Makes `branch` track the remote-tracking branch `upstream` (e.g. `origin/main`).
-    pub fn set_upstream(&self, branch: &str, upstream: &str) {
-        // libgit2 needs the remote to exist in the config.
+    /// Adds `origin` to the config (once).
+    pub fn add_origin(&self) {
         if self.repo.find_remote("origin").is_err() {
             self.repo
                 .remote("origin", "https://example.invalid/repo.git")
                 .unwrap();
         }
+    }
+
+    /// Makes `branch` track the remote-tracking branch `upstream` (e.g. `origin/main`).
+    pub fn set_upstream(&self, branch: &str, upstream: &str) {
+        // libgit2 needs the remote to exist in the config.
+        self.add_origin();
         self.repo
             .find_branch(branch, BranchType::Local)
             .unwrap()

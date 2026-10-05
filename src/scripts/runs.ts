@@ -168,14 +168,32 @@ export async function startScript(
   }
 }
 
+/** How a git action's end is shown (sync, W4a). */
+export interface GitActionShow {
+  /** A failed run opens its output panel instead of a toast. */
+  openOnFail?: boolean;
+  /** The success toast's message instead of “<name>” finished. */
+  done?: string;
+}
+const gitActionShow = new Map<string, GitActionShow>();
+
 /** Starts a git action (SPEC §15): its run gets the toast and output panel of a script's, but
  * no Run again. `name` is for the toast when it cannot start. */
-export async function startGitAction(name: string, start: () => Promise<ScriptRun>): Promise<void> {
+export async function startGitAction(
+  name: string,
+  start: () => Promise<ScriptRun>,
+  show: GitActionShow = {},
+): Promise<void> {
   try {
     const run = await start();
+    gitActionShow.set(run.runId, show);
     const runs = useRuns.getState();
     // A quick action can end (`script-exited`) before this answer arrives; keep the end.
-    if (runs.runs[run.runId]) return;
+    const known = runs.runs[run.runId];
+    if (known) {
+      if (known.status !== 'running') showRunToast(known);
+      return;
+    }
     runs.put(run);
     showRunToast(run);
   } catch (err) {
@@ -203,11 +221,16 @@ export function showRunToast(run: ScriptRun): void {
     return;
   }
   const ok = run.exitCode === 0;
+  const show = gitActionShow.get(run.runId);
+  if (!ok && show?.openOnFail && !run.stopped) {
+    useRuns.getState().showOutput(run.runId);
+    return;
+  }
   const why = run.stopped ? 'stopped' : run.exitCode !== null ? `exit ${run.exitCode}` : (run.signal ?? 'ended');
   // The last line says how it went.
   useUi.getState().showToast({
     status: ok ? 'success' : 'failed',
-    message: ok ? `“${run.name}” finished` : `“${run.name}” failed · ${why}`,
+    message: ok ? (show?.done ?? `“${run.name}” finished`) : `“${run.name}” failed · ${why}`,
     sub: run.lastLine || run.repoLabel,
     ...output,
   });

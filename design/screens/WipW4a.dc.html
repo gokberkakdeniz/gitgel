@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>W4a · Sync in History</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input,textarea{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; flex-direction: column; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--bg-main)">
+<div style="display: flex; gap: 8px; margin-right: -4px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><dc-import name="Icon" icon="sidebar" hint-size="17px,17px"></dc-import></button>
+<a href="HistH1.dc.html" aria-label="Back to Branches" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px"><dc-import name="Icon" icon="back" hint-size="17px,17px"></dc-import></a>
+<button aria-label="Forward" disabled style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)"><dc-import name="Icon" icon="forward" hint-size="17px,17px"></dc-import></button>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-left: 4px">
+<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap">History</span>
+<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{subtitle}}</span>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; align-items: center; gap: 10px">
+<button aria-label="Branch" aria-haspopup="menu" title="Pick a branch of web-app" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 7px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px; white-space: nowrap"><span style="display: flex; color: var(--accent-text)"><dc-import name="Icon" icon="branch" size="13" hint-size="13px,13px"></dc-import></span>{{refLabel}}<span style="display: flex; color: var(--text-muted)"><dc-import name="Icon" icon="chevron-down" size="10" hint-size="10px,10px"></dc-import></span></button>
+<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search commits" label="Search commit messages, SHAs and paths" right-text="" hint-size="200px,32px"></dc-import>
+<div role="group" aria-label="Sync with the remote" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
+<button title="Fetch web-app from origin" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="download" size="12" hint-size="12px,12px"></dc-import>Fetch</button>
+<span style="width: 1px; height: 16px; background: var(--border)"></span>
+<button title="Pull from origin/session-token-refresh" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-body); font-weight: 500"><dc-import name="Icon" icon="arrow-down" size="12" hint-size="12px,12px"></dc-import>Pull<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">↓1</span></button>
+<button disabled title="Behind origin, pull first" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-body); font-weight: 500; opacity: 0.5"><dc-import name="Icon" icon="arrow-up" size="12" hint-size="12px,12px"></dc-import>Push<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">↑2</span></button>
+</div>
+<button aria-label="More actions" title="More actions" aria-haspopup="menu" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+</div>
+</header>
+<div role="status" style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 9px 20px; border-bottom: 1px solid var(--border); background: rgba(var(--warning-rgb), 0.12); color: var(--warning); font-size: 12px"><span style="flex-grow: 1">session-token-refresh is behind origin by 1 commit, so it cannot be pushed. Pull it first.</span><dc-import name="Button" theme="none" variant="secondary" size="24" label="Pull (rebase)" hint-size="96px,24px"></dc-import></div>
+<div style="flex-grow: 1; display: flex; min-height: 0">
+<aside style="width: 380px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 8px; padding: 14px 16px 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)"><span style="flex-grow: 1">{{listLabel}}</span></div>
+<div role="listbox" aria-label="Commits" style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 8px 8px; min-height: 0; overflow: hidden">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="8">
+<sc-if value="{{it.isDay}}" hint-placeholder-val="{{false}}">
+<div style="padding: 10px 8px 4px; font-size: 11px; color: var(--text-faint)">{{it.label}}</div>
+</sc-if>
+<sc-if value="{{it.isBase}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 6px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="flex-grow: 1; height: 1px; background: var(--border-strong)"></span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.label}}</span><span style="flex-grow: 1; height: 1px; background: var(--border-strong)"></span></div>
+<span style="text-align: center; font-size: 11px; color: var(--text-faint)">{{it.sub}}</span>
+</div>
+</sc-if>
+<sc-if value="{{it.isWip}}" hint-placeholder-val="{{false}}">
+<div role="option" aria-selected="false" title="Show uncommitted changes (HEAD ↔ working tree)" style="display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin-top: 4px; border-radius: 8px; border: 1px dashed var(--border-strong); cursor: pointer">
+<span style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-text)"></span></span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 13px; font-weight: 500; color: var(--accent-text)">Uncommitted changes</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{it.isCommit}}" hint-placeholder-val="{{true}}">
+<div role="option" aria-selected="{{it.sel}}" title="Show this commit" style="{{it.rowStyle}}">
+<span title="{{it.author}}" style="{{it.avatarStyle}}">{{it.initials}}</span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.merge}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; display: flex; align-items: center; height: 16px; padding: 0 6px; border-radius: 9999px; border: 1px solid var(--border-strong); font-size: 10px; color: var(--text-muted)">merge</span></sc-if></div>
+<div style="display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap"><span style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{it.author}} · {{it.age}}</span><span style="color: var(--accent-text)">{{it.sha}}</span></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{it.isFile}}" hint-placeholder-val="{{false}}">
+<div style="{{it.rowStyle}}">
+<span style="{{it.badgeStyle}}">{{it.kind}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span>
+</div>
+</sc-if>
+</sc-for>
+</div>
+</aside>
+<section style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+<div style="border-bottom: 1px solid var(--border); padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 28px">
+<span style="font-size: 15px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{c.subject}}</span>
+<div style="flex-grow: 1"></div>
+<button aria-label="Copy SHA" title="Copy full SHA" style="width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-body)"><dc-import name="Icon" icon="copy" size="13" hint-size="13px,13px"></dc-import></button>
+</div>
+<div style="font-size: 13px; line-height: 1.5; color: var(--text-muted); max-width: 720px">{{c.body}}</div>
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">
+<span style="{{c.avatarStyle}}">{{c.initials}}</span>
+<span style="color: var(--text-body)">{{c.author}}</span><span style="color: var(--text-faint)">·</span><span>{{c.when}}</span><span style="color: var(--text-faint)">·</span><span style="color: var(--accent-text)">{{c.sha}}</span><span style="color: var(--text-faint)">·</span><span>parent {{c.parent}}</span><span style="color: var(--text-faint)">·</span><span>{{c.files}}</span><span style="color: var(--success)">{{c.add}}</span><span style="color: var(--danger)">{{c.del}}</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; min-height: 36px; box-sizing: border-box; padding: 5px 10px 5px 18px; border-bottom: 1px solid var(--border); background: var(--bg-sunken)">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{c.path}}</span>
+<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{c.parent}} ↔ {{c.sha}}</span>
+<div style="flex-grow: 1"></div>
+<button aria-haspopup="menu" title="Diff view" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)"><dc-import name="Icon" icon="split" size="14" stroke="1.7" hint-size="14px,14px"></dc-import><span>Split</span><dc-import name="Icon" icon="chevron-down" size="9" stroke="2.6" hint-size="9px,9px"></dc-import></button>
+<span style="width: 1px; height: 16px; background: var(--border); margin: 0 2px"></span>
+<span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{c.nav}}</span>
+<div role="group" aria-label="Jump between changes" style="display: flex; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
+<button disabled aria-label="Previous change" title="Previous change (⌥↑)" style="width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--icon-disabled)"><dc-import name="Icon" icon="chevron-up" size="14" stroke="2" hint-size="14px,14px"></dc-import></button>
+<button aria-label="Next change" title="Next change (⌥↓)" style="width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-body)"><dc-import name="Icon" icon="chevron-down" size="14" stroke="2" hint-size="14px,14px"></dc-import></button>
+</div>
+</div>
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: var(--bg-main); min-height: 0">
+<div style="border-right: 1px solid var(--border); padding-top: 6px; overflow: hidden">
+<sc-for list="{{left}}" as="l" hint-placeholder-count="6">
+<div style="{{l.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.n}}</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)">{{l.mark}}</span><span style="white-space: pre">{{l.t}}</span></div>
+</sc-for>
+</div>
+<div style="padding-top: 6px; overflow: hidden">
+<sc-for list="{{right}}" as="r" hint-placeholder-count="6">
+<div style="{{r.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{r.n}}</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">{{r.mark}}</span><span style="white-space: pre">{{r.t}}</span></div>
+</sc-for>
+</div>
+</div>
+</section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["main","branch"],"default":"branch"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var t = this.props.theme || 'dark';
+    var v = this.props.variant || 'main';
+    // History: one branch's commits, newest first, grouped by day. Left: the commit list (the
+    // picked commit expanded into its files, as Stashes does); right: the commit's header and
+    // its diff against its first parent. variant: main (Hi2, checked out, so Uncommitted changes sits on top) or a feature branch with the base
+    // line (Hi3).
+    var avatar = function (who, size) {
+      var bot = /\[bot\]/.test(who);
+      return 'width: ' + size + 'px; height: ' + size + 'px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-family: \'Instrument Sans\', sans-serif; font-size: ' + (size > 20 ? 10 : 9) + 'px; font-weight: 600; ' +
+        (bot ? 'background: var(--bg-band); color: var(--text-muted); border: 1px dashed var(--border-strong); box-sizing: border-box' : 'background: var(--bg-pressed); color: var(--text-strong)');
+    };
+    var initials = function (who) { return /\[bot\]/.test(who) ? 'BOT' : who.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2); };
+    var commit = function (sha, subject, author, age, opt) {
+      opt = opt || {};
+      return { isCommit: true, sha: sha, subject: subject, author: author, age: age, merge: !!opt.merge, sel: !!opt.sel,
+        initials: initials(author), avatarStyle: avatar(author, 24),
+        subjectStyle: 'font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: ' + (opt.shared ? 'var(--text-muted)' : 'var(--text-strong)'),
+        rowStyle: 'display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; cursor: pointer; ' + (opt.sel ? 'background: var(--bg-hover)' : '') + (opt.shared ? '; opacity: 0.7' : '') };
+    };
+    var KIND = { M: 'warning', A: 'success', D: 'danger' };
+    var file = function (kind, name, dir, add, del, on) {
+      return { isFile: true, kind: kind, name: name, dir: dir, add: add, del: del,
+        badgeStyle: 'width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; font-weight: 500; color: var(--' + KIND[kind] + '); background: rgba(var(--' + KIND[kind] + '-rgb), 0.15)',
+        rowStyle: 'display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 42px; border-radius: 8px; ' + (on ? 'box-shadow: inset 0 0 0 1px var(--accent); background: rgba(var(--accent-rgb), 0.10)' : '') };
+    };
+    var day = function (label) { return { isDay: true, label: label }; };
+    var line = function (side, kind, n, text) {
+      var bg = kind === 'pad' ? 'background: repeating-linear-gradient(135deg, var(--bg-band) 0 4px, var(--bg-main) 4px 8px)'
+        : kind === 'del' ? 'background: rgba(var(--danger-rgb), 0.15)' : kind === 'add' ? 'background: rgba(var(--success-rgb), 0.15)' : '';
+      return { n: n || '', t: text || '', mark: kind === 'del' ? '−' : kind === 'add' ? '+' : '', style: 'display: flex; padding-right: 12px; color: var(--text-code); ' + bg };
+    };
+
+    var rotate = commit('a1c9e02', 'Rotate refresh tokens on every use', 'Melis Kaya', '2h', { sel: true });
+    var rotateFiles = [file('M', 'refresh.ts', 'src/auth', '+14', '−3', true), file('M', 'store.ts', 'src/auth', '+6', '−2'), file('A', 'refresh.test.ts', 'test/auth', '+38', '')];
+    var rotateDetail = { subject: 'Rotate refresh tokens on every use', author: 'Melis Kaya', initials: 'MK', avatarStyle: avatar('Melis Kaya', 18),
+      body: 'A refresh token can now be used once. Using a revoked one again ends the whole session family, so a stolen token stops working on its first replay.',
+      when: 'today 11:42', sha: 'a1c9e02', parent: '9e44b1d', files: '3 files', add: '+58', del: '−5', path: 'src/auth/refresh.ts', nav: 'Change 1 of 2' };
+    var rotateLeft = [line('l', 'ctx', 30, 'export async function refreshSession(s: Session) {'), line('l', 'pad'),
+      line('l', 'del', 31, '  const next = await issueToken(s.userId);'), line('l', 'pad'),
+      line('l', 'ctx', 32, '  await store.set(next.id, next);'), line('l', 'ctx', 33, '  return next;'), line('l', 'ctx', 34, '}')];
+    var rotateRight = [line('r', 'ctx', 30, 'export async function refreshSession(s: Session) {'),
+      line('r', 'add', 31, '  if (await store.isRevoked(s.refreshId)) throw new ReplayError(s.id);'),
+      line('r', 'add', 32, '  const next = await issueToken(s.userId, { rotate: true });'),
+      line('r', 'add', 33, '  await store.revoke(s.refreshId);'),
+      line('r', 'ctx', 34, '  await store.set(next.id, next);'), line('r', 'ctx', 35, '  return next;'), line('r', 'ctx', 36, '}')];
+
+    var out;
+    if (v === 'branch') {
+      out = { subtitle: 'web-app · session-token-refresh · ~/code/wt/token-refresh', refLabel: 'session-token-refresh', listLabel: 'session-token-refresh · 4 ahead of main',
+        items: [{ isWip: true, meta: '3 files · 6m' }, day('Today'), commit('e8b2c41', 'Retry refresh once on network error', 'Can Öztürk', '6m', { sel: true }),
+          file('M', 'refresh.ts', 'src/auth', '+12', '−1', true), file('M', 'errors.ts', 'src/auth', '+7', '−3'),
+          commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m'),
+          commit('b41f9e3', 'Add refresh token rotation flag', 'Can Öztürk', '3h'),
+          day('Yesterday'), commit('2e7c1d0', 'Scaffold token refresh service', 'Can Öztürk', '1d'),
+          { isBase: true, label: 'base main · d81f03a', sub: 'Below: already in main' },
+          commit('d81f03a', 'Split auth middleware into guards', 'Melis Kaya', '3d', { shared: true }),
+          commit('e1d4a77', 'Add audit log for admin sign-ins', 'Deniz Arslan', '3d', { shared: true }),
+          commit('6d0a913', 'Add refresh token family id', 'Melis Kaya', '4d', { shared: true })],
+        c: { subject: 'Retry refresh once on network error', author: 'Can Öztürk', initials: 'CÖ', avatarStyle: avatar('Can Öztürk', 18),
+          body: 'A dropped connection during refresh logged people out. Retry once with the same refresh id; a second failure still signs out.',
+          when: 'today 13:36', sha: 'e8b2c41', parent: '5c0d7aa', files: '2 files', add: '+19', del: '−4', path: 'src/auth/refresh.ts', nav: 'Change 1 of 1' },
+        left: [line('l', 'ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('l', 'del', 41, '  return refreshSession(s);'),
+          line('l', 'pad'), line('l', 'pad'), line('l', 'pad'), line('l', 'pad'), line('l', 'pad'), line('l', 'ctx', 42, '}')],
+        right: [line('r', 'ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('r', 'add', 41, '  try {'),
+          line('r', 'add', 42, '    return await refreshSession(s);'), line('r', 'add', 43, '  } catch (e) {'),
+          line('r', 'add', 44, '    if (!(e instanceof NetworkError)) throw e;'), line('r', 'add', 45, '    return refreshSession(s);'),
+          line('r', 'add', 46, '  }'), line('r', 'ctx', 47, '}')] };
+    } else {
+      out = { subtitle: 'web-app · main · ~/code/web-app', refLabel: 'main', listLabel: 'main · 248 commits',
+        items: [{ isWip: true, meta: '2 files · 4m' }, day('Today'), rotate].concat(rotateFiles, [
+          commit('9e44b1d', 'Merge pull request #412 from deniz/rate-limit-headers', 'Deniz Arslan', '5h', { merge: true }),
+          commit('3f0a7c8', 'Send RateLimit-* headers on 429', 'Deniz Arslan', '6h'),
+          day('Yesterday'), commit('c72d915', 'Bump vite from 5.4.2 to 5.4.8', 'dependabot[bot]', '1d'),
+          commit('7f3b210', 'Fix cookie domain on preview deploys', 'Can Öztürk', '1d'),
+          day('Oct 2'), commit('58ab0e3', 'Drop legacy /v1/session endpoint', 'Melis Kaya', '2d'),
+          commit('e1d4a77', 'Add audit log for admin sign-ins', 'Deniz Arslan', '3d')]),
+        c: rotateDetail, left: rotateLeft, right: rotateRight };
+    }
+    out.themeClass = 'theme-' + t;
+    return out;
+  }
+}
+</script>
+</body>
+</html>

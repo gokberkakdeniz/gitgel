@@ -17,7 +17,7 @@ const repos: ListItem[] = [
     detail: '~/old/admin-panel',
     actions: [
       { kind: 'pill', label: 'path not found', tone: 'danger' },
-      { label: 'Locate…', variant: 'secondary', ariaLabel: 'Locate admin-panel' },
+      { label: 'Locate', variant: 'secondary', ariaLabel: 'Locate admin-panel' },
       x('Remove repository'),
     ],
   },
@@ -116,8 +116,8 @@ export function ListStory() {
 
         <section style={col}>
           <h2 style={h2}>Settings › Repositories · regular</h2>
-          <List label="Repositories" items={repos} addLabel="+ Add repository…" onAdd={() => {}} />
-          <span style={note}>titleWeight 500 + titleWidth 96; aside "base main"; a missing repo: danger Pill + Locate…; ✕</span>
+          <List label="Repositories" items={repos} addLabel="+ Add repository" onAdd={() => {}} />
+          <span style={note}>titleWeight 500 + titleWidth 96; aside "base main"; a missing repo: danger Pill + Locate; ✕</span>
         </section>
 
         <section style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>

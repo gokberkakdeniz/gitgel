@@ -12,7 +12,6 @@ import {
   ForwardIcon,
   HistoryIcon,
   MoreVerticalIcon,
-  PencilIcon,
   RefreshIcon,
   SidebarIcon,
 } from '../../components/icons';
@@ -25,7 +24,6 @@ import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { Popover } from '../../components/Popover';
 import { Pill } from '../../components/Pill';
-import { RefreshButton } from '../../components/RefreshButton';
 import { Segmented } from '../../components/Segmented';
 import { Icon } from '../../components/icons';
 import { formatAge, plural } from '../../lib/format';
@@ -44,8 +42,12 @@ import type {
 } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
-import { StashButton } from '../../stash/StashButton';
+import { useStashAction } from '../../stash/StashAction';
+import { PageMenu } from '../../components/PageMenu';
+import { rescanAll } from '../../lib/events';
 import { StashBar } from '../../stash/StashBar';
+import { SyncItems } from '../../sync/SyncButtons';
+import { upstreamLabel, upstreamTitle } from '../../sync/sync';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
@@ -148,7 +150,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     if (m === 'uncommitted') setCommitSel({});
   };
   // Entries with nothing in this mode are hidden, except the one group of a branch review: its
-  // header holds the menu with "Change base…", the way out of a base that leaves nothing to show.
+  // header holds the menu with "Change base", the way out of a base that leaves nothing to show.
   const visible = viewGroups.filter((g) => g.files[mode].length > 0 || !!shaOf(g) || target.kind === 'branch');
   const current = resolveSelection(visible, mode, selected);
   const group = visible.find((g) => g.entry.key === current?.key);
@@ -410,11 +412,11 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     />
   );
 
+  const stashAction = useStashAction(data?.groups ?? []);
+
   return (
     <div className={styles.screen}>
       <ReviewHeader entry={entry} target={target} backLabel={backLabel} data={data} stashes={stashes}>
-        {target.kind !== 'stashes' && <StashButton groups={data?.groups ?? []} />}
-        <RefreshButton />
         {target.kind !== 'stashes' && (
           <Segmented
             aria-label="Diff layer"
@@ -427,7 +429,34 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
             }))}
           />
         )}
-        {target.kind === 'project' && <EditProjectButton projectId={target.projectId} />}
+        <PageMenu>
+          {(close, anchor) => (
+            <>
+              {target.kind !== 'stashes' && stashAction.item(close, anchor)}
+              <MenuItem
+                icon="refresh"
+                onSelect={() => {
+                  close();
+                  void rescanAll(true);
+                }}
+              >
+                Refresh
+              </MenuItem>
+              {target.kind === 'project' && (
+                <MenuItem
+                  icon="pencil"
+                  onSelect={() => {
+                    close();
+                    editProject(target.projectId);
+                  }}
+                >
+                  Edit project
+                </MenuItem>
+              )}
+            </>
+          )}
+        </PageMenu>
+        {stashAction.dialog}
       </ReviewHeader>
       {conflictBanner && !stash && <Banner tone="danger">{conflictBanner}</Banner>}
       {banner ? (
@@ -612,18 +641,12 @@ function commitParent(g: ReviewGroup, sha: string | undefined, c: CommitChanges 
 }
 
 /** Opens the project page: back to it when Review was opened from there, else a new step. */
-function EditProjectButton({ projectId }: { projectId: string }) {
-  const edit = () => {
-    const nav = useNav.getState();
-    const prev = nav.stack[nav.index - 1];
-    if (prev?.name === 'project' && prev.projectId === projectId) nav.back();
-    else nav.push({ name: 'project', projectId });
-  };
-  return (
-    <IconButton size={32} aria-label="Edit project" title="Edit project" onClick={edit}>
-      <PencilIcon />
-    </IconButton>
-  );
+/** Back to the project page when Review was opened from it, else to it. */
+function editProject(projectId: string) {
+  const nav = useNav.getState();
+  const prev = nav.stack[nav.index - 1];
+  if (prev?.name === 'project' && prev.projectId === projectId) nav.back();
+  else nav.push({ name: 'project', projectId });
 }
 
 function ReviewHeader({
@@ -722,7 +745,7 @@ function ReviewHeader({
   );
 }
 
-/** An entry's ⋯ menu: "Change base…", then Branches' row menu without "Open review", since this is it. */
+/** An entry's ⋯ menu: "Change base", then Branches' row menu without "Open review", since this is it. */
 function EntryMenu({
   entry,
   target,
@@ -745,7 +768,7 @@ function EntryMenu({
         sub={`base ${entry.base ?? 'none'}${entry.baseIsCustom ? ' · set for this branch' : ''}`}
         onSelect={onChangeBase}
       >
-        Change base…
+        Change base
       </MenuItem>
       {entry.branch !== null && (
         <MenuItem
@@ -771,6 +794,7 @@ function EntryMenu({
       )}
       <MenuDivider />
       <OpenItems entry={entry} onDone={onClose} />
+      <SyncItems entry={entry} onDone={onClose} />
       {project !== undefined ? (
         <ScriptsMenu entry={entry} menu="project" project={project} onDone={onClose} />
       ) : (
@@ -859,10 +883,16 @@ function FileGroup({
               {e.conflicts === 1 ? '1 conflict' : `${e.conflicts} conflicts`}
             </Pill>
           )}
-          {terms.length > 0 && (
+          {terms.length > 0 ? (
             <span className={styles.matchLabel}>
               {shown.length} of {files.length}
             </span>
+          ) : (
+            e.upstream && (
+              <span className={styles.upstream} title={upstreamTitle(e.upstream)}>
+                {upstreamLabel(e.upstream)}
+              </span>
+            )
           )}
         </div>
         {commit && (
@@ -1037,6 +1067,10 @@ function EntryBar({
   const index = sha ? g.commits.findIndex((c) => c.sha === sha) : -1;
   const total = g.commits.length;
   const on = index >= 0;
+  // The upstream line (W4a) sits over the newest commit the remote has, when some listed ones
+  // are not pushed.
+  const up = e.upstream;
+  const pushedAt = up?.name ? g.commits.findIndex((c) => c.sha === up.mergeBase) : -1;
 
   // Stepping keeps the picked row in view.
   const list = useRef<HTMLDivElement>(null);
@@ -1093,6 +1127,7 @@ function EntryBar({
                   >
                     {e.base}
                   </button>
+                  {e.upstream && <span title={upstreamTitle(e.upstream)}> · {upstreamLabel(e.upstream)}</span>}
                 </>
               )}
         </span>
@@ -1128,12 +1163,23 @@ function EntryBar({
       </div>
       {!workingTree && total > 0 && (
         <div ref={list} role="listbox" aria-label="Commits" className={styles.commits}>
-          {g.commits.map((c) => {
+          {g.commits.map((c, i) => {
             const picked = c.sha === sha;
             const cls = [styles.commit, picked && styles.commitOn, c.fromBranch && styles.foreign]
               .filter(Boolean)
               .join(' ');
-            return (
+            const line = i === pushedAt && i > 0 && (
+              <div
+                key="upstream"
+                role="separator"
+                aria-label={`${up!.name} is at ${c.shortSha}; above it is not pushed`}
+                className={styles.upstreamLine}
+              >
+                <span>{up!.name} · above: not pushed</span>
+              </div>
+            );
+            return [
+              line,
               <button
                 key={c.sha}
                 type="button"
@@ -1151,8 +1197,8 @@ function EntryBar({
                   </Pill>
                 )}
                 <span className={styles.age}>{formatAge(c.committedAt)}</span>
-              </button>
-            );
+              </button>,
+            ];
           })}
         </div>
       )}

@@ -147,7 +147,7 @@ class Component extends DCLogic {
       });
     };
     var sep = { kind: 'sep' };
-    var point = { label: 'Point to another branch…', icon: 'branch' };
+    var point = { label: 'Point to another branch', icon: 'branch' };
     var copy = { label: 'Copy branch name', icon: 'copy' };
     var remove = { label: 'Remove from project', icon: 'remove', danger: true };
     var subtitle = variant === 'full' ? '6 entries across 4 repos' : variant === 'one' ? '1 entry · web-app' : 'Empty';
@@ -163,7 +163,7 @@ class Component extends DCLogic {
       showProjectMenu: projectMenu,
       showDelete: !!this.props.confirmDelete,
       projectMenu: projectMenu,
-      projectMenuItems: [{ label: 'Rename', hint: 'click the title', active: true }, sep, { label: 'Delete project…', danger: true }],
+      projectMenuItems: [{ label: 'Rename', hint: 'click the title', active: true }, sep, { label: 'Delete project', danger: true }],
       hasRows: data.length > 0,
       isEmpty: data.length === 0,
       showMenu: menu,

@@ -23,7 +23,7 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 
 - **Reads through git2, writes through the git CLI.** Everything Gitgel reads comes from git2
   (libgit2); the git binary is never run to read. Everything that changes a repository (the stash
-  actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
+  and sync actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
   command line built in `src-tauri/src/scripts/git.rs` and run like a script (§14: login shell,
   pty, toast, output panel, rescan when it ends). Values (a message, folders) go in `GITGEL_*`
   environment variables, never into the command text. `std::process::Command` is banned in app
@@ -44,7 +44,9 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   `getCurrentWindow()` (`@tauri-apps/api/window`), permissions live in
   `src-tauri/capabilities/*.json`, plugins are `tauri-plugin-*` crates and `@tauri-apps/plugin-*`
   packages. A Rust command parameter `repo_id` is sent as `repoId` from JS.
-- UI copy is English and matches the reference screens exactly (singular/plural included). Code,
+- UI copy is English and matches the reference screens exactly (singular/plural included). Labels
+  (buttons, menu items) never end in "…", even when they open a dialog; only progress text does
+  ("Scanning repositories…"). Code,
   identifiers and comments are English.
 - Do not invent features the spec does not describe. If something is undefined, pick the
   simplest behaviour and mention it at the next checkpoint.
@@ -82,7 +84,7 @@ This file describes the app as it is, plus what open tasks will add:
 
 **Goal:** a macOS desktop app for reviewing branches and worktrees across several git
 repositories from one place, without checking anything out. It reads without writing; it changes
-a repository only when asked to (the stash actions, §15), through the git CLI. Built for looking at what coding
+a repository only when asked to (the stash and sync actions, §15), through the git CLI. Built for looking at what coding
 agents (Cursor, Codex, Claude Code) leave in their worktrees. Not for the App Store: ad-hoc
 signed, not notarized, no sandbox.
 
@@ -120,7 +122,7 @@ signed, not notarized, no sandbox.
 **Screens:** Branches (including the first-run empty state), Project, Review, History (§16), Add palette (⌘K), Settings.
 
 **Out of scope:** writing to repositories beyond the git actions (§15; a user's script may do
-anything), review comments, GitHub/PR integration, fetch/pull, launching agents, multiple
+anything), review comments, GitHub/PR integration, fetching on its own (only the Fetch button fetches), force-push, launching agents, multiple
 windows, LSP, the git CLI for reading (even as a fallback), agent labels, a light theme,
 configurable refresh.
 
@@ -178,8 +180,10 @@ gitgel/
 │  │            # Review/parts.tsx: view menu, change navigation, file row, diff view settings
 │  │            #   (shared with History, §16)
 │  │            # History/: the History screen and its list rows (§16)
-│  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashButton + StashDialog (P4), StashTargetMenu
-│  │            # (Apply to… / Pop to…, P5), DropStashModal (P6)
+│  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
+│  │            # (Apply to / Pop to, P5), DropStashModal (P6)
+│  ├─ sync/     # §15 sync (W4a): sync.ts (what Fetch / Pull / Push can do, labels), SyncButtons
+│  │            # (History header buttons, SyncItems: the branch menus' group)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
@@ -197,7 +201,7 @@ gitgel/
       ├─ memory.rs                # frees libgit2 memory after full scans
       ├─ updates.rs               # in-app updates: check, install, restart
       ├─ scripts/   mod.rs  run.rs # the user's scripts: config, import/export; running, output, stop
-      │             git.rs        # git actions: stash push / apply / pop / drop (§0, §15)
+      │             git.rs        # git actions: stash push / apply / pop / drop, fetch / pull / push (§0, §15)
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
       ├─ git/                     # the ONLY place git2 is used
@@ -372,9 +376,12 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
 
 - `Button`: `primary` (accent fill, `--on-accent` text, 600), `secondary` (`bg.elevated`, 1px
   border, `text.strong`), `ghost`, `danger` (`danger.fill`), `link` (`accent.text`); optional
-  `kbd` hint on the right in mono 11px. Also 28px (Locate…), `chevron` for a dropdown trigger and
+  `kbd` hint on the right in mono 11px. Also 28px (Locate), `chevron` for a dropdown trigger and
   `active` for its open state (`bg.pressed`, `border.strong`); a modal's Cancel is a plain
   `secondary`. Icon-only buttons are `IconButton` (28 plain, 24 in compact list rows, 32 boxed).
+- `PageMenu`: the ⋮ (`more-vertical`) 32px boxed `IconButton` (`aria-label` "More actions") that
+  ends the Review and History headers; a 240px `Menu`, right-aligned under it, with the page's
+  less used actions.
 - `Pill`: `success | warning | danger | neutral`, 11px/500, padding 3px 10px. Neutral: `#d8d4cc`
   on `#302e2a`. Also `accent` (`accent.text` on `rgba(accent,0.14)`), `size="sm"` (16px tall,
   padding 0 7px: Branches line 2, a badge next to a name), `mono` (exit codes, SHAs) and a
@@ -470,7 +477,7 @@ inputs, textareas and the diff.
   `#75726b`) + name with ellipsis, no counts. Click opens the project's review (project scope,
   sidebar kept shown, Back aria-label "Back"), or its page while it has no entries; the review's
   pencil opens the page. The active one (on its page or its project review) gets
-  `bg.sidebarActive`. Right-click opens the project menu (Rename / Delete project…); Rename or a
+  `bg.sidebarActive`. Right-click opens the project menu (Rename / Delete project); Rename or a
   double-click turns the whole row into the field in place (`bg.sunken`, inset 1px accent
   outline, the name where it was and selected, no navigation): ↵ saves, Esc or leaving the field
   cancels, a name conflict turns the outline danger with the message as its tooltip. A draft
@@ -483,7 +490,7 @@ inputs, textareas and the diff.
   danger: "Update failed · Retry", the error as its title.
 - **Footer** (56px, top border `#2a2825`): a 36px link row (folder icon + "N repositories",
   "1 repository") → Settings. On footer hover the row gets `bg.sunken` and a 32px "+" button
-  appears (aria-label "Add repository", title "Add repository…"; hidden but space kept
+  appears (aria-label "Add repository", title "Add repository"; hidden but space kept
   otherwise) that opens the folder picker and the add-repositories sheet. The gear → Settings is
   on the far right (`bg.sidebarActive` while on Settings).
 
@@ -559,7 +566,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     - In 1+ projects: a chip "1 project" / "N projects" (`bg.elevated`, 1px border, 10px
       chevron; tooltip lists the names). Click opens a 270px menu: label "In N projects", one row
       per project (hollow dot + name + muted "→", opens it), divider, `accent.text` "+ Add to
-      another project…" (opens the picker without the projects the branch is already in). While
+      another project" (opens the picker without the projects the branch is already in). While
       open the chip is `bg.pressed` with a `#4a4741` border and the row `bg.elevated`. ↑/↓/↵/Esc
       work.
     - Right after an add the cell shows the new count with an accent outline and
@@ -569,7 +576,8 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     `bg.elevated`). It opens a 260px menu, right-aligned under the button (right-clicking
     anywhere on the row opens it at the pointer): "Copy branch name"
     (hidden for a detached HEAD), then the open items as in the Project entry menu (with a divider
-    between the two groups); icons as there; then the Scripts group (§14, flow N1–N2). ↑/↓/↵/Esc
+    between the two groups); icons as there; then the Sync group (§15 "Sync"); then the Scripts
+    group (§14, flow N1–N2). ↑/↓/↵/Esc
     work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
 - **Base branch row** (`HistH1.dc.html`): the repo's base branch (§1) is always
@@ -599,12 +607,12 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 - Esc clears the selection, otherwise the filter.
 - **Empty state** (no repos): subtitle "Nothing to review yet", no refresh or filter; centred 40px
   accent branch icon, serif 28px "No repositories yet", 14px copy, 40px primary
-  "Add repository…" (multi-folder picker), 12px muted "or drop folders onto this window".
+  "Add repository" (multi-folder picker), 12px muted "or drop folders onto this window".
 - **Selection bar** (flow H), bottom centre when 1+ rows are selected: "N branches selected"
   (13px/500) + 12px muted "across M repos", divider, secondary "Add to project ▾" (the project
   picker, opening above the bar), primary "New project", ✕ clears.
 - **Project picker** (300px popover): "Search" input, projects (name + 12px muted
-  "N entries"), and a `#2a2825` footer "+ New project…" in `accent.text`. "+ New project…"
+  "N entries"), and a `#2a2825` footer "+ New project" in `accent.text`. "+ New project"
   turns it in place into a 320px form: serif 18px "New project", "Name" input (focused), "First
   entry" + mono 11 `<repo> / <branch> · base <base>`, Cancel / primary "Create & add ↵". A name
   conflict marks the input invalid with a 12px danger message and disables the button.
@@ -635,13 +643,15 @@ Layout:
   changes. **Header** (a page header, `bg.main`, drag region): with the sidebar hidden,
   traffic-light space, show-sidebar button, Back (aria-label "Back to Branches" / "Back to
   project" / "Back") and Forward at 16px padding; the title + subtitle (project scope: the title
-  renames the project in place like the Project page's); right: a refresh button, segmented
-  **Committed / Uncommitted / All**, each with its file count summed over all groups, and, in
-  project scope, a 32px pencil button "Edit project" that opens the project page (going back to
-  it when Review was opened from there).
+  renames the project in place like the Project page's); right, as History's (the page's own
+  controls, then the ⋮ menu last): segmented **Committed / Uncommitted / All**, each with its
+  file count summed over all groups, then the **page menu** (⋮, `PageMenu`): "Stash"
+  (§15; not in the stash scope), "Refresh" (full rescan), and in project scope "Edit project"
+  (`pencil`), which opens the project page (going back to it when Review was opened from
+  there).
 - Default mode Committed; Uncommitted if there are no committed changes but some uncommitted.
   Switching mode resets the selection to that mode's first file. Groups with no files in the
-  mode are hidden, except the one group of a branch review (its menu, with "Change base…", stays reachable).
+  mode are hidden, except the one group of a branch review (its menu, with "Change base", stays reachable).
 - **Left file list** (310px, 280px beside the sidebar; `bg.sidebar`, padding 8, scrolls), one
   group per entry (two entries from the same repo are two groups):
   - **Resizing**: its right border is a drag handle (8px hit area, `col-resize`; a 2px accent
@@ -671,12 +681,14 @@ Layout:
     after a base change. While the header is hovered or keyboard-focused, or its menu is open,
     the totals give way to a 22×20 "⋮" button (`aria-label` "Branch options"; `bg.pressed` while
     open).
-  - Line 2 (indent 20): mono 12 branch (ellipsis), the conflicts pill.
+  - Line 2 (indent 20): mono 12 branch (ellipsis), the conflicts pill, and on the right mono 11
+    muted upstream state (§15 "Sync": `origin ↑2 ↓1`, `origin` when level, `not on origin · ↑3`;
+    tooltip with the counts), replaced by `n of m` while filtering.
   - **Entry menu** (260px, right-aligned under "⋮"; right-clicking the header opens it at the
-    pointer): "Change base…" (sub `base <ref>`, plus ` · set for this branch` when the base is
+    pointer): "Change base" (sub `base <ref>`, plus ` · set for this branch` when the base is
     custom) opens the Base menu at the same anchor; then the Branches row menu without "Open
     review": "Copy branch name", "Open history" (back label "Back to Review"), the open items,
-    then the Scripts group as the Branches menu (the Project menu in a project review). The
+    the Sync group (§15 "Sync"), then the Scripts group as the Branches menu (the Project menu in a project review). The
     header has no base control: the entry bar shows the base in use.
   - Commit chip (when the entry is scoped to one commit, see below).
   - Stacked warning (margin 0 8px 6px 28px, padding 7px 10px, radius 8, warning tone):
@@ -692,10 +704,14 @@ Layout:
   scrolls to that repo's band and highlights it briefly), mono 12 branch (link: opens its History,
   §16; tooltip `Show history of <branch>`), a mono 11 muted range only when it adds something
   (`working tree <~path>` in Uncommitted, `<parent>..<sha>` with a commit picked), and on the
-  right 12px muted `N commits ahead of <base>`, the base a link to its History (Uncommitted:
+  right 12px muted `N commits ahead of <base>`, the base a link to its History, then
+  ` · <upstream state>` (Uncommitted:
   `HEAD ↔ working tree`). Links take `accent.hover` on hover.
 - **Commit list** (max ≈132px, scrolls; hidden in Uncommitted): rows with mono 12
-  `accent.text` short SHA, subject, and mono 11 muted age. Commits that belong to another branch
+  `accent.text` short SHA, subject, and mono 11 muted age. When some listed commits are not on the
+  remote, a dashed **upstream line** (18px, mono 10 muted `origin/<branch> · above: not pushed`
+  between two 1px dashed `border.strong` rules) sits above the newest commit the remote has (the
+  upstream's `mergeBase`); none when every listed commit is pushed or none is. Commits that belong to another branch
   (stacked) are at 60% opacity with a mono 11 warning pill naming the branch.
 - **One commit at a time** (flow D7): every commit row is a button (`role="option"`, tooltip
   "Show only this commit"). Clicking one scopes **that entry** to the commit's own changes,
@@ -771,7 +787,7 @@ Layout:
   merge conflicts in M entries. Resolve them …` for several); the group's line 2 has the same
   danger sm `N conflicts` pill as its Branches row (P7). The files are `C` in the
   Uncommitted and All lists; their diff is HEAD ↔ the working tree file with its markers.
-- **Base menu** (340px popover, from a Review group's "Change base…", the Project table's Base button or a
+- **Base menu** (340px popover, from a Review group's "Change base", the Project table's Base button or a
   "base missing" pill): "Search" input; **Suggested** (mono 13 name +
   `Contains N of the M commits shown`); **Default** (see "Default and remote rows" below);
   **Other branches**; **Remote branches**; **Tags** when the filter
@@ -804,7 +820,7 @@ Layout:
     (`refs/remotes/*`, without `*/HEAD` and without the Default candidates), same row style as
     Other branches. The one whose short name equals the entry's branch comes first, with a muted
     `same name` note. Filtered by the menu input like the other sections; hidden when empty.
-  - The entry menu's "Change base…" and the entry bar always show the ref in use
+  - The entry menu's "Change base" and the entry bar always show the ref in use
     (`base origin/master`, `ahead of origin/master`); "set for this branch" still means
     "stored custom base" only.
 - Empty states: "No committed changes" / "No uncommitted changes" / "No changes". Branch scope
@@ -837,10 +853,11 @@ Layout:
   - "View last known state" (deleted branches only), with mono 11 muted
     `tip <shortSha> · seen <age> ago`; disabled with `tip <shortSha> · no longer in the repository`
     when the commit is gone. Opens single-branch review on that tip.
-  - "Point to another branch…": a branch picker (local branches of the entry's repo); repoints
+  - "Point to another branch": a branch picker (local branches of the entry's repo); repoints
     the entry and refreshes its last known tip.
   - "Copy branch name" (hidden for detached entries).
-  - After the open items, the Scripts group for scripts shown in the Project entry menu (§14);
+  - After the open items, the Sync group (§15 "Sync"), then the Scripts group for scripts shown
+    in the Project entry menu (§14);
     there `branch.project` and `GITGEL_PROJECT` are the project's name (none in a draft).
   - **Open items**: divider, "Open in Finder" (the worktree folder, or the repository folder
     when the branch is not checked out), then "Open in <App>" for
@@ -862,7 +879,7 @@ Layout:
       it (no divider at either end of a menu or twice in a row).
   - Divider, danger "Remove from project".
 - **Project menu** (230px; also on the sidebar's right-click): "Rename" (hint "F2"), divider,
-  danger "Delete project…".
+  danger "Delete project".
 - **Rename:** the title becomes an in-place input in the title's own box (at least 340px wide,
   30px, padding 0 6px, 1px border, serif 22px, `bg.sunken`), so the name does not move; only the
   border turns accent, no ring; text selected; the subtitle stays. A name conflict
@@ -915,9 +932,9 @@ Layout:
   gear and ⌘, open the last one.
 - **Repositories:** serif 18px heading; a `List`. Row: 500-weight name
   (96px), mono 12 muted path (ellipsis), a note (`base <defaultBase>`, "no base found", or a
-  danger pill "path not found" + 28px "Locate…", or "git error"), ✕ remove. "+ Add repository…"
+  danger pill "path not found" + 28px "Locate", or "git error"), ✕ remove. "+ Add repository"
   (last row, `accent.text`) opens the folder picker and sheet (flow A).
-  - Locate…: the picked folder must be a repository (or resolve to one) not already added under
+  - Locate: the picked folder must be a repository (or resolve to one) not already added under
     another id; errors show as a failed toast with the picked folder under the message ("Not a git
     repository", "Already added as <name>"). Fixes every entry of that repo.
   - ✕ asks first only when projects use the repo: `Remove <name>?` · "Its N project entries are
@@ -950,7 +967,7 @@ Layout:
   - "Terminal" ("Used by “Open in …” in the branch menus"): a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
-    Terminal, iTerm2, WezTerm, "Other…". Terminals that are not installed are disabled. At
+    Terminal, iTerm2, WezTerm, "Other". Terminals that are not installed are disabled. At
     launch a chosen terminal that is not installed falls back to Automatic (an Other command
     cannot be checked, so it is left alone). Other shows under it, full width, a 36px mono input
     (placeholder `wezterm start --cwd %`, saved on blur/↵, trimmed; empty = Automatic) and a
@@ -1001,14 +1018,14 @@ open.
 
 ## 6. Flows
 
-- **A · First run.** Branches is empty ("No repositories yet"). **Add repository…** (multi-folder
+- **A · First run.** Branches is empty ("No repositories yet"). **Add repository** (multi-folder
   picker) or dropping folders opens the sheet, which checks each folder: ✓ git repository with
   its default base; ↪ worktree or subfolder, resolved to the main repository (duplicates
   skipped); ✕ not a repository, skipped. "Add N repositories" fills Branches.
-- **A · More repositories later.** The sidebar footer's "+", Settings' "+ Add repository…" and
+- **A · More repositories later.** The sidebar footer's "+", Settings' "+ Add repository" and
   dropping folders on any screen all end in the same sheet.
 - **B · Project from a Branches row.** "+ Add" in a row's Projects cell opens the project
-  picker; pick a project, or "+ New project…" → name form → "Create & add ↵". The row stays; its
+  picker; pick a project, or "+ New project" → name form → "Create & add ↵". The row stays; its
   cell shows the new count; a toast offers Undo and "Open project →". A project page with one
   entry shows the "add related branches" card; ⌘K opens the palette for that project.
 - **C · Empty project.** Sidebar "New project" or ⌘N opens a draft project ("Untitled project",
@@ -1025,20 +1042,20 @@ open.
   7. Clicking a commit shows only that commit's changes against its parent; ↑ ↓ (⌥⇧↑ / ⌥⇧↓)
      step through commits.
 - **E · Stacked branch.** With base main, the entry lists another branch's commits dimmed and
-  labelled, plus the warning note. The entry menu's "Change base…" suggests that branch. After choosing,
+  labelled, plus the warning note. The entry menu's "Change base" suggests that branch. After choosing,
   only that group recomputes and the banner confirms. The base is stored per branch.
 - **F · Broken entries.** Labels, not errors: a deleted branch offers its last known state; a
-  missing repo is fixed with Locate… in Settings (fixes all its entries); "base missing" opens the
+  missing repo is fixed with Locate in Settings (fixes all its entries); "base missing" opens the
   base menu.
 - **G · Rename / delete project.** As described under the Project screen.
 - **H · Project from a selection.** Select rows on Branches; the selection bar offers "Add to
   project ▾" (the project picker) or "New project" (a draft project with those entries, title in
   rename mode, as in C).
 - **I · Which projects a branch is in.** The Projects column counts them; clicking the count
-  lists them and offers "+ Add to another project…". The "Not in a project" filter shows only
+  lists them and offers "+ Add to another project". The "Not in a project" filter shows only
   branches in no project.
 - **N · Scripts**. Settings › Scripts lists the user's scripts (N5); "+ New
-  script" or ✎ opens the editor (N6); Import… previews a file first (N7). A branch's menu (Branches
+  script" or ✎ opens the editor (N6); Import previews a file first (N7). A branch's menu (Branches
   row or Project entry) lists the scripts whose Show when matches (N1); worktree scripts are
   left out when the branch is not checked out (N2). Running shows a toast (N3) and, for output
   clicking the toast opens the output panel (N4); "Open the output panel automatically" opens it
@@ -1047,7 +1064,7 @@ open.
   "Ask before running" and nothing to fill in asks in a short confirmation (O3); ⌘↵ runs it.
 - **P · Stashes.** Each repo band on Branches lists its stash stack (P1); a stash opens the
   stash review (P3). Project and branch reviews list the stashes taken on their branches under
-  the files (P2). Picking one shows what it holds, against the commit it was taken on. Stash…
+  the files (P2). Picking one shows what it holds, against the commit it was taken on. Stash
   stashes the review's entries (P4); Apply / Pop pick a worktree (P5); Drop asks first (P6).
   Each runs git like a script: a toast, and its output on click.
 - **J · Open elsewhere.** The ⋯ menu of an entry (Project, Review) or
@@ -1208,6 +1225,14 @@ export interface EntrySummary {
   changedAt: number | null;      // newest uncommitted file mtime; only when newer than lastCommitAt
   state: EntryState;
   error: string | null;          // detail for git_error / base_missing
+  upstream: Upstream | null;     // where it is pushed to (§15 "Sync"); null when detached, deleted or without a remote
+}
+export interface Upstream {      // as of the last fetch
+  remote: string;                // e.g. "origin"
+  name: string | null;           // remote-tracking branch ("origin/feat"); null: not on the remote
+  ahead: number;                 // commits the remote lacks (on top of `name`, else of the base)
+  behind: number;                // commits of `name` the branch lacks
+  mergeBase: string | null;      // newest commit shared with `name`
 }
 
 export interface OtherBranch {   // palette "Older" group
@@ -1310,6 +1335,7 @@ export interface HistoryPage {
   ahead: number | null;           // commits not in the base; null without a base
   mergeBase: string | null;       // tip ↔ base
   fetchedAt: number | null;       // FETCH_HEAD's modification time; null if never fetched
+  upstream: Upstream | null;      // when rev is a local branch: where it is pushed to (§15 "Sync")
 }
 export interface HistoryRefs { branches: string[]; remotes: string[] }   // sorted; no */HEAD
 export interface ReviewData {
@@ -1463,6 +1489,9 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `stash_push` | `entries: StashPush[]` (an `EntryRef` with `paths: string[] \| null`, `untracked`), `message: string` | `ScriptRun` (one git action for all entries, §15) |
 | `stash_apply` | `repoId, index, sha, worktreePath, pop: boolean` | `ScriptRun` |
 | `stash_drop` | `repoId, index, sha` | `ScriptRun` |
+| `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
+| `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
+| `git_push` | `entry: EntryRef` | `ScriptRun` |
 
 Notes:
 
@@ -1720,8 +1749,9 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, "Fetched", Stash… 39, refresh; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
-| Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash… dialog (entries with their files to pick), P5 worktree submenu beside Apply to…, P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
+| Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to, P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
+| Sync | `WipW4a`, `WipW4c.dc.html` | canvas page "Git Action Flows (WIP)": W4a History header with Fetch / Pull / Push and the diverged banner; W4c Review with the branch menu's Sync group, group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -1769,7 +1799,7 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   - **api-server** (default `master`, no origin): `feat/job-queue` (3 commits),
     `token-rotation-job` (stacked on it, checked out in `wt/token-rotation` with a change),
     a detached worktree `wt/detached` at `feat/job-queue~1`, `to-be-deleted`. `master` has a
-    modified `src/config/schedule.ts` and an untracked `notes/todo.md` (Stash… on the base
+    modified `src/config/schedule.ts` and an untracked `notes/todo.md` (Stash on the base
     branch). Stashes: `stash@{0}` "worker draft" on `master` (adds `src/queue/worker.ts`: applies
     cleanly to master, conflicts in `wt/detached` and `wt/token-rotation`); `stash@{1}` a WIP one
     with 2 files on `token-rotation-job`, whose apply git refuses there (its worktree has
@@ -1977,8 +2007,8 @@ export interface ScriptRun {
 ### Settings › Scripts (N5)
 
 - Serif 18px "Scripts" and 12px muted "Your own items in the branch menus. Each runs a shell
-  command for that branch. Drag to reorder; switch one off to take it out of the menus." On the right: Import…,
-  Export…, primary "+ New script".
+  command for that branch. Drag to reorder; switch one off to take it out of the menus." On the right: Import,
+  Export, primary "+ New script".
 - A `List` of 48px rows: drag handle, 28px icon tile, name (500), an
   on/off `Switch` (tooltip "On: shown in its menus. Switch off to hide it" /
   "Off: in no menu. Switch on to show it"), ✎ edit (opens N6), ✕ remove (at once, with an Undo
@@ -2028,10 +2058,10 @@ export interface ScriptRun {
 
 ### Import and export (N7)
 
-- Export…: native save panel, one file `gitgel-scripts.json`: `{"version": 1, "scripts": [...]}`
+- Export: native save panel, one file `gitgel-scripts.json`: `{"version": 1, "scripts": [...]}`
   (no ids, no paths of this machine). An off script is exported with `"disabled": true` and
   imported off.
-- Import…: native open panel, then the preview modal: `ModalHeader` "Import scripts" with the
+- Import: native open panel, then the preview modal: `ModalHeader` "Import scripts" with the
   mono file path and count; a card with one row per script: `Checkbox`, icon tile, name with a
   "new" (accent) or "same name exists" (warning) `Pill`, the full command in mono, a 12px meta
   line (runs in · menus, then "Opens the output" when `openOutput`); a conflicting row has Replace / Keep both / Skip (bordered
@@ -2063,16 +2093,15 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1–P7); boards `FlowP1`
   as an `accent` sm Pill (`<branch> · deleted` as `outline`; `detached HEAD` as `outline`),
   `N files`, the age. The text filter applies (message, branch, repo name). Clicking a row opens
   the stash review (P3) on it; the ⋮ button ("Stash options") opens a 280px menu: "Review
-  changes ↵", "Apply to…", "Pop to…" (no second line; a chevron on the right), divider,
-  danger "Drop…" (`⌫`). Apply to… and Pop to… open the worktree picker (P5) beside the item on
-  hover or click (→ from the keyboard, ← back), Drop… opens the confirmation (P6). Popovers follow
+  changes ↵", "Apply to", "Pop to" (no second line; a chevron on the right), divider,
+  danger "Drop" (`⌫`). Apply to and Pop to open the worktree picker (P5) beside the item on
+  hover or click (→ from the keyboard, ← back), Drop opens the confirmation (P6). Popovers follow
   their anchor when the page scrolls or resizes (scroll listener and `ResizeObserver`).
-- **Review header** (P2, project and branch scope; History of a checked-out branch too, §16, which
-  also lists the branch's stashes under its commits): a 32px secondary "Stash…" button with the
-  `package` icon before the refresh button; it opens the Stash changes dialog (P4). Disabled when
-  no checked-out entry without conflicts has uncommitted changes: tooltip "Resolve the merge
-  conflicts first; git cannot stash them" when an entry has conflicts, else "No uncommitted
-  changes".
+- **Page menu** (Review, project and branch scope; History of a checked-out branch too, §16,
+  which also lists the branch's stashes under its commits): "Stash" (`package`) first in
+  the ⋮ menu; it opens the Stash changes dialog (P4) under the ⋮ button. Left out while no
+  checked-out entry has uncommitted changes; disabled, tooltip "Resolve the merge conflicts first;
+  git cannot stash them", while every entry with changes has conflicts.
 - **Review list** (P2): after the groups (and the "not reviewable" line), under a 1px `bg.hover`
   rule: section label `Stashes of this project · N` (branch scope `Stashes of this branch · N`),
   the stashes taken on one of the review's branches (project order). Rows (padding 6px 8px,
@@ -2089,10 +2118,10 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1–P7); boards `FlowP1`
   `<repo> / <branch>` (the part that gives way when short of room), `from <short base>`,
   `<age> ago`. Then the file bar (compare label
   `<short base> ↔ stash@{n}`, view menu, change navigation over the stash's files) and the diff.
-  On the right of the message 28px buttons Apply, Pop (secondary) and Drop… (danger text): Apply
+  On the right of the message 28px buttons Apply, Pop (secondary) and Drop (danger text): Apply
   and Pop run at once in the worktree the stash's branch is checked out in (tooltip `Apply to
   <branch> (<~folder>)`), and open the worktree picker (P5) under the button only when that
-  branch is not checked out (or deleted, or detached); Drop… opens the confirmation (P6). No
+  branch is not checked out (or deleted, or detached); Drop opens the confirmation (P6). No
   uncommitted banner while a stash is shown.
 - **Stash review** (P3, `ReviewTarget` `stashes`): from Branches; title "Stashes", subtitle
   `<repo> · N stashes`; no mode segmented and no file filter; the list is the section only
@@ -2112,7 +2141,7 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   else "The stash list changed. Pick the stash again." (and the repo is rescanned); one git
   action at a time per repository, else "Another git action is running in <repo>." A refused
   action shows a failed toast `“<name>” could not start` with that text.
-- **Stash changes** (P4, the Stash… button of Review and History): a 420px popover under the
+- **Stash changes** (P4, "Stash" in the page menu of Review and History): a 420px popover under the
   button, padding 16, gap 12: serif 18px "Stash changes"; "In" (12px/500) and one group per entry
   of the review that is checked out, in review order. The entry row (26px): a `Checkbox` (on when
   every file is picked, mixed with a dash when some are, off with none; a click picks all or
@@ -2140,7 +2169,7 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   <unpicked staged>`, the same `stash push` with that variable, then `git … reset -q -- <picked>`
   on the real index; the copy is deleted when the run ends. Toast sub line `repo / branch` for one
   entry, else `N entries`.
-- **Worktree picker** (P5; Apply to… / Pop to… in the Branches stash menu, Apply / Pop in the
+- **Worktree picker** (P5; Apply to / Pop to in the Branches stash menu, Apply / Pop in the
   stash pane when its branch is not checked out): a 280px menu, label "Apply stash@{n} to" (or "Pop stash@{n} to"), then one item
   per checked-out entry of the repository (scan order, the branch the stash was taken on first):
   `branch` icon, the branch (short SHA when detached), desc the folder (`~/…`) plus
@@ -2151,11 +2180,55 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   When the folder has uncommitted changes to a file the stash also changes, git refuses before
   touching anything ("Your local changes to the following files would be overwritten by merge");
   that is git's own guard and is shown as is.
-- **Drop** (P6; Drop… in the menu or the pane): a 460px confirmation laid out like O3: serif 22px
+- **Drop** (P6; Drop in the menu or the pane): a 460px confirmation laid out like O3: serif 22px
   `Drop stash@{n}?`, a `bg.sunken` card with a `package` row (the message) and a `branch` row
   `repo / branch · N files`, 13px muted "Its changes are lost unless they are somewhere else.",
   then Cancel (focused) and danger "Drop stash". Runs `git stash drop 'stash@{n}'` in the
   repository folder, named "Drop stash@{n}". The stash review then picks the newest stash (above).
+
+### Sync (W4a)
+
+Fetch, Pull and Push of one branch: buttons in the History header, and a group in the branch
+menus (Branches row, Project entry, Review entry). Review's header has none: it only shows where
+each branch stands. Each is a git action as above (`upload` icon; toast sub line `repo / branch`,
+`repo` for Fetch). Gitgel never fetches on its own, never force-pushes, and syncs one branch at a
+time.
+
+- **Upstream** (`refs::tracking`, `scan::branch_upstream`; `EntrySummary.upstream`, and
+  `HistoryPage.upstream` when `rev` is a local branch): the configured upstream when it is on a
+  remote (`branch.<name>.remote` / `.merge`), else the same name on the default remote (`origin`,
+  else the only remote); none without a remote, for a detached HEAD, or when the branch shares no
+  history with it. `ahead` / `behind` against the remote-tracking branch, as of the last fetch;
+  when the remote does not have the branch (`name` null), `ahead` is the branch's commits on top
+  of its base. Shown as `origin ↑2 ↓1` (`origin` when level, `not on origin · ↑3`).
+- **What each can do** (`syncState`): Pull needs the remote-tracking branch, commits behind it
+  and a checkout (else disabled with "Not on origin" / "Nothing to pull" / "Not checked out");
+  Push needs a remote, commits ahead and none behind (else "No remote" / "Behind origin, pull
+  first" / "Nothing to push"). A branch that is ahead and behind is **diverged**.
+- **History header** (`WipW4a`), after the search field: one 32px group (`bg.elevated`, 1px `border`,
+  radius 8, padding 2, gap 2) of 26px buttons (12px, 12px icon, radius 6): "Fetch" (`download`,
+  `text.muted`, tooltip `Fetch <repo> from origin · last fetch <age> ago`), a 1px divider, "Pull" (`arrow-down`, mono 11
+  `↓N` when behind), "Push" (`arrow-up`, `↑N` when ahead; accent fill when it can push). Disabled
+  ones carry the reason as tooltip. While a sync runs in the repository all three are disabled
+  and the running one's icon spins. Diverged: a warning banner under the header, `<branch> is
+  behind origin by 1 commit, so it cannot be pushed. Pull it first.`, with a 24px "Pull (rebase)"
+  button when checked out.
+- **Branch menus** (`WipW4c`): after the open items, a divider, then "Fetch"
+  (`download`), "Pull" (`arrow-down`, hint `↓N`), "Pull (rebase)" (`rebase`; only when diverged
+  and checked out), "Push" (`arrow-up`, hint `↑N`). Disabled items carry the reason as tooltip ("A sync is running"
+  while one runs; Push of a branch the remote lacks: `Not on origin yet`). No group for a detached HEAD, a branch without a remote, a deleted branch or a
+  missing repository.
+- **Fetch**: `git fetch --all --prune` in the repository folder. Success toast `Fetched <repo>`.
+- **Pull**: `git pull [--rebase] "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<branch on the
+  remote>`) in the worktree, so a branch without a configured upstream pulls too and git's own
+  `pull.rebase` / `pull.ff` settings apply. Success toast `Pulled <branch>`.
+- **Push**: `git push [--set-upstream] "$GITGEL_REMOTE" "$GITGEL_REFSPEC"`
+  (`refs/heads/<branch>:refs/heads/<branch on the remote>`), in the worktree when there is one
+  (hooks see it), else the repository folder; `--set-upstream` only for a branch the remote does
+  not have and that has no configured upstream. Success toast `Pushed <branch>`.
+- **Failures**: a sync that exits non-zero opens its output panel (N4) instead of the failed toast
+  (git's message, or a prompt for a password or passphrase, is there). One that cannot start shows
+  the usual `“<name>” could not start` toast.
 
 ---
 
@@ -2189,10 +2262,10 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
   - Search field: `Input` 32px, 200px, placeholder "Search commits", label "Search commit
     messages, SHAs and paths", no keycap; ⌘K focuses it (also listed in Shortcuts). Typing
     searches (debounced 200 ms); Esc clears it.
-  - `Fetched <age> ago` (12px `text.faint`; tooltip "Gitgel never fetches"), only when `fetchedAt` is known.
-  - "Stash…" (§15, the Review header's button and P4 dialog, with this one entry), only when
-    `rev` is checked out in a worktree; disabled, tooltip "No uncommitted changes", without any.
-  - Refresh button.
+  - Fetch / Pull / Push (§15 "Sync"), only when `rev` is a local branch with a remote; the last
+    fetch's age (`fetchedAt`) is in Fetch's tooltip.
+  - The page menu (⋮, as Review's): "Stash" (§15, with this one entry; only when `rev`
+    is checked out in a worktree with uncommitted changes), "Refresh".
 - **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Label (section
   label style, padding 14px 16px 6px) `<rev> · N commits` (`total`), while searching `N matching
   commits` (`N+` while there are more). Rows (padding 0 8px 8px, gap 2):
@@ -2224,7 +2297,7 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
     but pinned to the bottom of the list column (top border `bg.hover`, padding 2px 8px 8px, at
     most 40% of its height, scrolls on its own), since the commits keep loading as they scroll.
     Picking one lists its files under it and shows Review's stash pane (P2: message, Apply / Pop /
-    Drop…, meta line), then the file bar (`<short base> ↔ stash@{n}`) and the diff. ↑ / ↓ do not
+    Drop, meta line), then the file bar (`<short base> ↔ stash@{n}`) and the diff. ↑ / ↓ do not
     step into it; a dropped or popped stash leaves the newest commit picked.
 - **Picking:** on opening, the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,

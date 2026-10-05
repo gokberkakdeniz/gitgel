@@ -97,7 +97,7 @@ export function Sidebar() {
         <button
           type="button"
           aria-label="Add repository"
-          title="Add repository…"
+          title="Add repository"
           className={styles.repoAdd}
           onClick={() => void openAddRepos()}
         >

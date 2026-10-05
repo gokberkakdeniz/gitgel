@@ -230,7 +230,7 @@
   background: var(--bg-pressed);
 }
 
-/* Point to another branch… */
+/* Point to another branch */
 .picker {
   display: flex;
   flex-direction: column;

@@ -22,6 +22,7 @@ const entry: EntrySummary = {
   conflicts: 0,
   lastCommitAt: 0,
   changedAt: null,
+  upstream: null,
   state: 'ok',
   error: null,
 };

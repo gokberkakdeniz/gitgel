@@ -56,7 +56,7 @@ export function stashPayload(rows: Row[], picks: Record<string, string[]>): Stas
   });
 }
 
-/** Stash changes (flow P4), under the Stash… button of Review and History. Each entry lists its
+/** Stash changes (flow P4), under the ⋮ menu's Stash in Review and History. Each entry lists its
  * files under it (open when there is one entry); its box picks them all or none. */
 export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGroup[]; anchorRect: DOMRect; onClose: () => void }) {
   const rows = stashRows(groups);

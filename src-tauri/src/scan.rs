@@ -16,8 +16,8 @@ use crate::git::pool::RepoPool;
 use crate::git::refs::DefaultBase;
 use crate::git::{diff, refs, stash, worktrees, Repo};
 use crate::model::{
-    entry_key, Config, EntryState, EntrySummary, FileChange, FileKind, OtherBranch, RepoConfig, RepoScan,
-    RepoStatus, RepoUpdated, ScanResult, StashInfo, UpdateReason,
+    entry_key, Config, EntryState, EntrySummary, FileChange, FileKind, OtherBranch, RepoConfig,
+    RepoScan, RepoStatus, RepoUpdated, ScanResult, StashInfo, UpdateReason, Upstream,
 };
 use crate::nearest;
 use crate::state::{lock, AppState};
@@ -393,6 +393,7 @@ fn summarize(
         changed_at: None,
         state: EntryState::Ok,
         error: None,
+        upstream: None,
     };
     let mut flags = StateFlags {
         detached: s.branch.is_none(),
@@ -459,8 +460,55 @@ fn summarize(
         }
         Err(_) => {}
     }
+    if let Some(branch) = s.branch.as_deref() {
+        s.upstream = upstream(ctx, branch, &tip, s.ahead);
+    }
     s.state = pick_state(&flags);
     s
+}
+
+fn upstream(ctx: &RepoCtx, branch: &str, tip: &str, ahead: Option<u32>) -> Option<Upstream> {
+    let started = Instant::now();
+    let up = branch_upstream(ctx.repo, &ctx.repo_cfg.path, branch, tip, ahead);
+    ctx.timings.borrow_mut().add("upstream", started.elapsed());
+    up
+}
+
+/// A local branch against its remote (W4a); without the remote-tracking branch, its commits on
+/// top of the base (`ahead`) are what the remote lacks. `None` without a remote, or when the two
+/// share no history (a force-push of something else).
+pub fn branch_upstream(
+    repo: &Repo,
+    path: &str,
+    branch: &str,
+    tip: &str,
+    ahead: Option<u32>,
+) -> Option<Upstream> {
+    let tracking = refs::tracking(repo, branch)?;
+    let mut up = Upstream {
+        remote: tracking.remote,
+        name: None,
+        ahead: ahead.unwrap_or(0),
+        behind: 0,
+        merge_base: None,
+    };
+    if let Some(name) = tracking.tracking {
+        let up_tip = refs::resolve_commit(repo, &name)?;
+        match history::ahead_behind(repo, tip, &up_tip) {
+            Ok(Some((a, b, mb))) => {
+                up.ahead = a;
+                up.behind = b;
+                up.merge_base = Some(mb);
+            }
+            Ok(None) => return None,
+            Err(e) => {
+                log::warn!("upstream of {branch} in {path}: {e}");
+                return None;
+            }
+        }
+        up.name = Some(name);
+    }
+    Some(up)
 }
 
 /// Uncommitted file count of a worktree whose HEAD is `head`, how many of them have conflicts,
@@ -625,6 +673,7 @@ pub fn summarize_one(
             changed_at: None,
             state: pick_state(&flags),
             error,
+            upstream: None,
         }
     };
     if !path.exists() {
@@ -754,6 +803,7 @@ pub fn removed_repo_summary(e: &crate::model::EntryConfig, config: &Config) -> E
         changed_at: None,
         state: EntryState::RepoMissing,
         error: Some("repository removed from Gitgel".into()),
+        upstream: None,
     }
 }
 
@@ -1420,13 +1470,38 @@ mod tests {
     }
 
     #[test]
+    fn entries_know_their_upstream() {
+        let t = TestRepo::new();
+        let root = t.commit_on("main", &[("a.txt", Some(b"a\n"))], "init", 5);
+        t.set_origin_head("main");
+        t.add_origin();
+        t.branch_from("feat", root);
+        let pushed = t.commit_on("feat", &[("b.txt", Some(b"b\n"))], "b", 4);
+        t.commit_on("feat", &[("c.txt", Some(b"c\n"))], "c", 3);
+        // Not on origin yet: what it has on top of its base is what origin lacks.
+        let up = active(&run(&t).scan, "feat").upstream.clone().unwrap();
+        assert_eq!((up.name, up.ahead, up.behind), (None, 2, 0));
+        // origin/feat has the first commit and one of its own.
+        t.branch_from("theirs", pushed);
+        let theirs = t.commit_on("theirs", &[("d.txt", Some(b"d\n"))], "d", 2);
+        t.set_remote("origin/feat", theirs);
+        let up = active(&run(&t).scan, "feat").upstream.clone().unwrap();
+        assert_eq!(up.name.as_deref(), Some("origin/feat"));
+        assert_eq!((up.ahead, up.behind), (1, 1));
+        assert_eq!(up.merge_base, Some(pushed.to_string()));
+    }
+
+    #[test]
     fn base_branch_without_upstream_shows_uncommitted_work() {
         let t = TestRepo::new();
         t.commit_on("main", &[("a.txt", Some(b"a\n"))], "init", 3);
         t.checkout_main();
         let clean = run(&t).scan;
         assert_eq!(
-            (active(&clean, "main").ahead, active(&clean, "main").uncommitted),
+            (
+                active(&clean, "main").ahead,
+                active(&clean, "main").uncommitted
+            ),
             (None, Some(0))
         );
 

@@ -33,7 +33,7 @@ button,input,textarea{font-family:inherit}
 </div>
 <div style="flex-grow: 1"></div>
 <div style="display: flex; align-items: center; gap: 10px">
-<button disabled title="Resolve the merge conflicts first; git cannot stash them" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 8px; font-size: 12px; white-space: nowrap; background: transparent; border: 1px solid var(--border); color: var(--text-body); opacity: 0.5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 4l8 3.5v9L12 20l-8-3.5Z"></path><path d="M4 7.5 12 11l8-3.5M12 11v9"></path></svg>Stash…</button>
+<button disabled title="Resolve the merge conflicts first; git cannot stash them" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 8px; font-size: 12px; white-space: nowrap; background: transparent; border: 1px solid var(--border); color: var(--text-body); opacity: 0.5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 4l8 3.5v9L12 20l-8-3.5Z"></path><path d="M4 7.5 12 11l8-3.5M12 11v9"></path></svg>Stash</button>
 <button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); "><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg></button>
 <div role="group" aria-label="Diff layer" style="display: flex; padding: 3px; gap: 2px; background: var(--bg-track); border-radius: 8px"><button aria-pressed="false" style="height: 26px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; background: transparent; color: var(--text-muted)">Committed <span style="color: var(--text-faint)">2</span></button><button aria-pressed="true" style="height: 26px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; background: var(--bg-pressed); color: var(--text-strong)">Uncommitted <span style="color: var(--text-faint)">1</span></button><button aria-pressed="false" style="height: 26px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; background: transparent; color: var(--text-muted)">All <span style="color: var(--text-faint)">3</span></button></div>
 </div>
@@ -82,7 +82,7 @@ class Component extends DCLogic {
     // "worker draft" applied to wt/detached conflicted (add/add): the file is unmerged, so it is C
     // (D's colours with a ring, "· conflict"), the entry gets a danger "1 conflict" pill (here and
     // on its Branches row), and a danger banner sits above the others in every mode. The diff is
-    // HEAD ↔ the working tree file with git's markers. Stash… is disabled: git cannot stash it.
+    // HEAD ↔ the working tree file with git's markers. Stash is disabled: git cannot stash it.
     var t = this.props.theme || 'dark';
     return { themeClass: 'theme-' + t, themeName: t };
   }

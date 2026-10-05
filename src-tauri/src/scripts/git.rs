@@ -10,7 +10,7 @@ use serde::Deserialize;
 use crate::config;
 use crate::config::new_id;
 use crate::error::AppError;
-use crate::git::{stash, worktrees};
+use crate::git::{refs, stash, worktrees};
 use crate::model::{entry_key, EntryRef, ScriptRun, UpdateReason};
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -20,6 +20,7 @@ use super::run::{self, Launch};
 /// `script_id` of every git action's run; the rest names the action.
 pub const ACTION_PREFIX: &str = "git:";
 const ICON: &str = "package";
+const SYNC_ICON: &str = "upload";
 
 /// A repository as a git action needs it.
 struct Repo {
@@ -325,6 +326,145 @@ pub fn stash_drop(
     )
 }
 
+/// Runs one sync command (W4a) in `folder` as a git action; values only in `GITGEL_*`.
+#[allow(clippy::too_many_arguments)]
+fn launch_sync(
+    state: &AppState,
+    action: &str,
+    name: &str,
+    repo: &Repo,
+    folder: PathBuf,
+    label: String,
+    entry_key: String,
+    command: String,
+    env: Vec<(String, String)>,
+) -> Result<ScriptRun, AppError> {
+    repo.not_busy(state)?;
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}{action}"),
+            name: name.into(),
+            icon: SYNC_ICON.into(),
+            entry_key,
+            repo_label: label,
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder,
+            command,
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// Fetch (W4a): `git fetch --all --prune` in the repository folder.
+pub fn fetch(state: &AppState, repo_id: &str) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    launch_sync(
+        state,
+        "fetch",
+        "Fetch",
+        &repo,
+        repo.main.clone(),
+        repo.name.clone(),
+        repo.id.clone(),
+        "git fetch --all --prune".into(),
+        Vec::new(),
+    )
+}
+
+/// A branch entry's repository, branch and where it syncs to.
+fn tracked(state: &AppState, entry: &EntryRef) -> Result<(Repo, String, refs::Tracking), AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    let branch = entry
+        .branch
+        .clone()
+        .ok_or_else(|| AppError::Invalid("A detached HEAD has no upstream.".into()))?;
+    let tracking = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        refs::tracking(&git, &branch)
+    }
+    .ok_or_else(|| AppError::Invalid(format!("{} has no remote.", repo.name)))?;
+    Ok((repo, branch, tracking))
+}
+
+/// Pull (W4a): `git pull [--rebase] <remote> refs/heads/<branch on the remote>` in the entry's
+/// worktree, so a branch without a configured upstream pulls from the same name on the remote.
+pub fn pull(state: &AppState, entry: EntryRef, rebase: bool) -> Result<ScriptRun, AppError> {
+    let (repo, branch, tracking) = tracked(state, &entry)?;
+    if tracking.tracking.is_none() {
+        return Err(AppError::Invalid(format!(
+            "{branch} is not on {}.",
+            tracking.remote
+        )));
+    }
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!("{} / {branch} is not checked out.", repo.name))
+    })?;
+    let env = vec![
+        ("GITGEL_REMOTE".into(), tracking.remote),
+        (
+            "GITGEL_MERGE".into(),
+            format!("refs/heads/{}", tracking.branch),
+        ),
+    ];
+    launch_sync(
+        state,
+        "pull",
+        if rebase { "Pull (rebase)" } else { "Pull" },
+        &repo,
+        tree.path.clone(),
+        repo.label(tree),
+        entry_key(&repo.id, Some(&branch), Some(&tree.path.to_string_lossy())),
+        download_command(rebase),
+        env,
+    )
+}
+
+/// Push (W4a): `git push <remote> refs/heads/<branch>:refs/heads/<on remote>`, never forced; a
+/// branch the remote does not have yet gets it as its upstream (`--set-upstream`).
+pub fn push(state: &AppState, entry: EntryRef) -> Result<ScriptRun, AppError> {
+    let (repo, branch, tracking) = tracked(state, &entry)?;
+    let tree = repo.tree_of(&entry);
+    let new = tracking.tracking.is_none() && !tracking.configured;
+    let env = vec![
+        ("GITGEL_REMOTE".into(), tracking.remote),
+        (
+            "GITGEL_REFSPEC".into(),
+            format!("refs/heads/{branch}:refs/heads/{}", tracking.branch),
+        ),
+    ];
+    let key = entry_key(
+        &repo.id,
+        Some(&branch),
+        tree.map(|t| t.path.to_string_lossy()).as_deref(),
+    );
+    launch_sync(
+        state,
+        "push",
+        "Push",
+        &repo,
+        // Hooks (pre-push) see the worktree when there is one.
+        tree.map_or_else(|| repo.main.clone(), |t| t.path.clone()),
+        format!("{} / {branch}", repo.name),
+        key,
+        upload_command(new),
+        env,
+    )
+}
+
+pub(super) fn download_command(rebase: bool) -> String {
+    let rebase = if rebase { " --rebase" } else { "" };
+    format!("git pull{rebase} \"$GITGEL_REMOTE\" \"$GITGEL_MERGE\"")
+}
+
+pub(super) fn upload_command(set_upstream: bool) -> String {
+    let upstream = if set_upstream { " --set-upstream" } else { "" };
+    format!("git push{upstream} \"$GITGEL_REMOTE\" \"$GITGEL_REFSPEC\"")
+}
+
 /// `git -C "$GITGEL_FOLDER_1" stash push … [-- "$GITGEL_PATH_1_1" …] && git -C "$GITGEL_FOLDER_2" …`:
 /// only fixed text and quoted variables, which sh, bash, zsh and fish all read the same way.
 pub(super) fn push_command(steps: &[PushStep], message: bool) -> String {
@@ -374,6 +514,26 @@ fn with_git_env(mut env: Vec<(String, String)>) -> Vec<(String, String)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sync_commands_hold_no_values() {
+        assert_eq!(
+            download_command(false),
+            r#"git pull "$GITGEL_REMOTE" "$GITGEL_MERGE""#
+        );
+        assert_eq!(
+            download_command(true),
+            r#"git pull --rebase "$GITGEL_REMOTE" "$GITGEL_MERGE""#
+        );
+        assert_eq!(
+            upload_command(false),
+            r#"git push "$GITGEL_REMOTE" "$GITGEL_REFSPEC""#
+        );
+        assert_eq!(
+            upload_command(true),
+            r#"git push --set-upstream "$GITGEL_REMOTE" "$GITGEL_REFSPEC""#
+        );
+    }
 
     #[test]
     fn push_commands_hold_no_values() {

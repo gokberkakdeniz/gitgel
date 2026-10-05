@@ -409,6 +409,25 @@ pub struct EntrySummary {
     pub state: EntryState,
     /// Detail for `git_error` / `base_missing`.
     pub error: Option<String>,
+    /// Where the branch is pushed to (W4a); `None` when detached, deleted or without a remote.
+    #[serde(default)]
+    pub upstream: Option<Upstream>,
+}
+
+/// A branch against its remote (`refs::tracking`), as of the last fetch.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Upstream {
+    /// e.g. `origin`.
+    pub remote: String,
+    /// The remote-tracking branch (`origin/feat`); `None` when the remote does not have it.
+    pub name: Option<String>,
+    /// Commits the remote does not have: on top of `name`, or, without it, on top of the base.
+    pub ahead: u32,
+    /// Commits of `name` the branch does not have.
+    pub behind: u32,
+    /// Newest commit the branch shares with `name` (where Review draws the upstream line).
+    pub merge_base: Option<String>,
 }
 
 /// Lightweight record for the palette's "Older" group.
@@ -630,6 +649,8 @@ pub struct HistoryPage {
     pub merge_base: Option<String>,
     /// Modification time of `FETCH_HEAD`, unix seconds; `None` if never fetched.
     pub fetched_at: Option<i64>,
+    /// When `rev` is a local branch: where it is pushed to (W4a).
+    pub upstream: Option<Upstream>,
 }
 
 /// The refs History's branch button lists.

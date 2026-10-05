@@ -101,7 +101,7 @@ function Repositories({ config }: { config: Config }) {
       <h2 className={styles.heading}>Repositories</h2>
       <List
         label="Repositories"
-        addLabel="+ Add repository…"
+        addLabel="+ Add repository"
         onAdd={() => void openAddRepos()}
         items={config.repos.map((repo): ListItem => {
           const s = scan[repo.id];
@@ -118,7 +118,7 @@ function Repositories({ config }: { config: Config }) {
               s?.status === 'missing'
                 ? [
                     { kind: 'pill', label: 'path not found', tone: 'danger' },
-                    { label: 'Locate…', variant: 'secondary', ariaLabel: `Locate ${name}`, onPress: () => void locate(repo) },
+                    { label: 'Locate', variant: 'secondary', ariaLabel: `Locate ${name}`, onPress: () => void locate(repo) },
                     remove,
                   ]
                 : s?.status === 'error'
@@ -297,7 +297,7 @@ function TerminalSetting({ config }: { config: Config }) {
             { value: 'terminal', label: 'Terminal', disabled: missing('terminal') },
             { value: 'iterm', label: 'iTerm2', disabled: missing('iterm') },
             { value: 'wezterm', label: 'WezTerm', disabled: missing('wezterm') },
-            { value: 'other', label: 'Other…' },
+            { value: 'other', label: 'Other' },
           ]}
         />
       </label>

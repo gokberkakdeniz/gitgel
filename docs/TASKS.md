@@ -439,6 +439,21 @@ rather than as a task is listed the same way, marked "(on request)".
   Project one-entry card removed; shorter Review subtitles, base banner, nav tooltips, History
   fetch tooltip, delete confirmation, Settings hint and update tooltip; entry menu notes cut to
   a few words ("Not checked out", "Branch deleted", …) — 2026-10-05
+- [x] (on request) Sync of one branch (W4a): Fetch / Pull / Push as git actions (`fetch --all
+  --prune`, `pull <remote> <branch>`, `push [--set-upstream] <remote> <refspec>`, never forced)
+  in the History header and the branch menus (Branches, Project, Review); `EntrySummary.upstream`
+  / `HistoryPage.upstream` (↑/↓ against the remote) shown in Review on group line 2, the entry
+  bar and a dashed upstream line in the commit list; diverged banner with "Pull (rebase)" in
+  History; a failed sync opens its output panel — 2026-10-05
+  - note: git CLI rather than libgit2, so SSH agents, credential helpers and hooks work as in the
+    terminal. User decision: no buttons in Review's header and no multi-entry sync; no shortcuts
+    or force-with-lease.
+- [x] (on request) Review and History headers in one order: the page's controls, then a ⋮ page
+  menu (`PageMenu`) with "Stash" (only when there is something to stash), "Refresh" and,
+  in a project review, "Edit project"; History's "Fetched" moves into Fetch's tooltip — 2026-10-05
+- [x] (on request) Labels drop the trailing "…" (Change base, Drop, Apply to, Pop to, Locate,
+  Import, Export, + New project, Delete project, …); only progress text keeps it (SPEC §0) —
+  2026-10-05
 
 ---
 

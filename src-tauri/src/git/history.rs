@@ -147,6 +147,23 @@ pub fn ahead_of(repo: &Repository, tip: &str, candidate: &str) -> Result<Option<
     }
 }
 
+/// `tip` against `other`: commits on each side and their merge-base; `None` when they share no
+/// history.
+pub fn ahead_behind(
+    repo: &Repository,
+    tip: &str,
+    other: &str,
+) -> Result<Option<(u32, u32, String)>, AppError> {
+    let (tip, other) = (Oid::from_str(tip)?, Oid::from_str(other)?);
+    let merge_base = match repo.merge_base(tip, other) {
+        Ok(oid) => oid,
+        Err(e) if e.code() == git2::ErrorCode::NotFound => return Ok(None),
+        Err(e) => return Err(e.into()),
+    };
+    let (ahead, behind) = repo.graph_ahead_behind(tip, other)?;
+    Ok(Some((ahead as u32, behind as u32, merge_base.to_string())))
+}
+
 /// How `tip`'s merge-bases with the local and the remote default relate. Only meaningful when
 /// both share history with `tip`.
 pub fn merge_base_order(
@@ -706,7 +723,11 @@ mod tests {
         assert_eq!(split.ahead.len(), 1);
         assert_eq!(split.merge_base, Some(base.to_string()));
         let w = walk(&t.repo, &tip, Some(&split.ahead), &[], 200).unwrap();
-        let marks: Vec<_> = w.commits.iter().map(|c| (c.subject.as_str(), c.in_base)).collect();
+        let marks: Vec<_> = w
+            .commits
+            .iter()
+            .map(|c| (c.subject.as_str(), c.in_base))
+            .collect();
         assert_eq!(marks, [("feature work", false), ("init", true)]);
     }
 
@@ -714,14 +735,27 @@ mod tests {
     fn history_search_matches_text_sha_and_paths() {
         let t = TestRepo::new();
         t.commit_on("main", &[("README", Some(b"r"))], "init", 5);
-        let fix = t.commit_on("main", &[("src/auth/refresh.ts", Some(b"x"))], "Fix token-refresh", 3);
-        t.commit_on("main", &[("docs/guide.md", Some(b"g"))], "Write the guide", 1);
+        let fix = t.commit_on(
+            "main",
+            &[("src/auth/refresh.ts", Some(b"x"))],
+            "Fix token-refresh",
+            3,
+        );
+        t.commit_on(
+            "main",
+            &[("docs/guide.md", Some(b"g"))],
+            "Write the guide",
+            1,
+        );
         t.merge_on("main", "main", &[], "Merge it");
         let tip = t.repo.revparse_single("main").unwrap().id().to_string();
         let find = |q: &str| {
             let terms: Vec<String> = search_words(q).split(' ').map(str::to_string).collect();
             let w = walk(&t.repo, &tip, None, &terms, 200).unwrap();
-            subjects(&w).iter().map(|s| s.to_string()).collect::<Vec<_>>()
+            subjects(&w)
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>()
         };
         assert_eq!(find("token refresh"), ["Fix token-refresh"]);
         assert_eq!(find("guide.md"), ["Write the guide"]);

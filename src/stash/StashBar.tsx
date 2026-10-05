@@ -22,7 +22,7 @@ export function StashBar({ stash, base }: { stash: ReviewStash; base: string }) 
   );
   const act = (pop: boolean, el: HTMLElement) =>
     home ? void applyStash(stash, home, pop) : setPick({ pop, rect: el.getBoundingClientRect() });
-  const where = home ? ` to ${home.branch} (${tildifyHome(home.worktreePath ?? '')})` : ' to…';
+  const where = home ? ` to ${home.branch} (${tildifyHome(home.worktreePath ?? '')})` : ' to a worktree';
   return (
     <div className={styles.entryBar}>
       <div className={styles.entryLine}>
@@ -37,7 +37,7 @@ export function StashBar({ stash, base }: { stash: ReviewStash; base: string }) 
           Pop
         </Button>
         <Button size={28} className={styles.dropButton} onClick={() => askDrop(stash)}>
-          Drop…
+          Drop
         </Button>
         {pick && (
           <Popover anchorRect={pick.rect} width={280} alignRight onClose={() => setPick(null)}>

@@ -19,6 +19,7 @@ import {
 } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
+import { SyncItems } from '../../sync/SyncButtons';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { askDrop } from '../../stash/actions';
 import { StashTargetMenu } from '../../stash/StashTargetMenu';
@@ -72,7 +73,7 @@ function FirstRun() {
             nothing is checked out or changed.
           </p>
           <Button variant="primary" size={40} className={styles.emptyButton} onClick={() => void openAddRepos()}>
-            Add repository…
+            Add repository
           </Button>
           <span className={styles.emptyHint}>or drop folders onto this window</span>
         </div>
@@ -491,7 +492,7 @@ function StashList({
 }) {
   const push = useNav((s) => s.push);
   const [menu, setMenu] = useState<{ sha: string; rect: DOMRect } | null>(null);
-  // Apply to… / Pop to…: the worktree picker (P5) beside the item, on hover or click.
+  // Apply to / Pop to: the worktree picker (P5) beside the item, on hover or click.
   // `focus`: opened by click or keyboard, so its first item takes the focus (not on hover).
   const [sub, setSub] = useState<{ pop: boolean; el: HTMLElement; focus?: boolean } | null>(null);
   const closeMenu = () => {
@@ -538,10 +539,10 @@ function StashList({
               Review changes
             </MenuItem>
             <MenuItem submenu onHover={(el) => setSub({ pop: false, el })} onSelect={(el) => setSub({ pop: false, el, focus: true })}>
-              Apply to…
+              Apply to
             </MenuItem>
             <MenuItem submenu onHover={(el) => setSub({ pop: true, el })} onSelect={(el) => setSub({ pop: true, el, focus: true })}>
-              Pop to…
+              Pop to
             </MenuItem>
             <MenuDivider />
             <MenuItem
@@ -553,7 +554,7 @@ function StashList({
                 askDrop(stash);
               }}
             >
-              Drop…
+              Drop
             </MenuItem>
           </Menu>
           {sub && (
@@ -785,6 +786,7 @@ function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: bool
       )}
       <MenuDivider />
       <OpenItems entry={entry} onDone={onClose} />
+      <SyncItems entry={entry} onDone={onClose} />
       <ScriptsMenu entry={entry} menu="branches" onDone={onClose} />
       <EntryMenuNote entry={entry} />
     </Menu>
@@ -854,7 +856,7 @@ function ProjectsMenu({
       ))}
       <div className={styles.projDivider} />
       <button type="button" role="menuitem" className={`${styles.projMenuItem} ${styles.projAddAnother}`} onClick={onAddAnother}>
-        + Add to another project…
+        + Add to another project
       </button>
     </div>
   );

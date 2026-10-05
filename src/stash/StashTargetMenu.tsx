@@ -12,7 +12,7 @@ export function stashTargets(st: ReviewStash, active: EntrySummary[]): EntrySumm
   return [...own, ...trees.filter((e) => !own.includes(e))];
 }
 
-/** Apply to… / Pop to… (flow P5): where the stash goes. */
+/** Apply to / Pop to (flow P5): where the stash goes. */
 export function StashTargetMenu({
   stash,
   pop,

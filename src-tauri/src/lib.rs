@@ -145,6 +145,9 @@ pub fn run() {
             commands::stash_push,
             commands::stash_apply,
             commands::stash_drop,
+            commands::git_fetch,
+            commands::git_pull,
+            commands::git_push,
         ])
         .build(tauri::generate_context!())
         .map(|app| {

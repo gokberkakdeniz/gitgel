@@ -147,6 +147,15 @@ export interface EntrySummary {
   changedAt: number | null; // newest uncommitted file mtime, only when newer than lastCommitAt
   state: EntryState;
   error: string | null; // detail for git_error / base_missing
+  upstream: Upstream | null; // where it is pushed to; null when detached, deleted or without a remote
+}
+/** A branch against its remote, as of the last fetch (W4a). */
+export interface Upstream {
+  remote: string; // e.g. "origin"
+  name: string | null; // the remote-tracking branch ("origin/feat"); null: not on the remote
+  ahead: number; // commits the remote lacks (on top of `name`, else on top of the base)
+  behind: number; // commits of `name` the branch lacks
+  mergeBase: string | null; // newest commit shared with `name` (Review's upstream line)
 }
 
 export interface OtherBranch {
@@ -258,6 +267,7 @@ export interface HistoryPage {
   ahead: number | null; // commits not in the base; null without a base
   mergeBase: string | null;
   fetchedAt: number | null; // FETCH_HEAD's modification time; null if never fetched
+  upstream: Upstream | null; // when rev is a local branch: where it is pushed to (W4a)
 }
 export interface HistoryRefs {
   branches: string[];

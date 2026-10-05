@@ -5,7 +5,7 @@ import { plural } from '../lib/format';
 import { dropStash, useStashUi } from './actions';
 import styles from './DropStashModal.module.css';
 
-/** Drop… (flow P6): confirms dropping `useStashUi.dropping`. */
+/** Drop (flow P6): confirms dropping `useStashUi.dropping`. */
 export function DropStashModal() {
   const st = useStashUi((s) => s.dropping);
   if (!st) return null;

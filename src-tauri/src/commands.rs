@@ -526,3 +526,28 @@ pub async fn stash_drop(
     })
     .await
 }
+
+/// Sync (W4a): `git fetch --all --prune` in the repository.
+#[tauri::command]
+pub async fn git_fetch(state: State<'_, AppState>, repo_id: String) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| scripts::git::fetch(state, &repo_id)).await
+}
+
+/// Sync (W4a): `git pull` (or `--rebase`) in the entry's worktree.
+#[tauri::command]
+pub async fn git_pull(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    rebase: bool,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::pull(state, entry, rebase)
+    })
+    .await
+}
+
+/// Sync (W4a): `git push` of the entry's branch to its remote, never forced.
+#[tauri::command]
+pub async fn git_push(state: State<'_, AppState>, entry: EntryRef) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| scripts::git::push(state, entry)).await
+}

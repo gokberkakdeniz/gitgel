@@ -92,7 +92,7 @@ class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
     // Stashes per repo: the shared List (List.dc.html) with a heading; row 1 has its menu open.
-    // Apply to… / Pop to… open the worktree picker beside them on hover or click (P5); Drop… asks first (P6).
+    // Apply to / Pop to open the worktree picker beside them on hover or click (P5); Drop asks first (P6).
     // api-server's list is collapsed: its bottom padding drops to the top's 8px.
     var more = function (open) { return [{ icon: 'more-vertical', ariaLabel: 'Stash options', active: open }]; };
     var stash = function (n, msg, branch, gone, files, age, open) {
@@ -101,9 +101,9 @@ class Component extends DCLogic {
     };
     return { themeClass: 'theme-' + t, themeName: t,
       stashMenu: [{ label: 'Review changes', kbd: '↵', active: true },
-        { label: 'Apply to…', submenu: true, href: 'FlowP5.dc.html' },
-        { label: 'Pop to…', submenu: true },
-        { kind: 'sep' }, { label: 'Drop…', kbd: '⌫', danger: true, href: 'FlowP6.dc.html' }],
+        { label: 'Apply to', submenu: true, href: 'FlowP5.dc.html' },
+        { label: 'Pop to', submenu: true },
+        { kind: 'sep' }, { label: 'Drop', kbd: '⌫', danger: true, href: 'FlowP6.dc.html' }],
       stashesWeb: [stash(0, 'debug logging for refresh', 'session-token-refresh', false, '1 file', '20m', true),
         stash(1, 'WIP on old-login: 71be0c2 Try new login form', 'old-login', true, '5 files', '3w', false)],
       stashesApi: [stash(0, 'WIP on token-rotation-job: e02b7d1 Schedule rotation', 'token-rotation-job', false, '2 files', '1d', false)] };

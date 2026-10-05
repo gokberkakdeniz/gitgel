@@ -632,6 +632,34 @@
   border-radius: 3px;
 }
 
+.upstream {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Where the remote-tracking branch is (W4a): a dashed rule with its name. */
+.upstreamLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 18px;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.upstreamLine::before,
+.upstreamLine::after {
+  content: '';
+  flex-grow: 1;
+  border-top: 1px dashed var(--border-strong);
+}
+
 .matchLabel {
   flex-shrink: 0;
   font-size: 11px;

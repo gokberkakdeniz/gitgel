@@ -23,6 +23,7 @@ const entry = (repoName: string, branch: string | null, worktreePath: string | n
   conflicts: 0,
   lastCommitAt: 0,
   changedAt: null,
+  upstream: null,
   state: 'ok',
   error: null,
 });

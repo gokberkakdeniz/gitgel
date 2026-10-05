@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>P5 · Apply to…: pick a worktree</title>
+<title>P5 · Apply to: pick a worktree</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -92,10 +92,10 @@ button,input,textarea{font-family:inherit}
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
-    // P1 with the pointer on Apply to…: the worktree picker opens beside it (here on its left, as
+    // P1 with the pointer on Apply to: the worktree picker opens beside it (here on its left, as
     // there is no room on the right; → / click open it from the keyboard, ← goes back). One item per checked-out branch of the
     // repo, the branch the stash was taken on first; desc the folder, plus its uncommitted count.
-    // A pick runs `git stash apply 'stash@{0}'` there (Pop to…: "Pop stash@{0} to", `pop`); the
+    // A pick runs `git stash apply 'stash@{0}'` there (Pop to: "Pop stash@{0} to", `pop`); the
     // same picker opens under the stash pane's Apply / Pop buttons (P2, P3).
     // api-server's list is collapsed: its bottom padding drops to the top's 8px.
     var more = function (open) { return [{ icon: 'more-vertical', ariaLabel: 'Stash options', active: open }]; };
@@ -104,8 +104,8 @@ class Component extends DCLogic {
         sub: [{ pill: gone ? branch + ' · deleted' : branch, tone: gone ? 'outline' : 'accent' }, { text: files }, { text: age }] };
     };
     return { themeClass: 'theme-' + t, themeName: t,
-      stashMenu: [{ label: 'Review changes', kbd: '↵' }, { label: 'Apply to…', submenu: true, active: true }, { label: 'Pop to…', submenu: true },
-        { kind: 'sep' }, { label: 'Drop…', kbd: '⌫', danger: true }],
+      stashMenu: [{ label: 'Review changes', kbd: '↵' }, { label: 'Apply to', submenu: true, active: true }, { label: 'Pop to', submenu: true },
+        { kind: 'sep' }, { label: 'Drop', kbd: '⌫', danger: true }],
       pickMenu: [{ kind: 'label', label: 'Apply stash@{0} to' },
         { label: 'session-token-refresh', icon: 'branch', desc: '~/code/wt/token-refresh · 3 uncommitted', active: true },
         { label: 'session-cookie-cleanup', icon: 'branch', desc: '~/code/wt/cookie-cleanup · 1 uncommitted' },

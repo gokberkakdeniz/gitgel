@@ -15,7 +15,7 @@ interface Props {
   label: ToastLabel;
   /** Shown in the new-project form under "First entry". */
   firstEntry: string;
-  /** Replaces the in-place form for "+ New project…" (selection bar: flow H2). */
+  /** Replaces the in-place form for "+ New project" (selection bar: flow H2). */
   onNewProject?: () => void;
   /** Projects not offered (the entry is already in them). */
   excludeProjectIds?: string[];
@@ -113,7 +113,7 @@ function PickView({
       )}
       <div className={styles.newRow}>
         <button type="button" className={styles.newButton} onClick={onNew}>
-          + New project…
+          + New project
         </button>
       </div>
     </div>

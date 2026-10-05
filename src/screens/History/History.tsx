@@ -6,9 +6,14 @@ import { Input } from '../../components/Input';
 import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
-import { RefreshButton } from '../../components/RefreshButton';
+import { Banner } from '../../components/Banner';
+import { Button } from '../../components/Button';
+import { SyncButtons } from '../../sync/SyncButtons';
+import { divergedBanner, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
 import { StashBar } from '../../stash/StashBar';
-import { StashButton } from '../../stash/StashButton';
+import { useStashAction } from '../../stash/StashAction';
+import { PageMenu } from '../../components/PageMenu';
+import { rescanAll } from '../../lib/events';
 import { formatAge, plural } from '../../lib/format';
 import { getCommitChanges, getHistory, getHistoryRefs, getReview, getStashChanges } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
@@ -78,7 +83,7 @@ export function History({ repoId, rev, backLabel }: Props) {
         tipOverride: null,
       }),
     [repoId, entry?.key],
-    // Also while searching: the Stash… button needs the files.
+    // Also while searching: the Stash button needs the files.
     { repoIds: [repoId], enabled: !!entry?.worktreePath && (entry.uncommitted ?? 0) > 0 },
   );
   const wipFiles = wipReview?.groups[0]?.files.uncommitted ?? [];
@@ -230,6 +235,16 @@ export function History({ repoId, rev, backLabel }: Props) {
 
   const { layout, ignoreWs, context, contextLines, saveView, toggleWs, viewRef } = useDiffView();
   const worktree = entry?.worktreePath ? tildifyHome(entry.worktreePath) : null;
+  // A local branch syncs with its remote (W4a); `upstream` is set only for one.
+  const syncTarget: SyncTarget = {
+    repoId,
+    repoName,
+    branch: data?.upstream ? rev : null,
+    worktreePath: entry?.worktreePath ?? null,
+    upstream: data?.upstream ?? null,
+  };
+  const diverged = divergedBanner(syncTarget);
+  const stashAction = useStashAction(wipReview?.groups ?? []);
   const subtitle = [repoName, rev, worktree].filter(Boolean).join(' · ');
 
   let label = '';
@@ -262,17 +277,35 @@ export function History({ repoId, rev, backLabel }: Props) {
             }
           }}
         />
-        {data?.fetchedAt != null && (
-          <span
-            className={styles.fetched}
-            title="Gitgel never fetches"
-          >
-            Fetched {formatAge(data.fetchedAt)} ago
-          </span>
-        )}
-        {entry?.worktreePath && <StashButton groups={wipReview?.groups ?? []} />}
-        <RefreshButton />
+        <SyncButtons target={syncTarget} fetchedAt={data?.fetchedAt ?? null} />
+        <PageMenu>
+          {(close, anchor) => (
+            <>
+              {entry?.worktreePath && stashAction.item(close, anchor)}
+              <MenuItem
+                icon="refresh"
+                onSelect={() => {
+                  close();
+                  void rescanAll(true);
+                }}
+              >
+                Refresh
+              </MenuItem>
+            </>
+          )}
+        </PageMenu>
+        {stashAction.dialog}
       </Header>
+      {diverged && (
+        <Banner tone="warning">
+          <span className={review.grow}>{diverged}</span>
+          {!syncState(syncTarget).pull && (
+            <Button size={24} onClick={() => void pullBranch(syncTarget, true)}>
+              Pull (rebase)
+            </Button>
+          )}
+        </Banner>
+      )}
 
       <div className={review.body}>
         <div className={styles.listPane}>

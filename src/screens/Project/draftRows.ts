@@ -31,6 +31,7 @@ export function draftRows(entries: EntryRef[], scan: Record<string, RepoScan>): 
       conflicts: 0,
       lastCommitAt: other?.lastCommitAt ?? null,
       changedAt: null,
+      upstream: null,
       state: other?.merged ? 'merged' : 'ok',
       error: null,
     };

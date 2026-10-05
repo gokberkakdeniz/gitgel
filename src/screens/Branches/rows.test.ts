@@ -23,6 +23,7 @@ function entry(repoId: string, branch: string | null, at: number, extra: Partial
     conflicts: 0,
     lastCommitAt: at,
     changedAt: null,
+    upstream: null,
     state: 'ok',
     error: null,
     ...extra,

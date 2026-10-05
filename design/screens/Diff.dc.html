@@ -42,11 +42,8 @@ button,input{font-family:inherit}
 </div>
 <div style="flex-grow: 1"></div>
 <div style="display: flex; align-items: center; gap: 10px">
-<dc-import name="Button" theme="{{themeName}}" variant="secondary" size="32" icon="refresh" label="" aria-label="Refresh" hint-size="32px,32px"></dc-import>
 <dc-import name="Segmented" theme="{{themeName}}" size="md" label="Diff layer" options="{{modes}}" hint-size="300px,34px"></dc-import>
-<sc-if value="{{showEditProject}}" hint-placeholder-val="{{true}}">
-<dc-import name="Button" theme="{{themeName}}" variant="secondary" size="32" icon="pencil" label="" aria-label="Edit project" title="Edit project" href="Projects.dc.html" hint-size="32px,32px"></dc-import>
-</sc-if>
+<dc-import name="Button" theme="{{themeName}}" variant="secondary" size="32" icon="more-vertical" label="" aria-label="More actions" title="More actions" hint-size="32px,32px"></dc-import>
 </div>
 </header>
 
@@ -271,7 +268,7 @@ class Component extends DCLogic {
     var extra = stacked && apiBase === 'main';
     var menu = !!this.props.baseMenu;
     var entryMenu = !!this.props.entryMenu;
-    // The entry whose base menu is open (Change base… in its ⋮ menu).
+    // The entry whose base menu is open (Change base in its ⋮ menu).
     var bmGroup = menu && scope === 'project' ? (baseCase === 'stacked' ? 'api' : 'web') : null;
     var resizing = !!this.props.resizing;
     var baseCase = this.props.baseCase || 'stacked';
@@ -418,11 +415,11 @@ class Component extends DCLogic {
         matchLabel: terms.length ? shown.length + ' of ' + list.length : '',
         add: '+' + add, del: del ? '−' + del : '',
         // D10: the first entry's header is hovered with its ⋮ menu open; the totals give way to it.
-        // With the base menu open (from the menu's Change base…) its entry keeps ⋮ pressed.
+        // With the base menu open (from the menu's Change base) its entry keeps ⋮ pressed.
         menuOn: entryMenu && g === G[0],
         dotsOn: (entryMenu && g === G[0]) || g.id === bmGroup,
         totalsOn: !((entryMenu && g === G[0]) || g.id === bmGroup),
-        menuItems: [{ label: 'Change base…', icon: 'branch', sub: 'base ' + g.base + (g.id === 'api' && apiBase !== 'main' ? ' · set for this branch' : ''), active: true },
+        menuItems: [{ label: 'Change base', icon: 'branch', sub: 'base ' + g.base + (g.id === 'api' && apiBase !== 'main' ? ' · set for this branch' : ''), active: true },
           { label: 'Copy branch name', icon: 'copy' }, { label: 'Open history', icon: 'history' }, { kind: 'sep' },
           { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' }],
         headStyle: 'display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px',
