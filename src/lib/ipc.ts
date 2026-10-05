@@ -105,6 +105,9 @@ export const getUpdate = () => invoke<UpdateInfo | null>('get_update');
 /** Downloads and installs that update, then the app restarts; rejects if it fails. */
 export const installUpdate = () => invoke<void>('install_update');
 
+/** Checks now (the Software Update window's Try Again); the answer arrives as `update-check`. */
+export const checkForUpdates = () => invoke<void>('check_for_updates');
+
 // ---- Scripts (SPEC §14) ----
 
 /** Adds a script (empty `id`) or replaces the one with that id. */

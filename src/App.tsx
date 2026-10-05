@@ -4,6 +4,7 @@ import { FolderPlusIcon } from './components/icons';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { ToastHost } from './components/Toast';
+import { UpdateModal } from './components/UpdateModal';
 import { OutputPanelHost } from './scripts/OutputPanel';
 import { RunDialogHost } from './scripts/RunDialog';
 import { DropStashModal } from './stash/DropStashModal';
@@ -93,6 +94,7 @@ export default function App() {
       <RunDialogHost />
       <OutputPanelHost />
       <DropStashModal />
+      <UpdateModal />
       <ToastHost />
       {dropping && (
         <div className={styles.drop} aria-hidden>

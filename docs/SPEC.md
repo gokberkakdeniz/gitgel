@@ -171,7 +171,7 @@ gitgel/
 │  ├─ state/    nav.ts  ui.ts  data.ts
 │  ├─ components/                 # Button, IconButton, Pill, Checkbox, Switch, Input, Kbd,
 │  │                              # Popover, Menu, Modal, Toast, Segmented, Select, SettingsNav,
-│  │                              # KindBadge, Banner, ResizeHandle (+ useStoredWidth), List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
+│  │                              # KindBadge, Banner, ResizeHandle (+ useStoredWidth), UpdateModal, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  History/  Settings/  Palette/  AddRepos/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
@@ -1088,9 +1088,20 @@ checkbox only (no ⌘/⇧-click).
 
 **App menu** (`src-tauri/src/menu.rs`, the standard macOS menus plus):
 
-- **Gitgel › Check for Updates…** (after About): checks now, whatever the setting, and answers in
-  a native dialog: "You’re up to date", or "A new version of Gitgel is available" with **Update
-  and Restart** / **Later**, or the error.
+- **Gitgel › Check for Updates…** (after About): checks now, whatever the setting, and opens the
+  **Software Update** window (`UpdateModal`, 360px, centered; Esc / Later closes it except while
+  installing). It follows the backend's `update-check` event (`checking` → `upToDate` /
+  `available` / `failed`); "Try Again" after a failed check calls `check_for_updates`. Top to
+  bottom, centered: the 88px app icon (`src-tauri/icons/128x128@2x.png`, soft drop shadow), a
+  serif 22px title, then by state:
+  - checking: "Checking for updates…" and an indeterminate 4px accent bar; Cancel.
+  - up to date: "You’re up to date", muted `Gitgel <version> is the newest version.`; OK.
+  - available: "A new version is available", the versions as mono pills (`<current>` muted →
+    `<new>` accent), muted "Gitgel restarts to finish the update."; Later / **Update and
+    Restart**. Installing shows the download bar (`Downloading… N%`, then `Installing…`) and
+    disables both; a failed install shows its error and the primary becomes "Try Again".
+  - failed: "Cannot check for updates" and the error (mono 11, danger tint); Close / Try Again.
+  Buttons are 36px and share the width, the primary last.
 - **Gitgel › Settings…** (⌘,): emits `open-settings`; the frontend opens Settings unless a modal
   is open or Settings is already showing.
 - **View › Font Size**: Decrease (⌘-), Increase (⌘.), Reset (⌘0). Zooms the whole window in steps

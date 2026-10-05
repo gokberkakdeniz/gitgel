@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>U1 · Software Update</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+button{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+</style>
+</helmet>
+<div class="theme-dark" style="width: 2040px; height: 520px; box-sizing: border-box; padding: 40px; display: flex; gap: 40px; align-items: flex-start; background: rgba(0,0,0,0.5); font-size: 13px; color: var(--text-body)">
+<sc-for list="{{states}}" as="s" hint-placeholder-count="5">
+<div style="width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">{{s.caption}}</span>
+<div role="dialog" aria-label="Software Update" style="display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px 28px 22px; text-align: center">
+<span style="width: 88px; height: 88px; flex-shrink: 0; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; border-radius: 20px; background: linear-gradient(180deg, #1f1f1f, #0c0c0c); box-shadow: 0 6px 14px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.06)"><svg viewBox="0 0 1024 1024" width="70" height="70" aria-hidden="true"><defs><linearGradient id="ug" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ccbd8"></stop><stop offset="1" stop-color="#4f8fa3"></stop></linearGradient></defs><g fill="none" stroke="#7fb3c4" stroke-width="50" stroke-linecap="round"><path d="M512 520 C 478 600 546 660 512 760"></path><path d="M388 520 C 376 612 300 628 296 712"></path><path d="M636 520 C 648 612 724 628 728 712"></path></g><path fill="url(#ug)" d="M202 500 C 202 272 344 140 512 140 C 680 140 822 272 822 500 Q 770 556 719 512 Q 667 556 615 512 Q 564 556 512 512 Q 460 556 409 512 Q 357 556 305 512 Q 254 556 202 500 Z"></path><path fill="#ffffff" fill-opacity="0.28" d="M284 430 C 280 316 350 226 452 196 C 380 250 336 330 336 430 C 336 452 284 452 284 430 Z"></path><g fill="#eef6f8" stroke="#4f8fa3" stroke-width="16"><circle cx="512" cy="806" r="62"></circle><circle cx="296" cy="752" r="52"></circle><circle cx="728" cy="752" r="52"></circle></g></svg></span>
+<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: var(--text-strong)">{{s.title}}</h2>
+<sc-if value="{{s.versions}}" hint-placeholder-val="{{false}}">
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="padding: 2px 8px; border-radius: 9999px; background: var(--bg-hover); color: var(--text-muted)">0.9.3</span><span style="color: var(--text-faint)">→</span><span style="padding: 2px 8px; border-radius: 9999px; background: rgba(var(--accent-rgb), 0.16); color: var(--accent-text)">0.10.0</span></span>
+</sc-if>
+<sc-if value="{{s.hasText}}" hint-placeholder-val="{{true}}">
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-muted)">{{s.text}}</p>
+</sc-if>
+<sc-if value="{{s.hasError}}" hint-placeholder-val="{{false}}">
+<p style="width: 100%; box-sizing: border-box; margin: 0; padding: 8px 10px; border-radius: 8px; background: rgba(var(--danger-rgb), 0.12); font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; color: var(--danger); text-align: left; overflow-wrap: anywhere">{{s.error}}</p>
+</sc-if>
+<sc-if value="{{s.hasBar}}" hint-placeholder-val="{{false}}">
+<div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 4px">
+<div role="progressbar" style="width: 100%; height: 4px; overflow: hidden; border-radius: 9999px; background: var(--bg-hover)"><div style="{{s.fillStyle}}"></div></div>
+<span style="font-size: 12px; color: var(--text-muted)">{{s.barLabel}}</span>
+</div>
+</sc-if>
+</div>
+<div style="display: flex; gap: 8px; padding: 0 20px 20px">
+<sc-for list="{{s.buttons}}" as="b" hint-placeholder-count="2">
+<button style="{{b.style}}">{{b.label}}</button>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2040,"height":520}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // Gitgel › Check for Updates… (src/components/UpdateModal.tsx): one window, five moments.
+    var btn = function (label, primary, disabled) {
+      return { label: label, style: 'flex: 1; height: 36px; padding: 0 16px; border-radius: 8px; font-size: 13px; cursor: pointer; ' +
+        (primary ? 'background: var(--accent); border: 1px solid var(--accent); color: var(--on-accent); font-weight: 600' : 'background: var(--bg-hover); border: 1px solid var(--border-strong); color: var(--text-strong)') +
+        (disabled ? '; opacity: 0.5; cursor: default' : '') };
+    };
+    var fill = 'height: 100%; border-radius: inherit; background: var(--accent); ';
+    var st = function (o) { return Object.assign({ versions: false, hasText: false, text: '', hasError: false, error: '', hasBar: false, fillStyle: '', barLabel: '' }, o); };
+    return { states: [
+      st({ caption: 'Checking', title: 'Checking for updates…', hasBar: true, fillStyle: fill + 'width: 35%; margin-left: 30%', barLabel: '', buttons: [btn('Cancel')] }),
+      st({ caption: 'Up to date', title: 'You’re up to date', hasText: true, text: 'Gitgel 0.9.3 is the newest version.', buttons: [btn('OK', true)] }),
+      st({ caption: 'Available', title: 'A new version is available', versions: true, hasText: true, text: 'Gitgel restarts to finish the update.', buttons: [btn('Later'), btn('Update and Restart', true)] }),
+      st({ caption: 'Downloading', title: 'A new version is available', versions: true, hasBar: true, fillStyle: fill + 'width: 42%', barLabel: 'Downloading… 42%', buttons: [btn('Later', false, true), btn('Updating…', true, true)] }),
+      st({ caption: 'Check failed', title: 'Cannot check for updates', hasError: true, error: 'error sending request for url (https://github.com/…/latest.json)', buttons: [btn('Close'), btn('Try Again', true)] })
+    ] };
+  }
+}
+</script>
+</body>
+</html>

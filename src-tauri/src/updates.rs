@@ -8,7 +8,6 @@ use std::time::{Duration, SystemTime};
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 use tauri_plugin_updater::{Update, UpdaterExt};
 
 use crate::config;
@@ -36,6 +35,16 @@ struct Inner {
 pub struct UpdateInfo {
     pub version: String,
     pub current_version: String,
+}
+
+/// Payload of `update-check`: Gitgel › Check for Updates… as the Software Update window shows it.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "state", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum UpdateCheck {
+    Checking { current_version: String },
+    UpToDate { current_version: String },
+    Available { version: String, current_version: String },
+    Failed { current_version: String, message: String },
 }
 
 fn info(update: &Update) -> UpdateInfo {
@@ -99,53 +108,31 @@ pub fn setting_changed(app: &AppHandle, on: bool) {
     }
 }
 
-/// Gitgel › Check for Updates…: checks now, whatever the setting, and answers in a dialog.
+/// Gitgel › Check for Updates…: checks now, whatever the setting. The frontend's Software Update
+/// window follows `update-check` and installs through `install_update`.
 pub fn check_now(app: &AppHandle) {
+    let current_version = app.package_info().version.to_string();
+    let _ = app.emit(
+        "update-check",
+        UpdateCheck::Checking {
+            current_version: current_version.clone(),
+        },
+    );
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
-        match check(&app).await {
-            Ok(Some(found)) => {
-                let handle = app.clone();
-                app.dialog()
-                    .message(format!(
-                        "Gitgel {} is available; you have {}. Gitgel restarts to finish the update.",
-                        found.version, found.current_version
-                    ))
-                    .title("A new version of Gitgel is available")
-                    .buttons(MessageDialogButtons::OkCancelCustom(
-                        "Update and Restart".into(),
-                        "Later".into(),
-                    ))
-                    .show(move |ok| {
-                        if ok {
-                            tauri::async_runtime::spawn(async move {
-                                if let Err(e) = install(handle.clone()).await {
-                                    failed(&handle, "Cannot update Gitgel", &e.to_string());
-                                }
-                            });
-                        }
-                    });
-            }
-            Ok(None) => {
-                app.dialog()
-                    .message(format!(
-                        "Gitgel {} is the newest version.",
-                        app.package_info().version
-                    ))
-                    .title("You’re up to date")
-                    .show(|_| {});
-            }
-            Err(e) => failed(&app, "Cannot check for updates", &e),
-        }
+        let answer = match check(&app).await {
+            Ok(Some(found)) => UpdateCheck::Available {
+                version: found.version,
+                current_version: found.current_version,
+            },
+            Ok(None) => UpdateCheck::UpToDate { current_version },
+            Err(message) => UpdateCheck::Failed {
+                current_version,
+                message,
+            },
+        };
+        let _ = app.emit("update-check", answer);
     });
-}
-
-fn failed(app: &AppHandle, title: &str, detail: &str) {
-    app.dialog()
-        .message(detail)
-        .title(title)
-        .kind(tauri_plugin_dialog::MessageDialogKind::Warning)
-        .show(|_| {});
 }
 
 /// Asks the endpoint for a newer version, keeps the answer and emits `update-available`.

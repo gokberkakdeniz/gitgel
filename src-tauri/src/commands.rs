@@ -341,6 +341,12 @@ pub fn get_update(app: AppHandle) -> Option<updates::UpdateInfo> {
     updates::current(&app)
 }
 
+/// Checks now, as Gitgel › Check for Updates… does; the answer arrives as `update-check`.
+#[tauri::command]
+pub fn check_for_updates(app: AppHandle) {
+    updates::check_now(&app);
+}
+
 /// Downloads and installs the update found by the last check, then restarts the app.
 #[tauri::command]
 pub async fn install_update(app: AppHandle) -> Result<(), AppError> {

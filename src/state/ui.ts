@@ -1,7 +1,7 @@
 // UI state that is not backend data.
 import type { ReactNode } from 'react';
 import { create } from 'zustand';
-import type { EntryRef } from '../lib/types';
+import type { EntryRef, UpdateCheck } from '../lib/types';
 import type { Route } from './nav';
 
 /** A project being named (flows C and H2); saved on ↵, discarded on esc or when leaving. */
@@ -44,6 +44,7 @@ interface UiState {
   modalCount: number; // open modals; folder drops are ignored while any is open
   deletingProjectId: string | null; // the delete confirmation is open for this project
   settingsSection: SettingsSection; // the last one shown; Settings opens on it
+  updateCheck: UpdateCheck | null; // the Software Update window is open (Check for Updates…)
   setSidebarVisible: (visible: boolean) => void;
   setBranchesFilter: (filter: string) => void;
   setSelectedKeys: (keys: string[]) => void;
@@ -56,6 +57,7 @@ interface UiState {
   modalClosed: () => void;
   setDeletingProjectId: (id: string | null) => void;
   setSettingsSection: (section: SettingsSection) => void;
+  setUpdateCheck: (check: UpdateCheck | null) => void;
 }
 
 let toastId = 0;
@@ -83,6 +85,8 @@ export const useUi = create<UiState>()((set) => ({
   modalClosed: () => set((s) => ({ modalCount: Math.max(0, s.modalCount - 1) })),
   setDeletingProjectId: (deletingProjectId) => set({ deletingProjectId }),
   setSettingsSection: (settingsSection) => set({ settingsSection }),
+  updateCheck: null,
+  setUpdateCheck: (updateCheck) => set({ updateCheck }),
 }));
 
 // Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a

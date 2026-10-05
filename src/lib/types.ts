@@ -342,6 +342,13 @@ export interface UpdateInfo {
   currentVersion: string;
 }
 
+/** Payload of `update-check` (Gitgel › Check for Updates…), shown by the Software Update window. */
+export type UpdateCheck =
+  | { state: 'checking'; currentVersion: string }
+  | { state: 'upToDate'; currentVersion: string }
+  | { state: 'available'; version: string; currentVersion: string }
+  | { state: 'failed'; currentVersion: string; message: string };
+
 // What `invoke` rejects with (AppError in error.rs).
 export interface AppError {
   code: string;

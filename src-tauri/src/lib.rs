@@ -128,6 +128,7 @@ pub fn run() {
             commands::get_terminal_options,
             commands::open_folder,
             commands::get_update,
+            commands::check_for_updates,
             commands::install_update,
             commands::save_script,
             commands::delete_script,

@@ -426,6 +426,9 @@ rather than as a task is listed the same way, marked "(on request)".
   double-click resets); each entry header has a menu (⋮ in place of the +/− totals on hover, or
   right-click): "Change base…" (the base button left the header), then the Branches row menu
   without "Open review"; canvas D10 — 2026-10-05
+- [x] (on request) Check for Updates… opens an in-app Software Update window (app icon, versions,
+  download progress, retry) in place of native dialogs; `update-check` event and
+  `check_for_updates` command — 2026-10-05
 
 ---
 
