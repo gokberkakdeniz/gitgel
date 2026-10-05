@@ -31,6 +31,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'Add branches', keys: ['⌘', 'K'], note: 'Project' },
       { label: 'Review changes', keys: ['⌘', 'R'], note: 'Project' },
       { label: 'Rename project', keys: ['F2'] },
+      { label: 'Collapse or expand all repos', keys: ['⌥', 'click'], note: 'Branches, on a repo' },
     ],
   },
   {

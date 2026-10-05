@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
+import { IconButton } from '../../components/IconButton';
 import { List, type ListSubPart } from '../../components/List';
 import {
   BranchIcon,
@@ -13,6 +14,7 @@ import {
   FolderIcon,
   HistoryIcon,
   MoreVerticalIcon,
+  PinIcon,
   SplitIcon,
   WorktreeIcon,
 } from '../../components/icons';
@@ -30,6 +32,7 @@ import { Segmented } from '../../components/Segmented';
 import { openAddRepos } from '../../lib/addRepos';
 import { startDraftProject } from '../../lib/draft';
 import { formatAge, plural } from '../../lib/format';
+import { setRepoPinned } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import { readProjectSort, sortProjects } from '../../lib/projectSort';
 import { refOf } from '../../lib/projects';
@@ -38,6 +41,7 @@ import { selectRepoScans, useData } from '../../state/data';
 import { openSettings, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import styles from './Branches.module.css';
+import { REPOS_KEY, STASHES_KEY, toggled, useCollapsed } from './collapsed';
 import { FilterField } from './FilterField';
 import {
   afu,
@@ -126,11 +130,29 @@ function BranchList() {
   const allRows = useMemo(() => scans.flatMap((s) => s.active), [scans]);
   const days = config.settings.activeDays;
 
-  // Arriving from a repo name: clear the filter, scroll to its band and flash it.
+  // Collapsed repo bands and stash lists; both open while filtering.
+  const [shutRepos, setShutRepos] = useCollapsed(REPOS_KEY);
+  const [shutStashes, setShutStashes] = useCollapsed(STASHES_KEY);
+  const filtering = filter.trim() !== '';
+  // ⌥-click collapses every band when the clicked one is open, and opens them all otherwise.
+  const toggleRepo = (id: string, all: boolean) =>
+    setShutRepos((ids) => {
+      if (!all) return toggled(ids, id);
+      const shown = groups.map((g) => g.scan.repo.id);
+      const next = new Set(ids);
+      for (const g of shown) {
+        if (ids.has(id)) next.delete(g);
+        else next.add(g);
+      }
+      return next;
+    });
+
+  // Arriving from a repo name: clear the filter, open its band, scroll to it and flash it.
   const [flash, setFlash] = useState<string | null>(null);
   useEffect(() => {
     if (!focusRepoId) return;
     useUi.getState().setBranchesFilter('');
+    setShutRepos((ids) => (ids.has(focusRepoId) ? toggled(ids, focusRepoId) : ids));
     requestAnimationFrame(() =>
       document.getElementById(`repo-${focusRepoId}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }),
     );
@@ -225,6 +247,10 @@ function BranchList() {
             group={g}
             config={config}
             flash={flash === g.scan.repo.id}
+            open={filtering || !shutRepos.has(g.scan.repo.id)}
+            onToggle={(all) => toggleRepo(g.scan.repo.id, all)}
+            stashesOpen={filtering || !shutStashes.has(g.scan.repo.id)}
+            onToggleStashes={() => setShutStashes((ids) => toggled(ids, g.scan.repo.id))}
             selectedKeys={selectedKeys}
             justAdded={justAdded}
             popover={popover}
@@ -357,6 +383,10 @@ function RepoSection({
   group: { scan, rows, stashes },
   config,
   flash,
+  open,
+  onToggle,
+  stashesOpen,
+  onToggleStashes,
   selectedKeys,
   justAdded,
   popover,
@@ -365,17 +395,32 @@ function RepoSection({
   group: RepoGroup;
   config: Config;
   flash: boolean;
+  open: boolean;
+  /** `all`: ⌥-click, for every band. */
+  onToggle: (all: boolean) => void;
+  stashesOpen: boolean;
+  onToggleStashes: () => void;
   selectedKeys: string[];
   justAdded: string[];
   popover: RowPopover | null;
   onPopover: (p: RowPopover) => void;
 }) {
+  const pinned = config.pinnedRepos.includes(scan.repo.id);
   return (
     <section id={`repo-${scan.repo.id}`} className={styles.section}>
       <div className={flash ? `${styles.band} ${styles.flash}` : styles.band}>
-        <FolderIcon size={16} className={styles.bandIcon} />
-        <span className={styles.repoName}>{scan.name}</span>
-        <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
+        <button
+          type="button"
+          className={styles.bandToggle}
+          aria-expanded={open}
+          // ⌥-click: every band. Listed in lib/shortcuts.ts.
+          onClick={(ev) => onToggle(ev.altKey)}
+        >
+          <ChevronDownIcon size={12} className={open ? styles.bandChevron : `${styles.bandChevron} ${styles.bandShut}`} />
+          <FolderIcon size={16} className={styles.bandIcon} />
+          <span className={styles.repoName}>{scan.name}</span>
+          <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
+        </button>
         {scan.status === 'missing' ? (
           <Pill tone="danger" onClick={() => openSettings('repositories')}>
             path not found
@@ -387,8 +432,18 @@ function RepoSection({
         ) : (
           <span className={styles.count}>{plural(rows.length, 'branch', 'branches')}</span>
         )}
+        <IconButton
+          size={24}
+          aria-label={pinned ? `Unpin ${scan.name}` : `Pin ${scan.name} to top`}
+          aria-pressed={pinned}
+          title={pinned ? 'Unpin' : 'Pin to top'}
+          className={pinned ? `${styles.pin} ${styles.pinned}` : styles.pin}
+          onClick={() => void setRepoPinned(scan.repo.id, !pinned)}
+        >
+          <PinIcon size={13} />
+        </IconButton>
       </div>
-      {rows.map((e) => (
+      {open && rows.map((e) => (
         <Row
           key={e.key}
           entry={e}
@@ -400,11 +455,13 @@ function RepoSection({
           onPopover={(kind, rect, atPointer) => onPopover({ kind, key: e.key, rect, atPointer })}
         />
       ))}
-      {stashes.length > 0 && (
+      {open && stashes.length > 0 && (
         <StashList
           repoId={scan.repo.id}
           repoName={scan.name}
           stashes={stashes}
+          collapsed={!stashesOpen}
+          onToggle={onToggleStashes}
         />
       )}
     </section>
@@ -416,10 +473,14 @@ function StashList({
   repoId,
   repoName,
   stashes,
+  collapsed,
+  onToggle,
 }: {
   repoId: string;
   repoName: string;
   stashes: StashInfo[];
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   const push = useNav((s) => s.push);
   const [menu, setMenu] = useState<{ sha: string; rect: DOMRect } | null>(null);
@@ -439,6 +500,8 @@ function StashList({
       <List
         heading="Stashes"
         label="Stashes"
+        collapsed={collapsed}
+        onToggle={onToggle}
         items={stashes.map((st) => ({
           key: st.sha,
           lead: 'icon',

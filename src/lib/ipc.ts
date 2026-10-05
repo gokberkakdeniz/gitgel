@@ -32,6 +32,10 @@ export const inspectFolders = (paths: string[]) => invoke<FolderCheck[]>('inspec
 
 export const addRepos = (paths: string[]) => invoke<Config>('add_repos', { paths });
 
+/** Pins a repo to the top of Branches, or unpins it. */
+export const setRepoPinned = (repoId: string, pinned: boolean) =>
+  invoke<Config>('set_repo_pinned', { repoId, pinned });
+
 export const getScan = () => invoke<ScanResult>('get_scan');
 
 /** `force` also rereads every working tree (the refresh button). */

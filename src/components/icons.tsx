@@ -250,6 +250,17 @@ export function CopyIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   );
 }
 
+/** A push pin: a repo pinned to the top of Branches. */
+export function PinIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
+      <path d="M9 3h6" />
+      <path d="M10 3v6l-3 4v1h10v-1l-3-4V3" />
+      <path d="M12 14v7" />
+    </Svg>
+  );
+}
+
 export function HistoryIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   return (
     <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
@@ -517,6 +528,7 @@ const ICONS = {
   trash: TrashIcon,
   undo: UndoIcon,
   history: HistoryIcon,
+  pin: PinIcon,
   download: DownloadIcon,
   upload: UploadIcon,
   play: PlayIcon,

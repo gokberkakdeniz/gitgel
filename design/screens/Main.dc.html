@@ -43,12 +43,17 @@ button,input{font-family:inherit}
 <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px">
 <sc-for list="{{repos}}" as="repo" hint-placeholder-count="3">
 <section style="display: flex; flex-direction: column">
-<div style="display: flex; align-items: center; gap: 10px; padding: 10px 26px 10px 28px; background: var(--bg-band); border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border)">
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px 26px 10px 6px; background: var(--bg-band); border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border)">
+<button type="button" aria-expanded="{{repo.open}}" style="flex-grow: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 0; background: transparent; border: 0; font: inherit; text-align: left; cursor: pointer">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="{{repo.chevronStyle}}"><path d="m6 9 6 6 6-6"></path></svg>
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--accent); flex-shrink: 0"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
 <span style="font-size: 15px; font-weight: 600; color: var(--text-strong)">{{repo.name}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1">{{repo.path}}</span>
-<span style="margin-right: 32px; font-size: 12px; color: var(--text-muted)">{{repo.count}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{repo.path}}</span>
+</button>
+<span style="margin-right: -2px; font-size: 12px; color: var(--text-muted)">{{repo.count}}</span>
+<button type="button" aria-label="{{repo.pinLabel}}" aria-pressed="{{repo.pinned}}" title="{{repo.pinTitle}}" style="{{repo.pinStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-3 4v1h10v-1l-3-4V3M12 14v7"></path></svg></button>
 </div>
+<sc-if value="{{repo.open}}" hint-placeholder-val="{{true}}">
 <sc-for list="{{repo.rows}}" as="row" hint-placeholder-count="2">
 <div style="{{row.rowStyle}}">
 <dc-import name="Checkbox" theme="{{themeName}}" label="" aria-label="Select {{row.branch}}" checked="{{row.checked}}" hidden="{{row.checkHidden}}" hint-size="16px,16px"></dc-import>
@@ -70,6 +75,7 @@ button,input{font-family:inherit}
 <dc-import name="Button" theme="{{themeName}}" variant="ghost" size="24" icon="more-vertical" label="" aria-label="Branch options" active="{{row.menuOpen}}" hidden="{{row.menuHidden}}" hint-size="24px,24px"></dc-import>
 </div>
 </sc-for>
+</sc-if>
 </section>
 </sc-for>
 </div>
@@ -285,7 +291,8 @@ class Component extends DCLogic {
       });
     };
     var repos = [
-      { name: 'web-app', path: '~/code/web-app', rows: [
+      // Pinned (accent pin, always shown): first whatever its activity; the others' pin shows on hover.
+      { name: 'web-app', path: '~/code/web-app', pinned: true, rows: [
         { branch: 'session-token-refresh', base: 'main', wt: '~/code/wt/token-refresh', ahead: 4, files: 9, dirty: 3, age: '6m', focus: true, projects: ['Session auth refresh', 'Rate limiting rollout'] },
         { branch: 'feature/PROJ-4821-add-retry-with-exponential-backoff-to-the-api-client', base: 'origin/main', wt: '~/code/wt/api-retry', ahead: 11, files: 23, dirty: 0, age: '42m', hover: true, sel: true },
         { branch: 'feat/billing-v2', base: 'main', wt: null, behind: 7, ahead: 18, files: 31, dirty: 0, age: '2d' }
@@ -295,7 +302,8 @@ class Component extends DCLogic {
         { branch: 'migrate-pg-pool', base: 'feat/db-v2', wt: '~/code/wt/pg-pool', behind: 2, ahead: 6, files: 12, dirty: 0, age: '1h', sel: true },
         { branch: 'a41c9e2', base: 'main', wt: '~/code/wt/a41c9e2', ahead: 2, files: 3, dirty: 1, age: '3h', state: 'detached HEAD' }
       ]},
-      { name: 'shared-ui', path: '~/code/shared-ui', rows: [
+      // Collapsed (chevron points right): only the band shows; remembered per repo.
+      { name: 'shared-ui', path: '~/code/shared-ui', collapsed: true, rows: [
         { branch: 'button-tokens', base: 'main', wt: null, ahead: 0, files: 0, dirty: 0, age: '5d', state: 'merged into main' }
       ]}
     ];
@@ -308,12 +316,20 @@ class Component extends DCLogic {
     var self = this;
     var scope = this.state && this.state.scope ? this.state.scope : (this.props.scope ?? 'all');
     var unassigned = scope === 'unassigned';
-    var built = repos.map(function (g) { return { name: g.name, path: g.path, rows: g.rows.map(mk) }; });
+    var built = repos.map(function (g) { return { name: g.name, path: g.path, collapsed: !!g.collapsed, pinned: !!g.pinned, rows: g.rows.map(mk) }; });
     var total = 0, free = 0;
     built.forEach(function (g) { g.rows.forEach(function (r) { total++; if (!r.projCount) free++; }); });
     var shownRepos = built.map(function (g) {
       var rows = unassigned ? g.rows.filter(function (r) { return !r.projCount; }) : g.rows;
-      return { name: g.name, path: g.path, rows: rows, count: rows.length + (rows.length === 1 ? ' branch' : ' branches') };
+      return {
+        name: g.name, path: g.path, rows: rows, count: rows.length + (rows.length === 1 ? ' branch' : ' branches'),
+        open: !g.collapsed,
+        pinned: g.pinned,
+        pinLabel: g.pinned ? 'Unpin ' + g.name : 'Pin ' + g.name + ' to top',
+        pinTitle: g.pinned ? 'Unpin' : 'Pin to top',
+        pinStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: ' + (g.pinned ? 'var(--accent-text)' : 'var(--text-muted); visibility: hidden'),
+        chevronStyle: 'stroke: var(--text-muted); flex-shrink: 0' + (g.collapsed ? '; transform: rotate(-90deg)' : '')
+      };
     }).filter(function (g) { return g.rows.length > 0; });
     var ico = 'width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: 600; ';
     return {

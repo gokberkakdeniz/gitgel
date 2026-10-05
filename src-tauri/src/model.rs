@@ -175,6 +175,8 @@ pub struct Config {
     pub settings: Settings,
     /// The user's scripts, in menu order (SPEC §14).
     pub scripts: Vec<ScriptConfig>,
+    /// Repo ids pinned to the top of Branches, in the order they were pinned.
+    pub pinned_repos: Vec<String>,
 }
 
 impl Default for Config {
@@ -186,6 +188,7 @@ impl Default for Config {
             projects: Vec::new(),
             settings: Settings::default(),
             scripts: Vec::new(),
+            pinned_repos: Vec::new(),
         }
     }
 }

@@ -66,6 +66,18 @@ pub async fn remove_repo(state: State<'_, AppState>, repo_id: String) -> Result<
 }
 
 #[tauri::command]
+pub async fn set_repo_pinned(
+    state: State<'_, AppState>,
+    repo_id: String,
+    pinned: bool,
+) -> Result<Config, AppError> {
+    blocking(&state, move |state| {
+        repos::set_repo_pinned(state, &repo_id, pinned)
+    })
+    .await
+}
+
+#[tauri::command]
 pub async fn update_settings(
     state: State<'_, AppState>,
     settings: Settings,

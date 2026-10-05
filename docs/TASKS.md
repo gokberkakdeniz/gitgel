@@ -429,6 +429,11 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Check for Updates… opens an in-app Software Update window (app icon, versions,
   download progress, retry) in place of native dialogs; `update-check` event and
   `check_for_updates` command — 2026-10-05
+- [x] (on request) Branches: repo bands collapse (chevron; ⌥-click for all); collapsed bands
+  and stash lists are remembered per repo and open while filtering; repos can be pinned to the
+  top (pin button on the band, `pinnedRepos` in the config, `set_repo_pinned`); `pin` icon;
+  canvas Main, Icons — 2026-10-05
+  - note: pin chosen over a sort option, so the newest-activity order stays the default.
 
 ---
 

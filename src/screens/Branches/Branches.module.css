@@ -120,10 +120,35 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px 10px 28px;
+  /* The chevron sits in the left padding, so the folder icon stays over the checkboxes. */
+  padding: 10px 16px 10px 6px;
   background: var(--bg-band);
   border-top: 1px solid var(--border-strong);
   border-bottom: 1px solid var(--border);
+}
+
+/* Chevron, icon, name and path: the band's collapse toggle. */
+.bandToggle {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bandChevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+
+.bandShut {
+  transform: rotate(-90deg);
 }
 
 .bandIcon {
@@ -149,10 +174,26 @@
 }
 
 .count {
-  /* Ends where the Projects column does: past the 24px ⋮ column and its 8px gap. */
-  margin-right: 32px;
+  /* Ends where the Projects column does; the pin button takes the ⋮ column after it. */
+  margin-right: -2px;
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* In the ⋮ column: shown while the band is hovered or the button has focus, always when pinned. */
+.pin {
+  flex-shrink: 0;
+  visibility: hidden;
+}
+
+.band:hover .pin,
+.pin:focus-visible,
+.pin.pinned {
+  visibility: visible;
+}
+
+.pin.pinned {
+  color: var(--accent-text);
 }
 
 .row {

@@ -55,8 +55,8 @@ function matchesWords(fields: (string | null)[], filter: string): boolean {
 }
 
 /**
- * Repo groups in display order: repos with the newest activity first, rows newest first (as
- * scanned). Repos without rows are left out, except missing repos, which are listed last so
+ * Repo groups in display order: pinned repos first, in pin order, then the others with the
+ * newest activity first; rows newest first (as scanned). Repos without rows are left out, except missing repos, which are listed last so
  * their "path not found" band stays visible (only while not filtering), and `keepRepoId`, the
  * repo being focused.
  */
@@ -87,7 +87,10 @@ export function branchGroups(
   }
   const newest = (g: RepoGroup) => Math.max(0, ...g.rows.map((r) => r.changedAt ?? r.lastCommitAt ?? 0));
   groups.sort((a, b) => newest(b) - newest(a));
-  return [...groups, ...missing];
+  const pins = config.pinnedRepos;
+  const pinned = pins.flatMap((id) => [...groups, ...missing].filter((g) => g.scan.repo.id === id));
+  const unpinned = (list: RepoGroup[]) => list.filter((g) => !pins.includes(g.scan.repo.id));
+  return [...pinned, ...unpinned(groups), ...unpinned(missing)];
 }
 
 /** Counts for the scope selector, independent of the text filter; base branch rows are left out. */

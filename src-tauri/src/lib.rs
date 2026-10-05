@@ -123,6 +123,7 @@ pub fn run() {
             commands::repoint_entry,
             commands::locate_repo,
             commands::remove_repo,
+            commands::set_repo_pinned,
             commands::update_settings,
             commands::get_open_apps,
             commands::get_terminal_options,

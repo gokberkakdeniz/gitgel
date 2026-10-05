@@ -150,7 +150,8 @@ mod tests {
                              "options": [], "required": true, "when": "" }],
                 "runsIn": "worktree", "showIn": ["branches"], "when": "branch.checkedOut",
                 "openOutput": true, "askFirst": false, "disabled": false
-            }]
+            }],
+            "pinnedRepos": ["r_1"]
         });
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(

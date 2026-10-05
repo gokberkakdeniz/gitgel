@@ -101,6 +101,7 @@ pub fn remove_repo(state: &AppState, repo_id: &str) -> Result<Config, AppError> 
             return Err(AppError::NotFound(format!("repository {repo_id}")));
         }
         config.branch_bases.retain(|k, _| !k.starts_with(&prefix));
+        config.pinned_repos.retain(|id| id != repo_id);
         for p in &mut config.projects {
             p.entries.retain(|e| e.repo_id != repo_id);
         }
@@ -114,6 +115,20 @@ pub fn remove_repo(state: &AppState, repo_id: &str) -> Result<Config, AppError> 
     }
     watch::sync_watches(state);
     Ok(config)
+}
+
+/// Pins a repository to the top of Branches (after those pinned before it), or unpins it.
+pub fn set_repo_pinned(state: &AppState, repo_id: &str, pinned: bool) -> Result<Config, AppError> {
+    config::update(state, |config| {
+        if !config.repos.iter().any(|r| r.id == repo_id) {
+            return Err(AppError::NotFound(format!("repository {repo_id}")));
+        }
+        config.pinned_repos.retain(|id| id != repo_id);
+        if pinned {
+            config.pinned_repos.push(repo_id.to_string());
+        }
+        Ok(config.clone())
+    })
 }
 
 /// Saves the settings, then rescans every repo (the active threshold and default base order

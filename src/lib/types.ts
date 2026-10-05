@@ -48,6 +48,7 @@ export interface Config {
   projects: ProjectConfig[];
   settings: Settings;
   scripts: ScriptConfig[]; // the user's scripts, in menu order (SPEC §14)
+  pinnedRepos: string[]; // repo ids pinned to the top of Branches, in pin order
 }
 
 // ---- Scripts (SPEC §14) ----

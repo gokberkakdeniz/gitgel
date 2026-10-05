@@ -58,6 +58,7 @@ const config: Config = {
   ],
   settings: { defaultBaseOrder: ['main'], activeDays: 14, diffView: 'split', ignoreWhitespace: false, diffContext: 'changes', diffContextLines: 3, zoom: 100, appearance: 'system', terminal: 'auto', terminalCommand: '', checkUpdates: true },
   scripts: [],
+  pinnedRepos: [],
 };
 
 const scans = [
@@ -75,6 +76,11 @@ describe('branchGroups', () => {
       ['r_2', ['b', null]],
       ['r_4', []],
     ]);
+  });
+
+  it('puts pinned repos first, in pin order, missing ones included', () => {
+    const groups = branchGroups({ ...config, pinnedRepos: ['r_4', 'r_2'] }, scans, '');
+    expect(groups.map((g) => g.scan.repo.id)).toEqual(['r_4', 'r_2', 'r_1']);
   });
 
   it('"Not in a project" drops project entries and empty repos', () => {

@@ -512,11 +512,21 @@ Every active branch, whether or not it is in a project, and each repo's base bra
   headings line up), section-label style: [checkbox] Branch · Projects (right-aligned) · [⋮].
   The branch name gets all the room the other columns leave.
 - **Repo band** per repo: `bg.band`, top border `border.strong`, bottom border `border`, padding
-  10px 16px 10px 28px; folder icon in accent, 15px/600 repo name, mono 11px muted path,
-  "N branches" on the right, ending where the Projects column does (32px in); 14px between
+  10px 16px 10px 6px; a 12px muted collapse chevron (in the left padding, so the folder icon
+  stays over the checkbox column), folder icon in accent, 15px/600 repo name, mono 11px muted
+  path, "N branches" on the right, ending where the Projects column does (32px in); 14px between
   bands. Repos with no rows are hidden, except when focused from a repo link
   (then "0 branches"). A missing repo shows a danger pill "path not found" (→ Settings); a repo
   git2 cannot open shows a danger "git error" pill.
+  - Chevron, icon, name and path are one button that collapses the band: its rows and stashes
+    hide, the band and its "N branches" stay. ⌥-click collapses every band when the clicked
+    one is open, and opens them all otherwise. Collapsed bands are remembered per repo in
+    `localStorage` (`gitgel.branches.collapsedRepos`); they open while filtering, and a band
+    focused from a repo link opens.
+  - **Pin**: a 24px icon button with a 13px `pin` icon in the ⋮ column, after "N branches"
+    (tooltip "Pin to top" / "Unpin"). It shows while the band is hovered or the button has
+    focus, and always on a pinned band, where it is `accent.text`. Pins are kept in the config
+    (`pinnedRepos`); removing a repo drops its pin.
 - **Row** (same grid, bottom border `border.row`):
   - Checkbox: visible only on the hovered row; once anything is selected, all are visible.
   - **Branch** cell, three lines (gap 3), so every row has the same height:
@@ -582,7 +592,8 @@ Every active branch, whether or not it is in a project, and each repo's base bra
   under "Copy branch name" (first for a detached HEAD, which opens the history of its SHA). It
   opens History (§16) on the row's branch.
 - **Stashes** of the repo under its rows (flow P1, §15).
-- Repos sorted by their newest row, rows newest first (by the age shown).
+- Repos sorted by their newest row, rows newest first (by the age shown). Pinned repos come
+  first, in the order they were pinned (a missing one too), then the rest as above.
 - While the first scan runs: muted "Scanning repositories…" (the list fills in repo by repo).
   With repos but no rows: serif 22px "No active branches" and "Branches checked out in a worktree
   or committed in the last D days show up here."
@@ -1072,6 +1083,7 @@ own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free).
 | | Add branches | ⌘K | Project (opens the palette) |
 | | Review changes | ⌘R | Project |
 | | Rename project | F2 | Project |
+| | Collapse or expand all repos | ⌥-click a repo band | Branches |
 | Review | Next / previous change | ⌥↓ / ⌥↑ | continues into the next / previous file |
 | | Newer / older commit | ⌥⇧↑ / ⌥⇧↓ | with no commit picked, ⌥⇧↓ picks the newest |
 | | Split / Unified | ⌥V | |
@@ -1166,6 +1178,7 @@ export interface Config {
   projects: ProjectConfig[];
   settings: Settings;
   scripts: ScriptConfig[];               // §14, menu order
+  pinnedRepos: string[];                 // repo ids pinned to the top of Branches, in pin order
 }
 export interface EntryRef { repoId: string; branch: string | null; worktreePath: string | null }
 ```
@@ -1438,6 +1451,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `commit_exists` | `repoId, sha` | `boolean` |
 | `repoint_entry` | `projectId, key, branch` | `Config` |
 | `remove_repo` | `repoId` | `Config` |
+| `set_repo_pinned` | `repoId, pinned` | `Config` (a pin goes after the earlier ones) |
 | `locate_repo` | `repoId, path` | `Config` |
 | `update_settings` | `settings: Settings` | `Config` |
 | `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
@@ -2052,7 +2066,8 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1–P7); boards `FlowP1`
   sides are read from the object database (`read_file_pair` with `worktreePath` null). Every scan
   lists the stack with each stash's file count (cached per stash).
 - **Branches** (P1): under a repo band's rows (only while the band has rows), a `List` with the
-  heading "Stashes" and its count (collapsible), padding 8px 16px 14px 52px (8px at the bottom
+  heading "Stashes" and its count (collapsible; remembered per repo in `localStorage`,
+  `gitgel.branches.collapsedStashes`, and open while filtering), padding 8px 16px 14px 52px (8px at the bottom
   while collapsed, as at the top), bottom border `border.row`. Rows: lead `package` icon, prefix `stash@{n}`, the message; sub line: the branch
   as an `accent` sm Pill (`<branch> · deleted` as `outline`; `detached HEAD` as `outline`),
   `N files`, the age. The text filter applies (message, branch, repo name). Clicking a row opens
