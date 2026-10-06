@@ -42,6 +42,8 @@ export function Modal({ onClose, width, paddingTop = 110, closeOnScrim, children
         if (closeOnScrim && e.target === e.currentTarget) onClose();
       }}
     >
+      {/* The window's title strip stays draggable over the scrim. */}
+      <div className={styles.drag} data-tauri-drag-region />
       <div role="dialog" aria-modal aria-label={label} className={styles.box} style={{ width }}>
         {children}
       </div>
@@ -82,12 +84,15 @@ export function ModalHeader({
 /** The bottom of a modal: bg.sunken; a note (or a lead link) on the left, buttons on the right,
  * the primary last. `ruled` false when the list above already ends in a row border. */
 export function ModalFooter({
+  lead,
   note,
   noteMono,
   aside,
   ruled = true,
   children,
 }: {
+  /** A button on the far left, before the note (the output panel's Close). */
+  lead?: ReactNode;
   note?: ReactNode;
   noteMono?: boolean;
   /** Muted text just before the buttons. */
@@ -98,6 +103,7 @@ export function ModalFooter({
 }) {
   return (
     <div className={ruled ? `${styles.footer} ${styles.ruled}` : styles.footer}>
+      {lead}
       <span className={noteMono ? `${styles.note} ${styles.noteMono}` : styles.note}>{note}</span>
       {aside && <span className={styles.aside}>{aside}</span>}
       {children}

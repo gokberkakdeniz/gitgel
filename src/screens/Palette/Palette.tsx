@@ -152,6 +152,7 @@ function PaletteDialog({ projectId }: { projectId: string }) {
       </div>
 
       <ModalFooter note={`${checked.size} selected`}>
+        <Button onClick={close}>Cancel</Button>
         <Button variant="primary" disabled={checked.size === 0} onClick={() => void add(false)}>
           Add ↵
         </Button>

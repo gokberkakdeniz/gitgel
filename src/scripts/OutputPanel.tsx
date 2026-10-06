@@ -1,4 +1,3 @@
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
@@ -10,6 +9,7 @@ import { Modal, ModalFooter } from '../components/Modal';
 import { Pill } from '../components/Pill';
 import { getScriptRun, resizeScript, stopScript, writeScriptInput } from '../lib/ipc';
 import type { ScriptRun } from '../lib/types';
+import { useCopy } from '../lib/useCopy';
 import { ScriptIcon } from './ScriptIcon';
 import { onRunOutput, runAgain, useRuns } from './runs';
 import styles from './OutputPanel.module.css';
@@ -139,10 +139,8 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
       </Pill>
     );
 
-  const copy = async () => {
-    const r = await getScriptRun(run.runId);
-    await writeText(plainText(r.buffered ?? ''));
-  };
+  const { copied, copy } = useCopy();
+  const copyOutput = () => copy(async () => plainText((await getScriptRun(run.runId)).buffered ?? ''));
 
   return (
     <Modal aria-label={`${run.name} output`} width={760} paddingTop={80} onClose={onClose}>
@@ -168,10 +166,19 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
         />
         <ModalFooter
           ruled
-          aside={running ? (focused ? 'Type to answer · ⌃C stops' : 'Click the output to type') : undefined}
+          lead={
+            <Button size={36} onClick={onClose}>
+              Close
+            </Button>
+          }
         >
-          <Button size={36} onClick={() => void copy()}>
-            Copy output
+          <Button
+            size={36}
+            icon={copied ? 'check' : 'copy'}
+            className={copied ? `${styles.copy} ${styles.copied}` : styles.copy}
+            onClick={() => void copyOutput()}
+          >
+            {copied ? 'Copied' : 'Copy'}
           </Button>
           {running ? (
             <Button size={36} className={styles.stop} onClick={() => void stopScript(run.runId)}>

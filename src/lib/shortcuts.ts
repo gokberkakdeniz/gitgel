@@ -44,6 +44,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'Split / Unified', keys: ['⌥', 'V'] },
       { label: 'Changes only / Whole file', keys: ['⌥', 'C'] },
       { label: 'Ignore whitespace', keys: ['⌥', 'W'] },
+      { label: 'Review / History', keys: ['⌥', 'H'], note: 'of the same branch' },
     ],
   },
   {

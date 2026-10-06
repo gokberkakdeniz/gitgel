@@ -380,6 +380,8 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   `kbd` hint on the right in mono 11px. Also 28px (Locate), `chevron` for a dropdown trigger and
   `active` for its open state (`bg.pressed`, `border.strong`); a modal's Cancel is a plain
   `secondary`. Icon-only buttons are `IconButton` (28 plain, 24 in compact list rows, 32 boxed).
+  A copy button (the output panel's Copy, Copy SHA) says it worked: for 1.5 s its icon becomes `check` and
+  it turns `success.text`, a labelled one reading "Copied" (`useCopy`, `src/lib/useCopy.ts`).
 - `PageMenu`: the ⋮ (`more-vertical`) 32px boxed `IconButton` (`aria-label` "More actions") that
   ends the Review and History headers; a 240px `Menu`, right-aligned under it, with the page's
   less used actions.
@@ -434,10 +436,14 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   Also section labels (11px uppercase muted), radio items with a check slot, checkbox items, a
   12px `desc` line, a mono 11px `kbd` hint, faint captions and a segmented row: Review's View
   menu is built from these.
-- `Modal`: scrim, `bg.elevated`, radius 16, positioned from the top; Esc closes it.
+- `Modal`: scrim, `bg.elevated`, radius 16, positioned from the top; Esc closes it. The top
+  52px of the scrim is a drag region, so the window still moves while a modal is open. A modal
+  with a footer has a way out there too (Cancel, or Close when there is nothing to cancel), even
+  when its header has a ✕.
   `ModalHeader`: serif 22px title, a 13px muted sub line (mono 11px for repo / branch or a path),
   padding 20px 24px 14px, optional ✕; `ModalFooter`: `bg.sunken`, padding 14px 24px, a 12px
-  muted note (or a lead link button) on the left, buttons on the right, primary last.
+  muted note (or a lead link button) on the left, optionally after a `lead` button at the far
+  left, buttons on the right, primary last.
 - `Toast`: bottom centre, `#2a2825` on `#383631` border, radius 12; one at a time. Optional
   status icon (spinner, success, failed), a mono part before the message and a mono sub line.
   A toast with a status (a script run) ends with a 24px ✕ (12px icon, `text.muted`, `bg.pressed`
@@ -647,7 +653,9 @@ Layout:
   renames the project in place like the Project page's); right, as History's (the page's own
   controls, then the ⋮ menu last): segmented **Committed / Uncommitted / All**, each with its
   file count summed over all groups, then the **page menu** (⋮, `PageMenu`): "Stash"
-  (§15; not in the stash scope), "Refresh" (full rescan), and in project scope "Edit project"
+  (§15; not in the stash scope), in branch scope "Open history" (`history`, ⌥H; the branch's
+  History, or going back to it when Review was opened from there; not for a last known state),
+  "Refresh" (full rescan), and in project scope "Edit project"
   (`pencil`), which opens the project page (going back to it when Review was opened from
   there).
 - Default mode Committed; Uncommitted if there are no committed changes but some uncommitted.
@@ -903,7 +911,7 @@ Layout:
   there is **no project picker**. Works for a draft project too.
 - 620px dialog, centred, top 96px, radius 16, over the scrim. Search row 56px: search icon, 16px
   input (focused), 12px muted "fuzzy · all repos". List max 470px. Footer (`bg.sunken`):
-  "N selected" … primary "Add ↵".
+  "N selected" … Cancel, primary "Add ↵".
 - Groups: **Worktrees** (active entries checked out somewhere), **Active branches** (the rest of
   the active ones), **Older · found by search** (all other local branches; only while searching,
   at most 50).
@@ -1098,6 +1106,7 @@ own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free).
 | | Newer / older commit | ⌥⇧↑ / ⌥⇧↓ | with no commit picked, ⌥⇧↓ picks the newest |
 | | Split / Unified | ⌥V | |
 | | Ignore whitespace | ⌥W | |
+| | Review / History | ⌥H | the same branch's other page (also in the diff) |
 | | Changes only / Whole file | ⌥C | |
 | Lists and dialogs | Move | ↑ / ↓ | |
 | | Mark row | Space | Add palette |
@@ -2006,9 +2015,10 @@ export interface ScriptRun {
   `repo / branch · folder` (one line, ellipsis; the folder as tooltip), a mono pill (running:
   `running · m:ss`, neutral; exited: `exit N · m:ss`, success for 0, danger otherwise), ✕. Body:
   the terminal (`@xterm/xterm`, pinned; JetBrains Mono 12px, 20px lines, colours from the theme
-  tokens, `bg.sunken`). Footer (`ModalFooter`): while running "Click the output to type"
-  (focused: "Type to answer · ⌃C stops"), Copy output, Stop; when done Copy output and primary
-  "Run again" (same inputs).
+  tokens, `bg.sunken`). Footer (`ModalFooter`): while running
+  Copy, Stop; when done Copy and primary "Run again" (same inputs); Close on the far left
+  (`lead`). Copy is 96px wide at least and turns into ✓ "Copied" for 1.5 s; a focused output
+  shows only its accent ring.
 - Clicking the output focuses it; typed keys go to the script (`write_script_input`); ⌃C goes
   through the pty (SIGINT). Closing the panel does not stop the script. The pty takes the
   terminal's size (`resize_script`). The panel reads the output so far (`get_script_run`), then
@@ -2296,7 +2306,8 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
   - Fetch / Pull / Push (§15 "Sync"), only when `rev` is a local branch with a remote; the last
     fetch's age (`fetchedAt`) is in Fetch's tooltip.
   - The page menu (⋮, as Review's): "Stash" (§15, with this one entry; only when `rev`
-    is checked out in a worktree with uncommitted changes), "Refresh".
+    is checked out in a worktree with uncommitted changes), "Open review" (`split`, ⌥H; only
+    when `rev` is an active entry: its branch Review, or going back to it), "Refresh".
 - **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Label (section
   label style, padding 14px 16px 6px) `<rev> · N commits` (`total`), while searching `N matching
   commits` (`N+` while there are more). Rows (padding 0 8px 8px, gap 2):
@@ -2338,7 +2349,7 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
   commit stays when it is still listed, else the newest is picked. Search picks the first match.
 - **Pane** (`HistH2` 101–124): a commit header (padding 14px 18px, bottom border `border`, gap 8):
   15px/600 `text.strong` subject with, on the right, a 28px "Copy SHA" icon button (copy icon,
-  tooltip "Copy full SHA"); the body (13px, line-height 1.5, `text.muted`, `white-space:
+  tooltip "Copy full SHA"; ✓ and "Copied" for 1.5 s after a click); the body (13px, line-height 1.5, `text.muted`, `white-space:
   pre-wrap`, max-width 720px; left out when empty); mono 11 muted meta: an 18px avatar, the author
   (`text.body`), `·` the committer time (`today 11:42`, `yesterday 11:42`, `Oct 2, 11:42`, `Oct 2,
   2025`), `·` the short SHA (`accent.text`), `·` `parent <short>` (`root commit` without one), `·`

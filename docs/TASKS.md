@@ -458,6 +458,11 @@ rather than as a task is listed the same way, marked "(on request)".
   certificate from the keychain and notarizes with the App Store Connect API key in
   `~/.private_keys` (no password on the command line), and checks the signature, the stapled ticket and Gatekeeper
   before uploading; the cask no longer strips the quarantine flag (SPEC §12) — 2026-10-06
+- [x] (on request) The window can be dragged by its top 52px while a modal is open; the output
+  panel's Copy (was "Copy output", and its typing hints are gone) and Copy SHA turn into ✓ "Copied" for 1.5 s (`useCopy`); the output panel gets a Close (far
+  left) and the Add palette a Cancel in their footers; Review's page menu has "Open history" and
+  History's "Open review", both ⌥H, going back instead when the other page is the one just
+  before — 2026-10-06
 
 ---
 

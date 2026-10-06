@@ -56,6 +56,15 @@
   background: var(--bg-sunken) !important;
 }
 
+/* Keeps its width when the label turns to "Copied". */
+.copy {
+  min-width: 96px;
+}
+
+.copied {
+  color: var(--success-text);
+}
+
 .stop {
   color: var(--danger-text);
 }

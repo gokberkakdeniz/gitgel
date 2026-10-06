@@ -54,7 +54,7 @@ import { useData } from '../../state/data';
 import { selectCanForward, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { fileMatches, filterTerms } from './fileFilter';
-import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, ViewMenu } from './parts';
+import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, ViewMenu } from './parts';
 import { reviewStashes, stashHeading, stashMeta, type ReviewStash } from './stashes';
 import editable from '../../components/EditableTitle.module.css';
 import styles from './Review.module.css';
@@ -413,6 +413,13 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   );
 
   const stashAction = useStashAction(data?.groups ?? []);
+  // A branch (or a detached worktree's SHA) has a History; a project or the stash stack does not.
+  const historyRev = target.kind === 'branch' && !target.tipOverride ? (target.branch ?? entry?.headSha ?? null) : null;
+  const toHistory = useSwitchTo(
+    target.kind === 'branch' && historyRev
+      ? { name: 'history', repoId: target.repoId, rev: historyRev, backLabel: 'Back to Review' }
+      : null,
+  );
 
   return (
     <div className={styles.screen}>
@@ -433,6 +440,18 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
           {(close, anchor) => (
             <>
               {target.kind !== 'stashes' && stashAction.item(close, anchor)}
+              {toHistory && (
+                <MenuItem
+                  icon="history"
+                  kbd="⌥H"
+                  onSelect={() => {
+                    close();
+                    toHistory();
+                  }}
+                >
+                  Open history
+                </MenuItem>
+              )}
               <MenuItem
                 icon="refresh"
                 onSelect={() => {

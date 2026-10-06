@@ -1,6 +1,5 @@
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BackIcon, BranchIcon, ChevronDownIcon, CopyIcon, ForwardIcon, SidebarIcon } from '../../components/icons';
+import { BackIcon, BranchIcon, CheckIcon, ChevronDownIcon, CopyIcon, ForwardIcon, SidebarIcon } from '../../components/icons';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
@@ -18,13 +17,14 @@ import { formatAge, plural } from '../../lib/format';
 import { getCommitChanges, getHistory, getHistoryRefs, getReview, getStashChanges } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { CommitChanges, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
+import { useCopy } from '../../lib/useCopy';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
 import { selectCanForward, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
-import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, ViewMenu } from '../Review/parts';
+import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, ViewMenu } from '../Review/parts';
 import { StashSection } from '../Review/Review';
 import type { ReviewStash } from '../Review/stashes';
 import review from '../Review/Review.module.css';
@@ -245,6 +245,16 @@ export function History({ repoId, rev, backLabel }: Props) {
   };
   const diverged = divergedBanner(syncTarget);
   const stashAction = useStashAction(wipReview?.groups ?? []);
+  // Only an active branch (or a detached worktree's SHA) has a Review.
+  const toReview = useSwitchTo(
+    entry
+      ? {
+          name: 'review',
+          target: { kind: 'branch', repoId, branch: entry.branch, worktreePath: entry.worktreePath, tipOverride: null },
+          backLabel: 'Back to History',
+        }
+      : null,
+  );
   const subtitle = [repoName, rev, worktree].filter(Boolean).join(' · ');
 
   let label = '';
@@ -282,6 +292,18 @@ export function History({ repoId, rev, backLabel }: Props) {
           {(close, anchor) => (
             <>
               {entry?.worktreePath && stashAction.item(close, anchor)}
+              {toReview && (
+                <MenuItem
+                  icon="split"
+                  kbd="⌥H"
+                  onSelect={() => {
+                    close();
+                    toReview();
+                  }}
+                >
+                  Open review
+                </MenuItem>
+              )}
               <MenuItem
                 icon="refresh"
                 onSelect={() => {
@@ -683,6 +705,7 @@ function totals(files: FileChange[]) {
 /** Above a commit's diff: its subject, message and who / when / which. */
 function CommitHeader({ commit: c, changes }: { commit: HistoryCommit; changes: CommitChanges | undefined }) {
   const t = changes ? totals(changes.files) : null;
+  const { copied, copy } = useCopy();
   return (
     <div className={styles.head}>
       <div className={styles.headTop}>
@@ -690,8 +713,13 @@ function CommitHeader({ commit: c, changes }: { commit: HistoryCommit; changes: 
           {c.subject}
         </span>
         <span className={review.grow} />
-        <IconButton aria-label="Copy SHA" title="Copy full SHA" className={styles.copy} onClick={() => void writeText(c.sha)}>
-          <CopyIcon size={13} />
+        <IconButton
+          aria-label={copied ? 'Copied' : 'Copy SHA'}
+          title={copied ? 'Copied' : 'Copy full SHA'}
+          className={copied ? `${styles.copy} ${styles.copied}` : styles.copy}
+          onClick={() => void copy(c.sha)}
+        >
+          {copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
         </IconButton>
       </div>
       {c.body && <div className={styles.body}>{c.body}</div>}

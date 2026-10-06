@@ -322,6 +322,10 @@
   border: 1px solid var(--border);
 }
 
+.copied {
+  color: var(--success-text);
+}
+
 .body {
   max-width: 720px;
   max-height: 120px;

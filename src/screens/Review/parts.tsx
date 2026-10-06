@@ -1,6 +1,6 @@
 // Parts of the diff pane shared by Review and History (SPEC §16): the view menu, change
 // navigation, file rows, and the remembered diff view settings with their ⌥ keys.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
 import { Menu, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
@@ -10,6 +10,7 @@ import { basename } from '../../lib/paths';
 import type { DiffContext, DiffLayout, FileChange, Settings } from '../../lib/types';
 import type { NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
+import { useNav, type Route } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { firstHit } from './fileFilter';
 import styles from './Review.module.css';
@@ -203,6 +204,48 @@ export function ChangeNav({
       </div>
     </>
   );
+}
+
+/** Review ⇄ History of one branch: the page menu item and ⌥H (in the diff too). Goes back when
+ * the other page is the one just before, so switching to and fro does not grow the history.
+ * Listed in lib/shortcuts.ts. */
+export function useSwitchTo(route: Route | null): (() => void) | null {
+  const key = route ? JSON.stringify(route) : null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const go = useMemo(() => (route ? () => switchTo(route) : null), [key]);
+  useEffect(() => {
+    if (!go) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.altKey || e.metaKey || e.ctrlKey || e.shiftKey || e.code !== 'KeyH') return;
+      if ((e.target as HTMLElement | null)?.closest('input, textarea')) return;
+      if (useUi.getState().modalCount > 0) return;
+      e.preventDefault();
+      go();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [go]);
+  return go;
+}
+
+function switchTo(route: Route) {
+  const nav = useNav.getState();
+  const before = nav.stack[nav.index - 1];
+  if (before && samePage(before, route)) nav.back();
+  else nav.push(route);
+}
+
+function samePage(a: Route, b: Route): boolean {
+  if (a.name === 'history' && b.name === 'history') return a.repoId === b.repoId && a.rev === b.rev;
+  if (a.name === 'review' && b.name === 'review' && a.target.kind === 'branch' && b.target.kind === 'branch') {
+    return (
+      a.target.repoId === b.target.repoId &&
+      a.target.branch === b.target.branch &&
+      a.target.worktreePath === b.target.worktreePath &&
+      a.target.tipOverride === null
+    );
+  }
+  return false;
 }
 
 /** Review and History hide the sidebar (unless opened from it); leaving restores what it was. */

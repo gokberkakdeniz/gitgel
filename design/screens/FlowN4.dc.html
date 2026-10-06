@@ -42,7 +42,7 @@ button{font-family:inherit}
 </sc-for>
 </div>
 
-<dc-import name="ModalFooter" theme="{{themeName}}" note="" aside="{{asideHint}}" buttons="{{footerButtons}}" hint-size="100%,64px"></dc-import>
+<dc-import name="ModalFooter" theme="{{themeName}}" note="" lead="{{footerLead}}" buttons="{{footerButtons}}" hint-size="100%,64px"></dc-import>
 
 </div>
 </div>
@@ -97,10 +97,10 @@ return {
   lines: (state === 'prompt' ? prompt : head.concat(rest)).map(function (l) { return { text: l[0] || (l[2] ? '' : ' '), cursor: !!l[2], style: 'white-space: pre-wrap; word-break: break-word; min-height: 20px; ' + l[1] }; }),
   logStyle: 'flex-grow: 1; min-height: 0; overflow: auto; padding: 14px 20px; background: var(--bg-sunken); font-family: \'JetBrains Mono\', monospace; font-size: 12px; line-height: 20px; color: var(--text-code); outline: none;' + (focused ? ' box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), 0.55);' : ''),
   cursorStyle: 'display: inline-block; width: 7px; height: 14px; vertical-align: -2px; animation: gg-blink 1s step-end infinite; background: ' + (focused ? 'var(--text-strong)' : 'var(--text-muted)'),
-  asideHint: running ? (focused ? 'Type to answer · ⌃C stops' : 'Click the output to type') : '',
   pill: pill,
   pillTone: state === 'success' ? 'success' : state === 'failed' ? 'danger' : 'neutral',
-  footerButtons: [{ label: 'Copy output' }].concat(running ? [{ label: 'Stop' }] : [{ label: 'Run again', variant: 'primary' }]),
+  footerLead: { label: 'Close', variant: 'secondary' },
+  footerButtons: [{ label: 'Copy', icon: 'copy' }].concat(running ? [{ label: 'Stop' }] : [{ label: 'Run again', variant: 'primary' }]),
   isRunning: running,
   isDone: !running
 };

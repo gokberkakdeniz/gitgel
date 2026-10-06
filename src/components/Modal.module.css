@@ -8,6 +8,15 @@
   background: var(--scrim);
 }
 
+/* As tall as the sidebar's top row; every modal sits lower. */
+.drag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+}
+
 .box {
   max-height: calc(100vh - 160px);
   display: flex;
