@@ -464,32 +464,15 @@ rather than as a task is listed the same way, marked "(on request)".
   History's "Open review", both ⌥H, going back instead when the other page is the one just
   before — 2026-10-06
 
+### Phase 21 — Release notes
+- [x] T21.1 `CHANGELOG.md` and release notes in `pnpm release` — 2026-10-06
+  - note: the changelog also has 0.1.16, released before this task.
+
 ---
 
 ## Open
 
 ### Phase 21 — Release notes
-
-#### T21.1 `CHANGELOG.md` and release notes in `pnpm release`
-- **Depends on:** —
-- **Why:** user request, 2026-10-06: a changelog for every release, written by Claude at release
-  time (only what a user notices), shown on GitHub and in the app; past releases too.
-- **Spec:** SPEC §12 "Release notes", "Updates" (`notes`); §2 Distribution; §3 tree.
-- **Files:** `CHANGELOG.md` (new), `scripts/release.sh`, `CLAUDE.md`.
-- **Steps:**
-  1. Write `CHANGELOG.md` for 0.1.2 … 0.1.15: each version is the commits between its
-     `chore: release v…` commit and the previous one; the date is the release commit's. Use
-     those commits, not the local `v*` tags (some are from an older history, e.g. `v0.2.0`).
-     A version with nothing a user would notice keeps its heading with a single
-     `### Fixed` / `- Small fixes.`, so every version has a section.
-  2. `release.sh`: before building, read the `## <version> — …` section (die when it is missing
-     or has no `- ` line); pass it to `gh release create` (`--notes`, above the install note) and,
-     on a re-run, `gh release edit --notes` so a fixed text is published; write the last 10
-     sections into `latest.json` `notes`. Do the same on the tap release.
-  3. `CLAUDE.md`: one rule — asked for a release, Claude writes the version's `CHANGELOG.md`
-     section (SPEC §12 "Release notes"), shows it, and commits it with the version bump.
-- **Acceptance:** `release.sh` stops on a version without a section; with one, a dry check of the
-  generated `latest.json` (run its node snippet alone) carries the notes. No release is made.
 
 #### T21.2 Design: release notes in Software Update, What's New window
 - **Depends on:** —

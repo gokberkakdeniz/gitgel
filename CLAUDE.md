@@ -12,4 +12,5 @@ Rules:
 - Work through `docs/TASKS.md` in order. Stop at each checkpoint (✋) and show the result before continuing.
 - When a task is done, follow "Doing a task" in `docs/TASKS.md`: delete its block, add its one-line entry under Done, remove its `(planned, …)` markers from the spec, and keep the diff to that.
 - Any change that affects the design (a new or changed control, screen, state or flow) also updates the "Gitgel App Flow" design canvas (https://claude.ai/artifact/SzYAF9awmKNBf2rcZV16ZZ): edit the affected artboards there, publish, then copy the changed screens into `design/screens/`.
+- Asked for a release: write the version's `CHANGELOG.md` section first (`docs/SPEC.md` §12 "Release notes": commits since the last `chore: release v…`, only what a user notices, short lines), show it, and commit it with the version bump; `pnpm release` refuses a version without one.
 - Work asked for in chat that is worth remembering (a feature, behaviour change, new script or workflow) gets an `(on request)` line in `docs/TASKS.md` Done; see "Doing a task" there.

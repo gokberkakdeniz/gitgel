@@ -17,6 +17,9 @@
 # key's path goes on notarytool's command line, never a secret.
 # A plain `pnpm tauri build` stays ad-hoc signed and needs neither.
 #
+# Release notes: the version's section of CHANGELOG.md (SPEC §12 "Release notes") is the text of
+# both GitHub releases, and the last 10 sections are latest.json's `notes`.
+#
 # The version is the app's (package.json, via src-tauri/tauri.conf.json). The build must match a
 # pushed commit, so the
 # working tree has to be clean and HEAD pushed. Re-running for the same version replaces the zip,
@@ -50,6 +53,20 @@ TAP_TAG="gitgel-$VERSION"
 UPDATER_KEY="${GITGEL_UPDATER_KEY:-$HOME/.tauri/gitgel.key}"
 UPDATE="$BUNDLE/Gitgel-$VERSION-macos-$ARCH.app.tar.gz"
 LATEST="gitgel/latest.json"
+
+CHANGELOG="CHANGELOG.md"
+# A version's section of the changelog, without its heading and the blank lines around it.
+section() {
+  awk -v head="## $1 " '/^## / { if (on) exit; on = index($0, head) == 1; next } on' "$CHANGELOG" |
+    sed -e '/./,$!d' | sed -e ':a' -e '/^\n*$/{$d;N;ba' -e '}'
+}
+NOTES="$(section "$VERSION")"
+grep -q '^- ' <<<"$NOTES" || die "no notes for $VERSION in $CHANGELOG; write its section first"
+# Under the notes, after a rule: how it is signed (this repo) or how to install it (the tap).
+INSTALL_NOTE=$'<hr>\n\nSigned and notarized by Apple.'
+BREW_NOTE=$'<hr>\n\nInstall with Homebrew:\n```bash\nbrew install --cask gokberkakdeniz/tap/gitgel\n```'
+# The sections the update feed carries, newest first, headings included.
+FEED_NOTES="$(awk '/^## / { n++ } n >= 1 && n <= 10' "$CHANGELOG")"
 
 [[ -f "$UPDATER_KEY" ]] || die "no updater key at $UPDATER_KEY; restore it or set GITGEL_UPDATER_KEY"
 SIGNING_IDENTITY="$(security find-identity -v -p codesigning | sed -nE 's/.*"(Developer ID Application: .*)"$/\1/p' | head -1)"
@@ -99,23 +116,26 @@ ditto -c -k --keepParent "$APP" "$ZIP"
 
 if gh release view "$TAG" >/dev/null 2>&1; then
   gh release upload "$TAG" "$ZIP" --clobber
+  gh release edit "$TAG" --notes "$NOTES"$'\n\n'"$INSTALL_NOTE" >/dev/null
 else
   gh release create "$TAG" "$ZIP" \
     --target "$HEAD_SHA" \
     --title "Gitgel $VERSION" \
-    --notes "macOS build ($ARCH), signed with Developer ID and notarized."
+    --notes "$NOTES"$'\n\n'"$INSTALL_NOTE"
 fi
 
 echo "Uploaded $(basename "$ZIP") to $TAG: $(gh release view "$TAG" --json url --jq .url)"
 
 # Homebrew tap: the zip and the update first, then the cask and latest.json that point at them.
+TAP_NOTES="$NOTES"$'\n\n'"$BREW_NOTE"
 if gh release view "$TAP_TAG" --repo "$TAP_REPO" >/dev/null 2>&1; then
   gh release upload "$TAP_TAG" "$ZIP" "$UPDATE" --repo "$TAP_REPO" --clobber
+  gh release edit "$TAP_TAG" --repo "$TAP_REPO" --notes "$TAP_NOTES" >/dev/null
 else
   gh release create "$TAP_TAG" "$ZIP" "$UPDATE" \
     --repo "$TAP_REPO" \
     --title "Gitgel $VERSION" \
-    --notes "Gitgel $VERSION for macOS ($ARCH). Install with: brew install --cask gokberkakdeniz/tap/gitgel"
+    --notes "$TAP_NOTES"
 fi
 SHA256="$(shasum -a 256 "$ZIP" | awk '{ print $1 }')"
 sed -i '' -E \
@@ -123,14 +143,15 @@ sed -i '' -E \
   -e "s/^  sha256 \".*\"$/  sha256 \"$SHA256\"/" \
   "$TAP_DIR/$CASK"
 mkdir -p "$TAP_DIR/$(dirname "$LATEST")"
-VERSION="$VERSION" \
+VERSION="$VERSION" NOTES="$FEED_NOTES" \
   URL="https://github.com/$TAP_REPO/releases/download/$TAP_TAG/$(basename "$UPDATE")" \
   SIG="$BUNDLE/macos/Gitgel.app.tar.gz.sig" \
   node -e '
     const fs = require("fs");
-    const { VERSION, URL, SIG } = process.env;
+    const { VERSION, NOTES, URL, SIG } = process.env;
     const latest = {
       version: VERSION,
+      notes: NOTES,
       pub_date: new Date().toISOString().replace(/\.\d+Z$/, "Z"),
       platforms: { "darwin-aarch64": { url: URL, signature: fs.readFileSync(SIG, "utf8").trim() } },
     };

@@ -149,7 +149,7 @@ configurable refresh.
 | Diff | `@monaco-editor/react` + `monaco-editor`, bundled locally (`loader.config({ monaco })`), never from a CDN. |
 | Fonts | Instrument Sans, Source Serif 4, JetBrains Mono via `@fontsource/*`, bundled. The app works offline. |
 | Bundle id | `com.gitgel.desktop` (must not end in `.app`). |
-| Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). Release notes come from `CHANGELOG.md` (planned, T21.1). |
+| Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). Release notes come from `CHANGELOG.md`. |
 | Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the tap's `gitgel/latest.json` at launch and on window focus, at most every 6 hours; installs a signed build on request and restarts (§12 "Updates"). |
 
 ---
@@ -159,7 +159,7 @@ configurable refresh.
 ```
 gitgel/
 ├─ CLAUDE.md
-├─ CHANGELOG.md                   # release notes, newest first; written at release (§12) (planned, T21.1)
+├─ CHANGELOG.md                   # release notes, newest first; written at release (§12)
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
@@ -1855,7 +1855,7 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   `notarytool`'s command line, never a password. It stops before building when either is
   missing, and before uploading unless `codesign --verify --deep --strict`, `stapler validate`
   and `spctl --assess` pass.
-- **Release notes** (planned, T21.1): `CHANGELOG.md` holds one `## <version> — YYYY-MM-DD`
+- **Release notes:** `CHANGELOG.md` holds one `## <version> — YYYY-MM-DD`
   section per release, newest first, with `### New`, `### Improved` and `### Fixed` groups of
   `- ` lines in the user's terms (empty groups left out). Claude writes the section when a
   release is asked for: it reads the commits since the previous `chore: release v…` commit, keeps
@@ -1868,7 +1868,7 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   (`createUpdaterArtifacts`, passed with `--config` only by `release.sh`, so a plain build needs
   no key; key `~/.tauri/gitgel.key` or `$GITGEL_UPDATER_KEY`, public key in `tauri.conf.json`).
   It is uploaded as `Gitgel-<version>-macos-arm64.app.tar.gz` next to the zip in the tap release,
-  and `gitgel/latest.json` in the tap (`version`, `pub_date`, `notes` (planned, T21.1),
+  and `gitgel/latest.json` in the tap (`version`, `pub_date`, `notes`,
   `platforms.darwin-aarch64` url + signature) is committed with the cask. The app reads it from
   `raw.githubusercontent.com/gokberkakdeniz/homebrew-tap/master/gitgel/latest.json`; the cask
   has `auto_updates true`, so `brew upgrade` leaves a self-updating app alone. Only release
