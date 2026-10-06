@@ -454,6 +454,10 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Labels drop the trailing "…" (Change base, Drop, Apply to, Pop to, Locate,
   Import, Export, + New project, Delete project, …); only progress text keeps it (SPEC §0) —
   2026-10-05
+- [x] (on request) Releases are signed with Developer ID and notarized: `release.sh` takes the
+  certificate from the keychain and the notary Apple ID / app-specific password from the
+  keychain item `gitgel-notary`, and checks the signature, the stapled ticket and Gatekeeper
+  before uploading; the cask no longer strips the quarantine flag (SPEC §12) — 2026-10-06
 
 ---
 

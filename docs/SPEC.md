@@ -85,8 +85,8 @@ This file describes the app as it is, plus what open tasks will add:
 **Goal:** a macOS desktop app for reviewing branches and worktrees across several git
 repositories from one place, without checking anything out. It reads without writing; it changes
 a repository only when asked to (the stash and sync actions, §15), through the git CLI. Built for looking at what coding
-agents (Cursor, Codex, Claude Code) leave in their worktrees. Not for the App Store: ad-hoc
-signed, not notarized, no sandbox.
+agents (Cursor, Codex, Claude Code) leave in their worktrees. Not for the App Store: releases
+are Developer ID signed and notarized, no sandbox.
 
 **Concepts**
 
@@ -1828,8 +1828,8 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   on the fixtures (with file edits, focus changes and refreshes, but no git action),
   `find ~/gitgel-fixtures -path '*/.git/*' -newer <marker>` is empty.
 - **Build:** `pnpm tauri build --bundles app` → `src-tauri/target/release/bundle/macos/Gitgel.app`,
-  ad-hoc signed (`bundle.macOS.signingIdentity: "-"`), not notarized. The version comes from
-  `package.json`.
+  ad-hoc signed (`bundle.macOS.signingIdentity: "-"`), not notarized; only `pnpm release` signs
+  with Developer ID (below). The version comes from `package.json`.
 - **Release:** `pnpm release` (`scripts/release.sh`) needs a clean, pushed working tree and a
   clean, pushed Homebrew tap clone at `../homebrew-tap` (or `$GITGEL_TAP_DIR`), on an arm64 Mac.
   It builds, zips with `ditto` (`Gitgel-<version>-macos-arm64.zip`) and uploads the zip to this
@@ -1837,6 +1837,14 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   also uploads the zip to the public `gokberkakdeniz/homebrew-tap` release `gitgel-<version>`, then
   updates `version` and `sha256` in the tap's `Casks/gitgel.rb`, commits and pushes. After new
   commits, bump the version first. It also builds the signed update (below) and needs its key.
+- **Signing:** `release.sh` signs with the "Developer ID Application" certificate in the login
+  keychain (passed as `--config` `signingIdentity` and `APPLE_SIGNING_IDENTITY`; hardened
+  runtime, no entitlements) and has Tauri notarize and staple the app with `APPLE_ID` /
+  `APPLE_PASSWORD` / `APPLE_TEAM_ID`: the Apple ID and an app-specific password come from the
+  keychain item `gitgel-notary` (`security add-generic-password -s gitgel-notary -a <apple id>
+  -w`), the team id from the certificate's name. It stops before building when either is
+  missing, and before uploading unless `codesign --verify --deep --strict`, `stapler validate`
+  and `spctl --assess` pass.
 - **Release notes** (planned, T21.1): `CHANGELOG.md` holds one `## <version> — YYYY-MM-DD`
   section per release, newest first, with `### New`, `### Improved` and `### Fixed` groups of
   `- ` lines in the user's terms (empty groups left out). Claude writes the section when a
@@ -1856,8 +1864,8 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   has `auto_updates true`, so `brew upgrade` leaves a self-updating app alone. Only release
   builds install; a lost key means existing installs can no longer update in-app (a new key
   ships with a `brew upgrade`).
-- **Install:** `brew install --cask gokberkakdeniz/tap/gitgel` (Apple silicon). The cask removes
-  the quarantine flag after install (`postflight_steps`), so the unnotarized app opens.
+- **Install:** `brew install --cask gokberkakdeniz/tap/gitgel` (Apple silicon). The app is
+  notarized, so it opens without removing the quarantine flag.
 - macOS asks for access to repositories in protected folders (`~/Desktop`, `~/Documents`); the
   first scan waits until the user answers.
 

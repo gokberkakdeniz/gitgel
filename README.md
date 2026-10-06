@@ -44,10 +44,14 @@ config bans every git2 API that writes).
 pnpm tauri build --bundles app
 ```
 
-The app is written to `src-tauri/target/release/bundle/macos/Gitgel.app`. It is ad-hoc signed
-(`bundle.macOS.signingIdentity: "-"`), not notarized. On another Mac, the first launch of a
-downloaded copy is blocked: open it once, then allow it under System Settings → Privacy &
-Security → Open Anyway, or run `xattr -dr com.apple.quarantine /Applications/Gitgel.app`.
+The app is written to `src-tauri/target/release/bundle/macos/Gitgel.app`. A local build is
+ad-hoc signed (`bundle.macOS.signingIdentity: "-"`), not notarized; on another Mac its first
+launch is blocked. Releases are signed with Developer ID and notarized.
+
+`pnpm release` needs the "Developer ID Application" certificate in the login keychain (Xcode ›
+Settings › Accounts › Manage Certificates) and, for notarization, an app-specific password for
+the Apple ID in the keychain item `gitgel-notary`:
+`security add-generic-password -s gitgel-notary -a <apple id> -w` (asks for the password).
 
 To publish it: `pnpm release` builds the app, zips it and uploads the zip to the GitHub release
 `<version>` (the version in `package.json`) with the `gh` CLI, creating the release
