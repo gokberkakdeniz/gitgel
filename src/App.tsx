@@ -1,19 +1,19 @@
 import { useEffect } from 'react';
 import styles from './App.module.css';
+import { AuxBlocker } from './components/AuxBlocker';
 import { FolderPlusIcon } from './components/icons';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { ToastHost } from './components/Toast';
-import { AboutModal } from './components/AboutModal';
-import { UpdateModal } from './components/UpdateModal';
-import { useWhatsNewAfterUpdate, WhatsNewModal } from './components/WhatsNewModal';
 import { OutputPanelHost } from './scripts/OutputPanel';
 import { RunDialogHost } from './scripts/RunDialog';
 import { DropStashModal } from './stash/DropStashModal';
 import { startDraftProject } from './lib/draft';
 import { startEventBridge } from './lib/events';
+import { revealWindow } from './lib/ipc';
 import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from './lib/theme';
 import { useFolderDrop } from './lib/useFolderDrop';
+import { useWhatsNewAfterUpdate } from './lib/whatsNew';
 import { AddReposSheet } from './screens/AddRepos/AddReposSheet';
 import { Branches } from './screens/Branches/Branches';
 import { Palette } from './screens/Palette/Palette';
@@ -33,6 +33,8 @@ export default function App() {
 
   useEffect(() => {
     startEventBridge().catch((e) => console.error('event bridge failed', e));
+    // The window starts hidden (appearance.rs); show it now that the app has drawn.
+    void revealWindow();
   }, []);
 
   // Appearance (Settings › Appearance): the config wins once loaded; System follows macOS.
@@ -97,10 +99,8 @@ export default function App() {
       <RunDialogHost />
       <OutputPanelHost />
       <DropStashModal />
-      <UpdateModal />
-      <WhatsNewModal />
-      <AboutModal />
       <ToastHost />
+      <AuxBlocker />
       {dropping && (
         <div className={styles.drop} aria-hidden>
           <div className={styles.dropPill}>

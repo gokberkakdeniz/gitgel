@@ -1,4 +1,4 @@
-// Monaco from the local bundle (no CDN), with its workers. Imported first in main.tsx.
+// Monaco from the local bundle (no CDN), with its workers. Loaded before App in main.tsx.
 import { loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import EditorWorker from 'monaco-editor/editor/editor.worker?worker';

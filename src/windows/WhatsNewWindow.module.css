@@ -1,0 +1,18 @@
+/* Fills the window: the header under the traffic lights, the notes scroll, the footer stays
+   at the bottom (FlowU2.dc.html). */
+.whatsNew {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  box-sizing: border-box;
+}
+
+.notes {
+  flex-grow: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 24px;
+  border-top: 1px solid var(--border);
+  outline: none;
+}

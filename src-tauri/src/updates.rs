@@ -25,6 +25,8 @@ pub struct Updates(Mutex<Inner>);
 #[derive(Default)]
 struct Inner {
     last_check: Option<SystemTime>,
+    /// The last `update-check` sent, for a Software Update window that opens after it.
+    answer: Option<UpdateCheck>,
     update: Option<Update>,
     installing: bool,
 }
@@ -115,12 +117,22 @@ pub fn setting_changed(app: &AppHandle, on: bool) {
     }
 }
 
+fn send_check(app: &AppHandle, check: UpdateCheck) {
+    inner(app).answer = Some(check.clone());
+    let _ = app.emit("update-check", check);
+}
+
+/// What the Software Update window shows when it opens: the last `update-check`.
+pub fn last_answer(app: &AppHandle) -> Option<UpdateCheck> {
+    inner(app).answer.clone()
+}
+
 /// Gitgel › Check for Updates…: checks now, whatever the setting. The frontend's Software Update
 /// window follows `update-check` and installs through `install_update`.
 pub fn check_now(app: &AppHandle) {
     let current_version = app.package_info().version.to_string();
-    let _ = app.emit(
-        "update-check",
+    send_check(
+        app,
         UpdateCheck::Checking {
             current_version: current_version.clone(),
         },
@@ -139,7 +151,7 @@ pub fn check_now(app: &AppHandle) {
                 message,
             },
         };
-        let _ = app.emit("update-check", answer);
+        send_check(&app, answer);
     });
 }
 

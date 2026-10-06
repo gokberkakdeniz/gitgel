@@ -1,6 +1,6 @@
 //! The window's appearance at launch. The main window starts hidden (`tauri.conf.json`); its
-//! native theme and background are set from Settings › Appearance before it is shown, so neither
-//! the title bar nor the still-empty webview flashes the other theme while the page loads.
+//! native theme and background are set from Settings › Appearance, and the page shows it once it
+//! has drawn (`reveal_window`), so it never flashes white or the other theme while it loads.
 
 use tauri::window::Color;
 use tauri::{AppHandle, Manager, Theme};
@@ -28,12 +28,13 @@ pub fn show_main_window(app: &AppHandle, appearance: Appearance) {
     if let Err(e) = window.set_background_color(Some(if dark { DARK_BG } else { LIGHT_BG })) {
         log::warn!("cannot set the window background: {e}");
     }
-    if let Err(e) = window.show() {
-        log::warn!("cannot show the window: {e}");
-    }
-    // Also brings the app forward when it was started without being activated (an update's
-    // restart by an older version).
-    if let Err(e) = window.set_focus() {
-        log::warn!("cannot focus the window: {e}");
-    }
+    // In case the page never says it is ready.
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_secs(3));
+        if !window.is_visible().unwrap_or(true) {
+            log::warn!("the page did not show the window; showing it");
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    });
 }

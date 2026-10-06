@@ -1,7 +1,7 @@
 // UI state that is not backend data.
 import type { ReactNode } from 'react';
 import { create } from 'zustand';
-import type { EntryRef, UpdateCheck } from '../lib/types';
+import type { EntryRef } from '../lib/types';
 import type { Route } from './nav';
 
 /** A project being named (flows C and H2); saved on ↵, discarded on esc or when leaving. */
@@ -42,11 +42,9 @@ interface UiState {
   toast: Toast | null;
   addReposSheet: string[] | null; // picked folder paths while the sheet is open
   modalCount: number; // open modals; folder drops are ignored while any is open
+  auxWindows: string[]; // About / Software Update / What's New windows open (`aux-windows`)
   deletingProjectId: string | null; // the delete confirmation is open for this project
   settingsSection: SettingsSection; // the last one shown; Settings opens on it
-  updateCheck: UpdateCheck | null; // the Software Update window is open (Check for Updates…)
-  whatsNewOpen: boolean; // Help › What's New, or the first launch after an update
-  aboutOpen: boolean; // Gitgel › About Gitgel
   setSidebarVisible: (visible: boolean) => void;
   setBranchesFilter: (filter: string) => void;
   setSelectedKeys: (keys: string[]) => void;
@@ -55,13 +53,11 @@ interface UiState {
   showToast: (toast: Omit<Toast, 'id'>) => void;
   dismissToast: () => void;
   setAddReposSheet: (paths: string[] | null) => void;
+  setAuxWindows: (labels: string[]) => void;
   modalOpened: () => void;
   modalClosed: () => void;
   setDeletingProjectId: (id: string | null) => void;
   setSettingsSection: (section: SettingsSection) => void;
-  setUpdateCheck: (check: UpdateCheck | null) => void;
-  setWhatsNewOpen: (open: boolean) => void;
-  setAboutOpen: (open: boolean) => void;
 }
 
 let toastId = 0;
@@ -75,6 +71,8 @@ export const useUi = create<UiState>()((set) => ({
   toast: null,
   addReposSheet: null,
   modalCount: 0,
+  auxWindows: [],
+  setAuxWindows: (auxWindows) => set({ auxWindows }),
   deletingProjectId: null,
   settingsSection: 'general',
   setSidebarVisible: (sidebarVisible) => set({ sidebarVisible }),
@@ -89,12 +87,6 @@ export const useUi = create<UiState>()((set) => ({
   modalClosed: () => set((s) => ({ modalCount: Math.max(0, s.modalCount - 1) })),
   setDeletingProjectId: (deletingProjectId) => set({ deletingProjectId }),
   setSettingsSection: (settingsSection) => set({ settingsSection }),
-  updateCheck: null,
-  setUpdateCheck: (updateCheck) => set({ updateCheck }),
-  whatsNewOpen: false,
-  setWhatsNewOpen: (whatsNewOpen) => set({ whatsNewOpen }),
-  aboutOpen: false,
-  setAboutOpen: (aboutOpen) => set({ aboutOpen }),
 }));
 
 // Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a

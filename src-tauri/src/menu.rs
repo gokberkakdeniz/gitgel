@@ -9,6 +9,7 @@ use crate::config;
 use crate::logs;
 use crate::state::AppState;
 use crate::updates;
+use crate::windows::{self, Aux};
 
 const ABOUT: &str = "about";
 const CHECK_UPDATES: &str = "check_updates";
@@ -122,13 +123,12 @@ pub fn install(app: &App) -> tauri::Result<()> {
 
 fn on_event(app: &AppHandle, event: MenuEvent) {
     match event.id().as_ref() {
-        ABOUT => {
-            let _ = app.emit("open-about", ());
+        ABOUT => windows::open(app, Aux::About),
+        CHECK_UPDATES => {
+            windows::open(app, Aux::Update);
+            updates::check_now(app);
         }
-        CHECK_UPDATES => updates::check_now(app),
-        WHATS_NEW => {
-            let _ = app.emit("open-whats-new", ());
-        }
+        WHATS_NEW => windows::open(app, Aux::WhatsNew),
         SETTINGS => {
             let _ = app.emit("open-settings", ());
         }

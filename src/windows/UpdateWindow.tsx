@@ -1,36 +1,51 @@
-import { useState } from 'react';
+import { listen } from '@tauri-apps/api/event';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useEffect, useState } from 'react';
 import appIcon from '../../src-tauri/icons/128x128@2x.png';
+import { Button } from '../components/Button';
+import { ReleaseNotes } from '../components/ReleaseNotes';
 import { newerThan, parseChangelog } from '../lib/changelog';
-import { checkForUpdates, installUpdate } from '../lib/ipc';
-import type { AppError } from '../lib/types';
-import { useData } from '../state/data';
-import { useUi } from '../state/ui';
-import { Button } from './Button';
-import { Modal } from './Modal';
-import { ReleaseNotes } from './ReleaseNotes';
-import styles from './UpdateModal.module.css';
+import { checkForUpdates, getUpdateCheck, installUpdate } from '../lib/ipc';
+import type { AppError, UpdateCheck } from '../lib/types';
+import { closeWindow, Fitted, useEscCloses } from './AuxApp';
+import styles from './UpdateWindow.module.css';
 
 /** Software Update (Gitgel › Check for Updates…, §12 "Updates"): the app icon over the answer of
- * the check, and the download's progress once Update and Restart is pressed. */
-export function UpdateModal() {
-  const check = useUi((s) => s.updateCheck);
-  const progress = useData((s) => s.updateProgress);
+ * the check, and the download's progress once Update and Restart is pressed. It follows the
+ * backend's `update-check`, starting from the last one sent (`get_update_check`). */
+export function UpdateWindow() {
+  const [check, setCheck] = useState<UpdateCheck | null>(null);
+  // null: not installing; 'unknown' until the size is known.
+  const [progress, setProgress] = useState<number | 'unknown' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const unlisten = [
+      listen<UpdateCheck>('update-check', (e) => setCheck(e.payload)),
+      listen<number | null>('update-progress', (e) => setProgress(e.payload ?? 'unknown')),
+    ];
+    void getUpdateCheck().then((c) => c && setCheck((now) => now ?? c));
+    return () => unlisten.forEach((u) => void u.then((fn) => fn()));
+  }, []);
+  const installing = progress !== null;
+  useEscCloses(!installing);
+  // Closing mid-install would leave nothing to show how it went.
+  useEffect(() => {
+    if (!installing) return;
+    const unlisten = getCurrentWindow().onCloseRequested((e) => e.preventDefault());
+    return () => void unlisten.then((fn) => fn());
+  }, [installing]);
   if (!check) return null;
 
-  const installing = progress !== null;
   const close = () => {
-    if (installing) return;
-    setError(null);
-    useUi.getState().setUpdateCheck(null);
+    if (!installing) closeWindow();
   };
   const install = async () => {
     setError(null);
-    useData.getState().setUpdateProgress('unknown');
+    setProgress('unknown');
     try {
       await installUpdate(); // the app restarts when it succeeds
     } catch (e) {
-      useData.getState().setUpdateProgress(null);
+      setProgress(null);
       setError((e as AppError).message ?? String(e));
     }
   };
@@ -119,14 +134,14 @@ export function UpdateModal() {
   }
 
   return (
-    <Modal aria-label="Software Update" width={notes.length > 0 ? 440 : 360} paddingTop={notes.length > 0 ? 100 : 140} onClose={close}>
+    <Fitted width={notes.length > 0 ? 440 : 360}>
       <div className={styles.body}>
         <img className={styles.icon} src={appIcon} alt="" width={88} height={88} />
-        <h2 className={styles.title}>{title}</h2>
+        <h1 className={styles.title}>{title}</h1>
         {body}
       </div>
       <div className={styles.buttons}>{buttons}</div>
-    </Modal>
+    </Fitted>
   );
 }
 

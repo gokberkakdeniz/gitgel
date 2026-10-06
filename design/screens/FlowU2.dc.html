@@ -16,13 +16,9 @@ button{font-family:inherit}
 .theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-hover:#ebe8e1;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--on-accent:#ffffff;--accent-rgb:58,123,143;--shadow:rgba(40,32,20,0.18);--scrim:rgba(30,26,20,0.28)}
 </style>
 </helmet>
-<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
-<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
-<dc-import name="Main" theme="{{themeName}}" popover="none" hint-size="1280px,800px"></dc-import>
-</div>
-<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
-
-<div role="dialog" aria-labelledby="wn-title" style="position: relative; margin-top: 80px; width: 520px; max-height: 640px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
+<div class="{{themeClass}}" style="width: 520px; height: 640px; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div role="dialog" aria-labelledby="wn-title" style="position: relative; box-sizing: border-box; width: 520px; height: 640px; padding-top: 20px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; top: 10px; left: 12px; display: flex; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 9999px; background: #ff5f57"></span><span style="width: 12px; height: 12px; border-radius: 9999px; background: var(--border-strong)"></span><span style="width: 12px; height: 12px; border-radius: 9999px; background: var(--border-strong)"></span></div>
 <dc-import name="ModalHeader" theme="none" title="What’s New" sub="Gitgel 0.1.16" title-id="wn-title" hint-size="100%,76px"></dc-import>
 
 <div role="region" aria-label="Release notes" tabindex="0" style="flex-grow: 1; min-height: 0; overflow: auto; padding: 0 24px; border-top: 1px solid var(--border)">
@@ -47,11 +43,12 @@ button{font-family:inherit}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 520, "height": 640}}'>
 class Component extends DCLogic {
 renderVals() {
-// Help › What's New, and once at the first launch after an update: CHANGELOG.md as bundled
-// in the app, newest first, the running version on top. `code` spans are mono.
+// Help › What's New, and once at the first launch after an update: a window of its own
+// (520 × 640, resizable; src/windows/WhatsNewWindow.tsx). CHANGELOG.md as bundled in the app,
+// newest first, the running version on top. `code` spans are mono.
 var theme = this.props.theme ?? 'dark';
 var CODE = 'font-family: \'JetBrains Mono\', monospace; font-size: 12px; padding: 1px 5px; border-radius: 4px; background: var(--bg-hover); color: var(--text-code)';
 // A line is text with `code` spans, split into parts.

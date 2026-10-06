@@ -1,0 +1,15 @@
+/* Over everything, modals and menus included; transparent. */
+.blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+/* The title strip, as tall as the sidebar's top row. */
+.drag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+}

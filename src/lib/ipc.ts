@@ -23,6 +23,7 @@ import type {
   StashChanges,
   Settings,
   TerminalOption,
+  UpdateCheck,
   UpdateInfo,
 } from './types';
 
@@ -112,6 +113,11 @@ export const installUpdate = () => invoke<void>('install_update');
 /** Checks now (the Software Update window's Try Again); the answer arrives as `update-check`. */
 export const checkForUpdates = () => invoke<void>('check_for_updates');
 export const reportIssue = () => invoke<void>('report_issue');
+export const getUpdateCheck = () => invoke<UpdateCheck | null>('get_update_check');
+/** About Gitgel, Software Update or What's New, in a window of its own (`windows.rs`). */
+export const openWindow = (label: 'about' | 'update' | 'whats-new') => invoke<void>('open_window', { label });
+/** This window has drawn: show it (every window starts hidden, so it never flashes white). */
+export const revealWindow = () => invoke<void>('reveal_window');
 
 // ---- Scripts (SPEC §14) ----
 

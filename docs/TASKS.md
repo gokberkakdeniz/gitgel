@@ -481,6 +481,11 @@ rather than as a task is listed the same way, marked "(on request)".
   never end in "…", SPEC §0); What's New moved to the top of Help; About Gitgel opens the app's
   own About window (`AboutModal`, canvas U3) with the version, build time, What's New and Report
   an Issue — 2026-10-06
+- [x] (on request) About Gitgel, Software Update and What's New are windows of their own, not
+  modals (`windows.rs`, `src/windows/`): overlay title bar, Esc / ⌘W close, About and Software
+  Update fit their content; each opens hidden and shows itself once drawn (no white flash; the
+  main window now does the same at launch); they are
+  children of the main window, which is blocked while one is open (`AuxBlocker`) — 2026-10-06
 
 ---
 

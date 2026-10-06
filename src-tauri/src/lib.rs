@@ -22,6 +22,7 @@ pub mod state;
 pub mod timing;
 pub mod updates;
 pub mod watch;
+pub mod windows;
 
 use tauri::{Manager, RunEvent, WindowEvent};
 
@@ -88,8 +89,11 @@ pub fn run() {
         // Automatic update checks run at launch and on focus, at most every 6 hours.
         .on_window_event(|window, event| match event {
             WindowEvent::Focused(true) => updates::check_if_due(window.app_handle()),
-            // Closing with scripts running asks first (SPEC §14).
-            WindowEvent::CloseRequested { api, .. } => {
+            WindowEvent::Destroyed if windows::Aux::from_label(window.label()).is_some() => {
+                windows::closed(window.app_handle(), window.label());
+            }
+            // Closing the main window with scripts running asks first (SPEC §14).
+            WindowEvent::CloseRequested { api, .. } if window.label() == "main" => {
                 let app = window.app_handle();
                 if scripts::run::running_count(&app.state::<state::AppState>()) > 0 {
                     api.prevent_close();
@@ -132,6 +136,9 @@ pub fn run() {
             commands::check_for_updates,
             commands::install_update,
             commands::report_issue,
+            commands::get_update_check,
+            commands::open_window,
+            commands::reveal_window,
             commands::save_script,
             commands::delete_script,
             commands::reorder_scripts,

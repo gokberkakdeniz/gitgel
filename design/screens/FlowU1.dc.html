@@ -19,8 +19,9 @@ button{font-family:inherit}
 <sc-for list="{{states}}" as="s" hint-placeholder-count="5">
 <div style="{{s.colStyle}}">
 <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">{{s.caption}}</span>
-<div role="dialog" aria-label="Software Update" style="display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden">
-<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px 28px 22px; text-align: center">
+<div role="dialog" aria-label="Software Update" style="position: relative; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden">
+<div aria-hidden="true" style="position: absolute; top: 10px; left: 12px; display: flex; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 9999px; background: #ff5f57"></span><span style="width: 12px; height: 12px; border-radius: 9999px; background: var(--border-strong)"></span><span style="width: 12px; height: 12px; border-radius: 9999px; background: var(--border-strong)"></span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 28px 22px; text-align: center">
 <span style="width: 88px; height: 88px; flex-shrink: 0; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; border-radius: 20px; background: linear-gradient(180deg, #1f1f1f, #0c0c0c); box-shadow: 0 6px 14px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.06)"><svg viewBox="0 0 1024 1024" width="70" height="70" aria-hidden="true"><defs><linearGradient id="ug" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ccbd8"></stop><stop offset="1" stop-color="#4f8fa3"></stop></linearGradient></defs><g fill="none" stroke="#7fb3c4" stroke-width="50" stroke-linecap="round"><path d="M512 520 C 478 600 546 660 512 760"></path><path d="M388 520 C 376 612 300 628 296 712"></path><path d="M636 520 C 648 612 724 628 728 712"></path></g><path fill="url(#ug)" d="M202 500 C 202 272 344 140 512 140 C 680 140 822 272 822 500 Q 770 556 719 512 Q 667 556 615 512 Q 564 556 512 512 Q 460 556 409 512 Q 357 556 305 512 Q 254 556 202 500 Z"></path><path fill="#ffffff" fill-opacity="0.28" d="M284 430 C 280 316 350 226 452 196 C 380 250 336 330 336 430 C 336 452 284 452 284 430 Z"></path><g fill="#eef6f8" stroke="#4f8fa3" stroke-width="16"><circle cx="512" cy="806" r="62"></circle><circle cx="296" cy="752" r="52"></circle><circle cx="728" cy="752" r="52"></circle></g></svg></span>
 <h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: var(--text-strong)">{{s.title}}</h2>
 <sc-if value="{{s.versions}}" hint-placeholder-val="{{false}}">
@@ -71,7 +72,8 @@ button{font-family:inherit}
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2200,"height":640}}'>
 class Component extends DCLogic {
   renderVals() {
-    // Gitgel › Check for Updates… (src/components/UpdateModal.tsx): one window, five moments.
+    // Gitgel › Check for Updates… (src/windows/UpdateWindow.tsx): a window of its own, five moments;
+    // as tall as its content, 440px wide with release notes.
     var btn = function (label, primary, disabled) {
       return { label: label, style: 'flex: 1; height: 36px; padding: 0 16px; border-radius: 8px; font-size: 13px; cursor: pointer; ' +
         (primary ? 'background: var(--accent); border: 1px solid var(--accent); color: var(--on-accent); font-weight: 600' : 'background: var(--bg-hover); border: 1px solid var(--border-strong); color: var(--text-strong)') +

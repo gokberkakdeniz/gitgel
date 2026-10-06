@@ -1,0 +1,23 @@
+/* A small window's ground (bg.elevated, as the modals were) under an overlay title bar. */
+.window {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+}
+
+/* Room for the traffic lights; drags the window. */
+.titleBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  z-index: 1;
+}
+
+.fitted {
+  display: flex;
+  flex-direction: column;
+}

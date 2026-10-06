@@ -7,7 +7,7 @@ import { useUi } from '../state/ui';
 import * as ipc from './ipc';
 import { loadHome } from './paths';
 import { applyRunExited, applyRunOutput } from '../scripts/runs';
-import type { Config, RepoUpdated, ScriptOutputChunk, ScriptRun, UpdateCheck, UpdateInfo } from './types';
+import type { Config, RepoUpdated, ScriptOutputChunk, ScriptRun, UpdateInfo } from './types';
 
 let started: Promise<void> | null = null;
 
@@ -38,16 +38,8 @@ async function start() {
   // The backend checks for updates at launch and on focus (updates.rs).
   await listen<UpdateInfo | null>('update-available', (e) => data.setUpdate(e.payload));
   await listen<number | null>('update-progress', (e) => data.setUpdateProgress(e.payload ?? 'unknown'));
-  // App menu › Check for Updates…: opens the Software Update window and follows the check.
-  await listen<UpdateCheck>('update-check', (e) => useUi.getState().setUpdateCheck(e.payload));
-  // App menu › About Gitgel
-  await listen('open-about', () => {
-    if (useUi.getState().modalCount === 0) useUi.getState().setAboutOpen(true);
-  });
-  // Help › What's New
-  await listen('open-whats-new', () => {
-    if (useUi.getState().modalCount === 0) useUi.getState().setWhatsNewOpen(true);
-  });
+  // The small windows (About, Software Update, What's New) block this one while open.
+  await listen<string[]>('aux-windows', (e) => useUi.getState().setAuxWindows(e.payload));
   // App menu › Settings… (⌘,). Listed in lib/shortcuts.ts.
   await listen('open-settings', () => {
     if (useUi.getState().modalCount === 0) openSettings();

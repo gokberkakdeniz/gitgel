@@ -365,6 +365,28 @@ pub async fn install_update(app: AppHandle) -> Result<(), AppError> {
     updates::install(app).await
 }
 
+/// The Software Update window's state when it opens (§7): the last `update-check`.
+#[tauri::command]
+pub fn get_update_check(app: AppHandle) -> Option<updates::UpdateCheck> {
+    updates::last_answer(&app)
+}
+
+/// Opens (or brings forward) About Gitgel, Software Update or What's New (`windows.rs`).
+#[tauri::command]
+pub async fn open_window(app: AppHandle, label: String) -> Result<(), AppError> {
+    let aux = crate::windows::Aux::from_label(&label)
+        .ok_or_else(|| AppError::NotFound(format!("no window {label}")))?;
+    crate::windows::open(&app, aux);
+    Ok(())
+}
+
+/// A window's page has drawn: show it (and attach a small one to the main window, `windows.rs`).
+/// Sync, so it runs on the main thread, which AppKit needs.
+#[tauri::command]
+pub fn reveal_window(window: tauri::WebviewWindow) {
+    crate::windows::reveal(&window);
+}
+
 /// About Gitgel's "Report an Issue": the issues page, as Help › Search or Report an Issue.
 #[tauri::command]
 pub fn report_issue() {
