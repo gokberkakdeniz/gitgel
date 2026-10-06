@@ -12,8 +12,9 @@
 # the tap's gitgel/latest.json (the app's update endpoint) is pointed at it in the cask's commit.
 #
 # Signing: the build is signed with the Developer ID Application certificate in the keychain and
-# notarized (the ticket stapled to the app) with the Apple ID in the keychain item gitgel-notary
-# (account = Apple ID, password = an app-specific password); the team id is the certificate's.
+# notarized (the ticket stapled to the app) with an App Store Connect API key: the .p8 file
+# ~/.private_keys/AuthKey_<key id>.p8 (or $GITGEL_NOTARY_KEY) and the team's issuer id. Only the
+# key's path goes on notarytool's command line, never a secret.
 # A plain `pnpm tauri build` stays ad-hoc signed and needs neither.
 #
 # The version is the app's (package.json, via src-tauri/tauri.conf.json). The build must match a
@@ -53,11 +54,11 @@ LATEST="gitgel/latest.json"
 [[ -f "$UPDATER_KEY" ]] || die "no updater key at $UPDATER_KEY; restore it or set GITGEL_UPDATER_KEY"
 SIGNING_IDENTITY="$(security find-identity -v -p codesigning | sed -nE 's/.*"(Developer ID Application: .*)"$/\1/p' | head -1)"
 [[ -n "$SIGNING_IDENTITY" ]] || die "no Developer ID Application certificate in the keychain"
-TEAM_ID="$(sed -nE 's/.*\(([A-Z0-9]+)\)$/\1/p' <<<"$SIGNING_IDENTITY")"
-[[ -n "$TEAM_ID" ]] || die "no team id in \"$SIGNING_IDENTITY\""
-NOTARY_ITEM="gitgel-notary"
-NOTARY_APPLE_ID="$(security find-generic-password -s "$NOTARY_ITEM" 2>/dev/null | sed -nE 's/^ *"acct"<blob>="(.*)"$/\1/p')"
-[[ -n "$NOTARY_APPLE_ID" ]] || die "no notary password; run: security add-generic-password -s $NOTARY_ITEM -a <apple id> -w"
+NOTARY_KEY="${GITGEL_NOTARY_KEY:-$(ls "$HOME"/.private_keys/AuthKey_*.p8 2>/dev/null | head -1)}"
+[[ -f "$NOTARY_KEY" ]] || die "no App Store Connect API key; put AuthKey_<key id>.p8 in ~/.private_keys or set GITGEL_NOTARY_KEY"
+NOTARY_KEY_ID="$(basename "$NOTARY_KEY" .p8)"
+NOTARY_KEY_ID="${NOTARY_KEY_ID#AuthKey_}"
+NOTARY_ISSUER="${GITGEL_NOTARY_ISSUER:-REDACTED}"
 [[ -z "$(git status --porcelain)" ]] || die "uncommitted changes; commit them first"
 HEAD_SHA="$(git rev-parse HEAD)"
 [[ -n "$(git branch -r --contains "$HEAD_SHA")" ]] || die "HEAD is not pushed; push it first"
@@ -83,8 +84,8 @@ BUILD_CONFIG="$(node -e '
   console.log(JSON.stringify({ bundle: { createUpdaterArtifacts: true, macOS: { signingIdentity } } }));
 ' "$SIGNING_IDENTITY")"
 TAURI_SIGNING_PRIVATE_KEY="$(cat "$UPDATER_KEY")" TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${GITGEL_UPDATER_KEY_PASSWORD:-}" \
-  APPLE_SIGNING_IDENTITY="$SIGNING_IDENTITY" APPLE_TEAM_ID="$TEAM_ID" APPLE_ID="$NOTARY_APPLE_ID" \
-  APPLE_PASSWORD="$(security find-generic-password -s "$NOTARY_ITEM" -w)" \
+  APPLE_SIGNING_IDENTITY="$SIGNING_IDENTITY" \
+  APPLE_API_KEY_PATH="$NOTARY_KEY" APPLE_API_KEY="$NOTARY_KEY_ID" APPLE_API_ISSUER="$NOTARY_ISSUER" \
   pnpm tauri build --bundles app --config "$BUILD_CONFIG"
 [[ -f "$BUNDLE/macos/Gitgel.app.tar.gz.sig" ]] || die "the build made no signed update"
 codesign --verify --deep --strict "$APP" || die "the app's signature does not verify"

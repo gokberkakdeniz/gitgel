@@ -49,9 +49,9 @@ ad-hoc signed (`bundle.macOS.signingIdentity: "-"`), not notarized; on another M
 launch is blocked. Releases are signed with Developer ID and notarized.
 
 `pnpm release` needs the "Developer ID Application" certificate in the login keychain (Xcode ›
-Settings › Accounts › Manage Certificates) and, for notarization, an app-specific password for
-the Apple ID in the keychain item `gitgel-notary`:
-`security add-generic-password -s gitgel-notary -a <apple id> -w` (asks for the password).
+Settings › Accounts › Manage Certificates) and, for notarization, an App Store Connect API key
+(Users and Access › Integrations › Team Keys, role Developer) saved as
+`~/.private_keys/AuthKey_<key id>.p8` (mode 600). The issuer id is in `scripts/release.sh`.
 
 To publish it: `pnpm release` builds the app, zips it and uploads the zip to the GitHub release
 `<version>` (the version in `package.json`) with the `gh` CLI, creating the release

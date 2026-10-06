@@ -455,8 +455,8 @@ rather than as a task is listed the same way, marked "(on request)".
   Import, Export, + New project, Delete project, …); only progress text keeps it (SPEC §0) —
   2026-10-05
 - [x] (on request) Releases are signed with Developer ID and notarized: `release.sh` takes the
-  certificate from the keychain and the notary Apple ID / app-specific password from the
-  keychain item `gitgel-notary`, and checks the signature, the stapled ticket and Gatekeeper
+  certificate from the keychain and notarizes with the App Store Connect API key in
+  `~/.private_keys` (no password on the command line), and checks the signature, the stapled ticket and Gatekeeper
   before uploading; the cask no longer strips the quarantine flag (SPEC §12) — 2026-10-06
 
 ---

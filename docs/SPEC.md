@@ -1839,10 +1839,11 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   commits, bump the version first. It also builds the signed update (below) and needs its key.
 - **Signing:** `release.sh` signs with the "Developer ID Application" certificate in the login
   keychain (passed as `--config` `signingIdentity` and `APPLE_SIGNING_IDENTITY`; hardened
-  runtime, no entitlements) and has Tauri notarize and staple the app with `APPLE_ID` /
-  `APPLE_PASSWORD` / `APPLE_TEAM_ID`: the Apple ID and an app-specific password come from the
-  keychain item `gitgel-notary` (`security add-generic-password -s gitgel-notary -a <apple id>
-  -w`), the team id from the certificate's name. It stops before building when either is
+  runtime, no entitlements) and has Tauri notarize and staple the app with an App Store Connect
+  API key (`APPLE_API_KEY_PATH` / `APPLE_API_KEY` / `APPLE_API_ISSUER`): the `.p8` file
+  `~/.private_keys/AuthKey_<key id>.p8` (or `$GITGEL_NOTARY_KEY`), the key id from its name, the
+  issuer id in `release.sh` (or `$GITGEL_NOTARY_ISSUER`). Only the key's path reaches
+  `notarytool`'s command line, never a password. It stops before building when either is
   missing, and before uploading unless `codesign --verify --deep --strict`, `stapler validate`
   and `spctl --assess` pass.
 - **Release notes** (planned, T21.1): `CHANGELOG.md` holds one `## <version> — YYYY-MM-DD`
