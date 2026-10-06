@@ -459,4 +459,64 @@ rather than as a task is listed the same way, marked "(on request)".
 
 ## Open
 
-No open tasks.
+### Phase 21 — Release notes
+
+#### T21.1 `CHANGELOG.md` and release notes in `pnpm release`
+- **Depends on:** —
+- **Why:** user request, 2026-10-06: a changelog for every release, written by Claude at release
+  time (only what a user notices), shown on GitHub and in the app; past releases too.
+- **Spec:** SPEC §12 "Release notes", "Updates" (`notes`); §2 Distribution; §3 tree.
+- **Files:** `CHANGELOG.md` (new), `scripts/release.sh`, `CLAUDE.md`.
+- **Steps:**
+  1. Write `CHANGELOG.md` for 0.1.2 … 0.1.15: each version is the commits between its
+     `chore: release v…` commit and the previous one; the date is the release commit's. Use
+     those commits, not the local `v*` tags (some are from an older history, e.g. `v0.2.0`).
+     A version with nothing a user would notice keeps its heading with a single
+     `### Fixed` / `- Small fixes.`, so every version has a section.
+  2. `release.sh`: before building, read the `## <version> — …` section (die when it is missing
+     or has no `- ` line); pass it to `gh release create` (`--notes`, above the install note) and,
+     on a re-run, `gh release edit --notes` so a fixed text is published; write the last 10
+     sections into `latest.json` `notes`. Do the same on the tap release.
+  3. `CLAUDE.md`: one rule — asked for a release, Claude writes the version's `CHANGELOG.md`
+     section (SPEC §12 "Release notes"), shows it, and commits it with the version bump.
+- **Acceptance:** `release.sh` stops on a version without a section; with one, a dry check of the
+  generated `latest.json` (run its node snippet alone) carries the notes. No release is made.
+
+#### T21.2 Design: release notes in Software Update, What's New window
+- **Depends on:** —
+- **Why:** as T21.1.
+- **Spec:** SPEC §7 "Software Update" (available), "Gitgel › What's New…".
+- **Reference:** canvas "Gitgel App Flow" (https://claude.ai/artifact/SzYAF9awmKNBf2rcZV16ZZ),
+  the Software Update artboards (`FlowU1.dc.html`).
+- **Steps:**
+  1. In the canvas: the "available" state with notes for two skipped versions (box height, the
+     wider window), and a What's New artboard (version heading, date, New / Improved / Fixed
+     groups, a `code` span, two versions so the divider between them shows), in both themes.
+  2. Publish, copy the changed screens into `design/screens/`, and put the artboard's line
+     ranges into SPEC §7 where it says `FlowU1.dc.html` (What's New artboard).
+- **Acceptance:** the artboards exist in the canvas and in `design/screens/`; SPEC points at them.
+
+#### T21.3 ✋ Checkpoint — release notes design
+- Show the artboards; wait for approval before T21.4.
+
+#### T21.4 Release notes in the app
+- **Depends on:** T21.1, T21.3
+- **Why:** as T21.1.
+- **Spec:** SPEC §7 "Software Update" (available), "Gitgel › What's New…"; §8 `Settings.lastSeenVersion`.
+- **Reference:** the T21.2 artboards.
+- **Files:** `src-tauri/src/updates.rs` (`UpdateCheck::Available` / `UpdateInfo` gain `notes`
+  from `update.body`), `src-tauri/src/menu.rs` (What's New… item, emits `open-whats-new`),
+  `src-tauri/src/config.rs` (`lastSeenVersion`, serde default `''`), `src/lib/types.ts`,
+  `src/lib/changelog.ts` (parse + `newerThan(version)`, with tests), `src/components/UpdateModal.tsx`,
+  `src/components/WhatsNewModal.tsx` (new), `App.tsx` (startup check, menu event).
+- **Steps:**
+  1. Parser first, tested on the real `CHANGELOG.md` and on the feed's `notes` (same format).
+  2. Compare versions numerically (0.1.10 > 0.1.9), not as strings.
+  3. The startup What's New waits for the first config load and never opens over another modal.
+- **Acceptance:** Software Update with a feed that has notes shows only versions newer than the
+  running one; setting `lastSeenVersion` to an older version and restarting shows What's New
+  once; a fresh config shows nothing and stores the version; the menu item always opens it.
+
+#### T21.5 ✋ Checkpoint — phase 21
+- Show What's New (menu and after a faked update) and Software Update with notes (a local feed
+  or a stubbed `notes`); wait for approval.

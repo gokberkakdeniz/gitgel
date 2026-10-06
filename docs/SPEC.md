@@ -149,7 +149,7 @@ configurable refresh.
 | Diff | `@monaco-editor/react` + `monaco-editor`, bundled locally (`loader.config({ monaco })`), never from a CDN. |
 | Fonts | Instrument Sans, Source Serif 4, JetBrains Mono via `@fontsource/*`, bundled. The app works offline. |
 | Bundle id | `com.gitgel.desktop` (must not end in `.app`). |
-| Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). |
+| Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). Release notes come from `CHANGELOG.md` (planned, T21.1). |
 | Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the tap's `gitgel/latest.json` at launch and on window focus, at most every 6 hours; installs a signed build on request and restarts (§12 "Updates"). |
 
 ---
@@ -159,6 +159,7 @@ configurable refresh.
 ```
 gitgel/
 ├─ CLAUDE.md
+├─ CHANGELOG.md                   # release notes, newest first; written at release (§12) (planned, T21.1)
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
@@ -1118,11 +1119,22 @@ checkbox only (no ⌘/⇧-click).
   - checking: "Checking for updates…" and an indeterminate 4px accent bar; Cancel.
   - up to date: "You’re up to date", muted `Gitgel <version> is the newest version.`; OK.
   - available: "A new version is available", the versions as mono pills (`<current>` muted →
-    `<new>` accent), muted "Gitgel restarts to finish the update."; Later / **Update and
-    Restart**. Installing shows the download bar (`Downloading… N%`, then `Installing…`) and
+    `<new>` accent), then the release notes of every version newer than the current one, newest
+    first, in a scrolling box (the What's New body below) when the feed has any; the window
+    widens for them (planned, T21.4). Muted "Gitgel restarts to finish the update."; Later /
+    **Update and Restart**. Installing shows the download bar (`Downloading… N%`, then `Installing…`) and
     disables both; a failed install shows its error and the primary becomes "Try Again".
   - failed: "Cannot check for updates" and the error (mono 11, danger tint); Close / Try Again.
   Buttons are 36px and share the width, the primary last.
+- **Gitgel › What's New…** (after Check for Updates…) (planned, T21.4): opens the **What's New**
+  window (`WhatsNewModal`): the release notes of `CHANGELOG.md`, bundled into the app at build
+  time (Vite `?raw`), newest first, the running version's section first. Each version: its
+  number (mono) and date, then the groups New / Improved / Fixed as bulleted lines; `code` spans
+  render mono. A small parser in `src/lib/changelog.ts` reads `## <version> — <date>`,
+  `### <group>` and `- ` lines; nothing else of Markdown is supported. Esc / OK closes it.
+  It opens by itself once after an update: at startup, when `settings.lastSeenVersion` is older
+  than the running version, it is shown and `lastSeenVersion` is set to it; when it is empty
+  (a fresh install) it is only set. Look and sizes: `FlowU1.dc.html` (What's New artboard).
 - **Gitgel › Settings…** (⌘,): emits `open-settings`; the frontend opens Settings unless a modal
   is open or Settings is already showing.
 - **View › Font Size**: Decrease (⌘-), Increase (⌘.), Reset (⌘0). Zooms the whole window in steps
@@ -1178,6 +1190,7 @@ export interface Settings {
   terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   checkUpdates: boolean;         // Settings › General › Check for updates; default true
+  lastSeenVersion: string;       // version whose What's New was shown; default '' (planned, T21.4)
   appearance: 'system' | 'light' | 'dark'; // Settings › General › Theme; default 'system' (T10.1)
 }
 export interface Config {
@@ -1824,12 +1837,21 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   also uploads the zip to the public `gokberkakdeniz/homebrew-tap` release `gitgel-<version>`, then
   updates `version` and `sha256` in the tap's `Casks/gitgel.rb`, commits and pushes. After new
   commits, bump the version first. It also builds the signed update (below) and needs its key.
+- **Release notes** (planned, T21.1): `CHANGELOG.md` holds one `## <version> — YYYY-MM-DD`
+  section per release, newest first, with `### New`, `### Improved` and `### Fixed` groups of
+  `- ` lines in the user's terms (empty groups left out). Claude writes the section when a
+  release is asked for: it reads the commits since the previous `chore: release v…` commit, keeps
+  only what a user would notice (no refactors, design canvas, docs, tests or tooling) and puts
+  it in the same commit as the version bump (`chore: release v<version>`). `release.sh` stops
+  when the version has no section; it uses the section as the GitHub release notes (above the
+  install note) and puts the sections of the last 10 versions, as Markdown, in `latest.json`'s
+  `notes`, so an app several versions behind still sees what it skips.
 - **Updates:** the release build also makes `Gitgel.app.tar.gz` and its minisign signature
   (`createUpdaterArtifacts`, passed with `--config` only by `release.sh`, so a plain build needs
   no key; key `~/.tauri/gitgel.key` or `$GITGEL_UPDATER_KEY`, public key in `tauri.conf.json`).
   It is uploaded as `Gitgel-<version>-macos-arm64.app.tar.gz` next to the zip in the tap release,
-  and `gitgel/latest.json` in the tap (`version`, `pub_date`, `platforms.darwin-aarch64` url +
-  signature) is committed with the cask. The app reads it from
+  and `gitgel/latest.json` in the tap (`version`, `pub_date`, `notes` (planned, T21.1),
+  `platforms.darwin-aarch64` url + signature) is committed with the cask. The app reads it from
   `raw.githubusercontent.com/gokberkakdeniz/homebrew-tap/master/gitgel/latest.json`; the cask
   has `auto_updates true`, so `brew upgrade` leaves a self-updating app alone. Only release
   builds install; a lost key means existing installs can no longer update in-app (a new key
