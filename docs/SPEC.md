@@ -27,8 +27,9 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   command line built in `src-tauri/src/scripts/git.rs` and run like a script (§14: login shell,
   pty, toast, output panel, rescan when it ends). Values (a message, folders) go in `GITGEL_*`
   environment variables, never into the command text. `std::process::Command` is banned in app
-  code; the one exception is `src-tauri/src/apps.rs`, which starts the terminal the user set in
-  Settings (WezTerm, or an Other command). Scripts and git actions run in a pty (`portable-pty`,
+  code; the exceptions are `src-tauri/src/apps.rs`, which starts the terminal the user set in
+  Settings (WezTerm, or an Other command), and `src-tauri/src/updates.rs`, which relaunches
+  Gitgel with `open -n` after an update. Scripts and git actions run in a pty (`portable-pty`,
   `src-tauri/src/scripts/run.rs`). git2 is used only under `src-tauri/src/git/`; other modules
   use the functions there and the types in §8.
 - **git2 never writes.** The app never calls a git2 API that writes to a repository: no checkout,
@@ -150,7 +151,7 @@ configurable refresh.
 | Fonts | Instrument Sans, Source Serif 4, JetBrains Mono via `@fontsource/*`, bundled. The app works offline. |
 | Bundle id | `com.gitgel.desktop` (must not end in `.app`). |
 | Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). Release notes come from `CHANGELOG.md`. |
-| Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the tap's `gitgel/latest.json` at launch and on window focus, at most every 6 hours; installs a signed build on request and restarts (§12 "Updates"). |
+| Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the tap's `gitgel/latest.json` at launch and on window focus, at most every 6 hours; installs a signed build on request and restarts through LaunchServices (`open -n`), so the new version comes to the front focused; the window also takes focus when it is first shown (§12 "Updates"). |
 
 ---
 
@@ -1575,7 +1576,8 @@ Notes:
 - git2 is used only under `src-tauri/src/git/`. No git2 type leaks out: SHAs are hex `String`s,
   errors `AppError`, results the types in §8.
 - `src-tauri/clippy.toml` turns every writing API into a compile error under `-D warnings`:
-  - `std::process::Command::new` (allowed only in `apps.rs` for the terminal).
+  - `std::process::Command::new` (allowed only in `apps.rs` for the terminal and in `updates.rs`
+    for the relaunch after an update).
   - `git2::Repository::` `init`, `init_bare`, `init_opts`, `clone`, `clone_recurse`,
     `checkout_head`, `checkout_index`, `checkout_tree`, `set_head`, `set_head_detached`,
     `set_head_bytes`, `commit`, `commit_signed`, `branch`, `branch_from_annotated_commit`,
@@ -1832,7 +1834,8 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
 - **Performance targets:** first scan < 3 s; a file change reaches the screen in < 1 s (300 ms
   debounce included); a full rescan with nothing changed < 300 ms; switching files in Review is
   instant; an event storm (hundreds of files) is merged into a few jobs without freezing the UI.
-- **Read-only audit:** `grep -rn "Command::new" src-tauri/src` is empty; git2 appears only under
+- **Read-only audit:** `grep -rn "Command::new" src-tauri/src` finds only `apps.rs` and
+  `updates.rs`; git2 appears only under
   `src-tauri/src/git/`; `disallowed` only in `git/testutil.rs`; clippy passes; after using the app
   on the fixtures (with file edits, focus changes and refreshes, but no git action),
   `find ~/gitgel-fixtures -path '*/.git/*' -newer <marker>` is empty.

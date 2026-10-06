@@ -160,6 +160,32 @@ async fn check(app: &AppHandle) -> Result<Option<UpdateInfo>, String> {
     Ok(found)
 }
 
+/// Starts the installed app through LaunchServices (`open -n`), as a launch from the Dock would,
+/// so it comes to the front with its window focused; false when it could not, and the caller
+/// falls back to `app.restart()`, which runs the binary itself and leaves it in the background.
+// A `Command` exception (SPEC §0): it starts Gitgel itself and never runs git.
+#[allow(clippy::disallowed_methods)]
+fn relaunch() -> bool {
+    let bundle = std::env::current_exe().ok().and_then(|exe| {
+        exe.ancestors()
+            .nth(3)
+            .filter(|p| p.extension().is_some_and(|e| e == "app"))
+            .map(|p| p.to_path_buf())
+    });
+    let Some(bundle) = bundle else { return false };
+    match std::process::Command::new("/usr/bin/open").arg("-n").arg(&bundle).status() {
+        Ok(s) if s.success() => true,
+        Ok(s) => {
+            log::warn!("open {} exited with {s}", bundle.display());
+            false
+        }
+        Err(e) => {
+            log::warn!("cannot run open: {e}");
+            false
+        }
+    }
+}
+
 /// Downloads the update found by the last check, replaces the app and restarts. Emits
 /// `update-progress` (percent, or null while the size is unknown) as it downloads.
 pub async fn install(app: AppHandle) -> Result<(), AppError> {
@@ -205,6 +231,10 @@ pub async fn install(app: AppHandle) -> Result<(), AppError> {
     match result {
         Ok(()) => {
             log::info!("update {} installed; restarting", update.version);
+            if relaunch() {
+                app.exit(0);
+                return Ok(());
+            }
             app.restart()
         }
         Err(e) => {

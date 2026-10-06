@@ -467,6 +467,9 @@ rather than as a task is listed the same way, marked "(on request)".
 ### Phase 21 — Release notes
 - [x] T21.1 `CHANGELOG.md` and release notes in `pnpm release` — 2026-10-06
   - note: the changelog also has 0.1.16, released before this task.
+- [x] (on request) After an update the new version comes to the front focused: it is relaunched
+  with `open -n` (a second `Command` exception, `updates.rs`) instead of `app.restart()`, and the
+  window takes focus when first shown — 2026-10-06
 
 ---
 

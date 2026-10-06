@@ -31,4 +31,9 @@ pub fn show_main_window(app: &AppHandle, appearance: Appearance) {
     if let Err(e) = window.show() {
         log::warn!("cannot show the window: {e}");
     }
+    // Also brings the app forward when it was started without being activated (an update's
+    // restart by an older version).
+    if let Err(e) = window.set_focus() {
+        log::warn!("cannot focus the window: {e}");
+    }
 }

@@ -2,8 +2,8 @@
 # actions (`src/scripts/git.rs`, SPEC §0): the user's git CLI in a pty, like the user's scripts
 # (`portable-pty`, `src/scripts/run.rs`). These bans turn other writes into errors under
 # `clippy -D warnings`. The exceptions, each marked `#[allow]` where it happens:
-# `src/git/testutil.rs` (tests, inside their own temp folder) and `src/apps.rs` (starts the
-# user's terminal).
+# `src/git/testutil.rs` (tests, inside their own temp folder), `src/apps.rs` (starts the
+# user's terminal) and `src/updates.rs` (relaunches Gitgel after an update).
 
 disallowed-methods = [
   { path = "std::process::Command::new", reason = "no git CLI; use git2" },
