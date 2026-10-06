@@ -1751,7 +1751,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to, P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
-| Sync | `WipW4a`, `WipW4c.dc.html` | canvas page "Git Action Flows (WIP)": W4a History header with Fetch / Pull / Push and the diverged banner; W4c Review with the branch menu's Sync group, group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
+| Sync | `HistH4`, `WipW4c.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Git Action Flows (WIP)": W4c Review with the branch menu's Sync group, group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -2205,7 +2205,7 @@ time.
   and a checkout (else disabled with "Not on origin" / "Nothing to pull" / "Not checked out");
   Push needs a remote, commits ahead and none behind (else "No remote" / "Behind origin, pull
   first" / "Nothing to push"). A branch that is ahead and behind is **diverged**.
-- **History header** (`WipW4a`), after the search field: one 32px group (`bg.elevated`, 1px `border`,
+- **History header** (`HistH4`), after the search field: one 32px group (`bg.elevated`, 1px `border`,
   radius 8, padding 2, gap 2) of 26px buttons (12px, 12px icon, radius 6): "Fetch" (`download`,
   `text.muted`, tooltip `Fetch <repo> from origin · last fetch <age> ago`), a 1px divider, "Pull" (`arrow-down`, mono 11
   `↓N` when behind), "Push" (`arrow-up`, `↑N` when ahead; accent fill when it can push). Disabled
