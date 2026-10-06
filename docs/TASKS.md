@@ -486,13 +486,10 @@ rather than as a task is listed the same way, marked "(on request)".
   Update fit their content; each opens hidden and shows itself once drawn (no white flash; the
   main window now does the same at launch); they are
   children of the main window, which is blocked while one is open (`AuxBlocker`) — 2026-10-06
+- [x] T21.5 ✋ Checkpoint — phase 21 — 2026-10-06
 
 ---
 
 ## Open
 
-### Phase 21 — Release notes
-
-#### T21.5 ✋ Checkpoint — phase 21
-- Show What's New (menu and after a faked update) and Software Update with notes (a local feed
-  or a stubbed `notes`); wait for approval.
+No open tasks.
