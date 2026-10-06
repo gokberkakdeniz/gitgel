@@ -458,6 +458,83 @@ pub fn push(state: &AppState, entry: EntryRef) -> Result<ScriptRun, AppError> {
     )
 }
 
+/// Rebase on the base (SPEC §15 "Sync"): the entry's branch onto its base (the one in use: custom
+/// or the repo's default), fresh from the base's remote when it has one there (`git pull --rebase
+/// <remote> refs/heads/<base on the remote>`, like oh-my-zsh's `gupom` for the default base),
+/// else onto the local base (`git rebase <base>`). In the entry's worktree.
+pub fn rebase_on_base(state: &AppState, entry: EntryRef) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    let branch = entry
+        .branch
+        .clone()
+        .ok_or_else(|| AppError::Invalid("A detached HEAD has no base to rebase on.".into()))?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!("{} / {branch} is not checked out.", repo.name))
+    })?;
+    let base = lock(&state.last_scan)
+        .get(&repo.id)
+        .and_then(|s| s.active.iter().find(|e| e.branch.as_deref() == Some(&branch)))
+        .and_then(|e| e.base.clone())
+        .ok_or_else(|| AppError::Invalid(format!("{branch} has no base.")))?;
+    if base == branch {
+        return Err(AppError::Invalid(format!("{branch} is its own base.")));
+    }
+    let upstream = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        base_upstream(&git, &base)
+    };
+    let (command, env) = match upstream {
+        Some((remote, on_remote)) => (
+            download_command(true),
+            vec![
+                ("GITGEL_REMOTE".into(), remote),
+                ("GITGEL_MERGE".into(), format!("refs/heads/{on_remote}")),
+            ],
+        ),
+        None => (
+            "git rebase \"$GITGEL_BASE\"".to_string(),
+            vec![("GITGEL_BASE".into(), base.clone())],
+        ),
+    };
+    launch_sync(
+        state,
+        "rebase-base",
+        &format!("Rebase on {base}"),
+        &repo,
+        tree.path.clone(),
+        repo.label(tree),
+        entry_key(&repo.id, Some(&branch), Some(&tree.path.to_string_lossy())),
+        command,
+        env,
+    )
+}
+
+/// Where a base ref lives on a remote, as `(remote, branch on the remote)`: a local branch's
+/// upstream when the remote has it, or a remote-tracking ref split at its remote (`origin/HEAD`
+/// followed to the branch it points at). `None` for a base only here.
+fn base_upstream(git: &git2::Repository, base: &str) -> Option<(String, String)> {
+    if git.find_branch(base, git2::BranchType::Local).is_ok() {
+        let t = refs::tracking(git, base)?;
+        return t.tracking.is_some().then_some((t.remote, t.branch));
+    }
+    let reference = git.find_reference(&format!("refs/remotes/{base}")).ok()?;
+    let target = reference
+        .symbolic_target()
+        .ok()
+        .flatten()
+        .and_then(|t| t.strip_prefix("refs/remotes/"))
+        .unwrap_or(base)
+        .to_string();
+    let remotes = git.remotes().ok()?;
+    let names: Vec<&str> = remotes.iter().filter_map(|r| r.ok().flatten()).collect();
+    names
+        .into_iter()
+        .filter_map(|r| Some((r, target.strip_prefix(r)?.strip_prefix('/')?)))
+        .max_by_key(|(r, _)| r.len())
+        .map(|(r, rest)| (r.to_string(), rest.to_string()))
+}
+
 pub(super) fn download_command(rebase: bool) -> String {
     let rebase = if rebase { " --rebase" } else { "" };
     format!("git pull{rebase} \"$GITGEL_REMOTE\" \"$GITGEL_MERGE\"")
@@ -517,6 +594,24 @@ fn with_git_env(mut env: Vec<(String, String)>) -> Vec<(String, String)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn base_upstream_follows_the_base_to_its_remote() {
+        let t = crate::git::testutil::TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        t.branch_from("dev", tip);
+        // No remote: only the local base.
+        assert_eq!(base_upstream(&t.repo, "main"), None);
+        t.add_origin();
+        t.set_remote("origin/main", tip);
+        t.set_origin_head("main");
+        let main = Some(("origin".to_string(), "main".to_string()));
+        assert_eq!(base_upstream(&t.repo, "main"), main);
+        assert_eq!(base_upstream(&t.repo, "origin/main"), main);
+        assert_eq!(base_upstream(&t.repo, "origin/HEAD"), main);
+        // Not on the remote.
+        assert_eq!(base_upstream(&t.repo, "dev"), None);
+    }
 
     #[test]
     fn sync_commands_hold_no_values() {

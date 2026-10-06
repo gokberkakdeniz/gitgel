@@ -1813,7 +1813,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to, P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
-| Sync | `HistH4`, `WipW4c.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Git Action Flows (WIP)": W4c Review with the branch menu's Sync group, group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
+| Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 Review with the branch menu's Sync group (menu data 192–205), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -2295,15 +2295,23 @@ time.
   and the running one's icon spins. Diverged: a warning banner under the header, `<branch> is
   behind origin by 1 commit, so it cannot be pushed. Pull it first.`, with a 24px "Pull (rebase)"
   button when checked out.
-- **Branch menus** (`WipW4c`): after the open items, a divider, then "Fetch"
+- **Branch menus** (`FlowR1`): after the open items, a divider, then "Fetch"
   (`download`), "Pull" (`arrow-down`, hint `↓N`), "Pull (rebase)" (`rebase`; only when diverged
-  and checked out), "Push" (`arrow-up`, hint `↑N`). Disabled items carry the reason as tooltip ("A sync is running"
+  and checked out), "Rebase on `<base>`" (`rebase`; a checked-out branch whose base, custom or
+  the repo's default, is not itself), "Push" (`arrow-up`, hint `↑N`). Disabled items carry the reason as tooltip ("A sync is running"
   while one runs; Push of a branch the remote lacks: `Not on origin yet`). No group for a detached HEAD, a branch without a remote, a deleted branch or a
   missing repository.
 - **Fetch**: `git fetch --all --prune` in the repository folder. Success toast `Fetched <repo>`.
 - **Pull**: `git pull [--rebase] "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<branch on the
   remote>`) in the worktree, so a branch without a configured upstream pulls too and git's own
   `pull.rebase` / `pull.ff` settings apply. Success toast `Pulled <branch>`.
+- **Rebase on `<base>`** (`git_rebase_on_base`): the branch onto the entry's base, in the
+  worktree. When the base is on a remote (a local base's upstream the remote has, or a
+  remote-tracking base, `origin/HEAD` followed to its branch): `git pull --rebase
+  "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<base on the remote>`), so it rebases on the
+  remote's latest, like oh-my-zsh's `gupom` for the default base; else `git rebase
+  "$GITGEL_BASE"`. Success toast `Rebased <branch> on <base>`; a conflict leaves the rebase to
+  the user (the failed run's output panel says so).
 - **Push**: `git push [--set-upstream] "$GITGEL_REMOTE" "$GITGEL_REFSPEC"`
   (`refs/heads/<branch>:refs/heads/<branch on the remote>`), in the worktree when there is one
   (hooks see it), else the repository folder; `--set-upstream` only for a branch the remote does

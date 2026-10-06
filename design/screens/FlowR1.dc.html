@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>W4c · Sync in the branch menu</title>
+<title>R1 · Sync in the branch menu</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -181,7 +181,7 @@ button,input,textarea{font-family:inherit}
 </div>
 </section>
 </div>
-<div style="position: absolute; left: 50px; top: 140px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch options" items="{{syncMenu}}" hint-size="260px,470px"></dc-import></div>
+<div style="position: absolute; left: 50px; top: 140px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch options" items="{{syncMenu}}" hint-size="260px,504px"></dc-import></div>
 </div>
 </div>
 </x-dc>
@@ -199,6 +199,8 @@ class Component extends DCLogic {
       { label: 'Fetch', icon: 'download' },
       { label: 'Pull', icon: 'arrow-down', hint: '↓1' },
       { label: 'Pull (rebase)', icon: 'rebase', active: true },
+      // The entry's base, fresh from its remote (like gupom for the default base).
+      { label: 'Rebase on main', icon: 'rebase' },
       { label: 'Push', icon: 'arrow-up', hint: '↑2', disabled: true }
     ];
     return { themeClass: 'theme-' + t, themeName: t, syncMenu: syncMenu };

@@ -157,6 +157,7 @@ pub fn run() {
             commands::stash_drop,
             commands::git_fetch,
             commands::git_pull,
+            commands::git_rebase_on_base,
             commands::git_push,
         ])
         .build(tauri::generate_context!())

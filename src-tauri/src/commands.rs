@@ -582,6 +582,15 @@ pub async fn git_pull(
     .await
 }
 
+/// Sync: the entry's branch rebased on its base (fresh from the base's remote when it has one).
+#[tauri::command]
+pub async fn git_rebase_on_base(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| scripts::git::rebase_on_base(state, entry)).await
+}
+
 /// Sync (W4a): `git push` of the entry's branch to its remote, never forced.
 #[tauri::command]
 pub async fn git_push(state: State<'_, AppState>, entry: EntryRef) -> Result<ScriptRun, AppError> {

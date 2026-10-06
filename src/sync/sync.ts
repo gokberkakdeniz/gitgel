@@ -1,6 +1,6 @@
 // Fetch, pull and push of one branch (W4a): what each can do, and how a branch stands against
 // its remote. Each runs as a git action (SPEC §15 "Sync").
-import { gitFetch, gitPull, gitPush } from '../lib/ipc';
+import { gitFetch, gitPull, gitPush, gitRebaseOnBase } from '../lib/ipc';
 import { plural } from '../lib/format';
 import type { EntryRef, Upstream } from '../lib/types';
 import { startGitAction } from '../scripts/runs';
@@ -70,6 +70,14 @@ export function pullBranch(t: SyncTarget, rebase = false): Promise<void> {
   return startGitAction(rebase ? 'Pull (rebase)' : 'Pull', () => gitPull(refOf(t), rebase), {
     openOnFail: true,
     done: `Pulled ${t.branch}`,
+  });
+}
+
+/** The branch rebased on its base, fresh from the base's remote when it has one (SPEC §15). */
+export function rebaseOnBase(t: SyncTarget, base: string): Promise<void> {
+  return startGitAction(`Rebase on ${base}`, () => gitRebaseOnBase(refOf(t)), {
+    openOnFail: true,
+    done: `Rebased ${t.branch} on ${base}`,
   });
 }
 

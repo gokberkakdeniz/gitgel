@@ -498,6 +498,11 @@ rather than as a task is listed the same way, marked "(on request)".
     after 10 s).
 - [x] T22.4 ✋ Checkpoint — phase 22 — 2026-10-06
   - note: checked on the user's Mac with a Fetch and with a user script.
+- [x] (on request) "Rebase on <base>" in the branch menus' sync group: a checked-out branch onto
+  its base (custom or default), from the base's remote when it has one there (`git pull
+  --rebase <remote> <base>`, like `gupom`), else `git rebase <base>` (`git_rebase_on_base`);
+  the canvas's W4c moved from the WIP page to "Branch actions" as R1 (`FlowR1.dc.html`) —
+  2026-10-06
 
 ---
 

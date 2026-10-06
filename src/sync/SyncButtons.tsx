@@ -4,7 +4,7 @@ import { MenuDivider, MenuItem } from '../components/Menu';
 import type { EntrySummary } from '../lib/types';
 import { useRuns } from '../scripts/runs';
 import styles from './SyncButtons.module.css';
-import { fetchRepo, pullBranch, pushBranch, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
+import { fetchRepo, pullBranch, pushBranch, rebaseOnBase, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
 
 /** The sync action running in the repository, if any (one git action at a time per repository). */
 function useRunningSync(repoId: string): string | null {
@@ -101,6 +101,8 @@ export function SyncItems({ entry, onDone }: { entry: EntrySummary; onDone: () =
     void action();
   };
   const busy = running ? 'A sync is running' : null;
+  // Rebase on the base: a checked-out branch that has a base other than itself.
+  const base = entry.worktreePath && entry.base && entry.base !== entry.branch ? entry.base : null;
   return (
     <>
       <MenuDivider />
@@ -119,6 +121,11 @@ export function SyncItems({ entry, onDone }: { entry: EntrySummary; onDone: () =
       {st.diverged && !st.pull && (
         <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => pullBranch(entry, true))}>
           Pull (rebase)
+        </MenuItem>
+      )}
+      {base && (
+        <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => rebaseOnBase(entry, base))}>
+          Rebase on {base}
         </MenuItem>
       )}
       <MenuItem
