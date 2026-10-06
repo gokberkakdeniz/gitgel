@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.17 — 2026-10-06
+
+### New
+- What's New in the Help menu, shown once after an update.
+- Software Update shows what the new version brings.
+- An About Gitgel window.
+- An SSH key's passphrase is asked in a dialog and can be remembered in the Keychain.
+- Rebase on its base from a branch's menu.
+- ⌥H switches between a branch's Review and History.
+
+### Improved
+- About, Software Update and What's New open in windows of their own.
+- The window can be moved while a dialog is open.
+- Copy buttons show when they copied.
+- The Gitgel menu follows macOS: Settings… and Check for Updates… under About.
+
+### Fixed
+- After an update, Gitgel comes to the front.
+- No white flash when Gitgel opens.
+
 ## 0.1.16 — 2026-10-06
 
 ### Improved
