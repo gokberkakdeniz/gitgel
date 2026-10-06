@@ -488,6 +488,17 @@ rather than as a task is listed the same way, marked "(on request)".
   children of the main window, which is blocked while one is open (`AuxBlocker`) — 2026-10-06
 - [x] T21.5 ✋ Checkpoint — phase 21 — 2026-10-06
 
+### Phase 22 — SSH passphrase
+- [x] T22.1 Design: the Passphrase dialog — 2026-10-06
+  - note: on the canvas page "Branch actions" (S1–S3, `FlowS1.dc.html`), not the WIP page.
+- [x] T22.2 ✋ Checkpoint — passphrase design — 2026-10-06
+- [x] T22.3 Passphrase prompt, Keychain and preloading — 2026-10-06
+  - note: the passphrase is saved when the run ends without ssh asking again, not at Continue,
+    so a wrong one is never handed to ssh-add (which would ask again forever; it also stops
+    after 10 s).
+- [x] T22.4 ✋ Checkpoint — phase 22 — 2026-10-06
+  - note: checked on the user's Mac with a Fetch and with a user script.
+
 ---
 
 ## Open

@@ -29,6 +29,8 @@ use crate::state::{lock, AppState};
 
 pub const SCRIPT_OUTPUT: &str = "script-output";
 pub const SCRIPT_EXITED: &str = "script-exited";
+/// ssh asked for a key's passphrase in a run (SPEC §15 "SSH passphrase").
+pub const SSH_PASSPHRASE: &str = "ssh-passphrase";
 
 /// Output kept per run; the oldest is dropped past it.
 const MAX_OUTPUT: usize = 2 * 1024 * 1024;
@@ -62,6 +64,8 @@ struct Run {
     also_rescan: Vec<String>,
     /// Temporary files removed when it ends (a git action's index copies).
     cleanup: Vec<PathBuf>,
+    /// `written` when the last passphrase prompt was reported, so each is reported once.
+    asked_at: u64,
 }
 
 /// A run to start: what its toast and panel show, and the command.
@@ -282,6 +286,7 @@ pub(super) fn launch(state: &AppState, l: Launch) -> Result<ScriptRun, AppError>
             started: Instant::now(),
             also_rescan: l.also_rescan,
             cleanup: l.cleanup,
+            asked_at: 0,
         },
     );
     log::info!("script “{}” started in {}", l.name, l.repo_label);
@@ -453,8 +458,17 @@ fn append(state: &AppState, run_id: &str, text: &str) {
         if let Some(line) = last_line(text) {
             run.info.last_line = line;
         }
-        run.written
+        // A prompt may arrive split across reads: look at the end of the whole output.
+        let asked = passphrase_prompt(&run.output).filter(|(at, _)| {
+            run.written - (run.output.len() - at) as u64 >= run.asked_at
+        });
+        let asked = asked.map(|(_, key)| {
+            run.asked_at = run.written;
+            key
+        });
+        (run.written, asked)
     };
+    let (end, asked) = end;
     let chunk = ScriptOutputChunk {
         run_id: run_id.to_string(),
         data: text.to_string(),
@@ -463,6 +477,36 @@ fn append(state: &AppState, run_id: &str, text: &str) {
     if let Err(e) = state.app.emit(SCRIPT_OUTPUT, chunk) {
         log::warn!("cannot emit {SCRIPT_OUTPUT}: {e}");
     }
+    if let Some(key) = asked {
+        log::info!("run {run_id}: ssh asks for a passphrase");
+        let payload = SshPassphrase {
+            run_id: run_id.to_string(),
+            key,
+        };
+        if let Err(e) = state.app.emit(SSH_PASSPHRASE, payload) {
+            log::warn!("cannot emit {SSH_PASSPHRASE}: {e}");
+        }
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SshPassphrase {
+    run_id: String,
+    key: String,
+}
+
+/// ssh's `Enter passphrase for key '<path>': ` at the very end of `output` (nothing but spaces
+/// after it): where it starts and the key's path.
+pub fn passphrase_prompt(output: &str) -> Option<(usize, String)> {
+    const ASK: &str = "Enter passphrase for key '";
+    let at = output.rfind(ASK)?;
+    let rest = &output[at + ASK.len()..];
+    let end = rest.find("':")?;
+    if !rest[end + 2..].trim().is_empty() {
+        return None;
+    }
+    Some((at, rest[..end].to_string()))
 }
 
 /// The last non-empty line of `text`, without terminal escapes.
@@ -753,6 +797,18 @@ mod tests {
             ),
             "Rebase on main… (web-app/feat/x)"
         );
+    }
+
+    #[test]
+    fn passphrase_prompt_only_at_the_end() {
+        let key = "/Users/me/.ssh/id_ed25519";
+        let asked = format!("Fetching origin\r\nEnter passphrase for key '{key}': ");
+        assert_eq!(passphrase_prompt(&asked), Some((17, key.to_string())));
+        // Answered: more output after it.
+        assert_eq!(passphrase_prompt(&format!("{asked}\r\nremote: Counting objects")), None);
+        // Still arriving.
+        assert_eq!(passphrase_prompt("Enter passphrase for key '/Users/me/.ss"), None);
+        assert_eq!(passphrase_prompt("no prompt here"), None);
     }
 
     #[test]

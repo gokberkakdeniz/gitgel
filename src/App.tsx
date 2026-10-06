@@ -6,6 +6,7 @@ import { Sidebar } from './components/Sidebar/Sidebar';
 import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { ToastHost } from './components/Toast';
 import { OutputPanelHost } from './scripts/OutputPanel';
+import { PassphraseDialog } from './scripts/PassphraseDialog';
 import { RunDialogHost } from './scripts/RunDialog';
 import { DropStashModal } from './stash/DropStashModal';
 import { startDraftProject } from './lib/draft';
@@ -99,6 +100,7 @@ export default function App() {
       <RunDialogHost />
       <OutputPanelHost />
       <DropStashModal />
+      <PassphraseDialog />
       <ToastHost />
       <AuxBlocker />
       {dropping && (

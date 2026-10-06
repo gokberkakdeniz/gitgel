@@ -387,6 +387,14 @@ pub fn reveal_window(window: tauri::WebviewWindow) {
     crate::windows::reveal(&window);
 }
 
+/// Saves an SSH key's passphrase in the Keychain (§15 "SSH passphrase"), after ssh accepted it.
+#[tauri::command]
+pub async fn remember_ssh_key(key: String, passphrase: String) -> Result<(), AppError> {
+    tauri::async_runtime::spawn_blocking(move || crate::ssh::remember(&key, &passphrase))
+        .await
+        .map_err(|e| AppError::Io(e.to_string()))?
+}
+
 /// About Gitgel's "Report an Issue": the issues page, as Help › Search or Report an Issue.
 #[tauri::command]
 pub fn report_issue() {

@@ -162,6 +162,8 @@ export const writeScriptInput = (runId: string, data: string) => invoke<null>('w
 
 /** SIGINT, then SIGKILL after 3 s. */
 export const stopScript = (runId: string) => invoke<null>('stop_script', { runId });
+/** Saves an SSH key's passphrase in the Keychain (SPEC §15 "SSH passphrase"). */
+export const rememberSshKey = (key: string, passphrase: string) => invoke<void>('remember_ssh_key', { key, passphrase });
 
 /** A run with its output so far (`buffered`). */
 export const getScriptRun = (runId: string) => invoke<ScriptRun>('get_script_run', { runId });

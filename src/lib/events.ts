@@ -6,6 +6,7 @@ import { openSettings } from '../state/nav';
 import { useUi } from '../state/ui';
 import * as ipc from './ipc';
 import { loadHome } from './paths';
+import { applyPassphraseAsked, applyPassphraseRunExited } from '../scripts/PassphraseDialog';
 import { applyRunExited, applyRunOutput } from '../scripts/runs';
 import type { Config, RepoUpdated, ScriptOutputChunk, ScriptRun, UpdateInfo } from './types';
 
@@ -33,7 +34,12 @@ async function start() {
   });
   await listen<RepoUpdated>('repo-updated', (e) => data.applyRepoUpdated(e.payload));
   // A script ended (scripts/run.rs); its toast says how.
-  await listen<ScriptRun>('script-exited', (e) => applyRunExited(e.payload));
+  await listen<ScriptRun>('script-exited', (e) => {
+    applyRunExited(e.payload);
+    applyPassphraseRunExited(e.payload);
+  });
+  // ssh asked for a key's passphrase in a run (SPEC §15 "SSH passphrase").
+  await listen<{ runId: string; key: string }>('ssh-passphrase', (e) => applyPassphraseAsked(e.payload));
   await listen<ScriptOutputChunk>('script-output', (e) => applyRunOutput(e.payload));
   // The backend checks for updates at launch and on focus (updates.rs).
   await listen<UpdateInfo | null>('update-available', (e) => data.setUpdate(e.payload));

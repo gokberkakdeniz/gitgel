@@ -28,8 +28,9 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   pty, toast, output panel, rescan when it ends). Values (a message, folders) go in `GITGEL_*`
   environment variables, never into the command text. `std::process::Command` is banned in app
   code; the exceptions are `src-tauri/src/apps.rs`, which starts the terminal the user set in
-  Settings (WezTerm, or an Other command), and `src-tauri/src/updates.rs`, which relaunches
-  Gitgel with `open -n` after an update. Scripts and git actions run in a pty (`portable-pty`,
+  Settings (WezTerm, or an Other command), `src-tauri/src/updates.rs`, which relaunches
+  Gitgel with `open -n` after an update, and `src-tauri/src/ssh.rs`, which saves an SSH key's
+  passphrase in the Keychain with `ssh-add`. Scripts and git actions run in a pty (`portable-pty`,
   `src-tauri/src/scripts/run.rs`). git2 is used only under `src-tauri/src/git/`; other modules
   use the functions there and the types in §8.
 - **git2 never writes.** The app never calls a git2 API that writes to a repository: no checkout,
@@ -207,6 +208,7 @@ gitgel/
       ├─ memory.rs                # frees libgit2 memory after full scans
       ├─ updates.rs               # in-app updates: check, install, restart
       ├─ windows.rs               # About, Software Update, What's New windows (§7)
+      ├─ ssh.rs                   # SSH passphrase into the Keychain; askpass mode (§15)
       ├─ scripts/   mod.rs  run.rs # the user's scripts: config, import/export; running, output, stop
       │             git.rs        # git actions: stash push / apply / pop / drop, fetch / pull / push (§0, §15)
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
@@ -2309,6 +2311,38 @@ time.
 - **Failures**: a sync that exits non-zero opens its output panel (N4) instead of the failed toast
   (git's message, or a prompt for a password or passphrase, is there). One that cannot start shows
   the usual `“<name>” could not start` toast.
+
+### SSH passphrase (S1)
+
+Git actions and scripts run in a login shell that is not interactive (§14), so an ssh-agent that
+only `~/.zshrc` starts (oh-my-zsh's `ssh-agent` plugin, a `ssh-add` line) is not there, and ssh
+asks for a key's passphrase in the pty. Gitgel answers that itself, the macOS way (Keychain), and
+never edits `~/.ssh`:
+
+- **Before a sync**: Fetch, Pull and Push first run `ssh-add --apple-load-keychain >/dev/null
+  2>&1;` in the same shell, which loads every passphrase saved in the Keychain into the agent, so
+  a key remembered once is not asked for again, also after a restart. Without Apple's `ssh-add`
+  it fails silently.
+- **Asked anyway** (any run: a git action or a script): when a run's output ends with
+  `Enter passphrase for key '<path>': ` (no newline after it), `scripts/run.rs` emits
+  `ssh-passphrase` `{ runId, key }` and the main window opens the **Passphrase** dialog over
+  whatever is shown (`PassphraseDialog`, 420px modal, top 180; `FlowS1.dc.html` 25–42, the
+  states in `renderVals` 47–63; canvas page "Branch actions", S1–S3, `state` `ask` / `wrong`):
+  `ModalHeader` "Passphrase" with the key, `~` for the home folder, as mono sub line; a 36px
+  password `Input` (autofocus, `aria-label` "Passphrase"); a `Checkbox` "Remember in Keychain",
+  on by default; footer Cancel / primary "Continue" (↵). Continue types the passphrase and a
+  return into the run's pty (`write_script_input`); with Remember on it also calls
+  `remember_ssh_key(key, passphrase)` once the run ends without ssh asking again (below).
+  Cancel or Esc stops the run.
+- **Wrong passphrase**: ssh asks again; the dialog opens again with a 12px `danger` line under
+  the field, "Wrong passphrase", and the field empty. Remember is only done for a passphrase ssh
+  accepts (`ssh-add` checks it too).
+- **Remember** (`src-tauri/src/ssh.rs`): `/usr/bin/ssh-add --apple-use-keychain <key>`, with the
+  passphrase handed over by `SSH_ASKPASS` = Gitgel's own binary and `SSH_ASKPASS_REQUIRE=force`;
+  the binary started with `GITGEL_ASKPASS=1` prints `GITGEL_ASKPASS_SECRET` and exits before Tauri
+  starts. ssh-add checks the passphrase, saves it in the login Keychain and adds the key to the
+  agent. A `Command` exception (§0). A failure is logged, never shown with the passphrase.
+- The passphrase is never logged, kept, or put in the command text.
 
 ---
 

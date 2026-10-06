@@ -18,6 +18,7 @@ pub mod repos;
 pub mod review;
 pub mod scan;
 pub mod scripts;
+pub mod ssh;
 pub mod state;
 pub mod timing;
 pub mod updates;
@@ -139,6 +140,7 @@ pub fn run() {
             commands::get_update_check,
             commands::open_window,
             commands::reveal_window,
+            commands::remember_ssh_key,
             commands::save_script,
             commands::delete_script,
             commands::reorder_scripts,

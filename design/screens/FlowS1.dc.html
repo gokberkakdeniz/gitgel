@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>S1 · SSH passphrase</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+button,input{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-hover:#2a2825;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--accent:#4f8fa3;--accent-text:#7fb3c4;--on-accent:#141311;--accent-rgb:79,143,163;--danger:#ee9a90;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.5);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-hover:#ebe8e1;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--on-accent:#ffffff;--accent-rgb:58,123,143;--danger:#b3463b;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.18);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Main" theme="{{themeName}}" popover="none" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div role="dialog" aria-labelledby="pp-title" style="position: relative; margin-top: 180px; width: 420px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
+<dc-import name="ModalHeader" theme="none" title="Passphrase" sub="~/.ssh/id_ed25519" sub-mono="{{true}}" title-id="pp-title" hint-size="100%,72px"></dc-import>
+
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 0 24px 20px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label style="{{fieldStyle}}">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Passphrase</span>
+<input type="password" value="{{value}}" style="flex-grow: 1; min-width: 0; border: 0; outline: none; background: transparent; color: var(--text-strong); font-size: 13px; letter-spacing: 0.1em">
+</label>
+<sc-if value="{{wrong}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 12px; color: var(--danger)">Wrong passphrase</span>
+</sc-if>
+</div>
+<dc-import name="Checkbox" theme="none" label="Remember in Keychain" checked="{{true}}" hint-size="200px,20px"></dc-import>
+</div>
+
+<dc-import name="ModalFooter" theme="none" note="" buttons="{{footerButtons}}" hint-size="100%,64px"></dc-import>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "state": {"editor": "enum", "options": ["ask", "wrong"], "default": "ask"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+renderVals() {
+// ssh asked for a key's passphrase while a git action or script ran (SPEC §15 "SSH passphrase",
+// src/scripts/PassphraseDialog.tsx). Continue (↵) types it into the run; Remember saves it in
+// the Keychain (ssh-add --apple-use-keychain). Cancel stops the run. A wrong one: ssh asks
+// again, the field is empty and says so.
+var theme = this.props.theme ?? 'dark';
+var wrong = (this.props.state ?? 'ask') === 'wrong';
+return {
+  themeClass: 'theme-' + theme,
+  themeName: theme,
+  wrong: wrong,
+  value: wrong ? '' : 'passphrase-typed',
+  // Focused; red after a wrong passphrase.
+  fieldStyle: 'display: flex; align-items: center; height: 36px; box-sizing: border-box; padding: 0 12px; background: var(--bg-sunken); border-radius: 8px; border: 1px solid ' +
+    (wrong ? 'rgba(var(--danger-rgb), 0.6); box-shadow: 0 0 0 3px rgba(var(--danger-rgb), 0.18)' : 'var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.22)'),
+  footerButtons: [{ label: 'Cancel' }, { label: 'Continue', variant: 'primary', kbd: '↵' }]
+};
+}
+}
+</script>
+</body>
+</html>

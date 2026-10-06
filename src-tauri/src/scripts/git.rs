@@ -21,6 +21,9 @@ use super::run::{self, Launch};
 pub const ACTION_PREFIX: &str = "git:";
 const ICON: &str = "package";
 const SYNC_ICON: &str = "upload";
+/// Before a sync: the passphrases saved in the Keychain into the agent (SPEC §15 "SSH
+/// passphrase"), silently; it fails quietly without Apple's ssh-add.
+const LOAD_KEYS: &str = "/usr/bin/ssh-add --apple-load-keychain >/dev/null 2>&1; ";
 
 /// A repository as a git action needs it.
 struct Repo {
@@ -351,7 +354,7 @@ fn launch_sync(
             repo_id: repo.id.clone(),
             also_rescan: Vec::new(),
             folder,
-            command,
+            command: format!("{LOAD_KEYS}{command}"),
             env: with_git_env(env),
             cleanup: Vec::new(),
         },
