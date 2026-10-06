@@ -467,50 +467,26 @@ rather than as a task is listed the same way, marked "(on request)".
 ### Phase 21 — Release notes
 - [x] T21.1 `CHANGELOG.md` and release notes in `pnpm release` — 2026-10-06
   - note: the changelog also has 0.1.16, released before this task.
+- [x] T21.2 Design: release notes in Software Update, What's New window — 2026-10-06
+  - note: U1's Available and Downloading cards show notes (440px); U2 What's New is a new
+    board (`FlowU2`, light twin `FlowU2Light` on the canvas only, like the other light twins).
+- [x] T21.3 ✋ Checkpoint — release notes design — 2026-10-06
+- [x] T21.4 Release notes in the app — 2026-10-06
+  - note: the running version comes from `package.json` (bundled), not an IPC call.
 - [x] (on request) After an update the new version comes to the front focused: it is relaunched
   with `open -n` (a second `Command` exception, `updates.rs`) instead of `app.restart()`, and the
   window takes focus when first shown — 2026-10-06
+- [x] (on request) The Gitgel menu follows the macOS HIG: About Gitgel, then Settings… and Check
+  for Updates… in their own group ("…" where the command asks for more; in-app labels still
+  never end in "…", SPEC §0); What's New moved to the top of Help; About Gitgel opens the app's
+  own About window (`AboutModal`, canvas U3) with the version, build time, What's New and Report
+  an Issue — 2026-10-06
 
 ---
 
 ## Open
 
 ### Phase 21 — Release notes
-
-#### T21.2 Design: release notes in Software Update, What's New window
-- **Depends on:** —
-- **Why:** as T21.1.
-- **Spec:** SPEC §7 "Software Update" (available), "Gitgel › What's New…".
-- **Reference:** canvas "Gitgel App Flow" (https://claude.ai/artifact/SzYAF9awmKNBf2rcZV16ZZ),
-  the Software Update artboards (`FlowU1.dc.html`).
-- **Steps:**
-  1. In the canvas: the "available" state with notes for two skipped versions (box height, the
-     wider window), and a What's New artboard (version heading, date, New / Improved / Fixed
-     groups, a `code` span, two versions so the divider between them shows), in both themes.
-  2. Publish, copy the changed screens into `design/screens/`, and put the artboard's line
-     ranges into SPEC §7 where it says `FlowU1.dc.html` (What's New artboard).
-- **Acceptance:** the artboards exist in the canvas and in `design/screens/`; SPEC points at them.
-
-#### T21.3 ✋ Checkpoint — release notes design
-- Show the artboards; wait for approval before T21.4.
-
-#### T21.4 Release notes in the app
-- **Depends on:** T21.1, T21.3
-- **Why:** as T21.1.
-- **Spec:** SPEC §7 "Software Update" (available), "Gitgel › What's New…"; §8 `Settings.lastSeenVersion`.
-- **Reference:** the T21.2 artboards.
-- **Files:** `src-tauri/src/updates.rs` (`UpdateCheck::Available` / `UpdateInfo` gain `notes`
-  from `update.body`), `src-tauri/src/menu.rs` (What's New… item, emits `open-whats-new`),
-  `src-tauri/src/config.rs` (`lastSeenVersion`, serde default `''`), `src/lib/types.ts`,
-  `src/lib/changelog.ts` (parse + `newerThan(version)`, with tests), `src/components/UpdateModal.tsx`,
-  `src/components/WhatsNewModal.tsx` (new), `App.tsx` (startup check, menu event).
-- **Steps:**
-  1. Parser first, tested on the real `CHANGELOG.md` and on the feed's `notes` (same format).
-  2. Compare versions numerically (0.1.10 > 0.1.9), not as strings.
-  3. The startup What's New waits for the first config load and never opens over another modal.
-- **Acceptance:** Software Update with a feed that has notes shows only versions newer than the
-  running one; setting `lastSeenVersion` to an older version and restarting shows What's New
-  once; a fresh config shows nothing and stores the version; the menu item always opens it.
 
 #### T21.5 ✋ Checkpoint — phase 21
 - Show What's New (menu and after a faked update) and Software Update with notes (a local feed

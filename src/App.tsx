@@ -4,7 +4,9 @@ import { FolderPlusIcon } from './components/icons';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { DeleteProjectModal } from './components/DeleteProjectModal';
 import { ToastHost } from './components/Toast';
+import { AboutModal } from './components/AboutModal';
 import { UpdateModal } from './components/UpdateModal';
+import { useWhatsNewAfterUpdate, WhatsNewModal } from './components/WhatsNewModal';
 import { OutputPanelHost } from './scripts/OutputPanel';
 import { RunDialogHost } from './scripts/RunDialog';
 import { DropStashModal } from './stash/DropStashModal';
@@ -27,6 +29,7 @@ export default function App() {
   const route = useNav(selectRoute);
   const sidebarVisible = useUi((s) => s.sidebarVisible);
   const dropping = useFolderDrop();
+  useWhatsNewAfterUpdate();
 
   useEffect(() => {
     startEventBridge().catch((e) => console.error('event bridge failed', e));
@@ -95,6 +98,8 @@ export default function App() {
       <OutputPanelHost />
       <DropStashModal />
       <UpdateModal />
+      <WhatsNewModal />
+      <AboutModal />
       <ToastHost />
       {dropping && (
         <div className={styles.drop} aria-hidden>

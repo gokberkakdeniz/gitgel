@@ -40,6 +40,14 @@ async function start() {
   await listen<number | null>('update-progress', (e) => data.setUpdateProgress(e.payload ?? 'unknown'));
   // App menu › Check for Updates…: opens the Software Update window and follows the check.
   await listen<UpdateCheck>('update-check', (e) => useUi.getState().setUpdateCheck(e.payload));
+  // App menu › About Gitgel
+  await listen('open-about', () => {
+    if (useUi.getState().modalCount === 0) useUi.getState().setAboutOpen(true);
+  });
+  // Help › What's New
+  await listen('open-whats-new', () => {
+    if (useUi.getState().modalCount === 0) useUi.getState().setWhatsNewOpen(true);
+  });
   // App menu › Settings… (⌘,). Listed in lib/shortcuts.ts.
   await listen('open-settings', () => {
     if (useUi.getState().modalCount === 0) openSettings();

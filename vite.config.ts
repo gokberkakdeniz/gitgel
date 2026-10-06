@@ -7,6 +7,8 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vite.dev/config/
 export default defineConfig(() => ({
   plugins: [react()],
+  // About Gitgel shows when this build was made.
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
 
   // Pre-bundle up front so the first `tauri dev` does not re-optimize and reload mid-render
   // (which briefly loads two React copies and throws "Invalid hook call").

@@ -85,6 +85,8 @@ pub struct Settings {
     pub terminal_command: String,
     /// Settings › Behaviour › Check for updates: at launch and on focus, at most every 6 hours.
     pub check_updates: bool,
+    /// The version whose What's New was shown (or skipped on a fresh install); '' before any.
+    pub last_seen_version: String,
 }
 
 impl Default for Settings {
@@ -101,6 +103,7 @@ impl Default for Settings {
             terminal: TerminalChoice::Auto,
             terminal_command: String::new(),
             check_updates: true,
+            last_seen_version: String::new(),
         }
     }
 }

@@ -1,0 +1,45 @@
+/* SPEC §7 "About Gitgel" (FlowU3.dc.html). */
+.about {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 28px 28px;
+  text-align: center;
+}
+
+.close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.icon {
+  margin-bottom: 18px;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.3));
+}
+
+.name {
+  margin: 0 0 10px;
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.4px;
+  color: var(--text-strong);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 28px;
+}

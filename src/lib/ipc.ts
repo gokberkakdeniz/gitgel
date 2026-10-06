@@ -111,6 +111,7 @@ export const installUpdate = () => invoke<void>('install_update');
 
 /** Checks now (the Software Update window's Try Again); the answer arrives as `update-check`. */
 export const checkForUpdates = () => invoke<void>('check_for_updates');
+export const reportIssue = () => invoke<void>('report_issue');
 
 // ---- Scripts (SPEC §14) ----
 

@@ -142,7 +142,8 @@ mod tests {
                 "diffContextLines": 5,
                 "terminal": "other",
                 "terminalCommand": "Ghostty",
-                "checkUpdates": false
+                "checkUpdates": false,
+                "lastSeenVersion": "0.1.15"
             },
             "scripts": [{
                 "id": "s_1", "name": "Run tests", "icon": "test", "command": "pnpm test",

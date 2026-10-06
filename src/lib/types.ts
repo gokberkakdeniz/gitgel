@@ -39,6 +39,7 @@ export interface Settings {
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"
   terminalCommand: string; // the Other terminal: a command (`%` = folder), an app name, a .app path or a bundle id; empty = Automatic
   checkUpdates: boolean; // Settings › Behaviour › Check for updates
+  lastSeenVersion: string; // the version whose What's New was shown; '' before any
 }
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
@@ -351,13 +352,14 @@ export interface TerminalOption {
 export interface UpdateInfo {
   version: string;
   currentVersion: string;
+  notes: string | null; // the feed's CHANGELOG.md sections, newest first
 }
 
 /** Payload of `update-check` (Gitgel › Check for Updates…), shown by the Software Update window. */
 export type UpdateCheck =
   | { state: 'checking'; currentVersion: string }
   | { state: 'upToDate'; currentVersion: string }
-  | { state: 'available'; version: string; currentVersion: string }
+  | { state: 'available'; version: string; currentVersion: string; notes: string | null }
   | { state: 'failed'; currentVersion: string; message: string };
 
 // What `invoke` rejects with (AppError in error.rs).

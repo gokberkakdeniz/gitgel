@@ -365,6 +365,12 @@ pub async fn install_update(app: AppHandle) -> Result<(), AppError> {
     updates::install(app).await
 }
 
+/// About Gitgel's "Report an Issue": the issues page, as Help › Search or Report an Issue.
+#[tauri::command]
+pub fn report_issue() {
+    crate::menu::open_url(crate::menu::ISSUES_URL);
+}
+
 // ---- Scripts (SPEC §14) ----
 
 /// Adds a script (empty `id`) or replaces the one with that id.

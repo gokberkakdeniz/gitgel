@@ -35,6 +35,8 @@ struct Inner {
 pub struct UpdateInfo {
     pub version: String,
     pub current_version: String,
+    /// The feed's `notes`: CHANGELOG.md sections of the last versions, newest first.
+    pub notes: Option<String>,
 }
 
 /// Payload of `update-check`: Gitgel › Check for Updates… as the Software Update window shows it.
@@ -43,7 +45,11 @@ pub struct UpdateInfo {
 pub enum UpdateCheck {
     Checking { current_version: String },
     UpToDate { current_version: String },
-    Available { version: String, current_version: String },
+    Available {
+        version: String,
+        current_version: String,
+        notes: Option<String>,
+    },
     Failed { current_version: String, message: String },
 }
 
@@ -51,6 +57,7 @@ fn info(update: &Update) -> UpdateInfo {
     UpdateInfo {
         version: update.version.clone(),
         current_version: update.current_version.clone(),
+        notes: update.body.clone(),
     }
 }
 
@@ -124,6 +131,7 @@ pub fn check_now(app: &AppHandle) {
             Ok(Some(found)) => UpdateCheck::Available {
                 version: found.version,
                 current_version: found.current_version,
+                notes: found.notes,
             },
             Ok(None) => UpdateCheck::UpToDate { current_version },
             Err(message) => UpdateCheck::Failed {

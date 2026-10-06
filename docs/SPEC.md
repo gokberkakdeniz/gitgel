@@ -46,8 +46,9 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   `src-tauri/capabilities/*.json`, plugins are `tauri-plugin-*` crates and `@tauri-apps/plugin-*`
   packages. A Rust command parameter `repo_id` is sent as `repoId` from JS.
 - UI copy is English and matches the reference screens exactly (singular/plural included). Labels
-  (buttons, menu items) never end in "…", even when they open a dialog; only progress text does
-  ("Scanning repositories…"). Code,
+  (buttons, in-app menu items) never end in "…", even when they open a dialog; only progress
+  text does ("Scanning repositories…"). The native menu bar follows the macOS HIG instead:
+  "…" on items that ask for more before they finish (Settings…, Check for Updates…). Code,
   identifiers and comments are English.
 - Do not invent features the spec does not describe. If something is undefined, pick the
   simplest behaviour and mention it at the next checkpoint.
@@ -172,10 +173,12 @@ gitgel/
 │  ├─ styles/   tokens.css  tokens.ts  global.css
 │  ├─ lib/      types.ts  ipc.ts  events.ts  useInvoke.ts  format.ts  paths.ts  entryKey.ts
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts
+│  │            useCopy.ts  changelog.ts (CHANGELOG.md parsed, version compare)
 │  ├─ state/    nav.ts  ui.ts  data.ts
 │  ├─ components/                 # Button, IconButton, Pill, Checkbox, Switch, Input, Kbd,
 │  │                              # Popover, Menu, Modal, Toast, Segmented, Select, SettingsNav,
-│  │                              # KindBadge, Banner, ResizeHandle (+ useStoredWidth), UpdateModal, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
+│  │                              # KindBadge, Banner, ResizeHandle (+ useStoredWidth), UpdateModal, WhatsNewModal, AboutModal,
+│  │                              # ReleaseNotes, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  History/  Settings/  Palette/  AddRepos/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
@@ -195,7 +198,7 @@ gitgel/
    ├─ capabilities/default.json
    └─ src/
       ├─ main.rs  lib.rs          # lib.rs: run(), plugins, command registration
-      ├─ menu.rs                  # app menu: Settings…, View › Font Size, Help items
+      ├─ menu.rs                  # app menu: Settings…, Check for Updates…, View › Font Size, Help items
       ├─ logs.rs                  # Help › Show Logs in Finder
       ├─ appearance.rs            # window theme and background before it is shown
       ├─ apps.rs                  # open items: installed editors/terminals, open a folder
@@ -1118,9 +1121,16 @@ own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free).
 ⌘R never reloads the webview (default prevented everywhere). Multi-select on Branches is by
 checkbox only (no ⌘/⇧-click).
 
-**App menu** (`src-tauri/src/menu.rs`, the standard macOS menus plus):
+**App menu** (`src-tauri/src/menu.rs`, the standard macOS menus plus). The Gitgel menu reads
+About Gitgel, divider, Settings… (⌘,), Check for Updates…, divider, Services, Hide, Quit.
 
-- **Gitgel › Check for Updates…** (after About): checks now, whatever the setting, and opens the
+- **Gitgel › About Gitgel**: opens the app's own **About** window (`AboutModal`, 340px, top 140,
+  instead of the standard panel; `FlowU3.dc.html`): a ✕ (28px, top right), the 88px app icon,
+  serif 30px "Gitgel", 13px muted `Version <version>` and the build time (`Oct 6, 2026, 8:40 PM`,
+  `__BUILD_TIME__` from `vite.config.ts`), then full-width 40px secondary buttons "What's New"
+  (closes About, opens What's New) and "Report an Issue" (`report_issue`: the issues page). Esc,
+  a click outside or ✕ closes it.
+- **Gitgel › Check for Updates…**: checks now, whatever the setting, and opens the
   **Software Update** window (`UpdateModal`, 360px, centered; Esc / Later closes it except while
   installing). It follows the backend's `update-check` event (`checking` → `upToDate` /
   `available` / `failed`); "Try Again" after a failed check calls `check_for_updates`. Top to
@@ -1130,27 +1140,36 @@ checkbox only (no ⌘/⇧-click).
   - up to date: "You’re up to date", muted `Gitgel <version> is the newest version.`; OK.
   - available: "A new version is available", the versions as mono pills (`<current>` muted →
     `<new>` accent), then the release notes of every version newer than the current one, newest
-    first, in a scrolling box (the What's New body below) when the feed has any; the window
-    widens for them (planned, T21.4). Muted "Gitgel restarts to finish the update."; Later /
+    first, in a 200px scrolling box (`bg.sunken`, `border`, radius 10, padding 0 14px; the What's
+    New body below at 12px, version mono 12, group titles 10px) when the feed has any; the window
+    is 440px wide with them, and keeps them while downloading (`FlowU1.dc.html`
+    29–59, data 83–99). Muted "Gitgel restarts to finish the update."; Later /
     **Update and Restart**. Installing shows the download bar (`Downloading… N%`, then `Installing…`) and
     disables both; a failed install shows its error and the primary becomes "Try Again".
   - failed: "Cannot check for updates" and the error (mono 11, danger tint); Close / Try Again.
   Buttons are 36px and share the width, the primary last.
-- **Gitgel › What's New…** (after Check for Updates…) (planned, T21.4): opens the **What's New**
+- **Help › What's New** (first in Help, then a divider): opens the **What's New**
   window (`WhatsNewModal`): the release notes of `CHANGELOG.md`, bundled into the app at build
   time (Vite `?raw`), newest first, the running version's section first. Each version: its
   number (mono) and date, then the groups New / Improved / Fixed as bulleted lines; `code` spans
   render mono. A small parser in `src/lib/changelog.ts` reads `## <version> — <date>`,
   `### <group>` and `- ` lines; nothing else of Markdown is supported. Esc / OK closes it.
   It opens by itself once after an update: at startup, when `settings.lastSeenVersion` is older
-  than the running version, it is shown and `lastSeenVersion` is set to it; when it is empty
-  (a fresh install) it is only set. Look and sizes: `FlowU1.dc.html` (What's New artboard).
+  than the running version, or empty in a config that has repositories (versions before 0.1.17
+  did not write it), it is shown and `lastSeenVersion` is set to it; on a fresh install (empty,
+  no repositories) it is only set; over another modal it waits for the next launch. Look and sizes:
+  `FlowU2.dc.html` (light twin on the canvas): 520px modal, top 80, max 640px; `ModalHeader`
+  "What's New", sub `Gitgel <version>`; the notes scroll between a top `border` and a
+  `ModalFooter` with primary "OK" (25–46). Each version (padding 18px 0, `border.row` between):
+  mono 13/500 number, 12px muted date (`Oct 6, 2026`); groups gap 12: 11px uppercase
+  `text.faint` title, 13px lines (line-height 1.5) after a 4px `text.faint` dot; `code` mono 12
+  on `bg.hover`, radius 4 (data 54–93).
 - **Gitgel › Settings…** (⌘,): emits `open-settings`; the frontend opens Settings unless a modal
   is open or Settings is already showing.
 - **View › Font Size**: Decrease (⌘-), Increase (⌘.), Reset (⌘0). Zooms the whole window in steps
   50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200 %; saved as `settings.zoom` and applied at
   startup. ⌘- and ⌘. need no Shift on Turkish and US layouts.
-- **Help › Discuss on GitHub** (opens https://github.com/gokberkakdeniz/gitgel/discussions),
+- **Help › Discuss on GitHub** (after What's New and a divider; opens https://github.com/gokberkakdeniz/gitgel/discussions),
   **Search or Report an Issue on GitHub** (…/issues), divider, **Show Logs in Finder** (writes all
   logs with the app and libgit2 versions to `~/Downloads/Gitgel-logs-<time>.log` and reveals it).
 
@@ -1200,7 +1219,7 @@ export interface Settings {
   terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   checkUpdates: boolean;         // Settings › General › Check for updates; default true
-  lastSeenVersion: string;       // version whose What's New was shown; default '' (planned, T21.4)
+  lastSeenVersion: string;       // version whose What's New was shown; default ''
   appearance: 'system' | 'light' | 'dark'; // Settings › General › Theme; default 'system' (T10.1)
 }
 export interface Config {
@@ -1563,6 +1582,8 @@ Notes:
 | `config-changed` | `Config` | every `config::update` (user actions, `lastKnownTip` refresh, font size) |
 | `repo-updated` | `RepoUpdated` | after the watcher handles a change, and after a command or scan rescans a repo whose result changed |
 | `open-settings` | – | Gitgel › Settings… (⌘,) |
+| `open-about` | – | Gitgel › About Gitgel |
+| `open-whats-new` | – | Help › What's New |
 | `script-output` | `{ runId, data, end }` | output from a running script (`end`: bytes so far) |
 | `script-exited` | `ScriptRun` | a script ended (exit code or signal) or could not start |
 

@@ -45,6 +45,8 @@ interface UiState {
   deletingProjectId: string | null; // the delete confirmation is open for this project
   settingsSection: SettingsSection; // the last one shown; Settings opens on it
   updateCheck: UpdateCheck | null; // the Software Update window is open (Check for Updates…)
+  whatsNewOpen: boolean; // Help › What's New, or the first launch after an update
+  aboutOpen: boolean; // Gitgel › About Gitgel
   setSidebarVisible: (visible: boolean) => void;
   setBranchesFilter: (filter: string) => void;
   setSelectedKeys: (keys: string[]) => void;
@@ -58,6 +60,8 @@ interface UiState {
   setDeletingProjectId: (id: string | null) => void;
   setSettingsSection: (section: SettingsSection) => void;
   setUpdateCheck: (check: UpdateCheck | null) => void;
+  setWhatsNewOpen: (open: boolean) => void;
+  setAboutOpen: (open: boolean) => void;
 }
 
 let toastId = 0;
@@ -87,6 +91,10 @@ export const useUi = create<UiState>()((set) => ({
   setSettingsSection: (settingsSection) => set({ settingsSection }),
   updateCheck: null,
   setUpdateCheck: (updateCheck) => set({ updateCheck }),
+  whatsNewOpen: false,
+  setWhatsNewOpen: (whatsNewOpen) => set({ whatsNewOpen }),
+  aboutOpen: false,
+  setAboutOpen: (aboutOpen) => set({ aboutOpen }),
 }));
 
 // Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a

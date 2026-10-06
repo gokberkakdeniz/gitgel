@@ -1,5 +1,6 @@
-//! The app menu: the standard macOS menus plus Gitgel › Check for Updates… and Settings… (⌘,),
-//! View › Font Size and the Help items.
+//! The app menu: the standard macOS menus with Gitgel › About Gitgel (the app's own window),
+//! Settings… (⌘,) and Check for Updates…, View › Font Size and the Help items (What's New first).
+//! Items that ask for more before they finish end in "…" (macOS HIG; SPEC §0).
 
 use tauri::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID};
 use tauri::{App, AppHandle, Emitter, Manager};
@@ -9,7 +10,9 @@ use crate::logs;
 use crate::state::AppState;
 use crate::updates;
 
+const ABOUT: &str = "about";
 const CHECK_UPDATES: &str = "check_updates";
+const WHATS_NEW: &str = "whats_new";
 const SETTINGS: &str = "settings";
 const FONT_SMALLER: &str = "font_smaller";
 const FONT_LARGER: &str = "font_larger";
@@ -18,7 +21,7 @@ const DISCUSS: &str = "discuss";
 const ISSUES: &str = "issues";
 
 const DISCUSS_URL: &str = "https://github.com/gokberkakdeniz/gitgel/discussions";
-const ISSUES_URL: &str = "https://github.com/gokberkakdeniz/gitgel/issues";
+pub const ISSUES_URL: &str = "https://github.com/gokberkakdeniz/gitgel/issues";
 
 /// Font size steps, as a zoom of the whole window (percent), like a browser's.
 const ZOOM_STEPS: [u32; 11] = [50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200];
@@ -33,17 +36,23 @@ pub fn install(app: &App) -> tauri::Result<()> {
             .find(|s| s.text().is_ok_and(|t| t == text)))
     };
 
-    // The first submenu is the app menu; Check for Updates and Settings go after "About Gitgel".
+    // The first submenu is the app menu: About Gitgel opens the app's own About window instead
+    // of the standard panel; Settings… and Check for Updates… follow it in their own group.
     if let Some(app_menu) = menu.items()?.first().and_then(|k| k.as_submenu().cloned()) {
+        app_menu.remove_at(0)?;
         app_menu.insert(
-            &MenuItem::with_id(app, CHECK_UPDATES, "Check for Updates…", true, None::<&str>)?,
-            1,
+            &MenuItem::with_id(app, ABOUT, "About Gitgel", true, None::<&str>)?,
+            0,
         )?;
-        app_menu.insert(&PredefinedMenuItem::separator(app)?, 2)?;
         app_menu.insert(
             &MenuItem::with_id(app, SETTINGS, "Settings…", true, Some("CmdOrCtrl+,"))?,
+            2,
+        )?;
+        app_menu.insert(
+            &MenuItem::with_id(app, CHECK_UPDATES, "Check for Updates…", true, None::<&str>)?,
             3,
         )?;
+        app_menu.insert(&PredefinedMenuItem::separator(app)?, 4)?;
     }
 
     // ⌘- ⌘. ⌘0: keys that need no Shift on Turkish and US layouts. Listed in lib/shortcuts.ts.
@@ -85,6 +94,8 @@ pub fn install(app: &App) -> tauri::Result<()> {
         .and_then(|k| k.as_submenu().cloned())
     {
         help.append_items(&[
+            &MenuItem::with_id(app, WHATS_NEW, "What’s New", true, None::<&str>)?,
+            &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(app, DISCUSS, "Discuss on GitHub", true, None::<&str>)?,
             &MenuItem::with_id(
                 app,
@@ -111,7 +122,13 @@ pub fn install(app: &App) -> tauri::Result<()> {
 
 fn on_event(app: &AppHandle, event: MenuEvent) {
     match event.id().as_ref() {
+        ABOUT => {
+            let _ = app.emit("open-about", ());
+        }
         CHECK_UPDATES => updates::check_now(app),
+        WHATS_NEW => {
+            let _ = app.emit("open-whats-new", ());
+        }
         SETTINGS => {
             let _ = app.emit("open-settings", ());
         }
@@ -125,7 +142,7 @@ fn on_event(app: &AppHandle, event: MenuEvent) {
     }
 }
 
-fn open_url(url: &str) {
+pub fn open_url(url: &str) {
     if let Err(e) = tauri_plugin_opener::open_url(url, None::<&str>) {
         log::warn!("cannot open {url}: {e}");
     }

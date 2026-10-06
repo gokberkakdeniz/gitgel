@@ -1,0 +1,10 @@
+/* Scrolls between the header and the footer (FlowU2.dc.html). */
+.notes {
+  flex-grow: 1;
+  min-height: 0;
+  max-height: 480px;
+  overflow: auto;
+  padding: 0 24px;
+  border-top: 1px solid var(--border);
+  outline: none;
+}

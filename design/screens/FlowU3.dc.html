@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>U3 · About Gitgel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+button{font-family:inherit}
+.theme-dark{--bg-elevated:#211f1c;--bg-hover:#2a2825;--border:#302e2a;--border-strong:#383631;--text-strong:#faf9f5;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b}
+</style>
+</helmet>
+<div class="theme-dark" style="width: 440px; height: 560px; box-sizing: border-box; padding: 40px 50px; background: rgba(0,0,0,0.5); font-size: 13px; color: var(--text-body)">
+<div role="dialog" aria-label="About Gitgel" style="position: relative; width: 340px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding: 36px 28px 28px; text-align: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5)">
+<button aria-label="Close" style="position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: var(--text-muted)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+<span style="width: 88px; height: 88px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; border-radius: 20px; background: linear-gradient(180deg, #1f1f1f, #0c0c0c); box-shadow: 0 6px 14px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.06)"><svg viewBox="0 0 1024 1024" width="70" height="70" aria-hidden="true"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ccbd8"></stop><stop offset="1" stop-color="#4f8fa3"></stop></linearGradient></defs><g fill="none" stroke="#7fb3c4" stroke-width="50" stroke-linecap="round"><path d="M512 520 C 478 600 546 660 512 760"></path><path d="M388 520 C 376 612 300 628 296 712"></path><path d="M636 520 C 648 612 724 628 728 712"></path></g><path fill="url(#ag)" d="M202 500 C 202 272 344 140 512 140 C 680 140 822 272 822 500 Q 770 556 719 512 Q 667 556 615 512 Q 564 556 512 512 Q 460 556 409 512 Q 357 556 305 512 Q 254 556 202 500 Z"></path><path fill="#ffffff" fill-opacity="0.28" d="M284 430 C 280 316 350 226 452 196 C 380 250 336 330 336 430 C 336 452 284 452 284 430 Z"></path><g fill="#eef6f8" stroke="#4f8fa3" stroke-width="16"><circle cx="512" cy="806" r="62"></circle><circle cx="296" cy="752" r="52"></circle><circle cx="728" cy="752" r="52"></circle></g></svg></span>
+<h2 style="margin: 0 0 10px; font-family: 'Source Serif 4', Georgia, serif; font-size: 30px; font-weight: 400; letter-spacing: -0.4px; color: var(--text-strong)">Gitgel</h2>
+<div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted)">
+<span>Version {{version}}</span>
+<span>{{built}}</span>
+</div>
+<div style="width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 28px">
+<button style="height: 40px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--bg-hover); color: var(--text-strong); font-size: 13px">What’s New</button>
+<button style="height: 40px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--bg-hover); color: var(--text-strong); font-size: 13px">Report an Issue</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":440,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // Gitgel › About Gitgel (src/components/AboutModal.tsx), instead of the standard panel.
+    // Esc, a click outside or ✕ closes it; What's New opens Help › What's New.
+    return { version: '0.1.17', built: 'Oct 6, 2026, 8:40 PM' };
+  }
+}
+</script>
+</body>
+</html>

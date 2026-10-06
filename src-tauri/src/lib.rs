@@ -131,6 +131,7 @@ pub fn run() {
             commands::get_update,
             commands::check_for_updates,
             commands::install_update,
+            commands::report_issue,
             commands::save_script,
             commands::delete_script,
             commands::reorder_scripts,

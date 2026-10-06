@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>U2 · What's New</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+button{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-hover:#2a2825;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--accent:#4f8fa3;--accent-text:#7fb3c4;--on-accent:#141311;--accent-rgb:79,143,163;--shadow:rgba(0,0,0,0.5);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-hover:#ebe8e1;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--on-accent:#ffffff;--accent-rgb:58,123,143;--shadow:rgba(40,32,20,0.18);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Main" theme="{{themeName}}" popover="none" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div role="dialog" aria-labelledby="wn-title" style="position: relative; margin-top: 80px; width: 520px; max-height: 640px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
+<dc-import name="ModalHeader" theme="none" title="What’s New" sub="Gitgel 0.1.16" title-id="wn-title" hint-size="100%,76px"></dc-import>
+
+<div role="region" aria-label="Release notes" tabindex="0" style="flex-grow: 1; min-height: 0; overflow: auto; padding: 0 24px; border-top: 1px solid var(--border)">
+<sc-for list="{{versions}}" as="v" hint-placeholder-count="3">
+<section style="{{v.style}}">
+<h3 style="margin: 0; display: flex; align-items: baseline; gap: 10px"><span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text-strong)">{{v.version}}</span><span style="font-size: 12px; font-weight: 400; color: var(--text-muted)">{{v.date}}</span></h3>
+<sc-for list="{{v.groups}}" as="g" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint)">{{g.title}}</span>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px">
+<sc-for list="{{g.items}}" as="it" hint-placeholder-count="2">
+<li style="display: flex; gap: 10px; font-size: 13px; line-height: 1.5; color: var(--text-body)"><span aria-hidden="true" style="width: 4px; height: 4px; flex-shrink: 0; margin-top: 8px; border-radius: 9999px; background: var(--text-faint)"></span><span><sc-for list="{{it}}" as="part" hint-placeholder-count="1"><span style="{{part.style}}">{{part.text}}</span></sc-for></span></li>
+</sc-for>
+</ul>
+</div>
+</sc-for>
+</section>
+</sc-for>
+</div>
+
+<dc-import name="ModalFooter" theme="none" note="" buttons="{{footerButtons}}" hint-size="100%,64px"></dc-import>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+renderVals() {
+// Help › What's New, and once at the first launch after an update: CHANGELOG.md as bundled
+// in the app, newest first, the running version on top. `code` spans are mono.
+var theme = this.props.theme ?? 'dark';
+var CODE = 'font-family: \'JetBrains Mono\', monospace; font-size: 12px; padding: 1px 5px; border-radius: 4px; background: var(--bg-hover); color: var(--text-code)';
+// A line is text with `code` spans, split into parts.
+var line = function (text) {
+  return text.split('`').map(function (t, i) { return { text: t, style: i % 2 ? CODE : '' }; }).filter(function (p) { return p.text; });
+};
+var log = [
+  ['0.1.16', 'Oct 6, 2026', [
+    ['Improved', ['Signed with Developer ID and notarized by Apple: Gitgel opens without “Open Anyway”.']]
+  ]],
+  ['0.1.15', 'Oct 5, 2026', [
+    ['New', ['Fetch, Pull and Push for a branch, from History and the branch menus.', 'Repos on Branches can be collapsed and pinned to the top.']],
+    ['Improved', ['Shorter text across the app.']],
+    ['Fixed', ['Renaming a project in the sidebar keeps the row’s colour.']]
+  ]],
+  ['0.1.14', 'Oct 5, 2026', [
+    ['New', ['Scripts: your own commands in a branch’s menu, with inputs and live output.', 'Stashes: list and review them; stash (picking files), apply, pop and drop.', 'History: a branch’s commits, with search.', 'The base branch is always listed on Branches; its menu opens its Review.', 'Review shows merge conflicts.', 'Review: a resizable file list, and Change base in the entry menu.', 'Gitgel › Check for Updates opens a Software Update window.']],
+    ['Improved', ['New icons and controls across the app.', 'Review’s entry bar opens the History of the branch and of its base.']],
+    ['Fixed', ['Unpicked staged files no longer go into a stash.']]
+  ]],
+  ['0.1.13', 'Sep 30, 2026', [
+    ['Improved', ['Branches rows show three lines; page headers look the same everywhere.', 'Settings has a section list, and the default bases can be reordered.']]
+  ]]
+];
+return {
+  themeClass: 'theme-' + theme,
+  themeName: theme,
+  versions: log.map(function (v, i) {
+    return {
+      version: v[0], date: v[1],
+      groups: v[2].map(function (g) { return { title: g[0], items: g[1].map(line) }; }),
+      style: 'display: flex; flex-direction: column; gap: 12px; padding: 18px 0;' + (i ? ' border-top: 1px solid var(--border-row)' : '')
+    };
+  }),
+  footerButtons: [{ label: 'OK', variant: 'primary' }]
+};
+}
+}
+</script>
+</body>
+</html>

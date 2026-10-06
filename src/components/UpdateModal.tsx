@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import appIcon from '../../src-tauri/icons/128x128@2x.png';
+import { newerThan, parseChangelog } from '../lib/changelog';
 import { checkForUpdates, installUpdate } from '../lib/ipc';
 import type { AppError } from '../lib/types';
 import { useData } from '../state/data';
 import { useUi } from '../state/ui';
 import { Button } from './Button';
 import { Modal } from './Modal';
+import { ReleaseNotes } from './ReleaseNotes';
 import styles from './UpdateModal.module.css';
 
 /** Software Update (Gitgel › Check for Updates…, §12 "Updates"): the app icon over the answer of
@@ -32,6 +34,10 @@ export function UpdateModal() {
       setError((e as AppError).message ?? String(e));
     }
   };
+
+  // The feed's notes of the versions this update brings (it may skip some).
+  const notes =
+    check.state === 'available' && check.notes ? newerThan(parseChangelog(check.notes), check.currentVersion) : [];
 
   let title: string;
   let body: React.ReactNode;
@@ -78,6 +84,11 @@ export function UpdateModal() {
             <span className={styles.arrow}>→</span>
             <span className={styles.to}>{check.version}</span>
           </span>
+          {notes.length > 0 && (
+            <div role="region" aria-label="Release notes" tabIndex={0} className={styles.notes}>
+              <ReleaseNotes releases={notes} compact />
+            </div>
+          )}
           {installing ? (
             <Bar percent={typeof progress === 'number' ? progress : null} />
           ) : error ? (
@@ -108,7 +119,7 @@ export function UpdateModal() {
   }
 
   return (
-    <Modal aria-label="Software Update" width={360} paddingTop={140} onClose={close}>
+    <Modal aria-label="Software Update" width={notes.length > 0 ? 440 : 360} paddingTop={notes.length > 0 ? 100 : 140} onClose={close}>
       <div className={styles.body}>
         <img className={styles.icon} src={appIcon} alt="" width={88} height={88} />
         <h2 className={styles.title}>{title}</h2>
