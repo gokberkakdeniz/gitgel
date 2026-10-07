@@ -1,7 +1,11 @@
 import { DiffEditor } from '@monaco-editor/react';
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import * as monaco from 'monaco-editor';
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import { readFilePair } from '../lib/ipc';
+import { CopyIcon, LinkIcon } from '../components/icons';
+import { Menu, MenuItem } from '../components/Menu';
+import { Popover } from '../components/Popover';
+import { getGithubUrl, openGithubLink, readFilePair } from '../lib/ipc';
 import { useEffectiveTheme } from '../lib/theme';
 import type { DiffContext, DiffLayout, DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
@@ -9,6 +13,7 @@ import styles from './DiffView.module.css';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
 import { languageForPath } from './language';
 import { setDiffPosition } from './position';
+import { fileReference, permalink } from './reference';
 import { monacoReady } from './setup';
 import { MONACO_THEMES } from './theme';
 
@@ -50,6 +55,12 @@ export interface DiffNav {
 interface Props {
   repoId: string;
   worktreePath: string | null;
+  /** The folder the file is on disk in (worktree, else repository), for the absolute reference. */
+  folder: string | null;
+  /** The commit the file is shown at (its modified side), for the permalink; none, no permalink. */
+  commit: string | null;
+  /** The commit's first parent: what the old side shows (none for a root commit). */
+  parent: string | null;
   change: FileChange;
   mode: DiffMode;
   /** Identifies the file on screen; when it changes the view lands on a change. */
@@ -80,6 +91,9 @@ interface Props {
 export function DiffView({
   repoId,
   worktreePath,
+  folder,
+  commit,
+  parent,
   change,
   mode,
   fileKey,
@@ -98,6 +112,14 @@ export function DiffView({
   onFocusFilter,
 }: Props) {
   const [ready, setReady] = useState(false);
+  /** The right-click menu: where it opens and the lines it refers to (`modified`: the new side). */
+  const [menu, setMenu] = useState<{
+    rect: DOMRect;
+    from: number;
+    to: number;
+    endColumn: number;
+    modified: boolean;
+  } | null>(null);
   const effective = useEffectiveTheme();
   useEffect(() => {
     void monacoReady.then(() => setReady(true));
@@ -284,6 +306,19 @@ export function DiffView({
     nav.current.restart = true;
   }, [ignoreWhitespace]);
 
+  // The repository's GitHub page, when the file is shown at a commit (for the permalink).
+  const { data: githubData } = useInvoke(() => getGithubUrl(repoId), [repoId], { enabled: commit !== null });
+  const github = commit !== null ? githubData : null;
+  // The new side is the file at the commit, the old side at its parent (under its old name).
+  const at = menu?.modified
+    ? change.kind !== 'D' && commit && { sha: commit, path: change.path }
+    : change.oldOid !== null && parent && { sha: parent, path: change.oldPath ?? change.path };
+  const link = menu && github && at ? permalink(github, at.sha, at.path, menu.from, menu.to, menu.endColumn) : null;
+  const copy = (text: string) => {
+    void writeText(text);
+    setMenu(null);
+  };
+
   const message = data?.binary
     ? 'Binary file not shown'
     : data?.tooLarge
@@ -339,6 +374,23 @@ export function DiffView({
                 report();
               }
             });
+            // Right-click: copy a reference to the selected lines, else the clicked one.
+            for (const ed of [original, modified]) {
+              ed.onContextMenu((e) => {
+                const line = e.target.position?.lineNumber;
+                if (!line) return;
+                const sel = ed.getSelection();
+                const inSel = sel && !sel.isEmpty() && sel.containsPosition(e.target.position!);
+                const { clientX, clientY } = e.event.browserEvent;
+                setMenu({
+                  rect: new DOMRect(clientX, clientY, 0, 0),
+                  from: inSel ? sel.startLineNumber : line,
+                  to: inSel ? sel.endLineNumber : line,
+                  endColumn: inSel ? sel.endColumn : 2,
+                  modified: ed === modified,
+                });
+              });
+            }
             // Read-only, so ⌥↑/⌥↓ (move line) is free for jumping. Listed in lib/shortcuts.ts.
             for (const ed of [original, modified]) {
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.DownArrow, () => latest.current.onStep(1));
@@ -360,6 +412,39 @@ export function DiffView({
         />
       )}
       {message && <div className={styles.message}>{message}</div>}
+      {menu && (
+        <Popover anchorRect={menu.rect} width={230} onClose={() => setMenu(null)}>
+          <Menu aria-label="Diff actions" autoFocus>
+            <MenuItem icon={<CopyIcon />} onSelect={() => copy(fileReference(change.path, menu.from, menu.to, menu.endColumn))}>
+              Copy relative reference
+            </MenuItem>
+            {folder && (
+              <MenuItem
+                icon={<CopyIcon />}
+                onSelect={() => copy(fileReference(`${folder}/${change.path}`, menu.from, menu.to, menu.endColumn))}
+              >
+                Copy absolute reference
+              </MenuItem>
+            )}
+            {link && (
+              <>
+                <MenuItem icon={<CopyIcon />} onSelect={() => copy(link)}>
+                  Copy permalink
+                </MenuItem>
+                <MenuItem
+                  icon={<LinkIcon />}
+                  onSelect={() => {
+                    openGithubLink(link).catch((e) => console.error('cannot open link', e));
+                    setMenu(null);
+                  }}
+                >
+                  Open permalink
+                </MenuItem>
+              </>
+            )}
+          </Menu>
+        </Popover>
+      )}
     </div>
   );
 }

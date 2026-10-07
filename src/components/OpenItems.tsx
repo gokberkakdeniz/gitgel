@@ -1,5 +1,5 @@
 import { openFile, openFolder } from '../lib/ipc';
-import type { EntrySummary } from '../lib/types';
+import type { Config, EntrySummary } from '../lib/types';
 import { useData } from '../state/data';
 import { TerminalIcon } from './icons';
 import { MenuDivider, MenuItem, MenuNote } from './Menu';
@@ -50,7 +50,11 @@ export function OpenItems({ entry, onDone }: { entry: EntrySummary; onDone: () =
 
 /** The folder a file row's menu opens files from: the entry's folder (see `OpenItems`). */
 export function useEntryFolder(entry: EntrySummary | undefined): string | null {
-  const config = useData((s) => s.config);
+  return entryFolder(entry, useData((s) => s.config));
+}
+
+/** `useEntryFolder` for a caller that has the config already (and may ask for several entries). */
+export function entryFolder(entry: EntrySummary | undefined, config: Config | null): string | null {
   if (!entry || entry.state === 'repo_missing' || entry.state === 'branch_deleted') return null;
   return entry.worktreePath ?? config?.repos.find((r) => r.id === entry.repoId)?.path ?? null;
 }

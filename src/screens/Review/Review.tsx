@@ -21,7 +21,7 @@ import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
-import { EntryMenuNote, OpenItems, useEntryFolder } from '../../components/OpenItems';
+import { EntryMenuNote, OpenItems, entryFolder, useEntryFolder } from '../../components/OpenItems';
 import { Popover } from '../../components/Popover';
 import { Pill } from '../../components/Pill';
 import { Segmented } from '../../components/Segmented';
@@ -84,6 +84,7 @@ const MODE_LABELS: Record<DiffMode, string> = {
 export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   useSidebarHiddenWhileMounted(!keepSidebar);
   const targetKey = JSON.stringify(target);
+  const config = useData((s) => s.config);
   const projects = useData((s) => s.config?.projects);
   const repoIds = useMemo(() => {
     if (target.kind !== 'project') return [target.repoId];
@@ -386,10 +387,22 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
       />
     </div>
   );
-  const diffView = (repoId: string, worktreePath: string | null, file: FileChange, diffMode: DiffMode, fileKey: string) => (
+  const diffView = (
+    repoId: string,
+    worktreePath: string | null,
+    folder: string | null,
+    commit: string | null,
+    parent: string | null,
+    file: FileChange,
+    diffMode: DiffMode,
+    fileKey: string,
+  ) => (
     <DiffView
       repoId={repoId}
       worktreePath={worktreePath}
+      folder={folder}
+      commit={commit}
+      parent={parent}
       change={file}
       mode={diffMode}
       fileKey={fileKey}
@@ -570,7 +583,15 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
               {stashFile ? (
                 <>
                   {fileBar(stashFile, `${(stashChanges?.base ?? stash.base).slice(0, 7)} ↔ stash@{${stash.index}}`)}
-                  {diffView(stash.repoId, null, stashFile, 'committed', `${currentId}\u0000stash`)}
+                  {diffView(
+                    stash.repoId,
+                    null,
+                    config?.repos.find((r) => r.id === stash.repoId)?.path ?? null,
+                    null,
+                    null,
+                    stashFile, 'committed',
+                    `${currentId}\u0000stash`,
+                  )}
                 </>
               ) : (
                 stashChanges && <div className={styles.empty}>No changes</div>
@@ -601,6 +622,9 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
               {diffView(
                 group.entry.repoId,
                 commitOf(group) ? null : group.entry.worktreePath,
+                entryFolder(group.entry, config),
+                commitOf(group)?.sha ?? null,
+                commitOf(group)?.parent ?? null,
                 change,
                 commitOf(group) ? 'committed' : mode,
                 `${currentId}\u0000${mode}\u0000${commitOf(group)?.sha ?? ''}`,

@@ -41,6 +41,43 @@ pub fn read_file_pair(
     pair
 }
 
+/// The GitHub page of the repository's remote (`https://github.com/<owner>/<repo>`), for a link
+/// to a file at a commit; `None` for no remote or another host. `origin` if there is one.
+pub fn github_url(state: &AppState, repo_id: &str) -> Result<Option<String>, AppError> {
+    let config = config::snapshot(state);
+    let repo_cfg = config
+        .repos
+        .iter()
+        .find(|r| r.id == repo_id)
+        .ok_or_else(|| AppError::NotFound(format!("repository {repo_id}")))?;
+    let shared = state.pool.get(Path::new(&repo_cfg.path))?;
+    let repo = lock(&shared);
+    let name = if repo.find_remote("origin").is_ok() {
+        Some("origin".to_string())
+    } else {
+        repo.remotes().ok().and_then(|n| n.iter().flatten().flatten().next().map(str::to_string))
+    };
+    let url = name
+        .and_then(|n| repo.find_remote(&n).ok())
+        .and_then(|r| r.url().ok().map(str::to_string));
+    Ok(url.as_deref().and_then(web_url))
+}
+
+/// `git@github.com:o/r.git`, `ssh://git@github.com/o/r` and `https://github.com/o/r.git` all
+/// become `https://github.com/o/r`.
+fn web_url(remote: &str) -> Option<String> {
+    let rest = if let Some((_, rest)) = remote.split_once("://") {
+        rest.to_string()
+    } else {
+        remote.split_once('@').map_or(remote, |(_, r)| r).replacen(':', "/", 1)
+    };
+    let rest = rest.split_once('@').map_or(rest.as_str(), |(_, r)| r);
+    let (host, path) = rest.split_once('/')?;
+    let host = host.split(':').next()?;
+    let path = path.trim_end_matches('/').trim_end_matches(".git");
+    (host == "github.com" && path.split('/').count() == 2).then(|| format!("https://{host}/{path}"))
+}
+
 fn read_pair(
     state: &AppState,
     repo_id: &str,
@@ -235,5 +272,20 @@ mod tests {
         let mut late = vec![b'a'; SNIFF_BYTES];
         late.push(0);
         assert!(!is_binary(&late));
+    }
+
+    #[test]
+    fn github_remotes_become_web_urls() {
+        for url in [
+            "git@github.com:o/r.git",
+            "ssh://git@github.com/o/r.git",
+            "ssh://git@github.com:22/o/r",
+            "https://github.com/o/r.git",
+            "https://user@github.com/o/r/",
+        ] {
+            assert_eq!(web_url(url).as_deref(), Some("https://github.com/o/r"), "{url}");
+        }
+        assert_eq!(web_url("git@gitlab.com:o/r.git"), None);
+        assert_eq!(web_url("/Users/me/repo"), None);
     }
 }

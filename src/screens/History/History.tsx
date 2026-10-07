@@ -477,6 +477,9 @@ export function History({ repoId, rev, backLabel }: Props) {
               <DiffView
                 repoId={repoId}
                 worktreePath={current === WIP ? (entry?.worktreePath ?? null) : null}
+                folder={folder}
+                commit={commit?.sha ?? null}
+                parent={commitChanges?.parent ?? null}
                 change={file}
                 mode={current === WIP ? 'uncommitted' : 'committed'}
                 fileKey={`${current}\u0000${file.path}`}

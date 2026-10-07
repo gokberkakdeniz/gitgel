@@ -469,7 +469,7 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
 top-left (≈70px kept free). Title rows (sidebar top row, page headers) carry
 `data-tauri-drag-region` on the element itself, never on buttons or inputs, and not on the
 Project title (a click renames it). The default webview context menu is disabled except in
-inputs, textareas and the diff.
+inputs and textareas (the diff has its own menu, §5 Review).
 
 ---
 
@@ -764,8 +764,14 @@ Layout:
 - **Diff:** Monaco diff editor, read-only, **Split** (side by side, default) or **Unified**
   (removed lines shown as view zones above the added ones; line-number columns may differ from
   the reference, accepted). Unchanged regions fold according to the view menu's **Context**
-  (default: changes only, 3 lines around each change; Whole file shows everything). No minimap, overview ruler, sticky scroll or
-  context menu; `useInlineViewWhenSpaceIsLimited: false`. The editor is created once; changing
+  (default: changes only, 3 lines around each change; Whole file shows everything). No minimap, overview ruler or sticky scroll;
+  `useInlineViewWhenSpaceIsLimited: false`. **Right-click** (Monaco's own menu is off) opens a
+  230px menu on the lines selected (when the click is inside the selection, else the clicked line;
+  line numbers of the side clicked): "Copy relative reference" (`@<path>:<line>` or
+  `@<path>:<from>-<to>`, the path relative to the repository), "Copy absolute reference" (the
+  same with the file's path in its worktree, else the repository folder; with a commit shown it is
+  the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (`https://github.com/<owner>/<repo>/blob/<sha>/<path>#L12-L13`;
+  only for a file shown at a commit, with a GitHub remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_github_url`, `open_github_link`, `src/monaco/reference.ts`). The editor is created once; changing
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
   shown"; files over 1 MiB "File is too large to show (over 1 MB)".
 - **Diff view menu:** the view button (split or unified icon + "Split" / "Unified" + chevron;
@@ -1542,6 +1548,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `update_settings` | `settings: Settings` | `Config` |
 | `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
 | `get_terminal_options` | – | `TerminalOption[]` (Terminal/iTerm2/WezTerm with install state) |
+| `get_github_url` | `repoId` | `string \| null` (`https://github.com/<owner>/<repo>` of `origin`, else the first remote; null for no remote or another host) |
+| `open_github_link` | `url` | `null` (opens a `https://github.com/…` URL in the browser; any other is refused) |
 | `open_folder` | `path, app: string` | `null` (`app`: an `OpenApp` id) |
 | `open_file` | `folder, file, app: string, line?, column?` | `null` (`file` relative to `folder`, must exist; `finder` reveals it, the terminal is refused; an editor goes to `line:column`) |
 | `save_script` | `script: ScriptConfig` | `Config` (a new id when `id` is empty; an unknown id is added back) |
