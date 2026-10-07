@@ -5,16 +5,15 @@
 ### New
 - What's New in the Help menu, shown once after an update.
 - Software Update shows what the new version brings.
-- An About Gitgel window.
-- An SSH key's passphrase is asked in a dialog and can be remembered in the Keychain.
-- Rebase on its base from a branch's menu.
+- SSH key passphrase dialog, saved to the Keychain.
+- Rebase a branch onto its base from its branch menu.
 - ⌥H switches between a branch's Review and History.
 
 ### Improved
-- About, Software Update and What's New open in windows of their own.
+- About, Software Update and What's New each open in their own window.
 - The window can be moved while a dialog is open.
-- Copy buttons show when they copied.
-- The Gitgel menu follows macOS: Settings… and Check for Updates… under About.
+- Copy buttons confirm the copy.
+- The Gitgel menu follows macOS: Settings… and Check for Updates… sit under About.
 
 ### Fixed
 - After an update, Gitgel comes to the front.
@@ -23,19 +22,19 @@
 ## 0.1.16 — 2026-10-06
 
 ### Improved
-- Signed with Developer ID and notarized by Apple: Gitgel opens without "Open Anyway".
+- Signed with Developer ID and notarized by Apple, so Gitgel opens without "Open Anyway".
 
 ## 0.1.15 — 2026-10-05
 
 ### New
-- Fetch, Pull and Push for a branch, from History and the branch menus.
-- Repos on Branches can be collapsed and pinned to the top.
+- Fetch, Pull and Push for a branch, from its History and branch menus.
+- Repo bands on Branches can be collapsed and pinned to the top.
 
 ### Improved
-- Shorter text across the app.
+- Leaner text across the app.
 
 ### Fixed
-- Renaming a project in the sidebar keeps the row's colour.
+- Renaming a project in the sidebar keeps the row's color.
 
 ## 0.1.14 — 2026-10-05
 
@@ -43,14 +42,14 @@
 - Scripts: your own commands in a branch's menu, with inputs and live output.
 - Stashes: list and review them; stash (picking files), apply, pop and drop.
 - History: a branch's commits, with search.
-- The base branch is always listed on Branches; its menu opens its Review.
+- The base branch is always listed on Branches; its menu opens Review.
 - Review shows merge conflicts.
-- Review: a resizable file list, and Change base in the entry menu.
+- Review: a resizable file list and Change base in the entry menu.
 - Gitgel › Check for Updates opens a Software Update window.
 
 ### Improved
 - New icons and controls across the app.
-- Review's entry bar opens the History of the branch and of its base.
+- Review's entry bar opens the History of the branch and its base.
 
 ### Fixed
 - Unpicked staged files no longer go into a stash.
@@ -58,34 +57,37 @@
 ## 0.1.13 — 2026-09-30
 
 ### Improved
-- Branches rows show three lines; page headers look the same everywhere.
-- Settings has a section list, and the default bases can be reordered.
+- Branch rows show three lines.
+- Page headers look the same everywhere.
+- Settings has a section list.
+- The default bases can be reordered.
 
 ## 0.1.12 — 2026-09-30
 
 ### New
 - In-app updates.
-- Projects in the sidebar open their review; double- or right-click one to rename it.
+- Projects in the sidebar open their review.
+- Double- or right-click a project to rename it.
 
 ### Improved
-- Age on Branches counts uncommitted changes when they are newer than the last commit.
+- Age on Branches reflects uncommitted changes when they are newer than the last commit.
 
 ## 0.1.11 — 2026-09-29
 
 ### New
-- A Diff column on Branches: ahead / behind counts and a checked-out icon.
+- A Diff column on Branches: ahead/behind counts and a checked-out icon.
 
 ## 0.1.10 — 2026-09-28
 
 ### New
 - Open a worktree in Finder, an editor or a terminal from a Branches row's menu.
-- Choose the terminal, or give your own command.
-- Remote branches in the base menu; the default base is the nearer of the local and `origin` one.
+- Choose the terminal or give your own command.
+- Remote branches in the base menu; the default base is the closer of the local and `origin` branches.
 
 ## 0.1.9 — 2026-09-28
 
 ### New
-- Review: changes only or the whole file, and how many lines around each change.
+- Review: changes only or the whole file, with a choice of how many lines show around each change.
 
 ## 0.1.8 — 2026-09-27
 
@@ -93,16 +95,17 @@
 - Filter Review's file list.
 
 ### Fixed
-- The selected file stays in view in the file list.
+- The selected file stays visible in the file list.
 - Ruby highlighting no longer breaks on an unmatched `end`.
 
 ## 0.1.7 — 2026-09-27
 
 ### Improved
-- Less memory after scans.
+- Less memory use after scans.
 
 ### Fixed
-- No theme flash at launch, and light theme fixes.
+- No theme flash at launch.
+- Light theme fixes.
 
 ## 0.1.6 — 2026-09-27
 
