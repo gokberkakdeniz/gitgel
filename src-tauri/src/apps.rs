@@ -75,9 +75,68 @@ pub fn open_folder(path: &str, app: &str, settings: &Settings) -> Result<(), App
     })
 }
 
+/// Editors that open `<scheme>://file/<path>:<line>:<column>` (the app is given, so the scheme
+/// goes to it and not to whichever app registered it last).
+const GOTO_SCHEMES: &[(&str, &str)] = &[
+    ("cursor", "cursor"),
+    ("vscode", "vscode"),
+    ("windsurf", "windsurf"),
+    ("zed", "zed"),
+];
+
+/// Sublime Text's command line tool, inside its bundle; it takes `<path>:<line>:<column>`.
+const SUBLIME_CLI: &str = "Contents/SharedSupport/bin/subl";
+
+/// Opens `path` in the editor `app` at a line and column; an editor that cannot is given the
+/// plain file.
+fn open_at(
+    path: &Path,
+    app: &str,
+    app_path: &str,
+    line: u32,
+    column: u32,
+) -> Result<(), AppError> {
+    let target = format!("{}:{}:{}", path.display(), line.max(1), column.max(1));
+    let opened = if let Some((_, scheme)) = GOTO_SCHEMES.iter().find(|(id, _)| *id == app) {
+        let url = format!("{scheme}://file{}", encode_path(&target));
+        tauri_plugin_opener::open_url(url, Some(app_path))
+    } else {
+        let cli = Path::new(app_path).join(SUBLIME_CLI);
+        if app == "sublime" && cli.is_file() {
+            let dir = path.parent().unwrap_or(path).to_string_lossy();
+            return spawn_detached(&cli.to_string_lossy(), &[&target], &dir);
+        }
+        tauri_plugin_opener::open_path(path, Some(app_path))
+    };
+    opened.map_err(|e| {
+        log::warn!("cannot open {target} in {app}: {e}");
+        AppError::Io(e.to_string())
+    })
+}
+
+/// Percent-encodes everything but `/` and the unreserved characters (and the `:` of the
+/// position).
+fn encode_path(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' | b'/' | b':' => {
+                out.push(b as char)
+            }
+            _ => out.push_str(&format!("%{b:02X}")),
+        }
+    }
+    out
+}
+
 /// Opens `file` (a path relative to `folder`) in the app `app` (an id from `installed`, not the
-/// terminal); Finder shows the file selected.
-pub fn open_file(folder: &str, file: &str, app: &str) -> Result<(), AppError> {
+/// terminal); Finder shows the file selected. An editor goes to `at` (line, column) when given.
+pub fn open_file(
+    folder: &str,
+    file: &str,
+    app: &str,
+    at: Option<(u32, u32)>,
+) -> Result<(), AppError> {
     check_folder(Path::new(folder))?;
     let rel = Path::new(file);
     if rel.is_absolute() || rel.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
@@ -96,7 +155,10 @@ pub fn open_file(folder: &str, file: &str, app: &str) -> Result<(), AppError> {
         let app_path = bundle_id(app)
             .and_then(app_path)
             .ok_or_else(|| AppError::NotFound(format!("app {app}")))?;
-        tauri_plugin_opener::open_path(&path, Some(app_path))
+        match at {
+            Some((line, column)) => return open_at(&path, app, &app_path, line, column),
+            None => tauri_plugin_opener::open_path(&path, Some(app_path)),
+        }
     };
     result.map_err(|e| {
         log::warn!("cannot open {shown} in {app}: {e}");
@@ -456,6 +518,11 @@ fn icon_png(_app_path: &str) -> Option<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn encodes_a_goto_path() {
+        assert_eq!(encode_path("/a b/é#x.rs:3:7"), "/a%20b/%C3%A9%23x.rs:3:7");
+    }
 
     fn with_terminal(terminal: TerminalChoice, command: &str) -> Settings {
         Settings {

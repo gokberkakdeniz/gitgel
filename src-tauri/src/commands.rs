@@ -347,15 +347,19 @@ pub async fn open_folder(
     .await
 }
 
-/// Opens a file of a worktree (or repository) folder in one of `get_open_apps` (Finder reveals it).
+/// Opens a file of a worktree (or repository) folder in one of `get_open_apps` (Finder reveals
+/// it; an editor goes to `line` and `column` when given).
 #[tauri::command]
 pub async fn open_file(
     state: State<'_, AppState>,
     folder: String,
     file: String,
     app: String,
+    line: Option<u32>,
+    column: Option<u32>,
 ) -> Result<(), AppError> {
-    blocking(&state, move |_| apps::open_file(&folder, &file, &app)).await
+    let at = line.map(|l| (l, column.unwrap_or(1)));
+    blocking(&state, move |_| apps::open_file(&folder, &file, &app, at)).await
 }
 
 /// The update found by the last check, if any (§12 "Updates").

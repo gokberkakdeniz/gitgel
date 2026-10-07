@@ -10,6 +10,7 @@ import { updateSettings } from '../../lib/ipc';
 import { basename } from '../../lib/paths';
 import type { DiffContext, DiffLayout, FileChange, Settings } from '../../lib/types';
 import type { NavInfo } from '../../monaco/DiffView';
+import { diffPosition } from '../../monaco/position';
 import { useData } from '../../state/data';
 import { useNav, type Route } from '../../state/nav';
 import { useUi } from '../../state/ui';
@@ -307,7 +308,12 @@ export function FileRow({
       {menu && menuFolder && (
         <Popover anchorRect={menu} width={220} onClose={() => setMenu(null)}>
           <Menu aria-label={`${basename(f.path)} actions`}>
-            <FileOpenItems folder={menuFolder} path={f.path} onDone={() => setMenu(null)} />
+            <FileOpenItems
+              folder={menuFolder}
+              path={f.path}
+              at={() => (on ? diffPosition(f.path) : null)}
+              onDone={() => setMenu(null)}
+            />
           </Menu>
         </Popover>
       )}

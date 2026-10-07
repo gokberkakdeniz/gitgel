@@ -8,6 +8,7 @@ import { useInvoke } from '../lib/useInvoke';
 import styles from './DiffView.module.css';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
 import { languageForPath } from './language';
+import { setDiffPosition } from './position';
 import { monacoReady } from './setup';
 import { MONACO_THEMES } from './theme';
 
@@ -104,8 +105,8 @@ export function DiffView({
 
   // Latest props for Monaco callbacks registered once.
   const handlers = { onNav, onStep, onToggleLayout, onToggleWhitespace, onToggleContext, onCommitStep, onFocusFilter };
-  const latest = useRef({ ...handlers, land, fileKey, layout, context, contextLines });
-  latest.current = { ...handlers, land, fileKey, layout, context, contextLines };
+  const latest = useRef({ ...handlers, land, fileKey, layout, context, contextLines, path: change.path });
+  latest.current = { ...handlers, land, fileKey, layout, context, contextLines, path: change.path };
 
   // Layout, whitespace and context are editor options: changed in place, never by rebuilding the
   // editor. Monaco hides whitespace-only changes by default, so the option is always given.
@@ -187,6 +188,8 @@ export function DiffView({
     // Top third of the view; both sides scroll together.
     ed.setScrollTop(Math.max(0, ed.getTopForLineNumber(target.line) - ed.getLayoutInfo().height / 3));
     ed.setPosition({ lineNumber: target.line, column: 1 });
+    // A change on the old side only: the file's line is where the lines were removed.
+    if (target.side === 'original') setDiffPosition(latest.current.path, Math.max(1, h.modifiedStart), 1);
     window.setTimeout(() => (n.jumping = false), 80);
     n.index = index;
     mark();
@@ -321,6 +324,9 @@ export function DiffView({
             const modified = editor.getModifiedEditor();
             nav.current.decorations = [original.createDecorationsCollection(), modified.createDecorationsCollection()];
             editor.onDidUpdateDiff(onDiffUpdated);
+            modified.onDidChangeCursorPosition((e) =>
+              setDiffPosition(latest.current.path, e.position.lineNumber, e.position.column),
+            );
             // Scrolling by hand moves "current" to the first change in view.
             modified.onDidScrollChange(() => {
               const n = nav.current;

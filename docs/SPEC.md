@@ -194,7 +194,7 @@ gitgel/
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
-│  └─ monaco/   setup.ts  theme.ts  language.ts  DiffView.tsx  changeNav.ts
+│  └─ monaco/   setup.ts  theme.ts  language.ts  DiffView.tsx  position.ts  changeNav.ts
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
    ├─ capabilities/default.json
@@ -717,6 +717,9 @@ Layout:
     the terminal. The file is read from the entry's worktree, else its repository folder (a
     stash's: the repository); History's file rows the same. A file that is not on disk there
     does nothing (`log::warn!`).
+    When the row is the file the diff shows, an editor opens it at the diff's cursor: line and
+    column of its modified side (`src/monaco/position.ts`; "Change n of m" and a click move
+    it), else at the top. Finder just shows the file.
   - Project scope, if some entries cannot be reviewed: one line under a top border, 12px muted
     `N entries not reviewable ·` + link "Open project".
   - Opening from a project row focuses that entry: its first file is selected and the other
@@ -1540,7 +1543,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
 | `get_terminal_options` | – | `TerminalOption[]` (Terminal/iTerm2/WezTerm with install state) |
 | `open_folder` | `path, app: string` | `null` (`app`: an `OpenApp` id) |
-| `open_file` | `folder, file, app: string` | `null` (`file` relative to `folder`, must exist; `finder` reveals it, the terminal is refused) |
+| `open_file` | `folder, file, app: string, line?, column?` | `null` (`file` relative to `folder`, must exist; `finder` reveals it, the terminal is refused; an editor goes to `line:column`) |
 | `save_script` | `script: ScriptConfig` | `Config` (a new id when `id` is empty; an unknown id is added back) |
 | `delete_script` | `scriptId` | `Config` |
 | `reorder_scripts` | `ids: string[]` | `Config` |
@@ -1591,6 +1594,10 @@ Notes:
   representation (32px on Retina) encoded as PNG, cached per app path for the app's lifetime. `open_folder`
   accepts only an existing folder and a listed id; it opens the folder with
   `tauri-plugin-opener` (`open_path`, with the app's bundle path). No git.
+  - `open_file` at a line: Cursor, VS Code, Windsurf and Zed get `<scheme>://file/<path>:<line>:<column>`
+    (`cursor`, `vscode`, `windsurf`, `zed`; percent-encoded) through `open_url` with the app's
+    bundle, so it needs no `code` on the PATH; Sublime Text runs its bundled
+    `Contents/SharedSupport/bin/subl <path>:<line>:<column>`; without it, the plain file.
   - Terminals: Terminal and iTerm2 open with `open_path`. WezTerm runs
     `<bundle>/Contents/MacOS/wezterm start --cwd <folder>`. Other: a single word or path that
     resolves to an app (name in `/Applications`, `/Applications/Utilities`,

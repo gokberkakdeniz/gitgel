@@ -61,8 +61,19 @@ export function useRepoFolder(repoId: string): string | null {
 }
 
 /** Open in Finder (the file selected), then Open in <App> for each editor; the file menu's items.
- * No terminal: it has no use for a file. */
-export function FileOpenItems({ folder, path, onDone }: { folder: string; path: string; onDone: () => void }) {
+ * No terminal: it has no use for a file. `at` is asked when an editor is picked: where the diff
+ * showing this file has its cursor (the editor opens there). */
+export function FileOpenItems({
+  folder,
+  path,
+  at,
+  onDone,
+}: {
+  folder: string;
+  path: string;
+  at: () => { line: number; column: number } | null;
+  onDone: () => void;
+}) {
   const apps = useData((s) => s.openApps);
   return (
     <>
@@ -74,7 +85,7 @@ export function FileOpenItems({ folder, path, onDone }: { folder: string; path: 
             icon={a.icon ? <img src={a.icon} alt="" className={styles.appIcon} /> : <TerminalIcon />}
             onSelect={() => {
               onDone();
-              openFile(folder, path, a.id).catch((e) => console.error('cannot open file', e));
+              openFile(folder, path, a.id, a.id === 'finder' ? null : at()).catch((e) => console.error('cannot open file', e));
             }}
           >
             Open in {a.name}
