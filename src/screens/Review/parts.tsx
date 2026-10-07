@@ -282,7 +282,13 @@ export function FileRow({
     <>
       <button
         type="button"
-        className={on ? `${styles.fileRow} ${styles.selected}` : styles.fileRow}
+        className={
+          on
+            ? `${styles.fileRow} ${styles.selected}`
+            : menu
+              ? `${styles.fileRow} ${styles.menuOpen}`
+              : styles.fileRow
+        }
         aria-current={on || undefined}
         onClick={onClick}
         onContextMenu={

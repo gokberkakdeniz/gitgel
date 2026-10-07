@@ -711,7 +711,8 @@ Layout:
     `N of M commits come from <branch>. A different base may fit better.`
   - File rows (30px, indent 28, radius 8, selected `bg.hover`): kind badge, mono 12 file name,
     mono 11 dimmed folder (ellipsis; renames `dir ← old/path`, untracked `dir · untracked`),
-    `+N` / `−N`. **Right-click** (not a deleted file): a 220px menu of "Open in Finder" (the file
+    `+N` / `−N`. **Right-click** (not a deleted file; it does not select the row, which shows
+    `bg.hover` while its menu is open): a 220px menu of "Open in Finder" (the file
     selected) and "Open in <App>" for each installed editor, as in §5 "Open items" but without
     the terminal. The file is read from the entry's worktree, else its repository folder (a
     stash's: the repository); History's file rows the same. A file that is not on disk there
