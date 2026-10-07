@@ -2304,7 +2304,8 @@ time.
 - **Branch menus** (`FlowR1`): after the open items, a divider, then "Fetch"
   (`download`), "Pull" (`arrow-down`, hint `↓N`), "Pull (rebase)" (`rebase`; only when diverged
   and checked out), "Rebase on `<base>`" (`rebase`; a checked-out branch whose base, custom or
-  the repo's default, is not itself), "Push" (`arrow-up`, hint `↑N`). Disabled items carry the reason as tooltip ("A sync is running"
+  the repo's default, is not itself or its own remote branch: the base branch's base is its
+  upstream), "Push" (`arrow-up`, hint `↑N`). Disabled items carry the reason as tooltip ("A sync is running"
   while one runs; Push of a branch the remote lacks: `Not on origin yet`). No group for a detached HEAD, a branch without a remote, a deleted branch or a
   missing repository.
 - **Fetch**: `git fetch --all --prune` in the repository folder. Success toast `Fetched <repo>`.

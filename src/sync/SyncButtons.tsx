@@ -110,8 +110,10 @@ export function SyncItems({
     void action();
   };
   const busy = running ? 'A sync is running' : null;
-  // Rebase on the base: a checked-out branch that has a base other than itself.
-  const base = entry.worktreePath && entry.base && entry.base !== entry.branch ? entry.base : null;
+  // Rebase on the base: a checked-out branch that has a base other than itself or its own remote
+  // branch (the base branch's base is its upstream: that is Pull (rebase)).
+  const base =
+    entry.worktreePath && entry.base && entry.base !== entry.branch && entry.base !== u.name ? entry.base : null;
   if (rebaseOnly) {
     if (!base) return null;
     return (
