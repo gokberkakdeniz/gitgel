@@ -503,6 +503,10 @@ rather than as a task is listed the same way, marked "(on request)".
   --rebase <remote> <base>`, like `gupom`), else `git rebase <base>` (`git_rebase_on_base`);
   the canvas's W4c moved from the WIP page to "Branch actions" as R1 (`FlowR1.dc.html`) —
   2026-10-06
+- [x] (on request) Right-click a file row in Review and History (commit, Uncommitted, stash) opens
+  a menu: Open in Finder (file selected) and Open in each installed editor (`open_file`) —
+  2026-10-07
+  - note: canvas board D11 (`FlowD11.dc.html`).
 
 ---
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
 import { Menu, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
+import { FileOpenItems } from '../../components/OpenItems';
 import { Popover } from '../../components/Popover';
 import { updateSettings } from '../../lib/ipc';
 import { basename } from '../../lib/paths';
@@ -264,30 +265,53 @@ export function FileRow({
   terms,
   on,
   onClick,
+  folder,
 }: {
   file: FileChange;
   terms: string[];
   on: boolean;
   onClick: () => void;
+  /** The folder the file is opened from by the right-click menu; none, no menu. */
+  folder: string | null;
 }) {
+  const [menu, setMenu] = useState<DOMRect | null>(null);
+  // A deleted file is not on disk.
+  const menuFolder = f.kind === 'D' ? null : folder;
   return (
-    <button
-      type="button"
-      className={on ? `${styles.fileRow} ${styles.selected}` : styles.fileRow}
-      aria-current={on || undefined}
-      onClick={onClick}
-      title={f.path}
-    >
-      <KindBadge kind={f.kind} />
-      <span className={styles.fileName}>
-        <Highlighted text={basename(f.path)} terms={terms} />
-      </span>
-      <span className={styles.fileDir}>
-        <Highlighted text={dirLabel(f)} terms={terms} />
-      </span>
-      {!!f.add && <span className={styles.add}>+{f.add}</span>}
-      {!!f.del && <span className={styles.del}>−{f.del}</span>}
-    </button>
+    <>
+      <button
+        type="button"
+        className={on ? `${styles.fileRow} ${styles.selected}` : styles.fileRow}
+        aria-current={on || undefined}
+        onClick={onClick}
+        onContextMenu={
+          menuFolder
+            ? (ev) => {
+                ev.preventDefault();
+                setMenu(new DOMRect(ev.clientX, ev.clientY, 0, 0));
+              }
+            : undefined
+        }
+        title={f.path}
+      >
+        <KindBadge kind={f.kind} />
+        <span className={styles.fileName}>
+          <Highlighted text={basename(f.path)} terms={terms} />
+        </span>
+        <span className={styles.fileDir}>
+          <Highlighted text={dirLabel(f)} terms={terms} />
+        </span>
+        {!!f.add && <span className={styles.add}>+{f.add}</span>}
+        {!!f.del && <span className={styles.del}>−{f.del}</span>}
+      </button>
+      {menu && menuFolder && (
+        <Popover anchorRect={menu} width={220} onClose={() => setMenu(null)}>
+          <Menu aria-label={`${basename(f.path)} actions`}>
+            <FileOpenItems folder={menuFolder} path={f.path} onDone={() => setMenu(null)} />
+          </Menu>
+        </Popover>
+      )}
+    </>
   );
 }
 

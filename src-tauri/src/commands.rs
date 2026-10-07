@@ -347,6 +347,17 @@ pub async fn open_folder(
     .await
 }
 
+/// Opens a file of a worktree (or repository) folder in one of `get_open_apps` (Finder reveals it).
+#[tauri::command]
+pub async fn open_file(
+    state: State<'_, AppState>,
+    folder: String,
+    file: String,
+    app: String,
+) -> Result<(), AppError> {
+    blocking(&state, move |_| apps::open_file(&folder, &file, &app)).await
+}
+
 /// The update found by the last check, if any (§12 "Updates").
 #[tauri::command]
 pub fn get_update(app: AppHandle) -> Option<updates::UpdateInfo> {

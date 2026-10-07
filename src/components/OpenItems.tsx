@@ -1,4 +1,4 @@
-import { openFolder } from '../lib/ipc';
+import { openFile, openFolder } from '../lib/ipc';
 import type { EntrySummary } from '../lib/types';
 import { useData } from '../state/data';
 import { TerminalIcon } from './icons';
@@ -40,6 +40,42 @@ export function OpenItems({ entry, onDone }: { entry: EntrySummary; onDone: () =
             key={a.id}
             icon={a.icon ? <img src={a.icon} alt="" className={styles.appIcon} /> : <TerminalIcon />}
             onSelect={() => open(a.id)}
+          >
+            Open in {a.name}
+          </MenuItem>
+        ))}
+    </>
+  );
+}
+
+/** The folder a file row's menu opens files from: the entry's folder (see `OpenItems`). */
+export function useEntryFolder(entry: EntrySummary | undefined): string | null {
+  const config = useData((s) => s.config);
+  if (!entry || entry.state === 'repo_missing' || entry.state === 'branch_deleted') return null;
+  return entry.worktreePath ?? config?.repos.find((r) => r.id === entry.repoId)?.path ?? null;
+}
+
+/** The repository folder, for rows that belong to a repo only (a stash). */
+export function useRepoFolder(repoId: string): string | null {
+  return useData((s) => s.config?.repos.find((r) => r.id === repoId)?.path ?? null);
+}
+
+/** Open in Finder (the file selected), then Open in <App> for each editor; the file menu's items.
+ * No terminal: it has no use for a file. */
+export function FileOpenItems({ folder, path, onDone }: { folder: string; path: string; onDone: () => void }) {
+  const apps = useData((s) => s.openApps);
+  return (
+    <>
+      {apps
+        .filter((a) => a.found && a.id !== 'terminal')
+        .map((a) => (
+          <MenuItem
+            key={a.id}
+            icon={a.icon ? <img src={a.icon} alt="" className={styles.appIcon} /> : <TerminalIcon />}
+            onSelect={() => {
+              onDone();
+              openFile(folder, path, a.id).catch((e) => console.error('cannot open file', e));
+            }}
           >
             Open in {a.name}
           </MenuItem>

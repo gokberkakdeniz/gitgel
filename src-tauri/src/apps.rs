@@ -75,6 +75,35 @@ pub fn open_folder(path: &str, app: &str, settings: &Settings) -> Result<(), App
     })
 }
 
+/// Opens `file` (a path relative to `folder`) in the app `app` (an id from `installed`, not the
+/// terminal); Finder shows the file selected.
+pub fn open_file(folder: &str, file: &str, app: &str) -> Result<(), AppError> {
+    check_folder(Path::new(folder))?;
+    let rel = Path::new(file);
+    if rel.is_absolute() || rel.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+        return Err(AppError::NotFound(format!("file {file}")));
+    }
+    let path = Path::new(folder).join(rel);
+    if !path.is_file() {
+        return Err(AppError::NotFound(format!("file {}", path.display())));
+    }
+    let shown = path.to_string_lossy();
+    let result = if app == "finder" {
+        tauri_plugin_opener::reveal_item_in_dir(&path)
+    } else if app == TERMINAL {
+        return Err(AppError::NotFound(format!("app {app}")));
+    } else {
+        let app_path = bundle_id(app)
+            .and_then(app_path)
+            .ok_or_else(|| AppError::NotFound(format!("app {app}")))?;
+        tauri_plugin_opener::open_path(&path, Some(app_path))
+    };
+    result.map_err(|e| {
+        log::warn!("cannot open {shown} in {app}: {e}");
+        AppError::Io(e.to_string())
+    })
+}
+
 fn open_in_terminal(folder: &str, settings: &Settings) -> Result<(), AppError> {
     let term = resolve_terminal(settings);
     match term.action {

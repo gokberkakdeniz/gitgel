@@ -21,7 +21,7 @@ import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
-import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
+import { EntryMenuNote, OpenItems, useEntryFolder } from '../../components/OpenItems';
 import { Popover } from '../../components/Popover';
 import { Pill } from '../../components/Pill';
 import { Segmented } from '../../components/Segmented';
@@ -862,6 +862,7 @@ function FileGroup({
   const add = files.reduce((n, f) => n + (f.add ?? 0), 0);
   const del = files.reduce((n, f) => n + (f.del ?? 0), 0);
   const e = g.entry;
+  const folder = useEntryFolder(e);
   return (
     <section className={styles.group}>
       <div
@@ -944,6 +945,7 @@ function FileGroup({
             <FileRow
               key={f.path}
               file={f}
+              folder={folder}
               terms={terms}
               on={selected?.key === e.key && selected.path === f.path}
               onClick={() => onSelect({ key: e.key, path: f.path })}
@@ -981,6 +983,7 @@ export function StashSection({
   onPick: (sha: string) => void;
   onFile: (path: string) => void;
 }) {
+  const repos = useData((s) => s.config?.repos);
   return (
     <section aria-label="Stashes" className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
       <div className={styles.stashHeading}>
@@ -1007,7 +1010,14 @@ export function StashSection({
             {on && changes && (
               <div className={styles.fileRows}>
                 {changes.files.map((f) => (
-                  <FileRow key={f.path} file={f} terms={[]} on={f.path === file} onClick={() => onFile(f.path)} />
+                  <FileRow
+                    key={f.path}
+                    file={f}
+                    folder={repos?.find((r) => r.id === st.repoId)?.path ?? null}
+                    terms={[]}
+                    on={f.path === file}
+                    onClick={() => onFile(f.path)}
+                  />
                 ))}
               </div>
             )}

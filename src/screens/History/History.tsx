@@ -21,6 +21,7 @@ import { useCopy } from '../../lib/useCopy';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
+import { useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
 import { selectCanForward, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
@@ -54,6 +55,10 @@ export function History({ repoId, rev, backLabel }: Props) {
     (e) => e.branch === rev || (e.branch === null && e.headSha === rev),
   );
   const base = entry?.base ?? null;
+  // The files' right-click menu opens them from the worktree, else from the repository folder.
+  const repoFolder = useRepoFolder(repoId);
+  const entryFolder = useEntryFolder(entry);
+  const folder = entry ? entryFolder : repoFolder;
 
   // Search, debounced; a new query starts again from the first page.
   const [query, setQuery] = useState('');
@@ -355,6 +360,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 wipAge={entry?.changedAt ?? null}
                 files={filesOpen ? files : []}
                 file={file?.path}
+                folder={folder}
                 onPick={click}
                 onFile={(p) => {
                   setPath(p);
@@ -587,6 +593,7 @@ function ListRow({
   wipAge,
   files,
   file,
+  folder,
   onPick,
   onFile,
 }: {
@@ -599,13 +606,22 @@ function ListRow({
   /** The picked row's files, listed under it. */
   files: FileChange[];
   file: string | undefined;
+  /** Where the files' right-click menu opens them from. */
+  folder: string | null;
   onPick: (row: string) => void;
   onFile: (path: string) => void;
 }) {
   const fileRows = (
     <div className={review.fileRows}>
       {files.map((f) => (
-        <FileRow key={f.path} file={f} terms={[]} on={f.path === file} onClick={() => onFile(f.path)} />
+        <FileRow
+          key={f.path}
+          file={f}
+          folder={folder}
+          terms={[]}
+          on={f.path === file}
+          onClick={() => onFile(f.path)}
+        />
       ))}
     </div>
   );

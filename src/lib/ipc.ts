@@ -101,6 +101,9 @@ export const getOpenApps = () => invoke<OpenApp[]>('get_open_apps');
 /** Terminal, iTerm2 and WezTerm with their install state, for the Settings dropdown. */
 export const getTerminalOptions = () => invoke<TerminalOption[]>('get_terminal_options');
 
+/** Opens a file (a path inside `folder`) in one of `getOpenApps`; Finder shows it selected. */
+export const openFile = (folder: string, file: string, app: string) =>
+  invoke<null>('open_file', { folder, file, app });
 /** Opens a worktree folder in one of `getOpenApps` (Finder included). */
 export const openFolder = (path: string, app: string) => invoke<null>('open_folder', { path, app });
 

@@ -133,6 +133,7 @@ pub fn run() {
             commands::get_open_apps,
             commands::get_terminal_options,
             commands::open_folder,
+            commands::open_file,
             commands::get_update,
             commands::check_for_updates,
             commands::install_update,

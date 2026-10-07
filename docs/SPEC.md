@@ -712,7 +712,11 @@ Layout:
     `N of M commits come from <branch>. A different base may fit better.`
   - File rows (30px, indent 28, radius 8, selected `bg.hover`): kind badge, mono 12 file name,
     mono 11 dimmed folder (ellipsis; renames `dir ← old/path`, untracked `dir · untracked`),
-    `+N` / `−N`.
+    `+N` / `−N`. **Right-click** (not a deleted file): a 220px menu of "Open in Finder" (the file
+    selected) and "Open in <App>" for each installed editor, as in §5 "Open items" but without
+    the terminal. The file is read from the entry's worktree, else its repository folder (a
+    stash's: the repository); History's file rows the same. A file that is not on disk there
+    does nothing (`log::warn!`).
   - Project scope, if some entries cannot be reviewed: one line under a top border, 12px muted
     `N entries not reviewable ·` + link "Open project".
   - Opening from a project row focuses that entry: its first file is selected and the other
@@ -1536,6 +1540,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
 | `get_terminal_options` | – | `TerminalOption[]` (Terminal/iTerm2/WezTerm with install state) |
 | `open_folder` | `path, app: string` | `null` (`app`: an `OpenApp` id) |
+| `open_file` | `folder, file, app: string` | `null` (`file` relative to `folder`, must exist; `finder` reveals it, the terminal is refused) |
 | `save_script` | `script: ScriptConfig` | `Config` (a new id when `id` is empty; an unknown id is added back) |
 | `delete_script` | `scriptId` | `Config` |
 | `reorder_scripts` | `ids: string[]` | `Config` |
@@ -1814,6 +1819,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to, P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 Review with the branch menu's Sync group (menu data 192–205), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
+| File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 72–77, menu 184, data 192–199): Open in Finder / Cursor / VS Code at the pointer |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
