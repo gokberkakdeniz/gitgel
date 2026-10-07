@@ -702,8 +702,7 @@ Layout:
     muted upstream state (§15 "Sync": `origin ↑2 ↓1`, `origin` when level, `not on origin · ↑3`;
     tooltip with the counts), replaced by `n of m` while filtering.
   - **Entry menu** (260px, right-aligned under "⋮"; right-clicking the header opens it at the
-    pointer): "Change base" (sub `base <ref>`, plus ` · set for this branch` when the base is
-    custom) opens the Base menu at the same anchor; then the Branches row menu without "Open
+    pointer): "Change base" (sub `base <ref>`) opens the Base menu at the same anchor; then the Branches row menu without "Open
     review": "Copy branch name", "Open history" (back label "Back to Review"), the open items,
     the Sync group (§15 "Sync"), then the Scripts group as the Branches menu (the Project menu in a project review). The
     header has no base control: the entry bar shows the base in use.
@@ -845,7 +844,7 @@ Layout:
     Other branches. The one whose short name equals the entry's branch comes first, with a muted
     `same name` note. Filtered by the menu input like the other sections; hidden when empty.
   - The entry menu's "Change base" and the entry bar always show the ref in use
-    (`base origin/master`, `ahead of origin/master`); "set for this branch" still means
+    (`base origin/master`, `ahead of origin/master`); the Base menu's "custom" still means
     "stored custom base" only.
 - Empty states: "No committed changes" / "No uncommitted changes" / "No changes". Branch scope
   on an entry that cannot be reviewed: "This branch no longer exists", "Repository not found",

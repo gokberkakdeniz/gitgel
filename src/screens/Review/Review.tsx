@@ -784,7 +784,7 @@ function EntryMenu({
     <Menu aria-label="Branch options" autoFocus>
       <MenuItem
         icon={<BranchIcon size={14} />}
-        sub={`base ${entry.base ?? 'none'}${entry.baseIsCustom ? ' · set for this branch' : ''}`}
+        sub={`base ${entry.base ?? 'none'}`}
         onSelect={onChangeBase}
       >
         Change base

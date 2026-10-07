@@ -419,7 +419,7 @@ class Component extends DCLogic {
         menuOn: entryMenu && g === G[0],
         dotsOn: (entryMenu && g === G[0]) || g.id === bmGroup,
         totalsOn: !((entryMenu && g === G[0]) || g.id === bmGroup),
-        menuItems: [{ label: 'Change base', icon: 'branch', sub: 'base ' + g.base + (g.id === 'api' && apiBase !== 'main' ? ' · set for this branch' : ''), active: true },
+        menuItems: [{ label: 'Change base', icon: 'branch', sub: 'base ' + g.base, active: true },
           { label: 'Copy branch name', icon: 'copy' }, { label: 'Open history', icon: 'history' }, { kind: 'sep' },
           { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' }],
         headStyle: 'display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px',
