@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.18 — 2026-10-08
+
+### New
+- Right-click a file in Review or History for Open in Finder and editors.
+- Right-click in the diff to copy a file reference.
+- Right-click in the diff to copy or open a GitHub permalink.
+
+### Improved
+- Editors open a file at the diff's cursor line.
+- History's ⋮ menu has the branch menu's items.
+
+### Fixed
+- The right-clicked file stays highlighted while its menu is open.
+- The base branch's menu has no Rebase item.
+
 ## 0.1.17 — 2026-10-06
 
 ### New
