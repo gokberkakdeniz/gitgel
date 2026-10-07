@@ -1,13 +1,15 @@
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BackIcon, BranchIcon, CheckIcon, ChevronDownIcon, CopyIcon, ForwardIcon, SidebarIcon } from '../../components/icons';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
-import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
+import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
-import { SyncButtons } from '../../sync/SyncButtons';
+import { ScriptsMenu } from '../../scripts/ScriptsMenu';
+import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
 import { divergedBanner, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
 import { StashBar } from '../../stash/StashBar';
 import { useStashAction } from '../../stash/StashAction';
@@ -21,7 +23,7 @@ import { useCopy } from '../../lib/useCopy';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
-import { useEntryFolder, useRepoFolder } from '../../components/OpenItems';
+import { EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
 import { selectCanForward, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
@@ -318,6 +320,29 @@ export function History({ repoId, rev, backLabel }: Props) {
               >
                 Refresh
               </MenuItem>
+              {entry && (
+                <>
+                  <MenuDivider />
+                  {entry.branch !== null && (
+                    <>
+                      <MenuItem
+                        icon={<CopyIcon />}
+                        onSelect={() => {
+                          void writeText(entry.branch!);
+                          close();
+                        }}
+                      >
+                        Copy branch name
+                      </MenuItem>
+                      <MenuDivider />
+                    </>
+                  )}
+                  <OpenItems entry={entry} onDone={close} />
+                  <SyncItems entry={entry} onDone={close} rebaseOnly />
+                  <ScriptsMenu entry={entry} menu="branches" onDone={close} />
+                  <EntryMenuNote entry={entry} />
+                </>
+              )}
             </>
           )}
         </PageMenu>

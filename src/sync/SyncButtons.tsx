@@ -91,7 +91,16 @@ function SyncButton({
 /** The sync group of a branch's menus (Branches, Project, Review; W4a): Fetch, Pull and Push with
  * what each would move. Nothing for a detached HEAD, a branch without a remote, or one that is
  * gone. */
-export function SyncItems({ entry, onDone }: { entry: EntrySummary; onDone: () => void }) {
+export function SyncItems({
+  entry,
+  onDone,
+  rebaseOnly,
+}: {
+  entry: EntrySummary;
+  onDone: () => void;
+  /** Only "Rebase on <base>": History's header has Fetch, Pull and Push already. */
+  rebaseOnly?: boolean;
+}) {
   const running = useRunningSync(entry.repoId);
   const u = entry.upstream;
   if (!entry.branch || !u || entry.state === 'repo_missing' || entry.state === 'branch_deleted') return null;
@@ -103,6 +112,17 @@ export function SyncItems({ entry, onDone }: { entry: EntrySummary; onDone: () =
   const busy = running ? 'A sync is running' : null;
   // Rebase on the base: a checked-out branch that has a base other than itself.
   const base = entry.worktreePath && entry.base && entry.base !== entry.branch ? entry.base : null;
+  if (rebaseOnly) {
+    if (!base) return null;
+    return (
+      <>
+        <MenuDivider />
+        <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => rebaseOnBase(entry, base))}>
+          Rebase on {base}
+        </MenuItem>
+      </>
+    );
+  }
   return (
     <>
       <MenuDivider />

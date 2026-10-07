@@ -507,6 +507,9 @@ rather than as a task is listed the same way, marked "(on request)".
   a menu: Open in Finder (file selected) and Open in each installed editor (`open_file`) —
   2026-10-07
   - note: canvas board D11 (`FlowD11.dc.html`).
+- [x] (on request) History's ⋮ menu: Open review and Refresh, then the branch menu's items (Copy
+  branch name, open items, Rebase on <base>, Scripts, note) — 2026-10-08
+  - note: canvas board Hi4 (`HistH5.dc.html`).
 
 ---
 

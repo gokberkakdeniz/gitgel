@@ -2395,6 +2395,10 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
   - The page menu (⋮, as Review's): "Stash" (§15, with this one entry; only when `rev`
     is checked out in a worktree with uncommitted changes), "Open review" (`split`, ⌥H; only
     when `rev` is an active entry: its branch Review, or going back to it), "Refresh".
+    When `rev` is an active entry, a divider and then the branch menu's items (§5 "Entry menu"):
+    "Copy branch name" (not for a detached SHA) and a divider, the open items, "Rebase on <base>" (not
+    Fetch / Pull / Push: the header has them), the Scripts group (menu `branches`), the closing note; not "Open history" or "Change base"
+    (`HistH5.dc.html`, Hi4).
 - **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Label (section
   label style, padding 14px 16px 6px) `<rev> · N commits` (`total`), while searching `N matching
   commits` (`N+` while there are more). Rows (padding 0 8px 8px, gap 2):
