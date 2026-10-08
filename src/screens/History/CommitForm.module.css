@@ -37,12 +37,6 @@
   opacity: 0.6;
 }
 
-.note {
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--danger-text);
-}
-
 .commit {
   width: 100%;
   justify-content: center;

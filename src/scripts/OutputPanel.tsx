@@ -181,7 +181,6 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
         />
         <ModalFooter
           ruled
-          note={again?.note}
           lead={
             <Button size={36} onClick={onClose}>
               Close

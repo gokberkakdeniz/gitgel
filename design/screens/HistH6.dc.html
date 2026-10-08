@@ -192,7 +192,7 @@ button,input,textarea{font-family:inherit}
 <div role="log" aria-label="Hook output" tabindex="0" style="flex-grow: 1; min-height: 0; overflow: auto; padding: 14px 20px; background: var(--bg-sunken); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; color: var(--text-code); outline: none">
 <sc-for list="{{outLines}}" as="o" hint-placeholder-count="8"><div style="{{o.style}}">{{o.text}}</div></sc-for>
 </div>
-<dc-import name="ModalFooter" theme="{{themeName}}" note="Nothing was committed; your message is kept." lead="{{outLead}}" buttons="{{outButtons}}" hint-size="100%,64px"></dc-import>
+<dc-import name="ModalFooter" theme="{{themeName}}" note="" lead="{{outLead}}" buttons="{{outButtons}}" hint-size="100%,64px"></dc-import>
 </div>
 </sc-if>
 </div>
@@ -354,8 +354,8 @@ class Component extends DCLogic {
       summary: amend ? 'Retry refresh once on network error' : 'Rotate tokens on refresh',
       body: amend ? 'A dropped connection during refresh logged people out. Retry once with the same refresh id.' : (s === 'hooks' || s === 'failed') ? 'Delete the old session when a token is rotated.' : '',
       amend: amend,
-      hasNote: amend || s === 'failed',
-      note: amend ? 'e8b2c41 is not on origin yet, so amending it is safe.' : 'Commit failed. Nothing was committed; your message is kept.',
+      hasNote: amend,
+      note: 'e8b2c41 is not on origin yet, so amending it is safe.',
       noteStyle: 'font-size: 12px; line-height: 1.45; color: var(--' + (amend ? 'text-muted' : 'danger') + ')',
       commitLabel: committing ? 'Committing…' : amend ? 'Amend e8b2c41' : 'Commit 2 files',
       commitIcon: committing ? 'spinner' : 'none',

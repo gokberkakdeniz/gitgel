@@ -155,7 +155,6 @@ export function History({ repoId, rev, backLabel }: Props) {
         const off = useRuns.subscribe(() => ended() && off());
       },
       again: {
-        note: 'Nothing was committed; your message is kept.',
         retry: () => again(false),
         skipHooks: files.noVerify ? undefined : () => again(true),
       },
@@ -516,7 +515,6 @@ export function History({ repoId, rev, backLabel }: Props) {
               description={description}
               files={included.length}
               committing={committing}
-              failed={commitFailed}
               blocked={
                 !staged
                   ? 'Reading the index'

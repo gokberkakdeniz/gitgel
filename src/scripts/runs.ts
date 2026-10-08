@@ -181,8 +181,6 @@ export interface GitActionShow {
 }
 /** Retry, and optionally the same without hooks, in a failed run's output panel. */
 export interface GitActionAgain {
-  /** Shown left of the buttons. */
-  note: string;
   retry: () => void;
   skipHooks?: () => void;
 }

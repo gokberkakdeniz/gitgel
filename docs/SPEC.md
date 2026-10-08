@@ -2306,7 +2306,7 @@ git action in the repository.
 - **Running** (`HistH7`): the run toast “Running “Commit”…” (sub `repo / branch`); a click opens the
   output panel with the hooks' output.
 - **Failed** (`HistH8`): the output panel opens by itself. Its footer, besides Close and Copy, has
-  the note "Nothing was committed; your message is kept." and the buttons "Commit without hooks"
+  the buttons "Commit without hooks"
   (the same commit with `--no-verify`) and "Retry" (primary, ⌘↵), which send the same files and
   message again. Stopping the run does not open it.
 
@@ -2486,8 +2486,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     changes. A file partly staged outside counts as one box and is staged whole.
   - **After it ends:** success empties the form and shows the toast “Committed to <rev>”. A failure
     (a hook exited non-zero, or git refused) keeps the message and the boxes, opens the output
-    panel, and puts "Commit failed. Nothing was committed; your message is kept." under the
-    description and the pill on the Uncommitted row, until the next commit starts.
+    panel, and puts the pill on the Uncommitted row, until the next commit starts.
 - **Picking:** on opening, the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,
   Uncommitted included. Clicking the picked row again folds its file list, and opens it again;

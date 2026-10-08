@@ -11,7 +11,6 @@ export function CommitForm({
   description,
   files,
   committing,
-  failed,
   blocked,
   onSummary,
   onDescription,
@@ -23,8 +22,6 @@ export function CommitForm({
   /** Files checked. */
   files: number;
   committing: boolean;
-  /** The last commit of this branch failed: nothing was committed, the message stays. */
-  failed: boolean;
   /** Why Commit cannot run besides an empty summary or no files; null when nothing blocks it. */
   blocked: string | null;
   onSummary: (value: string) => void;
@@ -67,9 +64,6 @@ export function CommitForm({
         onChange={(e) => onDescription(e.target.value)}
         onKeyDown={submitOnKey}
       />
-      {failed && !committing && (
-        <span className={styles.note}>Commit failed. Nothing was committed; your message is kept.</span>
-      )}
       <Button
         type="submit"
         variant="primary"
