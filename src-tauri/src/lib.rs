@@ -161,6 +161,8 @@ pub fn run() {
             commands::git_fetch,
             commands::git_pull,
             commands::git_rebase_on_base,
+            commands::git_commit,
+            commands::get_staged_paths,
             commands::git_push,
         ])
         .build(tauri::generate_context!())

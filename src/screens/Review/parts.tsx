@@ -1,6 +1,7 @@
 // Parts of the diff pane shared by Review and History (SPEC §16): the view menu, change
 // navigation, file rows, and the remembered diff view settings with their ⌥ keys.
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Checkbox } from '../../components/Checkbox';
 import { ChevronDownIcon, ChevronUpIcon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
 import { Menu, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
@@ -267,6 +268,7 @@ export function FileRow({
   on,
   onClick,
   folder,
+  check,
 }: {
   file: FileChange;
   terms: string[];
@@ -274,21 +276,17 @@ export function FileRow({
   onClick: () => void;
   /** The folder the file is opened from by the right-click menu; none, no menu. */
   folder: string | null;
+  /** A box before the row: the file goes into the commit (History's Uncommitted, W1a). */
+  check?: { checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void };
 }) {
   const [menu, setMenu] = useState<DOMRect | null>(null);
   // A deleted file is not on disk.
   const menuFolder = f.kind === 'D' ? null : folder;
-  return (
-    <>
+  const state = on ? styles.selected : menu ? styles.menuOpen : '';
+  const button = (
       <button
         type="button"
-        className={
-          on
-            ? `${styles.fileRow} ${styles.selected}`
-            : menu
-              ? `${styles.fileRow} ${styles.menuOpen}`
-              : styles.fileRow
-        }
+        className={check ? styles.fileRowBare : `${styles.fileRow} ${state}`}
         aria-current={on || undefined}
         onClick={onClick}
         onContextMenu={
@@ -311,6 +309,22 @@ export function FileRow({
         {!!f.add && <span className={styles.add}>+{f.add}</span>}
         {!!f.del && <span className={styles.del}>−{f.del}</span>}
       </button>
+  );
+  return (
+    <>
+      {check ? (
+        <div className={`${styles.boxedRow} ${state}`}>
+          <Checkbox
+            checked={check.checked}
+            disabled={check.disabled}
+            aria-label={`Include ${basename(f.path)}`}
+            onChange={(e) => check.onChange(e.target.checked)}
+          />
+          {button}
+        </div>
+      ) : (
+        button
+      )}
       {menu && menuFolder && (
         <Popover anchorRect={menu} width={220} onClose={() => setMenu(null)}>
           <Menu aria-label={`${basename(f.path)} actions`}>

@@ -625,6 +625,25 @@ pub async fn git_rebase_on_base(
     blocking(&state, move |state| scripts::git::rebase_on_base(state, entry)).await
 }
 
+/// Commit (W1a): the checked files of the entry's worktree, with the message.
+#[tauri::command]
+pub async fn git_commit(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    files: scripts::git::CommitFiles,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| scripts::git::commit(state, entry, files)).await
+}
+
+/// The paths git's index has staged in the entry's worktree (Uncommitted's boxes start checked).
+#[tauri::command]
+pub async fn get_staged_paths(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+) -> Result<Vec<String>, AppError> {
+    blocking(&state, move |state| scripts::git::staged_paths(state, &entry)).await
+}
+
 /// Sync (W4a): `git push` of the entry's branch to its remote, never forced.
 #[tauri::command]
 pub async fn git_push(state: State<'_, AppState>, entry: EntryRef) -> Result<ScriptRun, AppError> {

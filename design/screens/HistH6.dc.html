@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hi5 · Commit in History</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input,textarea{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+@keyframes gg-blink{50%{opacity:0}}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; flex-direction: column; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--bg-main)">
+<div style="display: flex; gap: 8px; margin-right: -4px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><dc-import name="Icon" icon="sidebar" hint-size="17px,17px"></dc-import></button>
+<a href="HistH1.dc.html" aria-label="Back to Branches" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px"><dc-import name="Icon" icon="back" hint-size="17px,17px"></dc-import></a>
+<button aria-label="Forward" disabled style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)"><dc-import name="Icon" icon="forward" hint-size="17px,17px"></dc-import></button>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-left: 4px">
+<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap">History</span>
+<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">web-app · ~/code/wt/token-refresh</span>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; align-items: center; gap: 10px">
+<button aria-label="Branch" aria-haspopup="menu" title="Pick a branch of web-app" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 7px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px; white-space: nowrap"><span style="display: flex; color: var(--accent-text)"><dc-import name="Icon" icon="branch" size="13" hint-size="13px,13px"></dc-import></span>session-token-refresh<span style="display: flex; color: var(--text-muted)"><dc-import name="Icon" icon="chevron-down" size="10" hint-size="10px,10px"></dc-import></span></button>
+<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search commits" label="Search commit messages, SHAs and paths" right-text="" hint-size="200px,32px"></dc-import>
+<span title="Last fetch (FETCH_HEAD)" style="font-size: 12px; color: var(--text-faint); white-space: nowrap">Fetched 3h ago</span>
+<button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><dc-import name="Icon" icon="refresh" size="14" hint-size="14px,14px"></dc-import></button>
+</div>
+</header>
+<div style="flex-grow: 1; display: flex; min-height: 0">
+<aside style="width: 380px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 8px; padding: 14px 16px 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)"><span style="flex-grow: 1">session-token-refresh · 4 ahead of main</span></div>
+<div role="listbox" aria-label="Commits" aria-multiselectable="{{multi}}" style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 8px 8px; min-height: 0; overflow: hidden">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="8">
+<sc-if value="{{it.isDay}}" hint-placeholder-val="{{false}}">
+<div style="flex-shrink: 0; padding: 10px 8px 4px; font-size: 11px; color: var(--text-faint)">{{it.label}}</div>
+</sc-if>
+<sc-if value="{{it.isLine}}" hint-placeholder-val="{{false}}">
+<div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 6px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="{{it.ruleStyle}}"></span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.label}}</span><span style="{{it.ruleStyle}}"></span></div>
+<span style="text-align: center; font-size: 11px; color: var(--text-faint)">{{it.sub}}</span>
+</div>
+</sc-if>
+<sc-if value="{{it.isWip}}" hint-placeholder-val="{{false}}">
+<div role="option" aria-selected="{{it.sel}}" title="Show uncommitted changes (HEAD ↔ working tree)" style="{{it.rowStyle}}">
+<span style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-text)"></span></span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 13px; font-weight: 500; color: var(--accent-text)">Uncommitted changes</span><sc-if value="{{it.failed}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="{{themeName}}" label="commit failed" tone="danger" size="sm" hint-size="72px,16px"></dc-import></sc-if></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{it.isCommit}}" hint-placeholder-val="{{true}}">
+<div role="option" aria-selected="{{it.sel}}" title="Show this commit" style="{{it.rowStyle}}">
+<span title="{{it.author}}" style="{{it.avatarStyle}}">{{it.initials}}</span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="{{themeName}}" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if></div>
+<div style="display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap"><span style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{it.author}} · {{it.age}}</span><span style="color: var(--accent-text)">{{it.sha}}</span></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{it.isAll}}" hint-placeholder-val="{{false}}">
+<div style="flex-shrink: 0; display: flex; align-items: center; gap: 0; height: 28px; padding: 0 8px"><span style="width: 26px; flex-shrink: 0; display: flex; align-items: center"><button type="button" role="checkbox" aria-checked="mixed" aria-label="Select all" style="width: 16px; height: 16px; flex-shrink: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: var(--accent); cursor: pointer"><span style="width: 8px; height: 2px; border-radius: 1px; background: var(--on-accent)"></span></button></span><span style="font-size: 12px; color: var(--text-muted)">Select all</span></div>
+</sc-if>
+<sc-if value="{{it.isSection}}" hint-placeholder-val="{{false}}">
+<div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; height: 26px; padding: 6px 8px 0 12px"><span style="flex-grow: 1; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">{{it.label}}<span style="margin-left: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0; color: var(--text-faint)">{{it.count}}</span></span><dc-import name="Button" theme="none" variant="link" size="28" label="{{it.action}}" title="{{it.actionTitle}}" hint-size="70px,16px"></dc-import></div>
+</sc-if>
+<sc-if value="{{it.isFile}}" hint-placeholder-val="{{false}}">
+<div style="{{it.rowStyle}}">
+<sc-if value="{{it.boxed}}" hint-placeholder-val="{{false}}"><span style="width: 26px; flex-shrink: 0; display: flex; align-items: center"><sc-if value="{{it.hasCheck}}" hint-placeholder-val="{{false}}"><dc-import name="Checkbox" theme="{{themeName}}" checked="{{it.on}}" label="" aria-label="{{it.checkLabel}}" hint-size="16px,16px"></dc-import></sc-if>
+<sc-if value="{{it.part}}" hint-placeholder-val="{{false}}"><button type="button" role="checkbox" aria-checked="mixed" aria-label="{{it.checkLabel}}" title="Some lines are included" style="width: 16px; height: 16px; flex-shrink: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: var(--accent); cursor: pointer"><span style="width: 8px; height: 2px; border-radius: 1px; background: var(--on-accent)"></span></button></sc-if></span></sc-if>
+<span style="{{it.badgeStyle}}">{{it.kind}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span>
+<sc-if value="{{it.hasAct}}" hint-placeholder-val="{{false}}"><button type="button" aria-label="{{it.actTitle}}" title="{{it.actTitle}}" style="{{it.actStyle}}">{{it.actGlyph}}</button></sc-if>
+</div>
+</sc-if>
+</sc-for>
+</div>
+<sc-if value="{{showComposer}}" hint-placeholder-val="{{true}}">
+<form aria-label="Commit" style="flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: var(--bg-sidebar)">
+<input aria-label="Summary" placeholder="Summary (required)" value="{{summary}}" style="height: 32px; box-sizing: border-box; width: 100%; padding: 0 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-size: 13px; outline: none">
+<textarea aria-label="Description" placeholder="Description" value="{{body}}" style="height: 56px; box-sizing: border-box; width: 100%; padding: 7px 10px; resize: none; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-size: 12px; line-height: 1.45; outline: none"></textarea>
+<sc-if value="{{hasNote}}" hint-placeholder-val="{{false}}"><span style="{{noteStyle}}">{{note}}</span></sc-if>
+<dc-import name="Button" theme="{{themeName}}" variant="primary" size="32" width="100%" label="{{commitLabel}}" icon="{{commitIcon}}" disabled="{{committing}}" title="{{commitTitle}}" hint-size="100%,32px"></dc-import>
+</form>
+</sc-if>
+<sc-if value="{{showSelection}}" hint-placeholder-val="{{false}}">
+<div role="region" aria-label="Selected commits" style="flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: var(--bg-sidebar)">
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">2 commits selected</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">e8b2c41 … 5c0d7aa</span></div>
+<span style="font-size: 12px; line-height: 1.45; color: var(--text-faint)">⇧-click extends the range. Commits already in main can't be picked.</span>
+<div style="display: flex; gap: 8px">
+<dc-import name="Button" theme="{{themeName}}" variant="primary" size="32" label="Squash 2 commits…" hint-size="150px,32px"></dc-import>
+<dc-import name="Button" theme="{{themeName}}" variant="ghost" size="32" label="Clear" kbd="esc" hint-size="80px,32px"></dc-import>
+</div>
+</div>
+</sc-if>
+</aside>
+<section style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+<div style="border-bottom: 1px solid var(--border); padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 28px">
+<span style="font-size: 15px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{c.subject}}</span>
+<div style="flex-grow: 1"></div>
+<sc-if value="{{c.isOne}}" hint-placeholder-val="{{false}}"><button aria-label="Copy SHA" title="Copy full SHA" style="width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-body)"><dc-import name="Icon" icon="copy" size="13" hint-size="13px,13px"></dc-import></button></sc-if>
+</div>
+<sc-if value="{{c.hasBody}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; line-height: 1.5; color: var(--text-muted); max-width: 720px">{{c.body}}</div></sc-if>
+<sc-if value="{{c.isRange}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<sc-for list="{{c.range}}" as="r" hint-placeholder-count="2"><div style="display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: var(--text-body)"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-text)">{{r.sha}}</span><span>{{r.subject}}</span></div></sc-for>
+</div>
+</sc-if>
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">
+<sc-if value="{{c.isOne}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px"><span style="{{c.avatarStyle}}">{{c.initials}}</span><span style="color: var(--text-body)">{{c.author}}</span><span style="color: var(--text-faint)">·</span><span>{{c.when}}</span><span style="color: var(--text-faint)">·</span><span style="color: var(--accent-text)">{{c.sha}}</span><span style="color: var(--text-faint)">·</span><span>parent {{c.parent}}</span><span style="color: var(--text-faint)">·</span></span></sc-if>
+<span>{{c.lead}}</span><span>{{c.files}}</span><span style="color: var(--success)">{{c.add}}</span><span style="color: var(--danger)">{{c.del}}</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; min-height: 36px; box-sizing: border-box; padding: 5px 10px 5px 18px; border-bottom: 1px solid var(--border); background: var(--bg-sunken)">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{c.path}}</span>
+<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{c.compare}}</span>
+<div style="flex-grow: 1"></div>
+<sc-if value="{{c.hasHint}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; color: var(--text-faint); white-space: nowrap">{{c.hint}}</span></sc-if>
+<button aria-haspopup="menu" title="Diff view" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)"><dc-import name="Icon" icon="{{c.viewIcon}}" size="14" stroke="1.7" hint-size="14px,14px"></dc-import><span>{{c.viewLabel}}</span><dc-import name="Icon" icon="chevron-down" size="9" stroke="2.6" hint-size="9px,9px"></dc-import></button>
+<span style="width: 1px; height: 16px; background: var(--border); margin: 0 2px"></span>
+<span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{c.nav}}</span>
+<div role="group" aria-label="Jump between changes" style="display: flex; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
+<button disabled aria-label="Previous change" title="Previous change (⌥↑)" style="width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--icon-disabled)"><dc-import name="Icon" icon="chevron-up" size="14" stroke="2" hint-size="14px,14px"></dc-import></button>
+<button aria-label="Next change" title="Next change (⌥↓)" style="width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-body)"><dc-import name="Icon" icon="chevron-down" size="14" stroke="2" hint-size="14px,14px"></dc-import></button>
+</div>
+</div>
+<sc-if value="{{isSplit}}" hint-placeholder-val="{{true}}">
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: var(--bg-main); min-height: 0">
+<div style="border-right: 1px solid var(--border); padding-top: 6px; overflow: hidden">
+<sc-for list="{{left}}" as="l" hint-placeholder-count="6">
+<div style="{{l.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.n}}</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)">{{l.mark}}</span><span style="white-space: pre">{{l.t}}</span></div>
+</sc-for>
+</div>
+<div style="padding-top: 6px; overflow: hidden">
+<sc-for list="{{right}}" as="r" hint-placeholder-count="6">
+<div style="{{r.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{r.n}}</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">{{r.mark}}</span><span style="white-space: pre">{{r.t}}</span></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{isPick}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 22px; background: var(--bg-main); min-height: 0; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 10px; height: 36px; box-sizing: border-box; padding: 0 10px 0 7px; margin: 6px 0 2px; background: var(--bg-band); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border)">
+<button type="button" role="checkbox" aria-checked="mixed" aria-label="Include the whole hunk" style="width: 16px; height: 16px; flex-shrink: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: var(--accent); cursor: pointer"><span style="width: 8px; height: 2px; border-radius: 1px; background: var(--on-accent)"></span></button>
+<span style="color: var(--text-muted); flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">@@ -18,7 +18,8 @@ export async function refreshSession</span>
+<span style="font-family: 'Instrument Sans', sans-serif; font-size: 12px; color: var(--text-muted); white-space: nowrap">2 of 3 changed lines included</span>
+<dc-import name="Button" theme="{{themeName}}" variant="secondary" size="28" label="Include hunk" hint-size="100px,28px"></dc-import>
+</div>
+<sc-for list="{{uni}}" as="u" hint-placeholder-count="8">
+<div style="{{u.style}}"><span style="width: 30px; flex-shrink: 0; display: flex; justify-content: center"><sc-if value="{{u.pick}}" hint-placeholder-val="{{false}}"><dc-import name="Checkbox" theme="{{themeName}}" checked="{{u.on}}" label="" aria-label="Include line" hint-size="16px,16px"></dc-import></sc-if></span><span style="width: 40px; flex-shrink: 0; text-align: right; padding-right: 8px; color: var(--text-faint)">{{u.o}}</span><span style="width: 40px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{u.n}}</span><span style="{{u.markStyle}}">{{u.mark}}</span><span style="white-space: pre">{{u.t}}</span></div>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</div>
+<sc-if value="{{showMenu}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; top: 262px; left: 214px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="300" label="Commit actions" items="{{menuItems}}" hint-size="300px,330px"></dc-import></div>
+</sc-if>
+<sc-if value="{{showToast}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 5"><dc-import name="Toast" theme="{{themeName}}" status="running" code="" message="Running “Commit”…" sub="web-app / session-token-refresh" action-label="" link-label="" href="HistH8.dc.html" hint-size="420px,46px"></dc-import></div>
+</sc-if>
+<sc-if value="{{showOutput}}" hint-placeholder-val="{{false}}">
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim); z-index: 6"></div>
+<div role="dialog" aria-labelledby="commit-out-title" style="position: absolute; top: 110px; left: 260px; width: 760px; height: 520px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden; z-index: 7">
+<div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px 14px 20px; border-bottom: 1px solid var(--border)">
+<span style="width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"></circle><path d="M3 12h5.5M15.5 12H21"></path></svg></span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<h2 id="commit-out-title" style="margin: 0; font-size: 14px; font-weight: 600; color: var(--text-strong)">Commit</h2>
+<span title="~/code/wt/token-refresh" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">web-app / session-token-refresh · ~/code/wt/token-refresh</span>
+</div>
+<dc-import name="Pill" theme="{{themeName}}" label="exit 1 · 0:04" tone="danger" mono="{{true}}" hint-size="96px,22px"></dc-import>
+<dc-import name="Button" theme="{{themeName}}" variant="ghost" size="28" icon="close" label="" aria-label="Close" hint-size="28px,28px"></dc-import>
+</div>
+<div role="log" aria-label="Hook output" tabindex="0" style="flex-grow: 1; min-height: 0; overflow: auto; padding: 14px 20px; background: var(--bg-sunken); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; color: var(--text-code); outline: none">
+<sc-for list="{{outLines}}" as="o" hint-placeholder-count="8"><div style="{{o.style}}">{{o.text}}</div></sc-for>
+</div>
+<dc-import name="ModalFooter" theme="{{themeName}}" note="Nothing was committed; your message is kept." lead="{{outLead}}" buttons="{{outButtons}}" hint-size="100%,64px"></dc-import>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","squash","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var t = this.props.theme || 'dark';
+    var s = this.props.state || 'commit';
+    // WIP git actions, all in History (one branch, so there is always exactly one target).
+    // state: commit (W1a: Uncommitted picked, its files have checkboxes, the commit form under
+    // the list), lines (W1b: lines picked in the diff, the file's box shows "some"), hooks (W1c:
+    // hooks run, a running toast that opens the output), failed (W1d: the output dialog, as the
+    // Scripts output N4), amend (W2a), squash (W2b: a range of commits picked with ⇧-click),
+    // menu (W2c: a commit's menu). The list shows two lines: the upstream (origin/<branch>,
+    // dashed: above it is not pushed yet) and the base (as Hi3).
+    var wipOpen = s !== 'squash' && s !== 'menu';
+    // composer: panel (the form under the list, W1a) or dialog (W5: no form, no checkboxes in the
+    // list; Commit… in the Uncommitted row's menu opens the commit dialog).
+    // composer index (W5c): no form; the boxes are git's index (checked = staged, "some" = part
+    // of the file staged); clicking one stages / unstages at once. composer sections (W5d): no
+    // boxes; Staged and Unstaged groups with + / − per file and Stage all / Unstage all.
+    var cmode = this.props.composer || 'panel';
+    var inDialog = cmode === 'dialog' || cmode === 'sections';
+    var avatar = function (who, size) {
+      return 'width: ' + size + 'px; height: ' + size + 'px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-family: \'Instrument Sans\', sans-serif; font-size: ' + (size > 20 ? 10 : 9) + 'px; font-weight: 600; background: var(--bg-pressed); color: var(--text-strong)';
+    };
+    var initials = function (who) { return who.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2); };
+    var commit = function (sha, subject, author, age, opt) {
+      opt = opt || {};
+      return { isCommit: true, sha: sha, subject: subject, author: author, age: age, sel: !!(opt.sel || opt.pick),
+        hasTag: !!opt.tag, tag: opt.tag || '', initials: initials(author), avatarStyle: avatar(author, 24),
+        subjectStyle: 'font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: ' + (opt.shared ? 'var(--text-muted)' : 'var(--text-strong)'),
+        rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; cursor: pointer; ' +
+          (opt.pick ? 'background: var(--bg-hover); ' : '') +
+          (opt.sel ? 'background: rgba(var(--accent-rgb), 0.12); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.5); ' : '') +
+          (opt.shared ? 'opacity: 0.7' : '') };
+    };
+    var KIND = { M: 'warning', A: 'success', D: 'danger', U: 'kind-u' };
+    var badge = function (kind) {
+      return 'width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; font-weight: 500; color: var(--' + KIND[kind] + '); background: rgba(var(--' + KIND[kind] + '-rgb), 0.15)';
+    };
+    var shownStyle = 'box-shadow: inset 0 0 0 1px var(--accent); background: rgba(var(--accent-rgb), 0.10)';
+    // check: 'on' | 'off' | 'part' (a file of Uncommitted) or undefined (a file of a commit)
+    var file = function (kind, name, dir, add, del, shown, check) {
+      if (inDialog) check = undefined;
+      var boxed = check !== undefined;
+      return { isFile: true, boxed: boxed, kind: kind, name: name, dir: dir, add: add, del: del, badgeStyle: badge(kind),
+        hasCheck: check === 'on' || check === 'off', part: check === 'part', on: check === 'on', checkLabel: 'Include ' + name,
+        rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 ' + (boxed ? 8 : 42) + 'px; border-radius: 8px; ' + (shown ? shownStyle : '') };
+    };
+    var day = function (label) { return { isDay: true, label: label }; };
+    var rule = function (dashed) { return 'flex-grow: 1; height: 0; border-top: 1px ' + (dashed ? 'dashed' : 'solid') + ' var(--border-strong)'; };
+    var upstream = { isLine: true, label: 'origin/session-token-refresh · b41f9e3', sub: 'Above: 2 not pushed', ruleStyle: rule(true) };
+    var base = { isLine: true, label: 'base main · d81f03a', sub: 'Below: already in main', ruleStyle: rule(false) };
+    var line = function (kind, n, text) {
+      var bg = kind === 'pad' ? 'background: repeating-linear-gradient(135deg, var(--bg-band) 0 4px, var(--bg-main) 4px 8px)'
+        : kind === 'del' ? 'background: rgba(var(--danger-rgb), 0.15)' : kind === 'add' ? 'background: rgba(var(--success-rgb), 0.15)' : '';
+      return { n: n || '', t: text || '', mark: kind === 'del' ? '−' : kind === 'add' ? '+' : '', style: 'display: flex; padding-right: 12px; color: var(--text-code); ' + bg };
+    };
+
+    var wipFiles = s === 'lines'
+      ? [file('M', 'refresh.ts', 'src/auth · 2 of 3 lines', '+2', '−1', true, 'part'), file('M', 'refresh.test.ts', 'test/auth', '+5', '', false, 'on'), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '', false, 'off')]
+      : [file('M', 'refresh.ts', 'src/auth', '+2', '−1', true, 'on'), file('M', 'refresh.test.ts', 'test/auth', '+5', '', false, 'on'), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '', false, 'off')];
+    var act = function (f, glyph, title, show) {
+      f.hasAct = true; f.actGlyph = glyph; f.actTitle = title;
+      f.actStyle = 'width: 20px; height: 20px; flex-shrink: 0; margin-left: 2px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-elevated); color: var(--text-strong); font-family: \'JetBrains Mono\', monospace; font-size: 12px; line-height: 1; cursor: pointer; ' + (show ? '' : 'visibility: hidden');
+      return f;
+    };
+    var section = function (label, count, action, title) { return { isSection: true, label: label, count: String(count), action: action, actionTitle: title }; };
+    if (cmode === 'index') {
+      wipFiles = [file('M', 'refresh.ts', 'src/auth · 2 of 3 lines staged', '+2', '−1', true, 'part'), file('M', 'refresh.test.ts', 'test/auth', '+5', '', false, 'on'), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '', false, 'off')];
+    } else if (cmode === 'sections') {
+      wipFiles = [section('Staged', 2, 'Unstage all', 'git restore --staged on every file'),
+        act(file('M', 'refresh.test.ts', 'test/auth', '+5', ''), '−', 'Unstage refresh.test.ts', false),
+        act(file('M', 'refresh.ts', 'src/auth · 2 of 3 lines', '+2', '−1'), '−', 'Unstage refresh.ts', false),
+        section('Unstaged', 2, 'Stage all', 'git add on every file'),
+        act(file('M', 'refresh.ts', 'src/auth · 1 line', '+1', '', true), '+', 'Stage refresh.ts', true),
+        act(file('U', 'token-debug.ts', 'scripts · untracked', '+22', ''), '+', 'Stage token-debug.ts', false)];
+    }
+    var wipMeta = cmode === 'index' || cmode === 'sections' ? '3 files · 2 staged · 6m' : '3 files · 6m';
+    var wip = { isWip: true, sel: wipOpen, failed: s === 'failed', meta: wipMeta,
+      rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin-top: 4px; border-radius: 8px; border: 1px dashed var(--border-strong); cursor: pointer; ' + (wipOpen ? 'background: var(--bg-hover)' : '') };
+
+    var c1 = commit('e8b2c41', 'Retry refresh once on network error', 'Can Öztürk', '6m', { sel: s === 'squash', tag: s === 'amend' ? 'amending' : '' });
+    var c2 = commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m', { sel: s === 'squash', pick: s === 'menu' });
+    var c2Files = s === 'menu' ? [file('M', 'store.ts', 'src/auth', '+9', '−1', true), file('M', 'refresh.ts', 'src/auth', '+2', '−1')] : [];
+    var allRow = { isAll: true };
+    var items = [wip].concat(wipOpen ? (cmode === 'panel' ? [allRow].concat(wipFiles) : wipFiles) : [], [day('Today'), c1, c2], c2Files, [upstream,
+      commit('b41f9e3', 'Add refresh token rotation flag', 'Can Öztürk', '3h'),
+      day('Yesterday'), commit('2e7c1d0', 'Scaffold token refresh service', 'Can Öztürk', '1d'),
+      base,
+      commit('d81f03a', 'Split auth middleware into guards', 'Melis Kaya', '3d', { shared: true }),
+      commit('e1d4a77', 'Add audit log for admin sign-ins', 'Deniz Arslan', '3d', { shared: true })]);
+
+    // The right pane: Uncommitted (HEAD ↔ working tree), one commit, or a range of commits.
+    var wipLeft = [line('ctx', 18, "import { issueToken } from './tokens';"), line('ctx', 19, ''), line('ctx', 20, 'export async function refreshSession(s: Session) {'),
+      line('del', 21, '  const next = await issueToken(s.userId);'), line('ctx', 22, '  await store.set(next.id, next);'), line('pad'),
+      line('ctx', 23, '  return next;'), line('ctx', 24, '}')];
+    var wipRight = [line('ctx', 18, "import { issueToken } from './tokens';"), line('ctx', 19, ''), line('ctx', 20, 'export async function refreshSession(s: Session) {'),
+      line('add', 21, '  const next = await issueToken(s.userId, { rotate: true });'), line('ctx', 22, '  await store.set(next.id, next);'),
+      line('add', 23, '  await store.delete(s.id);'), line('ctx', 24, '  return next;'), line('ctx', 25, '}')];
+    var c;
+    var left = wipLeft, right = wipRight;
+    var wipPane = { isOne: false, subject: 'Uncommitted changes', hasBody: false, isRange: false, lead: '~/code/wt/token-refresh · ', files: '3 files', add: '+29', del: '−1',
+      path: 'src/auth/refresh.ts', compare: 'HEAD ↔ working tree', nav: 'Change 1 of 2', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
+    if (s === 'menu') {
+      c = { isOne: true, subject: 'Persist refresh id with the session', hasBody: true, isRange: false,
+        body: 'The refresh id is saved next to the session, so a retry can find the token it started from.',
+        author: 'Can Öztürk', initials: 'CÖ', avatarStyle: avatar('Can Öztürk', 18), when: 'today 13:02', sha: '5c0d7aa', parent: 'b41f9e3',
+        lead: '', files: '2 files', add: '+11', del: '−2', path: 'src/auth/store.ts', compare: 'b41f9e3 ↔ 5c0d7aa', nav: 'Change 1 of 1', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
+      left = [line('ctx', 12, 'export async function save(s: Session) {'), line('del', 13, '  await db.put(s.id, s);'), line('pad'), line('ctx', 14, '}')];
+      right = [line('ctx', 12, 'export async function save(s: Session) {'), line('add', 13, '  await db.put(s.id, { ...s, refreshId: s.refreshId });'),
+        line('add', 14, "  await db.index('refresh', s.refreshId, s.id);"), line('ctx', 15, '}')];
+    } else if (s === 'squash') {
+      c = { isOne: false, subject: '2 commits selected', hasBody: false, isRange: true,
+        range: [{ sha: 'e8b2c41', subject: 'Retry refresh once on network error' }, { sha: '5c0d7aa', subject: 'Persist refresh id with the session' }],
+        lead: 'b41f9e3..e8b2c41 · ', files: '3 files', add: '+30', del: '−6', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ e8b2c41', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
+      left = [line('ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('del', 41, '  return refreshSession(s);'),
+        line('pad'), line('pad'), line('pad'), line('pad'), line('pad'), line('ctx', 42, '}')];
+      right = [line('ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('add', 41, '  try {'),
+        line('add', 42, '    return await refreshSession(s);'), line('add', 43, '  } catch (e) {'),
+        line('add', 44, '    if (!(e instanceof NetworkError)) throw e;'), line('add', 45, '    return refreshSession(s);'),
+        line('add', 46, '  }'), line('ctx', 47, '}')];
+    } else {
+      c = wipPane;
+      if (s === 'lines') { c = Object.assign({}, wipPane, { viewIcon: 'unified', viewLabel: 'Unified', hasHint: true, hint: 'Click a line to include it, drag for a range' }); }
+    }
+
+    // W1b: the unified diff with a box per changed line.
+    var uline = function (kind, o, n, text, on) {
+      var bg = kind === 'del' ? 'background: rgba(var(--danger-rgb), 0.15); ' : kind === 'add' ? 'background: rgba(var(--success-rgb), 0.15); ' : '';
+      return { pick: kind !== 'ctx', on: !!on, o: o || '', n: n || '', t: text, mark: kind === 'del' ? '−' : kind === 'add' ? '+' : '',
+        markStyle: 'width: 14px; flex-shrink: 0; color: var(--' + (kind === 'del' ? 'danger' : 'success') + ')',
+        style: 'display: flex; align-items: center; padding-right: 12px; color: var(--text-code); ' + bg + (on ? 'box-shadow: inset 3px 0 0 var(--accent-text)' : '') };
+    };
+    var uni = [uline('ctx', 18, 18, "import { issueToken } from './tokens';"), uline('ctx', 19, 19, ''),
+      uline('ctx', 20, 20, 'export async function refreshSession(s: Session) {'),
+      uline('del', 21, '', '  const next = await issueToken(s.userId);', true),
+      uline('add', '', 21, '  const next = await issueToken(s.userId, { rotate: true });', true),
+      uline('ctx', 22, 22, '  await store.set(next.id, next);'),
+      uline('add', '', 23, '  await store.delete(s.id);', false),
+      uline('ctx', 23, 24, '  return next;'), uline('ctx', 24, 25, '}')];
+
+    var C = 'color: var(--text-code);', M = 'color: var(--text-muted);', S = 'color: var(--success);', D = 'color: var(--danger);', A = 'color: var(--accent-text);';
+    var out = [['$ .husky/pre-commit', A], ['> lint-staged', M], ['✓ Preparing lint-staged…', S], ['✗ Running tasks for staged files…', D],
+      ['  ✗ *.ts — 2 files', D], ['    ✗ eslint --fix', D], ['', C], ['src/auth/refresh.ts', C],
+      ["  23:9  error  'next' is assigned a value but never used  no-unused-vars", D], ['', C],
+      ['✗ 1 problem (1 error, 0 warnings)', D], ['husky - pre-commit script failed (code 1)', M]];
+
+    var committing = s === 'hooks';
+    var amend = s === 'amend';
+    return {
+      themeClass: 'theme-' + t, themeName: t,
+      multi: s === 'squash',
+      items: items,
+      showComposer: wipOpen && cmode === 'panel',
+      showSelection: s === 'squash',
+      summary: amend ? 'Retry refresh once on network error' : 'Rotate tokens on refresh',
+      body: amend ? 'A dropped connection during refresh logged people out. Retry once with the same refresh id.' : (s === 'hooks' || s === 'failed') ? 'Delete the old session when a token is rotated.' : '',
+      amend: amend,
+      hasNote: amend || s === 'failed',
+      note: amend ? 'e8b2c41 is not on origin yet, so amending it is safe.' : 'Commit failed. Nothing was committed; your message is kept.',
+      noteStyle: 'font-size: 12px; line-height: 1.45; color: var(--' + (amend ? 'text-muted' : 'danger') + ')',
+      commitLabel: committing ? 'Committing…' : amend ? 'Amend e8b2c41' : 'Commit 2 files',
+      commitIcon: committing ? 'spinner' : 'none',
+      commitTitle: committing ? 'Hooks are running' : 'Commit to session-token-refresh',
+      committing: committing,
+      c: c, left: left, right: right,
+      isSplit: s !== 'lines', isPick: s === 'lines', uni: uni,
+      showMenu: s === 'menu',
+      menuItems: [
+        { kind: 'caption', label: '5c0d7aa · Persist refresh id with the session' },
+        { label: 'Copy SHA', icon: 'copy', kbd: '⌘C' },
+        { kind: 'sep' },
+        { label: 'Reword…', icon: 'pencil' },
+        { label: 'Squash into newer', icon: 'arrow-up', hint: 'e8b2c41', active: true },
+        { label: 'Fixup into older', icon: 'arrow-down', hint: 'b41f9e3', desc: 'b41f9e3 is on origin: the next push needs force' },
+        { label: 'Edit files of this commit', icon: 'edit', disabled: true, title: 'Needs a clean worktree (3 uncommitted files)' },
+        { kind: 'sep' },
+        { label: 'Undo commit', icon: 'undo', disabled: true, title: 'Only the latest commit (e8b2c41)' },
+        { label: 'Revert…', icon: 'back', desc: 'A new commit that reverses this one' }
+      ],
+      showToast: s === 'hooks',
+      showOutput: s === 'failed',
+      outLines: out.map(function (l) { return { text: l[0] || ' ', style: 'white-space: pre-wrap; word-break: break-word; min-height: 20px; ' + l[1] }; }),
+      outLead: { label: 'Close', variant: 'secondary' },
+      outButtons: [{ label: 'Copy', icon: 'copy' }, { label: 'Commit without hooks' }, { label: 'Retry', variant: 'primary', kbd: '⌘↵' }]
+    };
+  }
+}
+</script>
+</body>
+</html>

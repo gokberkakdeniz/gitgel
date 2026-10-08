@@ -183,6 +183,13 @@ export interface StashPush extends EntryRef {
   paths: string[] | null; // the files picked (a rename's old path too); null: all of them
   untracked: boolean; // --include-untracked
 }
+/** What a Commit holds (W1a, `git_commit`). */
+export interface CommitFiles {
+  include: string[]; // the checked files, relative to the worktree (a rename's old path too)
+  summary: string;
+  description: string;
+  noVerify: boolean; // skip the commit hooks (Commit without hooks)
+}
 /** One stash@{n} (flow P). */
 export interface StashInfo {
   index: number; // n in stash@{n}; 0 is the newest

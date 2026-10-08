@@ -329,6 +329,125 @@ pub fn stash_drop(
     )
 }
 
+/// What a Commit (W1a) holds: the checked files of Uncommitted and the message.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommitFiles {
+    /// Paths relative to the worktree (a rename's old path too): what goes into the commit.
+    pub include: Vec<String>,
+    pub summary: String,
+    pub description: String,
+    /// `--no-verify`: the commit hooks are skipped (the failed output panel's "Commit without
+    /// hooks").
+    pub no_verify: bool,
+}
+
+/// How the one command of a Commit is built.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct CommitShape {
+    /// Paths to stage (`$GITGEL_PATH_<n>`).
+    pub paths: usize,
+    /// Staged paths that are not checked (`$GITGEL_UNSTAGE_<n>`), taken out of the index first.
+    pub unstage: usize,
+    pub body: bool,
+    pub no_verify: bool,
+}
+
+/// Paths whose staged state differs from HEAD in the entry's worktree: the boxes of Uncommitted
+/// start checked for them (W1a), as git's index has them. Read only.
+pub fn staged_paths(state: &AppState, entry: &EntryRef) -> Result<Vec<String>, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    let tree = repo
+        .tree_of(entry)
+        .ok_or_else(|| AppError::Invalid(format!("{} is not checked out.", repo.name)))?;
+    let shared = state.pool.get(&tree.path)?;
+    let wt = lock(&shared);
+    Ok(worktrees::staged(&wt)?.0)
+}
+
+/// Commit (W1a): the checked files of the entry's worktree become one commit. The index is made
+/// to match the boxes (checked files staged whole, staged files left unchecked taken out), then
+/// `git commit` runs with the user's hooks (husky, lefthook, `core.hooksPath`).
+pub fn commit(
+    state: &AppState,
+    entry: EntryRef,
+    files: CommitFiles,
+) -> Result<ScriptRun, AppError> {
+    let summary = files.summary.trim().to_string();
+    let body = files.description.trim().to_string();
+    if summary.is_empty() {
+        return Err(AppError::Invalid("Write a summary.".into()));
+    }
+    if files.include.is_empty() {
+        return Err(AppError::Invalid("Pick at least one file.".into()));
+    }
+    if files.include.iter().any(|p| p.is_empty() || p.contains('\0')) {
+        return Err(AppError::Invalid("A picked file has no valid path.".into()));
+    }
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let staged = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        worktrees::staged(&wt)?.0
+    };
+    let unstage: Vec<&String> = staged
+        .iter()
+        .filter(|p| !files.include.contains(p))
+        .collect();
+    let mut env = vec![
+        (
+            "GITGEL_FOLDER".to_string(),
+            tree.path.to_string_lossy().into_owned(),
+        ),
+        ("GITGEL_SUMMARY".to_string(), summary),
+        // Picked paths are file names, never pathspec magic (`:(glob)`, `*`).
+        ("GIT_LITERAL_PATHSPECS".to_string(), "1".to_string()),
+    ];
+    if !body.is_empty() {
+        env.push(("GITGEL_BODY".into(), body.clone()));
+    }
+    for (i, p) in files.include.iter().enumerate() {
+        env.push((format!("GITGEL_PATH_{}", i + 1), p.clone()));
+    }
+    for (i, p) in unstage.iter().enumerate() {
+        env.push((format!("GITGEL_UNSTAGE_{}", i + 1), (*p).clone()));
+    }
+    let shape = CommitShape {
+        paths: files.include.len(),
+        unstage: unstage.len(),
+        body: !body.is_empty(),
+        no_verify: files.no_verify,
+    };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}commit"),
+            name: "Commit".into(),
+            icon: ICON.into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: commit_command(shape),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
 /// Runs one sync command (W4a) in `folder` as a git action; values only in `GITGEL_*`.
 #[allow(clippy::too_many_arguments)]
 fn launch_sync(
@@ -585,6 +704,39 @@ pub(super) fn push_command(steps: &[PushStep], message: bool) -> String {
         .join(" && ")
 }
 
+/// `git -C "$GITGEL_FOLDER" reset -q -- "$GITGEL_UNSTAGE_1" … && git … add -A -- "$GITGEL_PATH_1" …
+/// && git … commit [--no-verify] -m "$GITGEL_SUMMARY" [-m "$GITGEL_BODY"]`: only fixed text and
+/// quoted variables.
+pub(super) fn commit_command(shape: CommitShape) -> String {
+    let git = "git -C \"$GITGEL_FOLDER\"";
+    let list = |name: &str, count: usize| {
+        (1..=count)
+            .map(|j| format!(" \"${name}_{j}\""))
+            .collect::<String>()
+    };
+    let mut steps = Vec::new();
+    if shape.unstage > 0 {
+        steps.push(format!(
+            "{git} reset -q --{}",
+            list("GITGEL_UNSTAGE", shape.unstage)
+        ));
+    }
+    steps.push(format!(
+        "{git} add -A --{}",
+        list("GITGEL_PATH", shape.paths)
+    ));
+    let mut commit = format!("{git} commit");
+    if shape.no_verify {
+        commit.push_str(" --no-verify");
+    }
+    commit.push_str(" -m \"$GITGEL_SUMMARY\"");
+    if shape.body {
+        commit.push_str(" -m \"$GITGEL_BODY\"");
+    }
+    steps.push(commit);
+    steps.join(" && ")
+}
+
 /// git never waits on a pager in the pty.
 fn with_git_env(mut env: Vec<(String, String)>) -> Vec<(String, String)> {
     env.push(("GIT_PAGER".into(), "cat".into()));
@@ -661,6 +813,30 @@ mod tests {
         assert_eq!(
             push_command(&[around], false),
             r#"env GIT_INDEX_FILE="$GITGEL_INDEX_1" git -C "$GITGEL_FOLDER_1" reset -q -- "$GITGEL_UNSTAGE_1_1" && env GIT_INDEX_FILE="$GITGEL_INDEX_1" git -C "$GITGEL_FOLDER_1" stash push -- "$GITGEL_PATH_1_1" && git -C "$GITGEL_FOLDER_1" reset -q -- "$GITGEL_PATH_1_1""#
+        );
+    }
+
+    #[test]
+    fn commit_commands_hold_no_values() {
+        let plain = CommitShape {
+            paths: 2,
+            unstage: 0,
+            body: false,
+            no_verify: false,
+        };
+        assert_eq!(
+            commit_command(plain),
+            r#"git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" "$GITGEL_PATH_2" && git -C "$GITGEL_FOLDER" commit -m "$GITGEL_SUMMARY""#
+        );
+        let full = CommitShape {
+            paths: 1,
+            unstage: 1,
+            body: true,
+            no_verify: true,
+        };
+        assert_eq!(
+            commit_command(full),
+            r#"git -C "$GITGEL_FOLDER" reset -q -- "$GITGEL_UNSTAGE_1" && git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" && git -C "$GITGEL_FOLDER" commit --no-verify -m "$GITGEL_SUMMARY" -m "$GITGEL_BODY""#
         );
     }
 }

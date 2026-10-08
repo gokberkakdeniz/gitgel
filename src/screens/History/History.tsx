@@ -8,6 +8,8 @@ import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
+import { Checkbox } from '../../components/Checkbox';
+import { startGitAction, useRuns } from '../../scripts/runs';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
 import { divergedBanner, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
@@ -16,9 +18,9 @@ import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { formatAge, plural } from '../../lib/format';
-import { getCommitChanges, getHistory, getHistoryRefs, getReview, getStashChanges } from '../../lib/ipc';
+import { getCommitChanges, getHistory, getHistoryRefs, getReview, getStagedPaths, getStashChanges, gitCommit } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
-import type { CommitChanges, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
+import type { CommitChanges, CommitFiles, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
@@ -32,6 +34,7 @@ import { StashSection } from '../Review/Review';
 import type { ReviewStash } from '../Review/stashes';
 import review from '../Review/Review.module.css';
 import styles from './History.module.css';
+import { CommitForm } from './CommitForm';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
 
 /** Commits asked for at a time; scrolling near the end asks for this many more. */
@@ -94,6 +97,77 @@ export function History({ repoId, rev, backLabel }: Props) {
     { repoIds: [repoId], enabled: !!entry?.worktreePath && (entry.uncommitted ?? 0) > 0 },
   );
   const wipFiles = wipReview?.groups[0]?.files.uncommitted ?? [];
+
+  // Commit (W1a): Uncommitted's files have boxes; the checked ones go into the commit. They start
+  // as git's index has them (staged files checked), else every tracked file.
+  const entryRef: EntryRef | null = entry
+    ? { repoId, branch: entry.branch, worktreePath: entry.branch === null ? entry.worktreePath : null }
+    : null;
+  const { data: staged } = useInvoke(() => getStagedPaths(entryRef!), [repoId, entry?.key], {
+    repoIds: [repoId],
+    enabled: wip && !!entryRef,
+  });
+  const [boxes, setBoxes] = useState<Record<string, boolean>>({});
+  useEffect(() => setBoxes({}), [repoId, rev]);
+  const checked = (f: FileChange): boolean => {
+    if (f.path in boxes) return boxes[f.path];
+    if (staged && staged.length > 0) return staged.includes(f.path) || (!!f.oldPath && staged.includes(f.oldPath));
+    return f.kind !== 'U';
+  };
+  const [summary, setSummary] = useState('');
+  const [description, setDescription] = useState('');
+  useEffect(() => {
+    setSummary('');
+    setDescription('');
+  }, [repoId, rev]);
+  // The commit running for this entry, and how the last one ended.
+  const committing = useRuns((s) =>
+    Object.values(s.runs).some((r) => r.scriptId === 'git:commit' && r.status === 'running' && r.entryKey === entry?.key),
+  );
+  const lastCommit = useRuns((s) =>
+    Object.values(s.runs)
+      .filter((r) => r.scriptId === 'git:commit' && r.entryKey === entry?.key)
+      .sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt))[0],
+  );
+  const commitFailed =
+    !!lastCommit && lastCommit.status === 'exited' && lastCommit.exitCode !== 0 && !lastCommit.stopped;
+  const included = wipFiles.filter(checked);
+  const commitNow = (files: CommitFiles) => {
+    if (!entryRef) return;
+    // Retry and Commit without hooks send the same files and message again.
+    const again = (noVerify: boolean) => commitNow({ ...files, noVerify });
+    void startGitAction('Commit', () => gitCommit(entryRef, files), {
+      openOnFail: true,
+      done: `Committed to ${rev}`,
+      onStart: (runId) => {
+        // The form empties when the commit lands; a failed one keeps the message.
+        const ended = () => {
+          const r = useRuns.getState().runs[runId];
+          if (!r || r.status === 'running') return false;
+          if (r.status === 'exited' && r.exitCode === 0) {
+            setSummary('');
+            setDescription('');
+            setBoxes({});
+          }
+          return true;
+        };
+        if (ended()) return;
+        const off = useRuns.subscribe(() => ended() && off());
+      },
+      again: {
+        note: 'Nothing was committed; your message is kept.',
+        retry: () => again(false),
+        skipHooks: files.noVerify ? undefined : () => again(true),
+      },
+    });
+  };
+  const commitChecked = () =>
+    commitNow({
+      include: included.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path])),
+      summary,
+      description,
+      noVerify: false,
+    });
 
   // The stashes taken on this branch (§15), under the list; not while searching.
   const allStashes = repoScan?.stashes;
@@ -386,6 +460,14 @@ export function History({ repoId, rev, backLabel }: Props) {
                 files={filesOpen ? files : []}
                 file={file?.path}
                 folder={folder}
+                wipFailed={commitFailed}
+                check={
+                  current === WIP && staged
+                    ? { on: checked, disabled: committing, onChange: (f, on) => setBoxes((b) => ({ ...b, [f.path]: on })),
+                        onAll: (on) => setBoxes(Object.fromEntries(wipFiles.map((f) => [f.path, on]))),
+                      }
+                    : undefined
+                }
                 onPick={click}
                 onFile={(p) => {
                   setPath(p);
@@ -426,6 +508,26 @@ export function History({ repoId, rev, backLabel }: Props) {
                 }}
               />
             </div>
+          )}
+          {current === WIP && wip && (
+            <CommitForm
+              rev={rev}
+              summary={summary}
+              description={description}
+              files={included.length}
+              committing={committing}
+              failed={commitFailed}
+              blocked={
+                !staged
+                  ? 'Reading the index'
+                  : (entry?.conflicts ?? 0) > 0
+                    ? 'Resolve the merge conflicts first'
+                    : null
+              }
+              onSummary={setSummary}
+              onDescription={setDescription}
+              onCommit={commitChecked}
+            />
           )}
         </div>
 
@@ -622,6 +724,8 @@ function ListRow({
   files,
   file,
   folder,
+  wipFailed,
+  check,
   onPick,
   onFile,
 }: {
@@ -636,11 +740,32 @@ function ListRow({
   file: string | undefined;
   /** Where the files' right-click menu opens them from. */
   folder: string | null;
+  /** Uncommitted: the last commit failed. */
+  wipFailed: boolean;
+  /** Uncommitted's boxes (W1a), when it is picked. */
+  check?: {
+    on: (f: FileChange) => boolean;
+    disabled: boolean;
+    onChange: (f: FileChange, on: boolean) => void;
+    /** Check or uncheck every file. */
+    onAll: (on: boolean) => void;
+  };
   onPick: (row: string) => void;
   onFile: (path: string) => void;
 }) {
   const fileRows = (
     <div className={review.fileRows}>
+      {check && files.length > 0 && (
+        <div className={review.selectAll}>
+          <Checkbox
+            checked={files.every(check.on)}
+            mixed={!files.every(check.on) && files.some(check.on)}
+            disabled={check.disabled}
+            label={files.every(check.on) ? 'Unselect all' : 'Select all'}
+            onChange={(e) => check.onAll(e.target.checked)}
+          />
+        </div>
+      )}
       {files.map((f) => (
         <FileRow
           key={f.path}
@@ -649,6 +774,9 @@ function ListRow({
           terms={[]}
           on={f.path === file}
           onClick={() => onFile(f.path)}
+          check={
+            check && { checked: check.on(f), disabled: check.disabled, onChange: (on) => check.onChange(f, on) }
+          }
         />
       ))}
     </div>
@@ -686,7 +814,14 @@ function ListRow({
               <span className={styles.wipDot} />
             </span>
             <span className={styles.rowText}>
-              <span className={styles.wipTitle}>Uncommitted changes</span>
+              <span className={styles.subjectLine}>
+                <span className={styles.wipTitle}>Uncommitted changes</span>
+                {wipFailed && (
+                  <Pill tone="danger" size="sm">
+                    commit failed
+                  </Pill>
+                )}
+              </span>
               <span className={styles.meta}>
                 {plural(wipCount, 'file', 'files')}
                 {wipConflicts > 0 ? ` · ${wipConflicts === 1 ? '1 conflict' : `${wipConflicts} conflicts`}` : ''}

@@ -174,8 +174,24 @@ export interface GitActionShow {
   openOnFail?: boolean;
   /** The success toast's message instead of “<name>” finished. */
   done?: string;
+  /** The run's id, as soon as it has one. */
+  onStart?: (runId: string) => void;
+  /** What a failed run's output panel offers besides Copy (a failed Commit, W1a). */
+  again?: GitActionAgain;
+}
+/** Retry, and optionally the same without hooks, in a failed run's output panel. */
+export interface GitActionAgain {
+  /** Shown left of the buttons. */
+  note: string;
+  retry: () => void;
+  skipHooks?: () => void;
 }
 const gitActionShow = new Map<string, GitActionShow>();
+
+/** The failed-run buttons of a git action's output panel, if it has any. */
+export function gitActionAgain(runId: string): GitActionAgain | undefined {
+  return gitActionShow.get(runId)?.again;
+}
 
 /** Starts a git action (SPEC §15): its run gets the toast and output panel of a script's, but
  * no Run again. `name` is for the toast when it cannot start. */
@@ -187,6 +203,7 @@ export async function startGitAction(
   try {
     const run = await start();
     gitActionShow.set(run.runId, show);
+    show.onStart?.(run.runId);
     const runs = useRuns.getState();
     // A quick action can end (`script-exited`) before this answer arrives; keep the end.
     const known = runs.runs[run.runId];

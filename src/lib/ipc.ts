@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type {
   BaseOptions,
   CommitChanges,
+  CommitFiles,
   Config,
   EntryRef,
   FileChange,
@@ -166,6 +167,12 @@ export const gitFetch = (repoId: string) => invoke<ScriptRun>('git_fetch', { rep
 export const gitPull = (entry: EntryRef, rebase: boolean) => invoke<ScriptRun>('git_pull', { entry, rebase });
 export const gitRebaseOnBase = (entry: EntryRef) => invoke<ScriptRun>('git_rebase_on_base', { entry });
 export const gitPush = (entry: EntryRef) => invoke<ScriptRun>('git_push', { entry });
+
+/** Commit (W1a): the checked files of the entry's worktree, with the message. */
+export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });
+
+/** What git's index has staged in the entry's worktree: Uncommitted's boxes start checked for it. */
+export const getStagedPaths = (entry: EntryRef) => invoke<string[]>('get_staged_paths', { entry });
 
 /** Typed text for a running script. */
 export const writeScriptInput = (runId: string, data: string) => invoke<null>('write_script_input', { runId, data });

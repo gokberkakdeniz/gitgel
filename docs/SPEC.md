@@ -22,8 +22,8 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 ### Rules
 
 - **Reads through git2, writes through the git CLI.** Everything Gitgel reads comes from git2
-  (libgit2); the git binary is never run to read. Everything that changes a repository (the stash
-  and sync actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
+  (libgit2); the git binary is never run to read. Everything that changes a repository (the stash,
+  sync and commit actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
   command line built in `src-tauri/src/scripts/git.rs` and run like a script (§14: login shell,
   pty, toast, output panel, rescan when it ends). Values (a message, folders) go in `GITGEL_*`
   environment variables, never into the command text. `std::process::Command` is banned in app
@@ -87,7 +87,7 @@ This file describes the app as it is, plus what open tasks will add:
 
 **Goal:** a macOS desktop app for reviewing branches and worktrees across several git
 repositories from one place, without checking anything out. It reads without writing; it changes
-a repository only when asked to (the stash and sync actions, §15), through the git CLI. Built for looking at what coding
+a repository only when asked to (the stash, sync and commit actions, §15), through the git CLI. Built for looking at what coding
 agents (Cursor, Codex, Claude Code) leave in their worktrees. Not for the App Store: releases
 are Developer ID signed and notarized, no sandbox.
 
@@ -186,7 +186,7 @@ gitgel/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
 │  │            # Review/parts.tsx: view menu, change navigation, file row, diff view settings
 │  │            #   (shared with History, §16)
-│  │            # History/: the History screen and its list rows (§16)
+│  │            # History/: the History screen, its list rows and the commit form (§16)
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
 │  ├─ sync/     # §15 sync (W4a): sync.ts (what Fetch / Pull / Push can do, labels), SyncButtons
@@ -210,7 +210,7 @@ gitgel/
       ├─ windows.rs               # About, Software Update, What's New windows (§7)
       ├─ ssh.rs                   # SSH passphrase into the Keychain; askpass mode (§15)
       ├─ scripts/   mod.rs  run.rs # the user's scripts: config, import/export; running, output, stop
-      │             git.rs        # git actions: stash push / apply / pop / drop, fetch / pull / push (§0, §15)
+      │             git.rs        # git actions: stash push / apply / pop / drop, fetch / pull / push, commit (§0, §15)
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
       ├─ git/                     # the ONLY place git2 is used
@@ -1566,6 +1566,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `stash_push` | `entries: StashPush[]` (an `EntryRef` with `paths: string[] \| null`, `untracked`), `message: string` | `ScriptRun` (one git action for all entries, §15) |
 | `stash_apply` | `repoId, index, sha, worktreePath, pop: boolean` | `ScriptRun` |
 | `stash_drop` | `repoId, index, sha` | `ScriptRun` |
+| `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`include: string[]`, `summary`, `description`, `noVerify`) | `ScriptRun` (§15 "Commit") |
+| `get_staged_paths` | `entry: EntryRef` | `string[]` (paths staged in the entry's worktree) |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
 | `git_push` | `entry: EntryRef` | `ScriptRun` |
@@ -2289,6 +2291,25 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   then Cancel (focused) and danger "Drop stash". Runs `git stash drop 'stash@{n}'` in the
   repository folder, named "Drop stash@{n}". The stash review then picks the newest stash (above).
 
+### Commit
+
+Commit (W1a, in History, §16) is a git action too: name "Commit", `package` icon, script id
+`git:commit`, run in the entry's worktree, so the user's hooks (husky, lefthook,
+`core.hooksPath`) see it as they would in a terminal. The command is built in `commit_command`:
+`git reset -q -- <staged but unchecked> && git add -A -- <checked> && git commit [--no-verify] -m
+<summary> [-m <description>]`, the paths and message in `GITGEL_*` variables with
+`GIT_LITERAL_PATHSPECS=1`. So the index ends up as the boxes say: checked files go in whole (new,
+changed, deleted; a rename's old path too), staged files left unchecked are unstaged and stay
+changed. Refused before running: an empty summary, no file, an entry that is not checked out, another
+git action in the repository.
+
+- **Running** (`HistH7`): the run toast “Running “Commit”…” (sub `repo / branch`); a click opens the
+  output panel with the hooks' output.
+- **Failed** (`HistH8`): the output panel opens by itself. Its footer, besides Close and Copy, has
+  the note "Nothing was committed; your message is kept." and the buttons "Commit without hooks"
+  (the same commit with `--no-verify`) and "Retry" (primary, ⌘↵), which send the same files and
+  message again. Stopping the run does not open it.
+
 ### Sync (W4a)
 
 Fetch, Pull and Push of one branch: buttons in the History header, and a group in the branch
@@ -2379,8 +2400,9 @@ never edits `~/.ssh`:
 ## 16. History
 
 A branch's commits, newest first, each one shown on its own against its first parent, like
-GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Review & History", boards
-`HistH1`, `HistH2`, `HistH4.dc.html` (§11).
+GitHub Desktop's History tab. Reads are a revwalk and diffs; the one write is Commit (§15 "Commit").
+Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `HistH7`,
+`HistH8.dc.html` (§11).
 
 - **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
   branch, a remote-tracking branch or a SHA) and walks from it by committer time, newest first
@@ -2424,7 +2446,9 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
     `accent.text` "Uncommitted changes"; mono 11 muted `N files · <age>` (plus ` · N conflicts`
     after the files when some are unmerged; the age of the newest
     uncommitted file, as on Branches; left out when unknown). Picking it lists its files under it
-    and shows HEAD ↔ working tree (untracked files included), as Review's Uncommitted layer.
+    and shows HEAD ↔ working tree (untracked files included), as Review's Uncommitted layer. Its
+    files have a `Checkbox` before them (the commit form below); after a failed commit the row
+    carries a danger sm pill "commit failed" after the title (`HistH8`).
   - **Day labels**: 11px `text.faint`, padding 10px 8px 4px: "Today", "Yesterday", else `Oct 2`
     (this year) or `Oct 2, 2025`, by committer time.
   - **Commit row** (`role="option"`, tooltip "Show this commit"): padding 7px 8px, radius 8, gap
@@ -2448,6 +2472,22 @@ GitHub Desktop's History tab. Read-only: a revwalk and diffs. Canvas page "Revie
     Picking one lists its files under it and shows Review's stash pane (P2: message, Apply / Pop /
     Drop, meta line), then the file bar (`<short base> ↔ stash@{n}`) and the diff. ↑ / ↓ do not
     step into it; a dropped or popped stash leaves the newest commit picked.
+- **Commit form** (`HistH6`, `HistH7`, `HistH8`; §15 "Commit"): pinned to the bottom of the list
+  column, under the stashes, while Uncommitted is picked. Padding 12, gap 8, top border `border`,
+  `bg.sidebar`: a 32px `Input` "Summary (required)", a 56px description textarea (12px, no resize),
+  and a full-width primary 32px button "Commit N files" (tooltip `Commit to <rev>`; disabled with
+  no summary, no file checked, or merge conflicts, each saying why in the tooltip). ⌘↵ in either
+  field commits. While the commit runs (hooks included) the form is locked and the button reads
+  "Committing…" with a spinner.
+  - **Boxes:** a file row's `Checkbox` includes it. Above the files a 28px row has a `Checkbox` (mixed
+    when some are checked) labelled "Select all", or "Unselect all" when every file is checked. They start as git's index has them (files staged
+    outside Gitgel are checked, `get_staged_paths`); with nothing staged every tracked file is
+    checked and untracked ones are not. A click is kept until the commit lands or the branch
+    changes. A file partly staged outside counts as one box and is staged whole.
+  - **After it ends:** success empties the form and shows the toast “Committed to <rev>”. A failure
+    (a hook exited non-zero, or git refused) keeps the message and the boxes, opens the output
+    panel, and puts "Commit failed. Nothing was committed; your message is kept." under the
+    description and the pill on the Uncommitted row, until the next commit starts.
 - **Picking:** on opening, the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,
   Uncommitted included. Clicking the picked row again folds its file list, and opens it again;

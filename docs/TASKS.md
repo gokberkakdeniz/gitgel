@@ -513,6 +513,13 @@ rather than as a task is listed the same way, marked "(on request)".
   - note: canvas board Hi4 (`HistH5.dc.html`).
 - [x] (on request) Right-click in the diff: Copy relative / absolute reference (`@path:12-13`, the
   selected lines else the clicked one) and Copy / Open permalink (GitHub, at a commit) to hand to an agent — 2026-10-08
+- [x] (on request) Commit in History: Uncommitted's files have boxes (git's index as the start), a
+  summary / description form under the list, hooks run in the worktree; a failed commit keeps the
+  message, opens the output with Commit without hooks and Retry (`git_commit`, `get_staged_paths`) —
+  2026-10-08
+  - note: canvas boards Hi5–Hi7 (`HistH6`–`HistH8.dc.html`), moved from the WIP page (W1a, W1c, W1d).
+  - note: the pill and notes say "commit failed" (not "hook failed"): a refusal that is not a hook
+    looks the same from outside; the toast is the usual “Running “Commit”…”, without a hook name.
 
 ---
 

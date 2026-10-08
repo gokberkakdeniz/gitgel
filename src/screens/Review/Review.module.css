@@ -238,6 +238,53 @@
   background: var(--bg-hover);
 }
 
+/* A file row with a box before it (History's Uncommitted): the box sits outside the button, and
+ * the row takes the highlight. */
+.boxedRow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 8px;
+  border-radius: var(--radius-control);
+}
+
+.selectAll {
+  flex-shrink: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+
+.selectAll label {
+  font-size: 12px;
+}
+
+.fileRowBare {
+  composes: fileRow;
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  padding-left: 0;
+}
+
+.boxedRow:hover {
+  background: var(--bg-sunken);
+}
+
+.boxedRow .fileRowBare,
+.boxedRow .fileRowBare:hover {
+  background: transparent;
+}
+
+.boxedRow.selected,
+.boxedRow.selected:hover,
+.boxedRow.menuOpen,
+.boxedRow.menuOpen:hover {
+  background: var(--bg-hover);
+}
+
 .fileName {
   flex-shrink: 0;
   max-width: 60%;

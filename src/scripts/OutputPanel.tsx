@@ -11,7 +11,7 @@ import { getScriptRun, resizeScript, stopScript, writeScriptInput } from '../lib
 import type { ScriptRun } from '../lib/types';
 import { useCopy } from '../lib/useCopy';
 import { ScriptIcon } from './ScriptIcon';
-import { onRunOutput, runAgain, useRuns } from './runs';
+import { gitActionAgain, onRunOutput, runAgain, useRuns } from './runs';
 import styles from './OutputPanel.module.css';
 
 /** The output panel of the run `useRuns.shownRunId` names (flow N4). */
@@ -139,6 +139,21 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
       </Pill>
     );
 
+  // A failed git action may offer Retry (a failed Commit also: without hooks).
+  const again = !running && run.status === 'exited' && run.exitCode !== 0 && !run.stopped ? gitActionAgain(run.runId) : undefined;
+  const retry = again?.retry;
+  useEffect(() => {
+    if (!retry) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' || !e.metaKey) return;
+      e.preventDefault();
+      onClose();
+      retry();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [retry, onClose]);
+
   const { copied, copy } = useCopy();
   const copyOutput = () => copy(async () => plainText((await getScriptRun(run.runId)).buffered ?? ''));
 
@@ -166,6 +181,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
         />
         <ModalFooter
           ruled
+          note={again?.note}
           lead={
             <Button size={36} onClick={onClose}>
               Close
@@ -180,6 +196,32 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
           >
             {copied ? 'Copied' : 'Copy'}
           </Button>
+          {again && (
+            <>
+              {again.skipHooks && (
+                <Button
+                  size={36}
+                  onClick={() => {
+                    onClose();
+                    again.skipHooks!();
+                  }}
+                >
+                  Commit without hooks
+                </Button>
+              )}
+              <Button
+                variant="primary"
+                size={36}
+                kbd="⌘↵"
+                onClick={() => {
+                  onClose();
+                  again.retry();
+                }}
+              >
+                Retry
+              </Button>
+            </>
+          )}
           {running ? (
             <Button size={36} className={styles.stop} onClick={() => void stopScript(run.runId)}>
               Stop
