@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.19 — 2026-10-08
+
+### New
+- Commit from History: a summary, a description and a Commit button.
+- Checkboxes on Uncommitted files pick what goes into a commit.
+- ⌘↵ commits.
+- A failed commit offers Commit without hooks and Retry.
+
 ## 0.1.18 — 2026-10-08
 
 ### New
