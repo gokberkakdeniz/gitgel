@@ -15,6 +15,8 @@
   box-shadow: var(--shadow-pop);
   color: var(--text-strong);
   white-space: nowrap;
+  /* A long output line is cut short, not a toast across the window. */
+  max-width: min(560px, calc(100vw - 48px));
 }
 
 /* A script run's toast: the whole toast opens its output. */
@@ -38,6 +40,7 @@
 
 .action {
   position: relative;
+  flex-shrink: 0;
   height: 28px;
   padding: 0 12px;
   background: var(--bg-pressed);
@@ -50,6 +53,7 @@
 
 .link {
   position: relative;
+  flex-shrink: 0;
   padding: 0;
   background: transparent;
   border: 0;
@@ -87,15 +91,22 @@
 
 .main {
   pointer-events: none;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .lines {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+
+.lines > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* The mono part before the message (a branch name). */

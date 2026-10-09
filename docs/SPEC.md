@@ -454,6 +454,7 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   left, buttons on the right, primary last.
 - `Toast`: bottom centre, `#2a2825` on `#383631` border, radius 12; one at a time. Optional
   status icon (spinner, success, failed), a mono part before the message and a mono sub line.
+  At most 560px wide; a longer line (a run's last output line) ends in an ellipsis.
   A toast with a status (a script run) ends with a 24px ✕ (12px icon, `text.muted`, `bg.pressed`
   on hover) that dismisses it.
 - `Segmented`: padding 3, gap 2, `bg.elevated`, radius 10; buttons 26–28px, 12px/500; active

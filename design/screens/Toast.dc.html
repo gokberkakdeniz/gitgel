@@ -19,22 +19,22 @@ a.gg-toast-hit{position:absolute;inset:0;border-radius:12px}a.gg-toast-hit:hover
 .theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
 </style>
 </helmet>
-<div role="status" class="{{themeClass}}" style="position: relative; display: inline-flex; align-items: center; gap: 16px; padding: 10px 12px 10px 16px; background: var(--bg-hover); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); white-space: nowrap; font-family: 'Instrument Sans', -apple-system, sans-serif; font-size: 13px; color: var(--text-strong)">
+<div role="status" class="{{themeClass}}" style="position: relative; display: inline-flex; align-items: center; gap: 16px; padding: 10px 12px 10px 16px; background: var(--bg-hover); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); white-space: nowrap; max-width: 560px; box-sizing: border-box; font-family: 'Instrument Sans', -apple-system, sans-serif; font-size: 13px; color: var(--text-strong)">
 <sc-if value="{{hasHref}}" hint-placeholder-val="{{false}}"><a class="gg-toast-hit" href="{{href}}" aria-label="Show output" title="Show output"></a></sc-if>
-<span style="display: flex; align-items: center; gap: 10px; pointer-events: none">
+<span style="display: flex; align-items: center; gap: 10px; min-width: 0; pointer-events: none">
 <sc-if value="{{isRunning}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="spinner" size="14" spin="{{true}}" color="var(--accent-text)" hint-size="14px,14px"></dc-import></sc-if>
 <sc-if value="{{isSuccess}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="check" size="14" stroke="2.2" color="var(--success)" hint-size="14px,14px"></dc-import></sc-if>
 <sc-if value="{{isFailed}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="close" size="14" stroke="2.2" color="var(--danger)" hint-size="14px,14px"></dc-import></sc-if>
-<span style="display: flex; flex-direction: column; gap: 1px">
-<span><sc-if value="{{hasCode}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px">{{code}}</span> </sc-if>{{message}}</span>
-<sc-if value="{{hasSub}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{sub}}</span></sc-if>
+<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+<span style="overflow: hidden; text-overflow: ellipsis"><sc-if value="{{hasCode}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px">{{code}}</span> </sc-if>{{message}}</span>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis">{{sub}}</span></sc-if>
 </span>
 </span>
 <sc-if value="{{hasAction}}" hint-placeholder-val="{{false}}">
-<button type="button" onClick="{{action}}" style="height: 28px; padding: 0 12px; background: var(--bg-pressed); border: 0; border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 12px; cursor: pointer">{{actionLabel}}</button>
+<button type="button" onClick="{{action}}" style="flex-shrink: 0; height: 28px; padding: 0 12px; background: var(--bg-pressed); border: 0; border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 12px; cursor: pointer">{{actionLabel}}</button>
 </sc-if>
 <sc-if value="{{hasLink}}" hint-placeholder-val="{{false}}">
-<a class="gg-toast-link" href="{{linkHref}}" style="font-size: 12px; font-weight: 500">{{linkLabel}}</a>
+<a class="gg-toast-link" href="{{linkHref}}" style="flex-shrink: 0; font-size: 12px; font-weight: 500">{{linkLabel}}</a>
 </sc-if>
 <sc-if value="{{hasClose}}" hint-placeholder-val="{{false}}">
 <button type="button" class="gg-toast-close" aria-label="Dismiss" title="Dismiss (the script keeps running)" style="width: 24px; height: 24px; margin-left: -8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; cursor: pointer"><dc-import name="Icon" icon="close" size="12" hint-size="12px,12px"></dc-import></button>
@@ -48,6 +48,7 @@ class Component extends DCLogic {
     // positions it). An optional status icon (running spinner, success, failed), the message with
     // an optional mono part first (code) and a mono sub line, then an action button and a link.
     // A toast with a status (a script run) ends with a ✕ that dismisses it; the run goes on.
+    // At most 560px wide: a longer line (a run's last output line) ends in an ellipsis.
     // href makes the whole toast a button (a script run: opens its output).
     var p = this.props;
     var status = p.status || 'none';
