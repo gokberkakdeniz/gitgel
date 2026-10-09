@@ -59,3 +59,10 @@ export const SHORTCUTS: ShortcutGroup[] = [
     ],
   },
 ];
+
+/** A field the user types in, where keys edit text. Not the read-only diff: Monaco's hidden
+ * textarea is there only to take keys, so the app's shortcuts work inside it too. */
+export function isTextField(target: EventTarget | null): boolean {
+  const t = target as HTMLElement | null;
+  return !!t?.closest('input, textarea, [contenteditable]') && !t.closest('.monaco-editor');
+}

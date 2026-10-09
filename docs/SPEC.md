@@ -1110,14 +1110,15 @@ open.
 
 `src/lib/shortcuts.ts` is the list shown in Settings. It is not read by the handlers; each
 handler carries a `Listed in lib/shortcuts.ts` comment, so change both together. ⌥ turns letters
-into other characters, so ⌥ shortcuts check the physical key (`e.code`). Review shortcuts also
-work while the diff has focus (registered as Monaco commands; the editor is read-only, so its
-own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free).
+into other characters, so ⌥ shortcuts check the physical key (`e.code`). Every shortcut also
+works while the diff has focus: the read-only diff is not a text field (`isTextField`), Review's
+are registered as Monaco commands (its own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free), and Back /
+Forward are caught before Monaco (which would take ⌘← / ⌘→ for line start / end).
 
 | Group | Action | Keys | Where |
 |---|---|---|---|
 | General | New project | ⌘N | everywhere, unless a modal is open |
-| | Back / Forward | ⌘[ / ⌘] (physical keys; ⌘ğ / ⌘ü on a Turkish Q layout), also ⌘← / ⌘→ outside text fields | everywhere |
+| | Back / Forward | ⌘[ / ⌘] (physical keys; ⌘ğ / ⌘ü on a Turkish Q layout), also ⌘← / ⌘→ outside text fields (the diff is not one) | everywhere |
 | | Settings | ⌘, | app menu |
 | | Font size | ⌘- / ⌘. , ⌘0 resets | View menu |
 | | Close menu or dialog | Esc | topmost popover, menu, modal or palette; otherwise clears the selection or filter |

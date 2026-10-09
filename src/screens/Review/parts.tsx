@@ -9,6 +9,7 @@ import { FileOpenItems } from '../../components/OpenItems';
 import { Popover } from '../../components/Popover';
 import { updateSettings } from '../../lib/ipc';
 import { basename } from '../../lib/paths';
+import { isTextField } from '../../lib/shortcuts';
 import type { DiffContext, DiffLayout, FileChange, Settings } from '../../lib/types';
 import type { NavInfo } from '../../monaco/DiffView';
 import { diffPosition } from '../../monaco/position';
@@ -220,7 +221,7 @@ export function useSwitchTo(route: Route | null): (() => void) | null {
     if (!go) return;
     const onKey = (e: KeyboardEvent) => {
       if (!e.altKey || e.metaKey || e.ctrlKey || e.shiftKey || e.code !== 'KeyH') return;
-      if ((e.target as HTMLElement | null)?.closest('input, textarea')) return;
+      if (isTextField(e.target)) return;
       if (useUi.getState().modalCount > 0) return;
       e.preventDefault();
       go();

@@ -528,6 +528,8 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Right-click in the diff also has Open in Finder and Open in each editor, at the
   clicked line — 2026-10-09
   - note: canvas board D11 (`FlowD11.dc.html`, `menu: diff`).
+- [x] (on request) Shortcuts work while the diff has focus: ⌥H, and ⌘← / ⌘→ for Back / Forward
+  (Monaco's hidden textarea no longer counts as a text field) — 2026-10-09
 
 ---
 

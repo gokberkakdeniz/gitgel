@@ -12,6 +12,7 @@ import { DropStashModal } from './stash/DropStashModal';
 import { startDraftProject } from './lib/draft';
 import { startEventBridge } from './lib/events';
 import { revealWindow } from './lib/ipc';
+import { isTextField } from './lib/shortcuts';
 import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from './lib/theme';
 import { useFolderDrop } from './lib/useFolderDrop';
 import { useWhatsNewAfterUpdate } from './lib/whatsNew';
@@ -50,13 +51,15 @@ export default function App() {
 
   // ⌘N: new project (flow C), from anywhere unless a modal is open. ⌘R never reloads the
   // webview; on the Project screen it opens the review. ⌘← / ⌘→ (and ⌘[ / ⌘]): back / forward.
-  // ⌘, (Settings) is the app menu's. Listed in lib/shortcuts.ts.
+  // ⌘, (Settings) is the app menu's. Listed in lib/shortcuts.ts. Caught before the diff: Monaco
+  // takes ⌘← / ⌘→ (line start / end) and stops them there.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey && e.key.toLowerCase() === 'r') e.preventDefault();
       const dir = e.metaKey && useUi.getState().modalCount === 0 ? historyKey(e) : null;
       if (dir) {
         e.preventDefault();
+        e.stopPropagation();
         const nav = useNav.getState();
         if (dir === 'back') nav.back();
         else nav.forward();
@@ -67,8 +70,8 @@ export default function App() {
         startDraftProject([]);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, []);
 
   // No webview context menu ("Reload", "Inspect"), except where text is edited.
@@ -140,14 +143,14 @@ function Screen({ route }: { route: Route }) {
 }
 
 /**
- * Back/forward for ⌘←/⌘→ outside text fields (where they move the caret), and for the physical
- * [ / ] keys, whatever they type: `ğ` / `ü` on a Turkish Q keyboard, where `[` needs ⌥.
+ * Back/forward for ⌘←/⌘→ outside text fields (where they move the caret; the read-only diff is
+ * not one), and for the physical [ / ] keys, whatever they type: `ğ` / `ü` on a Turkish Q
+ * keyboard, where `[` needs ⌥.
  */
 function historyKey(e: KeyboardEvent): 'back' | 'forward' | null {
   if (e.code === 'BracketLeft') return 'back';
   if (e.code === 'BracketRight') return 'forward';
-  const t = e.target as HTMLElement | null;
-  const editing = !!t?.closest('input, textarea, [contenteditable], .monaco-editor');
+  const editing = isTextField(e.target);
   if (editing || e.shiftKey || e.altKey) return null;
   if (e.key === 'ArrowLeft') return 'back';
   if (e.key === 'ArrowRight') return 'forward';
