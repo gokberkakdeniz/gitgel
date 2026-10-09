@@ -118,7 +118,7 @@ PORT="$GITGEL_INPUT_PORT" API_URL="${GITGEL_INPUT_API:-mock}" pnpm dev</textarea
 </div>
 
 <div style="display: flex; flex-direction: column; gap: 6px">
-<div style="display: flex; align-items: baseline; justify-content: space-between"><label for="ns-when" style="color: var(--text-strong); font-weight: 500">Show when</label><span style="font-size: 12px; color: var(--text-muted)">A CEL expression. Empty shows it always.</span></div>
+<div style="display: flex; align-items: baseline; justify-content: space-between"><label for="ns-when" style="color: var(--text-strong); font-weight: 500">Show when</label><a href="https://github.com/cel-expr/cel-spec/blob/master/doc/langdef.md" style="font-size: 12px; font-weight: 500; color: var(--accent-text); text-decoration: none">CEL Syntax</a></div>
 <div style="position: relative; z-index: 1; display: flex; flex-direction: column">
 <textarea id="ns-when" rows="2" placeholder="branch.ahead &gt; 0 &amp;&amp; !branch.merged" aria-invalid="{{whenInvalid}}" aria-describedby="ns-when-result" style="{{whenStyle}}" value="{{whenExpr}}"></textarea>
 <button onClick="{{toggleWhenInsert}}" aria-haspopup="menu" aria-expanded="{{whenOpen}}" title="Insert a Field" style="{{whenBtnStyle}}">Add Variable<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
@@ -134,12 +134,22 @@ PORT="$GITGEL_INPUT_PORT" API_URL="${GITGEL_INPUT_API:-mock}" pnpm dev</textarea
 <sc-if value="{{whenOk}}" hint-placeholder-val="{{true}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--success)"><path d="m5 12 5 5 9-10"></path></svg></sc-if>
 <sc-if value="{{whenInvalid}}" hint-placeholder-val="{{false}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="flex-shrink: 0; color: var(--danger)"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v6"></path><path d="M12 16.5h.01"></path></svg></sc-if>
 <span>{{resultText}}</span>
+<sc-if value="{{whenOk}}" hint-placeholder-val="{{true}}">
+<span style="display: flex">
+<button type="button" aria-label="Show Matching Branches" aria-expanded="{{listOpen}}" onMouseEnter="{{openList}}" onMouseLeave="{{closeList}}" onFocus="{{openList}}" onBlur="{{closeList}}" style="display: flex; padding: 0; border: 0; background: transparent; color: var(--text-faint); cursor: help"><dc-import name="Icon" icon="help" size="13" hint-size="13px,13px"></dc-import></button>
+<sc-if value="{{listOpen}}" hint-placeholder-val="{{false}}">
+<ul aria-label="Matching branches" style="position: absolute; top: 19px; left: 0; right: 0; z-index: 5; max-height: 240px; overflow-y: auto; margin: 0; padding: 6px; list-style: none; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px var(--shadow)">
+<sc-for list="{{matches}}" as="m" hint-placeholder-count="3"><li title="{{m.full}}" style="display: flex; padding: 6px 10px; font-size: 12px; color: var(--text-strong); white-space: nowrap"><span style="flex-shrink: 0; color: var(--text-muted)">{{m.repo}}</span><span style="flex-shrink: 0; margin: 0 6px; color: var(--text-faint)">·</span><span style="min-width: 0; overflow: hidden; text-overflow: ellipsis">{{m.head}}</span><span style="flex-shrink: 0">{{m.tail}}</span></li></sc-for>
+</ul>
+</sc-if>
+</span>
+</sc-if>
 </div>
 </div>
 
-<dc-import name="Checkbox" theme="{{themeName}}" card="{{true}}" checked="{{openOutput}}" label="Open the output panel automatically" sub="Every run shows a toast; click it for the output, to answer prompts or to stop the script. Turn this on to open the output as soon as it starts (long jobs, scripts that ask questions)." on-toggle="{{toggleOpenOutput}}" hint-size="100%,64px"></dc-import>
+<dc-import name="Checkbox" theme="{{themeName}}" checked="{{openOutput}}" label="Open the output panel automatically" on-toggle="{{toggleOpenOutput}}" hint-size="260px,16px"></dc-import>
 
-<dc-import name="Checkbox" theme="{{themeName}}" card="{{true}}" checked="{{false}}" label="Ask before running" sub="Opens the run dialog first, even without inputs, so nothing runs on one click. Turn it on for scripts that change the branch (rebase, push, reset)." hint-size="100%,64px"></dc-import>
+<dc-import name="Checkbox" theme="{{themeName}}" checked="{{false}}" label="Ask before running" hint-size="160px,16px"></dc-import>
 
 </div>
 
@@ -206,7 +216,7 @@ var inputs = inputDefs.map(function (d) {
 });
 var when = this.props.when ?? 'valid';
 var exprs = { valid: "branch.repo == 'web-app' && branch.checkedOut", error: "branch.repo == 'web-app' && branch.checkedOt", empty: '' };
-var results = { valid: 'Shows for 1 of 4 branches: session-token-refresh', error: 'No such field: branch.checkedOt (did you mean checkedOut?)', empty: 'Always shown' };
+var results = { valid: 'Matches 3 branches', error: 'No such field: branch.checkedOt (did you mean checkedOut?)', empty: 'Always shown' };
 var invalid = when === 'error';
 var whenStyle = 'box-sizing: border-box; resize: none; padding: 10px 92px 10px 12px; background: var(--bg-sunken); border-radius: 8px; color: var(--text-code); font-family: \'JetBrains Mono\', monospace; font-size: 12px; line-height: 20px; outline: none;' + (invalid ? ' border: 1px solid var(--danger); box-shadow: 0 0 0 2px rgba(var(--danger-rgb), 0.2);' : ' border: 1px solid var(--border);');
 var fields = [
@@ -223,7 +233,15 @@ return {
   whenInvalid: invalid,
   whenOk: when === 'valid',
   resultText: results[when],
-  resultStyle: 'display: flex; align-items: center; gap: 6px; font-size: 12px;' + (invalid ? ' color: var(--danger);' : ' color: var(--text-muted);'),
+  matches: [
+    { repo: 'web-app', full: 'web-app · session-token-refresh', head: 'session-token-refresh', tail: '' },
+    { repo: 'api-server', full: 'api-server · feature/PROJ-4821-add-retry-with-exponential-backoff-to-the-api-client', head: 'feature/PROJ-4821-add-retry-with-exponential-backoff-to-', tail: 'the-api-client' },
+    { repo: 'web-app', full: 'web-app · logout-flow', head: 'logout-flow', tail: '' }
+  ],
+  listOpen: !!(this.state && this.state.listOpen),
+  openList: function () { self.setState({ listOpen: true }); },
+  closeList: function () { self.setState({ listOpen: false }); },
+  resultStyle: 'position: relative; display: flex; align-items: center; gap: 6px; font-size: 12px;' + (invalid ? ' color: var(--danger);' : ' color: var(--text-muted);'),
   fields: fields,
   inputs: inputs,
   icons: icons,

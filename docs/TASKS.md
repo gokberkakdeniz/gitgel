@@ -568,7 +568,7 @@ rather than as a task is listed the same way, marked "(on request)".
   first, "…" on items needing more input (Add Repository…, Change Base…, Stash…,
   Delete Project…, Import…, Export…, Locate…), sentence case for hints/tooltips/descriptions;
   SPEC §0 updated — 2026-10-09
-- [x] (on request) Settings › Scripts drops its two hint lines, the script editor its Name, Command and Inputs hints — 2026-10-09
+- [x] (on request) Settings › Scripts drops its two hint lines, the script editor its Name, Command and Inputs hints; Show when gets a "CEL Syntax" link to the CEL spec and shows "Matches N branches" with a ? listing them; Open the output panel and Ask before running are plain checkboxes — 2026-10-09
 
 ---
 

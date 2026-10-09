@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type MouseEvent, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type RefObject } from 'react';
 import { Button } from '../components/Button';
 import { Checkbox } from '../components/Checkbox';
 import { IconButton } from '../components/IconButton';
@@ -7,6 +7,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   CloseIcon,
+  HelpIcon,
   Icon,
   InfoIcon,
   type IconName,
@@ -17,7 +18,9 @@ import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 import { Pill } from '../components/Pill';
 import { Popover } from '../components/Popover';
 import { Select } from '../components/Select';
-import { saveScript } from '../lib/ipc';
+import { plural } from '../lib/format';
+import { middleCut } from '../screens/Branches/rows';
+import { openRemoteLink, saveScript } from '../lib/ipc';
 import { useAutoGrow } from '../lib/useAutoGrow';
 import type { AppError, ScriptConfig, ScriptInput, ScriptInputType } from '../lib/types';
 import { useData } from '../state/data';
@@ -25,6 +28,9 @@ import { DragHandle } from './DragHandle';
 import { useReorder } from './useReorder';
 import { BRANCH_FIELDS, branchContext, checkWhen, evalWhen } from './when';
 import styles from './ScriptEditor.module.css';
+
+/** The CEL language definition, behind Show when's "CEL Syntax" link. */
+const CEL_SYNTAX = 'https://github.com/cel-expr/cel-spec/blob/master/doc/langdef.md';
 
 /** The icons offered for a script (a part of the Icon set). */
 const SCRIPT_ICONS: IconName[] = [
@@ -96,6 +102,72 @@ export function scriptProblem(s: ScriptConfig): string | null {
   return checkWhen(s.when);
 }
 
+/** Show when's live result, "Matches N branches", with a ? that lists them on hover or focus,
+ * under the ? and as wide as the field. */
+function MatchCount({
+  names,
+  fieldRef,
+}: {
+  names: { repo: string; branch: string }[];
+  fieldRef: RefObject<HTMLElement | null>;
+}) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const closing = useRef<number | undefined>(undefined);
+  const open = (el: Element) => {
+    window.clearTimeout(closing.current);
+    const r = el.getBoundingClientRect();
+    const field = fieldRef.current?.getBoundingClientRect();
+    setRect(field ? new DOMRect(field.left, r.top, field.width, r.height) : r);
+  };
+  // A short delay, so the pointer can move from the ? into the list.
+  const close = () => {
+    window.clearTimeout(closing.current);
+    closing.current = window.setTimeout(() => setRect(null), 150);
+  };
+  useEffect(() => () => window.clearTimeout(closing.current), []);
+  return (
+    <>
+      <span>Matches {plural(names.length, 'branch', 'branches')}</span>
+      {names.length > 0 && (
+        <button
+          type="button"
+          aria-label="Show Matching Branches"
+          aria-expanded={!!rect}
+          className={styles.matchHelp}
+          onMouseEnter={(e) => open(e.currentTarget)}
+          onMouseLeave={close}
+          onFocus={(e) => open(e.currentTarget)}
+          onBlur={close}
+        >
+          <HelpIcon size={13} />
+        </button>
+      )}
+      {rect && (
+        <Popover anchorRect={rect} width={rect.width} onClose={() => setRect(null)}>
+          <ul
+            aria-label="Matching branches"
+            className={styles.matchList}
+            onMouseEnter={() => window.clearTimeout(closing.current)}
+            onMouseLeave={close}
+          >
+            {names.map(({ repo, branch }) => {
+              const [head, tail] = middleCut(branch);
+              return (
+                <li key={`${repo}\0${branch}`} title={`${repo} · ${branch}`} className={styles.matchItem}>
+                  <span className={styles.matchRepo}>{repo}</span>
+                  <span className={styles.matchDot}>·</span>
+                  <span className={styles.matchHead}>{head}</span>
+                  <span className={styles.matchTail}>{tail}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </Popover>
+      )}
+    </>
+  );
+}
+
 /** An open popover; `input` is the input whose Show when gets the field (kind `inputWhen`). */
 type Pop = { kind: 'icon' | 'name' | 'command' | 'when' | 'inputWhen'; rect: DOMRect; input?: number };
 
@@ -164,12 +236,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
   const whenError = checkWhen(s.when);
   const matches =
     whenError || !s.when.trim() ? [] : entries.filter((e) => evalWhen(s.when, branchContext(e, 'branches')));
-  const names = matches.map((e) => e.branch ?? e.shortSha ?? '');
-  const result = !s.when.trim()
-    ? 'Always shown'
-    : `Shows for ${matches.length} of ${entries.length} branches${
-        names.length ? `: ${names.slice(0, 3).join(', ')}${names.length > 3 ? ', …' : ''}` : ''
-      }`;
+  const names = matches.map((e) => ({ repo: e.repoName, branch: e.branch ?? e.shortSha ?? '' }));
 
   const problem = scriptProblem(s);
   const save = async () => {
@@ -465,7 +532,13 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             <label htmlFor="script-when" className={styles.label}>
               Show when
             </label>
-            <span className={styles.hint}>A CEL expression. Empty shows it always.</span>
+            <button
+              type="button"
+              className={styles.hintLink}
+              onClick={() => void openRemoteLink(CEL_SYNTAX).catch((e) => console.error('cannot open link', e))}
+            >
+              CEL Syntax
+            </button>
           </div>
           <div className={styles.areaWrap}>
             <textarea
@@ -493,28 +566,24 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             ) : (
               s.when.trim() && <CheckIcon size={13} className={styles.ok} />
             )}
-            <span>{whenError ?? result}</span>
+            {whenError ? (
+              <span>{whenError}</span>
+            ) : s.when.trim() ? (
+              <MatchCount names={names} fieldRef={whenRef} />
+            ) : (
+              <span>Always shown</span>
+            )}
           </div>
         </div>
 
         <Checkbox
-          card
           label="Open the output panel automatically"
-          sub={
-            'Every run shows a toast; click it for the output, to answer prompts or to stop the script. ' +
-            'Turn this on to open the output as soon as it starts (long jobs, scripts that ask questions).'
-          }
           checked={s.openOutput}
           onChange={(e) => set({ openOutput: e.target.checked })}
         />
 
         <Checkbox
-          card
           label="Ask before running"
-          sub={
-            'Opens the run dialog first, even without inputs, so nothing runs on one click. ' +
-            'Turn it on for scripts that change the branch (rebase, push, reset).'
-          }
           checked={s.askFirst}
           onChange={(e) => set({ askFirst: e.target.checked })}
         />

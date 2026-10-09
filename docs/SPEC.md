@@ -2208,15 +2208,13 @@ export interface ScriptRun {
   - **Runs in** (radio: Worktree folder "Hidden when the branch is not checked out" /
     Repository folder "Always available") and **Show in** (checkboxes: Branches row menu,
     Project entry menu) side by side.
-  - **Show when** (mono textarea, "+ Variable" listing the fields with their types), with the
-    live result under it: ✓ "Shows for N of M branches: <names>" / ✕ the error (danger; the
-    field turns invalid) / "Always shown".
-  - **Open the output panel automatically** (`Checkbox` card): "Every run shows a toast; click it
-    for the output, to answer prompts or to stop the script. Turn this on to open the output as
-    soon as it starts (long jobs, scripts that ask questions)."
-  - **Ask before running** (`Checkbox` card): "Opens the run dialog first, even without inputs,
-    so nothing runs on one click. Turn it on for scripts that change the branch (rebase, push,
-    reset)."
+  - **Show when** (mono textarea, "+ Variable" listing the fields with their types; a "CEL Syntax"
+    link on the label row opens the CEL language definition in the browser), with the
+    live result under it: ✓ "Matches N branches" with a ? (when N > 0) whose hover or focus
+    opens a popover listing them as "<repo> · <branch>" (as wide as the field, branch names
+    cut in the middle like Branches rows; 240px tall at most, then scrolls) / ✕ the error
+    (danger; the field turns invalid) / "Always shown".
+  - **Open the output panel automatically** and **Ask before running**: plain `Checkbox`es.
   - Footer: Cancel, primary "Save script". Save needs a name, a command, at least one
     menu under Show in, unique valid input ids and no `when` error; the footer note says what is
     missing.
