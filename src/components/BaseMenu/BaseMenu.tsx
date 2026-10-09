@@ -86,7 +86,7 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
             mono
             clearable
             size={32}
-            aria-label="Search branches"
+            aria-label="Search Branches"
             placeholder="Search"
             className={styles.filter}
             value={query}
@@ -106,7 +106,7 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
           {rows.map((row, i) => {
             const title = row.section !== lastSection && row.section !== 'Commit' ? row.section : null;
             lastSection = row.section;
-            const dim = row.section === 'Other branches' || row.section === 'Remote branches';
+            const dim = row.section === 'Other Branches' || row.section === 'Remote Branches';
             const cls = [styles.row, row.sub && styles.stacked, i === active && styles.active, row.disabled && styles.disabled]
               .filter(Boolean)
               .join(' ');

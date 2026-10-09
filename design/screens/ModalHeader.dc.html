@@ -25,7 +25,7 @@ body{margin:0}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Add repositories"},"sub":{"editor":"text","default":"3 folders selected. Repositories already in Gitgel are skipped."},"subMono":{"editor":"boolean","default":false},"close":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"titleId":{"editor":null},"onClose":{"editor":null},"$preview":{"width":600,"height":80}}'>
+<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Add Repositories"},"sub":{"editor":"text","default":"3 folders selected. Repositories already in Gitgel are skipped."},"subMono":{"editor":"boolean","default":false},"close":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"titleId":{"editor":null},"onClose":{"editor":null},"$preview":{"width":600,"height":80}}'>
 class Component extends DCLogic {
   renderVals() {
     // The top of every Modal: serif 22px title, a 13px muted sub line (mono 11px for a
@@ -36,7 +36,7 @@ class Component extends DCLogic {
     var sub = p.sub == null ? '' : String(p.sub);
     return {
       themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
-      title: p.title == null ? 'Add repositories' : p.title,
+      title: p.title == null ? 'Add Repositories' : p.title,
       titleId: p.titleId,
       hasSub: !!sub, sub: sub,
       subStyle: p.subMono ? 'font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--text-muted)' : 'font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-muted)',

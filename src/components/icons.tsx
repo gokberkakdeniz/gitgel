@@ -353,7 +353,7 @@ export function KeyboardIcon({ size = 16, className, strokeWidth: sw }: IconProp
   );
 }
 
-/** Move up / down in an ordered list (Settings › Default base). */
+/** Move up / down in an ordered list (Settings › Default Base). */
 export function ArrowUpIcon({ size = 13, className, strokeWidth: sw }: IconProps) {
   return (
     <Svg size={size} strokeWidth={sw ?? 2} className={className}>

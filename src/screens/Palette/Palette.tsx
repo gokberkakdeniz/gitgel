@@ -99,7 +99,7 @@ function PaletteDialog({ projectId }: { projectId: string }) {
 
   let lastGroup: string | null = null;
   return (
-    <Modal aria-label="Add branches or worktrees" width={620} paddingTop={96} closeOnScrim onClose={close}>
+    <Modal aria-label="Add Branches or Worktrees" width={620} paddingTop={96} closeOnScrim onClose={close}>
       <div
         className={styles.dialog}
         onKeyDown={(e) => {
@@ -115,7 +115,7 @@ function PaletteDialog({ projectId }: { projectId: string }) {
         <input
           ref={inputRef}
           autoFocus
-          aria-label="Search branches and worktrees"
+          aria-label="Search Branches and Worktrees"
           className={styles.input}
           value={query}
           spellCheck={false}
@@ -148,7 +148,7 @@ function PaletteDialog({ projectId }: { projectId: string }) {
             </div>
           );
         })}
-        {shown.length === 0 && <div className={styles.empty}>No matches</div>}
+        {shown.length === 0 && <div className={styles.empty}>No Matches</div>}
       </div>
 
       <ModalFooter note={`${checked.size} selected`}>
@@ -189,8 +189,8 @@ function Row({
         <span className={styles.branch}>{item.branch}</span>
         <span className={styles.meta}>{item.meta}</span>
       </span>
-      {item.tag === 'in project' && <Pill tone="neutral">in project</Pill>}
-      {item.tag === 'merged' && <Pill tone="success">merged</Pill>}
+      {item.tag === 'In Project' && <Pill tone="neutral">In Project</Pill>}
+      {item.tag === 'merged' && <Pill tone="success">Merged</Pill>}
     </label>
   );
 }

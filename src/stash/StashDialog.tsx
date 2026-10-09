@@ -56,7 +56,7 @@ export function stashPayload(rows: Row[], picks: Record<string, string[]>): Stas
   });
 }
 
-/** Stash changes (flow P4), under the ⋮ menu's Stash in Review and History. Each entry lists its
+/** Stash Changes (flow P4), under the ⋮ menu's Stash in Review and History. Each entry lists its
  * files under it (open when there is one entry); its box picks them all or none. */
 export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGroup[]; anchorRect: DOMRect; onClose: () => void }) {
   const rows = stashRows(groups);
@@ -84,7 +84,7 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
     <Popover anchorRect={anchorRect} width={420} alignRight onClose={onClose}>
       <div
         role="dialog"
-        aria-label="Stash changes"
+        aria-label="Stash Changes"
         className={styles.dialog}
         onKeyDown={(e) => {
           // Listed in lib/shortcuts.ts.
@@ -94,7 +94,7 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
           }
         }}
       >
-        <div className={styles.title}>Stash changes</div>
+        <div className={styles.title}>Stash Changes</div>
         <div className={styles.entries}>
           <span className={styles.label}>In</span>
           {rows.map((r) => {
@@ -130,7 +130,7 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
                       type="button"
                       className={styles.countButton}
                       aria-expanded={isOpen}
-                      title={isOpen ? 'Hide files' : 'Pick files'}
+                      title={isOpen ? 'Hide Files' : 'Pick Files'}
                       onClick={() => toggleOpen(key)}
                     >
                       {all ? plural(r.files.length, 'file', 'files') : `${n} of ${plural(r.files.length, 'file', 'files')}`}

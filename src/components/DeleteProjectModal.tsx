@@ -8,7 +8,7 @@ import { useUi } from '../state/ui';
 import { Button } from './Button';
 import { ConfirmModal } from './ConfirmModal';
 
-/** Delete project asks first (flow G) unless Settings › Prompts › "Deleting projects" is off. */
+/** Delete Project… asks first (flow G) unless Settings › Prompts › "Deleting projects" is off. */
 export function askDeleteProject(id: string): void {
   if (useData.getState().config?.settings.prompts.deleteProjects === false) void removeProject(id);
   else useUi.getState().setDeletingProjectId(id);
@@ -48,7 +48,7 @@ export function DeleteProjectModal() {
 
   return (
     <ConfirmModal
-      aria-label="Delete project"
+      aria-label="Delete Project"
       title={`Delete “${project.name}”?`}
       width={440}
       onClose={close}
@@ -59,7 +59,7 @@ export function DeleteProjectModal() {
         Cancel
       </Button>
       <Button variant="danger" size={36} disabled={busy} onClick={confirm}>
-        Delete project
+        Delete Project…
       </Button>
     </ConfirmModal>
   );

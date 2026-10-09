@@ -54,7 +54,7 @@ button,input{font-family:inherit}
 <div style="flex-grow: 1; display: flex; min-height: 0">
 <aside style="width: {{asideW}}px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; background: var(--bg-sidebar); padding: 8px; box-sizing: border-box; overflow: hidden">
 <div style="flex-shrink: 0; margin: 0 0 6px">
-<dc-import name="Input" theme="{{themeName}}" width="100%" value="{{fileQuery}}" on-value="{{setQ}}" on-key="{{onFilterKey}}" placeholder="Search" label="Search files" right-text="{{filterRight}}" right-kind="{{filterRightKind}}" hint-size="100%,30px"></dc-import>
+<dc-import name="Input" theme="{{themeName}}" width="100%" value="{{fileQuery}}" on-value="{{setQ}}" on-key="{{onFilterKey}}" placeholder="Search" label="Search Files" right-text="{{filterRight}}" right-kind="{{filterRightKind}}" hint-size="100%,30px"></dc-import>
 </div>
 <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
 <section style="display: flex; flex-direction: column; gap: 1px">
@@ -70,10 +70,10 @@ button,input{font-family:inherit}
 </sc-if>
 <sc-if value="{{g.dotsOn}}" hint-placeholder-val="{{false}}">
 <span style="position: relative; z-index: 30; flex-shrink: 0; display: flex">
-<button aria-label="Branch options" aria-haspopup="menu" aria-expanded="true" style="width: 22px; height: 20px; margin: -2px 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: var(--bg-pressed); color: var(--text-body); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5.5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="18.5" r="1.6"></circle></svg></button>
+<button aria-label="Branch Options" aria-haspopup="menu" aria-expanded="true" style="width: 22px; height: 20px; margin: -2px 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: var(--bg-pressed); color: var(--text-body); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5.5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="18.5" r="1.6"></circle></svg></button>
 <sc-if value="{{g.menuOn}}" hint-placeholder-val="{{false}}">
 <div style="position: absolute; top: 24px; right: 0">
-<dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch options" items="{{g.menuItems}}" hint-size="260px,260px"></dc-import>
+<dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch Options" items="{{g.menuItems}}" hint-size="260px,260px"></dc-import>
 </div>
 </sc-if>
 </span>
@@ -87,7 +87,7 @@ button,input{font-family:inherit}
 <div style="display: flex; align-items: center; gap: 6px; margin: 2px 0 0 20px; padding: 3px 3px 3px 8px; border-radius: 7px; background: rgba(var(--accent-rgb), 0.14); min-width: 0">
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-hover); flex-shrink: 0">{{g.commitSha}}</span>
 <span style="font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{g.commitMsg}}</span>
-<button onClick="{{g.clearCommit}}" aria-label="Show all commits" title="Show all commits" style="width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: var(--accent-hover); cursor: pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+<button onClick="{{g.clearCommit}}" aria-label="Show All Commits" title="Show All Commits" style="width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: var(--accent-hover); cursor: pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
 </div>
 </sc-if>
 </div>
@@ -113,7 +113,7 @@ button,input{font-family:inherit}
 <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px 8px">
 <span style="font-size: 13px; color: var(--text-body)">No files match “{{fileQuery}}”</span>
 <span style="font-size: 12px; color: var(--text-muted); line-height: 1.4">Searched paths in {{modeLower}} files of every entry.</span>
-<button onClick="{{clearQuery}}" style="padding: 0; border: 0; background: transparent; color: var(--accent-text); font-size: 12px; font-weight: 500; cursor: pointer">Clear filter</button>
+<button onClick="{{clearQuery}}" style="padding: 0; border: 0; background: transparent; color: var(--accent-text); font-size: 12px; font-weight: 500; cursor: pointer">Clear Filter</button>
 </div>
 </sc-if>
 
@@ -150,7 +150,7 @@ button,input{font-family:inherit}
 <span style="font-size: 12px; color: var(--text-muted); white-space: nowrap"><sc-if value="{{entry.rangeLinked}}" hint-placeholder-val="{{true}}">{{entry.aheadText}} <a href="HistH2.dc.html" title="Show history of {{entry.rangeBase}}" style="color: var(--text-muted)">{{entry.rangeBase}}</a></sc-if><sc-if value="{{entry.rangePlain}}" hint-placeholder-val="{{false}}">{{entry.commitLabel}}</sc-if></span>
 <sc-if value="{{commitOn}}" hint-placeholder-val="{{false}}">
 <dc-import name="Stepper" theme="none" kind="commits" up-disabled="{{newerDisabled}}" down-disabled="{{olderDisabled}}" on-up="{{newerCommit}}" on-down="{{olderCommit}}" hint-size="60px,30px"></dc-import>
-<button onClick="{{clearCommit}}" style="height: 28px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--accent-text); font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer">Show all commits</button>
+<button onClick="{{clearCommit}}" style="height: 28px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--accent-text); font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer">Show All Commits</button>
 </sc-if>
 </div>
 <sc-if value="{{showCommits}}" hint-placeholder-val="{{true}}">
@@ -404,8 +404,8 @@ class Component extends DCLogic {
         menuOn: entryMenu && g === G[0],
         dotsOn: (entryMenu && g === G[0]) || g.id === bmGroup,
         totalsOn: !((entryMenu && g === G[0]) || g.id === bmGroup),
-        menuItems: [{ label: 'Change base', icon: 'branch', sub: 'base ' + g.base, active: true },
-          { label: 'Copy branch name', icon: 'copy' }, { label: 'Open history', icon: 'history' }, { kind: 'sep' },
+        menuItems: [{ label: 'Change Base…', icon: 'branch', sub: 'base ' + g.base, active: true },
+          { label: 'Copy Branch Name', icon: 'copy' }, { label: 'Open History', icon: 'history' }, { kind: 'sep' },
           { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' }],
         headStyle: 'display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px',
         open: open,
@@ -630,7 +630,7 @@ class Component extends DCLogic {
       return Object.assign({ from: '' }, c, {
         on: on,
         pick: function () { goCommit(on ? null : c.sha); },
-        title: on ? 'Show all commits' : 'Show only this commit',
+        title: on ? 'Show All Commits' : 'Show Only This Commit',
         msgStyle: 'flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-strong); ' + (on ? 'font-weight: 500' : ''),
         style: 'display: flex; gap: 12px; align-items: baseline; width: 100%; padding: 3px 8px; border: 0; border-radius: 6px; font-size: 13px; text-align: left; cursor: pointer; ' +
           (on ? 'background: var(--bg-hover); box-shadow: inset 2px 0 0 var(--accent-text); ' : 'background: transparent; ') +
@@ -667,23 +667,23 @@ class Component extends DCLogic {
     if (baseCase === 'behind') {
       bmSections = [
         bmSec('Default', [autoRow('origin/main', '4 commits'), bmRow('main', { note: '31 commits' }), bmRow('origin/main', { note: '4 commits' })], { source: 'from origin/HEAD', first: true }),
-        bmSec('Other branches', otherWeb), bmSec('Remote branches', remotesWeb)];
+        bmSec('Other Branches', otherWeb), bmSec('Remote Branches', remotesWeb)];
     } else if (baseCase === 'unrelated') {
       bmSections = [
         bmSec('Default', [autoRow('main', '4 commits'), bmRow('main', { note: '4 commits' }), bmRow('origin/main', { note: 'no common ancestor', disabled: true })], { source: 'from origin/HEAD', first: true }),
-        bmSec('Other branches', otherWeb), bmSec('Remote branches', remotesWeb)];
+        bmSec('Other Branches', otherWeb), bmSec('Remote Branches', remotesWeb)];
     } else if (baseCase === 'remote') {
       bmQuery = 'session';
       bmSections = [
-        bmSec('Other branches', [bmRow('session-cleanup', { dim: true, on: true, sel: true })], { first: true }),
-        bmSec('Remote branches', [bmRow('origin/session-token-refresh', { note: 'same name', dim: true }), bmRow('origin/session-cleanup', { dim: true })])];
+        bmSec('Other Branches', [bmRow('session-cleanup', { dim: true, on: true, sel: true })], { first: true }),
+        bmSec('Remote Branches', [bmRow('origin/session-token-refresh', { note: 'same name', dim: true }), bmRow('origin/session-cleanup', { dim: true })])];
     } else {
       bmBranch = 'token-rotation-job'; bmTop = 214;
       bmSections = [
         bmSec('Suggested', [bmRow('feat/job-queue', { sub: 'Contains 3 of the 5 commits shown', on: true })], { first: true }),
         bmSec('Default', [autoRow('main', '5 commits', { on: false }), bmRow('main', { note: '5 commits' }), bmRow('origin/main', { note: 'same as main' })], { source: 'from origin/HEAD' }),
-        bmSec('Other branches', [bmRow('feat/db-v2', { dim: true }), bmRow('release/2026.09', { dim: true })]),
-        bmSec('Remote branches', [bmRow('origin/token-rotation-job', { note: 'same name', dim: true }), bmRow('origin/feat/job-queue', { dim: true })])];
+        bmSec('Other Branches', [bmRow('feat/db-v2', { dim: true }), bmRow('release/2026.09', { dim: true })]),
+        bmSec('Remote Branches', [bmRow('origin/token-rotation-job', { note: 'same name', dim: true }), bmRow('origin/feat/job-queue', { dim: true })])];
     }
     var bm = {
       label: 'Choose base for ' + bmBranch, query: bmQuery, sections: bmSections,
@@ -773,8 +773,8 @@ class Component extends DCLogic {
         else if (e.key === 'Enter' && navKeys.length) { e.preventDefault(); self.setState({ file: navKeys[0], hunk: 0 }); }
       },
       attention: [
-        { repo: 'api-server', branch: 'refresh-endpoint', tag: 'merged', tagTone: 'success' },
-        { repo: 'mobile', branch: 'feat/token-store', tag: 'base missing', tagTone: 'warning' },
+        { repo: 'api-server', branch: 'refresh-endpoint', tag: 'Merged', tagTone: 'success' },
+        { repo: 'mobile', branch: 'feat/token-store', tag: 'Base Missing', tagTone: 'warning' },
         { repo: 'web-app', branch: 'logout-flow', tag: 'deleted', tagTone: 'danger' },
         { repo: 'admin-panel', branch: 'session-ui', tag: 'repo missing', tagTone: 'danger' }
       ],

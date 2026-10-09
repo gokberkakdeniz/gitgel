@@ -83,7 +83,7 @@ class Component extends DCLogic {
       selected: two ? files.map(function (f) { return f.name; }) : [],
       isMenu: step === 'menu', isConfirm: step === 'confirm',
       menuPos: 'position: absolute; left: 196px; top: ' + (all ? 130 : two ? 260 : 230) + 'px; z-index: 5',
-      menuLabel: all ? 'Uncommitted changes actions' : many(files[0].name + ' actions', '# files actions'),
+      menuLabel: all ? 'Uncommitted Changes Actions' : many(files[0].name + ' actions', '# files actions'),
       fileMenu: all ? [
         { label: 'Discard All Changes…', danger: true, active: true },
         { label: 'Stash All Changes…', icon: 'package' }

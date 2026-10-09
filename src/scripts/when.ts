@@ -13,7 +13,7 @@ export const BRANCH_FIELDS = {
   ahead: 'int',
   behind: 'int',
   merged: 'bool',
-  project: 'string', // Project entry menu only; test with has(branch.project)
+  project: 'string', // Project Entry Menu only; test with has(branch.project)
   menu: 'string', // 'branches' | 'project'
 } as const;
 

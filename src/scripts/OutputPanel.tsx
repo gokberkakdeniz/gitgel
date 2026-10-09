@@ -25,7 +25,7 @@ export function OutputPanelHost() {
 
 const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-/** Terminal escapes out, for Copy output. */
+/** Terminal escapes out, for Copy Output. */
 export function plainText(output: string): string {
   return (
     output
@@ -205,7 +205,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
                     again.skipHooks!();
                   }}
                 >
-                  Commit without hooks
+                  Commit Without Hooks
                 </Button>
               )}
               <Button

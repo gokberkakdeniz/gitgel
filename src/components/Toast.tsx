@@ -25,8 +25,8 @@ export function ToastHost() {
         <button
           type="button"
           className={styles.hit}
-          aria-label="Show output"
-          title="Show output"
+          aria-label="Show Output"
+          title="Show Output"
           onClick={toast.onClick}
         />
       )}

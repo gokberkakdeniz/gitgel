@@ -17,7 +17,7 @@ const repos: ListItem[] = [
     detail: '~/old/admin-panel',
     actions: [
       { kind: 'pill', label: 'path not found', tone: 'danger' },
-      { label: 'Locate', variant: 'secondary', ariaLabel: 'Locate admin-panel' },
+      { label: 'Locate…', variant: 'secondary', ariaLabel: 'Locate admin-panel' },
       x('Remove repository'),
     ],
   },

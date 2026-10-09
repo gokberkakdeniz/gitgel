@@ -39,9 +39,9 @@ function Sheet({ paths }: { paths: string[] }) {
   };
 
   return (
-    <Modal aria-label="Add repositories" width={600} paddingTop={110} onClose={close}>
+    <Modal aria-label="Add Repositories" width={600} paddingTop={110} onClose={close}>
       <ModalHeader
-        title="Add repositories"
+        title="Add Repositories"
         sub={`${plural(paths.length, 'folder', 'folders')} selected. ${
           hasRepos ? 'Repositories already in Gitgel are skipped.' : 'Worktree folders resolve to their main repository.'
         }`}

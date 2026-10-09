@@ -67,7 +67,7 @@ describe('paletteItems', () => {
     expect(meta('r_1:feat/token-store')).toMatchObject({ group: 'active', meta: 'web-app · ↑2 · 4 files · 3d ago' });
     expect(meta('r_1:in-project')).toMatchObject({
       meta: 'web-app · already in Session auth',
-      tag: 'in project',
+      tag: 'In Project',
       disabled: true,
     });
     expect(meta('r_1:squashed')).toMatchObject({ meta: 'web-app · merged into main · 3d ago', tag: 'merged' });

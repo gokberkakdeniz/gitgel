@@ -60,7 +60,7 @@ export function askDiscard(req: DiscardRequest): void {
 export const discardPaths = (files: FileChange[]) => files.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path]));
 
 export function discardNow(req: DiscardRequest): Promise<void> {
-  return startGitAction('Discard changes', () =>
+  return startGitAction('Discard Changes', () =>
     gitDiscard(req.targets.map((t) => ({ ...t.entry, paths: discardPaths(t.files) }))),
   );
 }

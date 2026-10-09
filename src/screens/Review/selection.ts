@@ -54,7 +54,7 @@ export function compareLabel(mode: DiffMode, entry: EntrySummary): string {
 }
 
 export const EMPTY_MESSAGES: Record<DiffMode, string> = {
-  committed: 'No committed changes',
-  uncommitted: 'No uncommitted changes',
-  all: 'No changes',
+  committed: 'No Committed Changes',
+  uncommitted: 'No Uncommitted Changes',
+  all: 'No Changes',
 };

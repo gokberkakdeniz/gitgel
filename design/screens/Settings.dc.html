@@ -35,20 +35,20 @@ button,input{font-family:inherit}
 <sc-if value="{{isRepos}}" hint-placeholder-val="{{false}}">
 <section style="display: flex; flex-direction: column; gap: 12px">
 <h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Repositories</h2>
-<dc-import name="List" theme="none" label="Repositories" items="{{repoItems}}" add-label="+ Add repository" hint-size="100%,250px"></dc-import>
+<dc-import name="List" theme="none" label="Repositories" items="{{repoItems}}" add-label="+ Add Repository…" hint-size="100%,250px"></dc-import>
 </section>
 <section style="display: flex; flex-direction: column; gap: 14px">
 <div role="group" aria-labelledby="base-title" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
-<span style="display: flex; flex-direction: column; gap: 2px; padding-top: 8px"><span id="base-title" style="color: var(--text-strong)">Default base</span><span style="font-size: 12px; color: var(--text-muted)">Used when a branch has no base</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px; padding-top: 8px"><span id="base-title" style="color: var(--text-strong)">Default Base</span><span style="font-size: 12px; color: var(--text-muted)">Used when a branch has no base</span></span>
 <div style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px">
-<dc-import name="List" theme="none" label="Default base order" density="compact" radius="10" width="280px" items="{{baseItems}}" add-label="{{baseAddLabel}}" adding="{{baseAddState}}" add-value="{{baseDraft}}" add-placeholder="Branch name, e.g. develop" on-add="{{startAdd}}" hint-size="280px,140px"></dc-import>
+<dc-import name="List" theme="none" label="Default Base Order" density="compact" radius="10" width="280px" items="{{baseItems}}" add-label="{{baseAddLabel}}" adding="{{baseAddState}}" add-value="{{baseDraft}}" add-placeholder="Branch name, e.g. develop" on-add="{{startAdd}}" hint-size="280px,140px"></dc-import>
 <sc-if value="{{baseAdding}}" hint-placeholder-val="{{false}}">
 <span style="{{baseNoteStyle}}">{{baseNote}}</span>
 </sc-if>
 </div>
 </div>
 <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Active threshold</span><span style="font-size: 12px; color: var(--text-muted)">Branches without a worktree are listed if committed within</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Active Threshold</span><span style="font-size: 12px; color: var(--text-muted)">Branches without a worktree are listed if committed within</span></span>
 <span style="display: flex; align-items: center; gap: 8px"><dc-import name="Input" theme="{{themeName}}" size="36" width="60px" value="14" label="Active threshold in days" left-icon="none" right-text="" clearable="{{false}}" align="right" hint-size="60px,36px"></dc-import><span style="color: var(--text-muted)">days</span></span>
 </label>
 </section>
@@ -84,8 +84,8 @@ button,input{font-family:inherit}
 </div>
 <sc-if value="{{terminalOther}}" hint-placeholder-val="{{false}}">
 <label style="display: flex; flex-direction: column; gap: 6px">
-<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Terminal command</span>
-<dc-import name="Input" theme="{{themeName}}" size="36" width="100%" value="wezterm start --cwd %" placeholder="wezterm start --cwd %" label="Terminal command" left-icon="none" right-text="" clearable="{{false}}" hint-size="100%,36px"></dc-import>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Terminal Command</span>
+<dc-import name="Input" theme="{{themeName}}" size="36" width="100%" value="wezterm start --cwd %" placeholder="wezterm start --cwd %" label="Terminal Command" left-icon="none" right-text="" clearable="{{false}}" hint-size="100%,36px"></dc-import>
 <span style="font-size: 12px; line-height: 1.5; color: var(--text-muted)">A command, or an app name such as Ghostty. <span style="font-family: 'JetBrains Mono', monospace; color: var(--text-code)">%</span> becomes the worktree folder; the command runs in your login shell, in that folder.</span>
 </label>
 </sc-if>
@@ -94,8 +94,8 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Check for updates</span><span style="font-size: 12px; color: var(--text-muted)">At launch and every 6 hours; a new version shows in the sidebar</span></span>
-<dc-import name="Checkbox" theme="{{themeName}}" label="" aria-label="Check for updates" checked="{{true}}" hint-size="16px,16px"></dc-import>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Check for Updates</span><span style="font-size: 12px; color: var(--text-muted)">At launch and every 6 hours; a new version shows in the sidebar</span></span>
+<dc-import name="Checkbox" theme="{{themeName}}" label="" aria-label="Check for Updates" checked="{{true}}" hint-size="16px,16px"></dc-import>
 </div>
 </section>
 </sc-if>
@@ -105,24 +105,22 @@ button,input{font-family:inherit}
 <div style="display: flex; align-items: flex-end; gap: 16px">
 <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px">
 <h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Scripts</h2>
-<span style="font-size: 12px; color: var(--text-muted)">Your own items in the branch menus. Each runs a shell command for that branch. Drag to reorder; switch one off to take it out of the menus.</span>
 </div>
 <div style="display: flex; align-items: center; gap: 10px">
-<dc-import name="Button" theme="{{themeName}}" label="Import" href="FlowN7.dc.html" hint-size="84px,32px"></dc-import>
-<dc-import name="Button" theme="{{themeName}}" label="Export" hint-size="84px,32px"></dc-import>
-<dc-import name="Button" theme="{{themeName}}" variant="primary" label="+ New script" href="FlowN6.dc.html" hint-size="110px,32px"></dc-import>
+<dc-import name="Button" theme="{{themeName}}" label="Import…" href="FlowN7.dc.html" hint-size="84px,32px"></dc-import>
+<dc-import name="Button" theme="{{themeName}}" label="Export…" hint-size="84px,32px"></dc-import>
+<dc-import name="Button" theme="{{themeName}}" variant="primary" label="+ New Script…" href="FlowN6.dc.html" hint-size="110px,32px"></dc-import>
 </div>
 </div>
 
 <dc-import name="List" theme="none" label="Scripts" items="{{scriptItems}}" empty="No scripts yet" hint-size="100%,250px"></dc-import>
 </section>
 
-<span style="font-size: 12px; color: var(--text-muted)">Scripts run as you, with your permissions. Gitgel itself still only reads the repositories.</span>
 </sc-if>
 
 <sc-if value="{{isPrompts}}" hint-placeholder-val="{{false}}">
 <section role="group" aria-labelledby="ask-title" style="display: flex; flex-direction: column; gap: 12px">
-<h2 id="ask-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Show a confirmation dialog before...</h2>
+<h2 id="ask-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Show a Confirmation Dialog Before…</h2>
 <sc-for list="{{asks}}" as="a" hint-placeholder-count="4">
 <dc-import name="Checkbox" theme="{{themeName}}" label="{{a.label}}" checked="{{a.on}}" hint-size="200px,20px"></dc-import>
 </sc-for>
@@ -132,7 +130,7 @@ button,input{font-family:inherit}
 <sc-if value="{{isShortcuts}}" hint-placeholder-val="{{false}}">
 <section aria-labelledby="shortcuts-title" style="display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; align-items: baseline; gap: 12px">
-<h2 id="shortcuts-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Keyboard shortcuts</h2>
+<h2 id="shortcuts-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Keyboard Shortcuts</h2>
 <span style="font-size: 12px; color: var(--text-muted)">Not editable yet</span>
 </div>
 <div style="display: grid; grid-template-columns: repeat(2, minmax(max-content, 1fr)); gap: 12px; align-items: start">
@@ -175,7 +173,7 @@ class Component extends DCLogic {
     };
     var shortcutGroups = [
       { title: 'General', items: [
-        item('New project', ['⌘', 'N']),
+        item('New Project…', ['⌘', 'N']),
         item('Back', ['⌘', '['], 'also ⌘←'),
         item('Forward', ['⌘', ']'], 'also ⌘→'),
         item('Settings', ['⌘', ',']),
@@ -183,9 +181,9 @@ class Component extends DCLogic {
       ] },
       { title: 'Branches and projects', items: [
         item('Focus filter', ['⌘', 'K'], 'Branches, Review files'),
-        item('Add branches', ['⌘', 'K'], 'Project'),
-        item('Review changes', ['⌘', 'R'], 'Project'),
-        item('Rename project', ['F2']),
+        item('Add Branches…', ['⌘', 'K'], 'Project'),
+        item('Review Changes', ['⌘', 'R'], 'Project'),
+        item('Rename Project', ['F2']),
         item('Collapse or expand all repos', ['⌥', 'click'], 'Branches, on a repo')
       ] },
       { title: 'Review', items: [
@@ -281,9 +279,9 @@ class Component extends DCLogic {
       baseNote: bn[0], baseNoteStyle: bn[1], baseDraft: bn[2], baseInputState: bn[3],
       startAdd: function () { self.setState({ baseAdd: 'typing' }); },
       section: section,
-      // Prompts › Show a confirmation dialog before... (Hi8, GitHub Desktop's texts and section): the confirmations that can be turned off; "Do not show this message again" in
+      // Prompts › Show a Confirmation Dialog Before… (Hi8, GitHub Desktop's texts and section): the confirmations that can be turned off; "Do not show this message again" in
       // the Discard dialog clears its box here. Discard all and more than 10 files always ask.
-      asks: [{ label: 'Removing repositories', on: true }, { label: 'Discarding changes', on: true }, { label: 'Discarding stash', on: true }, { label: 'Deleting projects', on: true }],
+      asks: [{ label: 'Removing repositories', on: true }, { label: 'Discarding changes', on: true }, { label: 'Dropping stashes', on: true }, { label: 'Deleting projects', on: true }],
       isRepos: section === 'repositories', isGeneral: section === 'general', isShortcuts: section === 'shortcuts', isScripts: section === 'scripts', isPrompts: section === 'prompts',
       // Settings › Scripts (flow N5): name, icon (Icon set) in the user's order; the Switch turns one off (in no menu) at once.
       scripts: [['Open pull request', 'pull-request'], ['Run tests', 'test'], ['Rebase on {base}…', 'rebase'], ['Copy Linear link', 'link'], ['Start dev server', 'prompt']].map(function (x) {
@@ -301,7 +299,7 @@ class Component extends DCLogic {
         { name: 'web-app', path: '~/code/web-app', note: 'base main', noteStyle: ok, found: true, missing: false },
         { name: 'api-server', path: '~/code/api-server', note: 'base main', noteStyle: ok, found: true, missing: false },
         { name: 'shared-ui', path: '~/code/shared-ui', note: 'base main', noteStyle: ok, found: true, missing: false },
-        { name: 'admin-panel', path: '~/old/admin-panel', note: 'path not found', found: false, missing: true }
+        { name: 'admin-panel', path: '~/old/admin-panel', note: 'Path Not Found', found: false, missing: true }
       ]
     };
     // Settings' three card lists are the shared List (List.dc.html, ListRow.dc.html).
@@ -309,7 +307,7 @@ class Component extends DCLogic {
     out.repoItems = out.repos.map(function (r) {
       return { title: r.name, titleWeight: '500', titleWidth: 96, detail: r.path,
         aside: r.found ? r.note : '',
-        actions: (r.missing ? [{ kind: 'pill', label: r.note, tone: 'danger' }, { label: 'Locate', variant: 'secondary' }] : []).concat([x('Remove repository')]) };
+        actions: (r.missing ? [{ kind: 'pill', label: r.note, tone: 'danger' }, { label: 'Locate…', variant: 'secondary' }] : []).concat([x('Remove Repository…')]) };
     });
     out.baseItems = bases.map(function (b, i) {
       return { lead: 'index', leadText: b.n, title: b.name, titleMono: true, active: hover === i, actionsOnHover: true,
@@ -317,13 +315,13 @@ class Component extends DCLogic {
           { icon: 'arrow-down', ariaLabel: b.downLabel, disabled: b.last, onPress: b.down },
           { icon: 'close', ariaLabel: b.removeLabel, disabled: b.only, onPress: b.remove }] };
     });
-    out.baseAddLabel = baseAdd !== 'none' ? 'Add a base branch' : '+ Add branch';
+    out.baseAddLabel = baseAdd !== 'none' ? 'Add a base branch' : '+ Add Branch';
     out.baseAddState = baseAdd !== 'none' ? bn[3] : 'none';
     out.scriptItems = out.scripts.map(function (sc) {
       return { handle: true, lead: 'tile', icon: sc.icon, title: sc.name, titleWeight: '500', off: sc.off,
         badges: sc.off ? [{ label: 'off', tone: 'neutral' }] : [],
         actions: [{ kind: 'switch', checked: sc.on, ariaLabel: 'On', title: sc.switchTitle, onPress: sc.toggle },
-          { icon: 'edit', ariaLabel: 'Edit script', href: 'FlowN6.dc.html' }, x('Remove script')] };
+          { icon: 'edit', ariaLabel: 'Edit Script', href: 'FlowN6.dc.html' }, x('Remove script')] };
     });
     return out;
   }

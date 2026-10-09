@@ -2,11 +2,11 @@
 import { entryKey } from './entryKey';
 import type { Config, EntryRef, EntrySummary, OtherBranch } from './types';
 
-/** First free name of the form `Untitled project`, `Untitled project 2`, … */
+/** First free name of the form `Untitled Project`, `Untitled Project 2`, … */
 export function untitledName(config: Config | null): string {
   const taken = new Set((config?.projects ?? []).map((p) => p.name.trim().toLowerCase()));
   for (let n = 1; ; n++) {
-    const name = n === 1 ? 'Untitled project' : `Untitled project ${n}`;
+    const name = n === 1 ? 'Untitled Project' : `Untitled Project ${n}`;
     if (!taken.has(name.toLowerCase())) return name;
   }
 }

@@ -10,7 +10,7 @@ export interface ConfirmContext {
   title?: string;
 }
 
-/** A short confirmation (Delete project, Remove repository, Drop stash, Run): a serif title, then
+/** A short confirmation (Delete Project…, Remove Repository…, Drop stash, Run): a serif title, then
  * a text or a box naming what it acts on with a note, then the buttons (children) on the right. */
 export function ConfirmModal({
   'aria-label': label,

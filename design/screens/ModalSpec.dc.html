@@ -20,7 +20,7 @@
 <section style="display: flex; flex-direction: column; gap: 12px">
 <h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Headers and footers</h2>
 <div style="display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap">
-<div style="display: flex; flex-direction: column; gap: 8px"><div style="width: 440px; display: flex; flex-direction: column; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden"><dc-import name="ModalHeader" title="Add repositories" sub="3 folders selected. Repositories already in Gitgel are skipped." hint-size="440px,76px"></dc-import><div style="height: 56px; margin: 0 24px 22px; border: 1px dashed #383631; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 12px">Body (in the screen)</div><dc-import name="ModalFooter" note="" ruled="{{false}}" buttons="{{addRepos}}" hint-size="440px,64px"></dc-import></div><span style="font-size: 12px; color: #75726b">sans sub · no ✕ (Add repositories)</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="width: 440px; display: flex; flex-direction: column; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden"><dc-import name="ModalHeader" title="Add Repositories" sub="3 folders selected. Repositories already in Gitgel are skipped." hint-size="440px,76px"></dc-import><div style="height: 56px; margin: 0 24px 22px; border: 1px dashed #383631; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 12px">Body (in the screen)</div><dc-import name="ModalFooter" note="" ruled="{{false}}" buttons="{{addRepos}}" hint-size="440px,64px"></dc-import></div><span style="font-size: 12px; color: #75726b">sans sub · no ✕ (Add repositories)</span></div>
 <div style="display: flex; flex-direction: column; gap: 8px"><div style="width: 440px; display: flex; flex-direction: column; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden"><dc-import name="ModalHeader" title="Create pull request…" sub="web-app / session-token-refresh" sub-mono="{{true}}" close="{{true}}" hint-size="440px,76px"></dc-import><div style="height: 56px; margin: 0 24px 22px; border: 1px dashed #383631; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 12px">Body (in the screen)</div><dc-import name="ModalFooter" note="Last values are kept for this branch" buttons="{{run}}" hint-size="440px,64px"></dc-import></div><span style="font-size: 12px; color: #75726b">mono sub, ✕ · note + kbd</span></div>
 </div>
 </section>
@@ -34,7 +34,7 @@
 <section style="display: flex; flex-direction: column; gap: 12px">
 <h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Light</h2>
 <div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap; padding: 20px 24px; background: #fbfaf7; border-radius: 12px">
-<div style="width: 440px; display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2ded6; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.14); overflow: hidden"><dc-import name="ModalHeader" theme="light" title="Import scripts" sub="~/code/web-app/tools/gitgel-scripts.json · 4 scripts" sub-mono="{{true}}" close="{{true}}" hint-size="440px,76px"></dc-import><div style="height: 56px; margin: 0 24px 22px; border: 1px dashed #d5d0c7; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 12px">Body (in the screen)</div><dc-import name="ModalFooter" theme="light" note="3 of 4 selected" buttons="{{importBtns}}" hint-size="440px,64px"></dc-import></div>
+<div style="width: 440px; display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2ded6; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.14); overflow: hidden"><dc-import name="ModalHeader" theme="light" title="Import Scripts" sub="~/code/web-app/tools/gitgel-scripts.json · 4 scripts" sub-mono="{{true}}" close="{{true}}" hint-size="440px,76px"></dc-import><div style="height: 56px; margin: 0 24px 22px; border: 1px dashed #d5d0c7; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #75726b; font-size: 12px">Body (in the screen)</div><dc-import name="ModalFooter" theme="light" note="3 of 4 selected" buttons="{{importBtns}}" hint-size="440px,64px"></dc-import></div>
 </div>
 </section>
 </div>
@@ -45,7 +45,7 @@ class Component extends DCLogic {
     return {
       addRepos: [{ label: 'Cancel' }, { label: 'Add 1 repository', variant: 'primary' }],
       run: [{ label: 'Cancel' }, { label: 'Run', variant: 'primary', kbd: '⌘↵' }],
-      save: [{ label: 'Cancel' }, { label: 'Save script', variant: 'primary' }],
+      save: [{ label: 'Cancel' }, { label: 'Save Script', variant: 'primary' }],
       output: [{ label: 'Copy output' }, { label: 'Stop' }],
       importBtns: [{ label: 'Cancel' }, { label: 'Import 3 scripts', variant: 'primary' }],
       tryLead: { label: 'Try on session-token-refresh', icon: 'play' }

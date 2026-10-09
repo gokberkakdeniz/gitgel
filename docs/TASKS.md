@@ -564,6 +564,11 @@ rather than as a task is listed the same way, marked "(on request)".
   again" — 2026-10-09
   - note: canvas boards Hi8 (`HistH9`), D12 (`FlowD12`), M6 (`FlowM6`), moved from the WIP page
     (W4d, W4b, W4e); W4b's backup stash was dropped for the Trash copies.
+- [x] (on request) UI copy follows Apple HIG: buttons/menus/list actions in title case with a verb
+  first, "…" on items needing more input (Add Repository…, Change Base…, Stash…,
+  Delete Project…, Import…, Export…, Locate…), sentence case for hints/tooltips/descriptions;
+  SPEC §0 updated — 2026-10-09
+- [x] (on request) Settings › Scripts drops its two hint lines, the script editor its Name, Command and Inputs hints — 2026-10-09
 
 ---
 

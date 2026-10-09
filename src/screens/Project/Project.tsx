@@ -83,7 +83,7 @@ function SavedProject({ id }: { id: string }) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // ⌘R: Review changes. Listed in lib/shortcuts.ts.
+  // ⌘R: Review Changes. Listed in lib/shortcuts.ts.
   const hasEntries = (project?.entries.length ?? 0) > 0;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -124,14 +124,14 @@ function SavedProject({ id }: { id: string }) {
       >
         <RefreshButton />
         <Button kbd="⌘K" className={styles.addButton} onClick={openPalette}>
-          Add entries
+          Add Entries…
         </Button>
-        <Button variant="primary" title="Review changes (⌘R)" disabled={project.entries.length === 0} onClick={review}>
-          Review changes
+        <Button variant="primary" title="Review Changes (⌘R)" disabled={project.entries.length === 0} onClick={review}>
+          Review Changes
         </Button>
         <button
           type="button"
-          aria-label="Project options"
+          aria-label="Project Options"
           aria-haspopup="menu"
           className={menuAt ? `${styles.optionsButton} ${styles.optionsOpen}` : styles.optionsButton}
           onClick={(e) => setMenuAt(e.currentTarget.getBoundingClientRect())}
@@ -205,7 +205,7 @@ function DraftProject() {
         draft
         subtitle={
           rows.length === 0
-            ? 'Name your project'
+            ? 'Name Your Project'
             : `${entriesSummary(rows)} · name your project`
         }
         onNameChange={(name) => useUi.getState().setDraftProject({ ...draft, name })}
@@ -214,10 +214,10 @@ function DraftProject() {
       >
         <RefreshButton />
         <Button kbd="⌘K" className={styles.addButton} onClick={openPalette}>
-          Add entries
+          Add Entries…
         </Button>
         <Button variant="primary" disabled>
-          Review changes
+          Review Changes
         </Button>
       </ProjectHeader>
 
@@ -323,7 +323,7 @@ function ProjectHeader(props: HeaderProps) {
     <span
       className={editable.title}
       data-editable-title
-      title="Rename project"
+      title="Rename Project"
       onClick={(e) => {
         titleWidth.current = e.currentTarget.offsetWidth;
         props.onRenameStart?.();
@@ -348,12 +348,12 @@ function EmptyProject() {
   return (
     <div className={styles.center}>
       <div className={styles.emptyBody}>
-        <h2 className={styles.emptyTitle}>No entries yet</h2>
+        <h2 className={styles.emptyTitle}>No Entries Yet</h2>
         <p className={styles.emptyText}>
           A project groups branches that belong to one piece of work, across any of your repositories.
         </p>
         <Button variant="primary" size={40} kbd="⌘K" className={styles.emptyButton} onClick={openPalette}>
-          Add branches
+          Add Branches…
         </Button>
       </div>
     </div>
@@ -452,7 +452,7 @@ function EntryTable({
               />
               <button
                 type="button"
-                aria-label="Entry options"
+                aria-label="Entry Options"
                 className={hot ? `${styles.entryMenu} ${styles.entryMenuOpen}` : styles.entryMenu}
                 onClick={(ev) => setMenu({ key: e.key, rect: ev.currentTarget.getBoundingClientRect() })}
               >
@@ -529,26 +529,26 @@ function StatePill({
   switch (e.state) {
     case 'merged':
       return (
-        <Pill tone="success" className={cls} title={`merged into ${e.base}`}>
-          merged into {e.base}
+        <Pill tone="success" className={cls} title={`Merged into ${e.base}`}>
+          Merged into {e.base}
         </Pill>
       );
     case 'detached':
-      return <Pill tone="warning" className={cls}>detached HEAD</Pill>;
+      return <Pill tone="warning" className={cls}>Detached HEAD</Pill>;
     case 'base_missing':
-      return clickable('warning', 'base missing', onBase);
+      return clickable('warning', 'Base Missing', onBase);
     case 'git_error':
-      return <Pill tone="danger" className={cls} title={e.error ?? undefined}>git error</Pill>;
+      return <Pill tone="danger" className={cls} title={e.error ?? undefined}>Git Error</Pill>;
     case 'branch_deleted':
-      return clickable('danger', 'branch deleted', onMenu);
+      return clickable('danger', 'Branch Deleted', onMenu);
     case 'repo_missing':
-      return clickable('danger', 'repo path not found', onSettings);
+      return clickable('danger', 'Repo Path Not Found', onSettings);
     default:
       return <span className={styles.faint}>—</span>;
   }
 }
 
-/** Entry options: [View last known state], Point to another branch, Copy branch name, [open
+/** Entry Options: [View last known state], Point to Another Branch…, Copy Branch Name, [open
  * items], [Scripts], Remove, [the closing note]. */
 function EntryMenu({
   entry,
@@ -577,7 +577,7 @@ function EntryMenu({
   const hasFirst = !!tip || entry.branch !== null;
 
   return (
-    <Menu aria-label="Entry options">
+    <Menu aria-label="Entry Options">
       {tip && (
         <MenuItem
           icon={<HistoryIcon />}
@@ -601,7 +601,7 @@ function EntryMenu({
       )}
       {saved && entry.branch !== null && (
         <MenuItem icon={<BranchIcon size={14} />} onSelect={onRepoint}>
-          Point to another branch
+          Point to Another Branch…
         </MenuItem>
       )}
       <CopyBranchItem entry={entry} onDone={onClose} />
@@ -618,7 +618,7 @@ function EntryMenu({
   );
 }
 
-/** "Point to another branch": the local branches of the entry's repo. */
+/** "Point to Another Branch…": the local branches of the entry's repo. */
 function BranchPicker({
   entry,
   anchorRect,
@@ -648,7 +648,7 @@ function BranchPicker({
             mono
             clearable
             size={32}
-            aria-label="Search branches"
+            aria-label="Search Branches"
             placeholder="Search"
             className={styles.pickerFilter}
             value={query}

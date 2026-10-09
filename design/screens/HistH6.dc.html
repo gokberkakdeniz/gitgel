@@ -34,7 +34,7 @@ button,input,textarea{font-family:inherit}
 </div>
 <div style="flex-grow: 1"></div>
 <div style="display: flex; align-items: center; gap: 10px">
-<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search commits" label="Search commit messages, SHAs and paths" right-text="" hint-size="200px,32px"></dc-import>
+<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search Commits" label="Search commit messages, SHAs and paths" right-text="" hint-size="200px,32px"></dc-import>
 <span title="Last fetch (FETCH_HEAD)" style="font-size: 12px; color: var(--text-faint); white-space: nowrap">Fetched 3h ago</span>
 <button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><dc-import name="Icon" icon="refresh" size="14" hint-size="14px,14px"></dc-import></button>
 </div>
@@ -122,7 +122,7 @@ button,input,textarea{font-family:inherit}
 </div>
 </sc-if>
 <div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">
-<sc-if value="{{c.isOne}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px"><span style="{{c.avatarStyle}}">{{c.initials}}</span><span style="color: var(--text-body)">{{c.author}}</span><span style="color: var(--text-faint)">·</span><span>{{c.when}}</span><span style="color: var(--text-faint)">·</span><span style="display: inline-flex; align-items: center; gap: 2px"><button title="Open remote" style="padding: 0; border: 0; background: transparent; font: inherit; color: var(--accent-text); cursor: pointer">{{c.sha}}</button><button aria-label="Copy full SHA" title="Copy full SHA" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 0; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="copy" size="12" hint-size="12px,12px"></dc-import></button></span><span style="color: var(--text-faint)">·</span></span></sc-if>
+<sc-if value="{{c.isOne}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px"><span style="{{c.avatarStyle}}">{{c.initials}}</span><span style="color: var(--text-body)">{{c.author}}</span><span style="color: var(--text-faint)">·</span><span>{{c.when}}</span><span style="color: var(--text-faint)">·</span><span style="display: inline-flex; align-items: center; gap: 2px"><button title="Open remote" style="padding: 0; border: 0; background: transparent; font: inherit; color: var(--accent-text); cursor: pointer">{{c.sha}}</button><button aria-label="Copy Full SHA" title="Copy Full SHA" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 0; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="copy" size="12" hint-size="12px,12px"></dc-import></button></span><span style="color: var(--text-faint)">·</span></span></sc-if>
 <span>{{c.lead}}</span><span>{{c.files}}</span><span style="color: var(--success)">{{c.add}}</span><span style="color: var(--danger)">{{c.del}}</span>
 </div>
 </div>
@@ -373,7 +373,7 @@ class Component extends DCLogic {
       showOutput: s === 'failed',
       outLines: out.map(function (l) { return { text: l[0] || ' ', style: 'white-space: pre-wrap; word-break: break-word; min-height: 20px; ' + l[1] }; }),
       outLead: { label: 'Close', variant: 'secondary' },
-      outButtons: [{ label: 'Copy', icon: 'copy' }, { label: 'Commit without hooks' }, { label: 'Retry', variant: 'primary', kbd: '⌘↵' }]
+      outButtons: [{ label: 'Copy', icon: 'copy' }, { label: 'Commit Without Hooks' }, { label: 'Retry', variant: 'primary', kbd: '⌘↵' }]
     };
   }
 }

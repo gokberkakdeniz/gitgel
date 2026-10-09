@@ -135,7 +135,7 @@ export function History({ repoId, rev, backLabel }: Props) {
   const included = wipFiles.filter(checked);
   const commitNow = (files: CommitFiles) => {
     if (!entryRef) return;
-    // Retry and Commit without hooks send the same files and message again.
+    // Retry and Commit Without Hooks send the same files and message again.
     const again = (noVerify: boolean) => commitNow({ ...files, noVerify });
     void startGitAction('Commit', () => gitCommit(entryRef, files), {
       openOnFail: true,
@@ -380,7 +380,7 @@ export function History({ repoId, rev, backLabel }: Props) {
           className={styles.search}
           value={query}
           onChange={setQuery}
-          placeholder="Search commits"
+          placeholder="Search Commits"
           aria-label="Search commit messages, SHAs and paths"
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
@@ -404,7 +404,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                     toReview();
                   }}
                 >
-                  Open review
+                  Open Review
                 </MenuItem>
               )}
               <MenuItem
@@ -434,7 +434,7 @@ export function History({ repoId, rev, backLabel }: Props) {
       </PageHeader>
       {wipMenu && (
         <Popover anchorRect={wipMenu} width={230} onClose={() => setWipMenu(null)}>
-          <Menu aria-label="Uncommitted changes actions">
+          <Menu aria-label="Uncommitted Changes Actions">
             <MenuItem
               danger
               disabled={wipFiles.length === 0}
@@ -467,7 +467,7 @@ export function History({ repoId, rev, backLabel }: Props) {
             </Button>
           )}
           <Button size={24} onClick={() => void forcePushBranch(syncTarget)}>
-            Force push
+            Force Push
           </Button>
         </Banner>
       )}
@@ -524,7 +524,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                   <>
                     <span>No commits match “{search}”</span>
                     <button type="button" className={parts.linkButton} onClick={() => setQuery('')}>
-                      Clear search
+                      Clear Search
                     </button>
                   </>
                 ) : (
@@ -919,8 +919,8 @@ function CommitHeader({
           <ShaLink repoId={repoId} sha={c.sha} short={c.shortSha} />
           <IconButton
             size={24}
-            aria-label={copied ? 'Copied' : 'Copy full SHA'}
-            title={copied ? 'Copied' : 'Copy full SHA'}
+            aria-label={copied ? 'Copied' : 'Copy Full SHA'}
+            title={copied ? 'Copied' : 'Copy Full SHA'}
             className={copied ? styles.copied : undefined}
             onClick={() => void copy(c.sha)}
           >

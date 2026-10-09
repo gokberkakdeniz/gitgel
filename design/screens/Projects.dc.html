@@ -22,7 +22,7 @@ button{font-family:inherit}
 <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 16px 0 28px; border-bottom: 1px solid #302e2a">
 <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
 <sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}">
-<h1 title="Rename project" style="margin: 0; display: block; box-sizing: border-box; width: fit-content; min-width: 340px; height: 30px; margin-left: -7px; padding: 0 6px; border: 1px solid transparent; border-radius: 8px; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; line-height: 28px; letter-spacing: -0.3px; color: #faf9f5; cursor: text">Session auth refresh</h1>
+<h1 title="Rename Project" style="margin: 0; display: block; box-sizing: border-box; width: fit-content; min-width: 340px; height: 30px; margin-left: -7px; padding: 0 6px; border: 1px solid transparent; border-radius: 8px; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; line-height: 28px; letter-spacing: -0.3px; color: #faf9f5; cursor: text">Session auth refresh</h1>
 </sc-if>
 <sc-if value="{{renaming}}" hint-placeholder-val="{{false}}">
 <label style="display: flex">
@@ -33,9 +33,9 @@ button{font-family:inherit}
 <div style="{{subtitleStyle}}">{{subtitle}}</div>
 </div>
 <dc-import name="Button" variant="secondary" size="32" icon="refresh" label="" aria-label="Refresh" hint-size="32px,32px"></dc-import>
-<dc-import name="Button" label="Add entries" kbd="⌘K" href="Palette.dc.html" hint-size="126px,32px"></dc-import>
-<dc-import name="Button" variant="primary" label="Review changes" href="Diff.dc.html" hint-size="130px,32px"></dc-import>
-<dc-import name="Button" variant="secondary" size="32" icon="more" label="" aria-label="Project options" active="{{projectMenu}}" hint-size="32px,32px"></dc-import>
+<dc-import name="Button" label="Add Entries…" kbd="⌘K" href="Palette.dc.html" hint-size="126px,32px"></dc-import>
+<dc-import name="Button" variant="primary" label="Review Changes" href="Diff.dc.html" hint-size="130px,32px"></dc-import>
+<dc-import name="Button" variant="secondary" size="32" icon="more" label="" aria-label="Project Options" active="{{projectMenu}}" hint-size="32px,32px"></dc-import>
 </header>
 
 <sc-if value="{{hasRows}}" hint-placeholder-val="{{true}}">
@@ -52,7 +52,7 @@ button{font-family:inherit}
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{r.files}}</span>
 <span style="{{r.dirtyStyle}}">{{r.dirtyLabel}}</span>
 <span style="justify-self: start; display: flex"><sc-if value="{{r.hasState}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" label="{{r.state}}" tone="{{r.stateTone}}" hint-size="110px,20px"></dc-import></sc-if><sc-if value="{{r.noState}}" hint-placeholder-val="{{true}}"><span style="font-size: 12px; color: #75726b">—</span></sc-if></span>
-<dc-import name="Button" variant="ghost" size="28" icon="more" label="" aria-label="Entry options" active="{{r.hot}}" hint-size="28px,28px"></dc-import>
+<dc-import name="Button" variant="ghost" size="28" icon="more" label="" aria-label="Entry Options" active="{{r.hot}}" hint-size="28px,28px"></dc-import>
 </div>
 </sc-for>
 </div>
@@ -61,26 +61,26 @@ button{font-family:inherit}
 <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
 <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center">
 <div style="width: 420px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
-<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">No entries yet</h2>
+<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: -0.5px; color: #faf9f5">No Entries Yet</h2>
 <p style="margin: 0; font-size: 14px; color: #d8d4cc; line-height: 1.55">A project groups branches that belong to one piece of work, across any of your repositories.</p>
-<div style="margin-top: 8px; display: flex"><dc-import name="Button" variant="primary" size="40" label="Add branches" kbd="⌘K" href="Palette.dc.html" hint-size="170px,40px"></dc-import></div>
+<div style="margin-top: 8px; display: flex"><dc-import name="Button" variant="primary" size="40" label="Add Branches…" kbd="⌘K" href="Palette.dc.html" hint-size="170px,40px"></dc-import></div>
 </div>
 </div>
 </sc-if>
 
 <sc-if value="{{showMenu}}" hint-placeholder-val="{{false}}">
 <div style="position: absolute; top: 377px; right: 28px">
-<dc-import name="Menu" width="260" label="Entry options" items="{{deletedMenuItems}}" hint-size="260px,380px"></dc-import>
+<dc-import name="Menu" width="260" label="Entry Options" items="{{deletedMenuItems}}" hint-size="260px,380px"></dc-import>
 </div>
 </sc-if>
 <sc-if value="{{showOpenMenu}}" hint-placeholder-val="{{false}}">
 <div style="position: absolute; top: {{openMenuTop}}px; right: 28px">
-<dc-import name="Menu" width="260" label="Entry options" items="{{openMenuItems}}" hint-size="260px,320px"></dc-import>
+<dc-import name="Menu" width="260" label="Entry Options" items="{{openMenuItems}}" hint-size="260px,320px"></dc-import>
 </div>
 </sc-if>
 <sc-if value="{{showProjectMenu}}" hint-placeholder-val="{{false}}">
 <div style="position: absolute; top: 56px; right: 16px">
-<dc-import name="Menu" width="230" label="Project options" items="{{projectMenuItems}}" hint-size="230px,100px"></dc-import>
+<dc-import name="Menu" width="230" label="Project Options" items="{{projectMenuItems}}" hint-size="230px,100px"></dc-import>
 </div>
 </sc-if>
 </main>
@@ -107,18 +107,18 @@ class Component extends DCLogic {
     var openRow = openCase === 'notCheckedOut' ? 'refresh-endpoint' : openCase === 'repoMissing' ? 'session-ui' : 'session-token-refresh';
     // State pills (Pill tones).
     var S = {
-      'merged into main': 'success',
-      'base missing': 'warning',
-      'branch deleted': 'danger',
-      'repo path not found': 'danger'
+      'Merged into main': 'success',
+      'Base Missing': 'warning',
+      'Branch Deleted': 'danger',
+      'Repo Path Not Found': 'danger'
     };
     var data = [
       { repo: 'web-app', branch: 'session-token-refresh', base: 'main', ahead: '↑4', files: '6', dirty: 3 },
       { repo: 'api-server', branch: 'token-rotation-job', base: 'main', ahead: '↑2', files: '4', dirty: 1 },
-      { repo: 'api-server', branch: 'refresh-endpoint', base: 'main', ahead: '↑0', files: '0', dirty: 0, state: 'merged into main' },
-      { repo: 'mobile', branch: 'feat/token-store', base: 'feat/auth-core', ahead: '—', files: '—', dirty: 0, state: 'base missing' },
-      { repo: 'web-app', branch: 'logout-flow', base: 'main', ahead: '—', files: '—', dirty: 0, state: 'branch deleted', dim: true, target: true },
-      { repo: 'admin-panel', branch: 'session-ui', base: 'main', ahead: '—', files: '—', dirty: 0, state: 'repo path not found', dim: true }
+      { repo: 'api-server', branch: 'refresh-endpoint', base: 'main', ahead: '↑0', files: '0', dirty: 0, state: 'Merged into main' },
+      { repo: 'mobile', branch: 'feat/token-store', base: 'feat/auth-core', ahead: '—', files: '—', dirty: 0, state: 'Base Missing' },
+      { repo: 'web-app', branch: 'logout-flow', base: 'main', ahead: '—', files: '—', dirty: 0, state: 'Branch Deleted', dim: true, target: true },
+      { repo: 'admin-panel', branch: 'session-ui', base: 'main', ahead: '—', files: '—', dirty: 0, state: 'Repo Path Not Found', dim: true }
     ];
     if (variant === 'one') data = data.slice(0, 1);
     if (variant === 'empty') data = [];
@@ -140,15 +140,15 @@ class Component extends DCLogic {
       });
     };
     var sep = { kind: 'sep' };
-    var point = { label: 'Point to another branch', icon: 'branch' };
-    var copy = { label: 'Copy branch name', icon: 'copy' };
+    var point = { label: 'Point to Another Branch…', icon: 'branch' };
+    var copy = { label: 'Copy Branch Name', icon: 'copy' };
     var remove = { label: 'Remove from project', icon: 'remove', danger: true };
     var subtitle = variant === 'full' ? '6 entries across 4 repos' : variant === 'one' ? '1 entry · web-app' : 'Empty';
     return {
       renaming: rename !== 'none',
       notRenaming: rename === 'none',
-      draftName: fresh ? 'Untitled project' : conflict ? 'Rate limiting rollout' : 'Session token refresh',
-      activeProject: fresh ? 'Untitled project' : 'Session auth refresh',
+      draftName: fresh ? 'Untitled Project' : conflict ? 'Rate limiting rollout' : 'Session token refresh',
+      activeProject: fresh ? 'Untitled Project' : 'Session auth refresh',
       // The title's own box (EditableTitle): same 30px, 6px padding and 1px border as the title, so the
       // name does not move; editing only turns the border accent (danger on a conflict), no glow.
       renameInputStyle: 'display: block; box-sizing: border-box; width: 340px; height: 30px; margin: 0 0 0 -7px; padding: 0 6px; background: #1a1917; border-radius: 8px; outline: none; box-shadow: none; color: #faf9f5; font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; border: 1px solid ' + ring,
@@ -156,7 +156,7 @@ class Component extends DCLogic {
       showProjectMenu: projectMenu,
       showDelete: !!this.props.confirmDelete,
       projectMenu: projectMenu,
-      projectMenuItems: [{ label: 'Rename', hint: 'click the title', active: true }, sep, { label: 'Delete project', danger: true }],
+      projectMenuItems: [{ label: 'Rename', hint: 'click the title', active: true }, sep, { label: 'Delete Project…', danger: true }],
       hasRows: data.length > 0,
       isEmpty: data.length === 0,
       showMenu: menu,
@@ -166,12 +166,12 @@ class Component extends DCLogic {
       openMenuItems: [point, copy, sep].concat(apps(openCase === 'repoMissing'),
         [sep, remove],
         // One note closes the menu, after a divider.
-        openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [sep, { kind: 'note', label: openCase === 'repoMissing' ? 'Repository not found' : 'Not checked out' }] : []),
+        openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [sep, { kind: 'note', label: openCase === 'repoMissing' ? 'Repository Not Found' : 'Not checked out' }] : []),
       deletedMenuItems: [{ label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true }, point, copy, sep].concat(apps(true),
-        [sep, remove, sep, { kind: 'note', label: 'Branch deleted' }]),
+        [sep, remove, sep, { kind: 'note', label: 'Branch Deleted' }]),
       inboxCount: variant === 'full' ? '7' : '6',
-      subtitle: fromSel ? '3 entries across 2 repos · name your project' : fresh ? 'Name your project' : conflict ? 'A project named “Rate limiting rollout” already exists' : subtitle,
-      sidebarProjects: fresh ? [{ name: 'Rate limiting rollout', count: '2' }, { name: 'Untitled project', count: '0' }] : [{ name: 'Session auth refresh', count: count }, { name: 'Rate limiting rollout', count: '2' }],
+      subtitle: fromSel ? '3 entries across 2 repos · name your project' : fresh ? 'Name Your Project' : conflict ? 'A project named “Rate limiting rollout” already exists' : subtitle,
+      sidebarProjects: fresh ? [{ name: 'Rate limiting rollout', count: '2' }, { name: 'Untitled Project', count: '0' }] : [{ name: 'Session auth refresh', count: count }, { name: 'Rate limiting rollout', count: '2' }],
       rows: data.map(function (r) {
         var d = r.dirty > 0;
         var hot = (menu && r.target) || (openMenu && r.branch === openRow);

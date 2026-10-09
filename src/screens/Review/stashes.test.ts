@@ -72,6 +72,6 @@ describe('stashMeta', () => {
     const [refresh, old] = reviewStashes({ kind: 'stashes', repoId: 'r_1' }, [], scans);
     expect(stashMeta(refresh, true, NOW)).toBe('web-app / refresh · 2 files · 20m');
     expect(stashMeta({ ...old, files: 1 }, true, NOW)).toBe('web-app / old (deleted) · 1 file · 20m');
-    expect(stashMeta({ ...old, branch: null, files: null }, false, NOW)).toBe('detached HEAD · 20m');
+    expect(stashMeta({ ...old, branch: null, files: null }, false, NOW)).toBe('Detached HEAD · 20m');
   });
 });

@@ -20,7 +20,7 @@ a.gg-toast-hit{position:absolute;inset:0;border-radius:12px}a.gg-toast-hit:hover
 </style>
 </helmet>
 <div role="status" class="{{themeClass}}" style="position: relative; display: inline-flex; align-items: center; gap: 16px; padding: 10px 12px 10px 16px; background: var(--bg-hover); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 16px 40px var(--shadow); white-space: nowrap; max-width: 560px; box-sizing: border-box; font-family: 'Instrument Sans', -apple-system, sans-serif; font-size: 13px; color: var(--text-strong)">
-<sc-if value="{{hasHref}}" hint-placeholder-val="{{false}}"><a class="gg-toast-hit" href="{{href}}" aria-label="Show output" title="Show output"></a></sc-if>
+<sc-if value="{{hasHref}}" hint-placeholder-val="{{false}}"><a class="gg-toast-hit" href="{{href}}" aria-label="Show Output" title="Show Output"></a></sc-if>
 <span style="display: flex; align-items: center; gap: 10px; min-width: 0; pointer-events: none">
 <sc-if value="{{isRunning}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="spinner" size="14" spin="{{true}}" color="var(--accent-text)" hint-size="14px,14px"></dc-import></sc-if>
 <sc-if value="{{isSuccess}}" hint-placeholder-val="{{false}}"><dc-import name="Icon" icon="check" size="14" stroke="2.2" color="var(--success)" hint-size="14px,14px"></dc-import></sc-if>
@@ -41,7 +41,7 @@ a.gg-toast-hit{position:absolute;inset:0;border-radius:12px}a.gg-toast-hit:hover
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"message":{"editor":"text","default":"added to Session auth refresh"},"code":{"editor":"text","default":"session-token-refresh"},"sub":{"editor":"text","default":""},"status":{"editor":"enum","options":["none","running","success","failed"],"default":"none"},"actionLabel":{"editor":"text","default":"Undo"},"linkLabel":{"editor":"text","default":"Open project →"},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"linkHref":{"editor":null},"href":{"editor":null},"onAction":{"editor":null},"$preview":{"width":480,"height":50}}'>
+<script type="text/x-dc" data-dc-script data-props='{"message":{"editor":"text","default":"added to Session auth refresh"},"code":{"editor":"text","default":"session-token-refresh"},"sub":{"editor":"text","default":""},"status":{"editor":"enum","options":["none","running","success","failed"],"default":"none"},"actionLabel":{"editor":"text","default":"Undo"},"linkLabel":{"editor":"text","default":"Open Project"},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"linkHref":{"editor":null},"href":{"editor":null},"onAction":{"editor":null},"$preview":{"width":480,"height":50}}'>
 class Component extends DCLogic {
   renderVals() {
     // The app's Toast (src/components/Toast.tsx): one at a time, bottom centre (the importer

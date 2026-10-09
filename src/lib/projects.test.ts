@@ -9,8 +9,8 @@ const config = (names: string[]) =>
 
 describe('project helpers', () => {
   it('picks the first free untitled name', () => {
-    expect(untitledName(config([]))).toBe('Untitled project');
-    expect(untitledName(config(['untitled project', 'Untitled project 2']))).toBe('Untitled project 3');
+    expect(untitledName(config([]))).toBe('Untitled Project');
+    expect(untitledName(config(['untitled project', 'Untitled Project 2']))).toBe('Untitled Project 3');
   });
 
   it('finds name conflicts ignoring case and the project itself', () => {

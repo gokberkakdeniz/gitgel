@@ -48,12 +48,16 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   `getCurrentWindow()` (`@tauri-apps/api/window`), permissions live in
   `src-tauri/capabilities/*.json`, plugins are `tauri-plugin-*` crates and `@tauri-apps/plugin-*`
   packages. A Rust command parameter `repo_id` is sent as `repoId` from JS.
-- UI copy is English and matches the reference screens exactly (singular/plural included). Labels
-  (buttons, in-app menu items) never end in "…", even when they open a dialog; only progress
-  text does ("Scanning repositories…"). The exception is copy taken word for word from a
+- UI copy is English and matches the reference screens exactly (singular/plural included). It
+  follows the macOS HIG: buttons, menu items and list actions use title case with a verb
+  first ("Copy Branch Name", "Review Changes"); an item that needs more input before it can
+  finish ends in "…" ("Add Repository…", "Change Base…", "Stash…", "Delete Project…",
+  "Import…", "Export…", "Locate…"); inline actions that finish at once do not ("Rename",
+  "Copy", "Fetch", "Push", "Rebase on <base>"). Progress text keeps its "…" ("Scanning
+  repositories…"). Descriptions, hints, tooltips and empty-state body copy use sentence
+  case. The exception is copy taken word for word from a
   reference app the user names: Discard's menu items and dialog are GitHub Desktop's ("Discard
-  Changes…", "Show a confirmation dialog before..."). The native menu bar follows the macOS HIG instead:
-  "…" on items that ask for more before they finish (Settings…, Check for Updates…). Code,
+  Changes…"). Code,
   identifiers and comments are English.
 - Do not invent features the spec does not describe. If something is undefined, pick the
   simplest behaviour and mention it at the next checkpoint.
@@ -1050,7 +1054,7 @@ Layout:
 - **Scripts:** see §14 "Settings › Scripts".
 - **Prompts** (M6, `FlowM6`; GitHub Desktop's section and texts): serif 18px heading "Show a
   confirmation dialog before...", then one `Checkbox` per line, gap 12: "Removing repositories"
-  (the Repositories ✕), "Discarding changes" (§15 "Discard"), "Discarding stash" (Drop, P6),
+  (the Repositories ✕), "Discarding changes" (§15 "Discard"), "Dropping stashes" (Drop, P6),
   "Deleting projects" (flow G). All on by default (`settings.prompts`); off, the action runs
   without its dialog. Saved at once. Each of those dialogs has a `Checkbox` "Do not show this
   message again" above its buttons (`ConfirmModal`'s `dontAsk`; Confirm Discard Changes its own,
@@ -1303,7 +1307,7 @@ export interface Settings {
   appearance: 'system' | 'light' | 'dark'; // Settings › General › Theme; default 'system' (T10.1)
   prompts: Prompts;              // Settings › Prompts; every one true by default
 }
-export interface Prompts {       // "Show a confirmation dialog before..."
+export interface Prompts {       // "Show a Confirmation Dialog Before…"
   removeRepositories: boolean;
   discardChanges: boolean;       // off after "Do not show this message again" (§15 "Discard")
   discardStash: boolean;         // Drop (P6)
@@ -2171,9 +2175,7 @@ export interface ScriptRun {
 
 ### Settings › Scripts (N5)
 
-- Serif 18px "Scripts" and 12px muted "Your own items in the branch menus. Each runs a shell
-  command for that branch. Drag to reorder; switch one off to take it out of the menus." On the right: Import,
-  Export, primary "+ New script".
+- Serif 18px "Scripts". On the right: Import…, Export…, primary "+ New Script…".
 - A `List` of 48px rows: drag handle, 28px icon tile, name (500), an
   on/off `Switch` (tooltip "On: shown in its menus. Switch off to hide it" /
   "Off: in no menu. Switch on to show it"), ✎ edit (opens N6), ✕ remove (at once, with an Undo
@@ -2183,8 +2185,6 @@ export interface ScriptRun {
   place, command and inputs. An off row dims its icon tile (0.45), shows the
   name in `text.muted` and a small neutral "off" `Pill` after it; switching on brings it back. The
   section's count in the list counts all scripts.
-- Under the card, 12px muted: "Scripts run as you, with your permissions. Gitgel itself still only
-  reads the repositories."
 
 ### Editor (N6)
 
@@ -2194,8 +2194,8 @@ export interface ScriptRun {
     18 icons from the set (play, prompt, test, pull-request, rebase, link, upload, download,
     refresh, undo, code, package, rocket, bug, search, copy, folder, bolt; picked: accent
     outline), and a "+ Variable" menu on the right inserting `{branch}`, `{base}` or `{repo}` at
-    the cursor. Hint: "{branch}, {base} and {repo} in the name are filled in on the menu."
-  - **Command** (mono textarea, "Runs in your login shell"; grows with the command up to 360px,
+    the cursor.
+  - **Command** (mono textarea; grows with the command up to 360px,
     then scrolls; its corner handle drags it taller, and it never shrinks below that),
     "+ Variable" menu inserting `$GITGEL_…` names (with a short note each, inputs included) at the
     cursor.
@@ -2350,7 +2350,7 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   `repo / branch · N files`, 13px muted "Its changes are lost unless they are somewhere else.",
   then Cancel (focused) and danger "Drop stash". Runs `git stash drop 'stash@{n}'` in the
   repository folder, named "Drop stash@{n}". The stash review then picks the newest stash (above).
-  With Settings › Prompts › "Discarding stash" off it drops without asking.
+  With Settings › Prompts › "Dropping stashes" off it drops without asking.
 
 ### Discard
 

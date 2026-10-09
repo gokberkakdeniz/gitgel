@@ -55,7 +55,7 @@ export function stashHeading(target: ReviewTarget, repoName: string): string {
 /** Line 2 of a stash row: `web-app / session-token-refresh · 1 file · 20m`; without the repo in
  * stash scope, where the header names it. */
 export function stashMeta(s: ReviewStash, withRepo = true, now?: number): string {
-  const branch = s.branch ? (s.branchExists ? s.branch : `${s.branch} (deleted)`) : 'detached HEAD';
+  const branch = s.branch ? (s.branchExists ? s.branch : `${s.branch} (deleted)`) : 'Detached HEAD';
   const parts = [withRepo ? `${s.repoName} / ${branch}` : branch];
   if (s.files !== null) parts.push(plural(s.files, 'file', 'files'));
   parts.push(formatAge(s.createdAt, now));

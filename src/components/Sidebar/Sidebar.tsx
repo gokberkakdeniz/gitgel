@@ -67,13 +67,13 @@ export function Sidebar() {
         <button
           type="button"
           className={onDraft ? `${styles.row} ${styles.active}` : styles.row}
-          title="New project (⌘N)"
+          title="New Project… (⌘N)"
           onClick={() => startDraftProject([])}
         >
           <span className={styles.plus}>
             <PlusIcon />
           </span>
-          <span>New project</span>
+          <span>New Project…</span>
         </button>
         <button
           type="button"
@@ -97,8 +97,8 @@ export function Sidebar() {
         </button>
         <button
           type="button"
-          aria-label="Add repository"
-          title="Add repository"
+          aria-label="Add Repository…"
+          title="Add Repository…"
           className={styles.repoAdd}
           onClick={() => void openAddRepos()}
         >
@@ -168,7 +168,7 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
             size={28}
             className={styles.projectFilter}
             placeholder="Search"
-            aria-label="Search projects"
+            aria-label="Search Projects"
             value={filter}
             onChange={setFilter}
             onKeyDown={(e) => e.key === 'Escape' && closeFilter()}
@@ -179,12 +179,12 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
         )}
         <div className={styles.projectsActions}>
           {!filtering && (
-            <IconButton aria-label="Search projects" onClick={() => setFiltering(true)}>
+            <IconButton aria-label="Search Projects" onClick={() => setFiltering(true)}>
               <SearchIcon />
             </IconButton>
           )}
           <IconButton
-            aria-label="Sort and filter projects"
+            aria-label="Sort and Filter Projects"
             onClick={(e) => setSortMenu(e.currentTarget.getBoundingClientRect())}
           >
             <SlidersIcon />
@@ -215,19 +215,19 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
         {draftName !== undefined && (
           <div className={`${styles.projectRow} ${styles.active}`}>
             <span className={`${styles.dot} ${styles.dotActive}`} />
-            <span className={styles.projectName}>{draftName || 'Untitled project'}</span>
+            <span className={styles.projectName}>{draftName || 'Untitled Project'}</span>
           </div>
         )}
       </div>
 
       {sortMenu && (
         <Popover anchorRect={sortMenu} width={200} onClose={() => setSortMenu(null)}>
-          <Menu aria-label="Sort projects">
+          <Menu aria-label="Sort Projects">
             <MenuItem hint={sort === 'name' ? '✓' : undefined} onSelect={() => chooseSort('name')}>
-              Sort by name
+              Sort by Name
             </MenuItem>
             <MenuItem hint={sort === 'created' ? '✓' : undefined} onSelect={() => chooseSort('created')}>
-              Sort by date created
+              Sort by Date Created
             </MenuItem>
           </Menu>
         </Popover>

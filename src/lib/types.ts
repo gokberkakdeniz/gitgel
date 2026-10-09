@@ -38,11 +38,11 @@ export interface Settings {
   appearance: Appearance; // Settings › Appearance
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"
   terminalCommand: string; // the Other terminal: a command (`%` = folder), an app name, a .app path or a bundle id; empty = Automatic
-  checkUpdates: boolean; // Settings › Behaviour › Check for updates
+  checkUpdates: boolean; // Settings › Behaviour › Check for Updates
   lastSeenVersion: string; // the version whose What's New was shown; '' before any
   prompts: Prompts; // Settings › Prompts
 }
-/** Settings › Prompts (M6): "Show a confirmation dialog before..." each of these. */
+/** Settings › Prompts (M6): "Show a Confirmation Dialog Before…" each of these. */
 export interface Prompts {
   removeRepositories: boolean;
   discardChanges: boolean; // off after "Do not show this message again" in Confirm Discard Changes
@@ -192,7 +192,7 @@ export interface RepoScan {
   remotes: RemoteBranch[]; // remote-tracking branches with no local twin, newest first
   stashes: StashInfo[]; // the stash stack, newest first (one per repo, shared by its worktrees)
 }
-/** One entry of Stash changes (P4, `stash_push`). */
+/** One entry of Stash Changes (P4, `stash_push`). */
 export interface StashPush extends EntryRef {
   paths: string[] | null; // the files picked (a rename's old path too); null: all of them
   untracked: boolean; // --include-untracked
@@ -206,7 +206,7 @@ export interface CommitFiles {
   include: string[]; // the checked files, relative to the worktree (a rename's old path too)
   summary: string;
   description: string;
-  noVerify: boolean; // skip the commit hooks (Commit without hooks)
+  noVerify: boolean; // skip the commit hooks (Commit Without Hooks)
 }
 /** One stash@{n} (flow P). */
 export interface StashInfo {

@@ -79,7 +79,7 @@ interface ListProps {
   /** The list's accessible name; defaults to the heading. */
   label?: string;
   density?: ListDensity;
-  /** 12, or 10 for a narrow list (Default base). */
+  /** 12, or 10 for a narrow list (Default Base). */
   radius?: 10 | 12;
   width?: number | string;
   /** A disclosure above the card, with the item count; collapsing hides the card. */

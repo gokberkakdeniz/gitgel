@@ -148,7 +148,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     if (m === 'uncommitted') setCommitSel({});
   };
   // Entries with nothing in this mode are hidden, except the one group of a branch review: its
-  // header holds the menu with "Change base", the way out of a base that leaves nothing to show.
+  // header holds the menu with "Change Base…", the way out of a base that leaves nothing to show.
   const visible = viewGroups.filter((g) => g.files[mode].length > 0 || !!shaOf(g) || target.kind === 'branch');
   const current = resolveSelection(visible, mode, selected);
   const group = visible.find((g) => g.entry.key === current?.key);
@@ -460,7 +460,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
                     toHistory();
                   }}
                 >
-                  Open history
+                  Open History
                 </MenuItem>
               )}
               <MenuItem
@@ -515,10 +515,10 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
           )}
           {filtering && files.length === 0 && (
             <div className={styles.noMatch}>
-              <span className={styles.noMatchTitle}>No files match “{fileQuery}”</span>
+              <span className={styles.noMatchTitle}>No Files Match “{fileQuery}”</span>
               <span className={styles.noMatchHint}>Searched paths in {mode} files of every entry.</span>
               <button type="button" className={parts.linkButton} onClick={() => setFileQuery('')}>
-                Clear filter
+                Clear Filter
               </button>
             </div>
           )}
@@ -590,7 +590,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
                   )}
                 </>
               ) : (
-                stashChanges && <div className={parts.empty}>No changes</div>
+                stashChanges && <div className={parts.empty}>No Changes</div>
               )}
             </>
           ) : target.kind === 'stashes' ? (
@@ -745,7 +745,7 @@ function ReviewHeader({
           <span
             className={editable.title}
             data-editable-title
-            title="Rename project"
+            title="Rename Project"
             onClick={(e) => {
               titleWidth.current = e.currentTarget.offsetWidth;
               setRenaming(true);
@@ -764,7 +764,7 @@ function ReviewHeader({
   );
 }
 
-/** An entry's ⋯ menu: "Change base", then Branches' row menu without "Open review", since this is it. */
+/** An entry's ⋯ menu: "Change Base…", then Branches' row menu without "Open Review", since this is it. */
 function EntryMenu({
   entry,
   target,
@@ -781,13 +781,13 @@ function EntryMenu({
   );
   const rev = entry.branch ?? entry.headSha;
   return (
-    <Menu aria-label="Branch options" autoFocus>
+    <Menu aria-label="Branch Options" autoFocus>
       <MenuItem
         icon={<BranchIcon size={14} />}
         sub={`base ${entry.base ?? 'none'}`}
         onSelect={onChangeBase}
       >
-        Change base
+        Change Base…
       </MenuItem>
       <CopyBranchItem entry={entry} onDone={onClose} />
       {rev && (
@@ -798,7 +798,7 @@ function EntryMenu({
             openHistory(entry.repoId, rev, 'Back to Review');
           }}
         >
-          Open history
+          Open History
         </MenuItem>
       )}
       <MenuDivider />
@@ -882,7 +882,7 @@ function FileGroup({
             </span>
             <button
               type="button"
-              aria-label="Branch options"
+              aria-label="Branch Options"
               aria-haspopup="menu"
               className={styles.groupMenu}
               onClick={(ev) => onMenu(ev.currentTarget.getBoundingClientRect())}
@@ -918,8 +918,8 @@ function FileGroup({
             </span>
             <button
               type="button"
-              aria-label="Show all commits"
-              title="Show all commits"
+              aria-label="Show All Commits"
+              title="Show All Commits"
               className={styles.chipClose}
               onClick={onClearCommit}
             >
@@ -985,7 +985,7 @@ function FileFilter({
       value={query}
       onChange={onQuery}
       placeholder="Search"
-      aria-label="Search files"
+      aria-label="Search Files"
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
@@ -1099,7 +1099,7 @@ function EntryBar({
               onStep={onStep}
             />
             <button type="button" className={styles.showAll} onClick={() => onPick(null)}>
-              Show all commits
+              Show All Commits
             </button>
           </>
         )}
@@ -1128,7 +1128,7 @@ function EntryBar({
                 type="button"
                 role="option"
                 aria-selected={picked}
-                title={picked ? 'Show all commits' : 'Show only this commit'}
+                title={picked ? 'Show All Commits' : 'Show Only This Commit'}
                 className={cls}
                 onClick={() => onPick(picked ? null : c.sha)}
               >
@@ -1163,13 +1163,13 @@ function notReviewable(entry: EntrySummary | undefined): string {
   if (!entry) return '';
   switch (entry.state) {
     case 'branch_deleted':
-      return 'This branch no longer exists';
+      return 'This Branch No Longer Exists';
     case 'repo_missing':
-      return 'Repository not found';
+      return 'Repository Not Found';
     case 'base_missing':
-      return entry.error ? `Base missing: ${entry.error}` : 'Base missing';
+      return entry.error ? `Base Missing: ${entry.error}` : 'Base Missing';
     default:
-      return entry.error ?? 'Nothing to review';
+      return entry.error ?? 'Nothing to Review';
   }
 }
 

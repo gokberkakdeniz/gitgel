@@ -20,7 +20,7 @@ export const FilterField = forwardRef<HTMLInputElement, Props>(function FilterFi
       size={32}
       className={styles.filter}
       placeholder="Search"
-      aria-label="Search branches and worktrees"
+      aria-label="Search Branches and Worktrees"
       value={value}
       onChange={onChange}
       onKeyDown={(e) => e.key === 'Escape' && e.currentTarget.blur()}

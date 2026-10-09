@@ -434,22 +434,22 @@ export function DiffView({
       {message && <div className={styles.message}>{message}</div>}
       {menu && (
         <Popover anchorRect={menu.rect} width={230} onClose={() => setMenu(null)}>
-          <Menu aria-label="Diff actions" autoFocus>
+          <Menu aria-label="Diff Actions" autoFocus>
             <MenuItem icon={<CopyIcon />} onSelect={() => copy(fileReference(change.path, menu.from, menu.to, menu.endColumn))}>
-              Copy relative reference
+              Copy Relative Reference
             </MenuItem>
             {folder && (
               <MenuItem
                 icon={<CopyIcon />}
                 onSelect={() => copy(fileReference(`${folder}/${change.path}`, menu.from, menu.to, menu.endColumn))}
               >
-                Copy absolute reference
+                Copy Absolute Reference
               </MenuItem>
             )}
             {link && (
               <>
                 <MenuItem icon={<CopyIcon />} onSelect={() => copy(link)}>
-                  Copy permalink
+                  Copy Permalink
                 </MenuItem>
                 <MenuItem
                   icon={<LinkIcon />}
@@ -458,7 +458,7 @@ export function DiffView({
                     setMenu(null);
                   }}
                 >
-                  Open permalink
+                  Open Permalink
                 </MenuItem>
               </>
             )}

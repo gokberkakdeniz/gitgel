@@ -51,14 +51,14 @@ class Component extends DCLogic {
     //   heading: an optional disclosure above the card: chevron, 12px/500 label, mono 11 count
     //            (items.length); collapsed hides the card (onToggle).
     //   empty: one muted row when there are no items.
-    //   addLabel: a last row with a link button ("+ Add repository"); adding = 'focus' |
+    //   addLabel: a last row with a link button ("+ Add Repository…"); adding = 'focus' |
     //            'invalid' turns it into a 28px mono Input (addValue, addPlaceholder).
     // The importer gives width (default 100%) and density (regular 48px rows, compact 34px).
     var p = this.props;
     var self = this;
     var sample = [
-      { lead: 'icon', icon: 'package', prefix: 'stash@{0}', title: 'debug logging for refresh', sub: [{ pill: 'session-token-refresh', tone: 'accent' }, { text: '1 file' }, { text: '20m' }], actions: [{ icon: 'more-vertical', ariaLabel: 'Stash options' }], active: true },
-      { lead: 'icon', icon: 'package', prefix: 'stash@{1}', title: 'WIP on old-login: 71be0c2 Try new login form', sub: [{ pill: 'old-login · deleted', tone: 'outline' }, { text: '5 files' }, { text: '3w' }], actions: [{ icon: 'more-vertical', ariaLabel: 'Stash options' }] }
+      { lead: 'icon', icon: 'package', prefix: 'stash@{0}', title: 'debug logging for refresh', sub: [{ pill: 'session-token-refresh', tone: 'accent' }, { text: '1 file' }, { text: '20m' }], actions: [{ icon: 'more-vertical', ariaLabel: 'Stash Options' }], active: true },
+      { lead: 'icon', icon: 'package', prefix: 'stash@{1}', title: 'WIP on old-login: 71be0c2 Try new login form', sub: [{ pill: 'old-login · deleted', tone: 'outline' }, { text: '5 files' }, { text: '3w' }], actions: [{ icon: 'more-vertical', ariaLabel: 'Stash Options' }] }
     ];
     var items = p.items || sample;
     var compact = p.density === 'compact';

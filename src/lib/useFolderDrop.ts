@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useUi } from '../state/ui';
 import { openAddRepos } from './addRepos';
 
-/** Folders dropped anywhere on the window open the Add repositories sheet, except while a modal
+/** Folders dropped anywhere on the window open the Add Repositories sheet, except while a modal
  * is open. Returns whether folders are being dragged over the window. */
 export function useFolderDrop(): boolean {
   const [over, setOver] = useState(false);

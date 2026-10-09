@@ -63,19 +63,19 @@ export function Branches() {
 function FirstRun() {
   return (
     <>
-      <PageHeader title="Branches" subtitle="Nothing to review yet" />
+      <PageHeader title="Branches" subtitle="Nothing to Review Yet" />
       <div className={styles.center}>
         <div className={styles.emptyBody}>
           <BranchLargeIcon className={styles.emptyIcon} />
-          <h2 className={styles.emptyTitle}>No repositories yet</h2>
+          <h2 className={styles.emptyTitle}>No Repositories Yet</h2>
           <p className={styles.emptyText}>
             Add the git repositories you want to watch. Branches and worktrees are read in place;
             nothing is checked out or changed.
           </p>
           <Button variant="primary" size={40} className={styles.emptyButton} onClick={() => void openAddRepos()}>
-            Add repository
+            Add Repository…
           </Button>
-          <span className={styles.emptyHint}>or drop folders onto this window</span>
+          <span className={styles.emptyHint}>Or drop folders onto this window.</span>
         </div>
       </div>
     </>
@@ -252,14 +252,14 @@ function BranchList() {
   } else if (groups.length === 0 && scope === 'unassigned' && counts.all > 0) {
     body = (
       <div className={styles.center}>
-        <h2 className="page-title">Every active branch is in a project</h2>
+        <h2 className="page-title">Every Active Branch Is in a Project</h2>
       </div>
     );
   } else if (groups.length === 0) {
     body = (
       <div className={styles.center}>
         <div className={styles.emptyBody}>
-          <h2 className="page-title">No active branches</h2>
+          <h2 className="page-title">No Active Branches</h2>
           <p className={styles.emptyText}>
             Branches checked out in a worktree or committed in the last {days} days show up here.
           </p>
@@ -295,7 +295,7 @@ function BranchList() {
       <PageHeader title="Branches" subtitle={subtitle}>
         <RefreshButton />
         <Segmented
-          aria-label="Show branches"
+          aria-label="Show Branches"
           size="sm"
           value={scope}
           onChange={setScope}
@@ -379,13 +379,13 @@ function SelectionBar({ selected, onAdded }: { selected: EntrySummary[]; onAdded
       <span className={styles.selRepos}>across {plural(repos, 'repo', 'repos')}</span>
       <span className={styles.selDivider} />
       <button type="button" className={styles.selAdd} onClick={(e) => setPickAt(e.currentTarget.getBoundingClientRect())}>
-        Add to project
+        Add to Project…
         <ChevronDownIcon />
       </button>
       <Button variant="primary" onClick={newProject}>
-        New project
+        New Project…
       </Button>
-      <button type="button" aria-label="Clear selection" className={styles.selClear} onClick={clear}>
+      <button type="button" aria-label="Clear Selection" className={styles.selClear} onClick={clear}>
         <CloseIcon />
       </button>
       {pickAt && (
@@ -451,7 +451,7 @@ function RepoSection({
         </button>
         {scan.status === 'missing' ? (
           <Pill tone="danger" onClick={() => openSettings('repositories')}>
-            path not found
+            Path Not Found
           </Pill>
         ) : scan.status === 'error' ? (
           <Pill tone="danger" title={scan.error ?? undefined}>
@@ -515,7 +515,7 @@ function StashList({
 }) {
   const push = useNav((s) => s.push);
   const [menu, setMenu] = useState<{ sha: string; rect: DOMRect } | null>(null);
-  // Apply to / Pop to: the worktree picker (P5) beside the item, on hover or click.
+  // Apply to… / Pop to…: the worktree picker (P5) beside the item, on hover or click.
   // `focus`: opened by click or keyboard, so its first item takes the focus (not on hover).
   const [sub, setSub] = useState<{ pop: boolean; el: HTMLElement; focus?: boolean } | null>(null);
   const closeMenu = () => {
@@ -544,7 +544,7 @@ function StashList({
           actions: [
             {
               icon: 'more-vertical',
-              ariaLabel: 'Stash options',
+              ariaLabel: 'Stash Options',
               active: menu?.sha === st.sha,
               onPress: (e) => {
                 e.stopPropagation();
@@ -559,13 +559,13 @@ function StashList({
         <Popover anchorRect={menu.rect} width={240} alignRight onClose={closeMenu}>
           <Menu aria-label="Stash actions">
             <MenuItem kbd="↵" onHover={() => setSub(null)} onSelect={() => open(menu.sha)}>
-              Review changes
+              Review Changes
             </MenuItem>
             <MenuItem submenu onHover={(el) => setSub({ pop: false, el })} onSelect={(el) => setSub({ pop: false, el, focus: true })}>
-              Apply to
+              Apply to…
             </MenuItem>
             <MenuItem submenu onHover={(el) => setSub({ pop: true, el })} onSelect={(el) => setSub({ pop: true, el, focus: true })}>
-              Pop to
+              Pop to…
             </MenuItem>
             <MenuDivider />
             <MenuItem
@@ -612,14 +612,14 @@ function StashList({
   );
 }
 
-/** Remote branches matching the filter, under the band's rows; a row opens its History. */
+/** Remote Branches matching the filter, under the band's rows; a row opens its History. */
 function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch[] }) {
   const [menu, setMenu] = useState<{ name: string; rect: DOMRect } | null>(null);
   const open = (rev: string) => openHistory(repoId, rev, 'Back to Branches');
   return (
     <div className={styles.remotes}>
       <List
-        heading="Remote branches"
+        heading="Remote Branches"
         items={remotes.map((r) => ({
           key: r.name,
           lead: 'icon',
@@ -631,7 +631,7 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
           actions: [
             {
               icon: 'more-vertical',
-              ariaLabel: 'Remote branch options',
+              ariaLabel: 'Remote Branch Options',
               active: menu?.name === r.name,
               onPress: (e) => {
                 e.stopPropagation();
@@ -646,7 +646,7 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
         <Popover anchorRect={menu.rect} width={240} alignRight onClose={() => setMenu(null)}>
           <Menu aria-label="Remote branch actions">
             <MenuItem icon={<HistoryIcon />} kbd="↵" onSelect={() => open(menu.name)}>
-              Open history
+              Open History
             </MenuItem>
             <MenuItem
               icon={<CopyIcon />}
@@ -655,7 +655,7 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
                 setMenu(null);
               }}
             >
-              Copy branch name
+              Copy Branch Name
             </MenuItem>
           </Menu>
         </Popover>
@@ -669,7 +669,7 @@ function stashSub(st: StashInfo): ListSubPart[] {
     ? st.branchExists
       ? { pill: st.branch, tone: 'accent' }
       : { pill: `${st.branch} · deleted`, tone: 'outline' }
-    : { pill: 'detached HEAD', tone: 'outline' };
+    : { pill: 'Detached HEAD', tone: 'outline' };
   const parts: ListSubPart[] = [branch];
   if (st.files !== null) parts.push({ text: plural(st.files, 'file', 'files') });
   parts.push({ text: formatAge(st.createdAt) });
@@ -809,7 +809,7 @@ function Row({
       )}
       <button
         type="button"
-        aria-label="Branch options"
+        aria-label="Branch Options"
         aria-haspopup="menu"
         className={popover === 'menu' ? `${styles.rowMenu} ${styles.rowMenuOpen}` : styles.rowMenu}
         onClick={(ev) => onPopover('menu', ev.currentTarget.getBoundingClientRect())}
@@ -820,11 +820,11 @@ function Row({
   );
 }
 
-/** The row's ⋯ menu: Copy branch name and Open history (Open review on the base row, whose name
+/** The row's ⋯ menu: Copy Branch Name and Open History (Open Review on the base row, whose name
  * already opens History), the always-listed open items, the Scripts group, then the closing note. */
 function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: boolean; onClose: () => void }) {
   return (
-    <Menu aria-label="Branch options" autoFocus>
+    <Menu aria-label="Branch Options" autoFocus>
       <CopyBranchItem entry={entry} onDone={onClose} />
       {isBase ? (
         <MenuItem
@@ -834,7 +834,7 @@ function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: bool
             openReview(entry);
           }}
         >
-          Open review
+          Open Review
         </MenuItem>
       ) : (
         (entry.branch ?? entry.headSha) && (
@@ -845,7 +845,7 @@ function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: bool
               openEntryHistory(entry);
             }}
           >
-            Open history
+            Open History
           </MenuItem>
         )
       )}
@@ -904,7 +904,7 @@ function ProjectsMenu({
       ))}
       <MenuDivider />
       <MenuItem accent onSelect={onAddAnother}>
-        + Add to another project
+        Add to Another Project…
       </MenuItem>
     </Menu>
   );
@@ -915,14 +915,14 @@ function StateCell({ entry: e, onBase }: { entry: EntrySummary; onBase: (rect: D
   switch (e.state) {
     case 'merged':
       return (
-        <Pill tone="success" size="sm" title={`merged into ${e.base}`}>
-          merged
+        <Pill tone="success" size="sm" title={`Merged into ${e.base}`}>
+          Merged
         </Pill>
       );
     case 'detached':
       return (
         <Pill tone="warning" size="sm">
-          detached HEAD
+          Detached HEAD
         </Pill>
       );
     case 'base_missing':
@@ -933,13 +933,13 @@ function StateCell({ entry: e, onBase }: { entry: EntrySummary; onBase: (rect: D
           title={e.error ?? undefined}
           onClick={(ev) => onBase(ev.currentTarget.getBoundingClientRect())}
         >
-          base missing
+          Base Missing
         </Pill>
       );
     case 'git_error':
       return (
         <Pill tone="danger" size="sm" title={e.error ?? undefined}>
-          git error
+          Git Error
         </Pill>
       );
     default:

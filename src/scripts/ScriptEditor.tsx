@@ -35,7 +35,7 @@ const SCRIPT_ICONS: IconName[] = [
 
 const TYPES: { value: ScriptInputType; label: string }[] = [
   { value: 'text', label: 'Text' },
-  { value: 'textarea', label: 'Long text' },
+  { value: 'textarea', label: 'Long Text' },
   { value: 'checkbox', label: 'Checkbox' },
   { value: 'select', label: 'Select' },
   { value: 'branch', label: 'Branch' },
@@ -192,8 +192,8 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
   const iconName = SCRIPT_ICONS.includes(s.icon) ? s.icon : 'prompt';
 
   return (
-    <Modal aria-label={initial.id ? 'Edit script' : 'New script'} width={600} paddingTop={110} onClose={onClose}>
-      <ModalHeader title={initial.id ? 'Edit script' : 'New script'} onClose={onClose} />
+    <Modal aria-label={initial.id ? 'Edit Script' : 'New Script'} width={600} paddingTop={110} onClose={onClose}>
+      <ModalHeader title={initial.id ? 'Edit Script' : 'New Script'} onClose={onClose} />
       <div className={styles.body}>
         <div className={styles.field}>
           <span className={styles.label}>Name</span>
@@ -222,13 +222,12 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             rightText={
               <VariableButton
                 open={pop?.kind === 'name'}
-                title="Insert a variable"
+                title="Insert a Variable"
                 className={styles.nameVar}
                 onClick={toggle('name')}
               />
             }
           />
-          <span className={styles.hint}>{'{branch}, {base} and {repo} in the name are filled in on the menu.'}</span>
         </div>
 
         <div className={styles.field}>
@@ -236,7 +235,6 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             <label htmlFor="script-command" className={styles.label}>
               Command
             </label>
-            <span className={styles.hint}>Runs in your login shell</span>
           </div>
           <div className={styles.areaWrap}>
             <textarea
@@ -252,7 +250,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             />
             <VariableButton
               open={pop?.kind === 'command'}
-              title="Insert a variable"
+              title="Insert a Variable"
               className={styles.corner}
               onClick={toggle('command')}
             />
@@ -264,7 +262,6 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             <span id="script-inputs" className={styles.label}>
               Inputs
             </span>
-            <span className={styles.hint}>Asked in one dialog before running</span>
           </div>
           <ul ref={reorder.listRef} aria-labelledby="script-inputs" className={styles.card}>
             {reorder.order.map((key) => {
@@ -383,7 +380,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                           />
                           <VariableButton
                             open={pop?.kind === 'inputWhen' && pop.input === i}
-                            title="Insert a field"
+                            title="Insert a Field"
                             className={styles.corner}
                             onClick={toggle('inputWhen', i)}
                           />
@@ -408,7 +405,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             })}
             <li className={styles.addRow}>
               <Button variant="link" onClick={addInput}>
-                + Add input
+                Add Input
               </Button>
             </li>
           </ul>
@@ -421,8 +418,8 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             </span>
             {(
               [
-                ['worktree', 'Worktree folder', 'Hidden when the branch is not checked out'],
-                ['repo', 'Repository folder', 'Always available'],
+                ['worktree', 'Worktree Folder', 'Hidden when the branch is not checked out'],
+                ['repo', 'Repository Folder', 'Always available'],
               ] as const
             ).map(([value, label, note]) => (
               <button
@@ -447,8 +444,8 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             </span>
             {(
               [
-                ['branches', 'Branches row menu'],
-                ['project', 'Project entry menu'],
+                ['branches', 'Branches Row Menu'],
+                ['project', 'Project Entry Menu'],
               ] as const
             ).map(([menu, label]) => (
               <Checkbox
@@ -485,7 +482,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             />
             <VariableButton
               open={pop?.kind === 'when'}
-              title="Insert a field"
+              title="Insert a Field"
               className={styles.corner}
               onClick={toggle('when')}
             />
@@ -529,7 +526,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
           Cancel
         </Button>
         <Button variant="primary" size={36} disabled={!!problem || busy} onClick={() => void save()}>
-          Save script
+          Save Script
         </Button>
       </ModalFooter>
 
@@ -561,7 +558,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
       )}
       {pop?.kind === 'name' && (
         <Popover anchorRect={pop.rect} width={280} alignRight onClose={() => setPop(null)}>
-          <Menu aria-label="Insert a variable" autoFocus>
+          <Menu aria-label="Insert a Variable" autoFocus>
             {NAME_VARIABLES.map(([name, note]) => (
               <MenuItem
                 key={name}
@@ -576,7 +573,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
       )}
       {pop?.kind === 'command' && (
         <Popover anchorRect={pop.rect} width={300} alignRight onClose={() => setPop(null)}>
-          <Menu aria-label="Insert a variable" autoFocus>
+          <Menu aria-label="Insert a Variable" autoFocus>
             {[
               ...VARIABLES,
               ...s.inputs.map((x): [string, string] => [`$GITGEL_INPUT_${x.id}`, `input · ${x.label}`]),
@@ -590,7 +587,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
       )}
       {pop?.kind === 'when' && (
         <Popover anchorRect={pop.rect} width={320} alignRight onClose={() => setPop(null)}>
-          <Menu aria-label="Insert a field" autoFocus>
+          <Menu aria-label="Insert a Field" autoFocus>
             {(Object.keys(BRANCH_FIELDS) as (keyof typeof BRANCH_FIELDS)[]).map((f) => (
               <MenuItem
                 key={f}
@@ -605,7 +602,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
       )}
       {pop?.kind === 'inputWhen' && pop.input !== undefined && s.inputs[pop.input] && (
         <Popover anchorRect={pop.rect} width={320} alignRight onClose={() => setPop(null)}>
-          <Menu aria-label="Insert a field" autoFocus>
+          <Menu aria-label="Insert a Field" autoFocus>
             {[
               ...(Object.keys(BRANCH_FIELDS) as (keyof typeof BRANCH_FIELDS)[]).map((f): [string, string] => [
                 `branch.${f}`,
@@ -641,7 +638,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
 
 /** A select input's options, one per line. The text is kept as typed (blank lines included), so
  * Enter starts a new line; the options are its non-empty lines, trimmed. */
-/** "+ Variable ▾": opens the menu of variables or fields to insert. */
+/** "Add Variable ▾": opens the menu of variables or fields to insert. */
 function VariableButton({
   open,
   title,
@@ -662,7 +659,7 @@ function VariableButton({
       className={open ? `${className} ${styles.open}` : className}
       onClick={onClick}
     >
-      + Variable
+      Add Variable
       <ChevronDownIcon size={9} />
     </button>
   );

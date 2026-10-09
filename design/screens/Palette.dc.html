@@ -22,10 +22,10 @@ button,input{font-family:inherit}
 </div>
 <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5)"></div>
 
-<div role="dialog" aria-label="Add branches or worktrees" style="position: absolute; left: 330px; top: 96px; width: 620px; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden">
+<div role="dialog" aria-label="Add Branches or Worktrees" style="position: absolute; left: 330px; top: 96px; width: 620px; background: #211f1c; border: 1px solid #302e2a; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden">
 <label style="display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 56px; border-bottom: 1px solid #302e2a">
 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a09d96" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search branches and worktrees</span>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search Branches and Worktrees</span>
 <input value="token" style="flex-grow: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #faf9f5; font-size: 16px">
 <span style="font-size: 12px; color: #a09d96; white-space: nowrap">fuzzy · all repos</span>
 </label>
@@ -56,9 +56,9 @@ button,input{font-family:inherit}
 class Component extends DCLogic {
   renderVals() {
     // Tags are Pills: in project neutral, merged success.
-    var T = { 'in project': 'neutral', 'merged': 'success' };
+    var T = { 'In Project': 'neutral', 'Merged': 'success' };
     var row = function (b, meta, t, checked, active, tagLabel) {
-      var inProject = t === 'in project';
+      var inProject = t === 'In Project';
       return {
         branch: b, meta: meta, tag: tagLabel || t, hasTag: !!t, tagTone: T[t] || 'neutral', checked: checked, disabled: inProject,
         rowStyle: 'display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px; cursor: pointer; ' + (active ? 'background: #2a2825; ' : '') + (inProject ? 'opacity: 0.55; cursor: default' : '')
@@ -68,13 +68,13 @@ class Component extends DCLogic {
       { title: 'Worktrees', items: [
         row('token-rotation-job', 'api-server · ↑2 · 4 files · ● 1 uncommitted', '', true, true),
         row('refresh-endpoint', 'api-server · ↑3 · 6 files', '', true, false),
-        row('session-token-refresh', 'web-app · already in Session auth refresh', 'in project', true, false, 'in project')
+        row('session-token-refresh', 'web-app · already in Session auth refresh', 'In Project', true, false, 'In Project')
       ]},
       { title: 'Active branches', items: [
         row('feat/token-store', 'mobile · ↑5 · 8 files · 3d ago', '', false, false)
       ]},
       { title: 'Older · found by search', items: [
-        row('fix/token-expiry-clock-skew', 'web-app · merged into main · 41d ago', 'merged', false, false, 'merged')
+        row('fix/token-expiry-clock-skew', 'web-app · merged into main · 41d ago', 'Merged', false, false, 'Merged')
       ]}
     ] };
   }

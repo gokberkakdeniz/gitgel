@@ -15,7 +15,7 @@ interface Props {
   label: ToastLabel;
   /** Shown in the new-project form under "First entry". */
   firstEntry: string;
-  /** Replaces the in-place form for "+ New project" (selection bar: flow H2). */
+  /** Replaces the in-place form for "+ New Project…" (selection bar: flow H2). */
   onNewProject?: () => void;
   /** Projects not offered (the entry is already in them). */
   excludeProjectIds?: string[];
@@ -85,14 +85,14 @@ function PickView({
   };
 
   return (
-    <div role="dialog" aria-label="Add to project" className={styles.pick}>
+    <div role="dialog" aria-label="Add to Project" className={styles.pick}>
       <div className={styles.filterRow}>
         <Input
           autoFocus
           leftIcon="search"
           clearable
           size={32}
-          aria-label="Search projects"
+          aria-label="Search Projects"
           placeholder="Search"
           className={styles.filter}
           value={filter}
@@ -113,7 +113,7 @@ function PickView({
       )}
       <div className={styles.newRow}>
         <button type="button" className={styles.newButton} onClick={onNew}>
-          + New project
+          + New Project…
         </button>
       </div>
     </div>
@@ -152,8 +152,8 @@ function NewView({
   };
 
   return (
-    <div role="dialog" aria-label="New project" className={styles.form}>
-      <div className={styles.formTitle}>New project</div>
+    <div role="dialog" aria-label="New Project" className={styles.form}>
+      <div className={styles.formTitle}>New Project</div>
       <label className={styles.field}>
         <span className={styles.fieldLabel}>Name</span>
         <Input
@@ -187,14 +187,14 @@ function NewView({
 /** A branch name (the toast's mono part) or plain text such as "3 branches". */
 export type ToastLabel = { branch: string } | string;
 
-/** Toast after adding: Undo reverses exactly this action; "Open project →" goes there. */
+/** Toast after adding: Undo reverses exactly this action; "Open Project" goes there. */
 function announce(label: ToastLabel, project: ProjectConfig, undo: () => Promise<unknown>) {
   useUi.getState().showToast({
     code: typeof label === 'string' ? undefined : label.branch,
     message: typeof label === 'string' ? `${label} added to ${project.name}` : `added to ${project.name}`,
     actionLabel: 'Undo',
     onAction: () => void undo(),
-    linkLabel: 'Open project →',
+    linkLabel: 'Open Project',
     onLink: () => useNav.getState().push({ name: 'project', projectId: project.id }),
   });
 }

@@ -53,7 +53,7 @@ class Component extends DCLogic {
     var p = this.props;
     var context = p.context || [];
     var boxed = context.length > 0;
-    var buttons = p.buttons || [{ label: 'Cancel' }, { label: 'Delete project', variant: 'danger' }];
+    var buttons = p.buttons || [{ label: 'Cancel' }, { label: 'Delete Project…', variant: 'danger' }];
     return {
       themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
       label: p.label || p.title || '',

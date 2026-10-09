@@ -1,6 +1,6 @@
 import type { BaseCandidate, BaseOptions } from '../../lib/types';
 
-export type BaseSection = 'Suggested' | 'Default' | 'Other branches' | 'Remote branches' | 'Tags' | 'Commit';
+export type BaseSection = 'Suggested' | 'Default' | 'Other Branches' | 'Remote Branches' | 'Tags' | 'Commit';
 
 export interface BaseRow {
   section: BaseSection;
@@ -82,13 +82,13 @@ export function baseRows(o: BaseOptions, q: string, custom: boolean, branch: str
   }
   for (const b of o.branches) {
     if (defaultNames.has(b) || suggestedNames.has(b) || !match(b)) continue;
-    rows.push({ section: 'Other branches', value: b, label: b, selected: stored(b) });
+    rows.push({ section: 'Other Branches', value: b, label: b, selected: stored(b) });
   }
   // The backend lists the remote branch with the entry's own name first.
   for (const r of o.remotes) {
     if (!match(r)) continue;
     const sameName = branch !== null && r.slice(r.indexOf('/') + 1) === branch;
-    rows.push({ section: 'Remote branches', value: r, label: r, note: sameName ? 'same name' : undefined, selected: stored(r) });
+    rows.push({ section: 'Remote Branches', value: r, label: r, note: sameName ? 'same name' : undefined, selected: stored(r) });
   }
   if (query) {
     for (const t of o.tags) {

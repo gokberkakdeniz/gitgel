@@ -25,7 +25,7 @@ button{font-family:inherit}
 
 <div role="dialog" aria-labelledby="imp-title" style="position: relative; margin-top: 110px; width: 680px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
 
-<dc-import name="ModalHeader" theme="{{themeName}}" title="Import scripts" sub="~/code/web-app/tools/gitgel-scripts.json · 4 scripts" sub-mono="{{true}}" close="{{true}}" title-id="imp-title" hint-size="100%,72px"></dc-import>
+<dc-import name="ModalHeader" theme="{{themeName}}" title="Import Scripts" sub="~/code/web-app/tools/gitgel-scripts.json · 4 scripts" sub-mono="{{true}}" close="{{true}}" title-id="imp-title" hint-size="100%,72px"></dc-import>
 
 <div style="display: flex; flex-direction: column; gap: 14px; padding: 4px 24px 22px">
 
@@ -38,7 +38,7 @@ button{font-family:inherit}
 <span style="display: flex; align-items: center; gap: 8px; min-height: 22px">
 <span style="font-weight: 500; color: var(--text-strong)">{{sc.name}}</span>
 <sc-if value="{{sc.isNew}}" hint-placeholder-val="{{true}}"><dc-import name="Pill" theme="{{themeName}}" label="new" tone="accent" size="sm" hint-size="36px,16px"></dc-import></sc-if>
-<sc-if value="{{sc.conflict}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="{{themeName}}" label="same name exists" tone="warning" size="sm" hint-size="110px,16px"></dc-import></sc-if>
+<sc-if value="{{sc.conflict}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="{{themeName}}" label="Same Name Exists" tone="warning" size="sm" hint-size="110px,16px"></dc-import></sc-if>
 </span>
 <code style="font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 17px; color: var(--text-code); white-space: pre-wrap; word-break: break-all">{{sc.cmd}}</code>
 <span style="font-size: 12px; color: var(--text-muted)">{{sc.meta}}</span>

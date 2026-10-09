@@ -14,7 +14,7 @@ import { StashTargetMenu } from './StashTargetMenu';
 /** Above a stash's diff: its message and actions, then which stash, where it was taken and on
  * what. Two lines, so a long message does not push the rest out. */
 export function StashBar({ stash, base }: { stash: ReviewStash; base: string }) {
-  const branch = stash.branch ?? 'detached HEAD';
+  const branch = stash.branch ?? 'Detached HEAD';
   // Apply / Pop: straight into the worktree its branch is checked out in; otherwise the
   // worktree picker (P5) under the button.
   const [pick, setPick] = useState<{ pop: boolean; rect: DOMRect } | null>(null);

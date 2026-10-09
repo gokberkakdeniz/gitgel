@@ -20,7 +20,7 @@ export interface PaletteItem {
   repoName: string;
   worktreePath: string | null;
   meta: string;
-  tag: 'in project' | 'merged' | null;
+  tag: 'In Project' | 'merged' | null;
   disabled: boolean;
 }
 
@@ -60,7 +60,7 @@ export function paletteItems(
         repoName: e.repoName,
         worktreePath: e.worktreePath,
         meta,
-        tag: inside ? 'in project' : merged ? 'merged' : null,
+        tag: inside ? 'In Project' : merged ? 'merged' : null,
         disabled: inside,
       });
     }
@@ -78,7 +78,7 @@ export function paletteItems(
         meta: inside
           ? join([o.repoName, `already in ${projectName}`])
           : join([o.repoName, o.merged && `merged into ${scan.defaultBase}`, age(o.lastCommitAt)]),
-        tag: inside ? 'in project' : o.merged ? 'merged' : null,
+        tag: inside ? 'In Project' : o.merged ? 'merged' : null,
         disabled: inside,
       });
     }

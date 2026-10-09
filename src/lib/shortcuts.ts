@@ -16,7 +16,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
   {
     title: 'General',
     items: [
-      { label: 'New project', keys: ['⌘', 'N'] },
+      { label: 'New Project…', keys: ['⌘', 'N'] },
       { label: 'Back', keys: ['⌘', '['], note: 'also ⌘←' },
       { label: 'Forward', keys: ['⌘', ']'], note: 'also ⌘→' },
       { label: 'Settings', keys: ['⌘', ','] },
@@ -28,9 +28,9 @@ export const SHORTCUTS: ShortcutGroup[] = [
     title: 'Branches and projects',
     items: [
       { label: 'Focus filter', keys: ['⌘', 'K'], note: 'Branches, Review files, History search' },
-      { label: 'Add branches', keys: ['⌘', 'K'], note: 'Project' },
-      { label: 'Review changes', keys: ['⌘', 'R'], note: 'Project' },
-      { label: 'Rename project', keys: ['F2'] },
+      { label: 'Add Branches…', keys: ['⌘', 'K'], note: 'Project' },
+      { label: 'Review Changes', keys: ['⌘', 'R'], note: 'Project' },
+      { label: 'Rename Project', keys: ['F2'] },
       { label: 'Collapse or expand all repos', keys: ['⌥', 'click'], note: 'Branches, on a repo' },
     ],
   },
@@ -45,7 +45,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'Changes only / Whole file', keys: ['⌥', 'C'] },
       { label: 'Ignore whitespace', keys: ['⌥', 'W'] },
       { label: 'Review / History', keys: ['⌥', 'H'], note: 'of the same branch' },
-      { label: 'Pick files', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'Uncommitted, also History' },
+      { label: 'Pick Files', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'Uncommitted, also History' },
     ],
   },
   {

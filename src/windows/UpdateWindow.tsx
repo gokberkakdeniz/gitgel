@@ -59,7 +59,7 @@ export function UpdateWindow() {
   let buttons: React.ReactNode;
   switch (check.state) {
     case 'checking':
-      title = 'Checking for updates…';
+      title = 'Checking for Updates…';
       body = <Bar />;
       buttons = (
         <Button size={36} className={styles.button} onClick={close}>
@@ -68,7 +68,7 @@ export function UpdateWindow() {
       );
       break;
     case 'upToDate':
-      title = 'You’re up to date';
+      title = 'You’re Up to Date';
       body = <p className={styles.text}>Gitgel {check.currentVersion} is the newest version.</p>;
       buttons = (
         <Button variant="primary" size={36} className={styles.button} autoFocus onClick={close}>
@@ -77,7 +77,7 @@ export function UpdateWindow() {
       );
       break;
     case 'failed':
-      title = 'Cannot check for updates';
+      title = 'Cannot Check for Updates';
       body = <p className={styles.error}>{check.message}</p>;
       buttons = (
         <>
@@ -91,7 +91,7 @@ export function UpdateWindow() {
       );
       break;
     case 'available':
-      title = 'A new version is available';
+      title = 'A New Version Is Available';
       body = (
         <>
           <span className={styles.versions}>

@@ -20,7 +20,7 @@
 <section style="display: flex; flex-direction: column; gap: 12px">
 <h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">MenuItem</h2>
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 20px">
-<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Copy branch name" lead="icon" icon="copy" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">lead icon</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Copy Branch Name" lead="icon" icon="copy" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">lead icon</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Run tests" lead="icon" icon="test" active="{{true}}" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">active (hovered)</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Open in Cursor" lead="app" app="cursor" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">lead app</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Open in iTerm2" lead="app" app="terminal" disabled="{{true}}" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">disabled</span></div>
@@ -31,15 +31,15 @@
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Session auth refresh" lead="dot" checked="{{true}}" arrow="{{true}}" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">lead dot · arrow</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Rename" lead="none" aside="click the title" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">aside</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Remove from project" lead="icon" icon="remove" tone="danger" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">tone danger</span></div>
-<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="+ Add to another project" lead="none" tone="accent" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">tone accent</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Add to Another Project…" lead="none" tone="accent" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">tone accent</span></div>
 </div>
 </section>
 
 <section style="display: flex; flex-direction: column; gap: 12px">
 <h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Branch and entry menus</h2>
 <div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap">
-<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="260" label="Branch options" items="{{branch}}" hint-size="260px,420px"></dc-import><span style="font-size: 12px; color: #75726b">Branches row menu with Scripts</span></div>
-<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="260" label="Entry options" items="{{entry}}" hint-size="260px,380px"></dc-import><span style="font-size: 12px; color: #75726b">project entry, branch deleted</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="260" label="Branch Options" items="{{branch}}" hint-size="260px,420px"></dc-import><span style="font-size: 12px; color: #75726b">Branches row menu with Scripts</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="260" label="Entry Options" items="{{entry}}" hint-size="260px,380px"></dc-import><span style="font-size: 12px; color: #75726b">project entry, branch deleted</span></div>
 <div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="270" label="Projects containing session-token-refresh" items="{{projects}}" hint-size="270px,170px"></dc-import><span style="font-size: 12px; color: #75726b">Projects cell: label, dot, arrow, accent</span></div>
 </div>
 </section>
@@ -47,8 +47,8 @@
 <h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Choices</h2>
 <div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap">
 <div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="300" label="Diff view" items="{{view}}" hint-size="300px,400px"></dc-import><span style="font-size: 12px; color: #75726b">Review › View: radio, segmented row, checkbox</span></div>
-<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="230" label="Project options" items="{{project}}" hint-size="230px,100px"></dc-import><span style="font-size: 12px; color: #75726b">hint, danger</span></div>
-<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; background: #fbfaf7; border-radius: 12px"><dc-import name="Menu" theme="light" width="230" label="Project options" items="{{project}}" hint-size="230px,100px"></dc-import><span style="font-size: 12px; color: #75726b">light</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><dc-import name="Menu" width="230" label="Project Options" items="{{project}}" hint-size="230px,100px"></dc-import><span style="font-size: 12px; color: #75726b">hint, danger</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; background: #fbfaf7; border-radius: 12px"><dc-import name="Menu" theme="light" width="230" label="Project Options" items="{{project}}" hint-size="230px,100px"></dc-import><span style="font-size: 12px; color: #75726b">light</span></div>
 </div>
 </section>
 </div>
@@ -58,7 +58,7 @@ class Component extends DCLogic {
   renderVals() {
     return {
       branch: [
-        { label: 'Copy branch name', icon: 'copy' }, { kind: 'sep' },
+        { label: 'Copy Branch Name', icon: 'copy' }, { kind: 'sep' },
         { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
         { kind: 'sep' }, { kind: 'label', label: 'Scripts' },
         { label: 'Open pull request', icon: 'pull-request', active: true }, { label: 'Copy Linear link', icon: 'link' },
@@ -66,15 +66,15 @@ class Component extends DCLogic {
       ],
       entry: [
         { label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true },
-        { label: 'Point to another branch', icon: 'branch' }, { label: 'Copy branch name', icon: 'copy' }, { kind: 'sep' },
+        { label: 'Point to Another Branch…', icon: 'branch' }, { label: 'Copy Branch Name', icon: 'copy' }, { kind: 'sep' },
         { kind: 'sep' }, { label: 'Remove from project', icon: 'remove', danger: true },
-        { kind: 'sep' }, { kind: 'note', label: 'Branch deleted' }
+        { kind: 'sep' }, { kind: 'note', label: 'Branch Deleted' }
       ],
       projects: [
         { kind: 'label', label: 'In 2 projects' },
         { label: 'Session auth refresh', dot: 'on', arrow: true, active: true },
         { label: 'Rate limiting rollout', dot: 'off', arrow: true },
-        { kind: 'sep' }, { label: '+ Add to another project', accent: true }
+        { kind: 'sep' }, { label: 'Add to Another Project…', accent: true }
       ],
       view: [
         { kind: 'label', label: 'Layout' },
@@ -86,7 +86,7 @@ class Component extends DCLogic {
         { kind: 'sep' },
         { label: 'Ignore whitespace', box: true, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W' }
       ],
-      project: [{ label: 'Rename', hint: 'click the title', active: true }, { kind: 'sep' }, { label: 'Delete project', danger: true }]
+      project: [{ label: 'Rename', hint: 'click the title', active: true }, { kind: 'sep' }, { label: 'Delete Project…', danger: true }]
     };
   }
 }

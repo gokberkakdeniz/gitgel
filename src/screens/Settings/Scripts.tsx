@@ -79,18 +79,14 @@ export function Scripts({ config }: { config: Config }) {
         <div className={styles.scriptsHead}>
           <div className={styles.scriptsTitle}>
             <h2 className={styles.heading}>Scripts</h2>
-            <span className={styles.settingHint}>
-              Your own items in the branch menus. Each runs a shell command for that branch. Drag to reorder; switch one off to take it out of the
-              menus.
-            </span>
           </div>
           <div className={styles.scriptsActions}>
-            <Button onClick={() => void doImport()}>Import</Button>
+            <Button onClick={() => void doImport()}>Import…</Button>
             <Button disabled={config.scripts.length === 0} onClick={() => void doExport()}>
-              Export
+              Export…
             </Button>
             <Button variant="primary" onClick={() => setEditing(newScript())}>
-              + New script
+              + New Script…
             </Button>
           </div>
         </div>
@@ -122,9 +118,6 @@ export function Scripts({ config }: { config: Config }) {
           }))}
         />
         {error && <div className={styles.scriptsError}>{error}</div>}
-        <span className={styles.settingHint}>
-          Scripts run as you, with your permissions. Gitgel itself still only reads the repositories.
-        </span>
       </section>
       {editing && <ScriptEditor script={editing} onClose={() => setEditing(null)} />}
       {importing && (

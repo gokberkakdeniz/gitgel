@@ -101,11 +101,11 @@ class Component extends DCLogic {
       return r;
     };
     return { states: [
-      st({ caption: 'Checking', title: 'Checking for updates…', hasBar: true, fillStyle: fill + 'width: 35%; margin-left: 30%', barLabel: '', buttons: [btn('Cancel')] }),
-      st({ caption: 'Up to date', title: 'You’re up to date', hasText: true, text: 'Gitgel 0.1.16 is the newest version.', buttons: [btn('OK', true)] }),
-      st({ caption: 'Available', title: 'A new version is available', versions: true, from: '0.1.14', hasNotes: true, notes: notes, hasText: true, text: 'Gitgel restarts to finish the update.', buttons: [btn('Later'), btn('Update and Restart', true)] }),
-      st({ caption: 'Downloading', title: 'A new version is available', versions: true, from: '0.1.14', hasNotes: true, notes: notes, hasBar: true, fillStyle: fill + 'width: 42%', barLabel: 'Downloading… 42%', buttons: [btn('Later', false, true), btn('Updating…', true, true)] }),
-      st({ caption: 'Check failed', title: 'Cannot check for updates', hasError: true, error: 'error sending request for url (https://github.com/…/latest.json)', buttons: [btn('Close'), btn('Try Again', true)] })
+      st({ caption: 'Checking', title: 'Checking for Updates…', hasBar: true, fillStyle: fill + 'width: 35%; margin-left: 30%', barLabel: '', buttons: [btn('Cancel')] }),
+      st({ caption: 'Up to date', title: 'You’re Up to Date', hasText: true, text: 'Gitgel 0.1.16 is the newest version.', buttons: [btn('OK', true)] }),
+      st({ caption: 'Available', title: 'A New Version Is Available', versions: true, from: '0.1.14', hasNotes: true, notes: notes, hasText: true, text: 'Gitgel restarts to finish the update.', buttons: [btn('Later'), btn('Update and Restart', true)] }),
+      st({ caption: 'Downloading', title: 'A New Version Is Available', versions: true, from: '0.1.14', hasNotes: true, notes: notes, hasBar: true, fillStyle: fill + 'width: 42%', barLabel: 'Downloading… 42%', buttons: [btn('Later', false, true), btn('Updating…', true, true)] }),
+      st({ caption: 'Check failed', title: 'Cannot Check for Updates', hasError: true, error: 'error sending request for url (https://github.com/…/latest.json)', buttons: [btn('Close'), btn('Try Again', true)] })
     ] };
   }
 }

@@ -40,7 +40,7 @@ interface ItemProps {
   /** Gets the item's element (a submenu opens beside it). */
   onSelect: (el: HTMLElement) => void;
   danger?: boolean;
-  /** Accent text, e.g. "+ Add to another project". */
+  /** Accent text, e.g. "Add to Another Project…". */
   accent?: boolean;
   /** A 7px hollow dot on the left (a project); the label then stays on one line. */
   dot?: boolean;

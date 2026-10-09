@@ -12,7 +12,7 @@ function openableFolder(e: EntrySummary): string | null {
   return e.state === 'repo_missing' || e.state === 'branch_deleted' ? null : e.worktreePath;
 }
 
-/** Copy branch name, in the entry menus; none for a detached HEAD. */
+/** Copy Branch Name, in the entry menus; none for a detached HEAD. */
 export function CopyBranchItem({ entry, onDone }: { entry: EntrySummary; onDone: () => void }) {
   if (entry.branch === null) return null;
   return (
@@ -23,7 +23,7 @@ export function CopyBranchItem({ entry, onDone }: { entry: EntrySummary; onDone:
         onDone();
       }}
     >
-      Copy branch name
+      Copy Branch Name
     </MenuItem>
   );
 }
@@ -123,8 +123,8 @@ export function EntryMenuNote({ entry }: { entry: EntrySummary }) {
   const apps = useData((s) => s.openApps);
   const missingTerminal = apps.find((a) => a.id === 'terminal' && !a.found);
   const note = (() => {
-    if (entry.state === 'repo_missing') return 'Repository not found';
-    if (entry.state === 'branch_deleted') return 'Branch deleted';
+    if (entry.state === 'repo_missing') return 'Repository Not Found';
+    if (entry.state === 'branch_deleted') return 'Branch Deleted';
     if (!openableFolder(entry)) return 'Not checked out';
     if (missingTerminal) return `${missingTerminal.name} not installed`;
     return null;

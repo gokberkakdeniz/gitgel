@@ -1,4 +1,4 @@
-// Settings › Repositories › Default base: an ordered list edited one branch at a time, so
+// Settings › Repositories › Default Base: an ordered list edited one branch at a time, so
 // there is no separator to type (docs/SPEC.md §5, design flow M4/M5).
 import { useState } from 'react';
 import { List } from '../../components/List';
@@ -37,13 +37,13 @@ export function BaseOrder({ config }: { config: Config }) {
     <div role="group" aria-labelledby="base-title" className={styles.baseSetting}>
       <span className={`${styles.settingText} ${styles.baseText}`}>
         <span id="base-title" className={styles.settingName}>
-          Default base
+          Default Base
         </span>
         <span className={styles.settingHint}>Used when a branch has no base</span>
       </span>
       <div className={styles.baseColumn}>
         <List
-          label="Default base order"
+          label="Default Base Order"
           ordered
           density="compact"
           radius={10}
@@ -66,7 +66,7 @@ export function BaseOrder({ config }: { config: Config }) {
               },
             ],
           }))}
-          addLabel="+ Add branch"
+          addLabel="+ Add Branch"
           onAdd={() => setDraft('')}
           adding={
             draft === null

@@ -65,7 +65,7 @@ function matchesWords(fields: (string | null)[], filter: string): boolean {
  * Repo groups in display order: pinned repos first, in pin order, then the others with the
  * newest activity first; rows newest first (as scanned). While filtering, a band also lists the
  * matching remote branches. Repos without rows or remote matches are left out, except missing repos, which are listed last so
- * their "path not found" band stays visible (only while not filtering), and `keepRepoId`, the
+ * their "Path Not Found" band stays visible (only while not filtering), and `keepRepoId`, the
  * repo being focused.
  */
 export function branchGroups(

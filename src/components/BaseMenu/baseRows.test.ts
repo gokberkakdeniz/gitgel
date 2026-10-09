@@ -35,9 +35,9 @@ describe('baseRows', () => {
       ['Default', 'Automatic', 'uses origin/master', '✓'],
       ['Default', 'master', '31 commits', ''],
       ['Default', 'origin/master', '4 commits', ''],
-      ['Other branches', 'to-be-deleted', '', ''],
-      ['Remote branches', 'origin/token-rotation-job', 'same name', ''],
-      ['Remote branches', 'origin/feat/job-queue', '', ''],
+      ['Other Branches', 'to-be-deleted', '', ''],
+      ['Remote Branches', 'origin/token-rotation-job', 'same name', ''],
+      ['Remote Branches', 'origin/feat/job-queue', '', ''],
     ]);
   });
 

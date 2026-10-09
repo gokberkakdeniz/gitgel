@@ -19,11 +19,11 @@ const base: ScriptConfig = {
 
 describe('scriptMeta', () => {
   it('names the folder, the menus and the output', () => {
-    expect(scriptMeta(base)).toBe('Worktree folder · Branches, Projects · Opens the output');
+    expect(scriptMeta(base)).toBe('Worktree Folder · Branches, Projects · Opens the output');
     expect(scriptMeta({ ...base, runsIn: 'repo', showIn: ['branches'], openOutput: false })).toBe(
-      'Repository folder · Branches',
+      'Repository Folder · Branches',
     );
-    expect(scriptMeta({ ...base, showIn: [] })).toBe('Worktree folder · No menu · Opens the output');
+    expect(scriptMeta({ ...base, showIn: [] })).toBe('Worktree Folder · No menu · Opens the output');
   });
 
   it('compares names like the backend', () => {

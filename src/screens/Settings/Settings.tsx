@@ -110,12 +110,12 @@ function Repositories({ config }: { config: Config }) {
       <h2 className={styles.heading}>Repositories</h2>
       <List
         label="Repositories"
-        addLabel="+ Add repository"
+        addLabel="+ Add Repository…"
         onAdd={() => void openAddRepos()}
         items={config.repos.map((repo): ListItem => {
           const s = scan[repo.id];
           const name = basename(repo.path);
-          const remove: ListAction = { icon: 'close', ariaLabel: 'Remove repository', onPress: () => removeRow(repo) };
+          const remove: ListAction = { icon: 'close', ariaLabel: 'Remove Repository…', onPress: () => removeRow(repo) };
           return {
             key: repo.id,
             title: name,
@@ -126,12 +126,12 @@ function Repositories({ config }: { config: Config }) {
             actions:
               s?.status === 'missing'
                 ? [
-                    { kind: 'pill', label: 'path not found', tone: 'danger' },
-                    { label: 'Locate', variant: 'secondary', ariaLabel: `Locate ${name}`, onPress: () => void locate(repo) },
+                    { kind: 'pill', label: 'Path Not Found', tone: 'danger' },
+                    { label: 'Locate…', variant: 'secondary', ariaLabel: `Locate ${name}`, onPress: () => void locate(repo) },
                     remove,
                   ]
                 : s?.status === 'error'
-                  ? [{ kind: 'pill', label: 'git error', tone: 'danger', title: s.error ?? undefined }, remove]
+                  ? [{ kind: 'pill', label: 'Git Error', tone: 'danger', title: s.error ?? undefined }, remove]
                   : [remove],
           };
         })}
@@ -139,7 +139,7 @@ function Repositories({ config }: { config: Config }) {
 
       {removing && (
         <ConfirmModal
-          aria-label="Remove repository"
+          aria-label="Remove Repository…"
           title={`Remove ${basename(removing.path)}?`}
           width={440}
           onClose={closeRemoving}
@@ -172,13 +172,13 @@ function Prompts({ config }: { config: Config }) {
   const items: [keyof Config['settings']['prompts'], string][] = [
     ['removeRepositories', 'Removing repositories'],
     ['discardChanges', 'Discarding changes'],
-    ['discardStash', 'Discarding stash'],
+    ['discardStash', 'Dropping stashes'],
     ['deleteProjects', 'Deleting projects'],
   ];
   return (
     <section className={styles.prompts} aria-labelledby="prompts-title">
       <h2 id="prompts-title" className={styles.heading}>
-        Show a confirmation dialog before...
+        Show a Confirmation Dialog Before…
       </h2>
       {items.map(([key, label]) => (
         <Checkbox
@@ -197,7 +197,7 @@ function Shortcuts() {
     <section className={styles.shortcuts} aria-labelledby="shortcuts-title">
       <div className={styles.shortcutsHead}>
         <h2 id="shortcuts-title" className={styles.heading}>
-          Keyboard shortcuts
+          Keyboard Shortcuts
         </h2>
         <span className={styles.settingHint}>Not editable yet</span>
       </div>
@@ -252,7 +252,7 @@ function ActiveThreshold({ config }: { config: Config }) {
   return (
     <label className={styles.setting}>
       <span className={styles.settingText}>
-        <span className={styles.settingName}>Active threshold</span>
+        <span className={styles.settingName}>Active Threshold</span>
         <span className={styles.settingHint}>Branches without a worktree are listed if committed within</span>
       </span>
       <span className={styles.days}>
@@ -286,7 +286,7 @@ function General({ config }: { config: Config }) {
         <TerminalSetting config={config} />
         <label className={styles.setting}>
           <span className={styles.settingText}>
-            <span className={styles.settingName}>Check for updates</span>
+            <span className={styles.settingName}>Check for Updates</span>
             <span className={styles.settingHint}>At launch and every 6 hours; a new version shows in the sidebar</span>
           </span>
           <Checkbox
@@ -337,7 +337,7 @@ function TerminalSetting({ config }: { config: Config }) {
       </label>
       {terminal === 'other' && (
         <label className={styles.terminalOther}>
-          <span className={styles.srOnly}>Terminal command</span>
+          <span className={styles.srOnly}>Terminal Command</span>
           <Input
             mono
             size={36}

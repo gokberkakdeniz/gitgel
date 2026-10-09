@@ -161,7 +161,7 @@ export function SyncItems({
       </MenuItem>
       {st.diverged && (
         <MenuItem icon="arrow-up" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => forcePushBranch(entry))}>
-          Force push
+          Force Push
         </MenuItem>
       )}
     </>

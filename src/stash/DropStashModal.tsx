@@ -15,7 +15,7 @@ export function DropStashModal() {
     useStashUi.setState({ dropping: null });
   };
   const name = `stash@{${st.index}}`;
-  const where = `${st.repoName} / ${st.branch ?? 'detached HEAD'}${st.files !== null ? ` · ${plural(st.files, 'file', 'files')}` : ''}`;
+  const where = `${st.repoName} / ${st.branch ?? 'Detached HEAD'}${st.files !== null ? ` · ${plural(st.files, 'file', 'files')}` : ''}`;
   return (
     <ConfirmModal
       aria-label={`Drop ${name}`}

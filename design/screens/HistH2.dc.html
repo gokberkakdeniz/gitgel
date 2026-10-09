@@ -33,7 +33,7 @@ button,input,textarea{font-family:inherit}
 </div>
 <div style="flex-grow: 1"></div>
 <div style="display: flex; align-items: center; gap: 10px">
-<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search commits" label="Search commit messages, SHAs and paths" right-text="" hint-size="200px,32px"></dc-import>
+<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search Commits" label="Search commit messages, SHAs and paths" right-text="" hint-size="200px,32px"></dc-import>
 <div role="group" aria-label="Sync with the remote" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
 <button title="Fetch web-app from origin · last fetch 3h ago" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="download" size="12" hint-size="12px,12px"></dc-import>Fetch</button>
 <span style="width: 1px; height: 16px; background: var(--border)"></span>
@@ -108,7 +108,7 @@ button,input,textarea{font-family:inherit}
 <div style="font-size: 13px; line-height: 1.5; color: var(--text-muted); max-width: 720px">{{c.body}}</div>
 <div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">
 <span style="{{c.avatarStyle}}">{{c.initials}}</span>
-<span style="color: var(--text-body)">{{c.author}}</span><span style="color: var(--text-faint)">·</span><span>{{c.when}}</span><span style="color: var(--text-faint)">·</span><span style="display: inline-flex; align-items: center; gap: 2px"><button title="Open remote" style="padding: 0; border: 0; background: transparent; font: inherit; color: var(--accent-text); cursor: pointer">{{c.sha}}</button><button aria-label="Copy full SHA" title="Copy full SHA" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 0; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="copy" size="12" hint-size="12px,12px"></dc-import></button></span><span style="color: var(--text-faint)">·</span><span>{{c.files}}</span><span style="color: var(--success)">{{c.add}}</span><span style="color: var(--danger)">{{c.del}}</span>
+<span style="color: var(--text-body)">{{c.author}}</span><span style="color: var(--text-faint)">·</span><span>{{c.when}}</span><span style="color: var(--text-faint)">·</span><span style="display: inline-flex; align-items: center; gap: 2px"><button title="Open remote" style="padding: 0; border: 0; background: transparent; font: inherit; color: var(--accent-text); cursor: pointer">{{c.sha}}</button><button aria-label="Copy Full SHA" title="Copy Full SHA" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 0; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="copy" size="12" hint-size="12px,12px"></dc-import></button></span><span style="color: var(--text-faint)">·</span><span>{{c.files}}</span><span style="color: var(--success)">{{c.add}}</span><span style="color: var(--danger)">{{c.del}}</span>
 </div>
 </div>
 <div style="display: flex; align-items: center; gap: 10px; min-height: 36px; box-sizing: border-box; padding: 5px 10px 5px 18px; border-bottom: 1px solid var(--border); background: var(--bg-sunken)">
@@ -228,10 +228,10 @@ class Component extends DCLogic {
     // The page menu (⋮, History): Open review and Refresh, then the branch menu's items without
     // Open history / Change base (SPEC §16 "History").
     out.pageMenu = [
-      { label: 'Open review', icon: 'split', kbd: '⌥H' },
+      { label: 'Open Review', icon: 'split', kbd: '⌥H' },
       { label: 'Refresh', icon: 'refresh' },
       { kind: 'sep' },
-      { label: 'Copy branch name', icon: 'copy' },
+      { label: 'Copy Branch Name', icon: 'copy' },
       { kind: 'sep' },
       { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
       { kind: 'sep' },

@@ -50,9 +50,9 @@ export function ImportScripts({
   };
 
   return (
-    <Modal aria-label="Import scripts" width={680} paddingTop={110} onClose={onClose}>
+    <Modal aria-label="Import Scripts" width={680} paddingTop={110} onClose={onClose}>
       <ModalHeader
-        title="Import scripts"
+        title="Import Scripts"
         sub={`${tildifyHome(path)} · ${plural(scripts.length, 'script', 'scripts')}`}
         subMono
         onClose={onClose}
@@ -73,7 +73,7 @@ export function ImportScripts({
                   <span className={styles.name}>{s.name}</span>
                   {clashes[i] ? (
                     <Pill tone="warning" size="sm">
-                      same name exists
+                      Same Name Exists
                     </Pill>
                   ) : (
                     <Pill tone="accent" size="sm">

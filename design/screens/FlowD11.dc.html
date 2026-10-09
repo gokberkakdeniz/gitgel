@@ -41,14 +41,14 @@ button,input,textarea{font-family:inherit}
 <div style="flex-grow: 1; display: flex; min-height: 0">
 <aside style="width: 310px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; overflow: hidden">
 <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; padding: 8px; min-height: 0; overflow: hidden">
-<div style="flex-shrink: 0; margin: 0 0 6px"><dc-import name="Input" theme="{{themeName}}" width="100%" placeholder="Search" label="Search files" hint-size="100%,30px"></dc-import></div>
+<div style="flex-shrink: 0; margin: 0 0 6px"><dc-import name="Input" theme="{{themeName}}" width="100%" placeholder="Search" label="Search Files" hint-size="100%,30px"></dc-import></div>
 <section style="display: flex; flex-direction: column; gap: 1px; border-radius: 10px; padding-bottom: 4px; background: rgba(var(--accent-rgb), 0.07); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.45)">
 <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 6px">
 <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--text-muted); flex-shrink: 0"><path d="m6 9 6 6 6-6"></path></svg>
 <span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">web-app</span>
 <span style="flex-grow: 1"></span>
-<sc-if value="{{dotsShut}}" hint-placeholder-val="{{true}}"><button aria-label="Branch options" aria-haspopup="menu" style="width: 22px; height: 20px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if><sc-if value="{{dotsOpen}}" hint-placeholder-val="{{false}}"><button aria-label="Branch options" aria-haspopup="menu" aria-expanded="true" style="width: 22px; height: 20px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: var(--bg-pressed); color: var(--text-strong)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if>
+<sc-if value="{{dotsShut}}" hint-placeholder-val="{{true}}"><button aria-label="Branch Options" aria-haspopup="menu" style="width: 22px; height: 20px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if><sc-if value="{{dotsOpen}}" hint-placeholder-val="{{false}}"><button aria-label="Branch Options" aria-haspopup="menu" aria-expanded="true" style="width: 22px; height: 20px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: var(--bg-pressed); color: var(--text-strong)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if>
 
 </div>
 <div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
@@ -182,8 +182,8 @@ button,input,textarea{font-family:inherit}
 </section>
 </div>
 <sc-if value="{{isFile}}" hint-placeholder-val="{{true}}"><div style="position: absolute; left: 150px; top: 238px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="220" label="client.ts actions" items="{{fileMenu}}" hint-size="220px,116px"></dc-import></div></sc-if>
-<sc-if value="{{isSync}}" hint-placeholder-val="{{false}}"><div style="position: absolute; left: 50px; top: 140px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch options" items="{{syncMenu}}" hint-size="260px,536px"></dc-import></div></sc-if>
-<sc-if value="{{isDiff}}" hint-placeholder-val="{{false}}"><div style="position: absolute; left: 900px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="230" label="Diff actions" items="{{diffMenu}}" hint-size="230px,260px"></dc-import></div></sc-if>
+<sc-if value="{{isSync}}" hint-placeholder-val="{{false}}"><div style="position: absolute; left: 50px; top: 140px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch Options" items="{{syncMenu}}" hint-size="260px,536px"></dc-import></div></sc-if>
+<sc-if value="{{isDiff}}" hint-placeholder-val="{{false}}"><div style="position: absolute; left: 900px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="230" label="Diff Actions" items="{{diffMenu}}" hint-size="230px,260px"></dc-import></div></sc-if>
 </div>
 </div>
 </x-dc>
@@ -201,17 +201,17 @@ class Component extends DCLogic {
     // Right-click in the diff (SPEC §5 Review "Diff"): references to the lines, the permalink at a
     // commit, then the same open items; an editor opens the file at the clicked line.
     var diffMenu = [
-      { label: 'Copy relative reference', icon: 'copy' },
-      { label: 'Copy absolute reference', icon: 'copy' },
-      { label: 'Copy permalink', icon: 'copy' },
-      { label: 'Open permalink', icon: 'link' },
+      { label: 'Copy Relative Reference', icon: 'copy' },
+      { label: 'Copy Absolute Reference', icon: 'copy' },
+      { label: 'Copy Permalink', icon: 'copy' },
+      { label: 'Open Permalink', icon: 'link' },
       { kind: 'sep' }
     ].concat(fileMenu);
     // sync (R1, FlowR1.dc.html): the entry's ⋯ menu open, with its Sync group (SPEC §15 "Branch menus").
     var syncMenu = [
-      { label: 'Change base', icon: 'branch', sub: 'base main' },
-      { label: 'Copy branch name', icon: 'copy' },
-      { label: 'Open history', icon: 'history' },
+      { label: 'Change Base…', icon: 'branch', sub: 'base main' },
+      { label: 'Copy Branch Name', icon: 'copy' },
+      { label: 'Open History', icon: 'history' },
       { kind: 'sep' },
       { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
       { kind: 'sep' },
@@ -222,7 +222,7 @@ class Component extends DCLogic {
       { label: 'Rebase on main', icon: 'rebase' },
       { label: 'Push', icon: 'arrow-up', hint: '↑2', disabled: true },
       // Diverged only: --force-with-lease, over what the last fetch saw.
-      { label: 'Force push', icon: 'arrow-up' }
+      { label: 'Force Push', icon: 'arrow-up' }
     ];
     var m = this.props.menu || 'file';
     var row = function (on) { return 'display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: ' + (on ? 'var(--bg-hover)' : 'transparent'); };

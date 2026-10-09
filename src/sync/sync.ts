@@ -87,7 +87,7 @@ export function pushBranch(t: SyncTarget): Promise<void> {
 
 /** A diverged branch over its remote (`--force-with-lease`: only what the last fetch saw). */
 export function forcePushBranch(t: SyncTarget): Promise<void> {
-  return startGitAction('Force push', () => gitPush(refOf(t), true), {
+  return startGitAction('Force Push', () => gitPush(refOf(t), true), {
     openOnFail: true,
     done: `Force pushed ${t.branch}`,
   });

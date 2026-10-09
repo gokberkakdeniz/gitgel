@@ -27,7 +27,7 @@ button,input,textarea{font-family:inherit}
 </div>
 <div style="display: flex; align-items: center; gap: 10px">
 <button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); "><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg></button>
-<dc-import name="Input" theme="{{themeName}}" size="32" width="200px" placeholder="Search" value="queue" clearable="{{true}}" label="Search branches and worktrees" hint-size="200px,32px"></dc-import>
+<dc-import name="Input" theme="{{themeName}}" size="32" width="200px" placeholder="Search" value="queue" clearable="{{true}}" label="Search Branches and Worktrees" hint-size="200px,32px"></dc-import>
 </div>
 </header>
 <div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; padding: 10px 26px 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-row)">
@@ -47,8 +47,8 @@ button,input,textarea{font-family:inherit}
 <span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="m8 10 2.5 2.5L8 15M13 15h3"></path></svg><span>~/code/wt/job-queue</span></span>
 </div>
 <span style="justify-self: end; display: flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--text-body)">1 project</span>
-<button aria-label="Branch options" aria-haspopup="menu" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; background: transparent; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
-</div><div style="padding: 8px 26px 14px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Remote branches" heading="Remote branches" items="{{remotesApi}}" hint-size="100%,150px"></dc-import></div><div style="display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 10px 26px 10px 28px; background: var(--bg-band); border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border)">
+<button aria-label="Branch Options" aria-haspopup="menu" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; background: transparent; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
+</div><div style="padding: 8px 26px 14px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Remote Branches" heading="Remote Branches" items="{{remotesApi}}" hint-size="100%,150px"></dc-import></div><div style="display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 10px 26px 10px 28px; background: var(--bg-band); border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border)">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--accent); flex-shrink: 0"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
 <span style="font-size: 15px; font-weight: 600; color: var(--text-strong)">web-app</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1">~/code/web-app</span>
@@ -61,8 +61,8 @@ button,input,textarea{font-family:inherit}
 <span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="m8 10 2.5 2.5L8 15M13 15h3"></path></svg><span>~/code/wt/queue-status</span></span>
 </div>
 <span style="justify-self: end; display: flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--text-body)">1 project</span>
-<button aria-label="Branch options" aria-haspopup="menu" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; background: transparent; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
-</div><div style="padding: 8px 26px 14px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Remote branches" heading="Remote branches" items="{{remotesWeb}}" hint-size="100%,150px"></dc-import></div>
+<button aria-label="Branch Options" aria-haspopup="menu" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; background: transparent; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
+</div><div style="padding: 8px 26px 14px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Remote Branches" heading="Remote Branches" items="{{remotesWeb}}" hint-size="100%,150px"></dc-import></div>
 </div>
 <div style="position: absolute; top: 294px; left: 742px; z-index: 5"><dc-import name="Menu" theme="none" width="240" label="Remote branch actions" items="{{remoteMenu}}" hint-size="240px,80px"></dc-import></div>
 </main>
@@ -73,17 +73,17 @@ class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
     // Searching "queue": each band lists its matching rows, then the matching remote-tracking
-    // branches (the shared List, heading "Remote branches"). Only remotes with no local twin: not a
+    // branches (the shared List, heading "Remote Branches"). Only remotes with no local twin: not a
     // local branch's upstream, not origin/<a local name>. Nothing of this shows without a search.
     // A remote row (or ⋮ › Open history) opens its History; ⋮ also has Copy branch name.
     // The subtitle and band counts leave the remotes out. Row 1 has its menu open.
     var remote = function (name, age, open) {
       return { lead: 'icon', icon: 'branch', title: name, titleMono: true, active: open, sub: [{ text: age }],
-        actions: [{ icon: 'more-vertical', ariaLabel: 'Remote branch options', active: open }] };
+        actions: [{ icon: 'more-vertical', ariaLabel: 'Remote Branch Options', active: open }] };
     };
     return { themeClass: 'theme-' + t, themeName: t,
-      remoteMenu: [{ label: 'Open history', icon: 'history', kbd: '↵', active: true, href: 'HistH4.dc.html' },
-        { label: 'Copy branch name', icon: 'copy' }],
+      remoteMenu: [{ label: 'Open History', icon: 'history', kbd: '↵', active: true, href: 'HistH4.dc.html' },
+        { label: 'Copy Branch Name', icon: 'copy' }],
       remotesApi: [remote('origin/ayse/queue-dashboard', '2d', true), remote('origin/queue-priority-spike', '3w', false)],
       remotesWeb: [remote('origin/feat/queue-badge', '5d', false)] };
   }

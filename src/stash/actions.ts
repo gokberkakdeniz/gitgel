@@ -13,7 +13,7 @@ interface StashUi {
 
 export const useStashUi = create<StashUi>()(() => ({ dropping: null }));
 
-/** Drop asks first unless Settings › Prompts › "Discarding stash" is off. */
+/** Drop asks first unless Settings › Prompts › "Dropping stashes" is off. */
 export function askDrop(stash: ReviewStash): void {
   if (useData.getState().config?.settings.prompts.discardStash === false) void dropStash(stash);
   else useStashUi.setState({ dropping: stash });
@@ -31,5 +31,5 @@ export function applyStash(st: ReviewStash, target: EntrySummary, pop: boolean):
 
 /** One stash per entry, one after another (P4). */
 export function pushStashes(entries: StashPush[], message: string): Promise<void> {
-  return startGitAction('Stash changes', () => stashPush(entries, message));
+  return startGitAction('Stash Changes', () => stashPush(entries, message));
 }
