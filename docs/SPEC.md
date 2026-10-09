@@ -667,7 +667,9 @@ Layout:
   (`pencil`), which opens the project page (going back to it when Review was opened from
   there).
 - Default mode Committed; Uncommitted if there are no committed changes but some uncommitted.
-  Switching mode resets the selection to that mode's first file. Groups with no files in the
+  Switching mode keeps the file on screen if the new mode lists it (else that entry's first file,
+  else the first one); between Uncommitted and All (both end at the working tree) the diff also
+  keeps its place in the file. Groups with no files in the
   mode are hidden, except the one group of a branch review (its menu, with "Change base", stays reachable).
 - **Left file list** (310px, 280px beside the sidebar; `bg.sidebar`, padding 8, scrolls), one
   group per entry (two entries from the same repo are two groups):

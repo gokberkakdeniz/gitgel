@@ -144,9 +144,10 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     return c ? { ...g, files: { ...g.files, [mode]: c.files } } : g;
   });
 
+  // The file on screen stays when the new mode lists it (resolveSelection falls back otherwise).
   const setMode = (m: DiffMode) => {
     setChosenMode(m);
-    setSelected(null);
+    setSelected(current);
     setStashSel(null);
     if (m === 'uncommitted') setCommitSel({});
   };
@@ -627,7 +628,9 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
                 commitOf(group)?.parent ?? null,
                 change,
                 commitOf(group) ? 'committed' : mode,
-                `${currentId}\u0000${mode}\u0000${commitOf(group)?.sha ?? ''}`,
+                // Uncommitted and All both show the working tree on the new side: one key, so
+                // switching between them keeps the place in the file.
+                `${currentId}\u0000${mode === 'committed' ? mode : 'tree'}\u0000${commitOf(group)?.sha ?? ''}`,
               )}
             </>
           ) : (

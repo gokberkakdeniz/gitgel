@@ -1,7 +1,7 @@
 import { DiffEditor } from '@monaco-editor/react';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import * as monaco from 'monaco-editor';
-import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { CopyIcon, LinkIcon } from '../components/icons';
 import { Menu, MenuItem } from '../components/Menu';
 import { Popover } from '../components/Popover';
@@ -183,6 +183,8 @@ export function DiffView({
     /** The next diff update brings the current change back into view (the folds changed). */
     reveal: false,
     shownKey: null as string | null,
+    /** The line at the top of the view before new content of the same file came in. */
+    keepLine: null as number | null,
     decorations: [] as monaco.editor.IEditorDecorationsCollection[],
   });
 
@@ -259,7 +261,15 @@ export function DiffView({
       if (n.index !== null) n.index = n.hunks.length ? Math.min(n.index, n.hunks.length - 1) : null;
       const reveal = n.reveal;
       n.reveal = false;
-      if (reveal && n.index !== null) goTo(n.index);
+      const keep = n.keepLine;
+      n.keepLine = null;
+      if (keep !== null) {
+        // The new content folds differently: bring the same line back to the top once it has.
+        const ed = m.editor.getModifiedEditor();
+        requestAnimationFrame(() => ed.setScrollTop(ed.getTopForLineNumber(keep)));
+        mark();
+        report();
+      } else if (reveal && n.index !== null) goTo(n.index);
       else {
         mark();
         report();
@@ -324,6 +334,15 @@ export function DiffView({
     : data?.tooLarge
       ? 'File is too large to show (over 1 MB)'
       : null;
+
+  // New content for the file on screen (another layer, a refresh): note the line at the top
+  // before the editor takes it.
+  useLayoutEffect(() => {
+    const m = mounted.current;
+    const n = nav.current;
+    if (!m || !data || n.shownKey !== data.fileKey) return;
+    n.keepLine = m.editor.getModifiedEditor().getVisibleRanges()[0]?.startLineNumber ?? null;
+  }, [data]);
 
   // Which file's content is on screen. Monaco reports no diff update when the text does not
   // change (e.g. two binary files), so settle those here.

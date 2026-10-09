@@ -520,6 +520,8 @@ rather than as a task is listed the same way, marked "(on request)".
   - note: canvas boards Hi5–Hi7 (`HistH6`–`HistH8.dc.html`), moved from the WIP page (W1a, W1c, W1d).
   - note: the pill and notes say "commit failed" (not "hook failed"): a refusal that is not a hook
     looks the same from outside; the toast is the usual “Running “Commit”…”, without a hook name.
+- [x] (on request) Review: switching mode keeps the file on screen when the new mode lists it, and
+  between Uncommitted and All the diff keeps its place in the file — 2026-10-09
 
 ---
 
