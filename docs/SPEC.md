@@ -642,11 +642,10 @@ One screen for both scopes:
 
 - **Project scope** (a sidebar project with entries, Project → "Review changes" or ⌘R, or a
   project row's branch link): title =
-  project name, subtitle `X of Y changed` (X = groups with a file in
-  any mode).
-- **Branch scope** (a Branches row): title = branch (short SHA if detached), subtitle
-  `<repo>`; `<repo> · last known state` when opened
-  on a deleted branch's last tip. One group.
+  project name, subtitle `N repos · M branches` (its entries, as on Branches).
+- **Branch scope** (a Branches row): title "Review", subtitle as History's: `<repo> · <branch>`
+  (short SHA if detached), plus ` · <~worktree>` when checked out, or ` · last known state` when
+  opened on a deleted branch's last tip. One group.
 
 Layout:
 
@@ -811,9 +810,7 @@ Layout:
   the first change in view. Picking a file lands on its first change. A file with no line
   changes (binary, too large, rename only) shows "No line changes" ("Only whitespace changed"
   when whitespace is ignored), and ↑ ↓ go straight to the neighbouring file.
-- **Uncommitted mode:** the commit list is hidden; a warning banner under the header says which
-  working trees are shown: `Working tree at <~path>` (branch) or
-  `Uncommitted changes across N checked-out entries` (project).
+- **Uncommitted mode:** the commit list is hidden.
 - **Conflicts:** in every mode (not while a stash is shown), when an entry's working tree has
   unmerged files, a danger banner above that one: `1 file has merge conflicts. Resolve it in your
   editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.` (`N files have

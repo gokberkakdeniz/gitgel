@@ -726,8 +726,8 @@ class Component extends DCLogic {
       titlesStyle: 'display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-left: ' + (embedded ? 0 : 4) + 'px',
       titleStyle: 'font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap' + (project ? '; box-sizing: border-box; height: 30px; line-height: 28px; margin-left: -7px; padding: 0 6px; border: 1px solid transparent; border-radius: 8px' : ''),
       showEditProject: project,
-      title: project ? 'Session auth refresh' : 'rate-limit-middleware',
-      subtitle: project ? '2 of 6 changed' : 'api-server',
+      title: project ? 'Session auth refresh' : 'Review',
+      subtitle: project ? '4 repos · 6 branches' : 'api-server · rate-limit-middleware · ' + G[0].wt,
       backHref: project ? 'Projects.dc.html' : 'Main.dc.html',
       backLabel: project ? 'Back to project' : 'Back to Branches',
       modes: modes, groups: groups, lines: lines,
@@ -804,11 +804,9 @@ class Component extends DCLogic {
         { repo: 'admin-panel', branch: 'session-ui', tag: 'repo missing', tagTone: 'danger' }
       ],
       showBaseMenu: menu && project, bm: bm,
-      showBanner: mode === 'Uncommitted' || baseChanged,
-      banner: mode === 'Uncommitted'
-        ? (project ? 'Uncommitted changes across 2 checked-out entries' : 'Working tree at ' + selGroup.wt)
-        : 'Base set to feat/job-queue',
-      bannerStyle: 'padding: 9px 20px; font-size: 12px; border-bottom: 1px solid var(--border); ' + (mode === 'Uncommitted' ? 'background: rgba(var(--warning-rgb), 0.12); color: var(--warning)' : 'background: var(--bg-elevated); color: var(--text-body)')
+      showBanner: baseChanged,
+      banner: 'Base set to feat/job-queue',
+      bannerStyle: 'padding: 9px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-body)'
     };
   }
 }

@@ -35,7 +35,6 @@ import type {
   FileChange,
   DiffMode,
   EntrySummary,
-  ReviewData,
   ReviewGroup,
   ReviewTarget,
   StashChanges,
@@ -327,7 +326,6 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   const [entryMenu, setEntryMenu] = useState<{ entry: EntrySummary; rect: DOMRect; atPointer?: boolean } | null>(null);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   useEffect(() => setPendingKey(null), [data]);
-  const banner = mode === 'uncommitted' && !stash ? uncommittedBanner(target, groups) : null;
   const conflictBanner = conflictsBanner(groups);
 
   // Coming from a project row: open that entry, collapse the others (once).
@@ -437,7 +435,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
 
   return (
     <div className={styles.screen}>
-      <ReviewHeader entry={entry} target={target} backLabel={backLabel} data={data} stashes={stashes}>
+      <ReviewHeader entry={entry} target={target} backLabel={backLabel} stashes={stashes}>
         {target.kind !== 'stashes' && (
           <Segmented
             aria-label="Diff layer"
@@ -492,11 +490,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
         {stashAction.dialog}
       </ReviewHeader>
       {conflictBanner && !stash && <Banner tone="danger">{conflictBanner}</Banner>}
-      {banner ? (
-        <Banner tone="warning">{banner}</Banner>
-      ) : (
-        baseSaved && <Banner tone="neutral">{baseSaved}</Banner>
-      )}
+      {baseSaved && <Banner tone="neutral">{baseSaved}</Banner>}
 
       <div className={styles.body}>
         <aside
@@ -699,14 +693,12 @@ function ReviewHeader({
   entry,
   target,
   backLabel,
-  data,
   stashes,
   children,
 }: {
   entry: EntrySummary | undefined;
   target: ReviewTarget;
   backLabel: string;
-  data: ReviewData | undefined;
   stashes: ReviewStash[];
   children: React.ReactNode;
 }) {
@@ -724,18 +716,19 @@ function ReviewHeader({
   let title = '';
   let subtitle = '';
   if (target.kind === 'branch') {
-    title = target.branch ?? entry?.shortSha ?? '';
-    const repo = entry?.repoName ?? '';
-    subtitle = target.tipOverride ? `${repo} · last known state` : repo;
+    title = 'Review';
+    const rev = target.branch ?? entry?.shortSha;
+    const where = target.tipOverride ? 'last known state' : entry?.worktreePath ? tildifyHome(entry.worktreePath) : null;
+    subtitle = [entry?.repoName, rev, where].filter(Boolean).join(' · ');
   } else if (target.kind === 'stashes') {
     title = 'Stashes';
     const repo = config?.repos.find((r) => r.id === target.repoId);
     subtitle = `${repo ? basename(repo.path) : ''} · ${plural(stashes.length, 'stash', 'stashes')}`;
   } else {
     title = project?.name ?? '';
-    if (data) {
-      const changed = data.groups.filter((g) => g.files.committed.length + g.files.uncommitted.length + g.files.all.length > 0).length;
-      subtitle = `${changed} of ${data.totalEntries} changed`;
+    if (project) {
+      const repos = new Set(project.entries.map((e) => e.repoId)).size;
+      subtitle = `${plural(repos, 'repo', 'repos')} · ${plural(project.entries.length, 'branch', 'branches')}`;
     }
   }
 
@@ -1264,16 +1257,6 @@ function EntryBar({
 
 function openHistory(repoId: string, rev: string | null) {
   if (rev) useNav.getState().push({ name: 'history', repoId, rev, backLabel: 'Back to Review' });
-}
-
-/** Which working trees the Uncommitted layer shows. */
-function uncommittedBanner(target: ReviewTarget, groups: ReviewGroup[]): string | null {
-  if (target.kind === 'branch') {
-    const wt = groups[0]?.entry.worktreePath;
-    return wt ? `Working tree at ${tildifyHome(wt)}` : null;
-  }
-  const n = groups.filter((g) => g.entry.worktreePath).length;
-  return `Uncommitted changes across ${n} checked-out ${n === 1 ? 'entry' : 'entries'}`;
 }
 
 /** Unmerged files (a merge, rebase or stash apply that conflicted), in every mode. */

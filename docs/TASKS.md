@@ -530,6 +530,9 @@ rather than as a task is listed the same way, marked "(on request)".
   - note: canvas board D11 (`FlowD11.dc.html`, `menu: diff`).
 - [x] (on request) Shortcuts work while the diff has focus: ⌥H, and ⌘← / ⌘→ for Back / Forward
   (Monaco's hidden textarea no longer counts as a text field) — 2026-10-09
+- [x] (on request) Branch review header as History's: title "Review", subtitle `<repo> · <branch>
+  · <~worktree>`; project review subtitle `N repos · M branches` (was `X of Y changed`); the
+  Uncommitted layer's warning banner is gone (branch and project); canvas Diff, P7 — 2026-10-09
 
 ---
 
