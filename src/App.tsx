@@ -80,8 +80,8 @@ export default function App() {
   useEffect(() => {
     const onMenu = (e: MouseEvent) => {
       const t = e.target as HTMLElement | null;
-      // Monaco's hidden textarea is under the pointer on a right-click, so the diff is excluded.
-      if (t?.closest('.monaco-editor, input, textarea, .selectable')) return;
+      // Monaco's hidden textarea is under the pointer on a right-click, so the diff is checked first.
+      if (!t?.closest('.monaco-editor') && t?.closest('input, textarea, .selectable')) return;
       e.preventDefault();
     };
     window.addEventListener('contextmenu', onMenu);
