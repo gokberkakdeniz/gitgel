@@ -184,11 +184,11 @@ export function History({ repoId, rev, backLabel }: Props) {
   // their own section under the list (as in Review), are picked by click.
   const order = useMemo(() => [...(wip ? [WIP] : []), ...commits.map((c) => c.sha)], [wip, commits]);
 
-  // The picked row: the one asked for while it is listed, else the newest commit.
+  // The picked row: the one asked for while it is listed, else Uncommitted, else the newest commit.
   const [picked, setPicked] = useState<string | null>(null);
   useEffect(() => setPicked(null), [search]);
   const listed = (row: string) => order.includes(row) || stashes.some((s) => stashRow(s.sha) === row);
-  const current = picked && listed(picked) ? picked : (commits[0]?.sha ?? (wip ? WIP : null));
+  const current = picked && listed(picked) ? picked : wip ? WIP : (commits[0]?.sha ?? null);
   const commit = commits.find((c) => c.sha === current);
   const stash = stashes.find((s) => stashRow(s.sha) === current);
 

@@ -2501,7 +2501,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     most 40% of its height, scrolls on its own), since the commits keep loading as they scroll.
     Picking one lists its files under it and shows Review's stash pane (P2: message, Apply / Pop /
     Drop, meta line), then the file bar (`<short base> ↔ stash@{n}`) and the diff. ↑ / ↓ do not
-    step into it; a dropped or popped stash leaves the newest commit picked.
+    step into it; a dropped or popped stash leaves Uncommitted, else the newest commit, picked.
 - **Commit form** (`HistH6`, `HistH7`, `HistH8`; §15 "Commit"): pinned to the bottom of the list
   column, under the stashes, while Uncommitted is picked. Padding 12, gap 8, top border `border`,
   `bg.sidebar`: a 32px `Input` "Summary (required)", a 56px description textarea (12px, no resize),
@@ -2517,12 +2517,13 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **After it ends:** success empties the form and shows the toast “Committed to <rev>”. A failure
     (a hook exited non-zero, or git refused) keeps the message and the boxes, opens the output
     panel, and puts the pill on the Uncommitted row, until the next commit starts.
-- **Picking:** on opening, the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
+- **Picking:** on opening, Uncommitted when there is one, else the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,
   Uncommitted included. Clicking the picked row again folds its file list, and opens it again;
   picking another row opens its files. A row brought into view (stepping, or rows above it
   folding) keeps 8px, the list's side padding, above or below it. After a refresh the picked
-  commit stays when it is still listed, else the newest is picked. Search picks the first match.
+  commit stays when it is still listed, else Uncommitted or the newest is picked. Search picks the
+  first match.
 - **Pane** (`HistH2` 101–123): a commit header (padding 14px 18px, bottom border `border`, gap 8):
   15px/600 `text.strong` subject (selectable); the body (13px, line-height 1.5, `text.muted`, `white-space:
   pre-wrap`, max-width 720px; left out when empty; selectable); mono 11 muted meta (selectable): an 18px avatar, the author

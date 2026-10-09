@@ -552,6 +552,8 @@ rather than as a task is listed the same way, marked "(on request)".
   the remote, copy icon beside it; remote links for any host (`get_remote_url` → `RemoteInfo`,
   `open_remote_link`; GitLab `/-/`, Bitbucket `/commits` + `/src`, rest GitHub-style; was
   GitHub-only `get_github_url` / `open_github_link`) — 2026-10-09
+- [x] (on request) History opens on Uncommitted when the branch has uncommitted changes, else the
+  newest commit — 2026-10-09
 
 ---
 
