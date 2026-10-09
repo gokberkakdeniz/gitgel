@@ -536,6 +536,9 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Branches lists remote-tracking branches with no local twin while filtering
   (`RepoScan.remotes`; a row opens its History); History's branch picker and `get_history_refs`
   are gone; canvas K2, Hi2–Hi5 — 2026-10-09
+- [x] (on request) Branches: repo bands and stash lists collapse while filtering too; that state
+  is not remembered and is dropped when the filter is cleared; the filter applies 150 ms after the
+  last keystroke — 2026-10-09
 
 ---
 

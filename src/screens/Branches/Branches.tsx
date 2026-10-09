@@ -105,9 +105,19 @@ function BranchList() {
   const config = useData((s) => s.config)!;
   const scan = useData((s) => s.scan);
   const scannedOnce = useData((s) => s.scannedOnce);
-  const filter = useUi((s) => s.branchesFilter);
+  const typed = useUi((s) => s.branchesFilter);
   const setFilter = useUi((s) => s.setBranchesFilter);
   const filterRef = useRef<HTMLInputElement>(null);
+  // The list follows the field 150 ms after the last keystroke; clearing it applies at once.
+  const [filter, setApplied] = useState(typed);
+  useEffect(() => {
+    if (!typed.trim()) {
+      setApplied(typed);
+      return;
+    }
+    const timer = window.setTimeout(() => setApplied(typed), 150);
+    return () => window.clearTimeout(timer);
+  }, [typed]);
 
   const [scope, setScopeState] = useState<BranchScope>(readScope);
   const setScope = (next: BranchScope) => {
@@ -130,10 +140,22 @@ function BranchList() {
   const allRows = useMemo(() => scans.flatMap((s) => s.active), [scans]);
   const days = config.settings.activeDays;
 
-  // Collapsed repo bands and stash lists; both open while filtering.
-  const [shutRepos, setShutRepos] = useCollapsed(REPOS_KEY);
-  const [shutStashes, setShutStashes] = useCollapsed(STASHES_KEY);
+  // Collapsed repo bands and stash lists, remembered. While filtering everything starts open and
+  // collapsing is kept apart, not remembered, and forgotten when the filter is cleared.
+  const [savedRepos, setSavedRepos] = useCollapsed(REPOS_KEY);
+  const [savedStashes, setSavedStashes] = useCollapsed(STASHES_KEY);
+  const [searchRepos, setSearchRepos] = useState<Set<string>>(new Set());
+  const [searchStashes, setSearchStashes] = useState<Set<string>>(new Set());
   const filtering = filter.trim() !== '';
+  useEffect(() => {
+    if (filtering) return;
+    setSearchRepos(new Set());
+    setSearchStashes(new Set());
+  }, [filtering]);
+  const shutRepos = filtering ? searchRepos : savedRepos;
+  const setShutRepos = filtering ? setSearchRepos : setSavedRepos;
+  const shutStashes = filtering ? searchStashes : savedStashes;
+  const setShutStashes = filtering ? setSearchStashes : setSavedStashes;
   // ⌥-click collapses every band when the clicked one is open, and opens them all otherwise.
   const toggleRepo = (id: string, all: boolean) =>
     setShutRepos((ids) => {
@@ -253,9 +275,9 @@ function BranchList() {
             group={g}
             config={config}
             flash={flash === g.scan.repo.id}
-            open={filtering || !shutRepos.has(g.scan.repo.id)}
+            open={!shutRepos.has(g.scan.repo.id)}
             onToggle={(all) => toggleRepo(g.scan.repo.id, all)}
-            stashesOpen={filtering || !shutStashes.has(g.scan.repo.id)}
+            stashesOpen={!shutStashes.has(g.scan.repo.id)}
             onToggleStashes={() => setShutStashes((ids) => toggled(ids, g.scan.repo.id))}
             selectedKeys={selectedKeys}
             justAdded={justAdded}
@@ -282,7 +304,7 @@ function BranchList() {
             { value: 'unassigned', label: 'Not in a project', count: counts.unassigned },
           ]}
         />
-        <FilterField ref={filterRef} value={filter} onChange={setFilter} />
+        <FilterField ref={filterRef} value={typed} onChange={setFilter} />
       </PageHeader>
       <div className={styles.table}>
         <div className={`${styles.grid} ${styles.columns}`}>

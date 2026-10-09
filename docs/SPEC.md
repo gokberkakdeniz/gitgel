@@ -528,7 +528,8 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     `Kbd` "⌘K" (⌘K focuses it). It is a real filter, word-based: `-`, `/`, `_`, `.` count as
     spaces, and every typed word must appear in the branch name or SHA, the worktree path or the
     repo name, in any order, case-insensitive ("to be" finds `to-be-deleted`, "feat queue" finds
-    `feat/job-queue`). Esc clears it.
+    `feat/job-queue`). The list follows 150 ms after the last keystroke; clearing it applies at
+    once. Esc clears it.
 - **Columns:** grid `16px minmax(0,1fr) 104px 24px`, column-gap 8, padding 10px 16px 10px 28px
   (the list keeps a 10px scrollbar gutter; the header row adds it to its right padding so the
   headings line up), section-label style: [checkbox] Branch · Projects (right-aligned) · [⋮].
@@ -543,8 +544,9 @@ Every active branch, whether or not it is in a project, and each repo's base bra
   - Chevron, icon, name and path are one button that collapses the band: its rows and stashes
     hide, the band and its count stay. ⌥-click collapses every band when the clicked
     one is open, and opens them all otherwise. Collapsed bands are remembered per repo in
-    `localStorage` (`gitgel.branches.collapsedRepos`); they open while filtering, and a band
-    focused from a repo link opens.
+    `localStorage` (`gitgel.branches.collapsedRepos`), and a band focused from a repo link opens.
+    While filtering every band starts open and can still be collapsed; that state is not
+    remembered and is dropped when the filter is cleared.
   - **Pin**: a 24px icon button with a 13px `pin` icon in the ⋮ column, after the count
     (tooltip "Pin to top" / "Unpin"). It shows while the band is hovered or the button has
     focus, and always on a pinned band, where it is `accent.text`. Pins are kept in the config
@@ -2204,7 +2206,7 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1–P7); boards `FlowP1`
   lists the stack with each stash's file count (cached per stash).
 - **Branches** (P1): under a repo band's rows (only while the band has rows), a `List` with the
   heading "Stashes" and its count (collapsible; remembered per repo in `localStorage`,
-  `gitgel.branches.collapsedStashes`, and open while filtering), padding 8px 16px 14px 52px (8px at the bottom
+  `gitgel.branches.collapsedStashes`; while filtering open, collapsed as the bands are), padding 8px 16px 14px 52px (8px at the bottom
   while collapsed, as at the top), bottom border `border.row`. Rows: lead `package` icon, prefix `stash@{n}`, the message; sub line: the branch
   as an `accent` sm Pill (`<branch> · deleted` as `outline`; `detached HEAD` as `outline`),
   `N files`, the age. The text filter applies (message, branch, repo name). Clicking a row opens
