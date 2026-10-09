@@ -48,7 +48,7 @@ button,input,textarea{font-family:inherit}
 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--text-muted); flex-shrink: 0"><path d="m6 9 6 6 6-6"></path></svg>
 <span style="font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">web-app</span>
 <span style="flex-grow: 1"></span>
-<button aria-label="Branch options" aria-haspopup="menu" style="width: 22px; height: 20px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+<sc-if value="{{dotsShut}}" hint-placeholder-val="{{true}}"><button aria-label="Branch options" aria-haspopup="menu" style="width: 22px; height: 20px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if><sc-if value="{{dotsOpen}}" hint-placeholder-val="{{false}}"><button aria-label="Branch options" aria-haspopup="menu" aria-expanded="true" style="width: 22px; height: 20px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: var(--bg-pressed); color: var(--text-strong)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if>
 
 </div>
 <div style="display: flex; align-items: center; gap: 8px; padding-left: 20px; min-width: 0">
@@ -56,38 +56,38 @@ button,input,textarea{font-family:inherit}
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">origin ↑2 ↓1</span>
 </div>
 </div>
-<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
-<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--warning); background: rgba(var(--warning-rgb), 0.15)">M</span>
+<div style="{{row1Style}}">
+<dc-import name="KindBadge" theme="none" kind="M" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">session.ts</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">src/auth</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+6</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">−2</span>
 </div><div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
-<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--success); background: rgba(var(--success-rgb), 0.15)">A</span>
+<dc-import name="KindBadge" theme="none" kind="A" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">refresh.ts</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">src/auth</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+64</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)"></span>
-</div><div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: var(--bg-hover)">
-<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--warning); background: rgba(var(--warning-rgb), 0.15)">M</span>
+</div><div style="{{row3Style}}">
+<dc-import name="KindBadge" theme="none" kind="M" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">client.ts</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">src/api</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+9</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">−3</span>
 </div><div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
-<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--kind-r); background: rgba(var(--kind-r-rgb), 0.16)">R</span>
+<dc-import name="KindBadge" theme="none" kind="R" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">tokens.ts</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">src/auth ← src/auth/token.ts</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+2</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">−2</span>
 </div><div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
-<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--success); background: rgba(var(--success-rgb), 0.15)">A</span>
+<dc-import name="KindBadge" theme="none" kind="A" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">refresh.test.ts</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">test/auth</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+48</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)"></span>
 </div><div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
-<span style="width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--warning); background: rgba(var(--warning-rgb), 0.15)">M</span>
+<dc-import name="KindBadge" theme="none" kind="M" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">package.json</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1"></span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+1</span>
@@ -182,11 +182,12 @@ button,input,textarea{font-family:inherit}
 </section>
 </div>
 <sc-if value="{{isFile}}" hint-placeholder-val="{{true}}"><div style="position: absolute; left: 150px; top: 238px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="220" label="client.ts actions" items="{{fileMenu}}" hint-size="220px,116px"></dc-import></div></sc-if>
+<sc-if value="{{isSync}}" hint-placeholder-val="{{false}}"><div style="position: absolute; left: 50px; top: 140px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch options" items="{{syncMenu}}" hint-size="260px,536px"></dc-import></div></sc-if>
 <sc-if value="{{isDiff}}" hint-placeholder-val="{{false}}"><div style="position: absolute; left: 900px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="230" label="Diff actions" items="{{diffMenu}}" hint-size="230px,260px"></dc-import></div></sc-if>
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "menu": {"editor": "enum", "options": ["file", "diff"], "default": "file"}, "$preview": {"width": 1280, "height": 800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "menu": {"editor": "enum", "options": ["file", "diff", "sync"], "default": "file"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -206,8 +207,28 @@ class Component extends DCLogic {
       { label: 'Open permalink', icon: 'link' },
       { kind: 'sep' }
     ].concat(fileMenu);
+    // sync (R1, FlowR1.dc.html): the entry's ⋯ menu open, with its Sync group (SPEC §15 "Branch menus").
+    var syncMenu = [
+      { label: 'Change base', icon: 'branch', sub: 'base main' },
+      { label: 'Copy branch name', icon: 'copy' },
+      { label: 'Open history', icon: 'history' },
+      { kind: 'sep' },
+      { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
+      { kind: 'sep' },
+      { label: 'Fetch', icon: 'download' },
+      { label: 'Pull', icon: 'arrow-down', hint: '↓1' },
+      { label: 'Pull (rebase)', icon: 'rebase', active: true },
+      // The entry's base, fresh from its remote (like gupom for the default base).
+      { label: 'Rebase on main', icon: 'rebase' },
+      { label: 'Push', icon: 'arrow-up', hint: '↑2', disabled: true },
+      // Diverged only: --force-with-lease, over what the last fetch saw.
+      { label: 'Force push', icon: 'arrow-up' }
+    ];
     var m = this.props.menu || 'file';
-    return { themeClass: 'theme-' + t, themeName: t, fileMenu: fileMenu, diffMenu: diffMenu, isFile: m === 'file', isDiff: m === 'diff' };
+    var row = function (on) { return 'display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: ' + (on ? 'var(--bg-hover)' : 'transparent'); };
+    return { themeClass: 'theme-' + t, themeName: t, fileMenu: fileMenu, diffMenu: diffMenu, syncMenu: syncMenu,
+      isFile: m === 'file', isDiff: m === 'diff', isSync: m === 'sync', dotsOpen: m === 'sync', dotsShut: m !== 'sync',
+      row1Style: row(m === 'sync'), row3Style: row(m !== 'sync') };
   }
 }
 </script>

@@ -81,7 +81,7 @@ button,input,textarea{font-family:inherit}
 <div style="{{it.rowStyle}}">
 <sc-if value="{{it.boxed}}" hint-placeholder-val="{{false}}"><span style="width: 26px; flex-shrink: 0; display: flex; align-items: center"><sc-if value="{{it.hasCheck}}" hint-placeholder-val="{{false}}"><dc-import name="Checkbox" theme="{{themeName}}" checked="{{it.on}}" label="" aria-label="{{it.checkLabel}}" hint-size="16px,16px"></dc-import></sc-if>
 <sc-if value="{{it.part}}" hint-placeholder-val="{{false}}"><button type="button" role="checkbox" aria-checked="mixed" aria-label="{{it.checkLabel}}" title="Some lines are included" style="width: 16px; height: 16px; flex-shrink: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: var(--accent); cursor: pointer"><span style="width: 8px; height: 2px; border-radius: 1px; background: var(--on-accent)"></span></button></sc-if></span></sc-if>
-<span style="{{it.badgeStyle}}">{{it.kind}}</span>
+<dc-import name="KindBadge" theme="none" kind="{{it.kind}}" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span>
@@ -136,10 +136,7 @@ button,input,textarea{font-family:inherit}
 <button aria-haspopup="menu" title="Diff view" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)"><dc-import name="Icon" icon="{{c.viewIcon}}" size="14" stroke="1.7" hint-size="14px,14px"></dc-import><span>{{c.viewLabel}}</span><dc-import name="Icon" icon="chevron-down" size="9" stroke="2.6" hint-size="9px,9px"></dc-import></button>
 <span style="width: 1px; height: 16px; background: var(--border); margin: 0 2px"></span>
 <span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{c.nav}}</span>
-<div role="group" aria-label="Jump between changes" style="display: flex; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
-<button disabled aria-label="Previous change" title="Previous change (⌥↑)" style="width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--icon-disabled)"><dc-import name="Icon" icon="chevron-up" size="14" stroke="2" hint-size="14px,14px"></dc-import></button>
-<button aria-label="Next change" title="Next change (⌥↓)" style="width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-body)"><dc-import name="Icon" icon="chevron-down" size="14" stroke="2" hint-size="14px,14px"></dc-import></button>
-</div>
+<dc-import name="Stepper" theme="none" up-disabled="{{true}}" hint-size="60px,30px"></dc-import>
 </div>
 <sc-if value="{{isSplit}}" hint-placeholder-val="{{true}}">
 <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: var(--bg-main); min-height: 0">
@@ -230,16 +227,12 @@ class Component extends DCLogic {
           (opt.sel ? 'background: rgba(var(--accent-rgb), 0.12); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.5); ' : '') +
           (opt.shared ? 'opacity: 0.7' : '') };
     };
-    var KIND = { M: 'warning', A: 'success', D: 'danger', U: 'kind-u' };
-    var badge = function (kind) {
-      return 'width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; font-weight: 500; color: var(--' + KIND[kind] + '); background: rgba(var(--' + KIND[kind] + '-rgb), 0.15)';
-    };
     var shownStyle = 'box-shadow: inset 0 0 0 1px var(--accent); background: rgba(var(--accent-rgb), 0.10)';
     // check: 'on' | 'off' | 'part' (a file of Uncommitted) or undefined (a file of a commit)
     var file = function (kind, name, dir, add, del, shown, check) {
       if (inDialog) check = undefined;
       var boxed = check !== undefined;
-      return { isFile: true, boxed: boxed, kind: kind, name: name, dir: dir, add: add, del: del, badgeStyle: badge(kind),
+      return { isFile: true, boxed: boxed, kind: kind, name: name, dir: dir, add: add, del: del,
         hasCheck: check === 'on' || check === 'off', part: check === 'part', on: check === 'on', checkLabel: 'Include ' + name,
         rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 ' + (boxed ? 8 : 42) + 'px; border-radius: 8px; ' + (shown ? shownStyle : '') };
     };

@@ -40,6 +40,12 @@ interface ItemProps {
   /** Gets the item's element (a submenu opens beside it). */
   onSelect: (el: HTMLElement) => void;
   danger?: boolean;
+  /** Accent text, e.g. "+ Add to another project". */
+  accent?: boolean;
+  /** A 7px hollow dot on the left (a project); the label then stays on one line. */
+  dot?: boolean;
+  /** → on the right: goes to that page. */
+  arrow?: boolean;
   /** Muted text on the right, e.g. "double-click title". */
   hint?: string;
   /** Mono shortcut on the right, e.g. "⌥V". */
@@ -67,6 +73,9 @@ export function MenuItem({
   children,
   onSelect,
   danger,
+  accent,
+  dot,
+  arrow,
   hint,
   kbd,
   sub,
@@ -82,14 +91,16 @@ export function MenuItem({
   const second = sub ?? desc;
   const radio = checked !== undefined;
   const check = box !== undefined;
-  const cls = [styles.item, danger && styles.danger, second && styles.stacked].filter(Boolean).join(' ');
+  const cls = [styles.item, danger && styles.danger, accent && styles.accent, second && styles.stacked]
+    .filter(Boolean)
+    .join(' ');
   const text = second ? (
     <span className={styles.lines}>
       <span>{children}</span>
       <span className={sub ? styles.sub : styles.desc}>{second}</span>
     </span>
   ) : (
-    <span className={styles.label}>{children}</span>
+    <span className={dot ? `${styles.label} ${styles.oneLine}` : styles.label}>{children}</span>
   );
   return (
     <button
@@ -117,6 +128,7 @@ export function MenuItem({
           {typeof icon === 'string' ? <Icon name={icon as IconName} size={14} strokeWidth={1.8} /> : icon}
         </span>
       )}
+      {dot && <span className={styles.dot} />}
       {radio && (
         <span className={checked ? styles.check : `${styles.check} ${styles.unchecked}`}>
           <CheckIcon />
@@ -130,6 +142,7 @@ export function MenuItem({
       {text}
       {hint && <span className={styles.hint}>{hint}</span>}
       {kbd && <span className={second ? `${styles.kbd} ${styles.kbdTop}` : styles.kbd}>{kbd}</span>}
+      {arrow && <span className={styles.arrow}>→</span>}
       {submenu && <ChevronRightIcon size={12} className={styles.submenu} />}
     </button>
   );

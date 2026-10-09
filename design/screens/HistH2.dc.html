@@ -38,9 +38,9 @@ button,input,textarea{font-family:inherit}
 <button title="Fetch web-app from origin · last fetch 3h ago" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="download" size="12" hint-size="12px,12px"></dc-import>Fetch</button>
 <span style="width: 1px; height: 16px; background: var(--border)"></span>
 <button disabled title="Nothing to pull" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-body); font-weight: 500; opacity: 0.5"><dc-import name="Icon" icon="arrow-down" size="12" hint-size="12px,12px"></dc-import>Pull</button>
-<button disabled title="Nothing to push" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-body); font-weight: 500; opacity: 0.5"><dc-import name="Icon" icon="arrow-up" size="12" hint-size="12px,12px"></dc-import>Push</button>
+<sc-if value="{{pushOff}}" hint-placeholder-val="{{true}}"><button disabled title="Nothing to push" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-body); font-weight: 500; opacity: 0.5"><dc-import name="Icon" icon="arrow-up" size="12" hint-size="12px,12px"></dc-import>Push</button></sc-if><sc-if value="{{pushOn}}" hint-placeholder-val="{{false}}"><button title="Push to origin/session-token-refresh" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: var(--accent); color: var(--on-accent); font-weight: 600"><dc-import name="Icon" icon="arrow-up" size="12" hint-size="12px,12px"></dc-import>Push<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">↑2</span></button></sc-if>
 </div>
-<button aria-label="More actions" title="More actions" aria-haspopup="menu" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+<sc-if value="{{menuShut}}" hint-placeholder-val="{{true}}"><button aria-label="More actions" title="More actions" aria-haspopup="menu" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if><sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><button aria-label="More actions" title="More actions" aria-haspopup="menu" aria-expanded="true" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-pressed); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if>
 </div>
 </header>
 <div style="flex-grow: 1; display: flex; min-height: 0">
@@ -77,7 +77,7 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 <sc-if value="{{it.isFile}}" hint-placeholder-val="{{false}}">
 <div style="{{it.rowStyle}}">
-<span style="{{it.badgeStyle}}">{{it.kind}}</span>
+<dc-import name="KindBadge" theme="none" kind="{{it.kind}}" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span>
@@ -120,10 +120,7 @@ button,input,textarea{font-family:inherit}
 <button aria-haspopup="menu" title="Diff view" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)"><dc-import name="Icon" icon="split" size="14" stroke="1.7" hint-size="14px,14px"></dc-import><span>Split</span><dc-import name="Icon" icon="chevron-down" size="9" stroke="2.6" hint-size="9px,9px"></dc-import></button>
 <span style="width: 1px; height: 16px; background: var(--border); margin: 0 2px"></span>
 <span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{c.nav}}</span>
-<div role="group" aria-label="Jump between changes" style="display: flex; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
-<button disabled aria-label="Previous change" title="Previous change (⌥↑)" style="width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--icon-disabled)"><dc-import name="Icon" icon="chevron-up" size="14" stroke="2" hint-size="14px,14px"></dc-import></button>
-<button aria-label="Next change" title="Next change (⌥↓)" style="width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-body)"><dc-import name="Icon" icon="chevron-down" size="14" stroke="2" hint-size="14px,14px"></dc-import></button>
-</div>
+<dc-import name="Stepper" theme="none" up-disabled="{{true}}" hint-size="60px,30px"></dc-import>
 </div>
 <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: var(--bg-main); min-height: 0">
 <div style="border-right: 1px solid var(--border); padding-top: 6px; overflow: hidden">
@@ -139,9 +136,10 @@ button,input,textarea{font-family:inherit}
 </div>
 </section>
 </div>
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><div style="position: absolute; right: 16px; top: 54px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="240" label="More actions" items="{{pageMenu}}" hint-size="240px,330px"></dc-import></div></sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;main&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;main&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;main&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;main&quot;},&quot;pageMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -150,7 +148,7 @@ class Component extends DCLogic {
     // picked commit expanded into its files, as Stashes does); right: the commit's header and
     // its diff against its first parent. variant: main (Hi2, checked out, so Uncommitted changes sits on top; the stashes
     // taken on main sit under the list, pinned, as Review's stash section; picking one shows Review's stash pane, P2) or a feature branch with the base
-    // line (Hi3).
+    // line (Hi3). Hi3 and Hi4 (HistH4, HistH5) mount this board as branch, Hi4 with the page menu open.
     var avatar = function (who, size) {
       var bot = /\[bot\]/.test(who);
       return 'width: ' + size + 'px; height: ' + size + 'px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-family: \'Instrument Sans\', sans-serif; font-size: ' + (size > 20 ? 10 : 9) + 'px; font-weight: 600; ' +
@@ -164,10 +162,8 @@ class Component extends DCLogic {
         subjectStyle: 'font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: ' + (opt.shared ? 'var(--text-muted)' : 'var(--text-strong)'),
         rowStyle: 'display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; cursor: pointer; ' + (opt.sel ? 'background: var(--bg-hover)' : '') + (opt.shared ? '; opacity: 0.7' : '') };
     };
-    var KIND = { M: 'warning', A: 'success', D: 'danger' };
     var file = function (kind, name, dir, add, del, on) {
       return { isFile: true, kind: kind, name: name, dir: dir, add: add, del: del,
-        badgeStyle: 'width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; font-weight: 500; color: var(--' + KIND[kind] + '); background: rgba(var(--' + KIND[kind] + '-rgb), 0.15)',
         rowStyle: 'display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 42px; border-radius: 8px; ' + (on ? 'box-shadow: inset 0 0 0 1px var(--accent); background: rgba(var(--accent-rgb), 0.10)' : '') };
     };
     var day = function (label) { return { isDay: true, label: label }; };
@@ -224,6 +220,25 @@ class Component extends DCLogic {
         c: rotateDetail, left: rotateLeft, right: rotateRight };
     }
     out.themeClass = 'theme-' + t;
+    out.themeName = t;
+    // A feature branch has commits to push (Hi3); main has none.
+    out.pushOn = v === 'branch';
+    out.pushOff = v !== 'branch';
+    // pageMenu: the ⋮ open (Hi4).
+    out.menuOpen = !!this.props.pageMenu;
+    out.menuShut = !this.props.pageMenu;
+    // The page menu (⋮, History): Open review and Refresh, then the branch menu's items without
+    // Open history / Change base (SPEC §16 "History").
+    out.pageMenu = [
+      { label: 'Open review', icon: 'split', kbd: '⌥H' },
+      { label: 'Refresh', icon: 'refresh' },
+      { kind: 'sep' },
+      { label: 'Copy branch name', icon: 'copy' },
+      { kind: 'sep' },
+      { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
+      { kind: 'sep' },
+      { label: 'Rebase on main', icon: 'rebase' }
+    ];
     return out;
   }
 }

@@ -111,20 +111,6 @@
   color: var(--text-muted);
 }
 
-.tile {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  color: var(--text-muted);
-}
-
 .tileOff {
   opacity: 0.45;
 }

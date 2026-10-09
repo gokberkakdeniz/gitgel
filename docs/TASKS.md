@@ -539,6 +539,14 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Branches: repo bands and stash lists collapse while filtering too; that state
   is not remembered and is dropped when the filter is cleared; the filter applies 150 ms after the
   last keystroke — 2026-10-09
+- [x] (on request) Shared components instead of copies: `PageHeader` for Review and History,
+  `ConfirmModal` (Delete project, Remove repository, Drop stash, Run), `Stepper`, `IconTile`,
+  `Menu` dot / arrow / accent items (Branches' projects menu), Review/parts' `FileBar`, `DiffStat`,
+  `StashSection` and `parts.module.css` (History no longer imports Review's CSS), `CopyBranchItem`,
+  `openHistory`; canvas: `Stepper`, `KindBadge`, `ConfirmModal` boards mounted by the screens, Hi3 /
+  Hi4 mount Hi2, R1 mounts D11, P5 mounts P1 — 2026-10-09
+  - note: the canvas's kind badge is 18px (SPEC) instead of 17px and its commit stepper 24px
+    tall instead of 22px, as the app draws them.
 
 ---
 

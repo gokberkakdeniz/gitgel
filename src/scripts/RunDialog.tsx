@@ -1,8 +1,8 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Button } from '../components/Button';
 import { Checkbox } from '../components/Checkbox';
-import { Icon } from '../components/icons';
 import { Input } from '../components/Input';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 import { Segmented } from '../components/Segmented';
 import { Select } from '../components/Select';
@@ -62,31 +62,24 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
   // "Ask before running" with nothing to fill in: a short confirmation (flow O3).
   if (shown.length === 0) {
     return (
-      <Modal aria-label={`Run ${name}`} width={460} paddingTop={180} onClose={onClose}>
-        <div className={styles.confirm} onKeyDown={onKeyDown}>
-          <div className={styles.confirmTitle}>Run “{name}”?</div>
-          <div className={styles.context}>
-            <span className={styles.contextRow}>
-              <Icon name="branch" size={14} className={styles.contextIcon} />
-              <span className={styles.contextText}>{where}</span>
-            </span>
-            {folder && (
-              <span className={styles.contextRow} title={folder}>
-                <Icon name="folder" size={14} className={styles.contextIcon} />
-                <span className={styles.contextText}>{tildifyHome(folder)}</span>
-              </span>
-            )}
-          </div>
-          <div className={styles.actions}>
-            <Button size={36} onClick={onClose}>
-              Cancel
-            </Button>
-            <Button variant="primary" size={36} kbd="⌘↵" autoFocus onClick={run}>
-              Run
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <ConfirmModal
+        aria-label={`Run ${name}`}
+        title={`Run “${name}”?`}
+        width={460}
+        onClose={onClose}
+        onKeyDown={onKeyDown}
+        context={[
+          { icon: 'branch', text: where },
+          ...(folder ? [{ icon: 'folder' as const, text: tildifyHome(folder), title: folder }] : []),
+        ]}
+      >
+        <Button size={36} onClick={onClose}>
+          Cancel
+        </Button>
+        <Button variant="primary" size={36} kbd="⌘↵" autoFocus onClick={run}>
+          Run
+        </Button>
+      </ConfirmModal>
     );
   }
 

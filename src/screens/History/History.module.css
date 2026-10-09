@@ -258,24 +258,6 @@
   border-bottom: 1px solid var(--border);
 }
 
-.headTop {
-  min-width: 0;
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.headSubject {
-  min-width: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-strong);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .copy {
   flex-shrink: 0;
   border: 1px solid var(--border);
@@ -295,22 +277,7 @@
   white-space: pre-wrap;
 }
 
-.headMeta {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-}
-
 .metaAuthor {
   color: var(--text-body);
 }
 
-.dot {
-  color: var(--text-faint);
-}

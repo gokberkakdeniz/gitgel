@@ -23,6 +23,11 @@
   gap: 2px;
 }
 
+/* Back to the page this one was opened from. */
+.back {
+  color: var(--text-body);
+}
+
 /* Room for the native traffic lights. */
 .lights {
   width: 64px;

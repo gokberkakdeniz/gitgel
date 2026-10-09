@@ -50,6 +50,7 @@ export function ProjectNameInput({
       autoFocus
       aria-label="Project name"
       className={className}
+      data-editable-title
       style={width ? { width } : undefined}
       spellCheck={false}
       autoComplete="off"

@@ -84,26 +84,38 @@ button,input,textarea{font-family:inherit}
 </div><div style="padding: 8px 26px 8px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Stashes" heading="Stashes" collapsed="{{true}}" items="{{stashesApi}}" hint-size="100%,150px"></dc-import></div>
 </div>
 <div style="position: absolute; top: 364px; left: 741px; z-index: 5"><dc-import name="Menu" theme="none" width="240" label="Stash actions" items="{{stashMenu}}" hint-size="240px,170px"></dc-import></div>
+<sc-if value="{{picker}}" hint-placeholder-val="{{false}}"><div style="position: absolute; top: 397px; left: 459px; z-index: 6"><dc-import name="Menu" theme="none" width="280" label="Apply stash to" items="{{pickMenu}}" hint-size="280px,170px"></dc-import></div></sc-if>
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;picker&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
     // Stashes per repo: the shared List (List.dc.html) with a heading; row 1 has its menu open.
     // Apply to / Pop to open the worktree picker beside them on hover or click (P5); Drop asks first (P6).
     // api-server's list is collapsed: its bottom padding drops to the top's 8px.
+    // picker (P5, FlowP5.dc.html): the pointer on Apply to: the worktree picker opens beside it (here on its left, as
+    // there is no room on the right; → / click open it from the keyboard, ← goes back). One item per checked-out branch of the
+    // repo, the branch the stash was taken on first; desc the folder, plus its uncommitted count.
+    // A pick runs `git stash apply 'stash@{0}'` there (Pop to: "Pop stash@{0} to", `pop`); the
+    // same picker opens under the stash pane's Apply / Pop buttons (P2, P3).
+    var picker = !!this.props.picker;
     var more = function (open) { return [{ icon: 'more-vertical', ariaLabel: 'Stash options', active: open }]; };
     var stash = function (n, msg, branch, gone, files, age, open) {
       return { lead: 'icon', icon: 'package', prefix: 'stash@{' + n + '}', title: msg, active: open, actions: more(open),
         sub: [{ pill: gone ? branch + ' · deleted' : branch, tone: gone ? 'outline' : 'accent' }, { text: files }, { text: age }] };
     };
     return { themeClass: 'theme-' + t, themeName: t,
-      stashMenu: [{ label: 'Review changes', kbd: '↵', active: true },
-        { label: 'Apply to', submenu: true, href: 'FlowP5.dc.html' },
+      picker: picker,
+      stashMenu: [{ label: 'Review changes', kbd: '↵', active: !picker },
+        { label: 'Apply to', submenu: true, active: picker, href: picker ? undefined : 'FlowP5.dc.html' },
         { label: 'Pop to', submenu: true },
         { kind: 'sep' }, { label: 'Drop', kbd: '⌫', danger: true, href: 'FlowP6.dc.html' }],
+      pickMenu: [{ kind: 'label', label: 'Apply stash@{0} to' },
+        { label: 'session-token-refresh', icon: 'branch', desc: '~/code/wt/token-refresh · 3 uncommitted', active: true },
+        { label: 'session-cookie-cleanup', icon: 'branch', desc: '~/code/wt/cookie-cleanup · 1 uncommitted' },
+        { label: 'main', icon: 'branch', desc: '~/code/web-app' }],
       stashesWeb: [stash(0, 'debug logging for refresh', 'session-token-refresh', false, '1 file', '20m', true),
         stash(1, 'WIP on old-login: 71be0c2 Try new login form', 'old-login', true, '5 files', '3w', false)],
       stashesApi: [stash(0, 'WIP on token-rotation-job: e02b7d1 Schedule rotation', 'token-rotation-job', false, '2 files', '1d', false)] };

@@ -1,7 +1,8 @@
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { openFile, openFolder } from '../lib/ipc';
 import type { Config, EntrySummary } from '../lib/types';
 import { useData } from '../state/data';
-import { TerminalIcon } from './icons';
+import { CopyIcon, TerminalIcon } from './icons';
 import { MenuDivider, MenuItem, MenuNote } from './Menu';
 import styles from './OpenItems.module.css';
 
@@ -9,6 +10,22 @@ import styles from './OpenItems.module.css';
  * (a gone detached worktree keeps its path but is `branch_deleted`). */
 function openableFolder(e: EntrySummary): string | null {
   return e.state === 'repo_missing' || e.state === 'branch_deleted' ? null : e.worktreePath;
+}
+
+/** Copy branch name, in the entry menus; none for a detached HEAD. */
+export function CopyBranchItem({ entry, onDone }: { entry: EntrySummary; onDone: () => void }) {
+  if (entry.branch === null) return null;
+  return (
+    <MenuItem
+      icon={<CopyIcon />}
+      onSelect={() => {
+        void writeText(entry.branch!);
+        onDone();
+      }}
+    >
+      Copy branch name
+    </MenuItem>
+  );
 }
 
 /** Open in Finder, then Open in <App> for each app, then the terminal; shared by the entry menus.

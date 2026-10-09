@@ -220,17 +220,12 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
               </button>
             }
             rightText={
-              <button
-                type="button"
-                aria-haspopup="menu"
-                aria-expanded={pop?.kind === 'name'}
+              <VariableButton
+                open={pop?.kind === 'name'}
                 title="Insert a variable"
-                className={pop?.kind === 'name' ? `${styles.nameVar} ${styles.open}` : styles.nameVar}
+                className={styles.nameVar}
                 onClick={toggle('name')}
-              >
-                + Variable
-                <ChevronDownIcon size={9} />
-              </button>
+              />
             }
           />
           <span className={styles.hint}>{'{branch}, {base} and {repo} in the name are filled in on the menu.'}</span>
@@ -255,17 +250,12 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
               placeholder="pnpm install --frozen-lockfile && pnpm test"
               onChange={(e) => set({ command: e.target.value })}
             />
-            <button
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded={pop?.kind === 'command'}
+            <VariableButton
+              open={pop?.kind === 'command'}
               title="Insert a variable"
-              className={pop?.kind === 'command' ? `${styles.corner} ${styles.open}` : styles.corner}
+              className={styles.corner}
               onClick={toggle('command')}
-            >
-              + Variable
-              <ChevronDownIcon size={9} />
-            </button>
+            />
           </div>
         </div>
 
@@ -391,19 +381,12 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                             value={input.when}
                             onChange={(e) => setInput(i, { when: e.target.value })}
                           />
-                          <button
-                            type="button"
-                            aria-haspopup="menu"
-                            aria-expanded={pop?.kind === 'inputWhen' && pop.input === i}
+                          <VariableButton
+                            open={pop?.kind === 'inputWhen' && pop.input === i}
                             title="Insert a field"
-                            className={
-                              pop?.kind === 'inputWhen' && pop.input === i ? `${styles.corner} ${styles.open}` : styles.corner
-                            }
+                            className={styles.corner}
                             onClick={toggle('inputWhen', i)}
-                          >
-                            + Variable
-                            <ChevronDownIcon size={9} />
-                          </button>
+                          />
                         </span>
                       </label>
                       {input.when.trim() && (
@@ -500,17 +483,12 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
               placeholder="branch.ahead > 0 && !branch.merged"
               onChange={(e) => set({ when: e.target.value })}
             />
-            <button
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded={pop?.kind === 'when'}
+            <VariableButton
+              open={pop?.kind === 'when'}
               title="Insert a field"
-              className={pop?.kind === 'when' ? `${styles.corner} ${styles.open}` : styles.corner}
+              className={styles.corner}
               onClick={toggle('when')}
-            >
-              + Variable
-              <ChevronDownIcon size={9} />
-            </button>
+            />
           </div>
           <div id="script-when-result" className={whenError ? `${styles.result} ${styles.bad}` : styles.result}>
             {whenError ? (
@@ -663,6 +641,33 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
 
 /** A select input's options, one per line. The text is kept as typed (blank lines included), so
  * Enter starts a new line; the options are its non-empty lines, trimmed. */
+/** "+ Variable ▾": opens the menu of variables or fields to insert. */
+function VariableButton({
+  open,
+  title,
+  className,
+  onClick,
+}: {
+  open: boolean;
+  title: string;
+  className: string;
+  onClick: (e: MouseEvent<HTMLElement>) => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-haspopup="menu"
+      aria-expanded={open}
+      title={title}
+      className={open ? `${className} ${styles.open}` : className}
+      onClick={onClick}
+    >
+      + Variable
+      <ChevronDownIcon size={9} />
+    </button>
+  );
+}
+
 function OptionsField({ options, onChange }: { options: string[]; onChange: (options: string[]) => void }) {
   const [text, setText] = useState(() => options.join('\n'));
   return (

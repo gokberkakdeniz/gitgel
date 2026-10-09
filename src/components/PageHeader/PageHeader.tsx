@@ -10,13 +10,15 @@ interface Props {
   subtitle?: ReactNode;
   /** Right-hand actions. */
   children?: ReactNode;
-  /** Off on the Project screen, where double-clicking the title renames. */
+  /** Off where clicking the title renames the project (Project, Review of a project). */
   dragTitle?: boolean;
+  /** A page opened from another (Review, History) names where Back goes and draws it stronger. */
+  backLabel?: string;
 }
 
 /** The 64px page header. With the sidebar hidden it leaves room for the traffic lights and
  * shows the show-sidebar, back and forward buttons. */
-export function PageHeader({ title, subtitle, children, dragTitle = true }: Props) {
+export function PageHeader({ title, subtitle, children, dragTitle = true, backLabel }: Props) {
   const sidebarVisible = useUi((s) => s.sidebarVisible);
   const setSidebarVisible = useUi((s) => s.setSidebarVisible);
   const canBack = useNav(selectCanBack);
@@ -33,7 +35,12 @@ export function PageHeader({ title, subtitle, children, dragTitle = true }: Prop
           <IconButton aria-label="Show sidebar" onClick={() => setSidebarVisible(true)}>
             <SidebarIcon />
           </IconButton>
-          <IconButton aria-label="Back" onClick={back} disabled={!canBack}>
+          <IconButton
+            aria-label={backLabel ?? 'Back'}
+            onClick={back}
+            disabled={!canBack}
+            className={backLabel ? styles.back : undefined}
+          >
             <BackIcon />
           </IconButton>
           <IconButton aria-label="Forward" onClick={forward} disabled={!canForward}>

@@ -17,8 +17,8 @@ import {
   SplitIcon,
   WorktreeIcon,
 } from '../../components/icons';
-import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
-import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
+import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
+import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { SyncItems } from '../../sync/SyncButtons';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { askDrop } from '../../stash/actions';
@@ -38,7 +38,7 @@ import { readProjectSort, sortProjects } from '../../lib/projectSort';
 import { refOf } from '../../lib/projects';
 import type { Config, EntrySummary, RemoteBranch, StashInfo } from '../../lib/types';
 import { selectRepoScans, useData } from '../../state/data';
-import { openSettings, selectRoute, useNav } from '../../state/nav';
+import { openHistory, openSettings, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import styles from './Branches.module.css';
 import { REPOS_KEY, STASHES_KEY, toggled, useCollapsed } from './collapsed';
@@ -615,7 +615,7 @@ function StashList({
 /** Remote branches matching the filter, under the band's rows; a row opens its History. */
 function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch[] }) {
   const [menu, setMenu] = useState<{ name: string; rect: DOMRect } | null>(null);
-  const open = (rev: string) => useNav.getState().push({ name: 'history', repoId, rev, backLabel: 'Back to Branches' });
+  const open = (rev: string) => openHistory(repoId, rev, 'Back to Branches');
   return (
     <div className={styles.remotes}>
       <List
@@ -734,7 +734,7 @@ function Row({
       <div className={styles.branchCell}>
         {isBase ? (
           <span className={styles.nameLine}>
-            <button type="button" className={styles.branchName} onClick={() => openHistory(e)} title={`Show history of ${name}`}>
+            <button type="button" className={styles.branchName} onClick={() => openEntryHistory(e)} title={`Show history of ${name}`}>
               <span className={styles.nameHead}>{name}</span>
             </button>
             <Pill tone="outline" size="sm">
@@ -764,7 +764,7 @@ function Row({
           <StateCell entry={e} onBase={(rect) => onPopover('base', rect)} />
           {e.conflicts > 0 && (
             <Pill tone="danger" size="sm" title="Merge conflicts in the working tree">
-              {e.conflicts === 1 ? '1 conflict' : `${e.conflicts} conflicts`}
+              {plural(e.conflicts, 'conflict', 'conflicts')}
             </Pill>
           )}
         </span>
@@ -782,7 +782,7 @@ function Row({
         )}
       </div>
       {isBase ? (
-        <button type="button" className={styles.historyButton} title={`Commit history of ${name}`} onClick={() => openHistory(e)}>
+        <button type="button" className={styles.historyButton} title={`Commit history of ${name}`} onClick={() => openEntryHistory(e)}>
           <HistoryIcon size={12} />
           History
         </button>
@@ -796,7 +796,7 @@ function Row({
         >
           {n > 0 ? (
             <>
-              <span>{n === 1 ? '1 project' : `${n} projects`}</span>
+              <span>{plural(n, 'project', 'projects')}</span>
               <ChevronDownIcon size={10} />
             </>
           ) : (
@@ -825,17 +825,7 @@ function Row({
 function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: boolean; onClose: () => void }) {
   return (
     <Menu aria-label="Branch options" autoFocus>
-      {entry.branch !== null && (
-        <MenuItem
-          icon={<CopyIcon />}
-          onSelect={() => {
-            void writeText(entry.branch!);
-            onClose();
-          }}
-        >
-          Copy branch name
-        </MenuItem>
-      )}
+      <CopyBranchItem entry={entry} onDone={onClose} />
       {isBase ? (
         <MenuItem
           icon={<SplitIcon />}
@@ -852,7 +842,7 @@ function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: bool
             icon={<HistoryIcon />}
             onSelect={() => {
               onClose();
-              openHistory(entry);
+              openEntryHistory(entry);
             }}
           >
             Open history
@@ -878,9 +868,8 @@ function openReview(e: EntrySummary) {
 }
 
 /** History (SPEC §16) of a row's branch, or of its SHA for a detached HEAD. */
-function openHistory(e: EntrySummary) {
-  const rev = e.branch ?? e.headSha;
-  if (rev) useNav.getState().push({ name: 'history', repoId: e.repoId, rev, backLabel: 'Back to Branches' });
+function openEntryHistory(e: EntrySummary) {
+  openHistory(e.repoId, e.branch ?? e.headSha, 'Back to Branches');
 }
 
 /** Flow I: the projects a branch is in, and adding it to another one. */
@@ -897,43 +886,27 @@ function ProjectsMenu({
 }) {
   const push = useNav((s) => s.push);
   const projects = sortProjects(projectsOf(config, entry.key), readProjectSort());
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    ref.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
-  }, []);
-  const move = (e: React.KeyboardEvent) => {
-    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-    e.preventDefault();
-    const items = [...(ref.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
-    const i = items.indexOf(document.activeElement as HTMLElement);
-    const next = e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length;
-    items[next]?.focus();
-  };
-
   return (
-    <div ref={ref} role="menu" aria-label={`Projects containing ${entry.branch ?? entry.shortSha}`} className={styles.projMenu} onKeyDown={move}>
-      <div className={styles.projMenuLabel}>In {plural(projects.length, 'project', 'projects')}</div>
+    <Menu aria-label={`Projects containing ${entry.branch ?? entry.shortSha}`} autoFocus>
+      <MenuLabel>In {plural(projects.length, 'project', 'projects')}</MenuLabel>
       {projects.map((p) => (
-        <button
+        <MenuItem
           key={p.id}
-          type="button"
-          role="menuitem"
-          className={styles.projMenuItem}
-          onClick={() => {
+          dot
+          arrow
+          onSelect={() => {
             onClose();
             push({ name: 'project', projectId: p.id });
           }}
         >
-          <span className={styles.projDot} />
-          <span className={styles.projName}>{p.name}</span>
-          <span className={styles.projArrow}>→</span>
-        </button>
+          {p.name}
+        </MenuItem>
       ))}
-      <div className={styles.projDivider} />
-      <button type="button" role="menuitem" className={`${styles.projMenuItem} ${styles.projAddAnother}`} onClick={onAddAnother}>
+      <MenuDivider />
+      <MenuItem accent onSelect={onAddAnother}>
         + Add to another project
-      </button>
-    </div>
+      </MenuItem>
+    </Menu>
   );
 }
 

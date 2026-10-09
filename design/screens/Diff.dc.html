@@ -98,7 +98,7 @@ button,input{font-family:inherit}
 <div style="display: flex; flex-direction: column; gap: 1px">
 <sc-for list="{{g.files}}" as="f" hint-placeholder-count="4">
 <button onClick="{{f.pick}}" style="{{f.rowStyle}}">
-<span style="{{f.kindStyle}}">{{f.kind}}</span>
+<dc-import name="KindBadge" theme="none" kind="{{f.kind}}" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{f.n0}}<span style="{{f.hitStyle}}">{{f.n1}}</span>{{f.n2}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1; text-align: left">{{f.d0}}<span style="{{f.dirHitStyle}}">{{f.d1}}</span>{{f.d2}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{f.add}}</span>
@@ -149,10 +149,7 @@ button,input{font-family:inherit}
 <div style="flex-grow: 1"></div>
 <span style="font-size: 12px; color: var(--text-muted); white-space: nowrap"><sc-if value="{{entry.rangeLinked}}" hint-placeholder-val="{{true}}">{{entry.aheadText}} <a href="HistH2.dc.html" title="Show history of {{entry.rangeBase}}" style="color: var(--text-muted)">{{entry.rangeBase}}</a></sc-if><sc-if value="{{entry.rangePlain}}" hint-placeholder-val="{{false}}">{{entry.commitLabel}}</sc-if></span>
 <sc-if value="{{commitOn}}" hint-placeholder-val="{{false}}">
-<div role="group" aria-label="Step through commits" style="display: flex; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
-<button onClick="{{newerCommit}}" disabled="{{newerDisabled}}" aria-label="Newer commit" title="Newer commit (⌥⇧↑)" style="{{newerStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"></path></svg></button>
-<button onClick="{{olderCommit}}" disabled="{{olderDisabled}}" aria-label="Older commit" title="Older commit (⌥⇧↓)" style="{{olderStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
-</div>
+<dc-import name="Stepper" theme="none" kind="commits" up-disabled="{{newerDisabled}}" down-disabled="{{olderDisabled}}" on-up="{{newerCommit}}" on-down="{{olderCommit}}" hint-size="60px,30px"></dc-import>
 <button onClick="{{clearCommit}}" style="height: 28px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--accent-text); font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer">Show all commits</button>
 </sc-if>
 </div>
@@ -192,14 +189,7 @@ button,input{font-family:inherit}
 </div>
 <span style="width: 1px; height: 16px; background: var(--border); margin: 0 2px"></span>
 <span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{navLabel}}<span style="color: var(--text-muted)">{{navNext}}</span></span>
-<div role="group" aria-label="Jump between changes" style="display: flex; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
-<button onClick="{{prevChange}}" disabled="{{prevDisabled}}" aria-label="Previous change" title="{{prevTitle}}" style="{{prevStyle}}">
-<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"></path></svg>
-</button>
-<button onClick="{{nextChange}}" disabled="{{nextDisabled}}" aria-label="Next change" title="{{nextTitle}}" style="{{nextStyle}}">
-<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
-</button>
-</div>
+<dc-import name="Stepper" theme="none" up-disabled="{{prevDisabled}}" down-disabled="{{nextDisabled}}" up-cross="{{prevCross}}" down-cross="{{nextCross}}" up-title="{{prevTitle}}" down-title="{{nextTitle}}" on-up="{{prevChange}}" on-down="{{nextChange}}" hint-size="60px,30px"></dc-import>
 </div>
 
 <sc-if value="{{showSplit}}" hint-placeholder-val="{{true}}">
@@ -275,13 +265,6 @@ class Component extends DCLogic {
     var webBase = baseCase === 'behind' || baseCase === 'remote' ? 'origin/main' : 'main';
     var mode = this.state.mode || this.props.mode || 'Committed';
     var collapsed = this.state.collapsed || (focus === 'api' ? { web: true } : {});
-    var kinds = {
-      A: 'color: var(--success); background: rgba(var(--success-rgb), 0.15)',
-      M: 'color: var(--warning); background: rgba(var(--warning-rgb), 0.15)',
-      R: 'color: var(--kind-r); background: rgba(var(--kind-r-rgb), 0.16)',
-      D: 'color: var(--danger); background: rgba(var(--danger-rgb), 0.18)',
-      U: 'color: var(--kind-u); background: rgba(var(--kind-u-rgb), 0.16)'
-    };
     var G = [];
     if (scope === 'branch') {
       G.push({ id: 'rl', repo: 'api-server', branch: 'rate-limit-middleware', base: 'main', wt: '~/code/wt/rate-limit',
@@ -440,7 +423,6 @@ class Component extends DCLogic {
             n0: n[0], n1: n[1], n2: n[2], d0: d[0], d1: d[1], d2: d[2],
             hitStyle: n[1] ? hitStyle : '', dirHitStyle: d[1] ? hitStyle : '',
             pick: function () { self.setState({ file: key, hunk: 0 }); },
-            kindStyle: 'width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; font-weight: 500; ' + kinds[f[0]],
             rowStyle: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px 0 28px; border: 0; border-radius: 8px; cursor: pointer; ' + (on ? 'background: var(--bg-hover)' : 'background: transparent')
           };
         })
@@ -591,10 +573,6 @@ class Component extends DCLogic {
       if (!atFirst) self.setState({ hunk: hIdx - 1 });
       else if (prevKey) self.setState({ file: prevKey, hunk: -1, collapsed: openGroupOf(prevKey) });
     };
-    var navBtn = function (off, cross) {
-      return 'width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; cursor: pointer; ' +
-        (off ? 'background: transparent; color: var(--icon-disabled); cursor: default' : cross ? 'background: rgba(var(--accent-rgb), 0.18); color: var(--accent-hover)' : 'background: transparent; color: var(--text-body)');
-    };
     var cur = 'box-shadow: inset 3px 0 0 var(--accent-text); ';
     var base0 = 'display: flex; padding-right: 12px; color: var(--text-code); ';
     var hatch = 'background: repeating-linear-gradient(135deg, var(--bg-band) 0 4px, var(--bg-main) 4px 8px)';
@@ -645,9 +623,6 @@ class Component extends DCLogic {
       self.setState({ commitSel: ns, file: first, hunk: 0 });
     };
     var parentSha = cIdx < 0 ? '' : (cAll[cIdx + 1] ? cAll[cIdx + 1].sha : selGroup.mb);
-    var stepBtn = function (off) {
-      return 'width: 26px; height: 22px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; cursor: pointer; background: transparent; color: ' + (off ? 'var(--icon-disabled); cursor: default' : 'var(--text-body)');
-    };
     var cm = cAll.map(function (c, i) {
       var on = i === cIdx;
       return Object.assign({ from: '' }, c, {
@@ -737,8 +712,7 @@ class Component extends DCLogic {
       prevDisabled: atFirst && !prevKey, nextDisabled: atLast && !nextKey,
       prevTitle: atFirst ? (prevKey ? 'Previous (⌥↑)' : 'First change') : 'Previous change (⌥↑)',
       nextTitle: atLast ? (nextKey ? 'Next (⌥↓)' : 'Last change') : 'Next change (⌥↓)',
-      prevStyle: navBtn(atFirst && !prevKey, atFirst && !!prevKey),
-      nextStyle: navBtn(atLast && !nextKey, atLast && !!nextKey),
+      prevCross: atFirst && !!prevKey, nextCross: atLast && !!nextKey,
       hasSample: !!rows, noSample: !rows,
       showSplit: !!rows && view === 'split', showUnified: !!rows && view === 'unified', uLines: uLines,
       isSplit: view === 'split', isUnified: view === 'unified', viewLabel: view === 'split' ? 'Split' : 'Unified',
@@ -780,7 +754,6 @@ class Component extends DCLogic {
       newerCommit: function () { if (cIdx > 0) goCommit(cAll[cIdx - 1].sha); },
       olderCommit: function () { if (cIdx >= 0 && cIdx < cAll.length - 1) goCommit(cAll[cIdx + 1].sha); },
       newerDisabled: cIdx <= 0, olderDisabled: cIdx < 0 || cIdx >= cAll.length - 1,
-      newerStyle: stepBtn(cIdx <= 0), olderStyle: stepBtn(cIdx < 0 || cIdx >= cAll.length - 1),
       showCommits: mode !== 'Uncommitted',
       commits: cm,
       filePath: path,

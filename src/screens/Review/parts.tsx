@@ -1,24 +1,28 @@
-// Parts of the diff pane shared by Review and History (SPEC §16): the view menu, change
-// navigation, file rows, and the remembered diff view settings with their ⌥ keys.
+// Parts of the diff pane shared by Review and History (SPEC §16): the file bar with its view menu
+// and change navigation, file rows, the stash section, and the remembered diff view settings with
+// their ⌥ keys.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox } from '../../components/Checkbox';
-import { ChevronDownIcon, ChevronUpIcon, SplitIcon, UnifiedIcon } from '../../components/icons';
+import { ChevronDownIcon, Icon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
 import { Menu, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
 import { FileOpenItems } from '../../components/OpenItems';
+import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
+import { Stepper } from '../../components/Stepper';
 import { updateSettings } from '../../lib/ipc';
 import { basename } from '../../lib/paths';
 import { isTextField } from '../../lib/shortcuts';
-import type { DiffContext, DiffLayout, FileChange, Settings } from '../../lib/types';
+import type { DiffContext, DiffLayout, FileChange, Settings, StashChanges } from '../../lib/types';
 import type { NavInfo } from '../../monaco/DiffView';
 import { diffPosition } from '../../monaco/position';
 import { useData } from '../../state/data';
 import { useNav, type Route } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { firstHit } from './fileFilter';
-import styles from './Review.module.css';
+import styles from './parts.module.css';
 import { dirLabel } from './selection';
+import { stashMeta, type ReviewStash } from './stashes';
 
 /** Layout, context and whitespace, remembered in the config; ⌥V / ⌥C / ⌥W outside the diff
  * (inside it Monaco handles them). Listed in lib/shortcuts.ts. */
@@ -54,10 +58,73 @@ export function useDiffView() {
   return { layout, ignoreWs, context, contextLines, saveView, toggleWs, viewRef };
 }
 
+export type DiffViewSettings = ReturnType<typeof useDiffView>;
+
+/** Above the diff: the file, what it compares, the whitespace pill, the view menu and ↑ ↓. */
+export function FileBar({
+  file,
+  label,
+  view,
+  nav,
+  prevFile,
+  nextFile,
+  onStep,
+}: {
+  file: FileChange;
+  /** What is compared: "a41c9e2 ↔ 7f3b2d1", "HEAD ↔ working tree". */
+  label: string;
+  view: DiffViewSettings;
+  nav: NavInfo;
+  prevFile: string | undefined;
+  nextFile: string | undefined;
+  onStep: (dir: 1 | -1) => void;
+}) {
+  const { layout, ignoreWs, context, contextLines, saveView, toggleWs } = view;
+  return (
+    <div className={styles.fileBar}>
+      <span className={styles.filePath}>{file.path}</span>
+      <span className={styles.muted}>{label}</span>
+      {ignoreWs && (
+        <Pill tone="accent" title="Show whitespace changes (⌥W)" onClick={toggleWs}>
+          Whitespace ignored
+        </Pill>
+      )}
+      <span className={styles.grow} />
+      <ViewMenu
+        layout={layout}
+        ignoreWs={ignoreWs}
+        onLayout={(l) => saveView({ diffView: l })}
+        context={context}
+        contextLines={contextLines}
+        onContext={(c, lines) => saveView({ diffContext: c, diffContextLines: lines })}
+        onToggleWs={toggleWs}
+      />
+      <span className={styles.barDivider} />
+      <ChangeNav
+        onlyWhitespace={ignoreWs && !file.binary && (file.add ?? 0) + (file.del ?? 0) > 0}
+        nav={nav}
+        prevFile={prevFile}
+        nextFile={nextFile}
+        onStep={onStep}
+      />
+    </div>
+  );
+}
+
+/** "+12 −3": each part only when given. */
+export function DiffStat({ add, del }: { add?: number; del?: number }) {
+  return (
+    <>
+      {add !== undefined && <span className={styles.add}>+{add}</span>}
+      {del !== undefined && <span className={styles.del}>−{del}</span>}
+    </>
+  );
+}
+
 const fileName = (id: string | undefined) => (id ? basename(id.split('\u0000')[1]) : '');
 
 /** Layout, context and Ignore whitespace; applies to every diff and is remembered. */
-export function ViewMenu({
+function ViewMenu({
   layout,
   ignoreWs,
   onLayout,
@@ -146,7 +213,7 @@ export function ViewMenu({
 }
 
 /** "Change 2 of 3" and ↑ ↓; past a file's first/last change they continue into the neighbour. */
-export function ChangeNav({
+function ChangeNav({
   onlyWhitespace,
   nav,
   prevFile,
@@ -173,7 +240,6 @@ export function ChangeNav({
       ? 'Next (⌥↓)'
       : 'Last change'
     : 'Next change (⌥↓)';
-  const cls = (cross: boolean) => (cross ? `${styles.navButton} ${styles.navCross}` : styles.navButton);
   return (
     <>
       <span aria-live="polite" className={styles.navLabel}>
@@ -184,28 +250,12 @@ export function ChangeNav({
           : `Change ${i + 1} of ${nav.count}`}
         {nav.count > 0 && atLast && nextFile && <span className={styles.muted}> · next file {fileName(nextFile)}</span>}
       </span>
-      <div role="group" aria-label="Jump between changes" className={styles.navGroup}>
-        <button
-          type="button"
-          aria-label="Previous change"
-          title={prevTitle}
-          className={cls(atFirst && !!prevFile)}
-          disabled={atFirst && !prevFile}
-          onClick={() => onStep(-1)}
-        >
-          <ChevronUpIcon size={14} />
-        </button>
-        <button
-          type="button"
-          aria-label="Next change"
-          title={nextTitle}
-          className={cls(atLast && !!nextFile)}
-          disabled={atLast && !nextFile}
-          onClick={() => onStep(1)}
-        >
-          <ChevronDownIcon size={14} />
-        </button>
-      </div>
+      <Stepper
+        aria-label="Jump between changes"
+        up={{ 'aria-label': 'Previous change', title: prevTitle, disabled: atFirst && !prevFile, cross: atFirst && !!prevFile }}
+        down={{ 'aria-label': 'Next change', title: nextTitle, disabled: atLast && !nextFile, cross: atLast && !!nextFile }}
+        onStep={onStep}
+      />
     </>
   );
 }
@@ -307,8 +357,7 @@ export function FileRow({
         <span className={styles.fileDir}>
           <Highlighted text={dirLabel(f)} terms={terms} />
         </span>
-        {!!f.add && <span className={styles.add}>+{f.add}</span>}
-        {!!f.del && <span className={styles.del}>−{f.del}</span>}
+        <DiffStat add={f.add || undefined} del={f.del || undefined} />
       </button>
   );
   return (
@@ -342,8 +391,79 @@ export function FileRow({
   );
 }
 
+/** The stash section under the files (flows P2–P3); the picked stash lists its files. */
+export function StashSection({
+  heading,
+  stashes,
+  picked,
+  changes,
+  file,
+  divider,
+  withRepo = divider,
+  onPick,
+  onFile,
+}: {
+  heading: string;
+  stashes: ReviewStash[];
+  picked: string | undefined;
+  /** The picked stash's files, once loaded. */
+  changes: StashChanges | undefined;
+  /** The file shown. */
+  file: string | undefined;
+  /** A rule above it, under the entries. */
+  divider: boolean;
+  /** `repo / branch` on line 2 (default: with the rule; stash scope names the repo in its header). */
+  withRepo?: boolean;
+  onPick: (sha: string) => void;
+  onFile: (path: string) => void;
+}) {
+  const repos = useData((s) => s.config?.repos);
+  return (
+    <section aria-label="Stashes" className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
+      <div className={styles.stashHeading}>
+        {heading} · {stashes.length}
+      </div>
+      {stashes.map((st) => {
+        const on = st.sha === picked;
+        return (
+          <div key={`${st.repoId}:${st.sha}`} className={styles.stash}>
+            <button
+              type="button"
+              className={on ? `${styles.stashRow} ${styles.stashOn}` : styles.stashRow}
+              aria-expanded={on}
+              title={st.message}
+              onClick={() => onPick(st.sha)}
+            >
+              <span className={styles.stashLine}>
+                <Icon name="package" size={13} strokeWidth={1.6} className={styles.stashIcon} />
+                <span className={styles.stashMessage}>{st.message}</span>
+                <span className={styles.stashRef}>stash@{`{${st.index}}`}</span>
+              </span>
+              <span className={styles.stashMeta}>{stashMeta(st, withRepo)}</span>
+            </button>
+            {on && changes && (
+              <div className={styles.fileRows}>
+                {changes.files.map((f) => (
+                  <FileRow
+                    key={f.path}
+                    file={f}
+                    folder={repos?.find((r) => r.id === st.repoId)?.path ?? null}
+                    terms={[]}
+                    on={f.path === file}
+                    onClick={() => onFile(f.path)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
 /** The first matching term in `text`, tinted. */
-export function Highlighted({ text, terms }: { text: string; terms: string[] }) {
+function Highlighted({ text, terms }: { text: string; terms: string[] }) {
   const hit = terms.length > 0 ? firstHit(text, terms) : null;
   if (!hit) return <>{text}</>;
   return (

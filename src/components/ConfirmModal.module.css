@@ -1,16 +1,28 @@
-/* Laid out like the O3 confirmation (scripts/RunDialog.module.css). */
 .body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   padding: 22px 24px 18px;
 }
 
+/* With a context box (Drop stash P6, Run O3) the parts sit further apart. */
+.withContext {
+  gap: 14px;
+}
+
 .title {
+  overflow-wrap: anywhere;
   font-family: var(--font-serif);
   font-size: 22px;
   letter-spacing: -0.3px;
   color: var(--text-strong);
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-body);
 }
 
 .context {
@@ -38,7 +50,7 @@
   color: var(--text-muted);
 }
 
-.text {
+.rowText {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -55,5 +67,9 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  margin-top: 10px;
+}
+
+.withContext .actions {
   margin-top: 4px;
 }

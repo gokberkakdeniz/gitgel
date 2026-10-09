@@ -1,10 +1,9 @@
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
-import { BranchIcon, ChevronDownIcon, CopyIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
+import { BranchIcon, ChevronDownIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
-import { EntryMenuNote, OpenItems } from '../../components/OpenItems';
+import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { SyncItems } from '../../sync/SyncButtons';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
@@ -604,17 +603,7 @@ function EntryMenu({
           Point to another branch
         </MenuItem>
       )}
-      {entry.branch !== null && (
-        <MenuItem
-          icon={<CopyIcon />}
-          onSelect={() => {
-            void writeText(entry.branch!);
-            onClose();
-          }}
-        >
-          Copy branch name
-        </MenuItem>
-      )}
+      <CopyBranchItem entry={entry} onDone={onClose} />
       {hasFirst && <MenuDivider />}
       <OpenItems entry={entry} onDone={onClose} />
       <SyncItems entry={entry} onDone={onClose} />

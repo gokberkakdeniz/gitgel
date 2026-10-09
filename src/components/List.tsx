@@ -2,6 +2,7 @@ import { useState, type ComponentProps, type HTMLAttributes, type MouseEvent, ty
 import { DragHandle } from '../scripts/DragHandle';
 import { Button, type ButtonVariant } from './Button';
 import { IconButton } from './IconButton';
+import { IconTile } from './IconTile';
 import { Icon, type IconName } from './icons';
 import { Input, type InputProps } from './Input';
 import { Pill, type PillTone } from './Pill';
@@ -219,9 +220,7 @@ export function ListRow({
         </span>
       )}
       {lead === 'tile' && (
-        <span className={off ? `${styles.tile} ${styles.tileOff}` : styles.tile} aria-hidden>
-          <Icon name={icon} size={14} strokeWidth={1.8} />
-        </span>
+        <IconTile name={icon} className={off ? styles.tileOff : undefined} />
       )}
       <span className={styles.body}>
         <span className={styles.line}>

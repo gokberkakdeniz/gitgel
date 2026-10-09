@@ -1,0 +1,38 @@
+.group {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+.button {
+  width: 26px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.button:not(:disabled):hover {
+  background: var(--bg-hover);
+}
+
+.button:disabled {
+  color: var(--icon-disabled);
+  cursor: default;
+}
+
+.cross,
+.cross:not(:disabled):hover {
+  background: rgba(var(--accent-rgb), 0.18);
+  color: var(--accent-hover);
+}

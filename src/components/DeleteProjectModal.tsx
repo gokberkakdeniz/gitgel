@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { plural } from '../lib/format';
 import { deleteProject } from '../lib/ipc';
 import { useData } from '../state/data';
 import { selectRoute, useNav } from '../state/nav';
 import { useUi } from '../state/ui';
 import { Button } from './Button';
-import styles from './DeleteProjectModal.module.css';
-import { Modal } from './Modal';
+import { ConfirmModal } from './ConfirmModal';
 
 /** Flow G: confirms deleting the project in `ui.deletingProjectId`. */
 export function DeleteProjectModal() {
@@ -30,22 +30,19 @@ export function DeleteProjectModal() {
   };
 
   return (
-    <Modal aria-label="Delete project" width={440} paddingTop={180} onClose={close}>
-      <div className={styles.body}>
-        <div className={styles.title}>Delete “{project.name}”?</div>
-        <p className={styles.text}>
-          Removes the project and its {n === 1 ? '1 entry' : `${n} entries`}. Nothing on disk is
-          touched.
-        </p>
-        <div className={styles.actions}>
-          <Button size={36} onClick={close}>
-            Cancel
-          </Button>
-          <Button variant="danger" size={36} disabled={busy} onClick={confirm}>
-            Delete project
-          </Button>
-        </div>
-      </div>
-    </Modal>
+    <ConfirmModal
+      aria-label="Delete project"
+      title={`Delete “${project.name}”?`}
+      width={440}
+      onClose={close}
+      text={`Removes the project and its ${plural(n, 'entry', 'entries')}. Nothing on disk is touched.`}
+    >
+      <Button size={36} onClick={close}>
+        Cancel
+      </Button>
+      <Button variant="danger" size={36} disabled={busy} onClick={confirm}>
+        Delete project
+      </Button>
+    </ConfirmModal>
   );
 }

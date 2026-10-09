@@ -45,3 +45,8 @@ export function openSettings(section?: SettingsSection) {
 // Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a
 // change here reloads the page instead.
 import.meta.hot?.accept(() => window.location.reload());
+
+/** A branch's History (SPEC §16); Back is named after the page it is opened from. */
+export function openHistory(repoId: string, rev: string | null | undefined, backLabel: string) {
+  if (rev) useNav.getState().push({ name: 'history', repoId, rev, backLabel });
+}

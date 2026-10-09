@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
 import { List, type ListAction, type ListItem } from '../../components/List';
-import { Modal } from '../../components/Modal';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { Input } from '../../components/Input';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Select } from '../../components/Select';
@@ -129,30 +129,27 @@ function Repositories({ config }: { config: Config }) {
       />
 
       {removing && (
-        <Modal aria-label="Remove repository" width={440} paddingTop={180} onClose={() => setRemoving(null)}>
-          <div className={styles.modal}>
-            <div className={styles.modalTitle}>Remove {basename(removing.path)}?</div>
-            <p className={styles.modalText}>
-              Its {entriesOf(removing.id) === 1 ? '1 project entry is' : `${entriesOf(removing.id)} project entries are`}{' '}
-              removed too. Nothing on disk is touched.
-            </p>
-            <div className={styles.modalActions}>
-              <Button size={36} onClick={() => setRemoving(null)}>
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                size={36}
-                onClick={() => {
-                  void removeRepo(removing.id);
-                  setRemoving(null);
-                }}
-              >
-                Remove
-              </Button>
-            </div>
-          </div>
-        </Modal>
+        <ConfirmModal
+          aria-label="Remove repository"
+          title={`Remove ${basename(removing.path)}?`}
+          width={440}
+          onClose={() => setRemoving(null)}
+          text={`Its ${entriesOf(removing.id) === 1 ? '1 project entry is' : `${entriesOf(removing.id)} project entries are`} removed too. Nothing on disk is touched.`}
+        >
+          <Button size={36} onClick={() => setRemoving(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            size={36}
+            onClick={() => {
+              void removeRepo(removing.id);
+              setRemoving(null);
+            }}
+          >
+            Remove
+          </Button>
+        </ConfirmModal>
       )}
     </section>
   );

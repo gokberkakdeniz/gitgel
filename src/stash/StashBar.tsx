@@ -4,10 +4,11 @@ import { Icon } from '../components/icons';
 import { Popover } from '../components/Popover';
 import { formatAge } from '../lib/format';
 import { tildifyHome } from '../lib/paths';
-import styles from '../screens/Review/Review.module.css';
+import parts from '../screens/Review/parts.module.css';
 import type { ReviewStash } from '../screens/Review/stashes';
 import { useData } from '../state/data';
 import { applyStash, askDrop } from './actions';
+import styles from './StashBar.module.css';
 import { StashTargetMenu } from './StashTargetMenu';
 
 /** Above a stash's diff: its message and actions, then which stash, where it was taken and on
@@ -24,12 +25,12 @@ export function StashBar({ stash, base }: { stash: ReviewStash; base: string }) 
     home ? void applyStash(stash, home, pop) : setPick({ pop, rect: el.getBoundingClientRect() });
   const where = home ? ` to ${home.branch} (${tildifyHome(home.worktreePath ?? '')})` : ' to a worktree';
   return (
-    <div className={styles.entryBar}>
-      <div className={styles.entryLine}>
-        <span className={styles.stashTitle} title={stash.message}>
+    <div className={`${parts.entryBar} ${styles.bar}`}>
+      <div className={parts.entryLine}>
+        <span className={parts.barTitle} title={stash.message}>
           {stash.message}
         </span>
-        <span className={styles.grow} />
+        <span className={parts.grow} />
         <Button size={28} title={`Apply${where}`} active={pick?.pop === false} onClick={(e) => act(false, e.currentTarget)}>
           Apply
         </Button>
@@ -45,16 +46,16 @@ export function StashBar({ stash, base }: { stash: ReviewStash; base: string }) 
           </Popover>
         )}
       </div>
-      <div className={styles.stashBarMeta}>
-        <Icon name="package" size={12} strokeWidth={1.7} className={styles.stashBarIcon} />
-        <span className={styles.stashBarRef}>stash@{`{${stash.index}}`}</span>
-        <span className={styles.dot}>·</span>
-        <span className={styles.stashBarWhere}>
+      <div className={parts.barMeta}>
+        <Icon name="package" size={12} strokeWidth={1.7} className={styles.icon} />
+        <span className={styles.ref}>stash@{`{${stash.index}}`}</span>
+        <span className={parts.dot}>·</span>
+        <span className={styles.where}>
           {stash.repoName} / {branch}
         </span>
-        <span className={styles.dot}>·</span>
+        <span className={parts.dot}>·</span>
         <span>from {base.slice(0, 7)}</span>
-        <span className={styles.dot}>·</span>
+        <span className={parts.dot}>·</span>
         <span>{formatAge(stash.createdAt)} ago</span>
       </div>
     </div>

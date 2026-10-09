@@ -1,31 +1,23 @@
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '../../components/Banner';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import {
-  BackIcon,
   BranchIcon,
   ChevronDownIcon,
   CloseIcon,
-  ChevronUpIcon,
-  CopyIcon,
-  ForwardIcon,
   HistoryIcon,
   MoreVerticalIcon,
   RefreshIcon,
-  SidebarIcon,
 } from '../../components/icons';
 import { ProjectNameInput } from '../../components/ProjectNameInput';
 import { ResizeHandle, useStoredWidth } from '../../components/ResizeHandle';
-import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
-import { EntryMenuNote, OpenItems, entryFolder, useEntryFolder } from '../../components/OpenItems';
+import { CopyBranchItem, EntryMenuNote, OpenItems, entryFolder, useEntryFolder } from '../../components/OpenItems';
 import { Popover } from '../../components/Popover';
 import { Pill } from '../../components/Pill';
 import { Segmented } from '../../components/Segmented';
-import { Icon } from '../../components/icons';
 import { formatAge, plural } from '../../lib/format';
 import { getCommitChanges, getReview, getStashChanges } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
@@ -42,7 +34,9 @@ import type {
 import { useInvoke } from '../../lib/useInvoke';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { useStashAction } from '../../stash/StashAction';
+import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { PageMenu } from '../../components/PageMenu';
+import { Stepper } from '../../components/Stepper';
 import { rescanAll } from '../../lib/events';
 import { StashBar } from '../../stash/StashBar';
 import { SyncItems } from '../../sync/SyncButtons';
@@ -50,11 +44,12 @@ import { upstreamLabel, upstreamTitle } from '../../sync/sync';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
-import { selectCanForward, useNav } from '../../state/nav';
+import { openHistory, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { fileMatches, filterTerms } from './fileFilter';
-import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, ViewMenu } from './parts';
-import { reviewStashes, stashHeading, stashMeta, type ReviewStash } from './stashes';
+import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo } from './parts';
+import parts from './parts.module.css';
+import { reviewStashes, stashHeading, type ReviewStash } from './stashes';
 import editable from '../../components/EditableTitle.module.css';
 import styles from './Review.module.css';
 import {
@@ -299,7 +294,8 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   stepCommitRef.current = stepCommit;
 
   // Diff view settings (layout, context, whitespace), remembered in the config.
-  const { layout, ignoreWs, context, contextLines, saveView, toggleWs, viewRef } = useDiffView();
+  const view = useDiffView();
+  const { layout, ignoreWs, context, contextLines, viewRef } = view;
 
   const stepRef = useRef(step);
   stepRef.current = step;
@@ -356,35 +352,15 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
 
   // The file bar and the diff, for an entry's file or a stash's.
   const fileBar = (file: FileChange, label: string) => (
-    <div className={styles.fileBar}>
-      <span className={styles.filePath}>{file.path}</span>
-      <span className={styles.muted}>{label}</span>
-      {ignoreWs && (
-        <Pill tone="accent" title="Show whitespace changes (⌥W)" onClick={toggleWs}>
-          Whitespace ignored
-        </Pill>
-      )}
-      <span className={styles.grow} />
-      <ViewMenu
-        layout={layout}
-        ignoreWs={ignoreWs}
-        onLayout={(l) => saveView({ diffView: l })}
-        context={context}
-        contextLines={contextLines}
-        onContext={(c, lines) => saveView({ diffContext: c, diffContextLines: lines })}
-        onToggleWs={toggleWs}
-      />
-      <span className={styles.barDivider} />
-      <ChangeNav
-        onlyWhitespace={
-          ignoreWs && !file.binary && (file.add ?? 0) + (file.del ?? 0) > 0
-        }
-        nav={nav}
-        prevFile={fileIndex >= 0 ? files[fileIndex - 1] : files[files.length - 1]}
-        nextFile={files[fileIndex + 1]}
-        onStep={step}
-      />
-    </div>
+    <FileBar
+      file={file}
+      label={label}
+      view={view}
+      nav={nav}
+      prevFile={fileIndex >= 0 ? files[fileIndex - 1] : files[files.length - 1]}
+      nextFile={files[fileIndex + 1]}
+      onStep={step}
+    />
   );
   const diffView = (
     repoId: string,
@@ -434,7 +410,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
   );
 
   return (
-    <div className={styles.screen}>
+    <div className={parts.screen}>
       <ReviewHeader entry={entry} target={target} backLabel={backLabel} stashes={stashes}>
         {target.kind !== 'stashes' && (
           <Segmented
@@ -492,7 +468,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
       {conflictBanner && !stash && <Banner tone="danger">{conflictBanner}</Banner>}
       {baseSaved && <Banner tone="neutral">{baseSaved}</Banner>}
 
-      <div className={styles.body}>
+      <div className={parts.body}>
         <aside
           ref={fileList}
           className={sidebarShown ? `${styles.files} ${styles.filesNarrow}` : styles.files}
@@ -518,7 +494,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
             <div className={styles.noMatch}>
               <span className={styles.noMatchTitle}>No files match “{fileQuery}”</span>
               <span className={styles.noMatchHint}>Searched paths in {mode} files of every entry.</span>
-              <button type="button" className={styles.linkButton} onClick={() => setFileQuery('')}>
+              <button type="button" className={parts.linkButton} onClick={() => setFileQuery('')}>
                 Clear filter
               </button>
             </div>
@@ -544,10 +520,10 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
           ))}
           {target.kind === 'project' && data && data.notInReview.length > 0 && !filtering && (
             <div className={styles.notInReview}>
-              {data.notInReview.length} {data.notInReview.length === 1 ? 'entry' : 'entries'} not reviewable ·{' '}
+              {plural(data.notInReview.length, 'entry', 'entries')} not reviewable ·{' '}
               <button
                 type="button"
-                className={styles.linkButton}
+                className={parts.linkButton}
                 onClick={() => push({ name: 'project', projectId: target.projectId })}
               >
                 Open project
@@ -569,9 +545,9 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
         </aside>
         <ResizeHandle pane={fileList} min={220} max={640} onResize={setFilesWidth} onReset={() => setFilesWidth(null)} />
 
-        <section className={styles.main}>
+        <section className={parts.main}>
           {error ? (
-            <div className={styles.empty}>{error.message}</div>
+            <div className={parts.empty}>{error.message}</div>
           ) : !data ? null : stash ? (
             <>
               <StashBar stash={stash} base={stashChanges?.base ?? stash.base} />
@@ -589,13 +565,13 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
                   )}
                 </>
               ) : (
-                stashChanges && <div className={styles.empty}>No changes</div>
+                stashChanges && <div className={parts.empty}>No changes</div>
               )}
             </>
           ) : target.kind === 'stashes' ? (
-            <div className={styles.empty}>No stashes</div>
+            <div className={parts.empty}>No stashes</div>
           ) : groups.length === 0 ? (
-            <div className={styles.empty}>
+            <div className={parts.empty}>
               {target.kind === 'branch' ? notReviewable(entry) : EMPTY_MESSAGES[mode]}
             </div>
           ) : group && change ? (
@@ -628,7 +604,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
               )}
             </>
           ) : (
-            <div className={styles.empty}>{EMPTY_MESSAGES[mode]}</div>
+            <div className={parts.empty}>{EMPTY_MESSAGES[mode]}</div>
           )}
         </section>
       </div>
@@ -702,11 +678,6 @@ function ReviewHeader({
   stashes: ReviewStash[];
   children: React.ReactNode;
 }) {
-  const sidebarVisible = useUi((s) => s.sidebarVisible);
-  const setSidebarVisible = useUi((s) => s.setSidebarVisible);
-  const back = useNav((s) => s.back);
-  const forward = useNav((s) => s.forward);
-  const canForward = useNav(selectCanForward);
   const config = useData((s) => s.config);
   const [renaming, setRenaming] = useState(false);
   // The title box's width when rename started, so the input keeps it.
@@ -733,24 +704,12 @@ function ReviewHeader({
   }
 
   return (
-    <header className={sidebarVisible ? styles.header : `${styles.header} ${styles.bare}`} data-tauri-drag-region>
-      {/* With the sidebar shown, its top row has the back and forward buttons. */}
-      {!sidebarVisible && (
-        <div className={styles.chrome} data-tauri-drag-region>
-          <div className={styles.lights} data-tauri-drag-region />
-          <IconButton aria-label="Show sidebar" onClick={() => setSidebarVisible(true)}>
-            <SidebarIcon />
-          </IconButton>
-          <IconButton aria-label={backLabel} onClick={back} className={styles.back}>
-            <BackIcon />
-          </IconButton>
-          <IconButton aria-label="Forward" onClick={forward} disabled={!canForward}>
-            <ForwardIcon />
-          </IconButton>
-        </div>
-      )}
-      <div className={styles.titles} data-tauri-drag-region>
-        {renaming && project ? (
+    <PageHeader
+      backLabel={backLabel}
+      // Project scope: click renames the project in place, as on its page.
+      dragTitle={!project}
+      title={
+        renaming && project ? (
           <ProjectNameInput
             project={project}
             className={editable.input}
@@ -758,9 +717,9 @@ function ReviewHeader({
             onDone={() => setRenaming(false)}
           />
         ) : project ? (
-          // Project scope: click renames the project in place, as on its page.
           <span
             className={editable.title}
+            data-editable-title
             title="Rename project"
             onClick={(e) => {
               titleWidth.current = e.currentTarget.offsetWidth;
@@ -770,17 +729,13 @@ function ReviewHeader({
             {title}
           </span>
         ) : (
-          <span className={styles.title} data-tauri-drag-region>
-            {title}
-          </span>
-        )}
-        <span className={styles.subtitle} data-tauri-drag-region>
-          {subtitle}
-        </span>
-      </div>
-      <div className={styles.grow} data-tauri-drag-region />
-      <div className={styles.actions}>{children}</div>
-    </header>
+          title
+        )
+      }
+      subtitle={subtitle}
+    >
+      {children}
+    </PageHeader>
   );
 }
 
@@ -809,23 +764,13 @@ function EntryMenu({
       >
         Change base
       </MenuItem>
-      {entry.branch !== null && (
-        <MenuItem
-          icon={<CopyIcon />}
-          onSelect={() => {
-            void writeText(entry.branch!);
-            onClose();
-          }}
-        >
-          Copy branch name
-        </MenuItem>
-      )}
+      <CopyBranchItem entry={entry} onDone={onClose} />
       {rev && (
         <MenuItem
           icon={<HistoryIcon />}
           onSelect={() => {
             onClose();
-            useNav.getState().push({ name: 'history', repoId: entry.repoId, rev, backLabel: 'Back to Review' });
+            openHistory(entry.repoId, rev, 'Back to Review');
           }}
         >
           Open history
@@ -902,8 +847,7 @@ function FileGroup({
           <span className={menuOpen ? `${styles.groupEnd} ${styles.groupEndOpen}` : styles.groupEnd}>
             <span className={styles.totals}>
               {/* An empty group (a branch review with nothing in this mode) shows no "+0". */}
-              {files.length > 0 && <span className={styles.add}>+{add}</span>}
-              {del > 0 && <span className={styles.del}>−{del}</span>}
+              <DiffStat add={files.length > 0 ? add : undefined} del={del > 0 ? del : undefined} />
             </span>
             <button
               type="button"
@@ -920,7 +864,7 @@ function FileGroup({
           <span className={styles.branch}>{e.branch ?? e.shortSha}</span>
           {e.conflicts > 0 && (
             <Pill tone="danger" size="sm" title="Merge conflicts in the working tree">
-              {e.conflicts === 1 ? '1 conflict' : `${e.conflicts} conflicts`}
+              {plural(e.conflicts, 'conflict', 'conflicts')}
             </Pill>
           )}
           {terms.length > 0 ? (
@@ -960,7 +904,7 @@ function FileGroup({
         </div>
       )}
       {open && (
-        <div className={loading ? `${styles.fileRows} ${styles.stale}` : styles.fileRows}>
+        <div className={loading ? `${parts.fileRows} ${styles.stale}` : parts.fileRows}>
           {shown.map((f) => (
             <FileRow
               key={f.path}
@@ -973,77 +917,6 @@ function FileGroup({
           ))}
         </div>
       )}
-    </section>
-  );
-}
-
-/** The stash section under the files (flows P2–P3); the picked stash lists its files. */
-export function StashSection({
-  heading,
-  stashes,
-  picked,
-  changes,
-  file,
-  divider,
-  withRepo = divider,
-  onPick,
-  onFile,
-}: {
-  heading: string;
-  stashes: ReviewStash[];
-  picked: string | undefined;
-  /** The picked stash's files, once loaded. */
-  changes: StashChanges | undefined;
-  /** The file shown. */
-  file: string | undefined;
-  /** A rule above it, under the entries. */
-  divider: boolean;
-  /** `repo / branch` on line 2 (default: with the rule; stash scope names the repo in its header). */
-  withRepo?: boolean;
-  onPick: (sha: string) => void;
-  onFile: (path: string) => void;
-}) {
-  const repos = useData((s) => s.config?.repos);
-  return (
-    <section aria-label="Stashes" className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
-      <div className={styles.stashHeading}>
-        {heading} · {stashes.length}
-      </div>
-      {stashes.map((st) => {
-        const on = st.sha === picked;
-        return (
-          <div key={`${st.repoId}:${st.sha}`} className={styles.stash}>
-            <button
-              type="button"
-              className={on ? `${styles.stashRow} ${styles.stashOn}` : styles.stashRow}
-              aria-expanded={on}
-              title={st.message}
-              onClick={() => onPick(st.sha)}
-            >
-              <span className={styles.stashLine}>
-                <Icon name="package" size={13} strokeWidth={1.6} className={styles.stashIcon} />
-                <span className={styles.stashMessage}>{st.message}</span>
-                <span className={styles.stashRef}>stash@{`{${st.index}}`}</span>
-              </span>
-              <span className={styles.stashMeta}>{stashMeta(st, withRepo)}</span>
-            </button>
-            {on && changes && (
-              <div className={styles.fileRows}>
-                {changes.files.map((f) => (
-                  <FileRow
-                    key={f.path}
-                    file={f}
-                    folder={repos?.find((r) => r.id === st.repoId)?.path ?? null}
-                    terms={[]}
-                    on={f.path === file}
-                    onClick={() => onFile(f.path)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
     </section>
   );
 }
@@ -1068,7 +941,7 @@ function FileFilter({
     <Input
       ref={inputRef}
       leftIcon="search"
-      rightText={query ? `${count} ${count === 1 ? 'file' : 'files'}` : <Kbd>⌘K</Kbd>}
+      rightText={query ? plural(count, 'file', 'files') : <Kbd>⌘K</Kbd>}
       mono
       clearable
       className={styles.filter}
@@ -1128,8 +1001,8 @@ function EntryBar({
   }, [sha]);
 
   return (
-    <div className={styles.entryBar}>
-      <div className={styles.entryLine}>
+    <div className={parts.entryBar}>
+      <div className={parts.entryLine}>
         <div className={styles.entryNames}>
           <button
             type="button"
@@ -1144,7 +1017,7 @@ function EntryBar({
             type="button"
             className={`${styles.entryBranch} ${styles.repoLink}`}
             title={`Show history of ${name}`}
-            onClick={() => openHistory(e.repoId, e.branch ?? e.headSha)}
+            onClick={() => openHistory(e.repoId, e.branch ?? e.headSha, 'Back to Review')}
           >
             {name}
           </button>
@@ -1159,8 +1032,8 @@ function EntryBar({
             )
           )}
         </div>
-        <span className={styles.grow} />
-        <span className={styles.muted}>
+        <span className={parts.grow} />
+        <span className={parts.muted}>
           {workingTree
             ? 'HEAD ↔ working tree'
             : on
@@ -1172,7 +1045,7 @@ function EntryBar({
                     type="button"
                     className={`${styles.baseLink} ${styles.repoLink}`}
                     title={`Show history of ${e.base}`}
-                    onClick={() => openHistory(e.repoId, e.base)}
+                    onClick={() => openHistory(e.repoId, e.base, 'Back to Review')}
                   >
                     {e.base}
                   </button>
@@ -1182,28 +1055,12 @@ function EntryBar({
         </span>
         {on && !workingTree && (
           <>
-            <div role="group" aria-label="Step through commits" className={styles.navGroup}>
-              <button
-                type="button"
-                aria-label="Newer commit"
-                title="Newer commit (⌥⇧↑)"
-                className={styles.navButton}
-                disabled={index <= 0}
-                onClick={() => onStep(-1)}
-              >
-                <ChevronUpIcon size={14} />
-              </button>
-              <button
-                type="button"
-                aria-label="Older commit"
-                title="Older commit (⌥⇧↓)"
-                className={styles.navButton}
-                disabled={index >= total - 1}
-                onClick={() => onStep(1)}
-              >
-                <ChevronDownIcon size={14} />
-              </button>
-            </div>
+            <Stepper
+              aria-label="Step through commits"
+              up={{ 'aria-label': 'Newer commit', title: 'Newer commit (⌥⇧↑)', disabled: index <= 0 }}
+              down={{ 'aria-label': 'Older commit', title: 'Older commit (⌥⇧↓)', disabled: index >= total - 1 }}
+              onStep={onStep}
+            />
             <button type="button" className={styles.showAll} onClick={() => onPick(null)}>
               Show all commits
             </button>
@@ -1253,10 +1110,6 @@ function EntryBar({
       )}
     </div>
   );
-}
-
-function openHistory(repoId: string, rev: string | null) {
-  if (rev) useNav.getState().push({ name: 'history', repoId, rev, backLabel: 'Back to Review' });
 }
 
 /** Unmerged files (a merge, rebase or stash apply that conflicted), in every mode. */

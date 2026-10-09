@@ -181,11 +181,12 @@ gitgel/
 │  ├─ components/                 # Button, IconButton, Pill, Checkbox, Switch, Input, Kbd,
 │  │                              # Popover, Menu, Modal, Toast, Segmented, Select, SettingsNav,
 │  │                              # KindBadge, Banner, ResizeHandle (+ useStoredWidth), ReleaseNotes, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
+│  │                              # ConfirmModal, Stepper, IconTile,
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  History/  Settings/  Palette/  AddRepos/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
-│  │            # Review/parts.tsx: view menu, change navigation, file row, diff view settings
-│  │            #   (shared with History, §16)
+│  │            # Review/parts.tsx (+ parts.module.css): file bar (view menu, change navigation),
+│  │            #   file row, stash section, diff view settings, page layout (shared with History, §16)
 │  │            # History/: the History screen, its list rows and the commit form (§16)
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
@@ -293,7 +294,8 @@ everything else `#e0ddd6`.
 18px square, radius 5, mono 10px/500: A `#8fcf9c` on green tint, M `#e8c071` on amber tint,
 R `#93b8ee` on `rgba(90,140,220,0.16)`, D `#ee9a90` on red tint, U (untracked) `#c5b2f2` on
 `rgba(160,130,230,0.16)`, C (merge conflict, unmerged in the index) D's colours with a 1px inset
-ring in its text colour; its folder label ends in ` · conflict`.
+ring in its text colour; its folder label ends in ` · conflict`. `KindBadge` (`KindBadge.dc.html`,
+`KindBadgeSpec.dc.html`).
 
 ### Light theme
 
@@ -404,7 +406,7 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   `border.row` rules between rows and none after the last. `density` regular (min 48px, padding
   8px 10px 8px 12px, gap 10) or compact (34px, padding 0 6px 0 12px, gap 8). A row, left to right,
   every part optional: a drag `handle`; a `lead` (mono 11 faint `index` · 16px slot with a 14px
-  line `icon` · 28px boxed `tile`); line 1: mono 12 muted `prefix`, `title` (13px, or mono 12
+  line `icon` · 28px boxed `tile`, the `IconTile` scripts use too); line 1: mono 12 muted `prefix`, `title` (13px, or mono 12
   `text.code`; weight 400 or 500; a fixed `titleWidth` so a `detail` column lines up), sm `Pill`
   `badges`, a mono 12 muted `detail` that takes the rest (ellipsis); line 2: a mono 11 muted `sub`
   line of sm mono Pills and texts with `·` between; a 12px `aside` (muted, faint, warning,
@@ -443,7 +445,9 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   items: `danger.text`); an item with a `sub` line keeps the icon beside its first line.
   Also section labels (11px uppercase muted), radio items with a check slot, checkbox items, a
   12px `desc` line, a mono 11px `kbd` hint, faint captions and a segmented row: Review's View
-  menu is built from these.
+  menu is built from these. A project item has a 7px hollow `dot` (`text.faint` ring; its label
+  stays on one line) and an `arrow` (→, muted) on the right; an `accent` item is `accent.text`/500
+  ("+ Add to another project"). Branches' projects menu is built from these.
 - `Modal`: scrim, `bg.elevated`, radius 16, positioned from the top; Esc closes it. The top
   52px of the scrim is a drag region, so the window still moves while a modal is open. A modal
   with a footer has a way out there too (Cancel, or Close when there is nothing to cancel), even
@@ -452,6 +456,17 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   padding 20px 24px 14px, optional ✕; `ModalFooter`: `bg.sunken`, padding 14px 24px, a 12px
   muted note (or a lead link button) on the left, optionally after a `lead` button at the far
   left, buttons on the right, primary last.
+- `ConfirmModal`: a short confirmation in a `Modal` (180px from the top, no `ModalHeader` /
+  `ModalFooter`; `ConfirmModal.dc.html`, `ConfirmModalSpec.dc.html`): padding 22px 24px 18px, a
+  serif 22px title, then a 14px `text.body` text (Delete project, Remove repository; gap 10, the
+  buttons 10px under it) or a `bg.sunken` box naming what it acts on (padding 12px 14px, radius
+  10, mono 12 `text.code`, one row per thing with a 14px muted icon) and a 13px muted note (Drop
+  stash P6, Run O3; gap 14, the buttons 4px under it); 36px buttons on the right, the action last.
+- `Stepper`: ↑ ↓ in one framed group (`bg.elevated`, 1px border, radius 8, padding 2, gap 2;
+  buttons 26×24, radius 6, 14px chevrons; `Stepper.dc.html`, `StepperSpec.dc.html`): Review's and
+  History's change navigation and Review's commit stepping. A button that cannot step is
+  `icon.disabled`; one that leaves the file for the next is tinted (`rgba(accent,0.18)`,
+  `accent.hover`).
 - `Toast`: bottom centre, `#2a2825` on `#383631` border, radius 12; one at a time. Optional
   status icon (spinner, success, failed), a mono part before the message and a mono sub line.
   At most 560px wide; a longer line (a run's last output line) ends in an ellipsis.
@@ -1841,15 +1856,15 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 56–61, row 63–82 (checked-out icon 66–73, Diff cell 76, Projects cell 78, ⋯ button 80), row and cell styles 229–284 (row menu target 239–241, checked-out, sub and Diff values 274–282), filter logic 308–317 and 347–355, empty state 89–99, picker 101–114, new-project form 116–132, projects menu 134–150, row menu 152–163 and 337–346, toast 165–171, selection bar 172–185, drop overlay 188–195, sheet 197–221 and 360–369; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
-| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 438–482 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–290 (sections, Default pair, pills, disabled rows, hint), base menu data per case 695–737 (`baseCase`: stacked / behind / unrelated / remote; effective base 307–308), commit selection 404–417, filter logic 419–429, 440–444, 475 and 608–609, segmented 483–490, context and fold logic 581–596 (sample hidden lines 495–503), view values 759–782 (context 766–781), commit values 785–795, theme and `embedded` values 743–744, filter values 798–809 |
-| Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–101, open-item entry menu 102–116 (`openMenu`: worktree / notCheckedOut / repoMissing, 147–152; items 184–195; note and position 211–215), project menu 117–123, delete modal 126–137, rename 180–202, pills 153–162 |
+| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 421–464 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–162 (commit stepping 144–151, list 152–161), file bar 164–224 (whitespace chip 167–169, view button and menu 171–213 with Context 192–203, change navigation 214–223), split body 226–239, unified body 240–246, base menu 253–273 (sections, Default pair, pills, disabled rows, hint), base menu data per case 670–712 (`baseCase`: stacked / behind / unrelated / remote; effective base 290–291), commit selection 387–400, filter logic 402–412, 423–426, 457 and 586–587, segmented 465–472, context and fold logic 563–576 (sample hidden lines 477–485), view values 733–756 (context 740–755), commit values 758–768, theme and `embedded` values 717–718, filter values 771–782 |
+| Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
-| Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to, P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
-| Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 Review with the branch menu's Sync group (menu data 192–205), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
-| File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 72–77, menu 184, data 192–199): Open in Finder / Cursor / VS Code at the pointer |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 232–241) |
+| Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
+| Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
+| File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -2504,7 +2519,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   picking another row opens its files. A row brought into view (stepping, or rows above it
   folding) keeps 8px, the list's side padding, above or below it. After a refresh the picked
   commit stays when it is still listed, else the newest is picked. Search picks the first match.
-- **Pane** (`HistH2` 101–124): a commit header (padding 14px 18px, bottom border `border`, gap 8):
+- **Pane** (`HistH2` 101–123): a commit header (padding 14px 18px, bottom border `border`, gap 8):
   15px/600 `text.strong` subject with, on the right, a 28px "Copy SHA" icon button (copy icon,
   tooltip "Copy full SHA"; ✓ and "Copied" for 1.5 s after a click); the body (13px, line-height 1.5, `text.muted`, `white-space:
   pre-wrap`, max-width 720px; left out when empty); mono 11 muted meta: an 18px avatar, the author

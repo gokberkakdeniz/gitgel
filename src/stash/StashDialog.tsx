@@ -121,7 +121,7 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
                   </label>
                   {conflicted ? (
                     <span className={styles.conflict} title="Resolve its merge conflicts first; git cannot stash them.">
-                      {r.entry.conflicts === 1 ? '1 conflict' : `${r.entry.conflicts} conflicts`}
+                      {plural(r.entry.conflicts, 'conflict', 'conflicts')}
                     </span>
                   ) : off ? (
                     <span className={styles.count}>no changes</span>

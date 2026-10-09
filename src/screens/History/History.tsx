@@ -1,9 +1,9 @@
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BackIcon, CheckIcon, CopyIcon, ForwardIcon, SidebarIcon } from '../../components/icons';
+import { CheckIcon, CopyIcon } from '../../components/icons';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { MenuDivider, MenuItem } from '../../components/Menu';
+import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
@@ -24,14 +24,12 @@ import { useCopy } from '../../lib/useCopy';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
-import { EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
+import { CopyBranchItem, EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
-import { selectCanForward, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
-import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, ViewMenu } from '../Review/parts';
-import { StashSection } from '../Review/Review';
+import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo } from '../Review/parts';
+import parts from '../Review/parts.module.css';
 import type { ReviewStash } from '../Review/stashes';
-import review from '../Review/Review.module.css';
 import styles from './History.module.css';
 import { CommitForm } from './CommitForm';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
@@ -312,7 +310,8 @@ export function History({ repoId, rev, backLabel }: Props) {
     if (nearEnd && data?.more && !loading && limit <= commits.length) setLimit(commits.length + PAGE);
   };
 
-  const { layout, ignoreWs, context, contextLines, saveView, toggleWs, viewRef } = useDiffView();
+  const view = useDiffView();
+  const { layout, ignoreWs, context, contextLines, viewRef } = view;
   const worktree = entry?.worktreePath ? tildifyHome(entry.worktreePath) : null;
   // A local branch syncs with its remote (W4a); `upstream` is set only for one.
   const syncTarget: SyncTarget = {
@@ -344,8 +343,8 @@ export function History({ repoId, rev, backLabel }: Props) {
   }
 
   return (
-    <div className={review.screen}>
-      <Header title="History" subtitle={subtitle} backLabel={backLabel}>
+    <div className={parts.screen}>
+      <PageHeader title="History" subtitle={subtitle} backLabel={backLabel}>
         <Input
           ref={searchInput}
           size={32}
@@ -394,20 +393,8 @@ export function History({ repoId, rev, backLabel }: Props) {
               {entry && (
                 <>
                   <MenuDivider />
-                  {entry.branch !== null && (
-                    <>
-                      <MenuItem
-                        icon={<CopyIcon />}
-                        onSelect={() => {
-                          void writeText(entry.branch!);
-                          close();
-                        }}
-                      >
-                        Copy branch name
-                      </MenuItem>
-                      <MenuDivider />
-                    </>
-                  )}
+                  <CopyBranchItem entry={entry} onDone={close} />
+                  <MenuDivider />
                   <OpenItems entry={entry} onDone={close} />
                   <SyncItems entry={entry} onDone={close} rebaseOnly />
                   <ScriptsMenu entry={entry} menu="branches" onDone={close} />
@@ -418,10 +405,10 @@ export function History({ repoId, rev, backLabel }: Props) {
           )}
         </PageMenu>
         {stashAction.dialog}
-      </Header>
+      </PageHeader>
       {diverged && (
         <Banner tone="warning">
-          <span className={review.grow}>{diverged}</span>
+          <span className={parts.grow}>{diverged}</span>
           {!syncState(syncTarget).pull && (
             <Button size={24} onClick={() => void pullBranch(syncTarget, true)}>
               Pull (rebase)
@@ -433,7 +420,7 @@ export function History({ repoId, rev, backLabel }: Props) {
         </Banner>
       )}
 
-      <div className={review.body}>
+      <div className={parts.body}>
         <div className={styles.listPane}>
           <aside
             ref={list}
@@ -481,7 +468,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 {search ? (
                   <>
                     <span>No commits match “{search}”</span>
-                    <button type="button" className={review.linkButton} onClick={() => setQuery('')}>
+                    <button type="button" className={parts.linkButton} onClick={() => setQuery('')}>
                       Clear search
                     </button>
                   </>
@@ -530,9 +517,9 @@ export function History({ repoId, rev, backLabel }: Props) {
           )}
         </div>
 
-        <section className={review.main}>
+        <section className={parts.main}>
           {error ? (
-            <div className={review.empty}>{error.message}</div>
+            <div className={parts.empty}>{error.message}</div>
           ) : current === WIP ? (
             <WipHeader worktree={worktree} files={wipFiles} />
           ) : stash ? (
@@ -542,39 +529,21 @@ export function History({ repoId, rev, backLabel }: Props) {
           ) : null}
           {!error && file && (current === WIP || commitChanges || stashChanges) && (
             <>
-              <div className={review.fileBar}>
-                <span className={review.filePath}>{file.path}</span>
-                <span className={review.muted}>
-                  {current === WIP
+              <FileBar
+                file={file}
+                label={
+                  current === WIP
                     ? 'HEAD ↔ working tree'
                     : stash
                       ? `${stashBase.slice(0, 7)} ↔ stash@{${stash.index}}`
-                      : `${commitChanges?.parent?.slice(0, 7) ?? 'empty tree'} ↔ ${commit?.shortSha}`}
-                </span>
-                {ignoreWs && (
-                  <Pill tone="accent" title="Show whitespace changes (⌥W)" onClick={toggleWs}>
-                    Whitespace ignored
-                  </Pill>
-                )}
-                <span className={review.grow} />
-                <ViewMenu
-                  layout={layout}
-                  ignoreWs={ignoreWs}
-                  onLayout={(l) => saveView({ diffView: l })}
-                  context={context}
-                  contextLines={contextLines}
-                  onContext={(c, lines) => saveView({ diffContext: c, diffContextLines: lines })}
-                  onToggleWs={toggleWs}
-                />
-                <span className={review.barDivider} />
-                <ChangeNav
-                  onlyWhitespace={ignoreWs && !file.binary && (file.add ?? 0) + (file.del ?? 0) > 0}
-                  nav={nav}
-                  prevFile={fileIndex > 0 ? `\u0000${fileIds[fileIndex - 1]}` : undefined}
-                  nextFile={fileIndex >= 0 && fileIndex < fileIds.length - 1 ? `\u0000${fileIds[fileIndex + 1]}` : undefined}
-                  onStep={step}
-                />
-              </div>
+                      : `${commitChanges?.parent?.slice(0, 7) ?? 'empty tree'} ↔ ${commit?.shortSha}`
+                }
+                view={view}
+                nav={nav}
+                prevFile={fileIndex > 0 ? `\u0000${fileIds[fileIndex - 1]}` : undefined}
+                nextFile={fileIndex >= 0 && fileIndex < fileIds.length - 1 ? `\u0000${fileIds[fileIndex + 1]}` : undefined}
+                onStep={step}
+              />
               <DiffView
                 repoId={repoId}
                 worktreePath={current === WIP ? (entry?.worktreePath ?? null) : null}
@@ -601,7 +570,7 @@ export function History({ repoId, rev, backLabel }: Props) {
             </>
           )}
           {!error && (commitChanges || stashChanges) && files.length === 0 && current !== WIP && (
-            <div className={review.empty}>No changes</div>
+            <div className={parts.empty}>No changes</div>
           )}
         </section>
       </div>
@@ -618,53 +587,6 @@ function rowKey(r: HistoryRow): string {
     default:
       return r.kind;
   }
-}
-
-/** Review's header layout: chrome while the sidebar is hidden, title and subtitle, actions. */
-function Header({
-  title,
-  subtitle,
-  backLabel,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  backLabel: string;
-  children: React.ReactNode;
-}) {
-  const sidebarVisible = useUi((s) => s.sidebarVisible);
-  const setSidebarVisible = useUi((s) => s.setSidebarVisible);
-  const back = useNav((s) => s.back);
-  const forward = useNav((s) => s.forward);
-  const canForward = useNav(selectCanForward);
-  return (
-    <header className={sidebarVisible ? review.header : `${review.header} ${review.bare}`} data-tauri-drag-region>
-      {!sidebarVisible && (
-        <div className={review.chrome} data-tauri-drag-region>
-          <div className={review.lights} data-tauri-drag-region />
-          <IconButton aria-label="Show sidebar" onClick={() => setSidebarVisible(true)}>
-            <SidebarIcon />
-          </IconButton>
-          <IconButton aria-label={backLabel} onClick={back} className={review.back}>
-            <BackIcon />
-          </IconButton>
-          <IconButton aria-label="Forward" onClick={forward} disabled={!canForward}>
-            <ForwardIcon />
-          </IconButton>
-        </div>
-      )}
-      <div className={review.titles} data-tauri-drag-region>
-        <span className={review.title} data-tauri-drag-region>
-          {title}
-        </span>
-        <span className={review.subtitle} data-tauri-drag-region>
-          {subtitle}
-        </span>
-      </div>
-      <div className={review.grow} data-tauri-drag-region />
-      <div className={review.actions}>{children}</div>
-    </header>
-  );
 }
 
 function ListRow({
@@ -707,9 +629,9 @@ function ListRow({
   onFile: (path: string) => void;
 }) {
   const fileRows = (
-    <div className={review.fileRows}>
+    <div className={parts.fileRows}>
       {check && files.length > 0 && (
-        <div className={review.selectAll}>
+        <div className={parts.selectAll}>
           <Checkbox
             checked={files.every(check.on)}
             mixed={!files.every(check.on) && files.some(check.on)}
@@ -777,7 +699,7 @@ function ListRow({
               </span>
               <span className={styles.meta}>
                 {plural(wipCount, 'file', 'files')}
-                {wipConflicts > 0 ? ` · ${wipConflicts === 1 ? '1 conflict' : `${wipConflicts} conflicts`}` : ''}
+                {wipConflicts > 0 ? ` · ${plural(wipConflicts, 'conflict', 'conflicts')}` : ''}
                 {wipAge ? ` · ${formatAge(wipAge)}` : ''}
               </span>
             </span>
@@ -840,11 +762,11 @@ function CommitHeader({ commit: c, changes }: { commit: HistoryCommit; changes: 
   const { copied, copy } = useCopy();
   return (
     <div className={styles.head}>
-      <div className={styles.headTop}>
-        <span className={styles.headSubject} title={c.subject}>
+      <div className={parts.entryLine}>
+        <span className={parts.barTitle} title={c.subject}>
           {c.subject}
         </span>
-        <span className={review.grow} />
+        <span className={parts.grow} />
         <IconButton
           aria-label={copied ? 'Copied' : 'Copy SHA'}
           title={copied ? 'Copied' : 'Copy full SHA'}
@@ -855,23 +777,22 @@ function CommitHeader({ commit: c, changes }: { commit: HistoryCommit; changes: 
         </IconButton>
       </div>
       {c.body && <div className={styles.body}>{c.body}</div>}
-      <div className={styles.headMeta}>
+      <div className={parts.barMeta}>
         <Avatar author={c.author} size={18} />
         <span className={styles.metaAuthor} title={c.authorEmail}>
           {c.author}
         </span>
-        <span className={styles.dot}>·</span>
+        <span className={parts.dot}>·</span>
         <span>{whenLabel(c.committedAt)}</span>
-        <span className={styles.dot}>·</span>
+        <span className={parts.dot}>·</span>
         <span className={styles.sha}>{c.shortSha}</span>
         {changes && (
           <>
-            <span className={styles.dot}>·</span>
+            <span className={parts.dot}>·</span>
             <span>{changes.parent ? `parent ${changes.parent.slice(0, 7)}` : 'root commit'}</span>
-            <span className={styles.dot}>·</span>
+            <span className={parts.dot}>·</span>
             <span>{plural(changes.files.length, 'file', 'files')}</span>
-            <span className={review.add}>+{t!.add}</span>
-            <span className={review.del}>−{t!.del}</span>
+            <DiffStat add={t!.add} del={t!.del} />
           </>
         )}
       </div>
@@ -883,19 +804,18 @@ function WipHeader({ worktree, files }: { worktree: string | null; files: FileCh
   const t = totals(files);
   return (
     <div className={styles.head}>
-      <div className={styles.headTop}>
-        <span className={styles.headSubject}>Uncommitted changes</span>
+      <div className={parts.entryLine}>
+        <span className={parts.barTitle}>Uncommitted changes</span>
       </div>
-      <div className={styles.headMeta}>
+      <div className={parts.barMeta}>
         {worktree && (
           <>
             <span>{worktree}</span>
-            <span className={styles.dot}>·</span>
+            <span className={parts.dot}>·</span>
           </>
         )}
         <span>{plural(files.length, 'file', 'files')}</span>
-        <span className={review.add}>+{t.add}</span>
-        <span className={review.del}>−{t.del}</span>
+        <DiffStat add={t.add} del={t.del} />
       </div>
     </div>
   );

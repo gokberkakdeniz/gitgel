@@ -1,0 +1,20 @@
+/* Beats Button's own secondary colours. */
+.bar .dropButton {
+  background: transparent;
+  color: var(--danger);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--accent-text);
+}
+
+.ref {
+  color: var(--accent-text);
+}
+
+.where {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
