@@ -29,6 +29,7 @@ function scan(id: string, name: string, stashes: StashInfo[]): RepoScan {
     baseBranch: null,
     active: [],
     others: [],
+    remotes: [],
     stashes,
   };
 }

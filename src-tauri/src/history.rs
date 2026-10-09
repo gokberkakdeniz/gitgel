@@ -5,7 +5,7 @@ use std::path::Path;
 use crate::config;
 use crate::error::AppError;
 use crate::git::{history, refs};
-use crate::model::{HistoryPage, HistoryRefs, RepoConfig};
+use crate::model::{HistoryPage, RepoConfig};
 use crate::state::{lock, AppState};
 use crate::timing::Timings;
 
@@ -94,22 +94,6 @@ pub fn get_history(
         merge_base: split.and_then(|s| s.merge_base),
         fetched_at,
         upstream,
-    })
-}
-
-/// Local and remote-tracking branches, for History's branch button.
-pub fn get_history_refs(state: &AppState, repo_id: &str) -> Result<HistoryRefs, AppError> {
-    let repo_cfg = repo_of(state, repo_id)?;
-    let shared = state.pool.get(Path::new(&repo_cfg.path))?;
-    let repo = lock(&shared);
-    let mut branches: Vec<String> = refs::local_branches(&repo)?
-        .into_iter()
-        .map(|b| b.name)
-        .collect();
-    branches.sort();
-    Ok(HistoryRefs {
-        branches,
-        remotes: refs::remote_branches(&repo)?,
     })
 }
 

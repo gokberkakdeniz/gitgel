@@ -1,7 +1,7 @@
 // Which entries the Branches screen lists: every active entry, optionally only those in no
 // project ("Not in a project").
 import { entryKey } from '../../lib/entryKey';
-import type { Config, EntrySummary, ProjectConfig, RepoScan, StashInfo } from '../../lib/types';
+import type { Config, EntrySummary, ProjectConfig, RemoteBranch, RepoScan, StashInfo } from '../../lib/types';
 
 export type BranchScope = 'all' | 'unassigned';
 
@@ -10,6 +10,8 @@ export interface RepoGroup {
   rows: EntrySummary[];
   /** Listed under the rows (flow P1); only while the band has rows. */
   stashes: StashInfo[];
+  /** Remote-tracking branches matching the filter; none while not filtering. */
+  remotes: RemoteBranch[];
 }
 
 export function projectKeys(config: Config): Set<string> {
@@ -44,6 +46,11 @@ export function matchesStash(s: StashInfo, repoName: string, filter: string): bo
   return matchesWords([s.message, s.branch, repoName], filter);
 }
 
+/** The same filter for a remote branch: its name (`origin/…`) or repo name. */
+export function matchesRemote(r: RemoteBranch, repoName: string, filter: string): boolean {
+  return matchesWords([r.name, repoName], filter);
+}
+
 function matchesWords(fields: (string | null)[], filter: string): boolean {
   const terms = words(filter).split(' ').filter(Boolean);
   if (terms.length === 0) return true;
@@ -56,7 +63,8 @@ function matchesWords(fields: (string | null)[], filter: string): boolean {
 
 /**
  * Repo groups in display order: pinned repos first, in pin order, then the others with the
- * newest activity first; rows newest first (as scanned). Repos without rows are left out, except missing repos, which are listed last so
+ * newest activity first; rows newest first (as scanned). While filtering, a band also lists the
+ * matching remote branches. Repos without rows or remote matches are left out, except missing repos, which are listed last so
  * their "path not found" band stays visible (only while not filtering), and `keepRepoId`, the
  * repo being focused.
  */
@@ -72,7 +80,7 @@ export function branchGroups(
   const missing: RepoGroup[] = [];
   for (const scan of scans) {
     if (scan.status === 'missing') {
-      if (!filter.trim() && scope === 'all') missing.push({ scan, rows: [], stashes: [] });
+      if (!filter.trim() && scope === 'all') missing.push({ scan, rows: [], stashes: [], remotes: [] });
       continue;
     }
     // The base branch row comes first and stays in "Not in a project".
@@ -80,12 +88,14 @@ export function branchGroups(
       (e) => (scope === 'all' || isBaseRow(scan, e) || !inProject.has(e.key)) && matchesFilter(e, filter),
     );
     const rows = [...shown.filter((e) => isBaseRow(scan, e)), ...shown.filter((e) => !isBaseRow(scan, e))];
-    if (rows.length > 0 || scan.repo.id === keepRepoId || (scan.status === 'error' && !filter.trim())) {
+    const remotes = filter.trim() ? scan.remotes.filter((r) => matchesRemote(r, scan.name, filter)) : [];
+    if (rows.length > 0 || remotes.length > 0 || scan.repo.id === keepRepoId || (scan.status === 'error' && !filter.trim())) {
       const stashes = rows.length > 0 ? scan.stashes.filter((st) => matchesStash(st, scan.name, filter)) : [];
-      groups.push({ scan, rows, stashes });
+      groups.push({ scan, rows, stashes, remotes });
     }
   }
-  const newest = (g: RepoGroup) => Math.max(0, ...g.rows.map((r) => r.changedAt ?? r.lastCommitAt ?? 0));
+  const newest = (g: RepoGroup) =>
+    Math.max(0, ...g.rows.map((r) => r.changedAt ?? r.lastCommitAt ?? 0), ...g.remotes.map((r) => r.lastCommitAt));
   groups.sort((a, b) => newest(b) - newest(a));
   const pins = config.pinnedRepos;
   const pinned = pins.flatMap((id) => [...groups, ...missing].filter((g) => g.scan.repo.id === id));

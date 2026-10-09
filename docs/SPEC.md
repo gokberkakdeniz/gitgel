@@ -615,6 +615,14 @@ Every active branch, whether or not it is in a project, and each repo's base bra
   under "Copy branch name" (first for a detached HEAD, which opens the history of its SHA). It
   opens History (§16) on the row's branch.
 - **Stashes** of the repo under its rows (flow P1, §15).
+- **Remote branches** (K2), only while filtering: under the band's rows (and stashes), a `List`
+  with the heading "Remote branches" and the repo's remote-tracking branches that match the
+  filter (their name or the repo name), newest first. Only those with no local twin: not the
+  upstream of a local branch and not `<remote>/<local name>`; never `*/HEAD`. Row: `branch` icon,
+  mono name, sub line the tip's age; the row opens History (§16) on it (tooltip `Show history of
+  <name>`), its ⋮ menu has "Open history" (↵) and "Copy branch name". A repo with only remote
+  matches still gets its band. The subtitle counts its repo but not the remote branches; the band
+  count leaves them out too.
 - Repos sorted by their newest row, rows newest first (by the age shown). Pinned repos come
   first, in the order they were pinned (a missing one too), then the rest as above.
 - While the first scan runs: muted "Scanning repositories…" (the list fills in repo by repo).
@@ -1313,6 +1321,9 @@ export interface Upstream {      // as of the last fetch
 export interface OtherBranch {   // palette "Older" group
   repoId: string; repoName: string; branch: string; lastCommitAt: number; merged: boolean;
 }
+export interface RemoteBranch {    // Branches "Remote branches" (K2)
+  name: string; lastCommitAt: number;   // name e.g. "origin/feat/x"
+}
 export interface RepoScan {
   repo: RepoConfig;
   name: string;
@@ -1323,6 +1334,7 @@ export interface RepoScan {
   baseBranch: string | null;         // local name of the base branch, always in `active`
   active: EntrySummary[];            // active branches + detached worktrees, newest first
   others: OtherBranch[];             // all other local branches except the base branch
+  remotes: RemoteBranch[];           // remote-tracking branches with no local twin, newest first
   stashes: StashInfo[];              // the stash stack, newest first (§15)
 }
 export interface StashInfo {
@@ -1412,7 +1424,6 @@ export interface HistoryPage {
   fetchedAt: number | null;       // FETCH_HEAD's modification time; null if never fetched
   upstream: Upstream | null;      // when rev is a local branch: where it is pushed to (§15 "Sync")
 }
-export interface HistoryRefs { branches: string[]; remotes: string[] }   // sorted; no */HEAD
 export interface ReviewData {
   groups: ReviewGroup[];          // reviewable entries, in project order
   notInReview: EntrySummary[];    // project scope only
@@ -1530,7 +1541,6 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_commit_changes` | `repoId, sha` | `CommitChanges` |
 | `get_stash_changes` | `repoId, sha` | `StashChanges` |
 | `get_history` | `repoId, rev, base: string\|null, query, limit` | `HistoryPage` (§16) |
-| `get_history_refs` | `repoId` | `HistoryRefs` |
 | `read_file_pair` | `repoId, worktreePath: string\|null, change: FileChange` | `FilePair` |
 | `create_project` | `name, entries: EntryRef[]` | `ProjectConfig` |
 | `rename_project` | `projectId, name` | `Config` |
@@ -1675,7 +1685,7 @@ Notes:
 | Default base | each `defaultBaseOrder` item: `<remote>/HEAD` → `find_reference("refs/remotes/<remote>/HEAD")?.symbolic_target()` (local branch of that name if it exists, else `origin/<name>`); otherwise a local branch, else any ref that resolves | first match wins |
 | Ref check | `revparse_single(rev)?.peel_to_commit()?.id()` | error = missing |
 | Local branches | `branches(Some(BranchType::Local))` → `name()`, `get().target()` | skip symbolic (`target()` None) |
-| Remote branches | `branches(Some(BranchType::Remote))` → `name()` | skip `*/HEAD` and symbolic refs |
+| Remote branches | `branches(Some(BranchType::Remote))` → `name()`, tip's committer time | skip `*/HEAD` and symbolic refs; the Branches list (`RepoScan.remotes`) also skips a local branch's upstream (`upstream_of`) and `<remote>/<local name>` |
 | Upstream | `find_branch(name, Local)?.upstream()?.name()` | none → `<remote>/<name>` if it resolves |
 | Ancestry | `graph_descendant_of(a, b)` | a == b is not a descendant; compare ids first |
 | Commit time | `find_commit(oid)?.time().seconds()` | committer time |
@@ -1828,13 +1838,13 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Screen | File | Key lines |
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
-| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 56–61, row 63–82 (checked-out icon 66–73, Diff cell 76, Projects cell 78, ⋯ button 80), row and cell styles 229–284 (row menu target 239–241, checked-out, sub and Diff values 274–282), filter logic 308–317 and 347–355, empty state 89–99, picker 101–114, new-project form 116–132, projects menu 134–150, row menu 152–163 and 337–346, toast 165–171, selection bar 172–185, drop overlay 188–195, sheet 197–221 and 360–369 |
+| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 56–61, row 63–82 (checked-out icon 66–73, Diff cell 76, Projects cell 78, ⋯ button 80), row and cell styles 229–284 (row menu target 239–241, checked-out, sub and Diff values 274–282), filter logic 308–317 and 347–355, empty state 89–99, picker 101–114, new-project form 116–132, projects menu 134–150, row menu 152–163 and 337–346, toast 165–171, selection bar 172–185, drop overlay 188–195, sheet 197–221 and 360–369; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 438–482 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–165 (commit stepping 144–151, list 153–164), file bar 167–234 (whitespace chip 170–172, view button and menu 174–223 with Context 195–213, change navigation 224–233), split body 236–249, unified body 250–256, base menu 263–290 (sections, Default pair, pills, disabled rows, hint), base menu data per case 695–737 (`baseCase`: stacked / behind / unrelated / remote; effective base 307–308), commit selection 404–417, filter logic 419–429, 440–444, 475 and 608–609, segmented 483–490, context and fold logic 581–596 (sample hidden lines 495–503), view values 759–782 (context 766–781), commit values 785–795, theme and `embedded` values 743–744, filter values 798–809 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–101, open-item entry menu 102–116 (`openMenu`: worktree / notCheckedOut / repoMissing, 147–152; items 184–195; note and position 211–215), project menu 117–123, delete modal 126–137, rename 180–202, pills 153–162 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–42: branch button, search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–124; split diff 125+; avatar and row styles 151–175); `HistH4` the same screen for a feature branch with the base line (data 179–197) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to, P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 Review with the branch menu's Sync group (menu data 192–205), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 72–77, menu 184, data 192–199): Open in Finder / Cursor / VS Code at the pointer |
@@ -2418,17 +2428,12 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   rule) must appear in the subject, body, author name or email, the full SHA, or a path the
   commit changed against its first parent (read only when the text did not match); the walk goes
   on until `limit` commits match; `total` is null then. `fetchedAt`: the modification time of
-  `FETCH_HEAD` in the common git dir. `get_history_refs` lists the local branches and the
-  remote-tracking ones. Every call logs one line with its timings.
+  `FETCH_HEAD` in the common git dir. Every call logs one line with its timings.
 - **Opening:** "Open history" in a Branches row menu (not the base row's), the base branch row's name and History
-  button, and in Review's entry bar the branch name and the base in "N commits ahead of <base>". Route `history` with `repoId` and `rev`, pushed like Review
+  button, a remote branch row while filtering Branches (K2), and in Review's entry bar the branch name and the base in "N commits ahead of <base>". Route `history` with `repoId` and `rev`, pushed like Review
   (back and forward work). History hides the sidebar as Review does.
-- **Header** (`HistH2` 21–42), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
+- **Header** (`HistH2` 21–41), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
   ` · <~worktree>` when `rev` is a branch checked out in a worktree. On the right, gap 10:
-  - Branch button: 32px, `bg.elevated`, 1px `border`, radius 8, branch icon 13px `accent.text`,
-    mono 12 `text.strong` rev, chevron (tooltip `Pick a branch of <repo>`). It opens a menu:
-    label "Local", the local branches, label "Remote", the remote-tracking ones (the current one
-    checked; scrolls when long). Picking one replaces the route's `rev`.
   - Search field: `Input` 32px, 200px, placeholder "Search commits", label "Search commit
     messages, SHAs and paths", no keycap; ⌘K focuses it (also listed in Shortcuts). Typing
     searches (debounced 200 ms); Esc clears it.

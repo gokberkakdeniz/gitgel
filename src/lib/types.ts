@@ -166,6 +166,11 @@ export interface OtherBranch {
   lastCommitAt: number;
   merged: boolean;
 }
+/** A remote-tracking branch no local branch tracks or shares a name with. */
+export interface RemoteBranch {
+  name: string; // e.g. "origin/feat/x"
+  lastCommitAt: number;
+}
 export interface RepoScan {
   repo: RepoConfig;
   name: string;
@@ -176,6 +181,7 @@ export interface RepoScan {
   baseBranch: string | null; // local name of the base branch, always in `active` (first row of its band)
   active: EntrySummary[]; // active branches + detached worktrees, newest first
   others: OtherBranch[]; // all other local branches except the base branch
+  remotes: RemoteBranch[]; // remote-tracking branches with no local twin, newest first
   stashes: StashInfo[]; // the stash stack, newest first (one per repo, shared by its worktrees)
 }
 /** One entry of Stash changes (P4, `stash_push`). */
@@ -276,10 +282,6 @@ export interface HistoryPage {
   mergeBase: string | null;
   fetchedAt: number | null; // FETCH_HEAD's modification time; null if never fetched
   upstream: Upstream | null; // when rev is a local branch: where it is pushed to (W4a)
-}
-export interface HistoryRefs {
-  branches: string[];
-  remotes: string[];
 }
 export interface CommitChanges {
   sha: string;

@@ -36,7 +36,7 @@ import { setRepoPinned } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import { readProjectSort, sortProjects } from '../../lib/projectSort';
 import { refOf } from '../../lib/projects';
-import type { Config, EntrySummary, StashInfo } from '../../lib/types';
+import type { Config, EntrySummary, RemoteBranch, StashInfo } from '../../lib/types';
 import { selectRepoScans, useData } from '../../state/data';
 import { openSettings, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
@@ -201,9 +201,9 @@ function BranchList() {
     return () => window.removeEventListener('keydown', onKey);
   }, [popover]);
 
-  // What is listed: repos with rows, their branches (base rows left out, as in the scope counts)
-  // and stashes; stashes only when there are any.
-  const shown = groups.filter((g) => g.rows.length > 0);
+  // What is listed: repos with rows or remote matches, their branches (base rows and remote
+  // branches left out, as in the scope counts) and stashes; stashes only when there are any.
+  const shown = groups.filter((g) => g.rows.length > 0 || g.remotes.length > 0);
   const shownBranches = shown.reduce((n, g) => n + g.rows.filter((r) => !isBaseRow(g.scan, r)).length, 0);
   const shownStashes = shown.reduce((n, g) => n + g.stashes.length, 0);
   const subtitle = [
@@ -386,7 +386,7 @@ function SelectionBar({ selected, onAdded }: { selected: EntrySummary[]; onAdded
 }
 
 function RepoSection({
-  group: { scan, rows, stashes },
+  group: { scan, rows, stashes, remotes },
   config,
   flash,
   open,
@@ -472,6 +472,7 @@ function RepoSection({
           onToggle={onToggleStashes}
         />
       )}
+      {open && remotes.length > 0 && <RemoteList repoId={scan.repo.id} remotes={remotes} />}
     </section>
   );
 }
@@ -583,6 +584,58 @@ function StashList({
               </div>
             </Popover>
           )}
+        </Popover>
+      )}
+    </div>
+  );
+}
+
+/** Remote branches matching the filter, under the band's rows; a row opens its History. */
+function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch[] }) {
+  const [menu, setMenu] = useState<{ name: string; rect: DOMRect } | null>(null);
+  const open = (rev: string) => useNav.getState().push({ name: 'history', repoId, rev, backLabel: 'Back to Branches' });
+  return (
+    <div className={styles.remotes}>
+      <List
+        heading="Remote branches"
+        items={remotes.map((r) => ({
+          key: r.name,
+          lead: 'icon',
+          icon: 'branch',
+          title: r.name,
+          titleMono: true,
+          active: menu?.name === r.name,
+          sub: [{ text: formatAge(r.lastCommitAt) }],
+          actions: [
+            {
+              icon: 'more-vertical',
+              ariaLabel: 'Remote branch options',
+              active: menu?.name === r.name,
+              onPress: (e) => {
+                e.stopPropagation();
+                setMenu({ name: r.name, rect: e.currentTarget.getBoundingClientRect() });
+              },
+            },
+          ],
+          rowProps: { className: styles.remoteRow, title: `Show history of ${r.name}`, onClick: () => open(r.name) },
+        }))}
+      />
+      {menu && (
+        <Popover anchorRect={menu.rect} width={240} alignRight onClose={() => setMenu(null)}>
+          <Menu aria-label="Remote branch actions">
+            <MenuItem icon={<HistoryIcon />} kbd="↵" onSelect={() => open(menu.name)}>
+              Open history
+            </MenuItem>
+            <MenuItem
+              icon={<CopyIcon />}
+              onSelect={() => {
+                void writeText(menu.name);
+                setMenu(null);
+              }}
+            >
+              Copy branch name
+            </MenuItem>
+          </Menu>
         </Popover>
       )}
     </div>

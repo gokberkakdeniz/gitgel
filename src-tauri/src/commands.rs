@@ -7,8 +7,8 @@ use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
     BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, HistoryPage,
-    HistoryRefs, OpenApp, ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult,
-    ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
+    OpenApp, ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, ScriptConfig,
+    ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{apps, base, files, history, projects, repos, review, scan, scripts, updates, watch};
@@ -162,17 +162,6 @@ pub async fn get_history(
 ) -> Result<HistoryPage, AppError> {
     blocking(&state, move |state| {
         history::get_history(state, &repo_id, &rev, base.as_deref(), &query, limit)
-    })
-    .await
-}
-
-#[tauri::command]
-pub async fn get_history_refs(
-    state: State<'_, AppState>,
-    repo_id: String,
-) -> Result<HistoryRefs, AppError> {
-    blocking(&state, move |state| {
-        history::get_history_refs(state, &repo_id)
     })
     .await
 }

@@ -444,6 +444,15 @@ pub struct OtherBranch {
     pub merged: bool,
 }
 
+/// A remote-tracking branch with no local twin (Branches lists it while filtering).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoteBranch {
+    /// e.g. `origin/feat/x`.
+    pub name: String,
+    pub last_commit_at: i64,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RepoStatus {
@@ -469,6 +478,8 @@ pub struct RepoScan {
     pub active: Vec<EntrySummary>,
     /// All remaining local branches except the base branch.
     pub others: Vec<OtherBranch>,
+    /// Remote-tracking branches that are no local branch's upstream or namesake, newest first.
+    pub remotes: Vec<RemoteBranch>,
     /// The repository's stash stack, newest first (one stack for all its worktrees).
     pub stashes: Vec<StashInfo>,
 }
@@ -654,14 +665,6 @@ pub struct HistoryPage {
     pub fetched_at: Option<i64>,
     /// When `rev` is a local branch: where it is pushed to (W4a).
     pub upstream: Option<Upstream>,
-}
-
-/// The refs History's branch button lists.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HistoryRefs {
-    pub branches: Vec<String>,
-    pub remotes: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,11 +1,10 @@
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BackIcon, BranchIcon, CheckIcon, ChevronDownIcon, CopyIcon, ForwardIcon, SidebarIcon } from '../../components/icons';
+import { BackIcon, CheckIcon, CopyIcon, ForwardIcon, SidebarIcon } from '../../components/icons';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
-import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
+import { MenuDivider, MenuItem } from '../../components/Menu';
 import { Pill } from '../../components/Pill';
-import { Popover } from '../../components/Popover';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
@@ -18,7 +17,7 @@ import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { formatAge, plural } from '../../lib/format';
-import { getCommitChanges, getHistory, getHistoryRefs, getReview, getStagedPaths, getStashChanges, gitCommit } from '../../lib/ipc';
+import { getCommitChanges, getHistory, getReview, getStagedPaths, getStashChanges, gitCommit } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { CommitChanges, CommitFiles, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
@@ -27,7 +26,7 @@ import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
-import { selectCanForward, selectRoute, useNav } from '../../state/nav';
+import { selectCanForward, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { ChangeNav, FileRow, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, ViewMenu } from '../Review/parts';
 import { StashSection } from '../Review/Review';
@@ -347,7 +346,6 @@ export function History({ repoId, rev, backLabel }: Props) {
   return (
     <div className={review.screen}>
       <Header title="History" subtitle={subtitle} backLabel={backLabel}>
-        <RefButton repoId={repoId} repoName={repoName} rev={rev} />
         <Input
           ref={searchInput}
           size={32}
@@ -666,52 +664,6 @@ function Header({
       <div className={review.grow} data-tauri-drag-region />
       <div className={review.actions}>{children}</div>
     </header>
-  );
-}
-
-/** The branch button: the repo's local and remote-tracking branches; picking one shows its history. */
-function RefButton({ repoId, repoName, rev }: { repoId: string; repoName: string; rev: string }) {
-  const [at, setAt] = useState<DOMRect | null>(null);
-  const { data } = useInvoke(() => getHistoryRefs(repoId), [repoId, !!at], { enabled: !!at });
-  const choose = (name: string) => {
-    setAt(null);
-    const nav = useNav.getState();
-    const route = selectRoute(nav);
-    if (route.name === 'history' && name !== rev) nav.replace({ ...route, rev: name });
-  };
-  return (
-    <>
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={!!at}
-        title={`Pick a branch of ${repoName}`}
-        className={at ? `${styles.refButton} ${styles.refButtonOpen}` : styles.refButton}
-        onClick={(e) => setAt(at ? null : e.currentTarget.getBoundingClientRect())}
-      >
-        <BranchIcon size={13} className={styles.refIcon} />
-        <span className={styles.refName}>{rev}</span>
-        <ChevronDownIcon size={10} className={styles.refChevron} />
-      </button>
-      {at && data && (
-        <Popover anchorRect={at} width={280} alignRight onClose={() => setAt(null)}>
-          <Menu aria-label="Branches" autoFocus>
-            <MenuLabel>Local</MenuLabel>
-            {data.branches.map((b) => (
-              <MenuItem key={b} checked={b === rev} onSelect={() => choose(b)}>
-                {b}
-              </MenuItem>
-            ))}
-            {data.remotes.length > 0 && <MenuLabel>Remote</MenuLabel>}
-            {data.remotes.map((b) => (
-              <MenuItem key={b} checked={b === rev} onSelect={() => choose(b)}>
-                {b}
-              </MenuItem>
-            ))}
-          </Menu>
-        </Popover>
-      )}
-    </>
   );
 }
 

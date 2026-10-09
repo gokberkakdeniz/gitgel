@@ -231,6 +231,26 @@ pub fn fetched_at(repo: &Repository) -> Option<i64> {
     i64::try_from(secs).ok()
 }
 
+/// Remote-tracking branches (`origin/x`) with their tips, without `*/HEAD`, in ref order.
+pub fn remote_branch_tips(repo: &Repository) -> Result<Vec<LocalBranch>, AppError> {
+    let mut out = Vec::new();
+    for branch in repo.branches(Some(BranchType::Remote))? {
+        let (branch, _) = branch?;
+        let (Ok(Some(name)), Some(tip)) = (branch.name(), branch.get().target()) else {
+            continue;
+        };
+        if name.ends_with("/HEAD") {
+            continue;
+        }
+        out.push(LocalBranch {
+            name: name.to_string(),
+            tip: tip.to_string(),
+            last_commit_at: repo.find_commit(tip)?.time().seconds(),
+        });
+    }
+    Ok(out)
+}
+
 /// Remote-tracking branch names (`origin/x`), without `*/HEAD`, sorted.
 pub fn remote_branches(repo: &Repository) -> Result<Vec<String>, AppError> {
     let mut out = Vec::new();

@@ -533,6 +533,9 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Branch review header as History's: title "Review", subtitle `<repo> · <branch>
   · <~worktree>`; project review subtitle `N repos · M branches` (was `X of Y changed`); the
   Uncommitted layer's warning banner is gone (branch and project); canvas Diff, P7 — 2026-10-09
+- [x] (on request) Branches lists remote-tracking branches with no local twin while filtering
+  (`RepoScan.remotes`; a row opens its History); History's branch picker and `get_history_refs`
+  are gone; canvas K2, Hi2–Hi5 — 2026-10-09
 
 ---
 

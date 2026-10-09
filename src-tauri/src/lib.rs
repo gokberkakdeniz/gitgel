@@ -113,7 +113,6 @@ pub fn run() {
             commands::get_commit_changes,
             commands::get_stash_changes,
             commands::get_history,
-            commands::get_history_refs,
             commands::read_file_pair,
             commands::get_github_url,
             commands::create_project,

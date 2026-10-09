@@ -50,6 +50,7 @@ const scan: RepoScan = {
     { repoId: 'r_1', repoName: 'web-app', branch: 'fix/token-expiry', lastCommitAt: NOW - 41 * DAY, merged: true },
     { repoId: 'r_1', repoName: 'web-app', branch: 'old-feature', lastCommitAt: NOW - 60 * DAY, merged: false },
   ],
+  remotes: [],
   stashes: [],
 };
 

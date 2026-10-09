@@ -14,6 +14,7 @@ const scan: Record<string, RepoScan> = {
     baseBranch: null,
     active: [active],
     others: [{ repoId: 'r_1', repoName: 'web-app', branch: 'old', lastCommitAt: 42, merged: true }],
+    remotes: [],
     stashes: [],
   },
 };

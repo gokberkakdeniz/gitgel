@@ -16,8 +16,8 @@ use crate::git::pool::RepoPool;
 use crate::git::refs::DefaultBase;
 use crate::git::{diff, refs, stash, worktrees, Repo};
 use crate::model::{
-    entry_key, Config, EntryState, EntrySummary, FileChange, FileKind, OtherBranch, RepoConfig,
-    RepoScan, RepoStatus, RepoUpdated, ScanResult, StashInfo, UpdateReason, Upstream,
+    entry_key, Config, EntryState, EntrySummary, FileChange, FileKind, OtherBranch, RemoteBranch,
+    RepoConfig, RepoScan, RepoStatus, RepoUpdated, ScanResult, StashInfo, UpdateReason, Upstream,
 };
 use crate::nearest;
 use crate::state::{lock, AppState};
@@ -110,6 +110,7 @@ pub fn scan_repo(
         base_branch: None,
         active: Vec::new(),
         others: Vec::new(),
+        remotes: Vec::new(),
         stashes: Vec::new(),
     };
     let path = Path::new(&repo_cfg.path);
@@ -139,6 +140,7 @@ pub fn scan_repo(
             scan.error = Some(e.to_string());
             scan.active.clear();
             scan.others.clear();
+            scan.remotes.clear();
             scan.stashes.clear();
             RepoResult { scan, layout: None }
         }
@@ -200,6 +202,10 @@ fn fill(
         branches
     };
     let branch_names: HashSet<String> = branches.iter().map(|b| b.name.clone()).collect();
+    scan.remotes = ctx
+        .timings
+        .borrow_mut()
+        .time("remotes", || remotes(repo, &branch_names));
     let mut other_tips: Vec<(String, i64)> = Vec::new();
     for branch in branches {
         live_tips.insert(branch.tip.clone());
@@ -303,6 +309,35 @@ fn fill(
         layout.worktrees.len()
     );
     Ok(layout)
+}
+
+/// Remote-tracking branches with no local twin: not the upstream of a local branch and not
+/// `<remote>/<name>` of one. Newest first.
+fn remotes(repo: &Repo, branch_names: &HashSet<String>) -> Vec<RemoteBranch> {
+    let tips = match refs::remote_branch_tips(repo) {
+        Ok(tips) => tips,
+        Err(e) => {
+            log::warn!("remote branches failed: {e}");
+            return Vec::new();
+        }
+    };
+    let upstreams: HashSet<String> = branch_names
+        .iter()
+        .filter_map(|b| refs::upstream_of(repo, b))
+        .collect();
+    let mut out: Vec<RemoteBranch> = tips
+        .into_iter()
+        .filter(|r| {
+            let short = r.name.split_once('/').map_or(r.name.as_str(), |(_, b)| b);
+            !upstreams.contains(&r.name) && !branch_names.contains(short)
+        })
+        .map(|r| RemoteBranch {
+            name: r.name,
+            last_commit_at: r.last_commit_at,
+        })
+        .collect();
+    out.sort_by_key(|r| std::cmp::Reverse(r.last_commit_at));
+    out
 }
 
 /// The stash stack, each stash with its file count (its changes are cached by stash commit).
@@ -1075,6 +1110,7 @@ fn failed_scan(repo_cfg: &RepoConfig, error: &str) -> RepoScan {
         base_branch: None,
         active: Vec::new(),
         others: Vec::new(),
+        remotes: Vec::new(),
         stashes: Vec::new(),
     }
 }
@@ -1224,6 +1260,22 @@ mod tests {
         let layout = layout.unwrap();
         assert_eq!(layout.git_dir, t.path().join(".git"));
         assert_eq!(layout.worktrees.len(), 3);
+    }
+
+    #[test]
+    fn lists_remote_branches_without_a_local_twin() {
+        let t = fixture();
+        let main = t.repo.revparse_single("main").unwrap().id();
+        let feature = t.repo.revparse_single("feature").unwrap().id();
+        t.set_origin_head("main"); // origin/main: namesake of main; origin/HEAD: skipped
+        t.set_remote("origin/recent", main); // namesake of recent
+        t.set_remote("origin/old-renamed", main);
+        t.set_upstream("old", "origin/old-renamed"); // upstream of old
+        t.set_remote("origin/colleague", main);
+        t.set_remote("origin/fresh", feature);
+        let RepoResult { scan, .. } = run(&t);
+        let names: Vec<_> = scan.remotes.iter().map(|r| r.name.as_str()).collect();
+        assert_eq!(names, ["origin/fresh", "origin/colleague"]);
     }
 
     #[test]

@@ -41,6 +41,7 @@ function scan(id: string, active: EntrySummary[], status: RepoScan['status'] = '
     baseBranch: null,
     active,
     others: [],
+    remotes: [],
     stashes: [],
   };
 }
@@ -214,6 +215,27 @@ describe('stashes under a band', () => {
 
   it('keeps a band without rows hidden', () => {
     expect(branchGroups(config, [empty], '')).toEqual([]);
+  });
+});
+
+describe('remote branches under a band', () => {
+  const remotes = [
+    { name: 'origin/colleague/job-queue', lastCommitAt: 900 },
+    { name: 'origin/old-spike', lastCommitAt: 10 },
+  ];
+  const repo = { ...scan('r_1', [entry('r_1', 'feat/x', 5)]), remotes };
+  const only = { ...scan('r_2', []), remotes };
+
+  it('lists none while not filtering', () => {
+    expect(branchGroups(config, [repo, only], '').map((g) => [g.scan.repo.id, g.remotes])).toEqual([['r_1', []]]);
+  });
+
+  it('lists the matching ones while filtering, and a band with only remote matches', () => {
+    const groups = branchGroups(config, [repo, only], 'job queue');
+    expect(groups.map((g) => [g.scan.repo.id, g.rows.length, g.remotes.map((r) => r.name)])).toEqual([
+      ['r_1', 0, ['origin/colleague/job-queue']],
+      ['r_2', 0, ['origin/colleague/job-queue']],
+    ]);
   });
 });
 

@@ -10,7 +10,6 @@ import type {
   FilePair,
   FolderCheck,
   HistoryPage,
-  HistoryRefs,
   OpenApp,
   ProjectConfig,
   ProjectView,
@@ -55,7 +54,6 @@ export const getStashChanges = (repoId: string, sha: string) =>
 export const getHistory = (repoId: string, rev: string, base: string | null, query: string, limit: number) =>
   invoke<HistoryPage>('get_history', { repoId, rev, base, query, limit });
 
-export const getHistoryRefs = (repoId: string) => invoke<HistoryRefs>('get_history_refs', { repoId });
 
 export const readFilePair = (repoId: string, worktreePath: string | null, change: FileChange) =>
   invoke<FilePair>('read_file_pair', { repoId, worktreePath, change });

@@ -116,6 +116,16 @@
   cursor: default;
 }
 
+.remotes {
+  /* As the stash list: under the rows, past the checkbox column. */
+  padding: 8px 16px 14px 52px;
+  border-bottom: 1px solid var(--border-row);
+}
+
+.remoteRow {
+  cursor: default;
+}
+
 .band {
   display: flex;
   align-items: center;

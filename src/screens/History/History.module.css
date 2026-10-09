@@ -4,47 +4,6 @@
   width: 200px;
 }
 
-/* Branch button */
-
-.refButton {
-  height: 32px;
-  max-width: 240px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  cursor: pointer;
-}
-
-.refButtonOpen {
-  background: var(--bg-hover);
-  border-color: var(--accent);
-}
-
-.refIcon {
-  flex-shrink: 0;
-  color: var(--accent-text);
-}
-
-.refName {
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-strong);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.refChevron {
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
 /* List */
 
 /* The commit list, and under it the branch's stashes (as in Review, but pinned: the list keeps
