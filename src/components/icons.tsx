@@ -302,6 +302,28 @@ export function InfoIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   );
 }
 
+/** Circle-question mark; Settings › Prompts. */
+export function HelpIcon({ size = 16, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.7} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.3" />
+      <path d="M12 16.6v.01" />
+    </Svg>
+  );
+}
+
+/** Triangle-exclamation; Confirm Discard Changes. */
+export function WarningIcon({ size = 16, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
+      <path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9.5v4.5" />
+      <path d="M12 17.2v.01" />
+    </Svg>
+  );
+}
+
 /** Arrow up in a circle; the sidebar's update row. */
 export function UpdateIcon({ size = 16, className, strokeWidth: sw }: IconProps) {
   return (
@@ -556,6 +578,8 @@ const ICONS = {
   split: SplitIcon,
   unified: UnifiedIcon,
   info: InfoIcon,
+  help: HelpIcon,
+  warning: WarningIcon,
   update: UpdateIcon,
   spinner: SpinnerIcon,
 } satisfies Record<string, (props: IconProps) => ReactNode>;

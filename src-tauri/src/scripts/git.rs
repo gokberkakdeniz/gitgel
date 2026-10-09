@@ -452,6 +452,149 @@ pub fn commit(
     )
 }
 
+/// One entry of a Discard (Hi8, D12): the files of its Uncommitted to put back to HEAD.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DiscardFiles {
+    #[serde(flatten)]
+    pub entry: EntryRef,
+    /// Relative to the worktree (a rename's old path too).
+    pub paths: Vec<String>,
+}
+
+/// How one entry's step of a Discard is built.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct DiscardStep {
+    /// Paths git knows (`$GITGEL_PATH_<step>_<n>`): `git restore` from HEAD.
+    pub restore: usize,
+    /// Untracked paths (`$GITGEL_CLEAN_<step>_<n>`): `git clean`.
+    pub clean: usize,
+}
+
+/// Discard (SPEC §15 "Discard"): each entry's files go back to HEAD, staged and unstaged alike;
+/// untracked ones are removed. A copy of every file still on disk goes to the Trash first; if one
+/// cannot, nothing is discarded.
+pub fn discard(state: &AppState, discards: Vec<DiscardFiles>) -> Result<ScriptRun, AppError> {
+    if discards.is_empty() || discards.iter().any(|d| d.paths.is_empty()) {
+        return Err(AppError::Invalid("Nothing to discard.".into()));
+    }
+    let mut repos: Vec<Repo> = Vec::new();
+    let mut steps: Vec<(PathBuf, String, String)> = Vec::new(); // folder, label, entry key
+    let mut env: Vec<(String, String)> = Vec::new();
+    let mut shape: Vec<DiscardStep> = Vec::new();
+    // What goes to the Trash: the file, its repo, branch and path (for the copy's name).
+    let mut files: Vec<(PathBuf, String, String, String)> = Vec::new();
+    for (i, d) in discards.iter().enumerate() {
+        if d.paths.iter().any(|p| !valid_relative(p)) {
+            return Err(AppError::Invalid("A picked file has no valid path.".into()));
+        }
+        let entry = &d.entry;
+        if !repos.iter().any(|r| r.id == entry.repo_id) {
+            let repo = open_repo(state, &entry.repo_id)?;
+            repo.not_busy(state)?;
+            repos.push(repo);
+        }
+        let repo = repos
+            .iter()
+            .find(|r| r.id == entry.repo_id)
+            .expect("opened");
+        let tree = repo.tree_of(entry).ok_or_else(|| {
+            AppError::Invalid(format!(
+                "{} / {} is not checked out.",
+                repo.name,
+                entry.branch.as_deref().unwrap_or("detached HEAD")
+            ))
+        })?;
+        let known = {
+            let shared = state.pool.get(&tree.path)?;
+            let wt = lock(&shared);
+            worktrees::tracked(&wt, &d.paths)?
+        };
+        let (mut restore, mut clean) = (0, 0);
+        for (path, known) in d.paths.iter().zip(known) {
+            let (name, n) = if known {
+                restore += 1;
+                ("PATH", restore)
+            } else {
+                clean += 1;
+                ("CLEAN", clean)
+            };
+            env.push((format!("GITGEL_{name}_{}_{n}", i + 1), path.clone()));
+            files.push((
+                tree.path.join(path),
+                repo.name.clone(),
+                tree.branch
+                    .clone()
+                    .unwrap_or_else(|| tree.head.chars().take(7).collect()),
+                path.clone(),
+            ));
+        }
+        shape.push(DiscardStep { restore, clean });
+        steps.push((
+            tree.path.clone(),
+            repo.label(tree),
+            entry_key(
+                &entry.repo_id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+        ));
+    }
+    let names = crate::trash::copy_names(
+        &files
+            .iter()
+            .map(|(_, repo, branch, path)| crate::trash::Discarded { repo, branch, path })
+            .collect::<Vec<_>>(),
+        chrono::Local::now(),
+    );
+    for ((file, ..), name) in files.iter().zip(&names) {
+        crate::trash::copy_to_trash(file, name)?;
+    }
+    env.extend(steps.iter().enumerate().map(|(i, (folder, _, _))| {
+        (
+            format!("GITGEL_FOLDER_{}", i + 1),
+            folder.to_string_lossy().into_owned(),
+        )
+    }));
+    // Picked paths are file names, never pathspec magic (`:(glob)`, `*`).
+    env.push(("GIT_LITERAL_PATHSPECS".into(), "1".into()));
+    let one = steps.len() == 1;
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}discard"),
+            name: "Discard changes".into(),
+            icon: "undo".into(),
+            entry_key: if one {
+                steps[0].2.clone()
+            } else {
+                format!("{ACTION_PREFIX}discard")
+            },
+            repo_label: if one {
+                steps[0].1.clone()
+            } else {
+                format!("{} entries", steps.len())
+            },
+            repo_id: repos[0].id.clone(),
+            also_rescan: repos[1..].iter().map(|r| r.id.clone()).collect(),
+            folder: steps[0].0.clone(),
+            command: discard_command(&shape),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// A path inside the worktree: relative, no `..`, no NUL.
+fn valid_relative(p: &str) -> bool {
+    let path = Path::new(p);
+    !p.is_empty()
+        && !p.contains('\0')
+        && path
+            .components()
+            .all(|c| matches!(c, std::path::Component::Normal(_)))
+}
+
 /// Runs one sync command (W4a) in `folder` as a git action; values only in `GITGEL_*`.
 #[allow(clippy::too_many_arguments)]
 fn launch_sync(
@@ -753,6 +896,40 @@ pub(super) fn commit_command(shape: CommitShape) -> String {
     steps.join(" && ")
 }
 
+/// `git -C "$GITGEL_FOLDER_1" restore --source=HEAD --staged --worktree -- "$GITGEL_PATH_1_1" … &&
+/// git -C "$GITGEL_FOLDER_1" clean -f -q -- "$GITGEL_CLEAN_1_1" … && git -C "$GITGEL_FOLDER_2" …`:
+/// only fixed text and quoted variables.
+pub(super) fn discard_command(steps: &[DiscardStep]) -> String {
+    steps
+        .iter()
+        .enumerate()
+        .flat_map(|(i, step)| {
+            let n = i + 1;
+            let git = format!("git -C \"$GITGEL_FOLDER_{n}\"");
+            let list = |name: &str, count: usize| {
+                (1..=count)
+                    .map(|j| format!(" \"${name}_{n}_{j}\""))
+                    .collect::<String>()
+            };
+            let mut parts = Vec::new();
+            if step.restore > 0 {
+                parts.push(format!(
+                    "{git} restore --source=HEAD --staged --worktree --{}",
+                    list("GITGEL_PATH", step.restore)
+                ));
+            }
+            if step.clean > 0 {
+                parts.push(format!(
+                    "{git} clean -f -q --{}",
+                    list("GITGEL_CLEAN", step.clean)
+                ));
+            }
+            parts
+        })
+        .collect::<Vec<_>>()
+        .join(" && ")
+}
+
 /// git never waits on a pager in the pty.
 fn with_git_env(mut env: Vec<(String, String)>) -> Vec<(String, String)> {
     env.push(("GIT_PAGER".into(), "cat".into()));
@@ -834,6 +1011,33 @@ mod tests {
             push_command(&[around], false),
             r#"env GIT_INDEX_FILE="$GITGEL_INDEX_1" git -C "$GITGEL_FOLDER_1" reset -q -- "$GITGEL_UNSTAGE_1_1" && env GIT_INDEX_FILE="$GITGEL_INDEX_1" git -C "$GITGEL_FOLDER_1" stash push -- "$GITGEL_PATH_1_1" && git -C "$GITGEL_FOLDER_1" reset -q -- "$GITGEL_PATH_1_1""#
         );
+    }
+
+    #[test]
+    fn discard_commands_hold_no_values() {
+        let both = DiscardStep {
+            restore: 2,
+            clean: 1,
+        };
+        let untracked = DiscardStep {
+            restore: 0,
+            clean: 1,
+        };
+        assert_eq!(
+            discard_command(&[both, untracked]),
+            r#"git -C "$GITGEL_FOLDER_1" restore --source=HEAD --staged --worktree -- "$GITGEL_PATH_1_1" "$GITGEL_PATH_1_2" && git -C "$GITGEL_FOLDER_1" clean -f -q -- "$GITGEL_CLEAN_1_1" && git -C "$GITGEL_FOLDER_2" clean -f -q -- "$GITGEL_CLEAN_2_1""#
+        );
+    }
+
+    #[test]
+    fn discard_paths_stay_in_the_worktree() {
+        assert!(valid_relative("src/a.ts"));
+        assert!(valid_relative(".env"));
+        assert!(!valid_relative("../a"));
+        assert!(!valid_relative("src/../../a"));
+        assert!(!valid_relative("/etc/hosts"));
+        assert!(!valid_relative("./a"));
+        assert!(!valid_relative(""));
     }
 
     #[test]

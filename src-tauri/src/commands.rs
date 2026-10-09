@@ -630,6 +630,16 @@ pub async fn git_commit(
     .await
 }
 
+/// Discard (Hi8, D12): the files go back to HEAD in each entry's worktree, a copy of each to the
+/// Trash first.
+#[tauri::command]
+pub async fn git_discard(
+    state: State<'_, AppState>,
+    entries: Vec<scripts::git::DiscardFiles>,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| scripts::git::discard(state, entries)).await
+}
+
 /// The paths git's index has staged in the entry's worktree (Uncommitted's boxes start checked).
 #[tauri::command]
 pub async fn get_staged_paths(

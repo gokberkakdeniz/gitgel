@@ -25,7 +25,7 @@ body{margin:0}
 </sc-for>
 </nav>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"current":{"editor":"enum","options":["general","repositories","scripts","shortcuts"],"default":"general"},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"sections":{"editor":null},"$preview":{"width":200,"height":220}}'>
+<script type="text/x-dc" data-dc-script data-props='{"current":{"editor":"enum","options":["general","repositories","scripts","prompts","shortcuts"],"default":"general"},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"sections":{"editor":null},"$preview":{"width":200,"height":220}}'>
 class Component extends DCLogic {
   renderVals() {
     // Settings' section list (VS Code-style): 200px, 34px rows, 16px line icon, a mono count on
@@ -33,10 +33,10 @@ class Component extends DCLogic {
     // count?, pick? }]; current is the id shown.
     var p = this.props;
     // Icons by section id, from the Icon set.
-    var ICON = { general: 'tune', repositories: 'folder', scripts: 'prompt', shortcuts: 'keyboard' };
+    var ICON = { general: 'tune', repositories: 'folder', scripts: 'prompt', prompts: 'help', shortcuts: 'keyboard' };
     var list = p.sections || [
       { id: 'general', label: 'General' }, { id: 'repositories', label: 'Repositories', count: '4' },
-      { id: 'scripts', label: 'Scripts', count: '5' }, { id: 'shortcuts', label: 'Shortcuts' }
+      { id: 'scripts', label: 'Scripts', count: '5' }, { id: 'prompts', label: 'Prompts' }, { id: 'shortcuts', label: 'Shortcuts' }
     ];
     var current = p.current || 'general';
     return {

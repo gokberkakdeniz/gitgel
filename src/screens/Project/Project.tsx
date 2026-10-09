@@ -10,6 +10,7 @@ import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
 import { ProjectMenu } from '../../components/ProjectMenu';
+import { askDeleteProject } from '../../components/DeleteProjectModal';
 import { RefreshButton } from '../../components/RefreshButton';
 import {
   commitExists,
@@ -159,7 +160,7 @@ function SavedProject({ id }: { id: string }) {
             }}
             onDelete={() => {
               setMenuAt(null);
-              useUi.getState().setDeletingProjectId(id);
+              askDeleteProject(id);
             }}
           />
         </Popover>

@@ -1,0 +1,79 @@
+/* Confirm Discard Changes (HistH9 / FlowD12): a warning icon beside the text. */
+.body {
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+  padding: 4px 24px 22px;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--warning);
+}
+
+.text {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.lead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-body);
+}
+
+.files {
+  align-self: stretch;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Several entries: one block per entry, its repo and branch first. */
+.groups {
+  gap: 10px;
+}
+
+.entry {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.repo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.branch {
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.path {
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-code);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}

@@ -143,7 +143,9 @@ mod tests {
                 "terminal": "other",
                 "terminalCommand": "Ghostty",
                 "checkUpdates": false,
-                "lastSeenVersion": "0.1.15"
+                "lastSeenVersion": "0.1.15",
+                "prompts": { "removeRepositories": true, "discardChanges": false,
+                             "discardStash": true, "deleteProjects": false }
             },
             "scripts": [{
                 "id": "s_1", "name": "Run tests", "icon": "test", "command": "pnpm test",
@@ -207,6 +209,8 @@ mod tests {
         assert_eq!(config.settings.diff_context_lines, 3);
         assert_eq!(config.settings.terminal, crate::model::TerminalChoice::Auto);
         assert_eq!(config.settings.terminal_command, "");
+        assert_eq!(config.settings.prompts, crate::model::Prompts::default());
+        assert!(config.settings.prompts.discard_changes);
         assert!(config.scripts.is_empty());
     }
 

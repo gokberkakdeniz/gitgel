@@ -9,6 +9,7 @@ import { OutputPanelHost } from './scripts/OutputPanel';
 import { PassphraseDialog } from './scripts/PassphraseDialog';
 import { RunDialogHost } from './scripts/RunDialog';
 import { DropStashModal } from './stash/DropStashModal';
+import { DiscardModal } from './discard/DiscardModal';
 import { startDraftProject } from './lib/draft';
 import { startEventBridge } from './lib/events';
 import { revealWindow } from './lib/ipc';
@@ -106,6 +107,7 @@ export default function App() {
       <RunDialogHost />
       <OutputPanelHost />
       <DropStashModal />
+      <DiscardModal />
       <PassphraseDialog />
       <ToastHost />
       <AuxBlocker />

@@ -191,7 +191,7 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","squash","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","squash","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -227,12 +227,15 @@ class Component extends DCLogic {
     };
     var shownStyle = 'box-shadow: inset 0 0 0 1px var(--accent); background: rgba(var(--accent-rgb), 0.10)';
     // check: 'on' | 'off' | 'part' (a file of Uncommitted) or undefined (a file of a commit)
+    // selected: names of Uncommitted's files picked with ⌘ / ⇧-click (Hi8), tinted.
+    var selected = this.props.selected || [];
     var file = function (kind, name, dir, add, del, shown, check) {
       if (inDialog) check = undefined;
+      var picked = check !== undefined && selected.indexOf(name) >= 0;
       var boxed = check !== undefined;
       return { isFile: true, boxed: boxed, kind: kind, name: name, dir: dir, add: add, del: del,
         hasCheck: check === 'on' || check === 'off', part: check === 'part', on: check === 'on', checkLabel: 'Include ' + name,
-        rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 ' + (boxed ? 8 : 42) + 'px; border-radius: 8px; ' + (shown ? shownStyle : '') };
+        rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 ' + (boxed ? 8 : 42) + 'px; border-radius: 8px; ' + (shown ? shownStyle : '') + (picked ? '; background: rgba(var(--accent-rgb), 0.18)' : '') };
     };
     var day = function (label) { return { isDay: true, label: label }; };
     var rule = function (dashed) { return 'flex-grow: 1; height: 0; border-top: 1px ' + (dashed ? 'dashed' : 'solid') + ' var(--border-strong)'; };

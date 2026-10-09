@@ -112,6 +112,29 @@ pub fn staged(wt_repo: &Repository) -> Result<(Vec<String>, PathBuf), AppError> 
     Ok((paths, wt_repo.path().join("index")))
 }
 
+/// For each path (relative to the worktree): whether git knows it, in the index or in HEAD.
+/// A discard puts these back with `git restore` and removes the others (untracked) with `git
+/// clean`. Read only, as `staged`.
+pub fn tracked(wt_repo: &Repository, paths: &[String]) -> Result<Vec<bool>, AppError> {
+    let mut index = wt_repo.index()?;
+    index.read(false)?;
+    let head = match wt_repo.head() {
+        Ok(h) => Some(h.peel_to_tree()?),
+        Err(_) => None,
+    };
+    Ok(paths
+        .iter()
+        .map(|p| {
+            index.get_path(Path::new(p), 0).is_some()
+                // An unmerged path has only its conflict stages in the index.
+                || (1..=3).any(|stage| index.get_path(Path::new(p), stage).is_some())
+                || head
+                    .as_ref()
+                    .is_some_and(|t| t.get_path(Path::new(p)).is_ok())
+        })
+        .collect())
+}
+
 /// Canonical common git dir (`<repo>/.git` for a normal repository).
 pub fn git_dir(repo: &Repository) -> PathBuf {
     canonical(repo.commondir())
@@ -171,6 +194,19 @@ mod tests {
         paths.sort();
         assert_eq!(paths, ["b", "c"]);
         assert!(index.ends_with("index") && index.exists());
+    }
+
+    #[test]
+    fn tracked_knows_the_index_and_head() {
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a", Some(b"a"))], "init", 1);
+        t.checkout_main();
+        t.write_file(t.path(), "b", b"staged new");
+        t.stage(t.path(), "b");
+        t.write_file(t.path(), "u", b"untracked");
+        std::fs::remove_file(t.path().join("a")).unwrap();
+        let paths = ["a", "b", "u"].map(String::from);
+        assert_eq!(tracked(&t.repo, &paths).unwrap(), [true, true, false]);
     }
 
     #[test]

@@ -467,8 +467,7 @@ export function DiffView({
               <>
                 <MenuDivider />
                 <FileOpenItems
-                  folder={folder}
-                  path={change.path}
+                  files={[{ folder, path: change.path }]}
                   at={() => (menu.modified ? { line: menu.from, column: 1 } : diffPosition(change.path))}
                   onDone={() => setMenu(null)}
                 />

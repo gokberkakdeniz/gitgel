@@ -5,6 +5,7 @@ import type {
   CommitChanges,
   CommitFiles,
   Config,
+  DiscardFiles,
   EntryRef,
   FileChange,
   FilePair,
@@ -169,6 +170,9 @@ export const gitPush = (entry: EntryRef, force = false) => invoke<ScriptRun>('gi
 
 /** Commit (W1a): the checked files of the entry's worktree, with the message. */
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });
+
+/** Discard (Hi8, D12): the files go back to HEAD, a copy of each to the Trash first. */
+export const gitDiscard = (entries: DiscardFiles[]) => invoke<ScriptRun>('git_discard', { entries });
 
 /** What git's index has staged in the entry's worktree: Uncommitted's boxes start checked for it. */
 export const getStagedPaths = (entry: EntryRef) => invoke<string[]>('get_staged_paths', { entry });

@@ -58,7 +58,7 @@ const config: Config = {
       entries: [{ repoId: 'r_1', branch: 'in-project', worktreePath: null, lastKnownTip: null }],
     },
   ],
-  settings: { defaultBaseOrder: ['main'], activeDays: 14, diffView: 'split', ignoreWhitespace: false, diffContext: 'changes', diffContextLines: 3, zoom: 100, appearance: 'system', terminal: 'auto', terminalCommand: '', checkUpdates: true, lastSeenVersion: '' },
+  settings: { defaultBaseOrder: ['main'], activeDays: 14, diffView: 'split', ignoreWhitespace: false, diffContext: 'changes', diffContextLines: 3, zoom: 100, appearance: 'system', terminal: 'auto', terminalCommand: '', checkUpdates: true, lastSeenVersion: '', prompts: { removeRepositories: true, discardChanges: true, discardStash: true, deleteProjects: true } },
   scripts: [],
   pinnedRepos: [],
 };

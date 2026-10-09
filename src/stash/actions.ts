@@ -4,6 +4,7 @@ import { stashApply, stashDrop, stashPush } from '../lib/ipc';
 import type { EntrySummary, StashPush } from '../lib/types';
 import type { ReviewStash } from '../screens/Review/stashes';
 import { startGitAction } from '../scripts/runs';
+import { useData } from '../state/data';
 
 interface StashUi {
   /** The Drop confirmation is open for this stash (P6). */
@@ -12,8 +13,10 @@ interface StashUi {
 
 export const useStashUi = create<StashUi>()(() => ({ dropping: null }));
 
+/** Drop asks first unless Settings › Prompts › "Discarding stash" is off. */
 export function askDrop(stash: ReviewStash): void {
-  useStashUi.setState({ dropping: stash });
+  if (useData.getState().config?.settings.prompts.discardStash === false) void dropStash(stash);
+  else useStashUi.setState({ dropping: stash });
 }
 
 export function dropStash(st: ReviewStash): Promise<void> {

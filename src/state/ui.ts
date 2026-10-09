@@ -31,7 +31,7 @@ export interface Toast {
 }
 
 /** The Settings section on the right of its section list (flow M). */
-export type SettingsSection = 'general' | 'repositories' | 'scripts' | 'shortcuts';
+export type SettingsSection = 'general' | 'repositories' | 'scripts' | 'prompts' | 'shortcuts';
 
 interface UiState {
   sidebarVisible: boolean;

@@ -40,6 +40,14 @@ export interface Settings {
   terminalCommand: string; // the Other terminal: a command (`%` = folder), an app name, a .app path or a bundle id; empty = Automatic
   checkUpdates: boolean; // Settings › Behaviour › Check for updates
   lastSeenVersion: string; // the version whose What's New was shown; '' before any
+  prompts: Prompts; // Settings › Prompts
+}
+/** Settings › Prompts (M6): "Show a confirmation dialog before..." each of these. */
+export interface Prompts {
+  removeRepositories: boolean;
+  discardChanges: boolean; // off after "Do not show this message again" in Confirm Discard Changes
+  discardStash: boolean;
+  deleteProjects: boolean;
 }
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
@@ -188,6 +196,10 @@ export interface RepoScan {
 export interface StashPush extends EntryRef {
   paths: string[] | null; // the files picked (a rename's old path too); null: all of them
   untracked: boolean; // --include-untracked
+}
+/** One entry of a Discard (Hi8, D12, `git_discard`). */
+export interface DiscardFiles extends EntryRef {
+  paths: string[]; // relative to the worktree (a rename's old path too)
 }
 /** What a Commit holds (W1a, `git_commit`). */
 export interface CommitFiles {

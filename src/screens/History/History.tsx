@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckIcon, CopyIcon } from '../../components/icons';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
-import { MenuDivider, MenuItem } from '../../components/Menu';
+import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
+import { Popover } from '../../components/Popover';
+import { askDiscard, targetOf } from '../../discard/discard';
+import { usePicks } from '../../discard/picks';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Banner } from '../../components/Banner';
@@ -28,7 +31,7 @@ import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { CopyBranchItem, EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
 import { useUi } from '../../state/ui';
-import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo } from '../Review/parts';
+import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, type FileActions } from '../Review/parts';
 import parts from '../Review/parts.module.css';
 import type { ReviewStash } from '../Review/stashes';
 import styles from './History.module.css';
@@ -231,6 +234,28 @@ export function History({ repoId, rev, backLabel }: Props) {
   // The file shown: the one picked while the row lists it, else its first.
   const [path, setPath] = useState<string | null>(null);
   const file = files.find((f) => f.path === path) ?? files[0];
+  // Several of Uncommitted's files picked with ⌘ / ⇧-click (Hi8): their right-click menu acts on
+  // all of them.
+  const picks = usePicks(
+    current === WIP ? wipFiles.map((f) => f.path) : [],
+    file?.path ?? null,
+    `${repoId}\u0000${rev}\u0000${current}`,
+  );
+  const discard = (list: FileChange[], all = false) => {
+    if (entry) askDiscard({ targets: [targetOf(entry, list)], all });
+  };
+  const wipActions = (f: FileChange): FileActions => {
+    const list = wipFiles.filter((x) => picks.targets(f.path).includes(x.path));
+    return {
+      files: list.map((x) => ({ file: x, folder })),
+      onDiscard: () => discard(list),
+      onInclude: staged
+        ? (on) => setBoxes((b) => ({ ...b, ...Object.fromEntries(list.map((x) => [x.path, on])) }))
+        : undefined,
+    };
+  };
+  // The Uncommitted row's right-click menu: Discard All Changes, Stash All Changes.
+  const [wipMenu, setWipMenu] = useState<DOMRect | null>(null);
   const [land, setLand] = useState<'first' | 'last'>('first');
   // The picked row lists its files under it; clicking it again folds them (and back).
   const [filesOpen, setFilesOpen] = useState(true);
@@ -407,6 +432,32 @@ export function History({ repoId, rev, backLabel }: Props) {
         </PageMenu>
         {stashAction.dialog}
       </PageHeader>
+      {wipMenu && (
+        <Popover anchorRect={wipMenu} width={230} onClose={() => setWipMenu(null)}>
+          <Menu aria-label="Uncommitted changes actions">
+            <MenuItem
+              danger
+              disabled={wipFiles.length === 0}
+              onSelect={() => {
+                setWipMenu(null);
+                discard(wipFiles, true);
+              }}
+            >
+              Discard All Changes…
+            </MenuItem>
+            <MenuItem
+              icon="package"
+              disabled={!stashAction.open}
+              onSelect={() => {
+                setWipMenu(null);
+                stashAction.open?.(wipMenu);
+              }}
+            >
+              Stash All Changes…
+            </MenuItem>
+          </Menu>
+        </Popover>
+      )}
       {diverged && (
         <Banner tone="warning">
           <span className={parts.grow}>{diverged}</span>
@@ -461,6 +512,9 @@ export function History({ repoId, rev, backLabel }: Props) {
                   setPath(p);
                   setLand('first');
                 }}
+                picks={current === WIP ? picks : undefined}
+                actions={current === WIP ? wipActions : undefined}
+                onWipMenu={setWipMenu}
               />
             ))}
             {data && !data.tip && <div className={styles.listEmpty}>{rev} not found</div>}
@@ -604,6 +658,9 @@ function ListRow({
   check,
   onPick,
   onFile,
+  picks,
+  actions,
+  onWipMenu,
 }: {
   row: HistoryRow;
   current: string | null;
@@ -628,6 +685,12 @@ function ListRow({
   };
   onPick: (row: string) => void;
   onFile: (path: string) => void;
+  /** Uncommitted's files picked with ⌘ / ⇧-click (Hi8). */
+  picks?: { isPicked: (path: string) => boolean; click: (path: string, e: React.MouseEvent, open: () => void) => void };
+  /** Uncommitted's file menu. */
+  actions?: (f: FileChange) => FileActions;
+  /** A right-click on the Uncommitted row, at the pointer. */
+  onWipMenu: (at: DOMRect) => void;
 }) {
   const fileRows = (
     <div className={parts.fileRows}>
@@ -649,7 +712,9 @@ function ListRow({
           folder={folder}
           terms={[]}
           on={f.path === file}
-          onClick={() => onFile(f.path)}
+          picked={picks?.isPicked(f.path)}
+          onClick={(e) => (picks ? picks.click(f.path, e, () => onFile(f.path)) : onFile(f.path))}
+          actions={actions?.(f)}
           check={
             check && { checked: check.on(f), disabled: check.disabled, onChange: (on) => check.onChange(f, on) }
           }
@@ -685,6 +750,10 @@ function ListRow({
             title="Show uncommitted changes (HEAD ↔ working tree)"
             className={on ? `${styles.wip} ${styles.rowOn}` : styles.wip}
             onClick={() => onPick(WIP)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              onWipMenu(new DOMRect(e.clientX, e.clientY, 0, 0));
+            }}
           >
             <span className={styles.wipSlot}>
               <span className={styles.wipDot} />

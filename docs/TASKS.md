@@ -554,6 +554,16 @@ rather than as a task is listed the same way, marked "(on request)".
   GitHub-only `get_github_url` / `open_github_link`) — 2026-10-09
 - [x] (on request) History opens on Uncommitted when the branch has uncommitted changes, else the
   newest commit — 2026-10-09
+- [x] (on request) Discard, as GitHub Desktop (its texts word for word): Uncommitted files picked
+  with ⌘ / ⇧-click in Review and History, a right-click menu (Discard Changes… / Discard N Selected
+  Changes…, Include / Exclude Selected Files in History, Copy (Relative) Paths, open items), History's
+  Uncommitted row menu (Discard All Changes…, Stash All Changes…), Confirm Discard Changes; a copy
+  of each file goes to the Trash first (`trash.rs`), then `git restore` / `git clean` as a git
+  action (`git_discard`); Settings › Prompts turns the confirmations of Remove repository,
+  Discard, Drop stash and Delete project off, and each of them has "Do not show this message
+  again" — 2026-10-09
+  - note: canvas boards Hi8 (`HistH9`), D12 (`FlowD12`), M6 (`FlowM6`), moved from the WIP page
+    (W4d, W4b, W4e); W4b's backup stash was dropped for the Trash copies.
 
 ---
 

@@ -45,6 +45,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'Changes only / Whole file', keys: ['⌥', 'C'] },
       { label: 'Ignore whitespace', keys: ['⌥', 'W'] },
       { label: 'Review / History', keys: ['⌥', 'H'], note: 'of the same branch' },
+      { label: 'Pick files', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'Uncommitted, also History' },
     ],
   },
   {

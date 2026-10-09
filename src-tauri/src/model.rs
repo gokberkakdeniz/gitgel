@@ -87,6 +87,30 @@ pub struct Settings {
     pub check_updates: bool,
     /// The version whose What's New was shown (or skipped on a fresh install); '' before any.
     pub last_seen_version: String,
+    /// Settings › Prompts: which confirmations are shown; configs from before it ask for all.
+    pub prompts: Prompts,
+}
+
+/// Settings › Prompts (M6): "Show a confirmation dialog before..." each of these.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Prompts {
+    pub remove_repositories: bool,
+    /// Off after "Do not show this message again" in Confirm Discard Changes.
+    pub discard_changes: bool,
+    pub discard_stash: bool,
+    pub delete_projects: bool,
+}
+
+impl Default for Prompts {
+    fn default() -> Self {
+        Prompts {
+            remove_repositories: true,
+            discard_changes: true,
+            discard_stash: true,
+            delete_projects: true,
+        }
+    }
 }
 
 impl Default for Settings {
@@ -104,6 +128,7 @@ impl Default for Settings {
             terminal_command: String::new(),
             check_updates: true,
             last_seen_version: String::new(),
+            prompts: Prompts::default(),
         }
     }
 }

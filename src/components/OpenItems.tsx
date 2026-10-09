@@ -85,13 +85,13 @@ export function useRepoFolder(repoId: string): string | null {
  * No terminal: it has no use for a file. `at` is asked when an editor is picked: where the diff
  * showing this file has its cursor (the editor opens there). */
 export function FileOpenItems({
-  folder,
-  path,
+  files,
   at,
   onDone,
 }: {
-  folder: string;
-  path: string;
+  /** Each file with the folder it is read from. Several picked files (Hi8, D12; in a project
+   * review from several worktrees) open one after another; only one opens at `at`. */
+  files: { folder: string; path: string }[];
   at: () => { line: number; column: number } | null;
   onDone: () => void;
 }) {
@@ -106,7 +106,8 @@ export function FileOpenItems({
             icon={a.icon ? <img src={a.icon} alt="" className={styles.appIcon} /> : <TerminalIcon />}
             onSelect={() => {
               onDone();
-              openFile(folder, path, a.id, a.id === 'finder' ? null : at()).catch((e) => console.error('cannot open file', e));
+              const where = a.id === 'finder' || files.length > 1 ? null : at();
+              for (const f of files) openFile(f.folder, f.path, a.id, where).catch((e) => console.error('cannot open file', e));
             }}
           >
             Open in {a.name}

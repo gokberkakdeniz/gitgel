@@ -30,6 +30,9 @@ body{margin:0}
 <sc-if value="{{hasNote}}" hint-placeholder-val="{{false}}">
 <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted)">{{note}}</p>
 </sc-if>
+<sc-if value="{{dontAsk}}" hint-placeholder-val="{{false}}">
+<dc-import name="Checkbox" theme="none" checked="{{false}}" label="Do not show this message again" hint-size="240px,20px"></dc-import>
+</sc-if>
 <div style="{{actionsStyle}}">
 <sc-for list="{{buttons}}" as="b" hint-placeholder-count="2">
 <dc-import name="Button" theme="none" label="{{b.label}}" variant="{{b.variant}}" size="36" kbd="{{b.kbd}}" hint-size="96px,36px"></dc-import>
@@ -37,14 +40,16 @@ body{margin:0}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Delete “Session auth refresh”?"},"text":{"editor":"text","default":"Removes the project and its 6 entries. Nothing on disk is touched."},"note":{"editor":"text","default":""},"width":{"editor":"int","default":440},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"label":{"editor":null},"context":{"editor":null},"buttons":{"editor":null},"$preview":{"width":440,"height":190}}'>
+<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Delete “Session auth refresh”?"},"text":{"editor":"text","default":"Removes the project and its 6 entries. Nothing on disk is touched."},"note":{"editor":"text","default":""},"dontAsk":{"editor":"boolean","default":false},"width":{"editor":"int","default":440},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"label":{"editor":null},"context":{"editor":null},"buttons":{"editor":null},"$preview":{"width":440,"height":190}}'>
 class Component extends DCLogic {
   renderVals() {
     // The app's ConfirmModal (src/components/ConfirmModal.tsx), the dialog box without its scrim:
     // a serif title, then a text (Delete project G, Remove repository) or a box naming what it acts
     // on, one icon row each, with a muted note (Drop stash P6, Run O3), then the 36px buttons on the
     // right, the action last. With the box the parts sit 14px apart (10px without) and the buttons
-    // 4px under it (10px under the text).
+    // 4px under it (10px under the text). dontAsk: a "Do not show this message again" checkbox above
+    // the buttons (GitHub Desktop's; it turns the dialog's Settings › Prompts box off, M6), on the
+    // dialogs Prompts lists: Delete project, Remove repository, Drop stash.
     var p = this.props;
     var context = p.context || [];
     var boxed = context.length > 0;
@@ -59,6 +64,7 @@ class Component extends DCLogic {
       context: context.map(function (c) { return { icon: c.icon, text: c.text, title: c.title || '' }; }),
       note: p.note || '',
       hasNote: !!p.note,
+      dontAsk: !!p.dontAsk,
       buttons: buttons.map(function (b) { return { label: b.label, variant: b.variant || 'secondary', kbd: b.kbd || '' }; }),
       boxStyle: 'position: relative; width: ' + (p.width || 440) + 'px; box-sizing: border-box; display: flex; flex-direction: column; gap: ' + (boxed ? 14 : 10) + 'px; padding: 22px 24px 18px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-body)',
       actionsStyle: 'display: flex; justify-content: flex-end; gap: 8px; margin-top: ' + (boxed ? 4 : 10) + 'px'

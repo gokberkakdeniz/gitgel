@@ -25,5 +25,8 @@ export function useStashAction(groups: ReviewGroup[]) {
       </MenuItem>
     );
   const dialog = rect && <StashDialog groups={groups} anchorRect={rect} onClose={() => setRect(null)} />;
-  return { item, dialog };
+  /** Opens the dialog at `anchor` (Stash All Changes in History's Uncommitted menu); null when
+   * nothing can be stashed (no changes, or merge conflicts everywhere). */
+  const open = rows.length > 0 && any ? (anchor: DOMRect) => setRect(anchor) : null;
+  return { item, dialog, open };
 }

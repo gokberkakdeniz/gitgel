@@ -26,6 +26,7 @@ import { Menu, MenuItem } from '../Menu';
 import { Popover } from '../Popover';
 import { ProjectNameInput } from '../ProjectNameInput';
 import { ProjectMenu } from '../ProjectMenu';
+import { askDeleteProject } from '../DeleteProjectModal';
 import { Input } from '../Input';
 import styles from './Sidebar.module.css';
 
@@ -239,7 +240,7 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
               setContextMenu(null);
             }}
             onDelete={() => {
-              useUi.getState().setDeletingProjectId(contextMenu.id);
+              askDeleteProject(contextMenu.id);
               setContextMenu(null);
             }}
           />

@@ -1,4 +1,5 @@
 import type { KeyboardEvent, ReactNode } from 'react';
+import { Checkbox } from './Checkbox';
 import { Icon, type IconName } from './icons';
 import { Modal } from './Modal';
 import styles from './ConfirmModal.module.css';
@@ -20,6 +21,7 @@ export function ConfirmModal({
   text,
   context,
   note,
+  dontAsk,
   children,
 }: {
   'aria-label': string;
@@ -33,6 +35,9 @@ export function ConfirmModal({
   context?: ConfirmContext[];
   /** Muted, under the box. */
   note?: ReactNode;
+  /** "Do not show this message again" (Settings › Prompts, M6): its state; the caller turns the
+   * prompt off when the action is confirmed with it checked. */
+  dontAsk?: { checked: boolean; onChange: (checked: boolean) => void };
   children: ReactNode;
 }) {
   return (
@@ -51,6 +56,14 @@ export function ConfirmModal({
           </div>
         )}
         {note && <p className={styles.note}>{note}</p>}
+        {dontAsk && (
+          <Checkbox
+            className={styles.dontAsk}
+            label="Do not show this message again"
+            checked={dontAsk.checked}
+            onChange={(e) => dontAsk.onChange(e.target.checked)}
+          />
+        )}
         <div className={styles.actions}>{children}</div>
       </div>
     </Modal>

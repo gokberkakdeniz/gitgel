@@ -10,6 +10,7 @@ import { Select } from '../../components/Select';
 import { SettingsNav, type SettingsNavSection } from '../../components/SettingsNav';
 import { openAddRepos } from '../../lib/addRepos';
 import { locateRepo, removeRepo, updateSettings } from '../../lib/ipc';
+import { stopAsking } from '../../lib/prompts';
 import { basename, tildifyHome } from '../../lib/paths';
 import type { AppError, Config, RepoConfig, TerminalChoice } from '../../lib/types';
 import { useData } from '../../state/data';
@@ -25,6 +26,7 @@ const SECTIONS: SettingsNavSection<SettingsSection>[] = [
   { id: 'general', label: 'General', icon: 'tune' },
   { id: 'repositories', label: 'Repositories', icon: 'folder' },
   { id: 'scripts', label: 'Scripts', icon: 'prompt' },
+  { id: 'prompts', label: 'Prompts', icon: 'help' },
   { id: 'shortcuts', label: 'Shortcuts', icon: 'keyboard' },
 ];
 
@@ -64,6 +66,8 @@ export function Settings() {
               <General config={config} />
             ) : section === 'scripts' ? (
               <Scripts config={config} />
+            ) : section === 'prompts' ? (
+              <Prompts config={config} />
             ) : (
               <Shortcuts />
             )}
@@ -77,6 +81,11 @@ export function Settings() {
 function Repositories({ config }: { config: Config }) {
   const scan = useData((s) => s.scan);
   const [removing, setRemoving] = useState<RepoConfig | null>(null);
+  const [dontAsk, setDontAsk] = useState(false);
+  const closeRemoving = () => {
+    setDontAsk(false);
+    setRemoving(null);
+  };
 
   const locate = async (repo: RepoConfig) => {
     const picked = await open({ directory: true, multiple: false });
@@ -91,8 +100,8 @@ function Repositories({ config }: { config: Config }) {
   const entriesOf = (repoId: string) =>
     config.projects.reduce((n, p) => n + p.entries.filter((e) => e.repoId === repoId).length, 0);
   const removeRow = (repo: RepoConfig) => {
-    // Only ask when projects would lose entries.
-    if (entriesOf(repo.id) > 0) setRemoving(repo);
+    // Only ask when projects would lose entries (and Settings › Prompts asks for it).
+    if (entriesOf(repo.id) > 0 && config.settings.prompts.removeRepositories) setRemoving(repo);
     else void removeRepo(repo.id);
   };
 
@@ -133,24 +142,52 @@ function Repositories({ config }: { config: Config }) {
           aria-label="Remove repository"
           title={`Remove ${basename(removing.path)}?`}
           width={440}
-          onClose={() => setRemoving(null)}
+          onClose={closeRemoving}
           text={`Its ${entriesOf(removing.id) === 1 ? '1 project entry is' : `${entriesOf(removing.id)} project entries are`} removed too. Nothing on disk is touched.`}
+          dontAsk={{ checked: dontAsk, onChange: setDontAsk }}
         >
-          <Button size={36} onClick={() => setRemoving(null)}>
+          <Button size={36} onClick={closeRemoving}>
             Cancel
           </Button>
           <Button
             variant="danger"
             size={36}
             onClick={() => {
+              if (dontAsk) stopAsking('removeRepositories');
               void removeRepo(removing.id);
-              setRemoving(null);
+              closeRemoving();
             }}
           >
             Remove
           </Button>
         </ConfirmModal>
       )}
+    </section>
+  );
+}
+
+/** The confirmations that can be turned off (M6, GitHub Desktop's texts). */
+function Prompts({ config }: { config: Config }) {
+  const prompts = config.settings.prompts;
+  const items: [keyof Config['settings']['prompts'], string][] = [
+    ['removeRepositories', 'Removing repositories'],
+    ['discardChanges', 'Discarding changes'],
+    ['discardStash', 'Discarding stash'],
+    ['deleteProjects', 'Deleting projects'],
+  ];
+  return (
+    <section className={styles.prompts} aria-labelledby="prompts-title">
+      <h2 id="prompts-title" className={styles.heading}>
+        Show a confirmation dialog before...
+      </h2>
+      {items.map(([key, label]) => (
+        <Checkbox
+          key={key}
+          label={label}
+          checked={prompts[key]}
+          onChange={(e) => void updateSettings({ ...config.settings, prompts: { ...prompts, [key]: e.target.checked } })}
+        />
+      ))}
     </section>
   );
 }

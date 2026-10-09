@@ -1,6 +1,7 @@
 // Parts of the diff pane shared by Review and History (SPEC §16): the file bar with its view menu
 // and change navigation, file rows, the stash section, and the remembered diff view settings with
 // their ⌥ keys.
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox } from '../../components/Checkbox';
 import { ChevronDownIcon, Icon, SplitIcon, UnifiedIcon } from '../../components/icons';
@@ -313,27 +314,44 @@ export function useSidebarHiddenWhileMounted(hide: boolean) {
   }, [hide]);
 }
 
+/** What Uncommitted's right-click menu does (Hi8, D12). */
+export interface FileActions {
+  /** The files it acts on: the picked ones when this row is one of them, else this one. Each
+   * with its worktree: a project review's picks can span repositories with the same paths. */
+  files: { file: FileChange; folder: string | null }[];
+  onDiscard: () => void;
+  /** History's boxes: Include / Exclude Selected Files, with several files. */
+  onInclude?: (on: boolean) => void;
+}
+
 export function FileRow({
   file: f,
   terms,
   on,
+  picked,
   onClick,
   folder,
   check,
+  actions,
 }: {
   file: FileChange;
   terms: string[];
   on: boolean;
-  onClick: () => void;
-  /** The folder the file is opened from by the right-click menu; none, no menu. */
+  /** Picked with ⌘ / ⇧-click: tinted. */
+  picked?: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  /** The folder the file is opened from by the right-click menu; none, no open items. */
   folder: string | null;
   /** A box before the row: the file goes into the commit (History's Uncommitted, W1a). */
   check?: { checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void };
+  /** Uncommitted's files: the menu discards and copies too, deleted files included. */
+  actions?: FileActions;
 }) {
   const [menu, setMenu] = useState<DOMRect | null>(null);
   // A deleted file is not on disk.
   const menuFolder = f.kind === 'D' ? null : folder;
-  const state = on ? styles.selected : menu ? styles.menuOpen : '';
+  const hasMenu = !!actions || !!menuFolder;
+  const state = picked ? styles.picked : on ? styles.selected : menu ? styles.menuOpen : '';
   const button = (
       <button
         type="button"
@@ -341,7 +359,7 @@ export function FileRow({
         aria-current={on || undefined}
         onClick={onClick}
         onContextMenu={
-          menuFolder
+          hasMenu
             ? (ev) => {
                 ev.preventDefault();
                 setMenu(new DOMRect(ev.clientX, ev.clientY, 0, 0));
@@ -375,17 +393,99 @@ export function FileRow({
       ) : (
         button
       )}
-      {menu && menuFolder && (
-        <Popover anchorRect={menu} width={220} onClose={() => setMenu(null)}>
-          <Menu aria-label={`${basename(f.path)} actions`}>
-            <FileOpenItems
-              folder={menuFolder}
-              path={f.path}
-              at={() => (on ? diffPosition(f.path) : null)}
-              onDone={() => setMenu(null)}
-            />
+      {menu && hasMenu && (
+        <Popover anchorRect={menu} width={actions ? 230 : 220} onClose={() => setMenu(null)}>
+          <Menu aria-label={actions && actions.files.length > 1 ? `${actions.files.length} files actions` : `${basename(f.path)} actions`}>
+            {actions ? (
+              <UncommittedItems
+                actions={actions}
+                at={() => (on ? diffPosition(f.path) : null)}
+                onDone={() => setMenu(null)}
+              />
+            ) : (
+              menuFolder && (
+                <FileOpenItems
+                  files={[{ folder: menuFolder, path: f.path }]}
+                  at={() => (on ? diffPosition(f.path) : null)}
+                  onDone={() => setMenu(null)}
+                />
+              )
+            )}
           </Menu>
         </Popover>
+      )}
+    </>
+  );
+}
+
+/** Uncommitted's file menu (Hi8, D12; GitHub Desktop's texts): Discard, Include / Exclude (History,
+ * several files), the paths, then the open items for the files still on disk. */
+function UncommittedItems({
+  actions,
+  at,
+  onDone,
+}: {
+  actions: FileActions;
+  at: () => { line: number; column: number } | null;
+  onDone: () => void;
+}) {
+  const { files, onDiscard, onInclude } = actions;
+  const one = files.length === 1;
+  const relative = files.map((x) => x.file.path);
+  const absolute = files.every((x) => x.folder) ? files.map((x) => `${x.folder}/${x.file.path}`) : null;
+  const onDisk = files.flatMap((x) => (x.folder && x.file.kind !== 'D' ? [{ folder: x.folder, path: x.file.path }] : []));
+  const copy = (paths: string[]) => {
+    onDone();
+    void writeText(paths.join('\n'));
+  };
+  return (
+    <>
+      <MenuItem
+        danger
+        onSelect={() => {
+          onDone();
+          onDiscard();
+        }}
+      >
+        {one ? 'Discard Changes…' : `Discard ${files.length} Selected Changes…`}
+      </MenuItem>
+      {!one && onInclude && (
+        <>
+          <MenuDivider />
+          <MenuItem
+            icon="check"
+            onSelect={() => {
+              onDone();
+              onInclude(true);
+            }}
+          >
+            Include Selected Files
+          </MenuItem>
+          <MenuItem
+            icon="close"
+            onSelect={() => {
+              onDone();
+              onInclude(false);
+            }}
+          >
+            Exclude Selected Files
+          </MenuItem>
+        </>
+      )}
+      <MenuDivider />
+      {absolute && (
+        <MenuItem icon="copy" onSelect={() => copy(absolute)}>
+          {one ? 'Copy File Path' : 'Copy Paths'}
+        </MenuItem>
+      )}
+      <MenuItem icon="copy" onSelect={() => copy(relative)}>
+        {one ? 'Copy Relative File Path' : 'Copy Relative Paths'}
+      </MenuItem>
+      {onDisk.length > 0 && (
+        <>
+          <MenuDivider />
+          <FileOpenItems files={onDisk} at={at} onDone={onDone} />
+        </>
       )}
     </>
   );

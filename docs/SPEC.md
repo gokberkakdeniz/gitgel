@@ -23,14 +23,16 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 
 - **Reads through git2, writes through the git CLI.** Everything Gitgel reads comes from git2
   (libgit2); the git binary is never run to read. Everything that changes a repository (the stash,
-  sync and commit actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
+  sync, commit and discard actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
   command line built in `src-tauri/src/scripts/git.rs` and run like a script (§14: login shell,
   pty, toast, output panel, rescan when it ends). Values (a message, folders) go in `GITGEL_*`
   environment variables, never into the command text. `std::process::Command` is banned in app
   code; the exceptions are `src-tauri/src/apps.rs`, which starts the terminal the user set in
   Settings (WezTerm, or an Other command), `src-tauri/src/updates.rs`, which relaunches
   Gitgel with `open -n` after an update, and `src-tauri/src/ssh.rs`, which saves an SSH key's
-  passphrase in the Keychain with `ssh-add`. Scripts and git actions run in a pty (`portable-pty`,
+  passphrase in the Keychain with `ssh-add`. The one write outside git: before a discard,
+  `src-tauri/src/trash.rs` puts a copy of each file in the Trash (NSFileManager; §15 "Discard").
+  Scripts and git actions run in a pty (`portable-pty`,
   `src-tauri/src/scripts/run.rs`). git2 is used only under `src-tauri/src/git/`; other modules
   use the functions there and the types in §8.
 - **git2 never writes.** The app never calls a git2 API that writes to a repository: no checkout,
@@ -48,7 +50,9 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   packages. A Rust command parameter `repo_id` is sent as `repoId` from JS.
 - UI copy is English and matches the reference screens exactly (singular/plural included). Labels
   (buttons, in-app menu items) never end in "…", even when they open a dialog; only progress
-  text does ("Scanning repositories…"). The native menu bar follows the macOS HIG instead:
+  text does ("Scanning repositories…"). The exception is copy taken word for word from a
+  reference app the user names: Discard's menu items and dialog are GitHub Desktop's ("Discard
+  Changes…", "Show a confirmation dialog before..."). The native menu bar follows the macOS HIG instead:
   "…" on items that ask for more before they finish (Settings…, Check for Updates…). Code,
   identifiers and comments are English.
 - Do not invent features the spec does not describe. If something is undefined, pick the
@@ -142,7 +146,7 @@ configurable refresh.
 | Base | Stored per branch: `branchBases["<repoId>:<branch>"]`. |
 | Deleted branches | Entries keep `lastKnownTip` (SHA + when it was last seen), so a deleted branch can still show its last diff while the commit exists. |
 | Review | One screen for a whole project, files grouped per entry, one mode toggle. Single-branch review is the same screen with one group. |
-| Settings | Sections in a list: General (theme, terminal, update checks), Repositories (repos, default base order, active threshold), Scripts (the user's scripts) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
+| Settings | Sections in a list: General (theme, terminal, update checks), Repositories (repos, default base order, active threshold), Scripts (the user's scripts), Prompts (which confirmations are shown) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
 | Scripts | User shell commands run from branch menus (§14): `$SHELL -l -c`, context in `GITGEL_*` env vars; every run in a pty (`portable-pty`) with a toast that opens its output panel (drawn with `@xterm/xterm`); Show when conditions in CEL, evaluated in the frontend. |
 | Config owner | Only Rust reads and writes the config. The frontend never writes files; every change is a Tauri command. |
 | Config path | `~/Library/Application Support/com.gitgel.desktop/config.json` (Tauri `app_data_dir()`). |
@@ -175,6 +179,7 @@ gitgel/
 │  ├─ lib/      types.ts  ipc.ts  events.ts  useInvoke.ts  format.ts  paths.ts  entryKey.ts
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts
 │  │            useCopy.ts  changelog.ts (CHANGELOG.md parsed, version compare)  whatsNew.ts
+│  │            prompts.ts (Settings › Prompts: "Do not show this message again")
 │  ├─ windows/  # §7 the small windows: AuxApp (entry, theme, sizing), AboutWindow,
 │  │            # UpdateWindow, WhatsNewWindow
 │  ├─ state/    nav.ts  ui.ts  data.ts
@@ -190,6 +195,8 @@ gitgel/
 │  │            # History/: the History screen, its list rows and the commit form (§16)
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
+│  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
+│  │            # Discard Changes), picks.ts (⌘ / ⇧-click picking of Uncommitted's files)
 │  ├─ sync/     # §15 sync (W4a): sync.ts (what Fetch / Pull / Push can do, labels), SyncButtons
 │  │            # (History header buttons, SyncItems: the branch menus' group)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
@@ -211,7 +218,8 @@ gitgel/
       ├─ windows.rs               # About, Software Update, What's New windows (§7)
       ├─ ssh.rs                   # SSH passphrase into the Keychain; askpass mode (§15)
       ├─ scripts/   mod.rs  run.rs # the user's scripts: config, import/export; running, output, stop
-      │             git.rs        # git actions: stash push / apply / pop / drop, fetch / pull / push, commit (§0, §15)
+      │             git.rs        # git actions: stash push / apply / pop / drop, fetch / pull / push, commit, discard (§0, §15)
+      ├─ trash.rs                 # Discard's copies into the Trash (§15)
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
       ├─ git/                     # the ONLY place git2 is used
@@ -219,7 +227,7 @@ gitgel/
       │  ├─ pool.rs               # Repository pool
       │  ├─ inspect.rs            # folder resolution (flow A2)
       │  ├─ refs.rs               # branches, default base, ref checks, tags, last fetch time
-      │  ├─ worktrees.rs          # main + linked worktrees, ignore check
+      │  ├─ worktrees.rs          # main + linked worktrees, ignore check, staged / tracked paths
       │  ├─ diff.rs               # tree/workdir/commit diffs, FileChange conversion, blobs
       │  ├─ history.rs            # merge-base, ahead, revwalk, merged state, stack candidates,
       │  │                        # history pages and search (§16)
@@ -463,7 +471,9 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   serif 22px title, then a 14px `text.body` text (Delete project, Remove repository; gap 10, the
   buttons 10px under it) or a `bg.sunken` box naming what it acts on (padding 12px 14px, radius
   10, mono 12 `text.code`, one row per thing with a 14px muted icon) and a 13px muted note (Drop
-  stash P6, Run O3; gap 14, the buttons 4px under it); 36px buttons on the right, the action last.
+  stash P6, Run O3; gap 14, the buttons 4px under it); with `dontAsk`, a `Checkbox` "Do not show
+  this message again" above the buttons (Delete project, Remove repository, Drop stash; §5
+  Settings "Prompts"); 36px buttons on the right, the action last.
 - `Stepper`: ↑ ↓ in one framed group (`bg.elevated`, 1px border, radius 8, padding 2, gap 2;
   buttons 26×24, radius 6, 14px chevrons; `Stepper.dc.html`, `StepperSpec.dc.html`): Review's and
   History's change navigation and Review's commit stepping. A button that cannot step is
@@ -748,7 +758,8 @@ Layout:
     does nothing (`log::warn!`).
     When the row is the file the diff shows, an editor opens it at the diff's cursor: line and
     column of its modified side (`src/monaco/position.ts`; "Change n of m" and a click move
-    it), else at the top. Finder just shows the file.
+    it), else at the top. Finder just shows the file. In the Uncommitted layer the files can be
+    picked with ⌘ / ⇧-click and the menu discards and copies them too (§15 "Discard", D12).
   - Project scope, if some entries cannot be reviewed: one line under a top border, 12px muted
     `N entries not reviewable ·` + link "Open project".
   - Opening from a project row focuses that entry: its first file is selected and the other
@@ -945,6 +956,7 @@ Layout:
   then does nothing, as with an empty name. Esc or a click elsewhere cancels.
 - **Delete confirm** (440px modal): serif 22px `Delete "Name"?`, "Removes the project and its N
   entries. Nothing on disk is touched." ("its 1 entry"), Cancel / danger "Delete project". Afterwards Branches.
+  With Settings › Prompts › "Deleting projects" off it deletes without asking.
 - **Empty project:** centred serif 28px "No entries yet", "A project groups branches that belong
   to one piece of work, across any of your repositories.", 40px primary "Add branches ⌘K".
 - A project that no longer exists (deleted elsewhere) sends the screen back to Branches.
@@ -983,7 +995,7 @@ Layout:
   its own; content max 760px, padding 28px 32px 40px, groups 28px apart). Sections: 34px rows
   (radius 8, 13px, 16px muted icon, gap 10): **General** (sliders), **Repositories** (folder icon,
   repo count in mono 12 muted on the right), **Scripts** (prompt icon, script count; §14),
-  **Shortcuts** (keyboard). The chosen one:
+  **Prompts** (help), **Shortcuts** (keyboard). The chosen one:
   `bg.sidebarActive`, `text.strong` 500, `aria-current="page"`; others hover `bg.sunken`.
   Settings opens on the section shown last (General at first; kept for the session).
   The sidebar's "N repositories" row and every "path not found" link open Repositories; the
@@ -995,7 +1007,7 @@ Layout:
   - Locate: the picked folder must be a repository (or resolve to one) not already added under
     another id; errors show as a failed toast with the picked folder under the message ("Not a git
     repository", "Already added as <name>"). Fixes every entry of that repo.
-  - ✕ asks first only when projects use the repo: `Remove <name>?` · "Its N project entries are
+  - ✕ asks first only when projects use the repo (and Prompts › "Removing repositories" is on): `Remove <name>?` · "Its N project entries are
     removed too. Nothing on disk is touched." · Cancel / danger "Remove". Removing drops the repo,
     its branch bases and its project entries.
   - Under the card, "Default base" ("Used when a branch has no base"; label level with the first
@@ -1036,6 +1048,13 @@ Layout:
   - "Check for updates" ("At launch and every 6 hours; a new version shows in the sidebar"): a
     checkbox, on by default (`settings.checkUpdates`). Off hides a found update; on checks at once.
 - **Scripts:** see §14 "Settings › Scripts".
+- **Prompts** (M6, `FlowM6`; GitHub Desktop's section and texts): serif 18px heading "Show a
+  confirmation dialog before...", then one `Checkbox` per line, gap 12: "Removing repositories"
+  (the Repositories ✕), "Discarding changes" (§15 "Discard"), "Discarding stash" (Drop, P6),
+  "Deleting projects" (flow G). All on by default (`settings.prompts`); off, the action runs
+  without its dialog. Saved at once. Each of those dialogs has a `Checkbox` "Do not show this
+  message again" above its buttons (`ConfirmModal`'s `dontAsk`; Confirm Discard Changes its own,
+  §15); confirming with it checked turns its box here off (`src/lib/prompts.ts`).
 - **Shortcuts:** serif 18px heading "Keyboard shortcuts" + muted "Not editable yet"; four cards
   (`bg.sunken`, radius 12, padding 6px 0) in a `repeat(2, minmax(max-content, 1fr))` grid, gap 12
   (a narrow window scrolls instead of squeezing): **General**, **Branches and projects**,
@@ -1282,6 +1301,13 @@ export interface Settings {
   checkUpdates: boolean;         // Settings › General › Check for updates; default true
   lastSeenVersion: string;       // version whose What's New was shown; default ''
   appearance: 'system' | 'light' | 'dark'; // Settings › General › Theme; default 'system' (T10.1)
+  prompts: Prompts;              // Settings › Prompts; every one true by default
+}
+export interface Prompts {       // "Show a confirmation dialog before..."
+  removeRepositories: boolean;
+  discardChanges: boolean;       // off after "Do not show this message again" (§15 "Discard")
+  discardStash: boolean;         // Drop (P6)
+  deleteProjects: boolean;       // flow G
 }
 export interface Config {
   version: 1;
@@ -1600,6 +1626,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `stash_drop` | `repoId, index, sha` | `ScriptRun` |
 | `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`include: string[]`, `summary`, `description`, `noVerify`) | `ScriptRun` (§15 "Commit") |
 | `get_staged_paths` | `entry: EntryRef` | `string[]` (paths staged in the entry's worktree) |
+| `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`) | `ScriptRun` (§15 "Discard") |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
 | `git_push` | `entry: EntryRef, force: boolean` | `ScriptRun` |
@@ -1863,12 +1890,13 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 421–464 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–162 (commit stepping 144–151, list 152–161), file bar 164–224 (whitespace chip 167–169, view button and menu 171–213 with Context 192–203, change navigation 214–223), split body 226–239, unified body 240–246, base menu 253–273 (sections, Default pair, pills, disabled rows, hint), base menu data per case 670–712 (`baseCase`: stacked / behind / unrelated / remote; effective base 290–291), commit selection 387–400, filter logic 402–412, 423–426, 457 and 586–587, segmented 465–472, context and fold logic 563–576 (sample hidden lines 477–485), view values 733–756 (context 740–755), commit values 758–768, theme and `embedded` values 717–718, filter values 771–782 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
-| Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Shortcuts 123–147, shortcut data and keycap style 167–198. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name |
+| Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Prompts 123–130 (data 286), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 232–241) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
+| Discard | `HistH9`, `FlowD12.dc.html` | canvas page "Review & History": Hi8 (`HistH9` mounts `HistH6` with `selected`) History's Uncommitted with files picked, their menu (23–25, data 87–111; `count` two / one / all: the Uncommitted row's menu) and Confirm Discard Changes (26–49, data 112–116); D12 (`FlowD12` mounts `Diff` with `selected`) the same in a project review, the dialog's files under their entry (data 87–96) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings. Projects and Palette still use hex; theme them with the same mapping |
 
@@ -2322,6 +2350,60 @@ same in sh, bash, zsh and fish. It has the run toast and output panel of a scrip
   `repo / branch · N files`, 13px muted "Its changes are lost unless they are somewhere else.",
   then Cancel (focused) and danger "Drop stash". Runs `git stash drop 'stash@{n}'` in the
   repository folder, named "Drop stash@{n}". The stash review then picks the newest stash (above).
+  With Settings › Prompts › "Discarding stash" off it drops without asking.
+
+### Discard
+
+Uncommitted files go back to HEAD, as GitHub Desktop's Discard Changes; its texts are used word
+for word (§0). Canvas boards `HistH9` (Hi8, History) and `FlowD12` (D12, Review).
+
+- **Picking files** (Review's Uncommitted layer, branch or project, and History's Uncommitted):
+  ⌘-click adds a file to the picked ones or takes it out (the first one starts from the file
+  shown), ⇧-click picks the range from the last one clicked, in list order (across entries in a
+  project review). Picked rows are tinted `rgba(accent, 0.18)` over every other state. A plain
+  click picks just that file again and shows it; esc clears; the diff keeps the file it shows.
+  The picks are dropped when the row, branch or mode changes, and files that leave the list
+  (discarded, committed) leave them too. Listed in Settings › Shortcuts ("Pick files").
+- **File menu** (right-click an Uncommitted file; deleted files too): on a picked file it acts on
+  every picked one, on any other file on that file alone. A 230px menu: danger "Discard
+  Changes…" (several: "Discard N Selected Changes…"); in History with several files, a divider
+  and "Include Selected Files" (`check`) / "Exclude Selected Files" (`close`), which check or
+  uncheck their commit boxes; a divider, "Copy File Path" (the absolute path; several: "Copy
+  Paths", one per line) and "Copy Relative File Path" ("Copy Relative Paths"), `copy` icons;
+  then a divider and the open items of §5 Review "File rows" for the files on disk (several open
+  one after another). Each file is read from its own entry's worktree, so picks across repos
+  with the same paths copy and open the right files. A commit's or a stash's files keep the open items alone.
+- **Uncommitted row menu** (History, right-click the "Uncommitted changes" row): danger "Discard
+  All Changes…" and "Stash All Changes…" (`package`; opens Stash (P4) at the pointer, disabled
+  when nothing can be stashed).
+- **Confirm Discard Changes** (`Modal` 480px, 160px from the top): `ModalHeader` "Confirm Discard
+  Changes" with ✕ ("Confirm Discard All Changes" for Discard All Changes); a body (padding 4px
+  24px 22px, gap 16) with a 28px `warning` icon (stroke 1.6, `warning`) beside a column (gap 12):
+  14px "Are you sure you want to discard all changes to:", the paths (mono 12 `text.code`,
+  ellipsis; with files of several entries, one block per entry under its 12px/600 repo name and
+  mono 11 muted branch), 13px muted "Changes can be restored by retrieving them from the Trash.",
+  and a `Checkbox` "Do not show this message again". Footer: Cancel (focused) and danger "Discard
+  Changes" ("Discard All Changes"). Esc and ✕ cancel. Discard All Changes, or more than 10 files,
+  shows "Are you sure you want to discard all N changed files?" instead of the list, without the
+  checkbox, and always asks. The checkbox turns Settings › Prompts › "Discarding changes" off;
+  with it off a discard of up to 10 picked files runs without asking.
+- **Running** (`git_discard`): a git action named "Discard changes", `undo` icon, script id
+  `git:discard`, toast sub line `repo / branch` (or `N entries`), the repositories rescanned when
+  it ends. Before it starts, the backend checks the paths (relative, no `..`), the entries'
+  worktrees and that no other git action runs in their repositories (§15 "Writing stashes"),
+  then puts a copy of each file still on disk into the Trash (`trash.rs`): copied into the temp
+  folder as `<file name> <HH-mm-ss-SSS><ext>` (`x1.txt 20-42-56-018.txt`, local time; files of
+  one discard sharing a name get the least that tells them apart in brackets before the time:
+  the repo, then its branch, else the repo and folder, else all three, `index.ts (web-app › src ›
+  auth) 20-42-56-018.ts`; a `/` in a branch becomes `∕`) and moved
+  with NSFileManager's `trashItemAtURL`. If a copy fails, nothing is discarded and the toast says
+  `“Discard changes” could not start` with "Could not put a copy of <name> in the Trash, so
+  nothing was discarded. …". Then, in each entry's worktree one after another: `git -C
+  "$GITGEL_FOLDER_n" restore --source=HEAD --staged --worktree -- <paths git knows>` (in the
+  index or HEAD; staged and unstaged changes alike, a staged new file removed) `&& git … clean -f
+  -q -- <untracked paths>` (`worktrees::tracked` decides), with `GIT_LITERAL_PATHSPECS=1`; a
+  rename sends its old path too. Only the working copy goes to the Trash: a staged version that
+  differs from it is not kept.
 
 ### Commit
 
@@ -2435,9 +2517,9 @@ never edits `~/.ssh`:
 ## 16. History
 
 A branch's commits, newest first, each one shown on its own against its first parent, like
-GitHub Desktop's History tab. Reads are a revwalk and diffs; the one write is Commit (§15 "Commit").
+GitHub Desktop's History tab. Reads are a revwalk and diffs; the writes are Commit and Discard (§15).
 Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `HistH7`,
-`HistH8.dc.html` (§11).
+`HistH8`, `HistH9.dc.html` (§11).
 
 - **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
   branch, a remote-tracking branch or a SHA) and walks from it by committer time, newest first
@@ -2478,7 +2560,9 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     uncommitted file, as on Branches; left out when unknown). Picking it lists its files under it
     and shows HEAD ↔ working tree (untracked files included), as Review's Uncommitted layer. Its
     files have a `Checkbox` before them (the commit form below); after a failed commit the row
-    carries a danger sm pill "commit failed" after the title (`HistH8`).
+    carries a danger sm pill "commit failed" after the title (`HistH8`). Right-click on the row:
+    Discard All Changes… / Stash All Changes…; its files can be picked with ⌘ / ⇧-click and
+    discarded, included or copied from their right-click menu (§15 "Discard", `HistH9`, Hi8).
   - **Day labels**: 11px `text.faint`, padding 10px 8px 4px: "Today", "Yesterday", else `Oct 2`
     (this year) or `Oct 2, 2025`, by committer time.
   - **Commit row** (`role="option"`, tooltip "Show this commit"): padding 7px 8px, radius 8, gap

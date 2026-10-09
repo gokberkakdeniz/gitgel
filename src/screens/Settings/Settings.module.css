@@ -26,6 +26,14 @@
   gap: 14px;
 }
 
+/* Prompts (M6): the heading, then one checkbox per line. */
+.prompts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
 .heading {
   margin: 0;
   font-family: var(--font-serif);

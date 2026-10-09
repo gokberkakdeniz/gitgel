@@ -47,7 +47,9 @@ import { useData } from '../../state/data';
 import { openHistory, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { fileMatches, filterTerms } from './fileFilter';
-import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo } from './parts';
+import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, type FileActions } from './parts';
+import { askDiscard, targetOf } from '../../discard/discard';
+import { usePicks } from '../../discard/picks';
 import parts from './parts.module.css';
 import { reviewStashes, stashHeading, type ReviewStash } from './stashes';
 import editable from '../../components/EditableTitle.module.css';
@@ -190,6 +192,27 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     fileList.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
   }, [currentId]);
   const fileIndex = currentId ? files.indexOf(currentId) : -1;
+  // Uncommitted files picked with ⌘ / ⇧-click, across entries (D12): their right-click menu
+  // discards and copies all of them.
+  const pickable = mode === 'uncommitted' && !stashId;
+  const picks = usePicks(pickable ? files : [], currentId, `${targetKey}\u0000${mode}`);
+  const actionsOf = (g: ReviewGroup, f: FileChange): FileActions | undefined => {
+    if (!pickable || !g.entry.worktreePath) return undefined;
+    const ids = picks.targets(fileId(g.entry.key, f.path));
+    const targets = listed.flatMap((x) => {
+      const picked = shownOf(x).filter((y) => ids.includes(fileId(x.entry.key, y.path)));
+      return picked.length > 0 ? [targetOf(x.entry, picked)] : [];
+    });
+    return {
+      // Each file with its own worktree: picks can span repos holding the same paths.
+      files: listed.flatMap((x) =>
+        shownOf(x)
+          .filter((y) => ids.includes(fileId(x.entry.key, y.path)))
+          .map((y) => ({ file: y, folder: entryFolder(x.entry, config) })),
+      ),
+      onDiscard: () => askDiscard({ targets, all: false }),
+    };
+  };
   const [land, setLand] = useState<{ id: string | null; where: 'first' | 'last' }>({ id: null, where: 'first' });
   const [nav, setNav] = useState<NavInfo>({ index: null, count: 0 });
   const diffNav = useRef<DiffNav | null>(null);
@@ -516,6 +539,8 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
               commit={g.commits.find((c) => c.sha === shaOf(g))}
               loading={!!shaOf(g) && !commitOf(g)}
               onClearCommit={() => pickCommit(g, null)}
+              picks={pickable ? picks : undefined}
+              actions={(f) => actionsOf(g, f)}
             />
           ))}
           {target.kind === 'project' && data && data.notInReview.length > 0 && !filtering && (
@@ -804,6 +829,8 @@ function FileGroup({
   commit,
   loading,
   onClearCommit,
+  picks,
+  actions,
 }: {
   group: ReviewGroup;
   mode: DiffMode;
@@ -822,6 +849,10 @@ function FileGroup({
   /** Its files are on the way; the previous list stays, dimmed. */
   loading: boolean;
   onClearCommit: () => void;
+  /** Uncommitted files picked with ⌘ / ⇧-click (D12), by `fileId`. */
+  picks?: { isPicked: (id: string) => boolean; click: (id: string, e: React.MouseEvent, open: () => void) => void };
+  /** Uncommitted's file menu (D12). */
+  actions: (f: FileChange) => FileActions | undefined;
 }) {
   const files = g.files[mode];
   const add = files.reduce((n, f) => n + (f.add ?? 0), 0);
@@ -912,7 +943,13 @@ function FileGroup({
               folder={folder}
               terms={terms}
               on={selected?.key === e.key && selected.path === f.path}
-              onClick={() => onSelect({ key: e.key, path: f.path })}
+              picked={picks?.isPicked(fileId(e.key, f.path))}
+              onClick={(ev) => {
+                const open = () => onSelect({ key: e.key, path: f.path });
+                if (picks) picks.click(fileId(e.key, f.path), ev, open);
+                else open();
+              }}
+              actions={actions(f)}
             />
           ))}
         </div>

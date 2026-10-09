@@ -34,10 +34,11 @@ notify-debouncer-full = "=0.7.0"
 tauri-plugin-opener = "=2.5.5"
 tauri-plugin-updater = "=2.12.0"
 
-# Finds installed apps for the entry menus' open items (`apps.rs`). Already in the tree via tao.
+# Finds installed apps for the entry menus' open items (`apps.rs`) and moves Discard's copies to
+# the Trash (`trash.rs`). Already in the tree via tao.
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "=0.6.4"
-objc2-foundation = { version = "=0.3.2", default-features = false, features = ["std", "NSString", "NSURL", "NSData", "NSDictionary", "NSGeometry"] }
+objc2-foundation = { version = "=0.3.2", default-features = false, features = ["std", "NSString", "NSURL", "NSData", "NSDictionary", "NSGeometry", "NSFileManager", "NSError"] }
 objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["std", "NSWorkspace", "NSWindow", "NSResponder", "NSGraphics", "NSImage", "NSImageRep", "NSBitmapImageRep", "NSGraphicsContext", "objc2-core-graphics"] }
 base64 = "=0.22.1"
 portable-pty = "=0.9.0"

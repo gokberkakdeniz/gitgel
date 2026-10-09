@@ -73,3 +73,8 @@
 .withContext .actions {
   margin-top: 4px;
 }
+
+/* "Do not show this message again": as wide as its label, not the dialog. */
+.dontAsk {
+  align-self: flex-start;
+}

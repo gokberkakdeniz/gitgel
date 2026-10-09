@@ -120,6 +120,15 @@ button,input{font-family:inherit}
 <span style="font-size: 12px; color: var(--text-muted)">Scripts run as you, with your permissions. Gitgel itself still only reads the repositories.</span>
 </sc-if>
 
+<sc-if value="{{isPrompts}}" hint-placeholder-val="{{false}}">
+<section role="group" aria-labelledby="ask-title" style="display: flex; flex-direction: column; gap: 12px">
+<h2 id="ask-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Show a confirmation dialog before...</h2>
+<sc-for list="{{asks}}" as="a" hint-placeholder-count="4">
+<dc-import name="Checkbox" theme="{{themeName}}" label="{{a.label}}" checked="{{a.on}}" hint-size="200px,20px"></dc-import>
+</sc-for>
+</section>
+</sc-if>
+
 <sc-if value="{{isShortcuts}}" hint-placeholder-val="{{false}}">
 <section aria-labelledby="shortcuts-title" style="display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; align-items: baseline; gap: 12px">
@@ -152,7 +161,7 @@ button,input{font-family:inherit}
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"baseHover": {"editor": "enum", "options": ["none", "1", "2", "3"], "default": "none"}, "baseAdd": {"editor": "enum", "options": ["none", "typing", "duplicate", "invalid"], "default": "none"}, "section": {"editor": "enum", "options": ["general", "repositories", "scripts", "shortcuts"], "default": "general"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "appearance": {"editor": "enum", "options": ["system", "light", "dark"], "default": "system"}, "terminal": {"editor": "enum", "options": ["auto", "terminal", "iterm", "wezterm", "other", "missing"], "default": "auto"}, "$preview": {"width": 1280, "height": 800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"baseHover": {"editor": "enum", "options": ["none", "1", "2", "3"], "default": "none"}, "baseAdd": {"editor": "enum", "options": ["none", "typing", "duplicate", "invalid"], "default": "none"}, "section": {"editor": "enum", "options": ["general", "repositories", "scripts", "prompts", "shortcuts"], "default": "general"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "appearance": {"editor": "enum", "options": ["system", "light", "dark"], "default": "system"}, "terminal": {"editor": "enum", "options": ["auto", "terminal", "iterm", "wezterm", "other", "missing"], "default": "auto"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
   renderVals() {
     var ok = 'font-size: 12px; color: var(--text-muted); white-space: nowrap';
@@ -229,7 +238,7 @@ class Component extends DCLogic {
     });
     var section = (this.state && this.state.section) || this.props.section || 'general';
     // Section list (SettingsNav): icons by id.
-    var sections = [['general', 'General', ''], ['repositories', 'Repositories', '4'], ['scripts', 'Scripts', '5'], ['shortcuts', 'Shortcuts', '']].map(function (x) {
+    var sections = [['general', 'General', ''], ['repositories', 'Repositories', '4'], ['scripts', 'Scripts', '5'], ['prompts', 'Prompts', ''], ['shortcuts', 'Shortcuts', '']].map(function (x) {
       return { id: x[0], label: x[1], count: x[2], pick: function () { self.setState({ section: x[0] }); } };
     });
     // Default base: an ordered list edited one branch at a time, so there is no separator to type.
@@ -272,7 +281,10 @@ class Component extends DCLogic {
       baseNote: bn[0], baseNoteStyle: bn[1], baseDraft: bn[2], baseInputState: bn[3],
       startAdd: function () { self.setState({ baseAdd: 'typing' }); },
       section: section,
-      isRepos: section === 'repositories', isGeneral: section === 'general', isShortcuts: section === 'shortcuts', isScripts: section === 'scripts',
+      // Prompts › Show a confirmation dialog before... (Hi8, GitHub Desktop's texts and section): the confirmations that can be turned off; "Do not show this message again" in
+      // the Discard dialog clears its box here. Discard all and more than 10 files always ask.
+      asks: [{ label: 'Removing repositories', on: true }, { label: 'Discarding changes', on: true }, { label: 'Discarding stash', on: true }, { label: 'Deleting projects', on: true }],
+      isRepos: section === 'repositories', isGeneral: section === 'general', isShortcuts: section === 'shortcuts', isScripts: section === 'scripts', isPrompts: section === 'prompts',
       // Settings › Scripts (flow N5): name, icon (Icon set) in the user's order; the Switch turns one off (in no menu) at once.
       scripts: [['Open pull request', 'pull-request'], ['Run tests', 'test'], ['Rebase on {base}…', 'rebase'], ['Copy Linear link', 'link'], ['Start dev server', 'prompt']].map(function (x) {
         var offMap = (self.state && self.state.scriptsOff) || { 'Copy Linear link': true };

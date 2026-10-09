@@ -968,6 +968,51 @@ mod tests {
         assert_eq!(crate::git::stash::list(&t.repo).unwrap().len(), 1);
     }
 
+    /// Discard (SPEC §15): picked files go back to HEAD, staged parts too, a staged new file and
+    /// an untracked one are removed; the rest stays.
+    #[test]
+    fn git_action_discards_picked_files_only() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on(
+            "main",
+            &[("a.txt", Some(b"a\n")), ("b*.txt", Some(b"b\n"))],
+            "base",
+            1,
+        );
+        t.checkout_main();
+        t.write_file(t.path(), "a.txt", b"staged\n");
+        t.stage(t.path(), "a.txt");
+        t.write_file(t.path(), "a.txt", b"staged and more\n");
+        t.write_file(t.path(), "b*.txt", b"keep\n");
+        t.write_file(t.path(), "added.txt", b"added\n");
+        t.stage(t.path(), "added.txt");
+        t.write_file(t.path(), "new.txt", b"new\n");
+        let folder = t.path().to_string_lossy().into_owned();
+        let step = super::super::git::DiscardStep {
+            restore: 2,
+            clean: 1,
+        };
+        let (out, ended) = pty(
+            &super::super::git::discard_command(&[step]),
+            &[
+                ("GITGEL_FOLDER_1", &folder),
+                ("GITGEL_PATH_1_1", "a.txt"),
+                ("GITGEL_PATH_1_2", "added.txt"),
+                ("GITGEL_CLEAN_1_1", "new.txt"),
+                ("GIT_LITERAL_PATHSPECS", "1"),
+            ],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        let read = |p: &str| std::fs::read(t.path().join(p)).ok();
+        assert_eq!(read("a.txt").as_deref(), Some(&b"a\n"[..]));
+        assert_eq!(read("added.txt"), None);
+        assert_eq!(read("new.txt"), None);
+        assert_eq!(read("b*.txt").as_deref(), Some(&b"keep\n"[..]));
+        let (staged, _) = crate::git::worktrees::staged(&t.repo).unwrap();
+        assert!(staged.is_empty(), "{staged:?}");
+    }
+
     /// A stash apply that conflicts leaves the file unmerged: it is listed as `C` (SPEC §15).
     #[test]
     fn conflicted_files_are_listed_as_conflicts() {

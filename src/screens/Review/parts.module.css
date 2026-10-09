@@ -256,6 +256,14 @@
   background: var(--bg-hover);
 }
 
+/* Picked with ⌘ / ⇧-click (Hi8, D12): tinted, over the other states. */
+.picked,
+.picked:hover,
+.boxedRow.picked,
+.boxedRow.picked:hover {
+  background: rgba(var(--accent-rgb), 0.18);
+}
+
 .fileName {
   flex-shrink: 0;
   max-width: 60%;
