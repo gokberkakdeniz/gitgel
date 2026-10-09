@@ -43,16 +43,27 @@ pub struct UpdateInfo {
 
 /// Payload of `update-check`: Gitgel › Check for Updates… as the Software Update window shows it.
 #[derive(Debug, Clone, Serialize)]
-#[serde(tag = "state", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "state",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum UpdateCheck {
-    Checking { current_version: String },
-    UpToDate { current_version: String },
+    Checking {
+        current_version: String,
+    },
+    UpToDate {
+        current_version: String,
+    },
     Available {
         version: String,
         current_version: String,
         notes: Option<String>,
     },
-    Failed { current_version: String, message: String },
+    Failed {
+        current_version: String,
+        message: String,
+    },
 }
 
 fn info(update: &Update) -> UpdateInfo {
@@ -193,7 +204,11 @@ fn relaunch() -> bool {
             .map(|p| p.to_path_buf())
     });
     let Some(bundle) = bundle else { return false };
-    match std::process::Command::new("/usr/bin/open").arg("-n").arg(&bundle).status() {
+    match std::process::Command::new("/usr/bin/open")
+        .arg("-n")
+        .arg(&bundle)
+        .status()
+    {
         Ok(s) if s.success() => true,
         Ok(s) => {
             log::warn!("open {} exited with {s}", bundle.display());

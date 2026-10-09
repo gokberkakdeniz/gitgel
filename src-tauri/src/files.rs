@@ -55,7 +55,9 @@ pub fn github_url(state: &AppState, repo_id: &str) -> Result<Option<String>, App
     let name = if repo.find_remote("origin").is_ok() {
         Some("origin".to_string())
     } else {
-        repo.remotes().ok().and_then(|n| n.iter().flatten().flatten().next().map(str::to_string))
+        repo.remotes()
+            .ok()
+            .and_then(|n| n.iter().flatten().flatten().next().map(str::to_string))
     };
     let url = name
         .and_then(|n| repo.find_remote(&n).ok())
@@ -69,7 +71,10 @@ fn web_url(remote: &str) -> Option<String> {
     let rest = if let Some((_, rest)) = remote.split_once("://") {
         rest.to_string()
     } else {
-        remote.split_once('@').map_or(remote, |(_, r)| r).replacen(':', "/", 1)
+        remote
+            .split_once('@')
+            .map_or(remote, |(_, r)| r)
+            .replacen(':', "/", 1)
     };
     let rest = rest.split_once('@').map_or(rest.as_str(), |(_, r)| r);
     let (host, path) = rest.split_once('/')?;
@@ -283,7 +288,11 @@ mod tests {
             "https://github.com/o/r.git",
             "https://user@github.com/o/r/",
         ] {
-            assert_eq!(web_url(url).as_deref(), Some("https://github.com/o/r"), "{url}");
+            assert_eq!(
+                web_url(url).as_deref(),
+                Some("https://github.com/o/r"),
+                "{url}"
+            );
         }
         assert_eq!(web_url("git@gitlab.com:o/r.git"), None);
         assert_eq!(web_url("/Users/me/repo"), None);

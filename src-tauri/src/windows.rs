@@ -8,7 +8,7 @@
 
 use tauri::window::Color;
 use tauri::{
-    AppHandle, Emitter, Manager, TitleBarStyle, Theme, WebviewUrl, WebviewWindow,
+    AppHandle, Emitter, Manager, Theme, TitleBarStyle, WebviewUrl, WebviewWindow,
     WebviewWindowBuilder,
 };
 
@@ -84,7 +84,9 @@ pub fn open(app: &AppHandle, aux: Aux) {
     builder = match appearance {
         Appearance::Light => builder.theme(Some(Theme::Light)).background_color(LIGHT_BG),
         Appearance::Dark => builder.theme(Some(Theme::Dark)).background_color(DARK_BG),
-        Appearance::System => builder.background_color(if dark_system(app) { DARK_BG } else { LIGHT_BG }),
+        Appearance::System => {
+            builder.background_color(if dark_system(app) { DARK_BG } else { LIGHT_BG })
+        }
     };
     if let Err(e) = builder.build() {
         log::warn!("cannot open the {} window: {e}", aux.label());

@@ -89,13 +89,7 @@ const SUBLIME_CLI: &str = "Contents/SharedSupport/bin/subl";
 
 /// Opens `path` in the editor `app` at a line and column; an editor that cannot is given the
 /// plain file.
-fn open_at(
-    path: &Path,
-    app: &str,
-    app_path: &str,
-    line: u32,
-    column: u32,
-) -> Result<(), AppError> {
+fn open_at(path: &Path, app: &str, app_path: &str, line: u32, column: u32) -> Result<(), AppError> {
     let target = format!("{}:{}:{}", path.display(), line.max(1), column.max(1));
     let opened = if let Some((_, scheme)) = GOTO_SCHEMES.iter().find(|(id, _)| *id == app) {
         let url = format!("{scheme}://file{}", encode_path(&target));
@@ -139,7 +133,11 @@ pub fn open_file(
 ) -> Result<(), AppError> {
     check_folder(Path::new(folder))?;
     let rel = Path::new(file);
-    if rel.is_absolute() || rel.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+    if rel.is_absolute()
+        || rel
+            .components()
+            .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
         return Err(AppError::NotFound(format!("file {file}")));
     }
     let path = Path::new(folder).join(rel);

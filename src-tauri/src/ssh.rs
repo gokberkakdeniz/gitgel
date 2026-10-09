@@ -38,14 +38,18 @@ pub fn remember(key: &str, passphrase: &str) -> Result<(), AppError> {
                 Ok(())
             } else {
                 log::warn!("ssh-add could not save the passphrase of {key} ({status})");
-                Err(AppError::Invalid("The passphrase could not be saved.".into()))
+                Err(AppError::Invalid(
+                    "The passphrase could not be saved.".into(),
+                ))
             };
         }
         if started.elapsed() > TIMEOUT {
             let _ = child.kill();
             let _ = child.wait();
             log::warn!("ssh-add did not accept the passphrase of {key}");
-            return Err(AppError::Invalid("The passphrase could not be saved.".into()));
+            return Err(AppError::Invalid(
+                "The passphrase could not be saved.".into(),
+            ));
         }
         std::thread::sleep(Duration::from_millis(100));
     }

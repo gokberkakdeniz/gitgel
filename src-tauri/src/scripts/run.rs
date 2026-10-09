@@ -459,9 +459,8 @@ fn append(state: &AppState, run_id: &str, text: &str) {
             run.info.last_line = line;
         }
         // A prompt may arrive split across reads: look at the end of the whole output.
-        let asked = passphrase_prompt(&run.output).filter(|(at, _)| {
-            run.written - (run.output.len() - at) as u64 >= run.asked_at
-        });
+        let asked = passphrase_prompt(&run.output)
+            .filter(|(at, _)| run.written - (run.output.len() - at) as u64 >= run.asked_at);
         let asked = asked.map(|(_, key)| {
             run.asked_at = run.written;
             key
@@ -805,9 +804,15 @@ mod tests {
         let asked = format!("Fetching origin\r\nEnter passphrase for key '{key}': ");
         assert_eq!(passphrase_prompt(&asked), Some((17, key.to_string())));
         // Answered: more output after it.
-        assert_eq!(passphrase_prompt(&format!("{asked}\r\nremote: Counting objects")), None);
+        assert_eq!(
+            passphrase_prompt(&format!("{asked}\r\nremote: Counting objects")),
+            None
+        );
         // Still arriving.
-        assert_eq!(passphrase_prompt("Enter passphrase for key '/Users/me/.ss"), None);
+        assert_eq!(
+            passphrase_prompt("Enter passphrase for key '/Users/me/.ss"),
+            None
+        );
         assert_eq!(passphrase_prompt("no prompt here"), None);
     }
 
@@ -974,7 +979,11 @@ mod tests {
         t.stash(false, "change");
         t.commit_on("main", &[("a.txt", Some(b"committed\n"))], "move on", 1);
         t.checkout_main();
-        let (out, ended) = pty_in(t.path(), "git stash apply 'stash@{0}'", &[("GIT_PAGER", "cat")]);
+        let (out, ended) = pty_in(
+            t.path(),
+            "git stash apply 'stash@{0}'",
+            &[("GIT_PAGER", "cat")],
+        );
         assert!(matches!(ended, Ended::Exited(Some(1), None)), "{out}");
         let list = crate::git::diff::uncommitted(&t.repo).unwrap();
         let kinds: Vec<_> = list.iter().map(|f| (f.path.as_str(), f.kind)).collect();

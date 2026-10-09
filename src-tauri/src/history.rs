@@ -73,11 +73,10 @@ pub fn get_history(
     };
     // A local branch syncs with its remote; without it there, its commits on top of the base
     // are what the remote lacks.
-    let upstream = refs::resolve_commit(&repo, &format!("refs/heads/{rev}"))
-        .and_then(|_| {
-            let ahead = split.as_ref().map(|s| s.ahead.len() as u32);
-            crate::scan::branch_upstream(&repo, &repo_cfg.path, rev, &tip, ahead)
-        });
+    let upstream = refs::resolve_commit(&repo, &format!("refs/heads/{rev}")).and_then(|_| {
+        let ahead = split.as_ref().map(|s| s.ahead.len() as u32);
+        crate::scan::branch_upstream(&repo, &repo_cfg.path, rev, &tip, ahead)
+    });
     log::info!(
         "history {rev} in {}: {t} · {} commits{}",
         repo_cfg.path,

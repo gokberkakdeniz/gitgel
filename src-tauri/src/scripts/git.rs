@@ -381,7 +381,11 @@ pub fn commit(
     if files.include.is_empty() {
         return Err(AppError::Invalid("Pick at least one file.".into()));
     }
-    if files.include.iter().any(|p| p.is_empty() || p.contains('\0')) {
+    if files
+        .include
+        .iter()
+        .any(|p| p.is_empty() || p.contains('\0'))
+    {
         return Err(AppError::Invalid("A picked file has no valid path.".into()));
     }
     let repo = open_repo(state, &entry.repo_id)?;
@@ -599,7 +603,11 @@ pub fn rebase_on_base(state: &AppState, entry: EntryRef) -> Result<ScriptRun, Ap
     })?;
     let base = lock(&state.last_scan)
         .get(&repo.id)
-        .and_then(|s| s.active.iter().find(|e| e.branch.as_deref() == Some(&branch)))
+        .and_then(|s| {
+            s.active
+                .iter()
+                .find(|e| e.branch.as_deref() == Some(&branch))
+        })
         .and_then(|e| e.base.clone())
         .ok_or_else(|| AppError::Invalid(format!("{branch} has no base.")))?;
     if base == branch {
