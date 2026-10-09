@@ -17,12 +17,13 @@ import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { formatAge, plural } from '../../lib/format';
-import { getCommitChanges, getHistory, getReview, getStagedPaths, getStashChanges, gitCommit } from '../../lib/ipc';
+import { getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, gitCommit, openRemoteLink } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { CommitChanges, CommitFiles, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
+import { commitUrl } from '../../monaco/reference';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { CopyBranchItem, EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
@@ -525,7 +526,7 @@ export function History({ repoId, rev, backLabel }: Props) {
           ) : stash ? (
             <StashBar stash={stash} base={stashBase} />
           ) : commit ? (
-            <CommitHeader commit={commit} changes={commitChanges} />
+            <CommitHeader repoId={repoId} commit={commit} changes={commitChanges} />
           ) : null}
           {!error && file && (current === WIP || commitChanges || stashChanges) && (
             <>
@@ -756,28 +757,88 @@ function totals(files: FileChange[]) {
   };
 }
 
+/** A short SHA that opens the commit on the remote; the text stays selectable, so it copies. */
+function ShaLink({ repoId, sha, short }: { repoId: string; sha: string; short: string }) {
+  const { data: remote } = useInvoke(() => getRemoteUrl(repoId), [repoId]);
+  if (!remote) {
+    return (
+      <span className={`${styles.sha} selectable`} title={sha}>
+        {short}
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={`${styles.sha} ${styles.shaLink} selectable`}
+      title="Open remote"
+      onClick={(e) => {
+        // A drag that selects the hash should not open the link.
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && e.currentTarget.contains(sel.anchorNode)) return;
+        void openRemoteLink(commitUrl(remote, sha)).catch((e) => console.error('cannot open link', e));
+      }}
+    >
+      {short}
+    </button>
+  );
+}
+
 /** Above a commit's diff: its subject, message and who / when / which. */
-function CommitHeader({ commit: c, changes }: { commit: HistoryCommit; changes: CommitChanges | undefined }) {
+function CommitHeader({
+  repoId,
+  commit: c,
+  changes,
+}: {
+  repoId: string;
+  commit: HistoryCommit;
+  changes: CommitChanges | undefined;
+}) {
   const t = changes ? totals(changes.files) : null;
+  const headRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const { copied, copy } = useCopy();
   return (
-    <div className={styles.head}>
+    <div
+      ref={headRef}
+      className={styles.head}
+      onCopy={(e) => {
+        // A hand selection across the header copies as one line: flex items would
+        // otherwise paste with a line break each.
+        const sel = window.getSelection();
+        const el = headRef.current;
+        if (!sel || !el || !e.clipboardData) return;
+        if (!el.contains(sel.anchorNode) || !el.contains(sel.focusNode)) return;
+        // Within the body alone, its own line breaks stay.
+        if (bodyRef.current?.contains(sel.anchorNode) && bodyRef.current.contains(sel.focusNode)) return;
+        const text = sel.toString();
+        if (!text.includes('\n')) return;
+        e.preventDefault();
+        const d = new Date(c.committedAt * 1000);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const stamp = `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        e.clipboardData.setData(
+          'text/plain',
+          text
+            .replace(whenLabel(c.committedAt), stamp)
+            .replace(/·/g, '-')
+            .replace(/\s*\n\s*/g, ' ')
+            .replace(/ {2,}/g, ' ')
+            .trim(),
+        );
+      }}
+    >
       <div className={parts.entryLine}>
-        <span className={parts.barTitle} title={c.subject}>
+        <span className={`${parts.barTitle} selectable`} title={c.subject}>
           {c.subject}
         </span>
-        <span className={parts.grow} />
-        <IconButton
-          aria-label={copied ? 'Copied' : 'Copy SHA'}
-          title={copied ? 'Copied' : 'Copy full SHA'}
-          className={copied ? `${styles.copy} ${styles.copied}` : styles.copy}
-          onClick={() => void copy(c.sha)}
-        >
-          {copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
-        </IconButton>
       </div>
-      {c.body && <div className={styles.body}>{c.body}</div>}
-      <div className={parts.barMeta}>
+      {c.body && (
+        <div ref={bodyRef} className={`${styles.body} selectable`}>
+          {c.body}
+        </div>
+      )}
+      <div className={`${parts.barMeta} selectable`}>
         <Avatar author={c.author} size={18} />
         <span className={styles.metaAuthor} title={c.authorEmail}>
           {c.author}
@@ -785,11 +846,20 @@ function CommitHeader({ commit: c, changes }: { commit: HistoryCommit; changes: 
         <span className={parts.dot}>·</span>
         <span>{whenLabel(c.committedAt)}</span>
         <span className={parts.dot}>·</span>
-        <span className={styles.sha}>{c.shortSha}</span>
+        <span className={styles.shaGroup}>
+          <ShaLink repoId={repoId} sha={c.sha} short={c.shortSha} />
+          <IconButton
+            size={24}
+            aria-label={copied ? 'Copied' : 'Copy full SHA'}
+            title={copied ? 'Copied' : 'Copy full SHA'}
+            className={copied ? styles.copied : undefined}
+            onClick={() => void copy(c.sha)}
+          >
+            {copied ? <CheckIcon size={12} /> : <CopyIcon size={12} />}
+          </IconButton>
+        </span>
         {changes && (
           <>
-            <span className={parts.dot}>·</span>
-            <span>{changes.parent ? `parent ${changes.parent.slice(0, 7)}` : 'root commit'}</span>
             <span className={parts.dot}>·</span>
             <span>{plural(changes.files.length, 'file', 'files')}</span>
             <DiffStat add={t!.add} del={t!.del} />

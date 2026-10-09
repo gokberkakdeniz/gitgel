@@ -708,6 +708,26 @@ pub struct FilePair {
     pub too_large: bool,
 }
 
+/// A repository remote's web page (`remote_url`): `origin` if there is one.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoteInfo {
+    pub base: String,
+    pub kind: RemoteKind,
+}
+
+/// The host decides the URL shape on the frontend: GitLab (`/-/commit`, `/-/blob`),
+/// Bitbucket (`/commits`, `/src`); anything else (Gitea, Forgejo, self-hosted) is
+/// GitHub-style (`/commit`, `/blob`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RemoteKind {
+    GitHub,
+    GitLab,
+    Bitbucket,
+    Other,
+}
+
 // ---- Other ----
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

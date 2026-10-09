@@ -15,6 +15,7 @@ import type {
   ProjectView,
   ReviewData,
   ReviewTarget,
+  RemoteInfo,
   ScanResult,
   RunContext,
   ScriptConfig,
@@ -58,8 +59,8 @@ export const getHistory = (repoId: string, rev: string, base: string | null, que
 export const readFilePair = (repoId: string, worktreePath: string | null, change: FileChange) =>
   invoke<FilePair>('read_file_pair', { repoId, worktreePath, change });
 
-/** The repository's GitHub page (`https://github.com/<owner>/<repo>`); null with no GitHub remote. */
-export const getGithubUrl = (repoId: string) => invoke<string | null>('get_github_url', { repoId });
+/** The repository remote's web page and host kind; null with no remote or a local path. */
+export const getRemoteUrl = (repoId: string) => invoke<RemoteInfo | null>('get_remote_url', { repoId });
 
 export const createProject = (name: string, entries: EntryRef[]) =>
   invoke<ProjectConfig>('create_project', { name, entries });
@@ -118,8 +119,8 @@ export const installUpdate = () => invoke<void>('install_update');
 
 /** Checks now (the Software Update window's Try Again); the answer arrives as `update-check`. */
 export const checkForUpdates = () => invoke<void>('check_for_updates');
-/** Opens a `https://github.com/…` link in the browser. */
-export const openGithubLink = (url: string) => invoke<void>('open_github_link', { url });
+/** Opens a remote (commit or file page) link in the browser. */
+export const openRemoteLink = (url: string) => invoke<void>('open_remote_link', { url });
 export const reportIssue = () => invoke<void>('report_issue');
 export const getUpdateCheck = () => invoke<UpdateCheck | null>('get_update_check');
 /** About Gitgel, Software Update or What's New, in a window of its own (`windows.rs`). */

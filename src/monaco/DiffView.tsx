@@ -6,7 +6,7 @@ import { CopyIcon, LinkIcon } from '../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../components/Menu';
 import { FileOpenItems } from '../components/OpenItems';
 import { Popover } from '../components/Popover';
-import { getGithubUrl, openGithubLink, readFilePair } from '../lib/ipc';
+import { getRemoteUrl, openRemoteLink, readFilePair } from '../lib/ipc';
 import { useEffectiveTheme } from '../lib/theme';
 import type { DiffContext, DiffLayout, DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
@@ -317,14 +317,14 @@ export function DiffView({
     nav.current.restart = true;
   }, [ignoreWhitespace]);
 
-  // The repository's GitHub page, when the file is shown at a commit (for the permalink).
-  const { data: githubData } = useInvoke(() => getGithubUrl(repoId), [repoId], { enabled: commit !== null });
-  const github = commit !== null ? githubData : null;
+  // The remote page, when the file is shown at a commit (for the permalink).
+  const { data: remoteData } = useInvoke(() => getRemoteUrl(repoId), [repoId], { enabled: commit !== null });
+  const remote = commit !== null ? remoteData : null;
   // The new side is the file at the commit, the old side at its parent (under its old name).
   const at = menu?.modified
     ? change.kind !== 'D' && commit && { sha: commit, path: change.path }
     : change.oldOid !== null && parent && { sha: parent, path: change.oldPath ?? change.path };
-  const link = menu && github && at ? permalink(github, at.sha, at.path, menu.from, menu.to, menu.endColumn) : null;
+  const link = menu && remote && at ? permalink(remote, at.sha, at.path, menu.from, menu.to, menu.endColumn) : null;
   const copy = (text: string) => {
     void writeText(text);
     setMenu(null);
@@ -454,7 +454,7 @@ export function DiffView({
                 <MenuItem
                   icon={<LinkIcon />}
                   onSelect={() => {
-                    openGithubLink(link).catch((e) => console.error('cannot open link', e));
+                    openRemoteLink(link).catch((e) => console.error('cannot open link', e));
                     setMenu(null);
                   }}
                 >

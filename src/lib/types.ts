@@ -288,6 +288,13 @@ export interface CommitChanges {
   parent: string | null; // null => root commit, compared with an empty tree
   files: FileChange[];
 }
+/** A repository remote's web page (`get_remote_url`): `origin` if there is one. The host
+ * decides the URL shape: GitLab (`/-/commit`, `/-/blob`), Bitbucket (`/commits`, `/src`),
+ * anything else (Gitea, Forgejo, self-hosted) GitHub-style (`/commit`, `/blob`). */
+export interface RemoteInfo {
+  base: string;
+  kind: 'github' | 'gitlab' | 'bitbucket' | 'other';
+}
 export interface ReviewData {
   groups: ReviewGroup[]; // reviewable entries, in project order
   notInReview: EntrySummary[]; // project scope only

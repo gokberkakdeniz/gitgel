@@ -7,8 +7,8 @@ use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
     BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, HistoryPage,
-    OpenApp, ProjectConfig, ProjectView, ReviewData, ReviewTarget, ScanResult, ScriptConfig,
-    ScriptRun, Settings, StashChanges, TerminalOption,
+    OpenApp, ProjectConfig, ProjectView, RemoteInfo, ReviewData, ReviewTarget, ScanResult,
+    ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{apps, base, files, history, projects, repos, review, scan, scripts, updates, watch};
@@ -179,13 +179,13 @@ pub async fn read_file_pair(
     .await
 }
 
-/// The GitHub page of a repository's remote, if it has one (for a link to a file at a commit).
+/// The web page of a repository's remote, if it has one (for links to a commit or a file).
 #[tauri::command]
-pub async fn get_github_url(
+pub async fn get_remote_url(
     state: State<'_, AppState>,
     repo_id: String,
-) -> Result<Option<String>, AppError> {
-    blocking(&state, move |state| files::github_url(state, &repo_id)).await
+) -> Result<Option<RemoteInfo>, AppError> {
+    blocking(&state, move |state| files::remote_url(state, &repo_id)).await
 }
 
 #[tauri::command]
@@ -408,11 +408,11 @@ pub async fn remember_ssh_key(key: String, passphrase: String) -> Result<(), App
         .map_err(|e| AppError::Io(e.to_string()))?
 }
 
-/// Opens a GitHub link (a permalink from the diff's menu) in the browser; any other URL is refused.
+/// Opens a remote link (a commit or file page) in the browser; anything but `https://` is refused.
 #[tauri::command]
-pub fn open_github_link(url: String) -> Result<(), AppError> {
-    if !url.starts_with("https://github.com/") {
-        return Err(AppError::Forbidden(format!("not a GitHub link: {url}")));
+pub fn open_remote_link(url: String) -> Result<(), AppError> {
+    if !url.starts_with("https://") {
+        return Err(AppError::Forbidden(format!("not a remote link: {url}")));
     }
     crate::menu::open_url(&url);
     Ok(())

@@ -74,12 +74,14 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey, true);
   }, []);
 
-  // No webview context menu ("Reload", "Inspect"), except where text is edited.
+  // No webview context menu ("Reload", "Inspect"), except where text is edited or
+  // selectable (commit subject, body, SHAs: right-click copies).
   useEffect(() => {
     const onMenu = (e: MouseEvent) => {
       const t = e.target as HTMLElement | null;
       // Monaco's hidden textarea is under the pointer on a right-click, so the diff is excluded.
-      if (t?.closest('.monaco-editor') || !t?.closest('input, textarea')) e.preventDefault();
+      if (t?.closest('.monaco-editor, input, textarea, .selectable')) return;
+      e.preventDefault();
     };
     window.addEventListener('contextmenu', onMenu);
     return () => window.removeEventListener('contextmenu', onMenu);

@@ -390,8 +390,10 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   `kbd` hint on the right in mono 11px. Also 28px (Locate), `chevron` for a dropdown trigger and
   `active` for its open state (`bg.pressed`, `border.strong`); a modal's Cancel is a plain
   `secondary`. Icon-only buttons are `IconButton` (28 plain, 24 in compact list rows, 32 boxed).
-  A copy button (the output panel's Copy, Copy SHA) says it worked: for 1.5 s its icon becomes `check` and
-  it turns `success.text`, a labelled one reading "Copied" (`useCopy`, `src/lib/useCopy.ts`).
+  A copy button (the output panel's Copy, the History header's copy SHA) says it worked: for 1.5 s its icon becomes `check` and
+  it turns `success.text`, a labelled one reading "Copied" (`useCopy`, `src/lib/useCopy.ts`). Rendered
+  texts (a commit's subject, body, short SHAs) are selectable and copy through the system menu or
+  shortcut; the webview menu is left alone on them (`App.tsx`).
 - `PageMenu`: the ⋮ (`more-vertical`) 32px boxed `IconButton` (`aria-label` "More actions") that
   ends the Review and History headers; a 240px `Menu`, right-aligned under it, with the page's
   less used actions.
@@ -797,8 +799,9 @@ Layout:
   line numbers of the side clicked): "Copy relative reference" (`@<path>:<line>` or
   `@<path>:<from>-<to>`, the path relative to the repository), "Copy absolute reference" (the
   same with the file's path in its worktree, else the repository folder; with a commit shown it is
-  the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (`https://github.com/<owner>/<repo>/blob/<sha>/<path>#L12-L13`;
-  only for a file shown at a commit, with a GitHub remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_github_url`, `open_github_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in each editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas D11, `menu: diff`). The editor is created once; changing
+  the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (the remote's
+  file page at the commit: GitHub-style `/blob/<sha>/<path>#L12-L13`, GitLab `/-/blob/…`, Bitbucket `/src/…#lines-…`;
+  only for a file shown at a commit, with a remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_remote_url`, `open_remote_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in each editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas D11, `menu: diff`). The editor is created once; changing
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
   shown"; files over 1 MiB "File is too large to show (over 1 MB)".
 - **Diff view menu:** the view button (split or unified icon + "Split" / "Unified" + chevron;
@@ -1452,6 +1455,7 @@ export type ReviewTarget =
       worktreePath: string | null; tipOverride: string | null }
   | { kind: 'stashes'; repoId: string };   // a repo's stash stack: no groups (§15)
 export interface FilePair { original: string; modified: string; binary: boolean; tooLarge: boolean }
+export interface RemoteInfo { base: string; kind: 'github' | 'gitlab' | 'bitbucket' | 'other' }
 ```
 
 Reviewable states: `ok`, `detached`, `merged`. In project scope a `merged` entry with no files in
@@ -1576,8 +1580,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `update_settings` | `settings: Settings` | `Config` |
 | `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
 | `get_terminal_options` | – | `TerminalOption[]` (Terminal/iTerm2/WezTerm with install state) |
-| `get_github_url` | `repoId` | `string \| null` (`https://github.com/<owner>/<repo>` of `origin`, else the first remote; null for no remote or another host) |
-| `open_github_link` | `url` | `null` (opens a `https://github.com/…` URL in the browser; any other is refused) |
+| `get_remote_url` | `repoId` | `RemoteInfo \| null` (`base` + `kind`: github, gitlab, bitbucket, other; `origin`, else the first remote; null for no remote or a local path) |
+| `open_remote_link` | `url` | `null` (opens an `https://…` remote page in the browser; anything else is refused) |
 | `open_folder` | `path, app: string` | `null` (`app`: an `OpenApp` id) |
 | `open_file` | `folder, file, app: string, line?, column?` | `null` (`file` relative to `folder`, must exist; `finder` reveals it, the terminal is refused; an editor goes to `line:column`) |
 | `save_script` | `script: ScriptConfig` | `Config` (a new id when `id` is empty; an unknown id is added back) |
@@ -2520,11 +2524,13 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   folding) keeps 8px, the list's side padding, above or below it. After a refresh the picked
   commit stays when it is still listed, else the newest is picked. Search picks the first match.
 - **Pane** (`HistH2` 101–123): a commit header (padding 14px 18px, bottom border `border`, gap 8):
-  15px/600 `text.strong` subject with, on the right, a 28px "Copy SHA" icon button (copy icon,
-  tooltip "Copy full SHA"; ✓ and "Copied" for 1.5 s after a click); the body (13px, line-height 1.5, `text.muted`, `white-space:
-  pre-wrap`, max-width 720px; left out when empty); mono 11 muted meta: an 18px avatar, the author
+  15px/600 `text.strong` subject (selectable); the body (13px, line-height 1.5, `text.muted`, `white-space:
+  pre-wrap`, max-width 720px; left out when empty; selectable); mono 11 muted meta (selectable): an 18px avatar, the author
   (`text.body`), `·` the committer time (`today 11:42`, `yesterday 11:42`, `Oct 2, 11:42`, `Oct 2,
-  2025`), `·` the short SHA (`accent.text`), `·` `parent <short>` (`root commit` without one), `·`
+  2025`), `·` the short SHA (`accent.text`, selectable; a click opens the commit on the remote when the repo
+  has one (GitHub, GitLab, Bitbucket, Gitea-style), tooltip "Open remote") with a copy icon beside it (tooltip "Copy full SHA",
+  copies the full SHA; ✓ and "Copied" for 1.5 s); a hand selection across the header copies as one line (line breaks from the
+  layout, and the body's within a wider selection, are collapsed to spaces, `·` to `-`, the relative time to `y/m/d h:i:s`), `·`
   `N files`, `+a` (`success`), `−d` (`danger`). For Uncommitted: "Uncommitted changes", meta
   `<~worktree> · N files +a −d`. Then Review's file bar (compare label `<parent> ↔ <sha>` or `HEAD
   ↔ working tree`, whitespace chip, view menu, change navigation over the picked row's files) and

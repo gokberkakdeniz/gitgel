@@ -547,6 +547,11 @@ rather than as a task is listed the same way, marked "(on request)".
   Hi4 mount Hi2, R1 mounts D11, P5 mounts P1 — 2026-10-09
   - note: the canvas's kind badge is 18px (SPEC) instead of 17px and its commit stepper 24px
     tall instead of 22px, as the app draws them.
+- [x] (on request) History commit header: subject, body and meta selectable (right-click copies,
+  a cross-element selection copies as one line), no parent SHA, the short SHA opens the commit on
+  the remote, copy icon beside it; remote links for any host (`get_remote_url` → `RemoteInfo`,
+  `open_remote_link`; GitLab `/-/`, Bitbucket `/commits` + `/src`, rest GitHub-style; was
+  GitHub-only `get_github_url` / `open_github_link`) — 2026-10-09
 
 ---
 

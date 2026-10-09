@@ -5,7 +5,7 @@ use std::path::{Component, Path, PathBuf};
 use crate::config;
 use crate::error::AppError;
 use crate::git::{diff, worktrees};
-use crate::model::{FileChange, FileKind, FilePair};
+use crate::model::{FileChange, FileKind, FilePair, RemoteInfo, RemoteKind};
 use crate::state::{lock, AppState};
 
 /// Larger files are not shown.
@@ -41,9 +41,9 @@ pub fn read_file_pair(
     pair
 }
 
-/// The GitHub page of the repository's remote (`https://github.com/<owner>/<repo>`), for a link
-/// to a file at a commit; `None` for no remote or another host. `origin` if there is one.
-pub fn github_url(state: &AppState, repo_id: &str) -> Result<Option<String>, AppError> {
+/// The web page of the repository's remote, for links to a commit or a file at a commit;
+/// `None` for no remote or a local path. `origin` if there is one.
+pub fn remote_url(state: &AppState, repo_id: &str) -> Result<Option<RemoteInfo>, AppError> {
     let config = config::snapshot(state);
     let repo_cfg = config
         .repos
@@ -66,8 +66,8 @@ pub fn github_url(state: &AppState, repo_id: &str) -> Result<Option<String>, App
 }
 
 /// `git@github.com:o/r.git`, `ssh://git@github.com/o/r` and `https://github.com/o/r.git` all
-/// become `https://github.com/o/r`.
-fn web_url(remote: &str) -> Option<String> {
+/// become `https://github.com/o/r`; other hosts keep their host (GitLab subgroups and all).
+fn web_url(remote: &str) -> Option<RemoteInfo> {
     let rest = if let Some((_, rest)) = remote.split_once("://") {
         rest.to_string()
     } else {
@@ -80,7 +80,22 @@ fn web_url(remote: &str) -> Option<String> {
     let (host, path) = rest.split_once('/')?;
     let host = host.split(':').next()?;
     let path = path.trim_end_matches('/').trim_end_matches(".git");
-    (host == "github.com" && path.split('/').count() == 2).then(|| format!("https://{host}/{path}"))
+    if host.is_empty() || path.split('/').count() < 2 {
+        return None;
+    }
+    let kind = if host == "github.com" {
+        RemoteKind::GitHub
+    } else if host == "gitlab.com" || host.contains("gitlab") {
+        RemoteKind::GitLab
+    } else if host == "bitbucket.org" {
+        RemoteKind::Bitbucket
+    } else {
+        RemoteKind::Other
+    };
+    Some(RemoteInfo {
+        base: format!("https://{host}/{path}"),
+        kind,
+    })
 }
 
 fn read_pair(
@@ -280,21 +295,68 @@ mod tests {
     }
 
     #[test]
-    fn github_remotes_become_web_urls() {
-        for url in [
-            "git@github.com:o/r.git",
-            "ssh://git@github.com/o/r.git",
-            "ssh://git@github.com:22/o/r",
-            "https://github.com/o/r.git",
-            "https://user@github.com/o/r/",
+    fn remotes_become_web_urls() {
+        for (url, base, kind) in [
+            (
+                "git@github.com:o/r.git",
+                "https://github.com/o/r",
+                RemoteKind::GitHub,
+            ),
+            (
+                "ssh://git@github.com/o/r.git",
+                "https://github.com/o/r",
+                RemoteKind::GitHub,
+            ),
+            (
+                "ssh://git@github.com:22/o/r",
+                "https://github.com/o/r",
+                RemoteKind::GitHub,
+            ),
+            (
+                "https://github.com/o/r.git",
+                "https://github.com/o/r",
+                RemoteKind::GitHub,
+            ),
+            (
+                "https://user@github.com/o/r/",
+                "https://github.com/o/r",
+                RemoteKind::GitHub,
+            ),
+            (
+                "git@gitlab.com:o/r.git",
+                "https://gitlab.com/o/r",
+                RemoteKind::GitLab,
+            ),
+            (
+                "https://gitlab.com/group/sub/r.git",
+                "https://gitlab.com/group/sub/r",
+                RemoteKind::GitLab,
+            ),
+            (
+                "git@bitbucket.org:o/r.git",
+                "https://bitbucket.org/o/r",
+                RemoteKind::Bitbucket,
+            ),
+            (
+                "https://codeberg.org/o/r.git",
+                "https://codeberg.org/o/r",
+                RemoteKind::Other,
+            ),
+            (
+                "git@gitea.example.com:o/r.git",
+                "https://gitea.example.com/o/r",
+                RemoteKind::Other,
+            ),
         ] {
             assert_eq!(
-                web_url(url).as_deref(),
-                Some("https://github.com/o/r"),
+                web_url(url),
+                Some(RemoteInfo {
+                    base: base.to_string(),
+                    kind
+                }),
                 "{url}"
             );
         }
-        assert_eq!(web_url("git@gitlab.com:o/r.git"), None);
         assert_eq!(web_url("/Users/me/repo"), None);
     }
 }

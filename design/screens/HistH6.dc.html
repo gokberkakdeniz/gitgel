@@ -114,8 +114,6 @@ button,input,textarea{font-family:inherit}
 <div style="border-bottom: 1px solid var(--border); padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
 <div style="display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 28px">
 <span style="font-size: 15px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{c.subject}}</span>
-<div style="flex-grow: 1"></div>
-<sc-if value="{{c.isOne}}" hint-placeholder-val="{{false}}"><button aria-label="Copy SHA" title="Copy full SHA" style="width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-body)"><dc-import name="Icon" icon="copy" size="13" hint-size="13px,13px"></dc-import></button></sc-if>
 </div>
 <sc-if value="{{c.hasBody}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; line-height: 1.5; color: var(--text-muted); max-width: 720px">{{c.body}}</div></sc-if>
 <sc-if value="{{c.isRange}}" hint-placeholder-val="{{false}}">
@@ -124,7 +122,7 @@ button,input,textarea{font-family:inherit}
 </div>
 </sc-if>
 <div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">
-<sc-if value="{{c.isOne}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px"><span style="{{c.avatarStyle}}">{{c.initials}}</span><span style="color: var(--text-body)">{{c.author}}</span><span style="color: var(--text-faint)">·</span><span>{{c.when}}</span><span style="color: var(--text-faint)">·</span><span style="color: var(--accent-text)">{{c.sha}}</span><span style="color: var(--text-faint)">·</span><span>parent {{c.parent}}</span><span style="color: var(--text-faint)">·</span></span></sc-if>
+<sc-if value="{{c.isOne}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px"><span style="{{c.avatarStyle}}">{{c.initials}}</span><span style="color: var(--text-body)">{{c.author}}</span><span style="color: var(--text-faint)">·</span><span>{{c.when}}</span><span style="color: var(--text-faint)">·</span><span style="display: inline-flex; align-items: center; gap: 2px"><button title="Open remote" style="padding: 0; border: 0; background: transparent; font: inherit; color: var(--accent-text); cursor: pointer">{{c.sha}}</button><button aria-label="Copy full SHA" title="Copy full SHA" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 0; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="copy" size="12" hint-size="12px,12px"></dc-import></button></span><span style="color: var(--text-faint)">·</span></span></sc-if>
 <span>{{c.lead}}</span><span>{{c.files}}</span><span style="color: var(--success)">{{c.add}}</span><span style="color: var(--danger)">{{c.del}}</span>
 </div>
 </div>

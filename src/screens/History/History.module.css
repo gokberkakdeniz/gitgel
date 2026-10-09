@@ -181,6 +181,31 @@
   color: var(--accent-text);
 }
 
+/* The commit header's SHA links to the commit when the repo has a remote; a copy icon beside it. */
+.shaGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.shaLink:global(.selectable) {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.shaLink:global(.selectable):hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.copied {
+  color: var(--success-text);
+}
+
 .avatar {
   width: 24px;
   height: 24px;
@@ -195,6 +220,9 @@
   font-size: 10px;
   font-weight: 600;
   color: var(--text-strong);
+  /* Initials stay out of hand selections (the meta row is selectable). */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .avatarSmall {
@@ -258,13 +286,9 @@
   border-bottom: 1px solid var(--border);
 }
 
-.copy {
-  flex-shrink: 0;
-  border: 1px solid var(--border);
-}
-
-.copied {
-  color: var(--success-text);
+/* Commit header: subject, body and meta are selectable. */
+.head :global(.selectable) {
+  cursor: text;
 }
 
 .body {
