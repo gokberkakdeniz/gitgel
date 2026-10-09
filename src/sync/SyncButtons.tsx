@@ -4,7 +4,7 @@ import { MenuDivider, MenuItem } from '../components/Menu';
 import type { EntrySummary } from '../lib/types';
 import { useRuns } from '../scripts/runs';
 import styles from './SyncButtons.module.css';
-import { fetchRepo, pullBranch, pushBranch, rebaseOnBase, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
+import { fetchRepo, forcePushBranch, pullBranch, pushBranch, rebaseOnBase, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
 
 /** The sync action running in the repository, if any (one git action at a time per repository). */
 function useRunningSync(repoId: string): string | null {
@@ -159,6 +159,11 @@ export function SyncItems({
       >
         Push
       </MenuItem>
+      {st.diverged && (
+        <MenuItem icon="arrow-up" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => forcePushBranch(entry))}>
+          Force push
+        </MenuItem>
+      )}
     </>
   );
 }

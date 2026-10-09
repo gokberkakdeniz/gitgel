@@ -522,6 +522,9 @@ rather than as a task is listed the same way, marked "(on request)".
     looks the same from outside; the toast is the usual “Running “Commit”…”, without a hook name.
 - [x] (on request) Review: switching mode keeps the file on screen when the new mode lists it, and
   between Uncommitted and All the diff keeps its place in the file — 2026-10-09
+- [x] (on request) Force push (`--force-with-lease`) for a diverged branch: in the branch menus'
+  sync group and History's diverged banner (`git_push` takes `force`) — 2026-10-09
+  - note: canvas board R1 (`FlowR1.dc.html`).
 
 ---
 

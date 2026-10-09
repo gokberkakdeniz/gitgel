@@ -12,7 +12,7 @@ import { Checkbox } from '../../components/Checkbox';
 import { startGitAction, useRuns } from '../../scripts/runs';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
-import { divergedBanner, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
+import { divergedBanner, forcePushBranch, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
 import { StashBar } from '../../stash/StashBar';
 import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
@@ -429,6 +429,9 @@ export function History({ repoId, rev, backLabel }: Props) {
               Pull (rebase)
             </Button>
           )}
+          <Button size={24} onClick={() => void forcePushBranch(syncTarget)}>
+            Force push
+          </Button>
         </Banner>
       )}
 

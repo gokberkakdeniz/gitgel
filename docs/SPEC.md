@@ -125,7 +125,7 @@ are Developer ID signed and notarized, no sandbox.
 **Screens:** Branches (including the first-run empty state), Project, Review, History (§16), Add palette (⌘K), Settings.
 
 **Out of scope:** writing to repositories beyond the git actions (§15; a user's script may do
-anything), review comments, GitHub/PR integration, fetching on its own (only the Fetch button fetches), force-push, launching agents, multiple
+anything), review comments, GitHub/PR integration, fetching on its own (only the Fetch button fetches), launching agents, multiple
 windows, LSP, the git CLI for reading (even as a fallback), agent labels, a light theme,
 configurable refresh.
 
@@ -1572,7 +1572,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_staged_paths` | `entry: EntryRef` | `string[]` (paths staged in the entry's worktree) |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
-| `git_push` | `entry: EntryRef` | `ScriptRun` |
+| `git_push` | `entry: EntryRef, force: boolean` | `ScriptRun` |
 
 Notes:
 
@@ -2317,8 +2317,8 @@ git action in the repository.
 Fetch, Pull and Push of one branch: buttons in the History header, and a group in the branch
 menus (Branches row, Project entry, Review entry). Review's header has none: it only shows where
 each branch stands. Each is a git action as above (`upload` icon; toast sub line `repo / branch`,
-`repo` for Fetch). Gitgel never fetches on its own, never force-pushes, and syncs one branch at a
-time.
+`repo` for Fetch). Gitgel never fetches on its own, force-pushes only when asked ("Force push",
+`--force-with-lease`), and syncs one branch at a time.
 
 - **Upstream** (`refs::tracking`, `scan::branch_upstream`; `EntrySummary.upstream`, and
   `HistoryPage.upstream` when `rev` is a local branch): the configured upstream when it is on a
@@ -2338,12 +2338,12 @@ time.
   ones carry the reason as tooltip. While a sync runs in the repository all three are disabled
   and the running one's icon spins. Diverged: a warning banner under the header, `<branch> is
   behind origin by 1 commit, so it cannot be pushed. Pull it first.`, with a 24px "Pull (rebase)"
-  button when checked out.
+  button when checked out and a 24px "Force push" button.
 - **Branch menus** (`FlowR1`): after the open items, a divider, then "Fetch"
   (`download`), "Pull" (`arrow-down`, hint `↓N`), "Pull (rebase)" (`rebase`; only when diverged
   and checked out), "Rebase on `<base>`" (`rebase`; a checked-out branch whose base, custom or
   the repo's default, is not itself or its own remote branch: the base branch's base is its
-  upstream), "Push" (`arrow-up`, hint `↑N`). Disabled items carry the reason as tooltip ("A sync is running"
+  upstream), "Push" (`arrow-up`, hint `↑N`), "Force push" (`arrow-up`; only when diverged). Disabled items carry the reason as tooltip ("A sync is running"
   while one runs; Push of a branch the remote lacks: `Not on origin yet`). No group for a detached HEAD, a branch without a remote, a deleted branch or a
   missing repository.
 - **Fetch**: `git fetch --all --prune` in the repository folder. Success toast `Fetched <repo>`.
@@ -2361,6 +2361,9 @@ time.
   (`refs/heads/<branch>:refs/heads/<branch on the remote>`), in the worktree when there is one
   (hooks see it), else the repository folder; `--set-upstream` only for a branch the remote does
   not have and that has no configured upstream. Success toast `Pushed <branch>`.
+- **Force push** (a diverged branch, e.g. after a rebase): the same with `--force-with-lease`, so
+  it overwrites only what the last fetch saw on the remote (a push someone made since is refused).
+  Success toast `Force pushed <branch>`.
 - **Failures**: a sync that exits non-zero opens its output panel (N4) instead of the failed toast
   (git's message, or a prompt for a password or passphrase, is there). One that cannot start shows
   the usual `“<name>” could not start` toast.

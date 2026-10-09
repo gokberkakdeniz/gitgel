@@ -545,10 +545,17 @@ pub fn pull(state: &AppState, entry: EntryRef, rebase: bool) -> Result<ScriptRun
     )
 }
 
-/// Push (W4a): `git push <remote> refs/heads/<branch>:refs/heads/<on remote>`, never forced; a
-/// branch the remote does not have yet gets it as its upstream (`--set-upstream`).
-pub fn push(state: &AppState, entry: EntryRef) -> Result<ScriptRun, AppError> {
+/// Push (W4a): `git push <remote> refs/heads/<branch>:refs/heads/<on remote>`; a branch the
+/// remote does not have yet gets it as its upstream (`--set-upstream`). Forced only when asked,
+/// and then `--force-with-lease`: it overwrites only what the last fetch saw on the remote.
+pub fn push(state: &AppState, entry: EntryRef, force: bool) -> Result<ScriptRun, AppError> {
     let (repo, branch, tracking) = tracked(state, &entry)?;
+    if force && tracking.tracking.is_none() {
+        return Err(AppError::Invalid(format!(
+            "{branch} is not on {}.",
+            tracking.remote
+        )));
+    }
     let tree = repo.tree_of(&entry);
     let new = tracking.tracking.is_none() && !tracking.configured;
     let env = vec![
@@ -566,13 +573,13 @@ pub fn push(state: &AppState, entry: EntryRef) -> Result<ScriptRun, AppError> {
     launch_sync(
         state,
         "push",
-        "Push",
+        if force { "Force push" } else { "Push" },
         &repo,
         // Hooks (pre-push) see the worktree when there is one.
         tree.map_or_else(|| repo.main.clone(), |t| t.path.clone()),
         format!("{} / {branch}", repo.name),
         key,
-        upload_command(new),
+        upload_command(new, force),
         env,
     )
 }
@@ -659,9 +666,10 @@ pub(super) fn download_command(rebase: bool) -> String {
     format!("git pull{rebase} \"$GITGEL_REMOTE\" \"$GITGEL_MERGE\"")
 }
 
-pub(super) fn upload_command(set_upstream: bool) -> String {
+pub(super) fn upload_command(set_upstream: bool, force: bool) -> String {
     let upstream = if set_upstream { " --set-upstream" } else { "" };
-    format!("git push{upstream} \"$GITGEL_REMOTE\" \"$GITGEL_REFSPEC\"")
+    let force = if force { " --force-with-lease" } else { "" };
+    format!("git push{upstream}{force} \"$GITGEL_REMOTE\" \"$GITGEL_REFSPEC\"")
 }
 
 /// `git -C "$GITGEL_FOLDER_1" stash push … [-- "$GITGEL_PATH_1_1" …] && git -C "$GITGEL_FOLDER_2" …`:
@@ -776,12 +784,16 @@ mod tests {
             r#"git pull --rebase "$GITGEL_REMOTE" "$GITGEL_MERGE""#
         );
         assert_eq!(
-            upload_command(false),
+            upload_command(false, false),
             r#"git push "$GITGEL_REMOTE" "$GITGEL_REFSPEC""#
         );
         assert_eq!(
-            upload_command(true),
+            upload_command(true, false),
             r#"git push --set-upstream "$GITGEL_REMOTE" "$GITGEL_REFSPEC""#
+        );
+        assert_eq!(
+            upload_command(false, true),
+            r#"git push --force-with-lease "$GITGEL_REMOTE" "$GITGEL_REFSPEC""#
         );
     }
 

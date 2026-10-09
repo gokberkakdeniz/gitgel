@@ -84,3 +84,11 @@ export function rebaseOnBase(t: SyncTarget, base: string): Promise<void> {
 export function pushBranch(t: SyncTarget): Promise<void> {
   return startGitAction('Push', () => gitPush(refOf(t)), { openOnFail: true, done: `Pushed ${t.branch}` });
 }
+
+/** A diverged branch over its remote (`--force-with-lease`: only what the last fetch saw). */
+export function forcePushBranch(t: SyncTarget): Promise<void> {
+  return startGitAction('Force push', () => gitPush(refOf(t), true), {
+    openOnFail: true,
+    done: `Force pushed ${t.branch}`,
+  });
+}

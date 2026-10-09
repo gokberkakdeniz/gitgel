@@ -644,8 +644,8 @@ pub async fn get_staged_paths(
     blocking(&state, move |state| scripts::git::staged_paths(state, &entry)).await
 }
 
-/// Sync (W4a): `git push` of the entry's branch to its remote, never forced.
+/// Sync (W4a): `git push` of the entry's branch to its remote; `force`: `--force-with-lease`.
 #[tauri::command]
-pub async fn git_push(state: State<'_, AppState>, entry: EntryRef) -> Result<ScriptRun, AppError> {
-    blocking(&state, move |state| scripts::git::push(state, entry)).await
+pub async fn git_push(state: State<'_, AppState>, entry: EntryRef, force: bool) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| scripts::git::push(state, entry, force)).await
 }
