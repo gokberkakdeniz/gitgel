@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.20 — 2026-10-09
+
+### New
+- Force push for a diverged branch, from its branch menu and History.
+- Searching Branches lists remote branches without a local copy.
+- Right-click in the diff for Open in Finder and editors, at the clicked line.
+
+### Improved
+- Review's header shows the repo, branch and worktree.
+- Project review's header shows the repo and branch count.
+- Review's Uncommitted layer has no warning banner.
+- History has no branch picker.
+- Searching Branches stays smooth while typing.
+
+### Fixed
+- ⌥H, ⌘← and ⌘→ work while the diff has focus.
+- Switching between Uncommitted and All keeps the file and its place.
+- A long line in a toast ends in an ellipsis.
+
 ## 0.1.19 — 2026-10-08
 
 ### New
