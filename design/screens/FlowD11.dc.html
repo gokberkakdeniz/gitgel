@@ -181,11 +181,12 @@ button,input,textarea{font-family:inherit}
 </div>
 </section>
 </div>
-<div style="position: absolute; left: 150px; top: 238px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="220" label="client.ts actions" items="{{fileMenu}}" hint-size="220px,116px"></dc-import></div>
+<sc-if value="{{isFile}}" hint-placeholder-val="{{true}}"><div style="position: absolute; left: 150px; top: 238px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="220" label="client.ts actions" items="{{fileMenu}}" hint-size="220px,116px"></dc-import></div></sc-if>
+<sc-if value="{{isDiff}}" hint-placeholder-val="{{false}}"><div style="position: absolute; left: 900px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="230" label="Diff actions" items="{{diffMenu}}" hint-size="230px,260px"></dc-import></div></sc-if>
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "menu": {"editor": "enum", "options": ["file", "diff"], "default": "file"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -196,7 +197,17 @@ class Component extends DCLogic {
       { label: 'Open in Cursor', app: 'cursor' },
       { label: 'Open in VS Code', app: 'vscode' }
     ];
-    return { themeClass: 'theme-' + t, themeName: t, fileMenu: fileMenu };
+    // Right-click in the diff (SPEC §5 Review "Diff"): references to the lines, the permalink at a
+    // commit, then the same open items; an editor opens the file at the clicked line.
+    var diffMenu = [
+      { label: 'Copy relative reference', icon: 'copy' },
+      { label: 'Copy absolute reference', icon: 'copy' },
+      { label: 'Copy permalink', icon: 'copy' },
+      { label: 'Open permalink', icon: 'link' },
+      { kind: 'sep' }
+    ].concat(fileMenu);
+    var m = this.props.menu || 'file';
+    return { themeClass: 'theme-' + t, themeName: t, fileMenu: fileMenu, diffMenu: diffMenu, isFile: m === 'file', isDiff: m === 'diff' };
   }
 }
 </script>

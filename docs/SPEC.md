@@ -774,7 +774,7 @@ Layout:
   `@<path>:<from>-<to>`, the path relative to the repository), "Copy absolute reference" (the
   same with the file's path in its worktree, else the repository folder; with a commit shown it is
   the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (`https://github.com/<owner>/<repo>/blob/<sha>/<path>#L12-L13`;
-  only for a file shown at a commit, with a GitHub remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_github_url`, `open_github_link`, `src/monaco/reference.ts`). The editor is created once; changing
+  only for a file shown at a commit, with a GitHub remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_github_url`, `open_github_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in each editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas D11, `menu: diff`). The editor is created once; changing
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
   shown"; files over 1 MiB "File is too large to show (over 1 MB)".
 - **Diff view menu:** the view button (split or unified icon + "Split" / "Unified" + chevron;

@@ -3,7 +3,8 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import * as monaco from 'monaco-editor';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { CopyIcon, LinkIcon } from '../components/icons';
-import { Menu, MenuItem } from '../components/Menu';
+import { Menu, MenuDivider, MenuItem } from '../components/Menu';
+import { FileOpenItems } from '../components/OpenItems';
 import { Popover } from '../components/Popover';
 import { getGithubUrl, openGithubLink, readFilePair } from '../lib/ipc';
 import { useEffectiveTheme } from '../lib/theme';
@@ -12,7 +13,7 @@ import { useInvoke } from '../lib/useInvoke';
 import styles from './DiffView.module.css';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
 import { languageForPath } from './language';
-import { setDiffPosition } from './position';
+import { diffPosition, setDiffPosition } from './position';
 import { fileReference, permalink } from './reference';
 import { monacoReady } from './setup';
 import { MONACO_THEMES } from './theme';
@@ -459,6 +460,18 @@ export function DiffView({
                 >
                   Open permalink
                 </MenuItem>
+              </>
+            )}
+            {/* The file on disk (not for a deleted one), at the clicked line of the new side. */}
+            {folder && change.kind !== 'D' && (
+              <>
+                <MenuDivider />
+                <FileOpenItems
+                  folder={folder}
+                  path={change.path}
+                  at={() => (menu.modified ? { line: menu.from, column: 1 } : diffPosition(change.path))}
+                  onDone={() => setMenu(null)}
+                />
               </>
             )}
           </Menu>

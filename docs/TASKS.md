@@ -525,6 +525,9 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Force push (`--force-with-lease`) for a diverged branch: in the branch menus'
   sync group and History's diverged banner (`git_push` takes `force`) — 2026-10-09
   - note: canvas board R1 (`FlowR1.dc.html`).
+- [x] (on request) Right-click in the diff also has Open in Finder and Open in each editor, at the
+  clicked line — 2026-10-09
+  - note: canvas board D11 (`FlowD11.dc.html`, `menu: diff`).
 
 ---
 
