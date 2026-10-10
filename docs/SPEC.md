@@ -2500,8 +2500,8 @@ git action in the repository.
   panel on click, stoppable there. The prompt is built from git2 reads only: the checked
   files' patch (cut at ~12k characters) and up to 15 recent subjects from the branch, those
   touching the checked files first. The CLI's fixed command carries the prompt in
-  `GITGEL_PROMPT`; it never writes to the repository (codex runs `--sandbox read-only`,
-  cursor without `--force`). Past 5.5 minutes the run is stopped (agy's own print timeout is
+  `GITGEL_PROMPT`; it never writes to the repository (codex and Antigravity run sandboxed,
+  Claude denies anything that would prompt, cursor without `--force`). Past 5.5 minutes the run is stopped (agy's own print timeout is
   5 minutes). The answer arrives as `generate-finished`: the provider's text (opencode's
   `text` events) split into summary (first line) and description (the rest), or an error; a
   stopped run stays quiet. The run rescans nothing and toasts nothing at its end.

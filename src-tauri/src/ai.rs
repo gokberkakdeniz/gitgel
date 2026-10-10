@@ -78,7 +78,11 @@ impl Provider {
                 };
                 format!("opencode run --format json{model}{effort} {prompt}")
             }
-            Provider::Claude => format!("claude -p {prompt} --output-format text{model}"),
+            // No sandbox flag: anything that would prompt is denied instead, so the
+            // CLI can read but not act (the patch is already in the prompt).
+            Provider::Claude => {
+                format!("claude -p {prompt} --output-format text --permission-prompts none{model}")
+            }
             // `agent` is Cursor's primary command (`cursor-agent` is its legacy alias).
             Provider::Cursor => format!("agent -p {prompt} --output-format text{model}"),
             Provider::Antigravity => {
@@ -87,7 +91,7 @@ impl Provider {
                 } else {
                     ""
                 };
-                format!("agy -p {prompt} --output-format text --print-timeout 5m{model}{effort}")
+                format!("agy -p {prompt} --sandbox --output-format text --print-timeout 5m{model}{effort}")
             }
             // Read-only by default, explicit here; without `--force` cursor only proposes too.
             // The effort override is TOML, so its value carries quotes.
@@ -698,7 +702,7 @@ mod tests {
     fn commands_carry_no_values() {
         assert_eq!(
             Provider::Claude.command(false, false),
-            r#"claude -p "$GITGEL_PROMPT" --output-format text"#
+            r#"claude -p "$GITGEL_PROMPT" --output-format text --permission-prompts none"#
         );
         assert_eq!(
             Provider::Opencode.command(true, true),
@@ -710,7 +714,7 @@ mod tests {
         );
         assert_eq!(
             Provider::Antigravity.command(true, true),
-            r#"agy -p "$GITGEL_PROMPT" --output-format text --print-timeout 5m --model "$GITGEL_MODEL" --effort "$GITGEL_EFFORT""#
+            r#"agy -p "$GITGEL_PROMPT" --sandbox --output-format text --print-timeout 5m --model "$GITGEL_MODEL" --effort "$GITGEL_EFFORT""#
         );
         assert_eq!(
             Provider::Codex.command(false, true),
