@@ -1,3 +1,4 @@
+pub mod ai;
 pub mod appearance;
 pub mod apps;
 pub mod base;
@@ -163,6 +164,9 @@ pub fn run() {
             commands::git_rebase_on_base,
             commands::git_operation,
             commands::git_commit,
+            commands::generate_message_start,
+            commands::get_ai_status,
+            commands::get_default_prompt,
             commands::git_discard,
             commands::get_staged_paths,
             commands::git_push,

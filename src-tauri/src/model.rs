@@ -89,6 +89,8 @@ pub struct Settings {
     pub last_seen_version: String,
     /// Settings › Prompts: which confirmations are shown; configs from before it ask for all.
     pub prompts: Prompts,
+    /// Settings › AI: commit message generation; configs from before it have it on.
+    pub ai: AiSettings,
 }
 
 /// Settings › Prompts (M6): "Show a confirmation dialog before..." each of these.
@@ -116,6 +118,71 @@ impl Default for Prompts {
     }
 }
 
+/// Settings › AI: commit message generation (SPEC §15 "Generate message").
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct AiSettings {
+    /// The commit form's generate control shows; off hides it.
+    pub enabled: bool,
+    /// The provider id (`opencode`, `claude`, `cursor`, `antigravity`, `codex`).
+    pub provider: String,
+    /// Menu order: provider ids, as the Settings list has them.
+    pub order: Vec<String>,
+    pub opencode: AiProviderSettings,
+    pub claude: AiProviderSettings,
+    pub cursor: AiProviderSettings,
+    pub antigravity: AiProviderSettings,
+    pub codex: AiProviderSettings,
+}
+
+/// One provider's switch, model, effort and prompt template; an empty model, effort or
+/// prompt is the CLI's own default, and the effort names are the model provider's own.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct AiProviderSettings {
+    /// Off hides the provider from the commit menu; configs from before it have it on.
+    #[serde(default = "on")]
+    pub enabled: bool,
+    pub model: Option<String>,
+    pub effort: Option<String>,
+    /// `{branch}`, `{repo}`, `{stat}`, `{patch}`, `{examples}` are filled in; unset sends the
+    /// built-in default.
+    pub prompt: Option<String>,
+}
+
+fn on() -> bool {
+    true
+}
+
+impl Default for AiSettings {
+    fn default() -> Self {
+        AiSettings {
+            enabled: true,
+            provider: "claude".into(),
+            order: ["opencode", "claude", "cursor", "antigravity", "codex"]
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
+            opencode: AiProviderSettings::default(),
+            claude: AiProviderSettings::default(),
+            cursor: AiProviderSettings::default(),
+            antigravity: AiProviderSettings::default(),
+            codex: AiProviderSettings::default(),
+        }
+    }
+}
+
+impl Default for AiProviderSettings {
+    fn default() -> Self {
+        AiProviderSettings {
+            enabled: true,
+            model: None,
+            effort: None,
+            prompt: None,
+        }
+    }
+}
+
 impl Default for Settings {
     fn default() -> Self {
         Settings {
@@ -132,6 +199,7 @@ impl Default for Settings {
             check_updates: true,
             last_seen_version: String::new(),
             prompts: Prompts::default(),
+            ai: AiSettings::default(),
         }
     }
 }

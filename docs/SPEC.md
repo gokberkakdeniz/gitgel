@@ -150,7 +150,7 @@ configurable refresh.
 | Base | Stored per branch: `branchBases["<repoId>:<branch>"]`. |
 | Deleted branches | Entries keep `lastKnownTip` (SHA + when it was last seen), so a deleted branch can still show its last diff while the commit exists. |
 | Review | One screen for a whole project, files grouped per entry, one mode toggle. Single-branch review is the same screen with one group. |
-| Settings | Sections in a list: General (theme, terminal, update checks), Repositories (repos, default base order, active threshold), Scripts (the user's scripts), Prompts (which confirmations are shown) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
+| Settings | Sections in a list: General (theme, terminal, update checks), Repositories (repos, default base order, active threshold), Scripts (the user's scripts), AI (commit message generation), Prompts (which confirmations are shown) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
 | Scripts | User shell commands run from branch menus (§14): `$SHELL -l -c`, context in `GITGEL_*` env vars; every run in a pty (`portable-pty`) with a toast that opens its output panel (drawn with `@xterm/xterm`); Show when conditions in CEL, evaluated in the frontend. |
 | Config owner | Only Rust reads and writes the config. The frontend never writes files; every change is a Tauri command. |
 | Config path | `~/Library/Application Support/com.gitgel.desktop/config.json` (Tauri `app_data_dir()`). |
@@ -184,6 +184,7 @@ gitgel/
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts
 │  │            useCopy.ts  changelog.ts (CHANGELOG.md parsed, version compare)  whatsNew.ts
 │  │            prompts.ts (Settings › Prompts: "Do not show this message again")
+│  │            ai.ts (generate-finished hub, provider list; §15 "Generate message")
 │  ├─ windows/  # §7 the small windows: AuxApp (entry, theme, sizing), AboutWindow,
 │  │            # UpdateWindow, WhatsNewWindow
 │  ├─ state/    nav.ts  ui.ts  data.ts
@@ -212,7 +213,8 @@ gitgel/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
    ├─ capabilities/default.json
    └─ src/
-      ├─ main.rs  lib.rs          # lib.rs: run(), plugins, command registration
+       ├─ main.rs  lib.rs          # lib.rs: run(), plugins, command registration
+      ├─ ai.rs                  # commit message generation (§15 "Generate message")
       ├─ menu.rs                  # app menu: Settings…, Check for Updates…, View › Font Size, Help items
       ├─ logs.rs                  # Help › Show Logs in Finder
       ├─ appearance.rs            # main window theme and background; shown by the page (`reveal_window`)
@@ -1011,8 +1013,8 @@ Layout:
   (padding 16px 10px, 1px `border.row` on its right) and the chosen section's pane (scrolls on
   its own; content max 760px, padding 28px 32px 40px, groups 28px apart). Sections: 34px rows
   (radius 8, 13px, 16px muted icon, gap 10): **General** (sliders), **Repositories** (folder icon,
-  repo count in mono 12 muted on the right), **Scripts** (prompt icon, script count; §14),
-  **Prompts** (help), **Shortcuts** (keyboard). The chosen one:
+   repo count in mono 12 muted on the right), **Scripts** (prompt icon, script count; §14),
+   **AI** (bolt icon), **Prompts** (help), **Shortcuts** (keyboard). The chosen one:
   `bg.sidebarActive`, `text.strong` 500, `aria-current="page"`; others hover `bg.sunken`.
   Settings opens on the section shown last (General at first; kept for the session).
   The sidebar's "N repositories" row and every "path not found" link open Repositories; the
@@ -1065,6 +1067,23 @@ Layout:
   - "Check for updates" ("At launch and every 6 hours; a new version shows in the sidebar"): a
     checkbox, on by default (`settings.checkUpdates`). Off hides a found update; on checks at once.
 - **Scripts:** see §14 "Settings › Scripts".
+- **AI**: serif 18px heading "AI".
+  - "Generate commit message with AI": a `Switch`, on by default (`settings.ai.enabled`). Off
+    hides the commit form's generate control; a run asked for meanwhile is refused.
+  - The provider is picked in the commit form's menu (`settings.ai.provider`, claude at first).
+  - One `List` row per provider, in menu order (drag the handle to reorder; ↑ / ↓ on the
+    focused handle): a `bolt` tile, its 500-weight name, a danger sm pill "Not installed" when
+    its CLI is missing, a neutral sm pill "off" when switched off, then a `Switch` (off hides
+    it from the commit menu) and ✎. While its     CLI is missing the `Switch` and ✎ are disabled;
+    the handle never is. ✎ opens an "Edit <provider>" modal: a 36px mono
+    `Input` "Model" (placeholder `Default`; empty = the CLI's own default), a 36px mono
+    `Input` "Effort" (placeholder `Default`; empty = default; free text — the names are the
+    model provider's own, e.g. opencode variants like `max`), and a growing mono textarea
+    "Prompt" (the effective prompt: the provider's own when untouched) with a
+    "+ Variable" menu (`{branch}`, `{repo}`, `{stat}`, `{patch}`, `{examples}`; inserted at
+    the cursor); Cancel / primary "Save". Saved on Save, trimmed; an empty model, prompt or
+    effort is the default again; a prompt without `{patch}` does not save. The install state
+    is read from the login shell (`command -v`) when the section opens.
 - **Prompts** (M6, `FlowM6`; GitHub Desktop's section and texts): serif 18px heading "Show a
   confirmation dialog before...", then one `Checkbox` per line, gap 12: "Removing repositories"
   (the Repositories ✕), "Discarding changes" (§15 "Discard"), "Dropping stashes" (Drop, P6),
@@ -2450,6 +2469,25 @@ git action in the repository.
   the buttons "Commit without hooks"
   (the same commit with `--no-verify`) and "Retry" (primary, ⌘↵), which send the same files and
   message again. Stopping the run does not open it.
+- **Generate message**: `generate_message_start` (`entry`, the checked `include`
+  paths, `provider`: opencode, claude, cursor, antigravity or codex) asks that agent CLI for a
+  commit message for the checked files, as a run (`ai:generate`, `bolt` icon) in the entry's
+  worktree: a running toast ("Running "Generate with <provider>"…") that opens its output
+  panel on click, stoppable there. The prompt is built from git2 reads only: the checked
+  files' patch (cut at ~12k characters) and up to 15 recent subjects from the branch, those
+  touching the checked files first. The CLI's fixed command carries the prompt in
+  `GITGEL_PROMPT`; it never writes to the repository (codex runs `--sandbox read-only`,
+  cursor without `--force`). Past 5.5 minutes the run is stopped (agy's own print timeout is
+  5 minutes). The answer arrives as `generate-finished`: the provider's text (opencode's
+  `text` events) split into summary (first line) and description (the rest), or an error; a
+  stopped run stays quiet. The run rescans nothing and toasts nothing at its end.
+  The provider, model, effort and prompt template come from Settings › AI: `--model
+  "$GITGEL_MODEL"` when a model is set (all five), `--variant "$GITGEL_EFFORT"` for opencode,
+  `--effort "$GITGEL_EFFORT"` for Antigravity and `-c
+  "model_reasoning_effort=\"$GITGEL_EFFORT\""` for Codex when an effort is set (free text, so
+  quotes and line breaks are refused). The template fills `{branch}`, `{repo}`, `{stat}`,
+  `{patch}` and `{examples}`; without one of its own the built-in default is sent. A
+  provider switched off is refused too.
 
 ### Sync (W4a)
 
@@ -2680,6 +2718,15 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   no summary, no file checked, or merge conflicts, each saying why in the tooltip). ⌘↵ in either
   field commits. While the commit runs (hooks included) the form is locked and the button reads
   "Committing…" with a spinner.
+  - **Generate message**: left of the Commit button one joined split control: a 32px `bolt`
+    (tooltip `Ask <provider> for a commit message`) that fills the summary and description,
+    which stay editable, and a 32px `more-vertical` (⋮) opening its menu (the switched-on
+    providers in menu order (switched off or missing ones are not listed at all);
+    picking one makes it the default and generates with it at once; right-click on the bolt
+    works too). While it runs the bolt is a
+    spinner, and a running toast opens the generation's output panel on click, so a slow
+    provider can be watched (and stopped); a failure shows a failed toast and leaves the form
+    alone.
   - **Boxes:** a file row's `Checkbox` includes it. Above the files a 28px row has a `Checkbox` (mixed
     when some are checked) labelled "Select all", or "Unselect all" when every file is checked. They start as git's index has them (files staged
     outside Gitgel are checked, `get_staged_paths`); with nothing staged every tracked file is

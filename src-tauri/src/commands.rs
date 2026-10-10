@@ -11,7 +11,9 @@ use crate::model::{
     ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
-use crate::{apps, base, files, history, projects, repos, review, scan, scripts, updates, watch};
+use crate::{
+    ai, apps, base, files, history, projects, repos, review, scan, scripts, updates, watch,
+};
 
 /// Runs git or disk work off the async runtime.
 pub async fn blocking<T, F>(state: &AppState, f: F) -> Result<T, AppError>
@@ -641,6 +643,35 @@ pub async fn git_commit(
         scripts::git::commit(state, entry, files)
     })
     .await
+}
+
+/// Generate message (SPEC §15 "Generate message"): an agent CLI writes a commit message for
+/// the entry's checked files, as a run; the answer arrives as `generate-finished`.
+#[tauri::command]
+pub async fn generate_message_start(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    include: Vec<String>,
+    provider: ai::Provider,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        ai::start(state, entry, include, provider)
+    })
+    .await
+}
+
+/// Whether each agent CLI is installed (Settings › AI, the commit menu).
+#[tauri::command]
+pub async fn get_ai_status(
+    state: State<'_, AppState>,
+) -> Result<Vec<ai::ProviderStatus>, AppError> {
+    blocking(&state, move |_| Ok(ai::status())).await
+}
+
+/// The prompt sent without one of its own (the edit modal prefills it).
+#[tauri::command]
+pub async fn get_default_prompt() -> Result<String, AppError> {
+    Ok(ai::DEFAULT_PROMPT.into())
 }
 
 /// Discard (Hi8, D12): the files go back to HEAD in each entry's worktree, a copy of each to the

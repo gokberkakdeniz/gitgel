@@ -37,7 +37,39 @@
   opacity: 0.6;
 }
 
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* One joined control: bolt generates, ⋮ opens the provider menu. */
+.split {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.splitMain {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.splitMenu {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: 0;
+}
+
 .commit {
-  width: 100%;
+  flex: 1;
   justify-content: center;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

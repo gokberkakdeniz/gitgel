@@ -16,6 +16,7 @@ import type { AppError, Config, RepoConfig, TerminalChoice } from '../../lib/typ
 import { useData } from '../../state/data';
 import { useUi, type SettingsSection } from '../../state/ui';
 import styles from './Settings.module.css';
+import { Ai } from './Ai';
 import { Appearance } from './Appearance';
 import { BaseOrder } from './BaseOrder';
 import { Scripts } from './Scripts';
@@ -26,6 +27,7 @@ const SECTIONS: SettingsNavSection<SettingsSection>[] = [
   { id: 'general', label: 'General', icon: 'tune' },
   { id: 'repositories', label: 'Repositories', icon: 'folder' },
   { id: 'scripts', label: 'Scripts', icon: 'prompt' },
+  { id: 'ai', label: 'AI', icon: 'bolt' },
   { id: 'prompts', label: 'Prompts', icon: 'help' },
   { id: 'shortcuts', label: 'Shortcuts', icon: 'keyboard' },
 ];
@@ -66,6 +68,8 @@ export function Settings() {
               <General config={config} />
             ) : section === 'scripts' ? (
               <Scripts config={config} />
+            ) : section === 'ai' ? (
+              <Ai config={config} />
             ) : section === 'prompts' ? (
               <Prompts config={config} />
             ) : (

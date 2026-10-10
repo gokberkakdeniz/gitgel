@@ -8,7 +8,8 @@ import * as ipc from './ipc';
 import { loadHome } from './paths';
 import { applyPassphraseAsked, applyPassphraseRunExited } from '../scripts/PassphraseDialog';
 import { applyRunExited, applyRunOutput } from '../scripts/runs';
-import type { Config, RepoUpdated, ScriptOutputChunk, ScriptRun, UpdateInfo } from './types';
+import { applyGenerateFinished } from './ai';
+import type { Config, GenerateFinished, RepoUpdated, ScriptOutputChunk, ScriptRun, UpdateInfo } from './types';
 
 let started: Promise<void> | null = null;
 
@@ -41,6 +42,8 @@ async function start() {
   // ssh asked for a key's passphrase in a run (SPEC §15 "SSH passphrase").
   await listen<{ runId: string; key: string }>('ssh-passphrase', (e) => applyPassphraseAsked(e.payload));
   await listen<ScriptOutputChunk>('script-output', (e) => applyRunOutput(e.payload));
+  // A generation run answered (src/ai.ts); the starter fills its form.
+  await listen<GenerateFinished>('generate-finished', (e) => applyGenerateFinished(e.payload));
   // The backend checks for updates at launch and on focus (updates.rs).
   await listen<UpdateInfo | null>('update-available', (e) => data.setUpdate(e.payload));
   await listen<number | null>('update-progress', (e) => data.setUpdateProgress(e.payload ?? 'unknown'));

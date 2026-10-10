@@ -69,7 +69,7 @@ struct Run {
 }
 
 /// A run to start: what its toast and panel show, and the command.
-pub(super) struct Launch {
+pub(crate) struct Launch {
     pub script_id: String,
     pub name: String,
     pub icon: String,
@@ -253,7 +253,7 @@ pub fn run_script(
 
 /// Starts a command in a pty and records its run. A process that cannot start gives a `failed`
 /// run.
-pub(super) fn launch(state: &AppState, l: Launch) -> Result<ScriptRun, AppError> {
+pub(crate) fn launch(state: &AppState, l: Launch) -> Result<ScriptRun, AppError> {
     let info = ScriptRun {
         run_id: config::new_id("run"),
         script_id: l.script_id,
@@ -311,6 +311,45 @@ pub(super) fn launch(state: &AppState, l: Launch) -> Result<ScriptRun, AppError>
 }
 
 // ---- Starting ----
+
+/// A run's output as text to parse: escapes stripped, the pty's `\r\n` back to `\n`.
+pub(crate) fn clean_output(text: &str) -> String {
+    strip_escapes(text).replace("\r\n", "\n").trim().to_string()
+}
+
+/// Runs a fixed read-only command in a pty and returns its output; no run is recorded.
+/// Past `timeout` the process group is killed and the probe is an error.
+pub(crate) fn probe(
+    command: &str,
+    env: &[(String, String)],
+    timeout: Duration,
+) -> Result<String, AppError> {
+    let (tx, rx) = mpsc::channel();
+    let out = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
+    let sink = out.clone();
+    let done = std::sync::Mutex::new(tx);
+    let on: OnEvent = std::sync::Arc::new(move |event| match event {
+        Event::Output(text) => {
+            sink.lock().unwrap().push_str(&text);
+        }
+        Event::Ended(ended) => {
+            let _ = done.lock().unwrap().send(ended);
+        }
+    });
+    // The writer and the pty stay alive until the run ends; dropping them would hang it up.
+    let spawned = spawn_pty(command, &std::env::temp_dir(), env, on)?;
+    let pid = spawned.0;
+    let _keep = spawned;
+    match rx.recv_timeout(timeout) {
+        Ok(_) => Ok(clean_output(&out.lock().unwrap())),
+        Err(_) => {
+            if let Some(pid) = pid {
+                signal_group(pid, libc::SIGKILL);
+            }
+            Err(AppError::Invalid("The check took too long.".into()))
+        }
+    }
+}
 
 /// What a started process reports, in order: output, then one end.
 enum Event {
@@ -634,8 +673,9 @@ fn finish(state: &AppState, run_id: &str, ended: Ended) {
     if let Err(e) = state.app.emit(SCRIPT_EXITED, &info) {
         log::warn!("cannot emit {SCRIPT_EXITED}: {e}");
     }
-    // The script may have committed, rebased or pushed (SPEC §14 "Decisions").
-    if info.status == ScriptRunStatus::Exited {
+    // The script may have committed, rebased or pushed (SPEC §14 "Decisions"); a message
+    // generation (`ai:…`) never writes, so it rescans nothing.
+    if info.status == ScriptRunStatus::Exited && !info.script_id.starts_with(crate::ai::AI_PREFIX) {
         for repo_id in std::iter::once(&info.repo_id).chain(&also_rescan) {
             scan::rescan_repo(state, repo_id, UpdateReason::Rescan, None);
         }
@@ -1153,12 +1193,19 @@ mod tests {
         assert!(out.contains("tty:yes:xterm-256color"), "{out:?}");
         assert!(matches!(ended, Ended::Exited(Some(0), None)));
     }
-
     #[test]
     fn signals_have_names() {
         assert_eq!(signal_name(libc::SIGINT), "SIGINT");
         assert_eq!(signal_name(64), "signal 64");
         assert_eq!(pty_signal_name("Interrupt: 2"), "SIGINT");
         assert_eq!(pty_signal_name("odd"), "odd");
+    }
+
+    #[test]
+    fn cleaned_output_has_no_escapes_or_returns() {
+        assert_eq!(
+            clean_output("\u{1b}[32mhello\u{1b}[0m\r\n\r\nworld  "),
+            "hello\n\nworld"
+        );
     }
 }

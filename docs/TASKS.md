@@ -575,8 +575,27 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Sidebar resizable (drag its right border, 200–400px, remembered; double-click resets) — 2026-10-10
 - [x] (on request) History list resizable (drag its right border, 280–640px, remembered; double-click resets) — 2026-10-10
 
+### Phase 23 — Commit message generation
+- [x] T23.1 Generate message backend — 2026-10-10
+- [x] T23.2 Generate message in the commit form — 2026-10-10
+
+### Phase 24 — AI settings
+- [x] T24.1 AI settings backend — 2026-10-10
+- [x] T24.2 Settings › AI — 2026-10-10
+- [x] T24.3 Commit form on the config — 2026-10-10
+- [x] T24.5 Provider list, toggles and edit modal — 2026-10-10
+- [x] T24.6 Prompt editor, row states, no binary notes — 2026-10-10
+
 ---
 
 ## Open
 
-No open tasks.
+### Phase 23 — Commit message generation
+
+#### T23.3 ✋ Checkpoint — message generation
+- **Depends on:** T23.2
+
+### Phase 24 — AI settings
+
+#### T24.4 ✋ Checkpoint — AI settings
+- **Depends on:** T24.6

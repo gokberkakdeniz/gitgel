@@ -146,7 +146,16 @@ mod tests {
                 "lastSeenVersion": "0.1.15",
                 "prompts": { "removeRepositories": true, "discardChanges": false,
                              "discardStash": true, "deleteProjects": false,
-                             "abortOperation": true }
+                             "abortOperation": true },
+                "ai": {
+                    "enabled": false, "provider": "opencode",
+                    "order": ["opencode", "codex"],
+                    "opencode": { "enabled": true, "model": "fast", "effort": "max", "prompt": null },
+                    "claude": { "enabled": true, "model": null, "effort": null, "prompt": null },
+                    "cursor": { "enabled": true, "model": null, "effort": null, "prompt": null },
+                    "antigravity": { "enabled": true, "model": null, "effort": "high", "prompt": null },
+                    "codex": { "enabled": true, "model": null, "effort": null, "prompt": null }
+                }
             },
             "scripts": [{
                 "id": "s_1", "name": "Run tests", "icon": "test", "command": "pnpm test",

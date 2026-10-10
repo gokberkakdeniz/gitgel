@@ -41,6 +41,7 @@ export interface Settings {
   checkUpdates: boolean; // Settings › Behaviour › Check for Updates
   lastSeenVersion: string; // the version whose What's New was shown; '' before any
   prompts: Prompts; // Settings › Prompts
+  ai: AiSettings; // Settings › AI
 }
 /** Settings › Prompts (M6): "Show a Confirmation Dialog Before…" each of these. */
 export interface Prompts {
@@ -221,6 +222,40 @@ export interface CommitFiles {
   summary: string;
   description: string;
   noVerify: boolean; // skip the commit hooks (Commit Without Hooks)
+}
+/** An agent CLI that writes a commit message (SPEC §15 "Generate message"). */
+export type CommitProvider = 'opencode' | 'claude' | 'cursor' | 'antigravity' | 'codex';
+/** One provider's switch, model, effort and prompt; empty is the default. */
+export interface AiProviderSettings {
+  enabled: boolean; // off hides the provider from the commit menu
+  model: string | null;
+  effort: string | null; // free text: the names are the model provider's own
+  prompt: string | null; // unset sends the built-in default; needs {patch}
+}
+/** Settings › AI (SPEC §5). */
+export interface AiSettings {
+  enabled: boolean; // the commit form's generate control shows
+  provider: CommitProvider;
+  order: string[]; // menu order: provider ids, as the Settings list has them
+  opencode: AiProviderSettings;
+  claude: AiProviderSettings;
+  cursor: AiProviderSettings;
+  antigravity: AiProviderSettings;
+  codex: AiProviderSettings;
+}
+/** One agent CLI: whether it is installed (`get_ai_status`). */
+export interface AiStatus {
+  id: CommitProvider;
+  installed: boolean;
+}
+/** What a generation's run reports through `generate-finished`: the form's two fields, or why
+ * there are none (`cancelled`: stopped, stays quiet). */
+export interface GenerateFinished {
+  runId: string;
+  summary: string | null;
+  description: string | null;
+  error: string | null;
+  cancelled: boolean;
 }
 /** One stash@{n} (flow P). */
 export interface StashInfo {

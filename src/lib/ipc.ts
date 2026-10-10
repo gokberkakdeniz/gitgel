@@ -1,9 +1,11 @@
 // Typed wrappers for the backend commands (src-tauri/src/commands.rs).
 import { invoke } from '@tauri-apps/api/core';
 import type {
+  AiStatus,
   BaseOptions,
   CommitChanges,
   CommitFiles,
+  CommitProvider,
   Config,
   DiscardFiles,
   EntryRef,
@@ -172,6 +174,17 @@ export const gitOperation = (entry: EntryRef, abort: boolean) => invoke<ScriptRu
 
 /** Commit (W1a): the checked files of the entry's worktree, with the message. */
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });
+
+/** Generate message (SPEC §15): an agent CLI writes a commit message for the checked files,
+ * as a run; the answer arrives as `generate-finished`. */
+export const generateMessageStart = (entry: EntryRef, include: string[], provider: CommitProvider) =>
+  invoke<ScriptRun>('generate_message_start', { entry, include, provider });
+
+/** Whether each agent CLI is installed (Settings › AI, the commit menu). */
+export const getAiStatus = () => invoke<AiStatus[]>('get_ai_status');
+
+/** The prompt sent without one of its own (the edit modal prefills it). */
+export const getDefaultPrompt = () => invoke<string>('get_default_prompt');
 
 /** Discard (Hi8, D12): the files go back to HEAD, a copy of each to the Trash first. */
 export const gitDiscard = (entries: DiscardFiles[]) => invoke<ScriptRun>('git_discard', { entries });

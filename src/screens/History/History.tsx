@@ -12,7 +12,8 @@ import { Pill } from '../../components/Pill';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
-import { startGitAction, useRuns } from '../../scripts/runs';
+import { startGitAction, showRunToast, useRuns } from '../../scripts/runs';
+import { AI_PROVIDERS, onGenerateFinished, providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { conflictOf } from '../../sync/operation';
 import { OperationBanner } from '../../sync/OperationUi';
@@ -23,9 +24,9 @@ import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { formatAge, plural } from '../../lib/format';
-import { getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, gitCommit, openRemoteLink } from '../../lib/ipc';
+import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, openRemoteLink, updateSettings } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
-import type { CommitChanges, CommitFiles, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
+import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
@@ -124,6 +125,60 @@ export function History({ repoId, rev, backLabel }: Props) {
     setSummary('');
     setDescription('');
   }, [repoId, rev]);
+  // Generate message (SPEC §15): the provider's CLI writes the form for the checked files.
+  // The provider lives in the config (Settings › AI); a pick from before that moves over once.
+  const config = useData((s) => s.config);
+  const ai = config?.settings.ai ?? null;
+  const provider = ai?.provider ?? 'claude';
+  const migrated = useRef(false);
+  useEffect(() => {
+    if (migrated.current || !config) return;
+    migrated.current = true;
+    const last = localStorage.getItem('gitgel.commitProvider');
+    localStorage.removeItem('gitgel.commitProvider');
+    if (last && AI_PROVIDERS.some((p) => p.id === last) && last !== config.settings.ai.provider) {
+      void updateSettings({
+        ...config.settings,
+        ai: { ...config.settings.ai, provider: last as CommitProvider },
+      });
+    }
+  }, [config]);
+  const chooseProvider = (next: CommitProvider) => {
+    if (!config || next === provider) return;
+    void updateSettings({ ...config.settings, ai: { ...config.settings.ai, provider: next } });
+  };
+  // Whether each CLI is installed; null while unknown (nothing is disabled).
+  const [aiStatus, setAiStatus] = useState<AiStatus[] | null>(null);
+  useEffect(() => {
+    if (ai && !ai.enabled) {
+      setAiStatus(null);
+      return;
+    }
+    void getAiStatus().then(setAiStatus, () => {});
+  }, [ai?.enabled]);
+  // The menu lists the switched-on and installed providers in menu order (all while
+  // the install state is unknown).
+  const enabledProviders = useMemo(
+    () =>
+      providerOrder(ai?.order ?? []).filter(
+        (id) => ai === null || ai[id]?.enabled !== false,
+      ),
+    [ai],
+  );
+  const menuProviders = useMemo(
+    () =>
+      enabledProviders.filter(
+        (id) => aiStatus === null || aiStatus.some((s) => s.id === id && s.installed),
+      ),
+    [enabledProviders, aiStatus],
+  );
+  const [generating, setGenerating] = useState(false);
+  // The generation this form waits for; a late answer never unlocks a newer one.
+  const genRun = useRef<string | null>(null);
+  useEffect(() => {
+    genRun.current = null;
+    setGenerating(false);
+  }, [repoId, rev]);
   // The commit running for this entry, and how the last one ended.
   const committing = useRuns((s) =>
     Object.values(s.runs).some((r) => r.scriptId === 'git:commit' && r.status === 'running' && r.entryKey === entry?.key),
@@ -171,6 +226,59 @@ export function History({ repoId, rev, backLabel }: Props) {
       description,
       noVerify: false,
     });
+  // Where the form is: a late answer fills another branch's form never.
+  const here = useRef('');
+  here.current = `${repoId}${rev}`;
+  const generateChecked = (forced?: CommitProvider) => {
+    if (!entryRef || generating) return;
+    // From the menu: generate with the picked provider at once.
+    const active = forced ?? provider;
+    if (!enabledProviders.includes(active)) {
+      useUi.getState().showToast({ status: 'failed', message: `${active} is turned off` });
+      return;
+    }
+    if (aiStatus && !aiStatus.some((s) => s.id === active && s.installed)) {
+      useUi.getState().showToast({ status: 'failed', message: `${active} is not installed` });
+      return;
+    }
+    // The answer may land on another branch: only this form takes it.
+    const mine = here.current;
+    const stop = () => {
+      genRun.current = null;
+      setGenerating(false);
+    };
+    setGenerating(true);
+    void generateMessageStart(
+      entryRef,
+      included.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path])),
+      active,
+    )
+      .then((run) => {
+        genRun.current = run.runId;
+        const runs = useRuns.getState();
+        runs.put(run);
+        showRunToast(run);
+        const off = onGenerateFinished(run.runId, (r) => {
+          off();
+          if (genRun.current === run.runId) stop();
+          // Its running toast is done, whatever took its place stays.
+          const ui = useUi.getState();
+          if (ui.toast?.owner === run.runId) ui.dismissToast();
+          if (here.current !== mine) return;
+          if (r.cancelled) return;
+          if (r.error || !r.summary) {
+            ui.showToast({ status: 'failed', message: r.error ?? 'No message generated' });
+            return;
+          }
+          setSummary(r.summary);
+          setDescription(r.description ?? '');
+        });
+      })
+      .catch((e: unknown) => {
+        stop();
+        useUi.getState().showToast({ status: 'failed', message: (e as AppError).message });
+      });
+  };
 
   // The stashes taken on this branch (§15), under the list; not while searching.
   const allStashes = repoScan?.stashes;
@@ -575,9 +683,23 @@ export function History({ repoId, rev, backLabel }: Props) {
                     ? 'Resolve the merge conflicts first'
                     : null
               }
+              provider={provider}
+              providers={menuProviders}
+              generating={generating}
+              aiEnabled={ai?.enabled ?? true}
+              installed={
+                aiStatus
+                  ? (Object.fromEntries(aiStatus.map((s) => [s.id, s.installed])) as Record<
+                      CommitProvider,
+                      boolean
+                    >)
+                  : null
+              }
               onSummary={setSummary}
               onDescription={setDescription}
               onCommit={commitChecked}
+              onProvider={chooseProvider}
+              onGenerate={generateChecked}
             />
           )}
         </div>

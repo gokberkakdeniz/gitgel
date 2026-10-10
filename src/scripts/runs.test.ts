@@ -123,6 +123,26 @@ describe('shownInputs', () => {
   });
 });
 
+describe('a generation run', () => {
+  it('toasts only while running; its generate-finished says how it ended', async () => {
+    const { applyRunExited, showRunToast } = await import('./runs');
+    const { useUi } = await import('../state/ui');
+    const run = {
+      runId: 'run_ai',
+      scriptId: 'ai:generate',
+      status: 'running',
+      exitCode: null,
+      name: 'Generate with Claude Code',
+      lastLine: '',
+      repoLabel: 'gitgel / master',
+    } as never;
+    showRunToast(run);
+    expect(useUi.getState().toast?.status).toBe('running');
+    applyRunExited({ ...(run as object), status: 'exited', exitCode: 0 } as never);
+    expect(useUi.getState().toast?.status).toBe('running');
+  });
+});
+
 describe('a run whose output panel is open', () => {
   it('has no toast; closing the panel brings it back while it runs', async () => {
     const { applyRunExited, showRunToast, useRuns } = await import('./runs');
