@@ -1084,7 +1084,10 @@ Layout:
     "Prompt" (the effective prompt: the provider's own when untouched) with a
     "+ Variable" menu (`{branch}`, `{repo}`, `{stat}`, `{patch}`, `{examples}`; inserted at
     the cursor); Cancel / primary "Save". Saved on Save, trimmed; an empty model, prompt or
-    effort is the default again; a prompt without `{patch}` does not save. The install state
+    effort is the default again; a prompt without `{patch}` does not save, and saving
+    without changes writes nothing. Left of
+    "+ Variable", a "Reset" button puts the built-in default back (disabled when already
+    default; saving then stores null). The install state
     is read from the login shell (`command -v`) when the section opens.
 - **Prompts** (M6, `FlowM6`; GitHub Desktop's section and texts): serif 18px heading "Show a
   confirmation dialog before...", then one `Checkbox` per line, gap 12: "Removing repositories"

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../components/Button';
-import { ChevronDownIcon } from '../../components/icons';
+import { ChevronDownIcon, UndoIcon } from '../../components/icons';
 import { Input } from '../../components/Input';
 import { List } from '../../components/List';
 import { Menu, MenuItem } from '../../components/Menu';
@@ -143,31 +143,36 @@ function ProviderEditor({
   const [effort, setEffort] = useState(settings.effort ?? '');
   // The effective prompt: the provider's own when untouched (prefilled from the default).
   const [prompt, setPrompt] = useState(settings.prompt ?? '');
-  const [base, setBase] = useState<string | null>(settings.prompt ?? null);
+  // The built-in default, for the Reset button and the save comparison.
+  const [def, setDef] = useState<string | null>(null);
   useEffect(() => {
-    if (settings.prompt != null) return;
     void getDefaultPrompt().then(
       (d) => {
-        setBase(d);
-        setPrompt((p) => (p === '' ? d : p));
+        setDef(d);
+        if (settings.prompt == null) setPrompt((p) => (p === '' ? d : p));
       },
-      () => setBase(''),
+      () => setDef(''),
     );
   }, [settings.prompt]);
-  const ready = settings.prompt != null || base !== null;
+  const ready = settings.prompt != null || def !== null;
+  const canReset = def != null && def !== '' && prompt !== def;
   const trimmed = (s: string) => {
     const t = s.trim();
     return t === '' ? null : t;
   };
   const problem = !prompt.includes('{patch}') ? 'The prompt needs {patch}' : null;
+  const next = {
+    ...settings,
+    model: trimmed(model),
+    effort: trimmed(effort),
+    // Default text always stores as null — including after Reset on a custom prompt.
+    prompt: trimmed(prompt) === def?.trim() ? null : trimmed(prompt),
+  };
+  // Nothing changed (e.g. Reset on an untouched prompt): saving writes nothing.
+  const unchanged = JSON.stringify(next) === JSON.stringify(settings);
   const save = () => {
-    if (problem) return;
-    onSave({
-      ...settings,
-      model: trimmed(model),
-      effort: trimmed(effort),
-      prompt: trimmed(prompt) === base?.trim() ? null : trimmed(prompt),
-    });
+    if (problem || unchanged) return;
+    onSave(next);
   };
   const submitOnKey = (e: React.KeyboardEvent) => {
     if (e.key !== 'Enter' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
@@ -177,6 +182,11 @@ function ProviderEditor({
   // The prompt editor grows with its text; "+ Variable" inserts at the cursor.
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
   const grow = useAutoGrow(promptRef, prompt);
+  const resetPrompt = () => {
+    if (def == null) return;
+    setPrompt(def);
+    promptRef.current?.focus();
+  };
   const [variables, setVariables] = useState<DOMRect | null>(null);
   const insertVariable = (name: string) => () => {
     const area = promptRef.current;
@@ -234,19 +244,32 @@ function ProviderEditor({
               onChange={(e) => setPrompt(e.target.value)}
               {...grow}
             />
-            <button
-              type="button"
-              className={variables ? `${styles.aiCorner} ${styles.open}` : styles.aiCorner}
-              aria-haspopup="menu"
-              aria-expanded={variables !== null}
-              title="Insert a variable"
-              onClick={(e) =>
-                setVariables(variables ? null : e.currentTarget.getBoundingClientRect())
-              }
-            >
-              + Variable
-              <ChevronDownIcon size={9} />
-            </button>
+            <div className={styles.aiCornerWrap}>
+              <button
+                type="button"
+                className={styles.aiCorner}
+                aria-label="Reset prompt to default"
+                title="Reset to default"
+                disabled={!canReset}
+                onClick={resetPrompt}
+              >
+                <UndoIcon size={12} />
+                Reset
+              </button>
+              <button
+                type="button"
+                className={variables ? `${styles.aiCorner} ${styles.open}` : styles.aiCorner}
+                aria-haspopup="menu"
+                aria-expanded={variables !== null}
+                title="Insert a variable"
+                onClick={(e) =>
+                  setVariables(variables ? null : e.currentTarget.getBoundingClientRect())
+                }
+              >
+                + Variable
+                <ChevronDownIcon size={9} />
+              </button>
+            </div>
           </div>
           {variables && (
             <Popover anchorRect={variables} width={280} alignRight onClose={() => setVariables(null)}>
@@ -265,7 +288,13 @@ function ProviderEditor({
         <Button size={36} onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="primary" size={36} disabled={!!problem || !ready} onClick={save}>
+        <Button
+          variant="primary"
+          size={36}
+          disabled={!!problem || !ready || unchanged}
+          title={unchanged ? 'No changes' : undefined}
+          onClick={save}
+        >
           Save
         </Button>
       </ModalFooter>
