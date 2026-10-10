@@ -237,8 +237,7 @@ export interface AiProviderSettings {
 /** Settings › AI (SPEC §5). */
 export interface AiSettings {
   enabled: boolean; // the commit form's generate control shows
-  provider: CommitProvider;
-  order: string[]; // menu order: provider ids, as the Settings list has them
+  order: string[]; // menu order: provider ids, as the Settings list has them; the default is the topmost switched-on one
   opencode: AiProviderSettings;
   claude: AiProviderSettings;
   cursor: AiProviderSettings;

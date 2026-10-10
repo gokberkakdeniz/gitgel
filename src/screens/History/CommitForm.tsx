@@ -29,7 +29,6 @@ export function CommitForm({
   onSummary,
   onDescription,
   onCommit,
-  onProvider,
   onGenerate,
 }: {
   rev: string;
@@ -51,8 +50,8 @@ export function CommitForm({
   onSummary: (value: string) => void;
   onDescription: (value: string) => void;
   onCommit: () => void;
-  onProvider: (provider: CommitProvider) => void;
-  /** The bolt generates with the default; a menu pick generates with the picked one at once. */
+  /** The bolt generates with the default; a menu pick generates with the picked one at
+   * once, leaving the default alone. */
   onGenerate: (provider?: CommitProvider) => void;
 }) {
   const ready = summary.trim() !== '' && files > 0 && !blocked;
@@ -101,7 +100,7 @@ export function CommitForm({
           <div className={styles.split}>
             <IconButton
               size={32}
-              aria-label={`Generate with ${providerLabel(provider)}`}
+              aria-label={`Generate commit message with ${providerLabel(provider)}`}
               title={
                 generating
                   ? 'Asking for a commit message'
@@ -109,7 +108,7 @@ export function CommitForm({
                     ? `${providerLabel(provider)} is turned off`
                     : missing(provider)
                       ? `${providerLabel(provider)} is not installed`
-                      : `Ask ${providerLabel(provider)} for a commit message`
+                      : `Generate commit message with ${providerLabel(provider)}`
               }
               active={menu !== null}
               disabled={!canGenerate || off || missing(provider)}
@@ -124,8 +123,8 @@ export function CommitForm({
             </IconButton>
             <IconButton
               size={32}
-              aria-label="More actions"
-              title={noProviders ? 'Turn on a provider first' : 'More actions'}
+              aria-label="Select different provider"
+              title={noProviders ? 'Turn on a provider first' : 'Select different provider'}
               active={menu !== null}
               disabled={noProviders}
               onClick={(e) => setMenu(menu ? null : e.currentTarget.getBoundingClientRect())}
@@ -142,9 +141,7 @@ export function CommitForm({
               {providers.map((id) => (
                 <MenuItem
                   key={id}
-                  checked={id === provider}
                   onSelect={() => {
-                    onProvider(id);
                     onGenerate(id);
                     setMenu(null);
                   }}

@@ -124,9 +124,8 @@ impl Default for Prompts {
 pub struct AiSettings {
     /// The commit form's generate control shows; off hides it.
     pub enabled: bool,
-    /// The provider id (`opencode`, `claude`, `cursor`, `antigravity`, `codex`).
-    pub provider: String,
-    /// Menu order: provider ids, as the Settings list has them.
+    /// Menu order: provider ids, as the Settings list has them; the default is the
+    /// topmost switched-on one. (Old files may still carry `provider`: ignored.)
     pub order: Vec<String>,
     pub opencode: AiProviderSettings,
     pub claude: AiProviderSettings,
@@ -158,7 +157,6 @@ impl Default for AiSettings {
     fn default() -> Self {
         AiSettings {
             enabled: true,
-            provider: "claude".into(),
             order: ["opencode", "claude", "cursor", "antigravity", "codex"]
                 .into_iter()
                 .map(str::to_string)

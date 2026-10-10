@@ -148,6 +148,8 @@ mod tests {
                              "discardStash": true, "deleteProjects": false,
                              "abortOperation": true },
                 "ai": {
+                    // `provider` was the stored default: old files still load it, but it is
+                    // not saved back (the default is the topmost switched-on provider now).
                     "enabled": false, "provider": "opencode",
                     "order": ["opencode", "codex"],
                     "opencode": { "enabled": true, "model": "fast", "effort": "max", "prompt": null },
@@ -191,7 +193,12 @@ mod tests {
                 }],
             }
         );
-        assert_eq!(serde_json::to_value(&config).unwrap(), value);
+        let mut expected = value.clone();
+        expected["settings"]["ai"]
+            .as_object_mut()
+            .unwrap()
+            .remove("provider");
+        assert_eq!(serde_json::to_value(&config).unwrap(), expected);
 
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("config.json");

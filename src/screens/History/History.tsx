@@ -13,7 +13,7 @@ import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
 import { startGitAction, showRunToast, useRuns } from '../../scripts/runs';
-import { AI_PROVIDERS, onGenerateFinished, providerOrder } from '../../lib/ai';
+import { onGenerateFinished, providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { conflictOf } from '../../sync/operation';
 import { OperationBanner } from '../../sync/OperationUi';
@@ -24,7 +24,7 @@ import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { formatAge, plural } from '../../lib/format';
-import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, openRemoteLink, updateSettings } from '../../lib/ipc';
+import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, openRemoteLink } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
@@ -126,27 +126,8 @@ export function History({ repoId, rev, backLabel }: Props) {
     setDescription('');
   }, [repoId, rev]);
   // Generate message (SPEC §15): the provider's CLI writes the form for the checked files.
-  // The provider lives in the config (Settings › AI); a pick from before that moves over once.
-  const config = useData((s) => s.config);
-  const ai = config?.settings.ai ?? null;
-  const provider = ai?.provider ?? 'claude';
-  const migrated = useRef(false);
-  useEffect(() => {
-    if (migrated.current || !config) return;
-    migrated.current = true;
-    const last = localStorage.getItem('gitgel.commitProvider');
-    localStorage.removeItem('gitgel.commitProvider');
-    if (last && AI_PROVIDERS.some((p) => p.id === last) && last !== config.settings.ai.provider) {
-      void updateSettings({
-        ...config.settings,
-        ai: { ...config.settings.ai, provider: last as CommitProvider },
-      });
-    }
-  }, [config]);
-  const chooseProvider = (next: CommitProvider) => {
-    if (!config || next === provider) return;
-    void updateSettings({ ...config.settings, ai: { ...config.settings.ai, provider: next } });
-  };
+  // The default is the topmost switched-on provider in menu order (Settings › AI).
+  const ai = useData((s) => s.config?.settings.ai ?? null);
   // Whether each CLI is installed; null while unknown (nothing is disabled).
   const [aiStatus, setAiStatus] = useState<AiStatus[] | null>(null);
   useEffect(() => {
@@ -172,6 +153,8 @@ export function History({ repoId, rev, backLabel }: Props) {
       ),
     [enabledProviders, aiStatus],
   );
+  // The bolt's provider: the menu's topmost, else the topmost switched-on, else claude.
+  const provider = menuProviders[0] ?? enabledProviders[0] ?? 'claude';
   const [generating, setGenerating] = useState(false);
   // The generation this form waits for; a late answer never unlocks a newer one.
   const genRun = useRef<string | null>(null);
@@ -698,7 +681,6 @@ export function History({ repoId, rev, backLabel }: Props) {
               onSummary={setSummary}
               onDescription={setDescription}
               onCommit={commitChecked}
-              onProvider={chooseProvider}
               onGenerate={generateChecked}
             />
           )}
