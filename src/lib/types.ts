@@ -36,6 +36,7 @@ export interface Settings {
   diffContextLines: number; // lines kept around each change: 3, 5 or 10
   zoom: number; // View › Font Size, percent
   appearance: Appearance; // Settings › Appearance
+  sidebarVisible: boolean; // the main sidebar is shown; remembered
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"
   terminalCommand: string; // the Other terminal: a command (`%` = folder), an app name, a .app path or a bundle id; empty = Automatic
   checkUpdates: boolean; // Settings › Behaviour › Check for Updates

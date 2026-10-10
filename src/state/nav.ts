@@ -6,8 +6,7 @@ import { useUi, type SettingsSection } from './ui';
 export type Route =
   | { name: 'branches'; focusRepoId?: string } // focus: scroll to that repo's band
   | { name: 'project'; projectId: string } // 'draft' = unsaved draft project (T5.6)
-  // keepSidebar: opened from the sidebar, so Review does not hide it
-  | { name: 'review'; target: ReviewTarget; focusKey?: string; backLabel: string; keepSidebar?: boolean }
+  | { name: 'review'; target: ReviewTarget; focusKey?: string; backLabel: string }
   // rev: a local or remote-tracking branch, or a SHA (SPEC §16)
   | { name: 'history'; repoId: string; rev: string; backLabel: string }
   | { name: 'settings' };

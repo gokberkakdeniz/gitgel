@@ -303,17 +303,6 @@ function samePage(a: Route, b: Route): boolean {
   return false;
 }
 
-/** Review and History hide the sidebar (unless opened from it); leaving restores what it was. */
-export function useSidebarHiddenWhileMounted(hide: boolean) {
-  useEffect(() => {
-    if (!hide) return;
-    const ui = useUi.getState();
-    const before = ui.sidebarVisible;
-    ui.setSidebarVisible(false);
-    return () => useUi.getState().setSidebarVisible(before);
-  }, [hide]);
-}
-
 /** What Uncommitted's right-click menu does (Hi8, D12). */
 export interface FileActions {
   /** The files it acts on: the picked ones when this row is one of them, else this one. Each

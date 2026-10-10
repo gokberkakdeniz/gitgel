@@ -138,6 +138,7 @@ mod tests {
                 "ignoreWhitespace": true,
                 "zoom": 125,
                 "appearance": "system",
+                "sidebarVisible": false,
                 "diffContext": "whole",
                 "diffContextLines": 5,
                 "terminal": "other",
@@ -219,6 +220,7 @@ mod tests {
         assert!(!config.settings.ignore_whitespace);
         assert_eq!(config.settings.zoom, 100);
         assert_eq!(config.settings.appearance, crate::model::Appearance::System);
+        assert!(config.settings.sidebar_visible);
         assert_eq!(
             config.settings.diff_context,
             crate::model::DiffContext::Changes

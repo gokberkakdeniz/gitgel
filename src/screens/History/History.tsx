@@ -35,7 +35,7 @@ import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { CopyBranchItem, EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
 import { useUi } from '../../state/ui';
-import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, type FileActions } from '../Review/parts';
+import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSwitchTo, type FileActions } from '../Review/parts';
 import parts from '../Review/parts.module.css';
 import type { ReviewStash } from '../Review/stashes';
 import styles from './History.module.css';
@@ -56,7 +56,6 @@ interface Props {
 
 /** A branch's commits, each shown on its own against its first parent (SPEC §16). */
 export function History({ repoId, rev, backLabel }: Props) {
-  useSidebarHiddenWhileMounted(true);
   const repoScan = useData((s) => s.scan[repoId]);
   const repoName = repoScan?.name ?? '';
   // The entry for this rev, when it is an active branch (or a detached worktree's SHA): its base

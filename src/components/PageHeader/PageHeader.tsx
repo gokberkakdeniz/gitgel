@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { selectCanBack, selectCanForward, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
+import { setSidebarVisible } from '../../lib/sidebar';
 import { BackIcon, ForwardIcon, SidebarIcon } from '../icons';
 import { IconButton } from '../IconButton';
 import styles from './PageHeader.module.css';
@@ -20,7 +21,6 @@ interface Props {
  * shows the show-sidebar, back and forward buttons. */
 export function PageHeader({ title, subtitle, children, dragTitle = true, backLabel }: Props) {
   const sidebarVisible = useUi((s) => s.sidebarVisible);
-  const setSidebarVisible = useUi((s) => s.setSidebarVisible);
   const canBack = useNav(selectCanBack);
   const canForward = useNav(selectCanForward);
   const back = useNav((s) => s.back);

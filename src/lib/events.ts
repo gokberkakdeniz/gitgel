@@ -6,6 +6,7 @@ import { openSettings } from '../state/nav';
 import { useUi } from '../state/ui';
 import * as ipc from './ipc';
 import { loadHome } from './paths';
+import { syncSidebarVisible } from './sidebar';
 import { applyPassphraseAsked, applyPassphraseRunExited } from '../scripts/PassphraseDialog';
 import { applyRunExited, applyRunOutput } from '../scripts/runs';
 import { applyGenerateFinished } from './ai';
@@ -27,6 +28,7 @@ async function start() {
     configEvents++;
     const before = useData.getState().config?.settings;
     data.setConfig(e.payload);
+    syncSidebarVisible(e.payload);
     // The terminal item follows Settings › Behaviour › Terminal.
     const after = e.payload.settings;
     if (before && (before.terminal !== after.terminal || before.terminalCommand !== after.terminalCommand)) {
@@ -68,7 +70,10 @@ async function start() {
   void ipc.getUpdate().then((u) => u && data.setUpdate(u));
   const [config] = await Promise.all([ipc.getConfig(), loadHome()]);
   // A config-changed that arrived meanwhile is newer than this answer.
-  if (configEvents === 0) data.setConfig(config);
+  if (configEvents === 0) {
+    data.setConfig(config);
+    syncSidebarVisible(config);
+  }
   data.setScan(await ipc.getScan());
 }
 

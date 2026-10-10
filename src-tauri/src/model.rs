@@ -78,6 +78,9 @@ pub struct Settings {
     pub zoom: u32,
     /// Settings › Appearance; configs from before it load as `system`.
     pub appearance: Appearance,
+    /// Whether the main sidebar is shown; remembered, configs from before it load as shown.
+    #[serde(default = "on")]
+    pub sidebar_visible: bool,
     /// Settings › Behaviour › Terminal, for the entry menus' open items.
     pub terminal: TerminalChoice,
     /// The `other` terminal: a command (`%` becomes the folder), an app name, a `.app` path or
@@ -192,6 +195,7 @@ impl Default for Settings {
             diff_context_lines: 3,
             zoom: 100,
             appearance: Appearance::System,
+            sidebar_visible: true,
             terminal: TerminalChoice::Auto,
             terminal_command: String::new(),
             check_updates: true,

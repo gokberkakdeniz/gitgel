@@ -49,7 +49,7 @@ import { useData } from '../../state/data';
 import { openHistory, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { fileMatches, filterTerms } from './fileFilter';
-import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSidebarHiddenWhileMounted, useSwitchTo, type FileActions } from './parts';
+import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSwitchTo, type FileActions } from './parts';
 import { askDiscard, targetOf } from '../../discard/discard';
 import { usePicks } from '../../discard/picks';
 import parts from './parts.module.css';
@@ -69,8 +69,6 @@ interface Props {
   backLabel: string;
   /** Project scope: open on this entry, with the other groups collapsed. */
   focusKey?: string;
-  /** Opened from the sidebar: leave it shown. */
-  keepSidebar?: boolean;
 }
 
 const MODE_LABELS: Record<DiffMode, string> = {
@@ -79,8 +77,7 @@ const MODE_LABELS: Record<DiffMode, string> = {
   all: 'All',
 };
 
-export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
-  useSidebarHiddenWhileMounted(!keepSidebar);
+export function Review({ target, backLabel, focusKey }: Props) {
   const targetKey = JSON.stringify(target);
   const config = useData((s) => s.config);
   const projects = useData((s) => s.config?.projects);

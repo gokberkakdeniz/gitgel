@@ -9,6 +9,7 @@ import { branchCount } from '../../screens/Branches/rows';
 import { selectRepoScans, useData } from '../../state/data';
 import { openSettings, selectCanBack, selectCanForward, selectRoute, useNav, type Route } from '../../state/nav';
 import { useUi } from '../../state/ui';
+import { setSidebarVisible } from '../../lib/sidebar';
 import {
   BackIcon,
   BranchIcon,
@@ -36,7 +37,6 @@ export function Sidebar() {
   const canBack = useNav(selectCanBack);
   const canForward = useNav(selectCanForward);
   const { back, forward, push } = useNav.getState();
-  const setSidebarVisible = useUi((s) => s.setSidebarVisible);
   const config = useData((s) => s.config);
   const scan = useData((s) => s.scan);
   const repoCount = config?.repos.length ?? 0;
@@ -161,7 +161,7 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
   const open = (id: string) => {
     if (!projects?.find((p) => p.id === id)?.entries.length) openPage(id);
     else if (id !== reviewId)
-      push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: 'Back', keepSidebar: true });
+      push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: 'Back' });
   };
 
   return (

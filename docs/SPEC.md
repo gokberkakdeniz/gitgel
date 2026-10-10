@@ -515,10 +515,11 @@ inputs and textareas (the diff has its own menu, §5 Review).
 ### Sidebar (`Sidebar.dc.html`)
 
 - 260px, `bg.sidebar`, right border `border.row`. Its right border is a drag handle (8px
-  hit area, `col-resize`; a 2px accent line on hover, focus and drag); 200–400px, ←/→ by
-  16px when focused, double-click resets. The width is remembered on this machine
-  (`localStorage`). Hidden on Review (except a review opened from
-  the project list); the header then shows a show-sidebar button next to the traffic lights.
+   hit area, `col-resize`; a 2px accent line on hover, focus and drag); 200–400px, ←/→ by
+   16px when focused, double-click resets. The width is remembered on this machine
+   (`localStorage`); whether the sidebar is shown is remembered in the config
+   (`settings.sidebarVisible`). Review and History leave it as it is; with it hidden the
+   header shows a show-sidebar button next to the traffic lights.
 - **Top row** (52px, drag region): traffic-light space, 28px icon buttons: sidebar toggle, Back,
   Forward (disabled colour `#5c5a55` when history does not allow it).
 - **Nav** (40px rows, radius 10, 14px; active `bg.sidebarActive` + `text.strong`):
@@ -530,7 +531,7 @@ inputs and textareas (the diff has its own menu, §5 Review).
     remembered in `localStorage` (`gitgel.projectSort`).
 - **Project list:** 40px rows, 7px hollow circle (1.5px border; `#e0ddd6` when active, else
   `#75726b`) + name with ellipsis, no counts. Click opens the project's review (project scope,
-  sidebar kept shown, Back aria-label "Back"), or its page while it has no entries; the review's
+  Back aria-label "Back"), or its page while it has no entries; the review's
   pencil opens the page. The active one (on its page or its project review) gets
   `bg.sidebarActive`. Right-click opens the project menu (Rename / Delete project); Rename or a
   double-click turns the whole row into the field in place (`bg.sunken`, inset 1px accent
@@ -699,8 +700,8 @@ One screen for both scopes:
 
 Layout:
 
-- The sidebar is hidden while on Review and restored on leaving, except when the review was
-  opened from the sidebar's project list: then it stays shown. When the user shows it (the
+- Review leaves the sidebar as it is (shown or hidden, `settings.sidebarVisible`).
+  When the user shows it (the
   header's show-sidebar button or the sidebar toggle), Review sits next to it
   (`ReviewSidebar.dc.html`, board L2): the header drops the traffic-light space and the
   show-sidebar button and Back / Forward (all live in the sidebar's top row) and starts with the
@@ -1342,6 +1343,7 @@ export interface Settings {
   checkUpdates: boolean;         // Settings › General › Check for updates; default true
   lastSeenVersion: string;       // version whose What's New was shown; default ''
   appearance: 'system' | 'light' | 'dark'; // Settings › General › Theme; default 'system' (T10.1)
+  sidebarVisible: boolean;       // the main sidebar is shown; remembered; default true
   prompts: Prompts;              // Settings › Prompts; every one true by default
 }
 export interface Prompts {       // "Show a Confirmation Dialog Before…"
@@ -2680,7 +2682,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   `FETCH_HEAD` in the common git dir. Every call logs one line with its timings.
 - **Opening:** "Open history" in a Branches row menu (not the base row's), the base branch row's name and History
   button, a remote branch row while filtering Branches (K2), and in Review's entry bar the branch name and the base in "N commits ahead of <base>". Route `history` with `repoId` and `rev`, pushed like Review
-  (back and forward work). History hides the sidebar as Review does.
+  (back and forward work). History leaves the sidebar as it is, like Review.
 - **Header** (`HistH2` 21–41), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
   ` · <~worktree>` when `rev` is a branch checked out in a worktree. On the right, gap 10:
   - Search field: `Input` 32px, 200px, placeholder "Search commits", label "Search commit
