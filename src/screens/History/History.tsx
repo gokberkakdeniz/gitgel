@@ -4,6 +4,7 @@ import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { Popover } from '../../components/Popover';
+import { ResizeHandle, useStoredWidth } from '../../components/ResizeHandle';
 import { askDiscard, targetOf } from '../../discard/discard';
 import { usePicks } from '../../discard/picks';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
@@ -340,6 +341,9 @@ export function History({ repoId, rev, backLabel }: Props) {
 
   const view = useDiffView();
   const { layout, ignoreWs, context, contextLines, viewRef } = view;
+  // The list column's width once dragged; until then 380px.
+  const listPane = useRef<HTMLDivElement>(null);
+  const [listWidth, setListWidth] = useStoredWidth('gitgel.historyListWidth');
   const worktree = entry?.worktreePath ? tildifyHome(entry.worktreePath) : null;
   // A local branch syncs with its remote (W4a); `upstream` is set only for one.
   const syncTarget: SyncTarget = {
@@ -478,7 +482,7 @@ export function History({ repoId, rev, backLabel }: Props) {
       )}
 
       <div className={parts.body}>
-        <div className={styles.listPane}>
+        <div ref={listPane} className={styles.listPane} style={listWidth ? { width: listWidth } : undefined}>
           <aside
             ref={list}
             role="listbox"
@@ -577,6 +581,7 @@ export function History({ repoId, rev, backLabel }: Props) {
             />
           )}
         </div>
+        <ResizeHandle pane={listPane} min={280} max={640} onResize={setListWidth} onReset={() => setListWidth(null)} label="Resize list" />
 
         <section className={parts.main}>
           {error ? (

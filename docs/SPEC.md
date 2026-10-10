@@ -381,7 +381,8 @@ italic, everything else `#2b2925`.
 
 - Radius: 8 buttons, inputs, rows · 10 segmented control · 12 popovers, menus, cards · 16 modals
   and palette · 9999 pills.
-- Sidebar 260px. Page headers (Branches, Project, Review, Settings) 64px: title serif 22px + 12px
+- Sidebar 260px, resizable 200–400px (drag its right border, ←/→ by 16px when focused,
+  double-click resets; remembered on this machine). Page headers (Branches, Project, Review, Settings) 64px: title serif 22px + 12px
   muted subtitle (2px apart), 28px left and 16px right padding (the space above the 32px
   controls), actions 10px apart in one order: refresh first, the screen's own controls in the
   middle, edit (pencil or ⋯) last.
@@ -511,7 +512,10 @@ inputs and textareas (the diff has its own menu, §5 Review).
 
 ### Sidebar (`Sidebar.dc.html`)
 
-- 260px, `bg.sidebar`, right border `border.row`. Hidden on Review (except a review opened from
+- 260px, `bg.sidebar`, right border `border.row`. Its right border is a drag handle (8px
+  hit area, `col-resize`; a 2px accent line on hover, focus and drag); 200–400px, ←/→ by
+  16px when focused, double-click resets. The width is remembered on this machine
+  (`localStorage`). Hidden on Review (except a review opened from
   the project list); the header then shows a show-sidebar button next to the traffic lights.
 - **Top row** (52px, drag region): traffic-light space, 28px icon buttons: sidebar toggle, Back,
   Forward (disabled colour `#5c5a55` when history does not allow it).
@@ -2629,7 +2633,10 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     "Copy branch name" (not for a detached SHA) and a divider, the open items, "Rebase on <base>" (not
     Fetch / Pull / Push: the header has them), the Scripts group (menu `branches`), the closing note; not "Open history" or "Change base"
     (`HistH5.dc.html`, Hi4).
-- **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Label (section
+- **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Its right
+  border is a drag handle (8px hit area, `col-resize`; a 2px accent line on hover, focus and
+  drag); 280–640px, ←/→ by 16px when focused, double-click resets. The width is remembered
+  on this machine (`localStorage`). Label (section
   label style, padding 14px 16px 6px) `<rev> · N commits` (`total`), while searching `N matching
   commits` (`N+` while there are more). Rows (padding 0 8px 8px, gap 2):
   - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with

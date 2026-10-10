@@ -30,12 +30,14 @@ export function ResizeHandle({
   max,
   onResize,
   onReset,
+  label = 'Resize file list',
 }: {
   pane: React.RefObject<HTMLElement | null>;
   min: number;
   max: number;
   onResize: (width: number) => void;
   onReset: () => void;
+  label?: string;
 }) {
   const [dragging, setDragging] = useState(false);
   const clamp = (w: number) => Math.min(max, Math.max(min, w));
@@ -73,7 +75,7 @@ export function ResizeHandle({
     <div
       role="separator"
       aria-orientation="vertical"
-      aria-label="Resize file list"
+      aria-label={label}
       tabIndex={0}
       title="Drag to resize · double-click to reset"
       className={dragging ? `${styles.handle} ${styles.active}` : styles.handle}

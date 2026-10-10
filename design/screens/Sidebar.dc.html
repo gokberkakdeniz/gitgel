@@ -15,7 +15,8 @@ body{margin:0}
 .theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
 </style>
 </helmet>
-<nav class="{{themeClass}}" style="width: 260px; height: 800px; box-sizing: border-box; background: var(--bg-sidebar); border-right: 1px solid var(--border-row); display: flex; flex-direction: column; font-family: 'Instrument Sans', -apple-system, sans-serif; font-size: 14px; color: var(--text-code)">
+<nav class="{{themeClass}}" style="width: 260px; height: 800px; box-sizing: border-box; background: var(--bg-sidebar); border-right: 1px solid var(--border-row); position: relative; display: flex; flex-direction: column; font-family: 'Instrument Sans', -apple-system, sans-serif; font-size: 14px; color: var(--text-code)">
+<div role="separator" aria-orientation="vertical" aria-label="Resize sidebar" style="position: absolute; z-index: 2; top: 0; right: -1px; bottom: 0; width: 0; cursor: col-resize"></div>
 
 <div style="height: 52px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 12px 0 16px">
 <div style="display: flex; gap: 8px; margin-right: 6px">

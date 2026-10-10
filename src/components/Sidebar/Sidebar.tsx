@@ -24,6 +24,7 @@ import {
 import { IconButton } from '../IconButton';
 import { Menu, MenuItem } from '../Menu';
 import { Popover } from '../Popover';
+import { ResizeHandle, useStoredWidth } from '../ResizeHandle';
 import { ProjectNameInput } from '../ProjectNameInput';
 import { ProjectMenu } from '../ProjectMenu';
 import { askDeleteProject } from '../DeleteProjectModal';
@@ -48,8 +49,13 @@ export function Sidebar() {
     if (route.name !== 'branches') push({ name: 'branches' });
   };
 
+  // Resizable (200–400px, remembered; double-click resets), like Review's file list.
+  const pane = useRef<HTMLElement>(null);
+  const [width, setWidth] = useStoredWidth('gitgel.sidebarWidth');
+
   return (
-    <nav className={styles.sidebar}>
+    <>
+    <nav ref={pane} className={styles.sidebar} style={width ? { width } : undefined}>
       <div className={styles.top} data-tauri-drag-region>
         <div className={styles.lights} data-tauri-drag-region />
         <IconButton aria-label="Toggle sidebar" onClick={() => setSidebarVisible(false)}>
@@ -114,6 +120,8 @@ export function Sidebar() {
         </button>
       </div>
     </nav>
+    <ResizeHandle pane={pane} min={200} max={400} onResize={setWidth} onReset={() => setWidth(null)} label="Resize sidebar" />
+    </>
   );
 }
 
