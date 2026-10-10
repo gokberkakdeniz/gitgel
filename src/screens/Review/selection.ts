@@ -24,6 +24,11 @@ export function resolveSelection(
     const fallback = g && first(g);
     if (fallback) return fallback;
   }
+  // A conflicted file first: that is what needs looking at (T2).
+  for (const g of groups) {
+    const c = g.files[mode].find((f) => f.kind === 'C');
+    if (c) return { key: g.entry.key, path: c.path };
+  }
   for (const g of groups) {
     const f = first(g);
     if (f) return f;
@@ -40,9 +45,11 @@ export function dirLabel(change: FileChange): string {
   return dir;
 }
 
-/** Committed, unless there are no committed changes but some uncommitted ones. */
+/** Committed, unless there are no committed changes but some uncommitted ones, or an entry has
+ * merge conflicts (they are in Uncommitted, T2). */
 export function defaultMode(groups: ReviewGroup[]): DiffMode {
   const count = (m: DiffMode) => groups.reduce((n, g) => n + g.files[m].length, 0);
+  if (groups.some((g) => g.entry.conflicts > 0 && g.files.uncommitted.length > 0)) return 'uncommitted';
   return count('committed') === 0 && count('uncommitted') > 0 ? 'uncommitted' : 'committed';
 }
 

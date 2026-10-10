@@ -571,6 +571,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Settings › Scripts drops its two hint lines, the script editor its Name, Command and Inputs hints; Show when gets a "CEL Syntax" link to the CEL spec and shows "Matches N branches" with a ? listing them; Open the output panel and Ask before running are plain checkboxes — 2026-10-09
 - [x] (on request) Operations in progress (flow T): a rebase / merge / cherry-pick / revert stopped in a worktree, from Gitgel or not, stays on its branch's row with a `rebasing 2/4` pill; Review gets a banner per entry with Abort (asks first, Settings › Prompts) and Continue (stages the resolved files; disabled while markers remain); the branch menus swap Sync for Continue / Abort; the watcher follows MERGE_HEAD and rebase-merge/ — 2026-10-10
   - note: after the first try (user feedback): the banner names the entry as the entry bar does, says where it paused (commit N of M, SHA and subject), links the conflicted files and says what Continue does next; the conflicts pill's tooltip names the files
+  - note: then (user feedback, GitHub Desktop as reference) the banner became one line (`Resolve conflicts to continue rebasing <repo> <branch> <folder> (1/6)`, `Continue rebasing …` once resolved), the conflicted files get ⚠ / ✓ in the file list and Review opens on them; History shows the banner without the names
 
 ---
 

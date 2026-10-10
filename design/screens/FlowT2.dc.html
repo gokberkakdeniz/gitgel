@@ -33,23 +33,21 @@ button,input,textarea{font-family:inherit}
 </div>
 <div style="flex-grow: 1"></div>
 <div style="display: flex; align-items: center; gap: 10px">
-<div role="group" aria-label="Diff layer" style="display: flex; padding: 3px; gap: 2px; background: var(--bg-track); border-radius: 10px"><button aria-pressed="false" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: transparent; color: var(--text-muted)">Committed <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">15</span></button><button aria-pressed="true" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--bg-pressed); color: var(--text-strong)">Uncommitted <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">5</span></button><button aria-pressed="false" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: transparent; color: var(--text-muted)">All <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">18</span></button></div>
+<div role="group" aria-label="Diff layer" style="display: flex; padding: 3px; gap: 2px; background: var(--bg-track); border-radius: 10px"><button aria-pressed="false" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: transparent; color: var(--text-muted)">Committed <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">15</span></button><button aria-pressed="true" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--bg-pressed); color: var(--text-strong)">Uncommitted <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">6</span></button><button aria-pressed="false" style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: transparent; color: var(--text-muted)">All <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7">18</span></button></div>
 <button aria-label="More actions" title="More actions" aria-haspopup="menu" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
 </div>
 </header>
 
-<div role="status" style="display: flex; align-items: center; gap: 12px; box-sizing: border-box; padding: 8px 12px 8px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--danger-rgb), 0.12); color: var(--danger)">
-<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<div style="display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">web-app</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">session-token-refresh</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; min-width: 0">~/code/wt/token-refresh</span></div>
-<div style="line-height: 1.5">Rebasing onto <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">main</span> paused at commit 2 of 4, <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">4b7e2c9</span> “Add refreshSession with token rotation”. Conflicts in <button type="button" title="Show src/auth/session.ts" style="padding: 0; border: 0; background: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">src/auth/session.ts</button>. Fix it in your editor, then Continue.</div>
+<div role="status" style="display: flex; align-items: center; gap: 12px; min-height: 40px; box-sizing: border-box; padding: 6px 12px 6px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--danger-rgb), 0.12); color: var(--danger)">
+<div style="flex-grow: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; overflow: hidden">
+<span>Resolve conflicts to continue rebasing</span><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">web-app</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">session-token-refresh</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; min-width: 0">~/code/wt/token-refresh</span><span>(2/4)</span>
 </div>
 <dc-import name="Button" theme="none" label="Abort" variant="secondary" size="28" href="FlowT3.dc.html" hint-size="64px,28px"></dc-import>
 <dc-import name="Button" theme="none" label="Continue" variant="primary" size="28" disabled="{{true}}" title="Fix the conflicts first" hint-size="82px,28px"></dc-import>
 </div>
-<div role="status" style="display: flex; align-items: center; gap: 12px; box-sizing: border-box; padding: 8px 12px 8px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--warning-rgb), 0.12); color: var(--warning)">
-<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<div style="display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">api-server</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">token-rotation-job</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; min-width: 0">~/code/api-server</span></div>
-<div style="line-height: 1.5">Merging <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">origin/token-rotation-job</span> into this branch paused. Conflicts resolved. Continue commits the merge.</div>
+<div role="status" style="display: flex; align-items: center; gap: 12px; min-height: 40px; box-sizing: border-box; padding: 6px 12px 6px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--warning-rgb), 0.12); color: var(--warning)">
+<div style="flex-grow: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; overflow: hidden">
+<span>Continue merging <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">origin/token-rotation-job</span> into</span><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">api-server</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">token-rotation-job</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; min-width: 0">~/code/api-server</span>
 </div>
 <dc-import name="Button" theme="none" label="Abort" variant="secondary" size="28" hint-size="64px,28px"></dc-import>
 <dc-import name="Button" theme="none" label="Continue" variant="primary" size="28" hint-size="82px,28px"></dc-import>
@@ -72,14 +70,20 @@ button,input,textarea{font-family:inherit}
 <div style="display: flex; align-items: center; gap: 6px; padding-left: 20px; min-width: 0">
 <span title="session-token-refresh" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">session-token-refresh</span>
 <dc-import name="Pill" theme="none" size="sm" tone="warning" label="rebasing" title="Rebasing onto main, paused at commit 2 of 4" hint-size="58px,16px"></dc-import>
-<dc-import name="Pill" theme="none" size="sm" tone="danger" label="1 conflict" title="Conflicts in src/auth/session.ts" hint-size="62px,16px"></dc-import>
+<dc-import name="Pill" theme="none" size="sm" tone="danger" label="2 conflicts" title="Conflicts in src/auth/session.ts" hint-size="68px,16px"></dc-import>
 </div>
 </div>
 <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: var(--bg-hover)">
 <dc-import name="KindBadge" theme="none" kind="C" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">session.ts</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">src/auth · conflict</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">+5</span>
+<span title="Has conflicts" style="display: flex; color: var(--danger)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Has conflicts"><path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9.5v4.5M12 17.2v.01"></path></svg></span>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
+<dc-import name="KindBadge" theme="none" kind="C" hint-size="18px,18px"></dc-import>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">config.ts</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">src/auth · conflict</span>
+<span title="Conflicts resolved" style="display: flex; color: var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Conflicts resolved"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
 </div>
 <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: transparent">
 <dc-import name="KindBadge" theme="none" kind="M" hint-size="18px,18px"></dc-import>
@@ -161,13 +165,14 @@ button,input,textarea{font-family:inherit}
 <script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
   renderVals() {
-    // Review while operations are in progress: one banner per entry, in place of its conflicts
-    // banner (P7's stays for conflicts outside an operation, e.g. a stash apply), each with Abort
-    // and Continue. Line 1: the entry's names as the entry bar shows them (repo, branch, folder).
-    // Line 2: what paused where (the commit, its subject), the files that still have conflicts
-    // (each opens in Uncommitted), what to do next. Danger while a conflicted file still has git's
-    // markers (Continue disabled, "Fix the conflicts first"); warning once none do. Continue stages the conflicted files and
-    // runs `GIT_EDITOR=true git rebase --continue` (`git merge --continue`, ...); Abort asks first (T3).
+    // Review while operations are in progress: one banner per entry, one line, in place of its
+    // conflicts banner (P7's stays for conflicts outside an operation, e.g. a stash apply):
+    // "Resolve conflicts to continue rebasing <repo> <branch> <folder> (2/4)", the names as the
+    // entry bar shows them, Abort and Continue on the right. Danger while a conflicted file still
+    // has git's markers (Continue disabled, "Fix the conflicts first"); warning once none does
+    // ("Continue rebasing …"). Review opens on Uncommitted with the first
+    // conflicted file while an entry has conflicts. The file rows show which: ⚠ (danger) while
+    // the file has markers, ✓ (success) once they are gone, in place of the +/− counts.
     // The group's line 2 shows the operation and conflicts pills instead of the upstream state.
     // The diff is HEAD (main plus the commits applied so far) ↔ the working tree with the markers.
     var t = this.props.theme || 'dark';

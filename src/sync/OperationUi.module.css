@@ -1,10 +1,12 @@
-/* Review's banner for an operation in progress (T2): Banner's colours, the entry's names as the
-   entry bar shows them, then the message; Abort and Continue on the right. */
+/* Review's one-line banner for an operation in progress (T2): Banner's colours, the entry's
+   names as the entry bar shows them; Abort and Continue on the right. */
 .banner {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px 8px 20px;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 6px 12px 6px 20px;
   font-size: 12px;
   border-bottom: 1px solid var(--border);
 }
@@ -19,20 +21,14 @@
   background: rgba(var(--warning-rgb), 0.12);
 }
 
-.body {
+.line {
   flex-grow: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.names {
-  display: flex;
   align-items: baseline;
-  gap: 8px;
-  min-width: 0;
+  gap: 6px;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .repo {
@@ -56,29 +52,7 @@
   color: var(--text-muted);
 }
 
-.message {
-  line-height: 1.5;
-}
-
 .ref {
   font-family: var(--font-mono);
   font-size: 11px;
-}
-
-/* A conflicted file: opens it in Uncommitted. */
-.file {
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-
-.file:hover {
-  color: var(--text-strong);
 }

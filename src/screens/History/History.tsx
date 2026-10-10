@@ -13,6 +13,8 @@ import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
 import { startGitAction, useRuns } from '../../scripts/runs';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
+import { conflictOf } from '../../sync/operation';
+import { OperationBanner } from '../../sync/OperationUi';
 import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
 import { divergedBanner, forcePushBranch, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
 import { StashBar } from '../../stash/StashBar';
@@ -459,7 +461,9 @@ export function History({ repoId, rev, backLabel }: Props) {
           </Menu>
         </Popover>
       )}
-      {diverged && (
+      {entry?.operation && <OperationBanner entry={entry} op={entry.operation} names={false} />}
+      {/* Mid-rebase the branch only looks diverged. */}
+      {diverged && !entry?.operation && (
         <Banner tone="warning">
           <span className={parts.grow}>{diverged}</span>
           {!syncState(syncTarget).pull && (
@@ -515,6 +519,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 }}
                 picks={current === WIP ? picks : undefined}
                 actions={current === WIP ? wipActions : undefined}
+                conflict={current === WIP && entry ? (f) => conflictOf(entry, f) : undefined}
                 onWipMenu={setWipMenu}
               />
             ))}
@@ -662,6 +667,7 @@ function ListRow({
   picks,
   actions,
   onWipMenu,
+  conflict,
 }: {
   row: HistoryRow;
   current: string | null;
@@ -692,6 +698,8 @@ function ListRow({
   actions?: (f: FileChange) => FileActions;
   /** A right-click on the Uncommitted row, at the pointer. */
   onWipMenu: (at: DOMRect) => void;
+  /** Uncommitted's conflicted files of an operation in progress: ⚠ / ✓ (T4). */
+  conflict?: (f: FileChange) => 'unresolved' | 'resolved' | undefined;
 }) {
   const fileRows = (
     <div className={parts.fileRows}>
@@ -716,6 +724,7 @@ function ListRow({
           picked={picks?.isPicked(f.path)}
           onClick={(e) => (picks ? picks.click(f.path, e, () => onFile(f.path)) : onFile(f.path))}
           actions={actions?.(f)}
+          conflict={conflict?.(f)}
           check={
             check && { checked: check.on(f), disabled: check.disabled, onChange: (on) => check.onChange(f, on) }
           }

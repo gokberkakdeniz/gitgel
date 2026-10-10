@@ -383,3 +383,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* A conflicted file of an operation in progress (T2): markers left, or gone. */
+.conflictMark,
+.resolvedMark {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.conflictMark {
+  color: var(--danger-text);
+}
+
+.resolvedMark {
+  color: var(--success);
+}

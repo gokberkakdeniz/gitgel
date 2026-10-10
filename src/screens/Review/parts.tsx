@@ -333,6 +333,7 @@ export function FileRow({
   folder,
   check,
   actions,
+  conflict,
 }: {
   file: FileChange;
   terms: string[];
@@ -346,6 +347,9 @@ export function FileRow({
   check?: { checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void };
   /** Uncommitted's files: the menu discards and copies too, deleted files included. */
   actions?: FileActions;
+  /** A conflicted file of an operation in progress (T2): ⚠ while it has git's markers, ✓ once
+   * they are gone, in place of the counts. */
+  conflict?: 'unresolved' | 'resolved';
 }) {
   const [menu, setMenu] = useState<DOMRect | null>(null);
   // A deleted file is not on disk.
@@ -375,7 +379,17 @@ export function FileRow({
         <span className={styles.fileDir}>
           <Highlighted text={dirLabel(f)} terms={terms} />
         </span>
-        <DiffStat add={f.add || undefined} del={f.del || undefined} />
+        {conflict === 'unresolved' ? (
+          <span className={styles.conflictMark} title="Has conflicts" role="img" aria-label="Has conflicts">
+            <Icon name="warning" size={14} />
+          </span>
+        ) : conflict === 'resolved' ? (
+          <span className={styles.resolvedMark} title="Conflicts resolved" role="img" aria-label="Conflicts resolved">
+            <Icon name="check" size={14} />
+          </span>
+        ) : (
+          <DiffStat add={f.add || undefined} del={f.del || undefined} />
+        )}
       </button>
   );
   return (

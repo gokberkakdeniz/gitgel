@@ -39,7 +39,7 @@ import { PageMenu } from '../../components/PageMenu';
 import { Stepper } from '../../components/Stepper';
 import { rescanAll } from '../../lib/events';
 import { StashBar } from '../../stash/StashBar';
-import { conflictsTooltip } from '../../sync/operation';
+import { conflictOf, conflictsTooltip } from '../../sync/operation';
 import { OperationBanner, OperationPill } from '../../sync/OperationUi';
 import { SyncItems } from '../../sync/SyncButtons';
 import { upstreamLabel, upstreamTitle } from '../../sync/sync';
@@ -142,14 +142,6 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
     return c ? { ...g, files: { ...g.files, [mode]: c.files } } : g;
   });
 
-  // A conflicted file named in an operation banner: Uncommitted, that entry open, the file shown.
-  const openConflict = (key: string, path: string) => {
-    setChosenMode('uncommitted');
-    setCommitSel({});
-    setStashSel(null);
-    setCollapsed((c) => new Set([...c].filter((k) => k !== key)));
-    setSelected({ key, path });
-  };
   // The file on screen stays when the new mode lists it (resolveSelection falls back otherwise).
   const setMode = (m: DiffMode) => {
     setChosenMode(m);
@@ -502,12 +494,7 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
         groups.map(
           (g) =>
             g.entry.operation && (
-              <OperationBanner
-                key={g.entry.key}
-                entry={g.entry}
-                op={g.entry.operation}
-                onOpenFile={(path) => openConflict(g.entry.key, path)}
-              />
+              <OperationBanner key={g.entry.key} entry={g.entry} op={g.entry.operation} />
             ),
         )}
       {conflictBanner && !stash && <Banner tone="danger">{conflictBanner}</Banner>}
@@ -975,6 +962,7 @@ function FileGroup({
                 else open();
               }}
               actions={actions(f)}
+              conflict={conflictOf(e, f)}
             />
           ))}
         </div>

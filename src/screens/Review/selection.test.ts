@@ -28,6 +28,12 @@ describe('resolveSelection', () => {
     expect(resolveSelection([group('r:empty', [])], 'committed', null)).toBeNull();
   });
 
+  it('picks a conflicted file first', () => {
+    const c = group('r:c', ['m.ts', 'c.ts']);
+    c.files.committed[1] = file('c.ts', { kind: 'C' });
+    expect(resolveSelection([...groups, c], 'committed', null)).toEqual({ key: 'r:c', path: 'c.ts' });
+  });
+
   it('keeps a selection that is still listed', () => {
     const sel = { key: 'r:b', path: 'z.ts' };
     expect(resolveSelection(groups, 'committed', sel)).toBe(sel);
@@ -57,8 +63,9 @@ describe('dirLabel', () => {
 });
 
 describe('defaultMode', () => {
-  const g = (committed: number, uncommitted: number) =>
+  const g = (committed: number, uncommitted: number, conflicts = 0) =>
     ({
+      entry: { conflicts },
       files: {
         committed: Array.from({ length: committed }, (_, i) => file(`c${i}`)),
         uncommitted: Array.from({ length: uncommitted }, (_, i) => file(`u${i}`)),
@@ -70,6 +77,10 @@ describe('defaultMode', () => {
     expect(defaultMode([g(2, 1)])).toBe('committed');
     expect(defaultMode([g(0, 0)])).toBe('committed');
     expect(defaultMode([g(0, 3), g(0, 0)])).toBe('uncommitted');
+  });
+
+  it('opens on uncommitted while an entry has merge conflicts', () => {
+    expect(defaultMode([g(2, 1, 1)])).toBe('uncommitted');
   });
 });
 

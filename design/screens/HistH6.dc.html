@@ -39,6 +39,11 @@ button,input,textarea{font-family:inherit}
 <button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><dc-import name="Icon" icon="refresh" size="14" hint-size="14px,14px"></dc-import></button>
 </div>
 </header>
+<sc-if value="{{op}}" hint-placeholder-val="{{false}}"><div role="status" style="display: flex; align-items: center; gap: 12px; min-height: 40px; box-sizing: border-box; padding: 6px 12px 6px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--danger-rgb), 0.12); color: var(--danger)">
+<span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Resolve conflicts to continue rebasing (2/4)</span>
+<dc-import name="Button" theme="none" label="Abort" variant="secondary" size="28" hint-size="64px,28px"></dc-import>
+<dc-import name="Button" theme="none" label="Continue" variant="primary" size="28" disabled="{{true}}" title="Fix the conflicts first" hint-size="82px,28px"></dc-import>
+</div></sc-if>
 <div style="flex-grow: 1; display: flex; min-height: 0">
 <aside style="width: 380px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; overflow: hidden">
 <div style="display: flex; align-items: center; gap: 8px; padding: 14px 16px 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)"><span style="flex-grow: 1">session-token-refresh · 4 ahead of main</span></div>
@@ -84,8 +89,10 @@ button,input,textarea{font-family:inherit}
 <dc-import name="KindBadge" theme="none" kind="{{it.kind}}" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span>
+<sc-if value="{{it.counts}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span></sc-if>
+<sc-if value="{{it.warn}}" hint-placeholder-val="{{false}}"><span title="Has conflicts" style="display: flex; color: var(--danger)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Has conflicts"><path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9.5v4.5M12 17.2v.01"></path></svg></span></sc-if>
+<sc-if value="{{it.ok}}" hint-placeholder-val="{{false}}"><span title="Conflicts resolved" style="display: flex; color: var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Conflicts resolved"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span></sc-if>
 <sc-if value="{{it.hasAct}}" hint-placeholder-val="{{false}}"><button type="button" aria-label="{{it.actTitle}}" title="{{it.actTitle}}" style="{{it.actStyle}}">{{it.actGlyph}}</button></sc-if>
 </div>
 </sc-if>
@@ -191,7 +198,7 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","squash","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","squash","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"operation":{"editor":"boolean","default":false},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -233,7 +240,7 @@ class Component extends DCLogic {
       if (inDialog) check = undefined;
       var picked = check !== undefined && selected.indexOf(name) >= 0;
       var boxed = check !== undefined;
-      return { isFile: true, boxed: boxed, kind: kind, name: name, dir: dir, add: add, del: del,
+      return { isFile: true, boxed: boxed, kind: kind, name: name, dir: dir, add: add, del: del, counts: true,
         hasCheck: check === 'on' || check === 'off', part: check === 'part', on: check === 'on', checkLabel: 'Include ' + name,
         rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 ' + (boxed ? 8 : 42) + 'px; border-radius: 8px; ' + (shown ? shownStyle : '') + (picked ? '; background: rgba(var(--accent-rgb), 0.18)' : '') };
     };
@@ -265,6 +272,16 @@ class Component extends DCLogic {
         section('Unstaged', 2, 'Stage all', 'git add on every file'),
         act(file('M', 'refresh.ts', 'src/auth · 1 line', '+1', '', true), '+', 'Stage refresh.ts', true),
         act(file('U', 'token-debug.ts', 'scripts · untracked', '+22', ''), '+', 'Stage token-debug.ts', false)];
+    }
+    // operation (T4, FlowT4): a rebase stopped on conflicts in this branch's worktree. The banner
+    // under the header, without the names (the header has them); Uncommitted's conflicted files
+    // show ⚠ while they have markers, ✓ once they are gone, in place of the counts.
+    var op = !!this.props.operation;
+    var mark = function (f, warn) { f.counts = false; f.warn = warn; f.ok = !warn; return f; };
+    if (op) {
+      wipFiles = [mark(file('C', 'session.ts', 'src/auth · conflict', '', '', true, 'on'), true),
+        mark(file('C', 'config.ts', 'src/auth · conflict', '', '', false, 'on'), false),
+        file('M', 'refresh.ts', 'src/auth', '+2', '−1', false, 'on')];
     }
     var wipMeta = cmode === 'index' || cmode === 'sections' ? '3 files · 2 staged · 6m' : '3 files · 6m';
     var wip = { isWip: true, sel: wipOpen, failed: s === 'failed', meta: wipMeta,
@@ -310,6 +327,11 @@ class Component extends DCLogic {
         line('add', 42, '    return await refreshSession(s);'), line('add', 43, '  } catch (e) {'),
         line('add', 44, '    if (!(e instanceof NetworkError)) throw e;'), line('add', 45, '    return refreshSession(s);'),
         line('add', 46, '  }'), line('ctx', 47, '}')];
+    } else if (op) {
+      c = Object.assign({}, wipPane, { files: '3 files', add: '+11', del: '−1', path: 'src/auth/session.ts', nav: 'Change 1 of 1' });
+      left = [line('ctx', 1, 'export function getSession() {'), line('pad'), line('ctx', 2, '  return cached();'), line('pad'), line('pad'), line('pad'), line('ctx', 3, '}')];
+      right = [line('ctx', 1, 'export function getSession() {'), line('add', 2, '<<<<<<< HEAD'), line('ctx', 3, '  return cached();'), line('add', 4, '======='),
+        line('add', 5, '  return refresh();'), line('add', 6, '>>>>>>> 4b7e2c9 (Refresh the session on read)'), line('ctx', 7, '}')];
     } else {
       c = wipPane;
       if (s === 'lines') { c = Object.assign({}, wipPane, { viewIcon: 'unified', viewLabel: 'Unified', hasHint: true, hint: 'Click a line to include it, drag for a range' }); }
@@ -339,7 +361,7 @@ class Component extends DCLogic {
     var committing = s === 'hooks';
     var amend = s === 'amend';
     return {
-      themeClass: 'theme-' + t, themeName: t,
+      themeClass: 'theme-' + t, themeName: t, op: op,
       multi: s === 'squash',
       items: items,
       showComposer: wipOpen && cmode === 'panel',
@@ -352,8 +374,8 @@ class Component extends DCLogic {
       noteStyle: 'font-size: 12px; line-height: 1.45; color: var(--' + (amend ? 'text-muted' : 'danger') + ')',
       commitLabel: committing ? 'Committing…' : amend ? 'Amend e8b2c41' : 'Commit 2 files',
       commitIcon: committing ? 'spinner' : 'none',
-      commitTitle: committing ? 'Hooks are running' : 'Commit to session-token-refresh',
-      committing: committing,
+      commitTitle: op ? 'Resolve the merge conflicts first' : committing ? 'Hooks are running' : 'Commit to session-token-refresh',
+      committing: committing || op,
       c: c, left: left, right: right,
       isSplit: s !== 'lines', isPick: s === 'lines', uni: uni,
       showMenu: s === 'menu',

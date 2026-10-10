@@ -30,64 +30,47 @@ export function OperationPill({ op, short }: { op: Operation; short?: boolean })
   );
 }
 
-/** Review's banner for one entry with an operation in progress (T2): the entry's names as the
- * entry bar shows them, then what paused where, the files that still have conflicts (each opens
- * in Uncommitted) and what to do next; Abort and Continue on the right. Danger while a conflicted
- * file keeps git's markers, warning once none does. */
+/** Review's one-line banner for an entry with an operation in progress (T2): `Resolve conflicts
+ * to continue rebasing` and the entry's names as the entry bar shows them, `(2/4)`; Abort and
+ * Continue on the right. Danger while a conflicted file keeps git's markers (the file rows say
+ * which), warning (`Continue rebasing …`) once none does. */
 export function OperationBanner({
   entry,
   op,
-  onOpenFile,
+  names = true,
 }: {
   entry: EntrySummary;
   op: Operation;
-  onOpenFile: (path: string) => void;
+  /** History (T4): no names, its header has them. */
+  names?: boolean;
 }) {
   const running = useGitActionRunning(entry.repoId);
-  const { tone, what, files, next } = operationBanner(entry, op);
+  const { tone, lead, progress } = operationBanner(op, names);
   const blocked = continueBlocked(op);
   const busy = running ? 'A git action is running' : undefined;
-  const shown = files.slice(0, 3);
   return (
     <div role="status" className={`${styles.banner} ${styles[tone]}`}>
-      <div className={styles.body}>
-        <div className={styles.names}>
-          <span className={styles.repo}>{entry.repoName}</span>
-          <span className={styles.branch}>{entry.branch ?? entry.shortSha}</span>
-          {entry.worktreePath && <span className={styles.path}>{tildifyHome(entry.worktreePath)}</span>}
-        </div>
-        <div className={styles.message}>
-          {what.map((p, i) =>
+      <span className={styles.line}>
+        <span>
+          {lead.map((p, i) =>
             'ref' in p ? (
               <span key={i} className={styles.ref}>
                 {p.ref}
-              </span>
-            ) : 'sha' in p ? (
-              <span key={i}>
-                <span className={styles.ref}>{p.sha}</span>
-                {p.subject && ` “${p.subject}”`}
               </span>
             ) : (
               p.text
             ),
           )}
-          {shown.length > 0 && (
-            <>
-              {' Conflicts in '}
-              {shown.map((path, i) => (
-                <span key={path}>
-                  {i > 0 && ', '}
-                  <button type="button" className={styles.file} title={`Show ${path}`} onClick={() => onOpenFile(path)}>
-                    {path}
-                  </button>
-                </span>
-              ))}
-              {files.length > shown.length && ` and ${files.length - shown.length} more`}.
-            </>
-          )}{' '}
-          {next}
-        </div>
-      </div>
+        </span>
+        {names && (
+          <>
+            <span className={styles.repo}>{entry.repoName}</span>
+            <span className={styles.branch}>{entry.branch ?? entry.shortSha}</span>
+            {entry.worktreePath && <span className={styles.path}>{tildifyHome(entry.worktreePath)}</span>}
+          </>
+        )}
+        {progress && <span>{progress}</span>}
+      </span>
       <Button size={28} disabled={running} title={busy} onClick={() => askAbort(entry, op)}>
         Abort
       </Button>

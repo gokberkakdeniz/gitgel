@@ -3,8 +3,7 @@
 // actions.
 import { create } from 'zustand';
 import { gitOperation } from '../lib/ipc';
-import { plural } from '../lib/format';
-import type { EntryRef, EntrySummary, Operation, OperationKind } from '../lib/types';
+import type { EntryRef, EntrySummary, FileChange, Operation, OperationKind } from '../lib/types';
 import { startGitAction, useRuns } from '../scripts/runs';
 import { useData } from '../state/data';
 
@@ -59,54 +58,45 @@ export function conflictsTooltip(e: EntrySummary): string {
   return files.length > 0 ? `Conflicts in ${files.join(', ')}` : 'Merge conflicts in the working tree';
 }
 
+/** A file row's conflict mark (T2): only for a conflicted file of an operation in progress. */
+export function conflictOf(e: EntrySummary, f: FileChange): 'unresolved' | 'resolved' | undefined {
+  if (f.kind !== 'C' || !e.operation) return undefined;
+  return e.operation.unresolved.includes(f.path) ? 'unresolved' : 'resolved';
+}
+
 /** `repo / branch` (the short SHA when detached). */
 export function entryLabel(e: EntrySummary): string {
   return `${e.repoName} / ${e.branch ?? e.shortSha ?? ''}`;
 }
 
-/** A piece of the banner's sentence: words, a ref or SHA (mono), or a commit (mono SHA, subject). */
-export type BannerPart = { text: string } | { ref: string } | { sha: string; subject: string | null };
+/** A piece of the banner's text: words, or a ref or SHA (mono). */
+export type BannerPart = { text: string } | { ref: string };
 
-/** Review's banner (T2) below the entry's names: what paused where, the files that still have
- * conflicts (links to them), and what to do next. */
+/** Review's one-line banner (T2): `Resolve conflicts to continue rebasing` + the entry's names +
+ * `(2/4)`; `Continue rebasing` once no conflicted file keeps git's markers. History's (T4) has no
+ * names, so a merge ends at what it merges (`… merging main`). */
 export function operationBanner(
-  e: EntrySummary,
   op: Operation,
-): { tone: 'danger' | 'warning'; what: BannerPart[]; files: string[]; next: string } {
-  const what: BannerPart[] = [];
-  const commit: BannerPart | null = op.commit ? { sha: op.commit, subject: op.subject } : null;
+  names = true,
+): { tone: 'danger' | 'warning'; lead: BannerPart[]; progress: string | null } {
+  const conflicts = op.unresolved.length > 0;
+  const lead: BannerPart[] = [{ text: conflicts ? 'Resolve conflicts to continue ' : 'Continue ' }];
   switch (op.kind) {
-    case 'rebase': {
-      const step = op.step !== null && op.total !== null;
-      what.push({ text: 'Rebasing onto ' }, op.onto ? { ref: op.onto } : { text: 'its base' });
-      what.push({ text: step || commit ? ' paused at ' : ' paused' });
-      if (step) what.push({ text: `commit ${op.step} of ${op.total}${commit ? ', ' : ''}` });
-      if (commit) what.push(commit);
+    case 'rebase':
+      lead.push({ text: 'rebasing' });
       break;
-    }
     case 'merge':
-      what.push({ text: 'Merging ' }, op.other ? { ref: op.other } : { text: 'a branch' }, { text: ' into this branch paused' });
+      lead.push({ text: 'merging ' }, op.other ? { ref: op.other } : { text: 'a branch' }, ...(names ? [{ text: ' into' }] : []));
       break;
     case 'cherry_pick':
-      what.push({ text: 'Cherry-picking ' }, commit ?? { text: 'a commit' }, { text: ' paused' });
+      lead.push({ text: 'cherry-picking ' }, op.commit ? { ref: op.commit } : { text: 'a commit' }, ...(names ? [{ text: ' onto' }] : []));
       break;
     case 'revert':
-      what.push({ text: 'Reverting ' }, commit ?? { text: 'a commit' }, { text: ' paused' });
+      lead.push({ text: 'reverting ' }, op.commit ? { ref: op.commit } : { text: 'a commit' }, ...(names ? [{ text: ' on' }] : []));
       break;
   }
-  what.push({ text: '.' });
-  if (op.unresolved.length > 0) {
-    const them = op.unresolved.length === 1 ? 'it' : 'them';
-    return { tone: 'danger', what, files: op.unresolved, next: `Fix ${them} in your editor, then Continue.` };
-  }
-  const resolved = e.conflicts > 0 ? 'Conflicts resolved. ' : '';
-  let next: string;
-  if (op.kind === 'merge') next = 'Continue commits the merge.';
-  else if (op.kind !== 'rebase') next = 'Continue commits it.';
-  else if (op.step === null || op.total === null) next = 'Continue goes on with the rebase.';
-  else if (op.step >= op.total) next = 'Continue commits it and finishes the rebase.';
-  else next = `Continue commits it and applies the remaining ${plural(op.total - op.step, 'commit', 'commits')}.`;
-  return { tone: 'warning', what, files: [], next: `${resolved}${next}` };
+  const progress = op.step !== null && op.total !== null ? `(${op.step}/${op.total})` : null;
+  return { tone: conflicts ? 'danger' : 'warning', lead, progress };
 }
 
 /** Why Continue cannot run now, or null. */

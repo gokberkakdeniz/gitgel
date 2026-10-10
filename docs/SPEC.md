@@ -710,7 +710,9 @@ Layout:
   "Refresh" (full rescan), and in project scope "Edit project"
   (`pencil`), which opens the project page (going back to it when Review was opened from
   there).
-- Default mode Committed; Uncommitted if there are no committed changes but some uncommitted.
+- Default mode Committed; Uncommitted if there are no committed changes but some uncommitted, or
+  an entry has merge conflicts (§15 "Operations in progress"); then the first conflicted file is
+  picked.
   Switching mode keeps the file on screen if the new mode lists it (else that entry's first file,
   else the first one); between Uncommitted and All (both end at the working tree) the diff also
   keeps its place in the file. Groups with no files in the
@@ -759,7 +761,7 @@ Layout:
     `N of M commits come from <branch>. A different base may fit better.`
   - File rows (30px, indent 28, radius 8, selected `bg.hover`): kind badge, mono 12 file name,
     mono 11 dimmed folder (ellipsis; renames `dir ← old/path`, untracked `dir · untracked`),
-    `+N` / `−N`. **Right-click** (not a deleted file; it does not select the row, which shows
+    `+N` / `−N` (a conflicted file of an operation in progress: ⚠ or ✓, §15). **Right-click** (not a deleted file; it does not select the row, which shows
     `bg.hover` while its menu is open): a 220px menu of "Open in Finder" (the file
     selected) and "Open in <App>" for each installed editor, as in §5 "Open items" but without
     the terminal. The file is read from the entry's worktree, else its repository folder (a
@@ -859,8 +861,8 @@ Layout:
   changes (binary, too large, rename only) shows "No line changes" ("Only whitespace changed"
   when whitespace is ignored), and ↑ ↓ go straight to the neighbouring file.
 - **Uncommitted mode:** the commit list is hidden.
-- **Operations in progress** (T2): in every mode (not while a stash is shown), one banner per
-  entry with an operation in progress, above the others; §15 "Operations in progress".
+- **Operations in progress** (T2): in every mode (not while a stash is shown), one one-line
+  banner per entry with an operation in progress, above the others; §15 "Operations in progress".
 - **Conflicts:** in every mode (not while a stash is shown), when an entry's working tree has
   unmerged files and no operation in progress (a stash apply), a danger banner above that one: `1 file has merge conflicts. Resolve it in your
   editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.` (`N files have
@@ -1921,7 +1923,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 232–241) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
-| Operations in progress | `FlowT1`–`FlowT3.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two operation banners (entry names, what paused where, the conflicted files as links, the next step; danger with conflicts, warning once resolved; Abort / Continue) and the group pills in place of the upstream state, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`) |
+| Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
 | Discard | `HistH9`, `FlowD12.dc.html` | canvas page "Review & History": Hi8 (`HistH9` mounts `HistH6` with `selected`) History's Uncommitted with files picked, their menu (23–25, data 87–111; `count` two / one / all: the Uncommitted row's menu) and Confirm Discard Changes (26–49, data 112–116); D12 (`FlowD12` mounts `Diff` with `selected`) the same in a project review, the dialog's files under their entry (data 87–96) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
@@ -2523,22 +2525,23 @@ when one starts, moves on or ends (§10 "Change watching").
   base first), else the short SHA; a merge's `other` is the name quoted in `MERGE_MSG`'s first
   line, else `MERGE_HEAD`'s short SHA; `commit` / `subject` are the commit a rebase stopped at
   (the last line of `rebase-merge/done`) or the one being cherry-picked or reverted.
-- **Review banner** (T2), one per such entry, in place of the conflicts banner for it: padding 8px
-  12px 8px 20px, 12px, two lines (gap 3) beside 28px "Abort" (secondary) and "Continue" (primary).
-  Line 1, the entry's names as the entry bar shows them: repo 13px/600 `text.strong`, branch mono
-  12 `text.body`, worktree folder (`~/…`) mono 11 `text.muted`. Line 2 (line-height 1.5), in the
-  banner's colour, refs and SHAs mono 11:
-  - what paused where: `Rebasing onto main paused at commit 2 of 4, 4b7e2c9 “Subject”.`,
-    `Merging origin/feat into this branch paused.`, `Cherry-picking 4b7e2c9 “Subject” paused.`,
-    `Reverting … paused.`;
-  - while conflicted files still have a line starting `<<<<<<< ` or `>>>>>>> ` (`unresolved`):
-    `Conflicts in src/auth/session.ts.` (at most 3, then `and N more`; each an underlined button
-    that opens the file in Uncommitted, its group expanded) and `Fix it in your editor, then
-    Continue.` (`them`); danger, Continue disabled ("Fix the conflicts first");
-  - else warning: `Conflicts resolved.` (when there were conflicts) and the next step: `Continue
-    commits it and applies the remaining 2 commits.` / `… and finishes the rebase.` / `Continue
-    commits the merge.` / `Continue commits it.`.
-  While a git action runs in the repository both buttons are disabled ("A git action is running").
+- **Review banner** (T2), one per such entry, in place of the conflicts banner for it: one line,
+  40px min, padding 6px 12px 6px 20px, 12px, then 28px "Abort" (secondary) and "Continue"
+  (primary). `Resolve conflicts to continue rebasing` (`merging <other> into`, `cherry-picking
+  <sha> onto`, `reverting <sha> on`; refs and SHAs mono 11), then the entry's names as the entry
+  bar shows them (repo 13px/600 `text.strong`, branch mono 12 `text.body`, worktree folder `~/…`
+  mono 11 `text.muted`, ellipsis), then `(2/4)` for a rebase. Danger while a conflicted file
+  still has a line starting `<<<<<<< ` or `>>>>>>> ` (`unresolved`; Continue disabled, "Fix the
+  conflicts first"); warning once none has, starting `Continue rebasing`. While a git action runs
+  in the repository both buttons are disabled ("A git action is running").
+- **History banner** (T4), for its `rev` when that is the entry in progress: the same banner
+  without the names (the header has them), under the header: `Resolve conflicts to continue
+  rebasing (2/4)`, `Continue merging main` (no `into` / `onto` / `on`).
+- **Conflicted files** (T2, T4): Review opens on Uncommitted while an entry has merge conflicts,
+  and with nothing picked the first conflicted file is shown. In Review's and History's file rows
+  a conflicted file of an operation shows, in place of `+N` / `−N`, a 14px `warning` (danger,
+  title "Has conflicts") while it has markers, else a `check` (success, "Conflicts resolved").
+  Picking it shows HEAD ↔ the working tree file with its markers.
 - **Menus** (T1): the branch menus' Sync group becomes "Continue Rebase" (`arrow-right`,
   disabled as Continue) and "Abort Rebase" (`undo`, danger) — Merge, Cherry-Pick, Revert alike.
   History's Pull and Push are disabled with "Rebase in progress".
