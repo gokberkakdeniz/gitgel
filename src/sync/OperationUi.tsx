@@ -135,8 +135,6 @@ export function AbortOperationModal() {
   };
   const title = operationTitle(op);
   const verb = title.toLowerCase();
-  const name = entry.branch ?? entry.shortSha ?? '';
-  const back = entry.shortSha ? `${name} goes back to ${entry.shortSha}, as before the ${verb}. ` : '';
   return (
     <ConfirmModal
       aria-label={`Abort the ${verb}`}
@@ -147,7 +145,6 @@ export function AbortOperationModal() {
         { icon: 'branch', text: entryLabel(entry) },
         { icon: 'rebase', text: operationTooltip(op) },
       ]}
-      note={`${back}Conflict fixes made so far are lost.`}
       dontAsk={{ checked: dontAsk, onChange: setDontAsk }}
     >
       <Button size={36} autoFocus onClick={close}>

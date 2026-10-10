@@ -2555,8 +2555,7 @@ when one starts, moves on or ends (§10 "Change watching").
   the banner moves on (`3 of 4`).
 - **Abort** (`abort: true`, `git:abort`, "Abort Rebase"): `git -C "$GITGEL_FOLDER" rebase --abort`
   (…). Asks first (T3, `ConfirmModal`, 460px): title `Abort the rebase?`, rows `<repo> /
-  <branch>` (`branch`) and the pill's tooltip (`rebase`), note `<branch> goes back to <short tip>,
-  as before the rebase. Conflict fixes made so far are lost.`, "Do not show this message
+  <branch>` (`branch`) and the pill's tooltip (`rebase`), no note, "Do not show this message
   again", Cancel (focused) and danger "Abort Rebase"; Settings › Prompts › "Aborting a rebase or
   merge" off skips it. Success toast `Aborted the rebase of <branch>` (`Aborted the merge of
   <branch>` …).
