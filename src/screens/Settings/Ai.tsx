@@ -33,7 +33,7 @@ export function Ai({ config }: { config: Config }) {
     return next;
   };
   const ids = providerOrder(ai.order);
-  const { listRef, order, dragId, handleProps } = useReorder(ids, (sorted) =>
+  const { listRef, order, dragId, handleProps, rowStyle, dropBefore, dropAfter } = useReorder(ids, (sorted) =>
     save({ ...ai, order: sorted }),
   );
   const shown = order
@@ -70,7 +70,13 @@ export function Ai({ config }: { config: Config }) {
             const gone = missing(p.id);
             return {
               key: p.id,
-              rowProps: { 'data-reorder': true, className: p.id === dragId ? styles.dragging : undefined },
+              rowProps: {
+                'data-reorder': true,
+                className: p.id === dragId ? styles.dragging : undefined,
+                style: rowStyle(p.id),
+                'data-drop-before': dropBefore(p.id) || undefined,
+                'data-drop-after': dropAfter(p.id) || undefined,
+              },
               handle: { 'aria-label': `Move ${p.label}`, ...handleProps(p.id) },
               lead: 'tile',
               icon: 'bolt',

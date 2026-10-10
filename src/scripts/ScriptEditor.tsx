@@ -340,6 +340,9 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                 <li
                   key={key}
                   data-reorder
+                  data-drop-before={reorder.dropBefore(key) || undefined}
+                  data-drop-after={reorder.dropAfter(key) || undefined}
+                  style={reorder.rowStyle(key)}
                   className={reorder.dragId === key ? `${styles.input} ${styles.dragging}` : styles.input}
                 >
                   <div className={styles.inputRow}>

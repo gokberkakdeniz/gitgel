@@ -19,7 +19,7 @@ export function Scripts({ config }: { config: Config }) {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<ScriptConfig | null>(null);
   const fail = (e: unknown) => setError((e as AppError).message ?? String(e));
-  const { listRef, order, dragId, handleProps } = useReorder(
+  const { listRef, order, dragId, handleProps, rowStyle, dropBefore, dropAfter } = useReorder(
     config.scripts.map((s) => s.id),
     (ids) => {
       setError(null);
@@ -96,7 +96,13 @@ export function Scripts({ config }: { config: Config }) {
           empty="No scripts yet"
           items={shown.map((s) => ({
             key: s.id,
-            rowProps: { 'data-reorder': true, className: s.id === dragId ? styles.dragging : undefined },
+            rowProps: {
+              'data-reorder': true,
+              className: s.id === dragId ? styles.dragging : undefined,
+              style: rowStyle(s.id),
+              'data-drop-before': dropBefore(s.id) || undefined,
+              'data-drop-after': dropAfter(s.id) || undefined,
+            },
             handle: { 'aria-label': `Move ${s.name}`, ...handleProps(s.id) },
             lead: 'tile',
             icon: isIconName(s.icon) ? s.icon : 'prompt',

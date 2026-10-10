@@ -8,11 +8,69 @@
   padding: 0;
   background: transparent;
   border: 0;
+  border-radius: 4px;
   color: var(--text-faint);
   cursor: grab;
   touch-action: none;
 }
 
+.handle:hover {
+  color: var(--text-muted);
+}
+
+.handle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .handle:active {
   cursor: grabbing;
+  color: var(--text-strong);
+}
+
+/* `useReorder` rows: the row keeps its place (it moves with a transform), so the drop line
+ * anchors to it. Attribute selectors are not scoped by CSS modules, which is what makes one
+ * rule cover the Settings lists and the script editor's inputs. */
+[data-reorder] {
+  position: relative;
+}
+
+[data-drop-before='true']::before,
+[data-drop-after='true']::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  z-index: 4;
+  pointer-events: none;
+  animation: reorder-drop-in 140ms ease-out;
+}
+
+[data-drop-before='true']::before {
+  top: -1px;
+}
+
+[data-drop-after='true']::after {
+  bottom: -1px;
+}
+
+@keyframes reorder-drop-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-drop-before='true']::before,
+  [data-drop-after='true']::after {
+    animation: none;
+  }
 }

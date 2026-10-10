@@ -590,6 +590,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) No stored default provider: the bolt uses the topmost switched-on provider in menu order (`settings.ai.provider` gone, old files still load) — 2026-10-10
 - [x] (on request) Sandboxed generation: Antigravity runs with `--sandbox`, Claude with `--permission-prompts none` (Codex already read-only; opencode and Cursor have no such flag) — 2026-10-10
 - [x] (on request) History base line is just `base <branch>`: the `Below: already in <base>` sub and the merge-base SHA are gone — 2026-10-10
+- [x] (on request) Smooth list reordering: the dragged row follows the pointer while the others glide aside, an accent line marks the drop slot, Escape cancels, lists auto-scroll at the edges — 2026-10-10
 
 ---
 
