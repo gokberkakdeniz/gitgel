@@ -10,7 +10,7 @@ export interface AiProviderMeta {
   effort: boolean;
 }
 export const AI_PROVIDERS: AiProviderMeta[] = [
-  { id: 'opencode', label: 'opencode', binary: 'opencode', effort: true },
+  { id: 'opencode', label: 'OpenCode', binary: 'opencode', effort: true },
   { id: 'claude', label: 'Claude Code', binary: 'claude', effort: false },
   { id: 'cursor', label: 'Cursor', binary: 'agent', effort: false },
   { id: 'antigravity', label: 'Antigravity', binary: 'agy', effort: true },

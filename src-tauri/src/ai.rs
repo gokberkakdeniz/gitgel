@@ -50,7 +50,7 @@ pub enum Provider {
 impl Provider {
     fn tool(&self) -> &'static str {
         match self {
-            Provider::Opencode => "opencode",
+            Provider::Opencode => "OpenCode",
             Provider::Claude => "Claude Code",
             Provider::Cursor => "Cursor",
             Provider::Antigravity => "Antigravity",
