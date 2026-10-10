@@ -2199,7 +2199,9 @@ export interface ScriptRun {
   Under the header the running command (`ScriptRun.command`: the user's script, or the git
   action's fixed command): one mono 11px row, `$` in `accent.text` and the command in
   `text.muted` (pre-wrapped, scrolls past 260px, no tooltip; drag its bottom border to make it
-  taller, double-click resets; the terminal below shrinks with it). A `$VAR` / `${VAR}` the
+  taller, double-click resets; the terminal below shrinks with it, re-fitting its visible
+  box (frame padding and scrollbar excluded; re-fit again when fonts arrive, so wrapped
+  lines never hide on the right). A `$VAR` / `${VAR}` the
   command names is `accent.text` with a dotted underline: hovering or focusing it opens a
   popover with its value (`ScriptRun.commandVars`; mono 11px, wrapped, 420 × 260 at most,
   then scrolls; the popover stays inside the window and the value selects as text). A 24px

@@ -148,14 +148,33 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
     const fit = new FitAddon();
     t.loadAddon(fit);
     t.open(el);
-    fit.fit();
-    void resizeScript(run.runId, t.cols, t.rows).catch(() => {});
+    // Fits the visible box: the frame's padding is outside `el`, and the viewport's
+    // scrollbar (classic mode) is taken out, so wrapped lines never hide on the right.
+    const refit = () => {
+      fit.fit();
+      const vp = el.querySelector('.xterm-viewport');
+      if (vp) {
+        const cellW = el.clientWidth / Math.max(1, t.cols);
+        const cut = Math.round((el.clientWidth - vp.clientWidth) / cellW);
+        if (cut > 0) t.resize(t.cols - cut, t.rows);
+      }
+    };
+    const syncSize = () => {
+      refit();
+      void resizeScript(run.runId, t.cols, t.rows).catch(() => {});
+    };
+    syncSize();
+    // The webfont can arrive after the terminal opens; its metrics move the wrap point.
+    let dead = false;
+    document.fonts?.ready.then(() => {
+      if (!dead) syncSize();
+    }).catch(() => {});
     term.current = t;
     // The command row above is resizable: when it grows, this box shrinks. Re-fit
     // the terminal so its canvas follows instead of painting over the footer.
     let resizeTimer = 0;
     const ro = new ResizeObserver(() => {
-      fit.fit();
+      refit();
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
         void resizeScript(run.runId, t.cols, t.rows).catch(() => {});
@@ -191,6 +210,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
     textarea?.addEventListener('focus', onFocus);
     textarea?.addEventListener('blur', onBlur);
     return () => {
+      dead = true;
       ro.disconnect();
       window.clearTimeout(resizeTimer);
       off();
@@ -327,11 +347,12 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
           </>
         )}
         <div
-          ref={box}
           role="log"
           aria-label="Output"
           className={focused && running ? `${styles.terminal} ${styles.focused}` : styles.terminal}
-        />
+        >
+          <div ref={box} className={styles.termBox} />
+        </div>
         <ModalFooter
           ruled
           lead={

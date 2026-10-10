@@ -117,21 +117,37 @@
   user-select: text;
 }
 
-/* The terminal; xterm fills it. Clipped while the command row's drag resizes it. */
+/* The terminal frame; xterm fills the inner box, so its columns match the visible
+   width (padding and scrollbar excluded). Clipped while the command row's drag resizes it. */
 .terminal {
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
   min-height: 0;
   overflow: hidden;
-  padding: 14px 20px;
+  padding: 14px 10px;
   background: var(--bg-sunken);
+}
+
+.termBox {
+  flex-grow: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* The canvas rarely divides the box evenly; center it so the leftover
+   sits equally left and right instead of padding only the right. */
+.termBox :global(.xterm) {
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .focused {
   box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), 0.55);
 }
 
-.terminal :global(.xterm),
-.terminal :global(.xterm-viewport) {
+.termBox :global(.xterm),
+.termBox :global(.xterm-viewport) {
   background: var(--bg-sunken) !important;
 }
 
