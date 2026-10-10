@@ -17,8 +17,10 @@ pub struct InProgress {
     /// Rebase: the commit it rebases on.
     pub onto: Option<String>,
     /// Merge: what is merged in, from `MERGE_MSG` (`origin/feat`), else `MERGE_HEAD`'s short SHA.
-    /// Cherry-pick, revert: the commit's short SHA.
     pub other: Option<String>,
+    /// The commit it stopped at: a rebase's last done (`done`), the commit being cherry-picked or
+    /// reverted. As git wrote it (perhaps abbreviated).
+    pub commit: Option<String>,
     /// Rebase: the commit it stopped at (1-based) and how many there are.
     pub step: Option<u32>,
     pub total: Option<u32>,
@@ -44,6 +46,7 @@ pub fn read(wt_repo: &Repository) -> Option<InProgress> {
         branch: None,
         onto: None,
         other: None,
+        commit: None,
         step: None,
         total: None,
     };
@@ -61,6 +64,7 @@ pub fn read(wt_repo: &Repository) -> Option<InProgress> {
             op.onto = file("onto");
             op.step = file(step).and_then(|s| s.parse().ok());
             op.total = file(total).and_then(|s| s.parse().ok());
+            op.commit = file("done").as_deref().and_then(last_done);
         }
         OperationKind::Merge => {
             op.other = text(&dir.join("MERGE_MSG"))
@@ -68,12 +72,41 @@ pub fn read(wt_repo: &Repository) -> Option<InProgress> {
                 .and_then(merged_name)
                 .or_else(|| text(&dir.join("MERGE_HEAD")).map(|s| short(&s)));
         }
-        OperationKind::CherryPick => {
-            op.other = text(&dir.join("CHERRY_PICK_HEAD")).map(|s| short(&s))
-        }
-        OperationKind::Revert => op.other = text(&dir.join("REVERT_HEAD")).map(|s| short(&s)),
+        OperationKind::CherryPick => op.commit = text(&dir.join("CHERRY_PICK_HEAD")),
+        OperationKind::Revert => op.commit = text(&dir.join("REVERT_HEAD")),
     }
     Some(op)
+}
+
+/// The commit of the last line of a rebase's `done` (`pick fe7be12 # Subject`, `pick fe7be12
+/// Subject`); `exec`, `break` and comments name none.
+fn last_done(done: &str) -> Option<String> {
+    let line = done
+        .lines()
+        .map(str::trim)
+        .rfind(|l| !l.is_empty() && !l.starts_with('#'))?;
+    let mut words = line.split_whitespace();
+    let command = words.next()?;
+    let names_commit = [
+        "pick", "p", "reword", "r", "edit", "e", "squash", "s", "fixup", "f",
+    ];
+    names_commit
+        .contains(&command)
+        .then(|| words.find(|w| !w.starts_with('-')))
+        .flatten()
+        .map(str::to_string)
+}
+
+/// A commit's short SHA and subject, for "stopped at fe7be12 Refresh the session".
+pub fn describe(repo: &Repository, sha: &str) -> Option<(String, String)> {
+    let commit = repo.revparse_single(sha).ok()?.peel_to_commit().ok()?;
+    let subject = commit
+        .summary()
+        .ok()
+        .flatten()
+        .unwrap_or_default()
+        .to_string();
+    Some((short(&commit.id().to_string()), subject))
 }
 
 /// The quoted name in a merge message's first line: `Merge branch 'feat' of github.com:o/r` →
@@ -199,6 +232,23 @@ mod tests {
         assert_eq!(op.kind, OperationKind::Merge);
         assert_eq!(op.other.as_deref(), Some("feat"));
         assert_eq!(op.branch, None);
+    }
+
+    #[test]
+    fn reads_the_commit_a_rebase_stopped_at() {
+        assert_eq!(
+            last_done("pick fe7be12 # f1\npick 1234567 # f2\n").as_deref(),
+            Some("1234567")
+        );
+        assert_eq!(
+            last_done("pick abcdef0 Old style\n").as_deref(),
+            Some("abcdef0")
+        );
+        assert_eq!(
+            last_done("fixup -C 1234567 # x\n").as_deref(),
+            Some("1234567")
+        );
+        assert_eq!(last_done("pick abcdef0 x\nexec make\n"), None);
     }
 
     #[test]

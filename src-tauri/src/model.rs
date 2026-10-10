@@ -465,13 +465,16 @@ pub struct Operation {
     pub kind: OperationKind,
     /// Rebase: what it rebases on (a branch whose tip it is, else the short SHA).
     pub onto: Option<String>,
-    /// Merge: what is merged in; cherry-pick and revert: the commit's short SHA.
+    /// Merge: what is merged in (`main`, `origin/feat`).
     pub other: Option<String>,
+    /// The commit it stopped at (rebase) or applies (cherry-pick, revert): short SHA and subject.
+    pub commit: Option<String>,
+    pub subject: Option<String>,
     /// Rebase: the commit it stopped at (1-based) of `total`.
     pub step: Option<u32>,
     pub total: Option<u32>,
-    /// Conflicted files that still have git's markers: Continue waits for 0.
-    pub unresolved: u32,
+    /// Conflicted files that still have git's markers: Continue waits for none.
+    pub unresolved: Vec<String>,
 }
 
 /// A branch against its remote (`refs::tracking`), as of the last fetch.

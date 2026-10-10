@@ -460,15 +460,21 @@ fn summarize(
                     .filter(|&at| n > 0 && at > s.last_commit_at.unwrap_or(0));
                 s.operation = w.op.map(|op| {
                     let prefer: Vec<&str> = base.as_deref().into_iter().collect();
+                    let (commit, subject) = op
+                        .commit
+                        .and_then(|c| operation::describe(ctx.repo, &c))
+                        .unzip();
                     Operation {
                         kind: op.kind,
                         onto: op
                             .onto
                             .map(|sha| operation::name_of(ctx.repo, &sha, &prefer)),
                         other: op.other,
+                        commit,
+                        subject,
                         step: op.step,
                         total: op.total,
-                        unresolved: operation::with_markers(wt, &w.conflicts).len() as u32,
+                        unresolved: operation::with_markers(wt, &w.conflicts),
                     }
                 });
             }
@@ -1305,7 +1311,7 @@ mod tests {
         assert_eq!(op.onto.as_deref(), Some("main"));
         assert_eq!((op.step, op.total), (Some(2), Some(4)));
         // Not unmerged in the index (no real conflict here), so nothing to check for markers.
-        assert_eq!(op.unresolved, 0);
+        assert!(op.unresolved.is_empty());
         assert_eq!(active(&scan, "recent").operation, None);
     }
 

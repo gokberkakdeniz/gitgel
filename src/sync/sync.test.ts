@@ -46,7 +46,7 @@ describe('syncState', () => {
   });
 
   it('waits for an operation in progress', () => {
-    const op = { kind: 'rebase' as const, onto: 'main', other: null, step: 2, total: 4, unresolved: 1 };
+    const op = { kind: 'rebase' as const, onto: 'main', other: null, commit: null, subject: null, step: 2, total: 4, unresolved: ['a.ts'] };
     const st = syncState({ ...target(up(2, 1)), operation: op });
     expect([st.pull, st.push]).toEqual(['Rebase in progress', 'Rebase in progress']);
   });

@@ -38,13 +38,19 @@ button,input,textarea{font-family:inherit}
 </div>
 </header>
 
-<div role="status" style="display: flex; align-items: center; gap: 12px; min-height: 40px; box-sizing: border-box; padding: 6px 12px 6px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--danger-rgb), 0.12); color: var(--danger)">
-<span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Rebasing <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">web-app / session-token-refresh</span> on <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">main</span> · 2 of 4 · 1 conflict</span>
-<dc-import name="Button" theme="none" label="Abort" variant="secondary" size="28" href="FlowT3.dc.html" hint-size="64px,28px"></dc-import>
-<dc-import name="Button" theme="none" label="Continue" variant="primary" size="28" disabled="{{true}}" title="Resolve the conflicts first" hint-size="82px,28px"></dc-import>
+<div role="status" style="display: flex; align-items: center; gap: 12px; box-sizing: border-box; padding: 8px 12px 8px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--danger-rgb), 0.12); color: var(--danger)">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">web-app</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">session-token-refresh</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; min-width: 0">~/code/wt/token-refresh</span></div>
+<div style="line-height: 1.5">Rebasing onto <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">main</span> paused at commit 2 of 4, <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">4b7e2c9</span> “Add refreshSession with token rotation”. Conflicts in <button type="button" title="Show src/auth/session.ts" style="padding: 0; border: 0; background: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">src/auth/session.ts</button>. Fix it in your editor, then Continue.</div>
 </div>
-<div role="status" style="display: flex; align-items: center; gap: 12px; min-height: 40px; box-sizing: border-box; padding: 6px 12px 6px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--warning-rgb), 0.12); color: var(--warning)">
-<span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Merging <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">origin/token-rotation-job</span> into <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">api-server / token-rotation-job</span> · conflicts resolved</span>
+<dc-import name="Button" theme="none" label="Abort" variant="secondary" size="28" href="FlowT3.dc.html" hint-size="64px,28px"></dc-import>
+<dc-import name="Button" theme="none" label="Continue" variant="primary" size="28" disabled="{{true}}" title="Fix the conflicts first" hint-size="82px,28px"></dc-import>
+</div>
+<div role="status" style="display: flex; align-items: center; gap: 12px; box-sizing: border-box; padding: 8px 12px 8px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--warning-rgb), 0.12); color: var(--warning)">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">api-server</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">token-rotation-job</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; min-width: 0">~/code/api-server</span></div>
+<div style="line-height: 1.5">Merging <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">origin/token-rotation-job</span> into this branch paused. Conflicts resolved. Continue commits the merge.</div>
+</div>
 <dc-import name="Button" theme="none" label="Abort" variant="secondary" size="28" hint-size="64px,28px"></dc-import>
 <dc-import name="Button" theme="none" label="Continue" variant="primary" size="28" hint-size="82px,28px"></dc-import>
 </div>
@@ -65,8 +71,8 @@ button,input,textarea{font-family:inherit}
 </div>
 <div style="display: flex; align-items: center; gap: 6px; padding-left: 20px; min-width: 0">
 <span title="session-token-refresh" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">session-token-refresh</span>
-<dc-import name="Pill" theme="none" size="sm" tone="warning" label="rebasing" title="Rebasing on main · 2 of 4" hint-size="58px,16px"></dc-import>
-<dc-import name="Pill" theme="none" size="sm" tone="danger" label="1 conflict" title="Merge conflicts in the working tree" hint-size="62px,16px"></dc-import>
+<dc-import name="Pill" theme="none" size="sm" tone="warning" label="rebasing" title="Rebasing onto main, paused at commit 2 of 4" hint-size="58px,16px"></dc-import>
+<dc-import name="Pill" theme="none" size="sm" tone="danger" label="1 conflict" title="Conflicts in src/auth/session.ts" hint-size="62px,16px"></dc-import>
 </div>
 </div>
 <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: var(--bg-hover)">
@@ -157,8 +163,10 @@ class Component extends DCLogic {
   renderVals() {
     // Review while operations are in progress: one banner per entry, in place of its conflicts
     // banner (P7's stays for conflicts outside an operation, e.g. a stash apply), each with Abort
-    // and Continue. Danger while a conflicted file still has git's markers (Continue disabled,
-    // "Resolve the conflicts first"); warning once none do. Continue stages the conflicted files and
+    // and Continue. Line 1: the entry's names as the entry bar shows them (repo, branch, folder).
+    // Line 2: what paused where (the commit, its subject), the files that still have conflicts
+    // (each opens in Uncommitted), what to do next. Danger while a conflicted file still has git's
+    // markers (Continue disabled, "Fix the conflicts first"); warning once none do. Continue stages the conflicted files and
     // runs `GIT_EDITOR=true git rebase --continue` (`git merge --continue`, ...); Abort asks first (T3).
     // The group's line 2 shows the operation and conflicts pills instead of the upstream state.
     // The diff is HEAD (main plus the commits applied so far) ↔ the working tree with the markers.

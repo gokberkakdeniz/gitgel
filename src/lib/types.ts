@@ -165,10 +165,12 @@ export type OperationKind = 'rebase' | 'merge' | 'cherry_pick' | 'revert';
 export interface Operation {
   kind: OperationKind;
   onto: string | null; // rebase: what it rebases on (a branch at that commit, else the short SHA)
-  other: string | null; // merge: what is merged in; cherry-pick, revert: the commit's short SHA
+  other: string | null; // merge: what is merged in ("main", "origin/feat")
+  commit: string | null; // short SHA of the commit it stopped at (rebase) or applies (cherry-pick, revert)
+  subject: string | null; // that commit's subject
   step: number | null; // rebase: the commit it stopped at (1-based) of `total`
   total: number | null;
-  unresolved: number; // conflicted files that still have git's markers: Continue waits for 0
+  unresolved: string[]; // conflicted files that still have git's markers: Continue waits for none
 }
 /** A branch against its remote, as of the last fetch (W4a). */
 export interface Upstream {

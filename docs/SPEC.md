@@ -1372,10 +1372,12 @@ export interface EntrySummary {
 export interface Operation {     // §15 "Operations in progress"
   kind: 'rebase' | 'merge' | 'cherry_pick' | 'revert';
   onto: string | null;           // rebase: what it rebases on (a branch at that commit, else the short SHA)
-  other: string | null;          // merge: what is merged in; cherry-pick / revert: the commit's short SHA
+  other: string | null;          // merge: what is merged in ("main", "origin/feat")
+  commit: string | null;         // short SHA of the commit it stopped at (rebase) or applies (cherry-pick, revert)
+  subject: string | null;        // that commit's subject
   step: number | null;           // rebase: the commit it stopped at (1-based) of `total`
   total: number | null;
-  unresolved: number;            // conflicted files that still have git's markers
+  unresolved: string[];          // conflicted files that still have git's markers
 }
 export interface Upstream {      // as of the last fetch
   remote: string;                // e.g. "origin"
@@ -1762,7 +1764,7 @@ Notes:
 | Tags | `tag_names(None)` | |
 | Worktrees | main: `workdir()` + `head()`; linked: `worktrees()` → `find_worktree(name)` → `validate()`, `path()` | `worktrees()` does not list the main one; failed `validate()` or missing folder = prunable, skip; unborn HEAD, skip |
 | Worktree HEAD | open the worktree path from the pool → `head_detached()`, `head()` | detached by a stopped rebase of a branch (`rebase-merge/head-name`): the worktree belongs to that branch |
-| Operation in progress | on the worktree's repo: `state()`, then files in its git dir: `rebase-merge/` (`head-name`, `onto`, `msgnum`, `end`) or `rebase-apply/` (`next`, `last`), `MERGE_MSG` / `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`; unmerged paths from `index().conflicts()` | `git/operation.rs`; markers read from the working-tree files |
+| Operation in progress | on the worktree's repo: `state()`, then files in its git dir: `rebase-merge/` (`head-name`, `onto`, `msgnum`, `end`, `done`) or `rebase-apply/` (`next`, `last`), `MERGE_MSG` / `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`; unmerged paths from `index().conflicts()` | `git/operation.rs`; markers read from the working-tree files |
 | Merge-base | `merge_base(base, tip)` | `NotFound` = no common ancestor |
 | Ahead | `graph_ahead_behind(tip, base)?.0` | |
 | Commit list | `revwalk()`: `push(tip)`, `hide(base)`, `Sort::TOPOLOGICAL \| Sort::TIME`, first 200 | |
@@ -1919,7 +1921,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 232–241) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
-| Operations in progress | `FlowT1`–`FlowT3.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two operation banners (danger with conflicts, warning once resolved; Abort / Continue) and the group pills in place of the upstream state, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`) |
+| Operations in progress | `FlowT1`–`FlowT3.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two operation banners (entry names, what paused where, the conflicted files as links, the next step; danger with conflicts, warning once resolved; Abort / Continue) and the group pills in place of the upstream state, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`) |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
 | Discard | `HistH9`, `FlowD12.dc.html` | canvas page "Review & History": Hi8 (`HistH9` mounts `HistH6` with `selected`) History's Uncommitted with files picked, their menu (23–25, data 87–111; `count` two / one / all: the Uncommitted row's menu) and Confirm Discard Changes (26–49, data 112–116); D12 (`FlowD12` mounts `Diff` with `selected`) the same in a project review, the dialog's files under their entry (data 87–96) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
@@ -2514,19 +2516,29 @@ when one starts, moves on or ends (§10 "Change watching").
   detached entry; the branch keeps its tip until the rebase ends). A rebase of a detached HEAD
   stays a detached entry. The worktree's uncommitted files are against its own HEAD.
 - **Shown** (T1, T2): a warning sm pill after the state pill on the Branches row (`rebasing 2/4`,
-  `merging`, `cherry-picking`, `reverting`; tooltip `Rebasing on main · 2 of 4`, `Merging
-  origin/feat`) and in the Review group's line 2 (`rebasing`, in place of the upstream state),
-  next to the conflicts pill. `onto` is a branch or remote-tracking branch at that commit (the
-  entry's base first), else the short SHA; a merge's `other` is the name quoted in `MERGE_MSG`'s
-  first line, else `MERGE_HEAD`'s short SHA.
-- **Review banner** (T2), one per such entry, in place of the conflicts banner for it: 40px min,
-  padding 6px 12px 6px 20px, 12px, then 28px "Abort" (secondary) and "Continue" (primary). Text
-  `Rebasing <repo> / <branch> on <onto> · 2 of 4 · 1 conflict` (`Merging <other> into …`,
-  `Cherry-picking <sha> onto …`, `Reverting <sha> in …`; names mono 11). Danger while a
-  conflicted file still has a line starting `<<<<<<< ` or `>>>>>>> ` (`unresolved`), Continue then
-  disabled ("Resolve the conflicts first"); warning once none has, ending `· conflicts resolved`
-  when there were conflicts. While a git action runs in the repository both are disabled ("A git
-  action is running").
+  `merging`, `cherry-picking`, `reverting`; tooltip `Rebasing onto main, paused at commit 2 of 4`,
+  `Merging origin/feat`) and in the Review group's line 2 (`rebasing`, in place of the upstream
+  state), next to the conflicts pill, whose tooltip then names the files (`Conflicts in
+  src/auth/session.ts`). `onto` is a branch or remote-tracking branch at that commit (the entry's
+  base first), else the short SHA; a merge's `other` is the name quoted in `MERGE_MSG`'s first
+  line, else `MERGE_HEAD`'s short SHA; `commit` / `subject` are the commit a rebase stopped at
+  (the last line of `rebase-merge/done`) or the one being cherry-picked or reverted.
+- **Review banner** (T2), one per such entry, in place of the conflicts banner for it: padding 8px
+  12px 8px 20px, 12px, two lines (gap 3) beside 28px "Abort" (secondary) and "Continue" (primary).
+  Line 1, the entry's names as the entry bar shows them: repo 13px/600 `text.strong`, branch mono
+  12 `text.body`, worktree folder (`~/…`) mono 11 `text.muted`. Line 2 (line-height 1.5), in the
+  banner's colour, refs and SHAs mono 11:
+  - what paused where: `Rebasing onto main paused at commit 2 of 4, 4b7e2c9 “Subject”.`,
+    `Merging origin/feat into this branch paused.`, `Cherry-picking 4b7e2c9 “Subject” paused.`,
+    `Reverting … paused.`;
+  - while conflicted files still have a line starting `<<<<<<< ` or `>>>>>>> ` (`unresolved`):
+    `Conflicts in src/auth/session.ts.` (at most 3, then `and N more`; each an underlined button
+    that opens the file in Uncommitted, its group expanded) and `Fix it in your editor, then
+    Continue.` (`them`); danger, Continue disabled ("Fix the conflicts first");
+  - else warning: `Conflicts resolved.` (when there were conflicts) and the next step: `Continue
+    commits it and applies the remaining 2 commits.` / `… and finishes the rebase.` / `Continue
+    commits the merge.` / `Continue commits it.`.
+  While a git action runs in the repository both buttons are disabled ("A git action is running").
 - **Menus** (T1): the branch menus' Sync group becomes "Continue Rebase" (`arrow-right`,
   disabled as Continue) and "Abort Rebase" (`undo`, danger) — Merge, Cherry-Pick, Revert alike.
   History's Pull and Push are disabled with "Rebase in progress".
@@ -2535,15 +2547,15 @@ when one starts, moves on or ends (§10 "Change watching").
   git -C "$GITGEL_FOLDER" rebase --continue` (`merge`, `cherry-pick`, `revert`), the conflicted
   paths in variables with `GIT_LITERAL_PATHSPECS=1` and `GIT_EDITOR=true`, so the commit keeps
   git's message. Refused while a conflicted file keeps its markers. Success toast `Rebased <branch>
-  on <onto>` (`Merged <other> into <branch>`, `Cherry-picked <sha> onto <branch>`, `Reverted <sha>
-  in <branch>`); a next commit that conflicts too fails the run, which opens its output panel, and
+  onto <onto>` (`Merged <other> into <branch>`, `Cherry-picked <sha> onto <branch>`, `Reverted <sha>
+  on <branch>`); a next commit that conflicts too fails the run, which opens its output panel, and
   the banner moves on (`3 of 4`).
 - **Abort** (`abort: true`, `git:abort`, "Abort Rebase"): `git -C "$GITGEL_FOLDER" rebase --abort`
   (…). Asks first (T3, `ConfirmModal`, 460px): title `Abort the rebase?`, rows `<repo> /
-  <branch>` (`branch`) and `on <onto> · stopped at 2 of 4` (`rebase`; `Merging <other>` …), note
-  `The branch goes back to <short tip>. Resolved conflicts are lost.`, "Do not show this message
+  <branch>` (`branch`) and the pill's tooltip (`rebase`), note `<branch> goes back to <short tip>,
+  as before the rebase. Conflict fixes made so far are lost.`, "Do not show this message
   again", Cancel (focused) and danger "Abort Rebase"; Settings › Prompts › "Aborting a rebase or
-  merge" off skips it. Success toast `Aborted the rebase of <branch>` (`Aborted the merge in
+  merge" off skips it. Success toast `Aborted the rebase of <branch>` (`Aborted the merge of
   <branch>` …).
 
 ### SSH passphrase (S1)

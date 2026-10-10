@@ -20,22 +20,43 @@ export function operationTitle(op: Operation): string {
   return NAMES[op.kind].title;
 }
 
-function progress(op: Operation): string | null {
-  return op.step !== null && op.total !== null ? `${op.step} of ${op.total}` : null;
-}
-
 /** `rebasing 2/4` (Branches), `rebasing` when `short` (Review's narrower group line). */
 export function operationPill(op: Operation, short = false): string {
   const p = !short && op.step !== null && op.total !== null ? ` ${op.step}/${op.total}` : '';
   return `${NAMES[op.kind].pill}${p}`;
 }
 
-/** The pill's tooltip: `Rebasing on main · 2 of 4`, `Merging origin/feat`. */
+/** Where it paused: `commit 2 of 4`, else the commit. */
+function pausedAt(op: Operation): string | null {
+  if (op.step !== null && op.total !== null) return `commit ${op.step} of ${op.total}`;
+  return op.commit;
+}
+
+/** What is in progress, in words: `Rebasing onto main`, `Merging origin/feat`, `Cherry-picking
+ * abc1234`. */
+function doing(op: Operation): string {
+  switch (op.kind) {
+    case 'rebase':
+      return op.onto ? `Rebasing onto ${op.onto}` : 'Rebasing';
+    case 'merge':
+      return op.other ? `Merging ${op.other}` : 'Merging';
+    case 'cherry_pick':
+      return op.commit ? `Cherry-picking ${op.commit}` : 'Cherry-picking';
+    case 'revert':
+      return op.commit ? `Reverting ${op.commit}` : 'Reverting';
+  }
+}
+
+/** The pill's tooltip (and the Abort dialog's row): `Rebasing onto main, paused at commit 2 of 4`. */
 export function operationTooltip(op: Operation): string {
-  const name = NAMES[op.kind].pill;
-  const head = name.charAt(0).toUpperCase() + name.slice(1);
-  if (op.kind === 'rebase') return [op.onto ? `${head} on ${op.onto}` : head, progress(op)].filter(Boolean).join(' · ');
-  return op.other ? `${head} ${op.other}` : head;
+  const at = op.kind === 'rebase' ? pausedAt(op) : null;
+  return at ? `${doing(op)}, paused at ${at}` : doing(op);
+}
+
+/** The conflicts pill's tooltip: which files still have conflicts. */
+export function conflictsTooltip(e: EntrySummary): string {
+  const files = e.operation?.unresolved ?? [];
+  return files.length > 0 ? `Conflicts in ${files.join(', ')}` : 'Merge conflicts in the working tree';
 }
 
 /** `repo / branch` (the short SHA when detached). */
@@ -43,41 +64,54 @@ export function entryLabel(e: EntrySummary): string {
   return `${e.repoName} / ${e.branch ?? e.shortSha ?? ''}`;
 }
 
-/** The banner's parts: what is in progress (names apart, shown in mono) and how it stands. */
-export function operationBanner(e: EntrySummary, op: Operation): { parts: { text: string; name?: boolean }[]; tone: 'danger' | 'warning' } {
-  const who = { text: entryLabel(e), name: true };
-  const parts: { text: string; name?: boolean }[] = [];
+/** A piece of the banner's sentence: words, a ref or SHA (mono), or a commit (mono SHA, subject). */
+export type BannerPart = { text: string } | { ref: string } | { sha: string; subject: string | null };
+
+/** Review's banner (T2) below the entry's names: what paused where, the files that still have
+ * conflicts (links to them), and what to do next. */
+export function operationBanner(
+  e: EntrySummary,
+  op: Operation,
+): { tone: 'danger' | 'warning'; what: BannerPart[]; files: string[]; next: string } {
+  const what: BannerPart[] = [];
+  const commit: BannerPart | null = op.commit ? { sha: op.commit, subject: op.subject } : null;
   switch (op.kind) {
-    case 'rebase':
-      parts.push({ text: 'Rebasing ' }, who);
-      if (op.onto) parts.push({ text: ' on ' }, { text: op.onto, name: true });
+    case 'rebase': {
+      const step = op.step !== null && op.total !== null;
+      what.push({ text: 'Rebasing onto ' }, op.onto ? { ref: op.onto } : { text: 'its base' });
+      what.push({ text: step || commit ? ' paused at ' : ' paused' });
+      if (step) what.push({ text: `commit ${op.step} of ${op.total}${commit ? ', ' : ''}` });
+      if (commit) what.push(commit);
       break;
+    }
     case 'merge':
-      parts.push({ text: 'Merging ' });
-      if (op.other) parts.push({ text: op.other, name: true }, { text: ' into ' });
-      parts.push(who);
+      what.push({ text: 'Merging ' }, op.other ? { ref: op.other } : { text: 'a branch' }, { text: ' into this branch paused' });
       break;
     case 'cherry_pick':
-      parts.push({ text: 'Cherry-picking ' });
-      if (op.other) parts.push({ text: op.other, name: true }, { text: ' onto ' });
-      parts.push(who);
+      what.push({ text: 'Cherry-picking ' }, commit ?? { text: 'a commit' }, { text: ' paused' });
       break;
     case 'revert':
-      parts.push({ text: 'Reverting ' });
-      if (op.other) parts.push({ text: op.other, name: true }, { text: ' in ' });
-      parts.push(who);
+      what.push({ text: 'Reverting ' }, commit ?? { text: 'a commit' }, { text: ' paused' });
       break;
   }
-  const p = progress(op);
-  if (p) parts.push({ text: ` · ${p}` });
-  if (op.unresolved > 0) parts.push({ text: ` · ${plural(op.unresolved, 'conflict', 'conflicts')}` });
-  else if (e.conflicts > 0) parts.push({ text: ' · conflicts resolved' });
-  return { parts, tone: op.unresolved > 0 ? 'danger' : 'warning' };
+  what.push({ text: '.' });
+  if (op.unresolved.length > 0) {
+    const them = op.unresolved.length === 1 ? 'it' : 'them';
+    return { tone: 'danger', what, files: op.unresolved, next: `Fix ${them} in your editor, then Continue.` };
+  }
+  const resolved = e.conflicts > 0 ? 'Conflicts resolved. ' : '';
+  let next: string;
+  if (op.kind === 'merge') next = 'Continue commits the merge.';
+  else if (op.kind !== 'rebase') next = 'Continue commits it.';
+  else if (op.step === null || op.total === null) next = 'Continue goes on with the rebase.';
+  else if (op.step >= op.total) next = 'Continue commits it and finishes the rebase.';
+  else next = `Continue commits it and applies the remaining ${plural(op.total - op.step, 'commit', 'commits')}.`;
+  return { tone: 'warning', what, files: [], next: `${resolved}${next}` };
 }
 
 /** Why Continue cannot run now, or null. */
 export function continueBlocked(op: Operation): string | null {
-  return op.unresolved > 0 ? 'Resolve the conflicts first' : null;
+  return op.unresolved.length > 0 ? 'Fix the conflicts first' : null;
 }
 
 /** The git action running in the entry's repository, if any (one at a time per repository). */
@@ -93,12 +127,11 @@ function refOf(e: EntrySummary): EntryRef {
 
 export function continueOperation(e: EntrySummary, op: Operation): Promise<void> {
   const branch = e.branch ?? e.shortSha ?? '';
-  const other = op.other ? `${op.other} ` : '';
   const done = {
-    rebase: `Rebased ${branch}${op.onto ? ` on ${op.onto}` : ''}`,
-    merge: `Merged ${other}into ${branch}`,
-    cherry_pick: `Cherry-picked ${other}onto ${branch}`,
-    revert: `Reverted ${other}in ${branch}`,
+    rebase: `Rebased ${branch}${op.onto ? ` onto ${op.onto}` : ''}`,
+    merge: `Merged ${op.other ? `${op.other} ` : ''}into ${branch}`,
+    cherry_pick: `Cherry-picked ${op.commit ? `${op.commit} ` : ''}onto ${branch}`,
+    revert: `Reverted ${op.commit ? `${op.commit} ` : ''}on ${branch}`,
   }[op.kind];
   // A next commit that conflicts too ends the run with an error: git says so in the output.
   return startGitAction(`Continue ${operationTitle(op)}`, () => gitOperation(refOf(e), false), { openOnFail: true, done });
@@ -106,7 +139,7 @@ export function continueOperation(e: EntrySummary, op: Operation): Promise<void>
 
 export function abortOperation(e: EntrySummary, op: Operation): Promise<void> {
   const branch = e.branch ?? e.shortSha ?? '';
-  const done = op.kind === 'rebase' ? `Aborted the rebase of ${branch}` : `Aborted the ${NAMES[op.kind].verb} in ${branch}`;
+  const done = `Aborted the ${NAMES[op.kind].verb} of ${branch}`;
   return startGitAction(`Abort ${operationTitle(op)}`, () => gitOperation(refOf(e), true), { openOnFail: true, done });
 }
 

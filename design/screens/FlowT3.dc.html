@@ -23,7 +23,7 @@ button,input,textarea{font-family:inherit}
 </div>
 <div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
 <div style="position: relative; margin-top: 180px">
-<dc-import name="ConfirmModal" theme="none" width="{{460}}" title="Abort the rebase?" context="{{context}}" note="The branch goes back to d81f03a. Resolved conflicts are lost." dont-ask="{{true}}" buttons="{{buttons}}" hint-size="460px,280px"></dc-import>
+<dc-import name="ConfirmModal" theme="none" width="{{460}}" title="Abort the rebase?" context="{{context}}" note="session-token-refresh goes back to d81f03a, as before the rebase. Conflict fixes made so far are lost." dont-ask="{{true}}" buttons="{{buttons}}" hint-size="460px,280px"></dc-import>
 </div>
 </div>
 </x-dc>
@@ -37,7 +37,7 @@ class Component extends DCLogic {
     // "Aborted the rebase of session-token-refresh".
     var t = this.props.theme || 'dark';
     return { themeClass: 'theme-' + t, themeName: t,
-      context: [{ icon: 'branch', text: 'web-app / session-token-refresh' }, { icon: 'rebase', text: 'on main · stopped at 2 of 4' }],
+      context: [{ icon: 'branch', text: 'web-app / session-token-refresh' }, { icon: 'rebase', text: 'Rebasing onto main, paused at commit 2 of 4' }],
       buttons: [{ label: 'Cancel' }, { label: 'Abort Rebase', variant: 'danger' }] };
   }
 }
