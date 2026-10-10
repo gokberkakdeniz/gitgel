@@ -274,7 +274,7 @@ export function History({ repoId, rev, backLabel }: Props) {
   );
 
   const rows = useMemo(
-    () => historyRows(commits, { wip, base, ahead: data?.ahead ?? null, mergeBase: data?.mergeBase ?? null }),
+    () => historyRows(commits, { wip, base, ahead: data?.ahead ?? null }),
     [commits, wip, base, data],
   );
   // The rows ↑ / ↓ step through, top to bottom: Uncommitted, then the commits. The stashes, in
@@ -592,7 +592,6 @@ export function History({ repoId, rev, backLabel }: Props) {
                 key={rowKey(r)}
                 row={r}
                 current={current}
-                base={base}
                 wipCount={entry?.uncommitted ?? 0}
               wipConflicts={entry?.conflicts ?? 0}
                 wipAge={entry?.changedAt ?? null}
@@ -762,7 +761,6 @@ function rowKey(r: HistoryRow): string {
 function ListRow({
   row,
   current,
-  base,
   wipCount,
   wipConflicts,
   wipAge,
@@ -780,7 +778,6 @@ function ListRow({
 }: {
   row: HistoryRow;
   current: string | null;
-  base: string | null;
   wipCount: number;
   wipConflicts: number;
   wipAge: number | null;
@@ -849,13 +846,9 @@ function ListRow({
         <div className={styles.baseLine}>
           <div className={styles.baseRow}>
             <span className={styles.baseRule} />
-            <span className={styles.baseLabel}>
-              base {row.base}
-              {row.mergeBase ? ` · ${row.mergeBase.slice(0, 7)}` : ''}
-            </span>
+            <span className={styles.baseLabel}>base {row.base}</span>
             <span className={styles.baseRule} />
           </div>
-          <span className={styles.baseSub}>Below: already in {base}</span>
         </div>
       );
     case 'wip': {

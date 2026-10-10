@@ -4,7 +4,7 @@ import type { HistoryCommit } from '../../lib/types';
 export type HistoryRow =
   | { kind: 'wip' }
   | { kind: 'day'; label: string }
-  | { kind: 'base'; base: string; mergeBase: string | null }
+  | { kind: 'base'; base: string }
   | { kind: 'commit'; commit: HistoryCommit };
 
 /**
@@ -14,7 +14,7 @@ export type HistoryRow =
  */
 export function historyRows(
   commits: HistoryCommit[],
-  opts: { wip: boolean; base: string | null; ahead: number | null; mergeBase: string | null; now?: Date },
+  opts: { wip: boolean; base: string | null; ahead: number | null; now?: Date },
 ): HistoryRow[] {
   const now = opts.now ?? new Date();
   const rows: HistoryRow[] = opts.wip ? [{ kind: 'wip' }] : [];
@@ -22,7 +22,7 @@ export function historyRows(
   let baseShown = !opts.base || !opts.ahead;
   for (const c of commits) {
     if (!baseShown && c.inBase) {
-      rows.push({ kind: 'base', base: opts.base!, mergeBase: opts.mergeBase });
+      rows.push({ kind: 'base', base: opts.base! });
       baseShown = true;
     }
     const label = dayLabel(c.committedAt, now);

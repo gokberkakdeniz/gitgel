@@ -270,12 +270,6 @@
   white-space: nowrap;
 }
 
-.baseSub {
-  text-align: center;
-  font-size: 11px;
-  color: var(--text-faint);
-}
-
 /* Commit header */
 
 .head {

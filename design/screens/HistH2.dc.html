@@ -54,7 +54,6 @@ button,input,textarea{font-family:inherit}
 <sc-if value="{{it.isBase}}" hint-placeholder-val="{{false}}">
 <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 6px">
 <div style="display: flex; align-items: center; gap: 8px"><span style="flex-grow: 1; height: 1px; background: var(--border-strong)"></span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.label}}</span><span style="flex-grow: 1; height: 1px; background: var(--border-strong)"></span></div>
-<span style="text-align: center; font-size: 11px; color: var(--text-faint)">{{it.sub}}</span>
 </div>
 </sc-if>
 <sc-if value="{{it.isWip}}" hint-placeholder-val="{{false}}">
@@ -194,7 +193,7 @@ class Component extends DCLogic {
           commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m'),
           commit('b41f9e3', 'Add refresh token rotation flag', 'Can Öztürk', '3h'),
           day('Yesterday'), commit('2e7c1d0', 'Scaffold token refresh service', 'Can Öztürk', '1d'),
-          { isBase: true, label: 'base main · d81f03a', sub: 'Below: already in main' },
+          { isBase: true, label: 'base main' },
           commit('d81f03a', 'Split auth middleware into guards', 'Melis Kaya', '3d', { shared: true }),
           commit('e1d4a77', 'Add audit log for admin sign-ins', 'Deniz Arslan', '3d', { shared: true }),
           commit('6d0a913', 'Add refresh token family id', 'Melis Kaya', '4d', { shared: true })],

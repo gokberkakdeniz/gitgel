@@ -2722,8 +2722,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
     below the base line: subject `text.muted`, row opacity 0.7.
   - **Base line** (`HistH4`): when `ahead` > 0, after the last commit not in the base: a 1px
-    `border.strong` rule on both sides of mono 11 muted `base <base> · <short merge-base>`, and
-    under it 11px `text.faint` `Below: already in <base>`.
+    `border.strong` rule on both sides of mono 11 muted `base <base>`.
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
     file shown on `bg.hover`).
   - Empty: "No commits"; while searching "No commits match “<query>”" with "Clear search"; a rev

@@ -49,7 +49,7 @@ describe('historyRows', () => {
   it('puts Uncommitted first and a label before each day', () => {
     const rows = historyRows(
       [commit('a', at(2026, 9, 4, 11)), commit('b', at(2026, 9, 4, 9)), commit('c', at(2026, 9, 3))],
-      { wip: true, base: null, ahead: null, mergeBase: null, now },
+      { wip: true, base: null, ahead: null, now },
     );
     expect(rows.map((r) => (r.kind === 'commit' ? r.commit.subject : r.kind === 'day' ? r.label : r.kind))).toEqual([
       'wip',
@@ -64,7 +64,7 @@ describe('historyRows', () => {
   it('draws the base line before the first commit already in the base', () => {
     const rows = historyRows(
       [commit('mine', at(2026, 9, 4, 11)), commit('shared', at(2026, 9, 4, 9), true)],
-      { wip: false, base: 'main', ahead: 1, mergeBase: 'abc', now },
+      { wip: false, base: 'main', ahead: 1, now },
     );
     expect(rows.map((r) => r.kind)).toEqual(['day', 'commit', 'base', 'commit']);
   });
@@ -74,7 +74,6 @@ describe('historyRows', () => {
       wip: false,
       base: 'origin/main',
       ahead: 0,
-      mergeBase: 'abc',
       now,
     });
     expect(rows.some((r) => r.kind === 'base')).toBe(false);

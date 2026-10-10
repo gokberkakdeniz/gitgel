@@ -55,7 +55,9 @@ button,input,textarea{font-family:inherit}
 <sc-if value="{{it.isLine}}" hint-placeholder-val="{{false}}">
 <div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 6px">
 <div style="display: flex; align-items: center; gap: 8px"><span style="{{it.ruleStyle}}"></span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.label}}</span><span style="{{it.ruleStyle}}"></span></div>
+<sc-if value="{{it.sub}}" hint-placeholder-val="{{false}}">
 <span style="text-align: center; font-size: 11px; color: var(--text-faint)">{{it.sub}}</span>
+</sc-if>
 </div>
 </sc-if>
 <sc-if value="{{it.isWip}}" hint-placeholder-val="{{false}}">
@@ -247,7 +249,7 @@ class Component extends DCLogic {
     var day = function (label) { return { isDay: true, label: label }; };
     var rule = function (dashed) { return 'flex-grow: 1; height: 0; border-top: 1px ' + (dashed ? 'dashed' : 'solid') + ' var(--border-strong)'; };
     var upstream = { isLine: true, label: 'origin/session-token-refresh · b41f9e3', sub: 'Above: 2 not pushed', ruleStyle: rule(true) };
-    var base = { isLine: true, label: 'base main · d81f03a', sub: 'Below: already in main', ruleStyle: rule(false) };
+    var base = { isLine: true, label: 'base main', ruleStyle: rule(false) };
     var line = function (kind, n, text) {
       var bg = kind === 'pad' ? 'background: repeating-linear-gradient(135deg, var(--bg-band) 0 4px, var(--bg-main) 4px 8px)'
         : kind === 'del' ? 'background: rgba(var(--danger-rgb), 0.15)' : kind === 'add' ? 'background: rgba(var(--success-rgb), 0.15)' : '';
