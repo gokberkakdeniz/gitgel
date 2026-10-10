@@ -1,0 +1,34 @@
+/* Review's banner for an operation in progress (T2): Banner's look, with Abort and Continue. */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 6px 12px 6px 20px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.danger {
+  color: var(--danger-text);
+  background: rgba(var(--danger-rgb), 0.12);
+}
+
+.warning {
+  color: var(--warning-text);
+  background: rgba(var(--warning-rgb), 0.12);
+}
+
+.text {
+  flex-grow: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}

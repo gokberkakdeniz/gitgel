@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use git2::Repository;
 
 use crate::error::AppError;
+use crate::git::operation;
 use crate::git::pool::RepoPool;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,8 +15,9 @@ pub struct WorktreeInfo {
     pub path: PathBuf,
     /// Linked worktree name (`.git/worktrees/<name>`); `None` for the main worktree.
     pub name: Option<String>,
+    /// HEAD's commit (during a rebase, the commit it stopped at, not the branch's tip).
     pub head: String,
-    /// `None`: detached HEAD.
+    /// `None`: detached HEAD, unless a rebase of a branch stopped there (that branch).
     pub branch: Option<String>,
 }
 
@@ -73,7 +75,8 @@ fn head_of(repo: &Repository) -> Result<Option<(String, Option<String>)>, AppErr
         return Ok(None);
     };
     let branch = if repo.head_detached()? {
-        None
+        // A stopped rebase detaches HEAD; the worktree still belongs to the branch it rebases.
+        operation::read(repo).and_then(|op| op.branch)
     } else {
         head.name()
             .ok()

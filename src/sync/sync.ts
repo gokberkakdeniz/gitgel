@@ -2,7 +2,8 @@
 // its remote. Each runs as a git action (SPEC §15 "Sync").
 import { gitFetch, gitPull, gitPush, gitRebaseOnBase } from '../lib/ipc';
 import { plural } from '../lib/format';
-import type { EntryRef, Upstream } from '../lib/types';
+import type { EntryRef, Operation, Upstream } from '../lib/types';
+import { operationTitle } from './operation';
 import { startGitAction } from '../scripts/runs';
 
 export const SYNC_ACTIONS = ['git:fetch', 'git:pull', 'git:push'];
@@ -14,6 +15,8 @@ export interface SyncTarget {
   branch: string | null;
   worktreePath: string | null;
   upstream: Upstream | null;
+  /** A rebase or merge stopped in its worktree: Pull and Push wait for it. */
+  operation?: Operation | null;
 }
 
 /** What each action can do now, and why not (a tooltip) when it cannot. */
@@ -32,6 +35,8 @@ export function syncState(t: SyncTarget): SyncState {
   else if (u.behind === 0) pull = 'Nothing to pull';
   else if (!t.worktreePath) pull = 'Not checked out';
   let push: string | null = null;
+  const busy = t.operation ? `${operationTitle(t.operation)} in progress` : null;
+  if (busy && u) return { pull: busy, push: busy, diverged };
   if (!u) push = 'No remote';
   else if (u.behind > 0) push = `Behind ${u.remote}, pull first`;
   else if (u.ahead === 0) push = 'Nothing to push';

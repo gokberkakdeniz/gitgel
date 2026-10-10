@@ -22,6 +22,7 @@ const entry = (over: Partial<EntrySummary> = {}): EntrySummary => ({
   lastCommitAt: 0,
   changedAt: null,
   upstream: null,
+  operation: null,
   state: 'ok',
   error: null,
   ...over,

@@ -39,6 +39,7 @@ import { PageMenu } from '../../components/PageMenu';
 import { Stepper } from '../../components/Stepper';
 import { rescanAll } from '../../lib/events';
 import { StashBar } from '../../stash/StashBar';
+import { OperationBanner, OperationPill } from '../../sync/OperationUi';
 import { SyncItems } from '../../sync/SyncButtons';
 import { upstreamLabel, upstreamTitle } from '../../sync/sync';
 import { next, prev } from '../../monaco/changeNav';
@@ -488,6 +489,8 @@ export function Review({ target, backLabel, focusKey, keepSidebar }: Props) {
         </PageMenu>
         {stashAction.dialog}
       </ReviewHeader>
+      {!stash &&
+        groups.map((g) => g.entry.operation && <OperationBanner key={g.entry.key} entry={g.entry} op={g.entry.operation} />)}
       {conflictBanner && !stash && <Banner tone="danger">{conflictBanner}</Banner>}
       {baseSaved && <Banner tone="neutral">{baseSaved}</Banner>}
 
@@ -893,6 +896,7 @@ function FileGroup({
         </div>
         <div className={styles.groupLine2}>
           <span className={styles.branch}>{e.branch ?? e.shortSha}</span>
+          {e.operation && <OperationPill op={e.operation} short />}
           {e.conflicts > 0 && (
             <Pill tone="danger" size="sm" title="Merge conflicts in the working tree">
               {plural(e.conflicts, 'conflict', 'conflicts')}
@@ -903,7 +907,9 @@ function FileGroup({
               {shown.length} of {files.length}
             </span>
           ) : (
-            e.upstream && (
+            // Mid-rebase the pills take its place; it comes back when the operation ends.
+            e.upstream &&
+            !e.operation && (
               <span className={styles.upstream} title={upstreamTitle(e.upstream)}>
                 {upstreamLabel(e.upstream)}
               </span>
@@ -1149,9 +1155,10 @@ function EntryBar({
   );
 }
 
-/** Unmerged files (a merge, rebase or stash apply that conflicted), in every mode. */
+/** Unmerged files outside an operation in progress (a stash apply that conflicted), in every mode;
+ * a stopped rebase or merge has its own banner. */
 export function conflictsBanner(groups: ReviewGroup[]): string | null {
-  const hit = groups.filter((g) => g.entry.conflicts > 0);
+  const hit = groups.filter((g) => g.entry.conflicts > 0 && !g.entry.operation);
   const n = hit.reduce((s, g) => s + g.entry.conflicts, 0);
   if (n === 0) return null;
   const files = n === 1 ? '1 file has merge conflicts' : `${n} files have merge conflicts`;

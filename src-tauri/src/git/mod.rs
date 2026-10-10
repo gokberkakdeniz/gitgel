@@ -4,6 +4,7 @@
 pub mod diff;
 pub mod history;
 pub mod inspect;
+pub mod operation;
 pub mod pool;
 pub mod refs;
 pub mod stash;

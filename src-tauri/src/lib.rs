@@ -161,6 +161,7 @@ pub fn run() {
             commands::git_fetch,
             commands::git_pull,
             commands::git_rebase_on_base,
+            commands::git_operation,
             commands::git_commit,
             commands::git_discard,
             commands::get_staged_paths,

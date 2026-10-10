@@ -100,6 +100,8 @@ pub struct Prompts {
     pub discard_changes: bool,
     pub discard_stash: bool,
     pub delete_projects: bool,
+    /// Abort of a rebase, merge, cherry-pick or revert (T3).
+    pub abort_operation: bool,
 }
 
 impl Default for Prompts {
@@ -109,6 +111,7 @@ impl Default for Prompts {
             discard_changes: true,
             discard_stash: true,
             delete_projects: true,
+            abort_operation: true,
         }
     }
 }
@@ -440,6 +443,35 @@ pub struct EntrySummary {
     /// Where the branch is pushed to (W4a); `None` when detached, deleted or without a remote.
     #[serde(default)]
     pub upstream: Option<Upstream>,
+    /// A rebase, merge, cherry-pick or revert stopped in its worktree (SPEC §15 "Operations in
+    /// progress"); `None` when not checked out or nothing is in progress.
+    #[serde(default)]
+    pub operation: Option<Operation>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OperationKind {
+    Rebase,
+    Merge,
+    CherryPick,
+    Revert,
+}
+
+/// An operation git left half done in an entry's worktree, usually on conflicts.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Operation {
+    pub kind: OperationKind,
+    /// Rebase: what it rebases on (a branch whose tip it is, else the short SHA).
+    pub onto: Option<String>,
+    /// Merge: what is merged in; cherry-pick and revert: the commit's short SHA.
+    pub other: Option<String>,
+    /// Rebase: the commit it stopped at (1-based) of `total`.
+    pub step: Option<u32>,
+    pub total: Option<u32>,
+    /// Conflicted files that still have git's markers: Continue waits for 0.
+    pub unresolved: u32,
 }
 
 /// A branch against its remote (`refs::tracking`), as of the last fetch.

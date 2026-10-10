@@ -10,8 +10,8 @@ use serde::Deserialize;
 use crate::config;
 use crate::config::new_id;
 use crate::error::AppError;
-use crate::git::{refs, stash, worktrees};
-use crate::model::{entry_key, EntryRef, ScriptRun, UpdateReason};
+use crate::git::{operation, refs, stash, worktrees};
+use crate::model::{entry_key, EntryRef, OperationKind, ScriptRun, UpdateReason};
 use crate::scan;
 use crate::state::{lock, AppState};
 
@@ -787,6 +787,76 @@ pub fn rebase_on_base(state: &AppState, entry: EntryRef) -> Result<ScriptRun, Ap
     )
 }
 
+/// Continue or abort the operation stopped in the entry's worktree (SPEC §15 "Operations in
+/// progress"): `git rebase --continue` / `--abort` (merge, cherry-pick, revert alike). Continue
+/// stages the conflicted files first and keeps git's message (`GIT_EDITOR=true`); it is refused
+/// while one of them still has git's markers.
+pub fn operation(state: &AppState, entry: EntryRef, abort: bool) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let (op, unmerged) = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        (operation::read(&wt), operation::unmerged(&wt)?)
+    };
+    let op = op.ok_or_else(|| {
+        AppError::Invalid(format!("Nothing is in progress in {}.", repo.label(tree)))
+    })?;
+    if !abort && !operation::with_markers(&tree.path, &unmerged).is_empty() {
+        return Err(AppError::Invalid("Resolve the conflicts first.".into()));
+    }
+    let (verb, title) = match op.kind {
+        OperationKind::Rebase => ("rebase", "Rebase"),
+        OperationKind::Merge => ("merge", "Merge"),
+        OperationKind::CherryPick => ("cherry-pick", "Cherry-Pick"),
+        OperationKind::Revert => ("revert", "Revert"),
+    };
+    let stage = if abort { 0 } else { unmerged.len() };
+    let mut env = vec![
+        (
+            "GITGEL_FOLDER".to_string(),
+            tree.path.to_string_lossy().into_owned(),
+        ),
+        // Conflicted paths are file names, never pathspec magic.
+        ("GIT_LITERAL_PATHSPECS".to_string(), "1".to_string()),
+    ];
+    for (i, p) in unmerged.iter().take(stage).enumerate() {
+        env.push((format!("GITGEL_PATH_{}", i + 1), p.clone()));
+    }
+    if !abort {
+        // The commit keeps the message git prepared; no editor opens in the pty.
+        env.push(("GIT_EDITOR".into(), "true".into()));
+    }
+    let action = if abort { "abort" } else { "continue" };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}{action}"),
+            name: format!("{} {title}", if abort { "Abort" } else { "Continue" }),
+            icon: "rebase".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                Some(&tree.path.to_string_lossy()),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: operation_command(verb, abort, stage),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
 /// Where a base ref lives on a remote, as `(remote, branch on the remote)`: a local branch's
 /// upstream when the remote has it, or a remote-tracking ref split at its remote (`origin/HEAD`
 /// followed to the branch it points at). `None` for a base only here.
@@ -896,6 +966,24 @@ pub(super) fn commit_command(shape: CommitShape) -> String {
     steps.join(" && ")
 }
 
+/// `git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" … && git -C "$GITGEL_FOLDER" rebase
+/// --continue` (no `add` without paths), or `… rebase --abort`: only fixed text and quoted
+/// variables.
+pub(super) fn operation_command(verb: &str, abort: bool, paths: usize) -> String {
+    let git = "git -C \"$GITGEL_FOLDER\"";
+    if abort {
+        return format!("{git} {verb} --abort");
+    }
+    let run = format!("{git} {verb} --continue");
+    if paths == 0 {
+        return run;
+    }
+    let list: String = (1..=paths)
+        .map(|j| format!(" \"$GITGEL_PATH_{j}\""))
+        .collect();
+    format!("{git} add -A --{list} && {run}")
+}
+
 /// `git -C "$GITGEL_FOLDER_1" restore --source=HEAD --staged --worktree -- "$GITGEL_PATH_1_1" … &&
 /// git -C "$GITGEL_FOLDER_1" clean -f -q -- "$GITGEL_CLEAN_1_1" … && git -C "$GITGEL_FOLDER_2" …`:
 /// only fixed text and quoted variables.
@@ -956,6 +1044,22 @@ mod tests {
         assert_eq!(base_upstream(&t.repo, "origin/HEAD"), main);
         // Not on the remote.
         assert_eq!(base_upstream(&t.repo, "dev"), None);
+    }
+
+    #[test]
+    fn operation_commands_hold_no_values() {
+        assert_eq!(
+            operation_command("rebase", true, 0),
+            r#"git -C "$GITGEL_FOLDER" rebase --abort"#
+        );
+        assert_eq!(
+            operation_command("merge", false, 0),
+            r#"git -C "$GITGEL_FOLDER" merge --continue"#
+        );
+        assert_eq!(
+            operation_command("rebase", false, 2),
+            r#"git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" "$GITGEL_PATH_2" && git -C "$GITGEL_FOLDER" rebase --continue"#
+        );
     }
 
     #[test]

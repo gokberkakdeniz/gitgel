@@ -5,7 +5,7 @@ use std::path::Path;
 use crate::cache::CommittedDetail;
 use crate::config;
 use crate::error::AppError;
-use crate::git::{diff, history, refs, stash, Repo};
+use crate::git::{diff, history, refs, stash, worktrees, Repo};
 use crate::model::{
     CommitChanges, Config, EntryState, EntrySummary, FilesByMode, RepoConfig, ReviewData,
     ReviewGroup, ReviewTarget, StashChanges,
@@ -225,8 +225,10 @@ fn group(
         Some(wt) => {
             let wt = Path::new(wt);
             let read = |wt_repo: &Repo, t: &mut Timings| -> Result<_, AppError> {
+                // The cache follows the worktree's HEAD, which a stopped rebase moves.
+                let head = worktrees::head_sha(wt_repo)?.unwrap_or_else(|| tip.clone());
                 let uncommitted = t.time("uncommitted", || {
-                    scan::cached_uncommitted(&state.cache, wt_repo, wt, &tip)
+                    scan::cached_uncommitted(&state.cache, wt_repo, wt, &head)
                 })?;
                 let all = match &merge_base {
                     Some(mb) => t.time("all", || {
@@ -234,7 +236,7 @@ fn group(
                             &state.cache,
                             wt_repo,
                             wt,
-                            &tip,
+                            &head,
                             mb,
                             &detail.files,
                             &uncommitted,

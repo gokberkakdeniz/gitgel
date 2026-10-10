@@ -247,6 +247,27 @@ impl TestRepo {
         index.write().unwrap();
     }
 
+    /// What `git rebase` leaves when it stops in the worktree at `worktree_dir`: HEAD detached at
+    /// `at`, and `rebase-merge/` naming the branch (`None`: a detached HEAD) and the progress.
+    pub fn fake_rebase(
+        &self,
+        worktree_dir: &Path,
+        branch: Option<&str>,
+        at: Oid,
+        step: u32,
+        total: u32,
+    ) {
+        let repo = Repository::open(worktree_dir).unwrap();
+        let dir = repo.path().join("rebase-merge");
+        std::fs::create_dir_all(&dir).unwrap();
+        let head = branch.map_or("detached HEAD".to_string(), |b| format!("refs/heads/{b}"));
+        std::fs::write(dir.join("head-name"), format!("{head}\n")).unwrap();
+        std::fs::write(dir.join("onto"), format!("{at}\n")).unwrap();
+        std::fs::write(dir.join("msgnum"), format!("{step}\n")).unwrap();
+        std::fs::write(dir.join("end"), format!("{total}\n")).unwrap();
+        repo.set_head_detached(at).unwrap();
+    }
+
     /// `git stash push -m <msg>` in the main working directory (`-u` with `untracked`).
     pub fn stash(&self, untracked: bool, msg: &str) -> Oid {
         let mut repo = Repository::open(&self.workdir).unwrap();

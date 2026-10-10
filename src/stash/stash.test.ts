@@ -24,6 +24,7 @@ const entry = (repoName: string, branch: string | null, worktreePath: string | n
   lastCommitAt: 0,
   changedAt: null,
   upstream: null,
+  operation: null,
   state: 'ok',
   error: null,
 });

@@ -48,6 +48,7 @@ export interface Prompts {
   discardChanges: boolean; // off after "Do not show this message again" in Confirm Discard Changes
   discardStash: boolean;
   deleteProjects: boolean;
+  abortOperation: boolean; // Abort of a rebase, merge, cherry-pick or revert (T3)
 }
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
@@ -157,6 +158,17 @@ export interface EntrySummary {
   state: EntryState;
   error: string | null; // detail for git_error / base_missing
   upstream: Upstream | null; // where it is pushed to; null when detached, deleted or without a remote
+  operation: Operation | null; // a rebase, merge, cherry-pick or revert stopped in its worktree
+}
+export type OperationKind = 'rebase' | 'merge' | 'cherry_pick' | 'revert';
+/** An operation git left half done in an entry's worktree (SPEC §15 "Operations in progress"). */
+export interface Operation {
+  kind: OperationKind;
+  onto: string | null; // rebase: what it rebases on (a branch at that commit, else the short SHA)
+  other: string | null; // merge: what is merged in; cherry-pick, revert: the commit's short SHA
+  step: number | null; // rebase: the commit it stopped at (1-based) of `total`
+  total: number | null;
+  unresolved: number; // conflicted files that still have git's markers: Continue waits for 0
 }
 /** A branch against its remote, as of the last fetch (W4a). */
 export interface Upstream {

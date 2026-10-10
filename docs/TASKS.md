@@ -569,6 +569,7 @@ rather than as a task is listed the same way, marked "(on request)".
   Delete Project…, Import…, Export…, Locate…), sentence case for hints/tooltips/descriptions;
   SPEC §0 updated — 2026-10-09
 - [x] (on request) Settings › Scripts drops its two hint lines, the script editor its Name, Command and Inputs hints; Show when gets a "CEL Syntax" link to the CEL spec and shows "Matches N branches" with a ? listing them; Open the output panel and Ask before running are plain checkboxes — 2026-10-09
+- [x] (on request) Operations in progress (flow T): a rebase / merge / cherry-pick / revert stopped in a worktree, from Gitgel or not, stays on its branch's row with a `rebasing 2/4` pill; Review gets a banner per entry with Abort (asks first, Settings › Prompts) and Continue (stages the resolved files; disabled while markers remain); the branch menus swap Sync for Continue / Abort; the watcher follows MERGE_HEAD and rebase-merge/ — 2026-10-10
 
 ---
 

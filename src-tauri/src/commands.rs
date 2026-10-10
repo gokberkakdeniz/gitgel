@@ -617,6 +617,19 @@ pub async fn git_rebase_on_base(
     .await
 }
 
+/// Continue or abort the rebase, merge, cherry-pick or revert stopped in the entry's worktree.
+#[tauri::command]
+pub async fn git_operation(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    abort: bool,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::operation(state, entry, abort)
+    })
+    .await
+}
+
 /// Commit (W1a): the checked files of the entry's worktree, with the message.
 #[tauri::command]
 pub async fn git_commit(

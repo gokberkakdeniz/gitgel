@@ -3,6 +3,7 @@ import { formatAge } from '../lib/format';
 import { MenuDivider, MenuItem } from '../components/Menu';
 import type { EntrySummary } from '../lib/types';
 import { useRuns } from '../scripts/runs';
+import { OperationItems } from './OperationUi';
 import styles from './SyncButtons.module.css';
 import { fetchRepo, forcePushBranch, pullBranch, pushBranch, rebaseOnBase, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
 
@@ -90,7 +91,7 @@ function SyncButton({
 
 /** The sync group of a branch's menus (Branches, Project, Review; W4a): Fetch, Pull and Push with
  * what each would move. Nothing for a detached HEAD, a branch without a remote, or one that is
- * gone. */
+ * gone; Continue and Abort while an operation is in progress. */
 export function SyncItems({
   entry,
   onDone,
@@ -103,6 +104,8 @@ export function SyncItems({
 }) {
   const running = useRunningSync(entry.repoId);
   const u = entry.upstream;
+  // While a rebase or merge is stopped there, its Continue and Abort take the group's place (T1).
+  if (entry.operation) return <OperationItems entry={entry} op={entry.operation} onDone={onDone} />;
   if (!entry.branch || !u || entry.state === 'repo_missing' || entry.state === 'branch_deleted') return null;
   const st = syncState(entry);
   const run = (action: () => Promise<void>) => {

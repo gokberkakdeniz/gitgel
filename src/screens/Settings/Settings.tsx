@@ -173,6 +173,7 @@ function Prompts({ config }: { config: Config }) {
     ['removeRepositories', 'Removing repositories'],
     ['discardChanges', 'Discarding changes'],
     ['discardStash', 'Dropping stashes'],
+    ['abortOperation', 'Aborting a rebase or merge'],
     ['deleteProjects', 'Deleting projects'],
   ];
   return (

@@ -167,6 +167,8 @@ export const gitFetch = (repoId: string) => invoke<ScriptRun>('git_fetch', { rep
 export const gitPull = (entry: EntryRef, rebase: boolean) => invoke<ScriptRun>('git_pull', { entry, rebase });
 export const gitRebaseOnBase = (entry: EntryRef) => invoke<ScriptRun>('git_rebase_on_base', { entry });
 export const gitPush = (entry: EntryRef, force = false) => invoke<ScriptRun>('git_push', { entry, force });
+/** Continue or abort the operation stopped in the entry's worktree. */
+export const gitOperation = (entry: EntryRef, abort: boolean) => invoke<ScriptRun>('git_operation', { entry, abort });
 
 /** Commit (W1a): the checked files of the entry's worktree, with the message. */
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });

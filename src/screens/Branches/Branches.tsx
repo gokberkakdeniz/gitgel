@@ -19,6 +19,7 @@ import {
 } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
 import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
+import { OperationPill } from '../../sync/OperationUi';
 import { SyncItems } from '../../sync/SyncButtons';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { askDrop } from '../../stash/actions';
@@ -762,6 +763,7 @@ function Row({
             {e.changedAt ? formatAge(e.changedAt) : e.lastCommitAt ? formatAge(e.lastCommitAt) : '—'}
           </span>
           <StateCell entry={e} onBase={(rect) => onPopover('base', rect)} />
+          {e.operation && <OperationPill op={e.operation} />}
           {e.conflicts > 0 && (
             <Pill tone="danger" size="sm" title="Merge conflicts in the working tree">
               {plural(e.conflicts, 'conflict', 'conflicts')}

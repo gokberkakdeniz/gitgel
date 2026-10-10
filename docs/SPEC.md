@@ -202,7 +202,8 @@ gitgel/
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
 │  │            # Discard Changes), picks.ts (⌘ / ⇧-click picking of Uncommitted's files)
 │  ├─ sync/     # §15 sync (W4a): sync.ts (what Fetch / Pull / Push can do, labels), SyncButtons
-│  │            # (History header buttons, SyncItems: the branch menus' group)
+│  │            # (History header buttons, SyncItems: the branch menus' group); operation.ts +
+│  │            # OperationUi (operations in progress: pill, banner, Continue / Abort, T3 dialog)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
@@ -222,7 +223,7 @@ gitgel/
       ├─ windows.rs               # About, Software Update, What's New windows (§7)
       ├─ ssh.rs                   # SSH passphrase into the Keychain; askpass mode (§15)
       ├─ scripts/   mod.rs  run.rs # the user's scripts: config, import/export; running, output, stop
-      │             git.rs        # git actions: stash push / apply / pop / drop, fetch / pull / push, commit, discard (§0, §15)
+      │             git.rs        # git actions: stash push / apply / pop / drop, fetch / pull / push, commit, discard, continue / abort (§0, §15)
       ├─ trash.rs                 # Discard's copies into the Trash (§15)
       ├─ error.rs  state.rs  model.rs  config.rs  cache.rs  timing.rs
       ├─ commands.rs              # every #[tauri::command] (thin wrappers)
@@ -236,6 +237,7 @@ gitgel/
       │  ├─ history.rs            # merge-base, ahead, revwalk, merged state, stack candidates,
       │  │                        # history pages and search (§16)
       │  ├─ stash.rs              # stash stack from the refs/stash reflog, a stash's changes
+      │  ├─ operation.rs          # a rebase / merge / cherry-pick / revert stopped in a worktree (§15)
       │  └─ testutil.rs           # #[cfg(test)] only: throwaway repos in a TempDir
       ├─ scan.rs                  # branch/worktree discovery, entry summaries, stored scan
       ├─ watch.rs                 # file watching, event classification, targeted recompute
@@ -590,9 +592,10 @@ Every active branch, whether or not it is in a project, and each repo's base bra
        middle: the start shrinks with "…" and the end (at most the last 16 characters, from after
        a `-`, `/`, `_` or `.`) always shows, so names that differ only at the end stay apart.
     2. A 15px mono 11 muted line: `base <base> · <diff> · <age>` (faint `·`; only the base is cut
-       with "…" when the line runs out of room), then the state pill, then a danger sm pill
-       `N conflicts` (`1 conflict`; tooltip "Merge conflicts in the working tree") when its
-       working tree has unmerged files.
+       with "…" when the line runs out of room), then the state pill, then a warning sm pill for
+       an operation in progress (`rebasing 2/4`, `merging`, …; §15 "Operations in progress",
+       T1), then a danger sm pill `N conflicts` (`1 conflict`; tooltip "Merge conflicts in the
+       working tree") when its working tree has unmerged files.
        - Diff: ahead · files · uncommitted as `↑4 / 9 / 3`, the ` / ` separators `text.faint`.
          Ahead carries ` ↓N` when the base has N commits the branch does not (it needs a
          rebase): `↑4 ↓2 / 9 / 3`. Uncommitted is 500 `accent.text` when above 0, faint
@@ -741,9 +744,11 @@ Layout:
     after a base change. While the header is hovered or keyboard-focused, or its menu is open,
     the totals give way to a 22×20 "⋮" button (`aria-label` "Branch options"; `bg.pressed` while
     open).
-  - Line 2 (indent 20): mono 12 branch (ellipsis), the conflicts pill, and on the right mono 11
+  - Line 2 (indent 20): mono 12 branch (ellipsis), the operation pill (`rebasing`, without the
+    progress; §15 "Operations in progress"), the conflicts pill, and on the right mono 11
     muted upstream state (§15 "Sync": `origin ↑2 ↓1`, `origin` when level, `not on origin · ↑3`;
-    tooltip with the counts), replaced by `n of m` while filtering.
+    tooltip with the counts; hidden while an operation is in progress), replaced by `n of m`
+    while filtering.
   - **Entry menu** (260px, right-aligned under "⋮"; right-clicking the header opens it at the
     pointer): "Change base" (sub `base <ref>`) opens the Base menu at the same anchor; then the Branches row menu without "Open
     review": "Copy branch name", "Open history" (back label "Back to Review"), the open items,
@@ -854,8 +859,10 @@ Layout:
   changes (binary, too large, rename only) shows "No line changes" ("Only whitespace changed"
   when whitespace is ignored), and ↑ ↓ go straight to the neighbouring file.
 - **Uncommitted mode:** the commit list is hidden.
+- **Operations in progress** (T2): in every mode (not while a stash is shown), one banner per
+  entry with an operation in progress, above the others; §15 "Operations in progress".
 - **Conflicts:** in every mode (not while a stash is shown), when an entry's working tree has
-  unmerged files, a danger banner above that one: `1 file has merge conflicts. Resolve it in your
+  unmerged files and no operation in progress (a stash apply), a danger banner above that one: `1 file has merge conflicts. Resolve it in your
   editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.` (`N files have
   merge conflicts in M entries. Resolve them …` for several); the group's line 2 has the same
   danger sm `N conflicts` pill as its Branches row (P7). The files are `C` in the
@@ -1055,7 +1062,7 @@ Layout:
 - **Prompts** (M6, `FlowM6`; GitHub Desktop's section and texts): serif 18px heading "Show a
   confirmation dialog before...", then one `Checkbox` per line, gap 12: "Removing repositories"
   (the Repositories ✕), "Discarding changes" (§15 "Discard"), "Dropping stashes" (Drop, P6),
-  "Deleting projects" (flow G). All on by default (`settings.prompts`); off, the action runs
+  "Deleting projects" (flow G), "Aborting a rebase or merge" (T3). All on by default (`settings.prompts`); off, the action runs
   without its dialog. Saved at once. Each of those dialogs has a `Checkbox` "Do not show this
   message again" above its buttons (`ConfirmModal`'s `dontAsk`; Confirm Discard Changes its own,
   §15); confirming with it checked turns its box here off (`src/lib/prompts.ts`).
@@ -1312,6 +1319,7 @@ export interface Prompts {       // "Show a Confirmation Dialog Before…"
   discardChanges: boolean;       // off after "Do not show this message again" (§15 "Discard")
   discardStash: boolean;         // Drop (P6)
   deleteProjects: boolean;       // flow G
+  abortOperation: boolean;       // Abort of a rebase or merge (T3)
 }
 export interface Config {
   version: 1;
@@ -1359,6 +1367,15 @@ export interface EntrySummary {
   state: EntryState;
   error: string | null;          // detail for git_error / base_missing
   upstream: Upstream | null;     // where it is pushed to (§15 "Sync"); null when detached, deleted or without a remote
+  operation: Operation | null;   // a rebase / merge / cherry-pick / revert stopped in its worktree (§15)
+}
+export interface Operation {     // §15 "Operations in progress"
+  kind: 'rebase' | 'merge' | 'cherry_pick' | 'revert';
+  onto: string | null;           // rebase: what it rebases on (a branch at that commit, else the short SHA)
+  other: string | null;          // merge: what is merged in; cherry-pick / revert: the commit's short SHA
+  step: number | null;           // rebase: the commit it stopped at (1-based) of `total`
+  total: number | null;
+  unresolved: number;            // conflicted files that still have git's markers
 }
 export interface Upstream {      // as of the last fetch
   remote: string;                // e.g. "origin"
@@ -1634,6 +1651,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
 | `git_push` | `entry: EntryRef, force: boolean` | `ScriptRun` |
+| `git_operation` | `entry: EntryRef, abort: boolean` | `ScriptRun` (§15 "Operations in progress") |
 
 Notes:
 
@@ -1743,7 +1761,8 @@ Notes:
 | Commit time | `find_commit(oid)?.time().seconds()` | committer time |
 | Tags | `tag_names(None)` | |
 | Worktrees | main: `workdir()` + `head()`; linked: `worktrees()` → `find_worktree(name)` → `validate()`, `path()` | `worktrees()` does not list the main one; failed `validate()` or missing folder = prunable, skip; unborn HEAD, skip |
-| Worktree HEAD | open the worktree path from the pool → `head_detached()`, `head()` | |
+| Worktree HEAD | open the worktree path from the pool → `head_detached()`, `head()` | detached by a stopped rebase of a branch (`rebase-merge/head-name`): the worktree belongs to that branch |
+| Operation in progress | on the worktree's repo: `state()`, then files in its git dir: `rebase-merge/` (`head-name`, `onto`, `msgnum`, `end`) or `rebase-apply/` (`next`, `last`), `MERGE_MSG` / `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`; unmerged paths from `index().conflicts()` | `git/operation.rs`; markers read from the working-tree files |
 | Merge-base | `merge_base(base, tip)` | `NotFound` = no common ancestor |
 | Ahead | `graph_ahead_behind(tip, base)?.0` | |
 | Commit list | `revwalk()`: `push(tip)`, `hide(base)`, `Sort::TOPOLOGICAL \| Sort::TIME`, first 200 | |
@@ -1839,6 +1858,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
   | `logs/refs/stash` | `Refs` (dropping a stash below the top only rewrites it) |
   | `index` | `Worktree` (main worktree) |
   | `worktrees/<name>/HEAD` | `Refs` |
+  | `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `rebase-merge/**`, `rebase-apply/**` (also under `worktrees/<name>/`) | `Refs` (an operation started, moved on or ended; a merge leaves HEAD as it is) |
   | `worktrees/<name>/index` | `Worktree` (that worktree) |
   | adding/removing `worktrees/<name>` | `Refs` (worktree list changed) |
   | anything else (`objects/`, other `logs/`, `*.lock`, `FETCH_HEAD`, …) | ignored |
@@ -1899,6 +1919,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 232–241) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
+| Operations in progress | `FlowT1`–`FlowT3.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two operation banners (danger with conflicts, warning once resolved; Abort / Continue) and the group pills in place of the upstream state, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`) |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
 | Discard | `HistH9`, `FlowD12.dc.html` | canvas page "Review & History": Hi8 (`HistH9` mounts `HistH6` with `selected`) History's Uncommitted with files picked, their menu (23–25, data 87–111; `count` two / one / all: the Uncommitted row's menu) and Confirm Discard Changes (26–49, data 112–116); D12 (`FlowD12` mounts `Diff` with `selected`) the same in a project review, the dialog's files under their entry (data 87–96) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
@@ -2440,7 +2461,9 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
 - **What each can do** (`syncState`): Pull needs the remote-tracking branch, commits behind it
   and a checkout (else disabled with "Not on origin" / "Nothing to pull" / "Not checked out");
   Push needs a remote, commits ahead and none behind (else "No remote" / "Behind origin, pull
-  first" / "Nothing to push"). A branch that is ahead and behind is **diverged**.
+  first" / "Nothing to push"). A branch that is ahead and behind is **diverged**. While an
+  operation is in progress in its worktree, both are disabled with "Rebase in progress" (Merge,
+  Cherry-Pick, Revert).
 - **History header** (`HistH4`), after the search field: one 32px group (`bg.elevated`, 1px `border`,
   radius 8, padding 2, gap 2) of 26px buttons (12px, 12px icon, radius 6): "Fetch" (`download`,
   `text.muted`, tooltip `Fetch <repo> from origin · last fetch <age> ago`), a 1px divider, "Pull" (`arrow-down`, mono 11
@@ -2455,7 +2478,8 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   the repo's default, is not itself or its own remote branch: the base branch's base is its
   upstream), "Push" (`arrow-up`, hint `↑N`), "Force push" (`arrow-up`; only when diverged). Disabled items carry the reason as tooltip ("A sync is running"
   while one runs; Push of a branch the remote lacks: `Not on origin yet`). No group for a detached HEAD, a branch without a remote, a deleted branch or a
-  missing repository.
+  missing repository. While an operation is in progress the group is its Continue / Abort
+  instead (§15 "Operations in progress"; also for a detached HEAD).
 - **Fetch**: `git fetch --all --prune` in the repository folder. Success toast `Fetched <repo>`.
 - **Pull**: `git pull [--rebase] "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<branch on the
   remote>`) in the worktree, so a branch without a configured upstream pulls too and git's own
@@ -2465,8 +2489,8 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   remote-tracking base, `origin/HEAD` followed to its branch): `git pull --rebase
   "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<base on the remote>`), so it rebases on the
   remote's latest, like oh-my-zsh's `gupom` for the default base; else `git rebase
-  "$GITGEL_BASE"`. Success toast `Rebased <branch> on <base>`; a conflict leaves the rebase to
-  the user (the failed run's output panel says so).
+  "$GITGEL_BASE"`. Success toast `Rebased <branch> on <base>`; a conflict stops the rebase (the
+  failed run's output panel says so) and §15 "Operations in progress" takes over.
 - **Push**: `git push [--set-upstream] "$GITGEL_REMOTE" "$GITGEL_REFSPEC"`
   (`refs/heads/<branch>:refs/heads/<branch on the remote>`), in the worktree when there is one
   (hooks see it), else the repository folder; `--set-upstream` only for a branch the remote does
@@ -2477,6 +2501,50 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
 - **Failures**: a sync that exits non-zero opens its output panel (N4) instead of the failed toast
   (git's message, or a prompt for a password or passphrase, is there). One that cannot start shows
   the usual `“<name>” could not start` toast.
+
+### Operations in progress
+
+A rebase, merge, cherry-pick or revert that git stopped in an entry's worktree, usually on
+conflicts, whoever started it (Gitgel's Pull or Rebase on `<base>`, a terminal, an editor). Read
+on every scan of the worktree (`git/operation.rs`, `EntrySummary.operation`); the watcher rescans
+when one starts, moves on or ends (§10 "Change watching").
+
+- **Which entry:** a stopped rebase detaches the worktree's HEAD at the commit it stopped at, but
+  `rebase-merge/head-name` names the branch: the worktree stays that branch's checkout (no
+  detached entry; the branch keeps its tip until the rebase ends). A rebase of a detached HEAD
+  stays a detached entry. The worktree's uncommitted files are against its own HEAD.
+- **Shown** (T1, T2): a warning sm pill after the state pill on the Branches row (`rebasing 2/4`,
+  `merging`, `cherry-picking`, `reverting`; tooltip `Rebasing on main · 2 of 4`, `Merging
+  origin/feat`) and in the Review group's line 2 (`rebasing`, in place of the upstream state),
+  next to the conflicts pill. `onto` is a branch or remote-tracking branch at that commit (the
+  entry's base first), else the short SHA; a merge's `other` is the name quoted in `MERGE_MSG`'s
+  first line, else `MERGE_HEAD`'s short SHA.
+- **Review banner** (T2), one per such entry, in place of the conflicts banner for it: 40px min,
+  padding 6px 12px 6px 20px, 12px, then 28px "Abort" (secondary) and "Continue" (primary). Text
+  `Rebasing <repo> / <branch> on <onto> · 2 of 4 · 1 conflict` (`Merging <other> into …`,
+  `Cherry-picking <sha> onto …`, `Reverting <sha> in …`; names mono 11). Danger while a
+  conflicted file still has a line starting `<<<<<<< ` or `>>>>>>> ` (`unresolved`), Continue then
+  disabled ("Resolve the conflicts first"); warning once none has, ending `· conflicts resolved`
+  when there were conflicts. While a git action runs in the repository both are disabled ("A git
+  action is running").
+- **Menus** (T1): the branch menus' Sync group becomes "Continue Rebase" (`arrow-right`,
+  disabled as Continue) and "Abort Rebase" (`undo`, danger) — Merge, Cherry-Pick, Revert alike.
+  History's Pull and Push are disabled with "Rebase in progress".
+- **Continue** (`git_operation`, `abort: false`; script id `git:continue`, `rebase` icon, run name
+  "Continue Rebase"): in the worktree, `git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" … &&
+  git -C "$GITGEL_FOLDER" rebase --continue` (`merge`, `cherry-pick`, `revert`), the conflicted
+  paths in variables with `GIT_LITERAL_PATHSPECS=1` and `GIT_EDITOR=true`, so the commit keeps
+  git's message. Refused while a conflicted file keeps its markers. Success toast `Rebased <branch>
+  on <onto>` (`Merged <other> into <branch>`, `Cherry-picked <sha> onto <branch>`, `Reverted <sha>
+  in <branch>`); a next commit that conflicts too fails the run, which opens its output panel, and
+  the banner moves on (`3 of 4`).
+- **Abort** (`abort: true`, `git:abort`, "Abort Rebase"): `git -C "$GITGEL_FOLDER" rebase --abort`
+  (…). Asks first (T3, `ConfirmModal`, 460px): title `Abort the rebase?`, rows `<repo> /
+  <branch>` (`branch`) and `on <onto> · stopped at 2 of 4` (`rebase`; `Merging <other>` …), note
+  `The branch goes back to <short tip>. Resolved conflicts are lost.`, "Do not show this message
+  again", Cancel (focused) and danger "Abort Rebase"; Settings › Prompts › "Aborting a rebase or
+  merge" off skips it. Success toast `Aborted the rebase of <branch>` (`Aborted the merge in
+  <branch>` …).
 
 ### SSH passphrase (S1)
 

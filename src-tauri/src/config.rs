@@ -145,7 +145,8 @@ mod tests {
                 "checkUpdates": false,
                 "lastSeenVersion": "0.1.15",
                 "prompts": { "removeRepositories": true, "discardChanges": false,
-                             "discardStash": true, "deleteProjects": false }
+                             "discardStash": true, "deleteProjects": false,
+                             "abortOperation": true }
             },
             "scripts": [{
                 "id": "s_1", "name": "Run tests", "icon": "test", "command": "pnpm test",

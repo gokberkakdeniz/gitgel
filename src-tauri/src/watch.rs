@@ -107,6 +107,10 @@ impl WatchIndex {
     }
 }
 
+/// Files git keeps while a merge, cherry-pick or revert is in progress (SPEC §15 "Operations in
+/// progress").
+const OPERATION_HEADS: [&str; 3] = ["MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD"];
+
 /// Classifies an event path by the longest root containing it (`<repo>/.git/…` belongs to the
 /// git dir, not the main worktree). `None`: nothing to do.
 pub fn classify(index: &WatchIndex, path: &Path) -> Option<Change> {
@@ -153,9 +157,14 @@ pub fn classify(index: &WatchIndex, path: &Path) -> Option<Change> {
                 // Dropping a stash below the top only rewrites its reflog.
                 ["logs", "refs", "stash"] => refs(),
                 ["index"] => worktree(main_worktree.as_ref()?),
+                // An operation started, moved on or ended (a merge leaves HEAD where it is).
+                [head] if OPERATION_HEADS.contains(head) => refs(),
+                ["rebase-merge" | "rebase-apply", ..] => refs(),
                 // A worktree was added or removed.
                 ["worktrees", _] => refs(),
                 ["worktrees", _, "HEAD"] => refs(),
+                ["worktrees", _, head] if OPERATION_HEADS.contains(head) => refs(),
+                ["worktrees", _, "rebase-merge" | "rebase-apply", ..] => refs(),
                 ["worktrees", name, "index"] => match linked.get(*name) {
                     Some(path) => worktree(path),
                     None => refs(),
@@ -417,6 +426,10 @@ mod tests {
         assert_eq!(c("/r/app/.git/worktrees/new"), refs());
         assert_eq!(c("/r/app/.git/worktrees/new/index"), refs());
         assert_eq!(c("/r/app/.git/logs/refs/stash"), refs());
+        assert_eq!(c("/r/app/.git/MERGE_HEAD"), refs());
+        assert_eq!(c("/r/app/.git/rebase-merge/msgnum"), refs());
+        assert_eq!(c("/r/app/.git/worktrees/feat/CHERRY_PICK_HEAD"), refs());
+        assert_eq!(c("/r/app/.git/worktrees/feat/rebase-apply/next"), refs());
         for dropped in [
             "/r/app/.git/objects/ab/cdef",
             "/r/app/.git/logs/HEAD",

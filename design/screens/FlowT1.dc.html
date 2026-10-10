@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>T1 · Rebase in Branches</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input,textarea{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<dc-import name="Sidebar" theme="{{themeName}}" active="inbox" hint-size="260px,800px"></dc-import>
+<main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px 0 28px; border-bottom: 1px solid var(--border)">
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: var(--text-strong)">Branches</h1>
+<div style="font-size: 12px; color: var(--text-muted)">2 repos · 4 branches</div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg></button>
+<dc-import name="Input" theme="{{themeName}}" size="32" width="200px" placeholder="Search" label="Search Branches and Worktrees" hint-size="200px,32px"></dc-import>
+</div>
+</header>
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; padding: 10px 26px 10px 28px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-row)">
+<span></span><span>Branch</span><span style="justify-self: end">Projects</span><span></span>
+</div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column">
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px 26px 10px 28px; background: var(--bg-band); border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border)">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--accent); flex-shrink: 0" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
+<span style="font-size: 15px; font-weight: 600; color: var(--text-strong)">web-app</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1">~/code/web-app</span>
+<span title="2 branches" style="margin-right: 32px; font-size: 12px; color: var(--text-muted)">2</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; align-items: center; padding: 10px 26px 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body); background: var(--bg-hover)">
+<input type="checkbox" aria-label="Select session-token-refresh" style="width: 16px; height: 16px; margin: 0; accent-color: var(--accent)">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-strong); white-space: nowrap">session-token-refresh</span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><span>base main</span><span style="color: var(--text-faint)">·</span><span>↑4<span style="color: var(--text-faint)"> / </span>6<span style="color: var(--text-faint)"> / </span><span style="font-weight: 500; color: var(--accent-text)">1</span></span><span style="color: var(--text-faint)">·</span><span>2m</span><dc-import name="Pill" theme="none" size="sm" tone="warning" label="rebasing 2/4" title="Rebasing on main · 2 of 4" hint-size="78px,16px"></dc-import><dc-import name="Pill" theme="none" size="sm" tone="danger" label="1 conflict" title="Merge conflicts in the working tree" hint-size="62px,16px"></dc-import></span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="m8 10 2.5 2.5L8 15M13 15h3"></path></svg><span>~/code/wt/token-refresh</span></span>
+</div>
+<span style="justify-self: end; display: flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--text-body)">1 project</span>
+<button aria-label="Branch Options" aria-haspopup="menu" aria-expanded="true" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 0; background: var(--bg-pressed); color: var(--text-strong)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
+</div>
+
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; align-items: center; padding: 10px 26px 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body)">
+<input type="checkbox" aria-label="Select session-cookie-cleanup" style="width: 16px; height: 16px; margin: 0; accent-color: var(--accent); visibility: hidden">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-strong); white-space: nowrap">session-cookie-cleanup</span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><span>base main</span><span style="color: var(--text-faint)">·</span><span>↑1<span style="color: var(--text-faint)"> / </span>2<span style="color: var(--text-faint)"> / </span><span style="font-weight: 500; color: var(--accent-text)">1</span></span><span style="color: var(--text-faint)">·</span><span>25m</span></span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="m8 10 2.5 2.5L8 15M13 15h3"></path></svg><span>~/code/wt/cookie-cleanup</span></span>
+</div>
+<span style="justify-self: end; display: flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--text-body)">1 project</span>
+<span></span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 10px 26px 10px 28px; background: var(--bg-band); border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border)">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--accent); flex-shrink: 0" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
+<span style="font-size: 15px; font-weight: 600; color: var(--text-strong)">api-server</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1">~/code/api-server</span>
+<span title="2 branches" style="margin-right: 32px; font-size: 12px; color: var(--text-muted)">2</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; align-items: center; padding: 10px 26px 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body)">
+<input type="checkbox" aria-label="Select token-rotation-job" style="width: 16px; height: 16px; margin: 0; accent-color: var(--accent); visibility: hidden">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-strong); white-space: nowrap">token-rotation-job</span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><span>base main</span><span style="color: var(--text-faint)">·</span><span>↑2<span style="color: var(--text-faint)"> / </span>4<span style="color: var(--text-faint)"> / </span><span style="font-weight: 500; color: var(--accent-text)">3</span></span><span style="color: var(--text-faint)">·</span><span>5m</span><dc-import name="Pill" theme="none" size="sm" tone="warning" label="merging" title="Merging origin/token-rotation-job" hint-size="56px,16px"></dc-import><dc-import name="Pill" theme="none" size="sm" tone="danger" label="2 conflicts" title="Merge conflicts in the working tree" hint-size="68px,16px"></dc-import></span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="m8 10 2.5 2.5L8 15M13 15h3"></path></svg><span>~/code/api-server</span></span>
+</div>
+<span style="justify-self: end; display: flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--text-body)">1 project</span>
+<span></span>
+</div>
+
+<div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; align-items: center; padding: 10px 26px 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body)">
+<input type="checkbox" aria-label="Select session-revoke-endpoint" style="width: 16px; height: 16px; margin: 0; accent-color: var(--accent); visibility: hidden">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-strong); white-space: nowrap">session-revoke-endpoint</span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><span>base main</span><span style="color: var(--text-faint)">·</span><span>↑3<span style="color: var(--text-faint)"> / </span>3<span style="color: var(--text-faint)"> / </span><span style="color: var(--text-faint)">0</span></span><span style="color: var(--text-faint)">·</span><span>1h</span></span>
+<span style="height: 15px; display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--text-muted)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="m8 10 2.5 2.5L8 15M13 15h3"></path></svg><span>~/code/wt/revoke</span></span>
+</div>
+<span style="justify-self: end; display: flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 12px; color: var(--text-body)">1 project</span>
+<span></span>
+</div>
+
+</div>
+<div style="position: absolute; top: 196px; left: 734px; z-index: 5"><dc-import name="Menu" theme="none" width="260" label="Branch Options" items="{{menu}}" hint-size="260px,300px"></dc-import></div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // A rebase (or merge, cherry-pick, revert) stopped in a worktree, started from Gitgel or not:
+    // git left that worktree's HEAD detached on the commit it stopped at. Gitgel reads which branch
+    // is in progress from .git (rebase-merge/head-name, onto, msgnum, end; rebase-apply; MERGE_HEAD;
+    // CHERRY_PICK_HEAD; REVERT_HEAD), so the worktree stays on that branch's row: no detached row,
+    // the branch stays checked out. Line 2 ends with a warning pill for the operation
+    // ("rebasing 2/4", "merging", "cherry-picking", "reverting") and the danger "N conflicts" pill.
+    // The row's ⋯ menu swaps the Sync group for Continue / Abort; Continue is disabled while a
+    // conflicted file still has git's markers. Abort asks first (T3).
+    var t = this.props.theme || 'dark';
+    return { themeClass: 'theme-' + t, themeName: t,
+      menu: [
+        { label: 'Copy Branch Name', icon: 'copy' },
+        { label: 'Open History', icon: 'history' },
+        { kind: 'sep' },
+        { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
+        { kind: 'sep' },
+        { label: 'Continue Rebase', icon: 'arrow-right', disabled: true, title: 'Resolve the conflicts first' },
+        { label: 'Abort Rebase', icon: 'undo', danger: true, active: true, href: 'FlowT3.dc.html' }
+      ] };
+  }
+}
+</script>
+</body>
+</html>

@@ -45,6 +45,12 @@ describe('syncState', () => {
     expect(syncState(target(null)).push).toBe('No remote');
   });
 
+  it('waits for an operation in progress', () => {
+    const op = { kind: 'rebase' as const, onto: 'main', other: null, step: 2, total: 4, unresolved: 1 };
+    const st = syncState({ ...target(up(2, 1)), operation: op });
+    expect([st.pull, st.push]).toEqual(['Rebase in progress', 'Rebase in progress']);
+  });
+
   it('warns when diverged', () => {
     expect(syncState(target(up(2, 1))).diverged).toBe(true);
     expect(divergedBanner(target(up(2, 1)))).toBe(

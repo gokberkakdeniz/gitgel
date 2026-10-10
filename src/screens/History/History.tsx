@@ -346,6 +346,7 @@ export function History({ repoId, rev, backLabel }: Props) {
     branch: data?.upstream ? rev : null,
     worktreePath: entry?.worktreePath ?? null,
     upstream: data?.upstream ?? null,
+    operation: entry?.operation ?? null,
   };
   const diverged = divergedBanner(syncTarget);
   const stashAction = useStashAction(wipReview?.groups ?? []);

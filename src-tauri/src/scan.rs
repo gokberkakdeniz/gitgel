@@ -14,10 +14,11 @@ use crate::error::AppError;
 use crate::git::history::{self, CommittedStats};
 use crate::git::pool::RepoPool;
 use crate::git::refs::DefaultBase;
-use crate::git::{diff, refs, stash, worktrees, Repo};
+use crate::git::{diff, operation, refs, stash, worktrees, Repo};
 use crate::model::{
-    entry_key, Config, EntryState, EntrySummary, FileChange, FileKind, OtherBranch, RemoteBranch,
-    RepoConfig, RepoScan, RepoStatus, RepoUpdated, ScanResult, StashInfo, UpdateReason, Upstream,
+    entry_key, Config, EntryState, EntrySummary, FileChange, FileKind, Operation, OtherBranch,
+    RemoteBranch, RepoConfig, RepoScan, RepoStatus, RepoUpdated, ScanResult, StashInfo,
+    UpdateReason, Upstream,
 };
 use crate::nearest;
 use crate::state::{lock, AppState};
@@ -429,6 +430,7 @@ fn summarize(
         state: EntryState::Ok,
         error: None,
         upstream: None,
+        operation: None,
     };
     let mut flags = StateFlags {
         detached: s.branch.is_none(),
@@ -447,12 +449,28 @@ fn summarize(
     };
 
     if let Some(wt) = &worktree_path {
-        match uncommitted_count(ctx, wt, &tip) {
-            Ok((n, conflicts, at)) => {
+        match worktree_state(ctx, wt) {
+            Ok(w) => {
+                let n = w.uncommitted;
                 s.uncommitted = Some(n);
-                s.conflicts = conflicts;
+                s.conflicts = w.conflicts.len() as u32;
                 // Its age is its last edit when that is newer than the tip commit.
-                s.changed_at = at.filter(|&at| n > 0 && at > s.last_commit_at.unwrap_or(0));
+                s.changed_at = w
+                    .changed_at
+                    .filter(|&at| n > 0 && at > s.last_commit_at.unwrap_or(0));
+                s.operation = w.op.map(|op| {
+                    let prefer: Vec<&str> = base.as_deref().into_iter().collect();
+                    Operation {
+                        kind: op.kind,
+                        onto: op
+                            .onto
+                            .map(|sha| operation::name_of(ctx.repo, &sha, &prefer)),
+                        other: op.other,
+                        step: op.step,
+                        total: op.total,
+                        unresolved: operation::with_markers(wt, &w.conflicts).len() as u32,
+                    }
+                });
             }
             Err(e) => fail(&mut s, &mut flags, e),
         }
@@ -546,41 +564,47 @@ pub fn branch_upstream(
     Some(up)
 }
 
-/// Uncommitted file count of a worktree whose HEAD is `head`, how many of them have conflicts,
-/// and the newest modification time of those files; cached until the watcher reports a change in
-/// it or HEAD moves.
-fn uncommitted_count(
-    ctx: &RepoCtx,
-    worktree: &Path,
-    head: &str,
-) -> Result<(u32, u32, Option<i64>), AppError> {
-    if let Some(w) = lock(ctx.cache).workdir(worktree, head) {
-        if let Some(list) = &w.uncommitted {
-            ctx.timings
-                .borrow_mut()
-                .add("status cached", std::time::Duration::ZERO);
-            return Ok((list.len() as u32, conflicts(list), w.changed_at));
-        }
-    }
+/// What a summary needs from a worktree; the file list is cached until the watcher reports a
+/// change in it or its HEAD moves.
+struct WorktreeState {
+    uncommitted: u32,
+    /// Paths of the files with conflicts (unmerged).
+    conflicts: Vec<String>,
+    /// Newest modification time of the uncommitted files.
+    changed_at: Option<i64>,
+    op: Option<operation::InProgress>,
+}
+
+fn worktree_state(ctx: &RepoCtx, worktree: &Path) -> Result<WorktreeState, AppError> {
     let started = std::time::Instant::now();
     // The file list, not just the count: a review of this worktree then opens from the cache.
+    // Keyed by the worktree's own HEAD, which a stopped rebase moves while the branch stays.
+    let read = |wt_repo: &Repo| -> Result<WorktreeState, AppError> {
+        let head = worktrees::head_sha(wt_repo)?.unwrap_or_default();
+        let list = cached_uncommitted(ctx.cache, wt_repo, worktree, &head)?;
+        Ok(WorktreeState {
+            uncommitted: list.len() as u32,
+            conflicts: list
+                .iter()
+                .filter(|c| c.kind == FileKind::C)
+                .map(|c| c.path.clone())
+                .collect(),
+            changed_at: lock(ctx.cache)
+                .workdir(worktree, &head)
+                .and_then(|w| w.changed_at),
+            op: operation::read(wt_repo),
+        })
+    };
     // The main worktree is the repository already locked by the caller.
-    let list = if worktree == ctx.main_path {
-        cached_uncommitted(ctx.cache, ctx.repo, worktree, head)?
+    let state = if worktree == ctx.main_path {
+        read(ctx.repo)?
     } else {
         let shared = ctx.pool.get(worktree)?;
         let wt_repo = lock(&shared);
-        cached_uncommitted(ctx.cache, &wt_repo, worktree, head)?
+        read(&wt_repo)?
     };
     ctx.timings.borrow_mut().add("status", started.elapsed());
-    let changed_at = lock(ctx.cache)
-        .workdir(worktree, head)
-        .and_then(|w| w.changed_at);
-    Ok((list.len() as u32, conflicts(&list), changed_at))
-}
-
-fn conflicts(list: &[FileChange]) -> u32 {
-    list.iter().filter(|c| c.kind == FileKind::C).count() as u32
+    Ok(state)
 }
 
 /// HEAD ↔ working tree file list of a worktree, cached like `uncommitted_count`.
@@ -709,6 +733,7 @@ pub fn summarize_one(
             state: pick_state(&flags),
             error,
             upstream: None,
+            operation: None,
         }
     };
     if !path.exists() {
@@ -839,6 +864,7 @@ pub fn removed_repo_summary(e: &crate::model::EntryConfig, config: &Config) -> E
         state: EntryState::RepoMissing,
         error: Some("repository removed from Gitgel".into()),
         upstream: None,
+        operation: None,
     }
 }
 
@@ -1260,6 +1286,27 @@ mod tests {
         let layout = layout.unwrap();
         assert_eq!(layout.git_dir, t.path().join(".git"));
         assert_eq!(layout.worktrees.len(), 3);
+    }
+
+    #[test]
+    fn a_stopped_rebase_stays_on_its_branch() {
+        let t = fixture();
+        let main = t.repo.revparse_single("main").unwrap().id();
+        let wt = t.root().join("wt-feature");
+        t.fake_rebase(&wt, Some("feature"), main, 2, 4);
+        t.write_file(&wt, "a.txt", b"<<<<<<< HEAD\na\n=======\nb\n>>>>>>> f1\n");
+        let RepoResult { scan, .. } = run(&t);
+        // No detached entry for it: the only one is the fixture's own.
+        assert_eq!(scan.active.iter().filter(|e| e.branch.is_none()).count(), 1);
+        let f = active(&scan, "feature");
+        assert!(f.worktree_path.as_deref().unwrap().ends_with("wt-feature"));
+        let op = f.operation.as_ref().unwrap();
+        assert_eq!(op.kind, crate::model::OperationKind::Rebase);
+        assert_eq!(op.onto.as_deref(), Some("main"));
+        assert_eq!((op.step, op.total), (Some(2), Some(4)));
+        // Not unmerged in the index (no real conflict here), so nothing to check for markers.
+        assert_eq!(op.unresolved, 0);
+        assert_eq!(active(&scan, "recent").operation, None);
     }
 
     #[test]
