@@ -4,7 +4,9 @@ import '@xterm/xterm/css/xterm.css';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../components/Button';
 import { IconButton } from '../components/IconButton';
-import { CloseIcon } from '../components/icons';
+import { CheckIcon, CloseIcon, CopyIcon } from '../components/icons';
+import { Popover } from '../components/Popover';
+import { ResizeHandle } from '../components/ResizeHandle';
 import { Modal, ModalFooter } from '../components/Modal';
 import { Pill } from '../components/Pill';
 import { getScriptRun, resizeScript, stopScript, writeScriptInput } from '../lib/ipc';
@@ -25,6 +27,66 @@ export function OutputPanelHost() {
 
 const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
+/** A command's pieces: plain text, or a `$VAR` / `${VAR}` token (same rules as the
+ * backend's `command_vars`: single-quoted parts and `\$` stay text). */
+export function tokenizeCommand(command: string): { text: string; variable?: string }[] {
+  const out: { text: string; variable?: string }[] = [];
+  let text = '';
+  const flush = () => {
+    if (text) {
+      out.push({ text });
+      text = '';
+    }
+  };
+  let single = false;
+  let i = 0;
+  while (i < command.length) {
+    const c = command[i];
+    if (c === "'") {
+      single = !single;
+      text += c;
+      i++;
+      continue;
+    }
+    if (c === '\\' && !single) {
+      text += command.slice(i, i + 2);
+      i += 2;
+      continue;
+    }
+    if (c === '$' && !single) {
+      const rest = command.slice(i + 1);
+      let name = '';
+      let len = 0;
+      if (rest.startsWith('{')) {
+        const end = rest.indexOf('}');
+        if (end > 1) {
+          name = rest.slice(1, end);
+          len = end + 1;
+        }
+      } else {
+        const m = /^[A-Za-z0-9_]+/.exec(rest);
+        if (m) {
+          name = m[0];
+          len = m[0].length;
+        }
+      }
+      if (!name) {
+        text += c;
+        i++;
+        continue;
+      }
+      flush();
+      out.push({ text: command.slice(i, i + 1 + len), variable: name });
+      i += 1 + len;
+      continue;
+    }
+    text += c;
+    i++;
+  }
+  flush();
+  return out;
+}
+
 /** Terminal escapes out, for Copy Output. */
 export function plainText(output: string): string {
   return (
@@ -43,6 +105,23 @@ function clock(ms: number): string {
 function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) {
   const box = useRef<HTMLDivElement>(null);
   const term = useRef<Terminal | null>(null);
+  const cmd = useRef<HTMLDivElement>(null);
+  // The command row's dragged height; null until first dragged, never remembered.
+  const [cmdH, setCmdH] = useState<number | null>(null);
+  const vars = new Map(run.commandVars.map((v) => [v.name, v.value]));
+  // The variable whose value hovers, with the anchor it opened from.
+  const [tip, setTip] = useState<{ name: string; rect: DOMRect } | null>(null);
+  const closing = useRef<number | undefined>(undefined);
+  const showTip = (el: Element, name: string) => {
+    window.clearTimeout(closing.current);
+    setTip({ name, rect: el.getBoundingClientRect() });
+  };
+  // A short delay, so the pointer can move from the variable into its value.
+  const hideTip = () => {
+    window.clearTimeout(closing.current);
+    closing.current = window.setTimeout(() => setTip(null), 150);
+  };
+  useEffect(() => () => window.clearTimeout(closing.current), []);
   const [focused, setFocused] = useState(false);
   const [now, setNow] = useState(Date.now());
   const running = run.status === 'running';
@@ -72,6 +151,17 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
     fit.fit();
     void resizeScript(run.runId, t.cols, t.rows).catch(() => {});
     term.current = t;
+    // The command row above is resizable: when it grows, this box shrinks. Re-fit
+    // the terminal so its canvas follows instead of painting over the footer.
+    let resizeTimer = 0;
+    const ro = new ResizeObserver(() => {
+      fit.fit();
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        void resizeScript(run.runId, t.cols, t.rows).catch(() => {});
+      }, 150);
+    });
+    ro.observe(el);
 
     let seen = -1; // bytes already written; chunks up to it are in the first read
     const queued: { data: string; end: number }[] = [];
@@ -101,6 +191,8 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
     textarea?.addEventListener('focus', onFocus);
     textarea?.addEventListener('blur', onBlur);
     return () => {
+      ro.disconnect();
+      window.clearTimeout(resizeTimer);
       off();
       typed.dispose();
       textarea?.removeEventListener('focus', onFocus);
@@ -156,6 +248,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
 
   const { copied, copy } = useCopy();
   const copyOutput = () => copy(async () => plainText((await getScriptRun(run.runId)).buffered ?? ''));
+  const varCopy = useCopy();
 
   return (
     <Modal aria-label={`${run.name} output`} width={760} paddingTop={80} onClose={onClose}>
@@ -173,6 +266,66 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
             <CloseIcon size={13} />
           </IconButton>
         </div>
+        {run.command && (
+          <>
+            <div ref={cmd} className={styles.command} style={cmdH ? { height: cmdH } : undefined}>
+              <span aria-hidden="true" className={styles.dollar}>
+                $
+              </span>
+              <span className={styles.commandText}>
+                {tokenizeCommand(run.command).map((t, i) =>
+                  t.variable && vars.has(t.variable) ? (
+                    <span
+                      key={i}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${t.text} value`}
+                      aria-expanded={tip?.name === t.variable}
+                      className={styles.var}
+                      onMouseEnter={(e) => showTip(e.currentTarget, t.variable as string)}
+                      onMouseLeave={hideTip}
+                      onFocus={(e) => showTip(e.currentTarget, t.variable as string)}
+                      onBlur={hideTip}
+                    >
+                      {t.text}
+                    </span>
+                  ) : (
+                    <span key={i}>{t.text}</span>
+                  ),
+                )}
+              </span>
+            </div>
+            <ResizeHandle
+              axis="y"
+              pane={cmd}
+              min={34}
+              max={260}
+              onResize={setCmdH}
+              onReset={() => setCmdH(null)}
+              label="Resize command"
+            />
+            {tip && (
+              <Popover anchorRect={tip.rect} onClose={() => setTip(null)}>
+                <div
+                  className={styles.varPop}
+                  onMouseEnter={() => window.clearTimeout(closing.current)}
+                  onMouseLeave={hideTip}
+                >
+                  <div className={styles.varValue}>{vars.get(tip.name)}</div>
+                  <IconButton
+                    size={24}
+                    aria-label="Copy value"
+                    title="Copy value"
+                    className={varCopy.copied ? `${styles.varCopy} ${styles.varCopied}` : styles.varCopy}
+                    onClick={() => void varCopy.copy(vars.get(tip.name) ?? '')}
+                  >
+                    {varCopy.copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
+                  </IconButton>
+                </div>
+              </Popover>
+            )}
+          </>
+        )}
         <div
           ref={box}
           role="log"

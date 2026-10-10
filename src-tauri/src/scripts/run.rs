@@ -21,8 +21,8 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::{refs, worktrees};
 use crate::model::{
-    entry_key, EntryRef, ScriptConfig, ScriptFolder, ScriptOutputChunk, ScriptRun, ScriptRunStatus,
-    UpdateReason,
+    CommandVar, entry_key, EntryRef, ScriptConfig, ScriptFolder, ScriptOutputChunk, ScriptRun,
+    ScriptRunStatus, UpdateReason,
 };
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -263,6 +263,8 @@ pub(crate) fn launch(state: &AppState, l: Launch) -> Result<ScriptRun, AppError>
         repo_label: l.repo_label.clone(),
         repo_id: l.repo_id,
         folder: l.folder.to_string_lossy().into_owned(),
+        command: l.command.clone(),
+        command_vars: command_vars(&l.command, &l.env),
         status: ScriptRunStatus::Running,
         exit_code: None,
         signal: None,
@@ -315,6 +317,68 @@ pub(crate) fn launch(state: &AppState, l: Launch) -> Result<ScriptRun, AppError>
 /// A run's output as text to parse: escapes stripped, the pty's `\r\n` back to `\n`.
 pub(crate) fn clean_output(text: &str) -> String {
     strip_escapes(text).replace("\r\n", "\n").trim().to_string()
+}
+
+/// The `$VAR` / `${VAR}` the command names with their values, for the output panel's
+/// hover. Display only; the pty always gets the raw command. Single-quoted parts are not
+/// collected (the shell leaves them too), `\$` stays literal, and unknown variables are
+/// left out. First appearance order, each name once.
+pub(crate) fn command_vars(command: &str, env: &[(String, String)]) -> Vec<CommandVar> {
+    /// A `$…` after the `$`: the name and the token's byte length (`{name}` counts braces).
+    fn var(s: &str) -> (&str, usize) {
+        if let Some(braced) = s.strip_prefix('{') {
+            return match braced.find('}') {
+                Some(end) => (&braced[..end], end + 2),
+                None => ("", 0),
+            };
+        }
+        let end = s
+            .char_indices()
+            .take_while(|(_, c)| c.is_ascii_alphanumeric() || *c == '_')
+            .last()
+            .map_or(0, |(i, c)| i + c.len_utf8());
+        (&s[..end], end)
+    }
+    let mut vars: Vec<CommandVar> = Vec::new();
+    let mut rest = command;
+    let mut single = false;
+    while let Some(c) = rest.chars().next() {
+        match c {
+            '\'' => {
+                single = !single;
+                rest = &rest[1..];
+            }
+            '\\' if !single => {
+                let mut it = rest.chars();
+                it.next();
+                rest = match it.next() {
+                    Some(next) => &rest[1 + next.len_utf8()..],
+                    None => "",
+                };
+            }
+            '$' if !single => {
+                let after = &rest[c.len_utf8()..];
+                let (name, len) = var(after);
+                if name.is_empty() {
+                    rest = after;
+                    continue;
+                }
+                if !vars.iter().any(|v| v.name == name) {
+                    if let Some(value) = env.iter().find(|(k, _)| k == name).map(|(_, v)| v) {
+                        vars.push(CommandVar {
+                            name: name.to_string(),
+                            value: value.clone(),
+                        });
+                    }
+                }
+                rest = &after[len..];
+            }
+            _ => {
+                rest = &rest[c.len_utf8()..];
+            }
+        }
+    }
+    vars
 }
 
 /// Runs a fixed read-only command in a pty and returns its output; no run is recorded.
@@ -854,6 +918,36 @@ mod tests {
             None
         );
         assert_eq!(passphrase_prompt("no prompt here"), None);
+    }
+
+    #[test]
+    fn command_vars_collects_referenced_values() {
+        let env = vec![
+            ("GITGEL_BRANCH".to_string(), "feat/x".to_string()),
+            ("GITGEL_MESSAGE".to_string(), "do it".to_string()),
+            ("GITGEL_PROMPT".to_string(), "x".repeat(501)),
+        ];
+        assert_eq!(
+            command_vars(
+                "git checkout $GITGEL_BRANCH ${GITGEL_BRANCH} -m \"$GITGEL_MESSAGE\" \
+                 '$GITGEL_BRANCH' \\$GITGEL_BRANCH $GITGEL_NOPE $5 tool -p \"$GITGEL_PROMPT\"",
+                &env
+            ),
+            vec![
+                CommandVar {
+                    name: "GITGEL_BRANCH".into(),
+                    value: "feat/x".into(),
+                },
+                CommandVar {
+                    name: "GITGEL_MESSAGE".into(),
+                    value: "do it".into(),
+                },
+                CommandVar {
+                    name: "GITGEL_PROMPT".into(),
+                    value: "x".repeat(501),
+                },
+            ]
+        );
     }
 
     #[test]

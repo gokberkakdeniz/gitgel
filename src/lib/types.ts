@@ -99,6 +99,8 @@ export interface ScriptRun {
   repoLabel: string; // "web-app / session-token-refresh"
   repoId: string;
   folder: string;
+  command: string; // the shell command as it runs, shown in the output panel
+  commandVars: { name: string; value: string }[]; // the $VARs it names with their values, for hover
   status: 'running' | 'exited' | 'failed'; // failed: could not start
   exitCode: number | null;
   signal: string | null; // e.g. "SIGINT" after Stop

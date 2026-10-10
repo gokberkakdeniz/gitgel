@@ -39,10 +39,89 @@
   text-overflow: ellipsis;
 }
 
-/* The terminal; xterm fills it. */
+/* The running command, above the terminal. Its bottom border drags taller. */
+.command {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+  max-height: 260px;
+  overflow: auto;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sunken);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+/* A $VAR the command names: hover or focus shows its value. */
+.var {
+  color: var(--accent-text);
+  border-bottom: 1px dotted var(--accent-text);
+  border-radius: 3px;
+  outline: none;
+}
+
+.var:hover {
+  background: rgba(var(--accent-rgb), 0.15);
+}
+
+.var:focus-visible {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* The hovered variable's value: fits its content, 420 wide at most. Only the value
+   scrolls; Copy stays pinned to the box's bottom-right. */
+.varPop {
+  position: relative;
+  min-width: 0;
+  max-width: 420px;
+  padding: 10px 12px;
+}
+
+.varValue {
+  max-height: 224px;
+  overflow: auto;
+  padding-right: 30px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--text-code);
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+.varCopy {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+
+.varCopied {
+  color: var(--success-text);
+}
+
+.dollar {
+  flex-shrink: 0;
+  color: var(--accent-text);
+}
+
+.commandText {
+  min-width: 0;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+/* The terminal; xterm fills it. Clipped while the command row's drag resizes it. */
 .terminal {
   flex-grow: 1;
   min-height: 0;
+  overflow: hidden;
   padding: 14px 20px;
   background: var(--bg-sunken);
 }

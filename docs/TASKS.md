@@ -585,6 +585,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] T24.3 Commit form on the config — 2026-10-10
 - [x] T24.5 Provider list, toggles and edit modal — 2026-10-10
 - [x] T24.6 Prompt editor, row states, no binary notes — 2026-10-10
+- [x] (on request) Output panel shows the running command (`ScriptRun.command`: user script or git action's fixed command) under its header; SPEC §14 and `FlowN4.dc.html` — 2026-10-10
 
 ---
 

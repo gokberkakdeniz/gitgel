@@ -23,7 +23,8 @@ export function useStoredWidth(key: string): [number | null, (w: number | null) 
   return [width, set];
 }
 
-/** The draggable border on a pane's right edge: drag or ←/→ to resize, double-click to reset. */
+/** The draggable border on a pane's edge: drag or arrow keys to resize, double-click
+ * to reset. `axis="x"` (default) is the right edge (←/→), `axis="y"` the bottom edge (↑/↓). */
 export function ResizeHandle({
   pane,
   min,
@@ -31,30 +32,36 @@ export function ResizeHandle({
   onResize,
   onReset,
   label = 'Resize file list',
+  axis = 'x',
 }: {
   pane: React.RefObject<HTMLElement | null>;
   min: number;
   max: number;
-  onResize: (width: number) => void;
+  onResize: (size: number) => void;
   onReset: () => void;
   label?: string;
+  axis?: 'x' | 'y';
 }) {
   const [dragging, setDragging] = useState(false);
-  const clamp = (w: number) => Math.min(max, Math.max(min, w));
+  const horizontal = axis === 'y';
+  const clamp = (n: number) => Math.min(max, Math.max(min, n));
+  const resizingClass = horizontal ? styles.resizingY : styles.resizing;
 
   const down = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 || !pane.current) return;
     e.preventDefault();
     const handle = e.currentTarget;
     handle.setPointerCapture(e.pointerId);
-    const startX = e.clientX;
-    const startW = pane.current.getBoundingClientRect().width;
+    const rect = pane.current.getBoundingClientRect();
+    const startAt = horizontal ? e.clientY : e.clientX;
+    const startSize = horizontal ? rect.height : rect.width;
     setDragging(true);
-    document.body.classList.add(styles.resizing);
-    const move = (ev: PointerEvent) => onResize(clamp(startW + ev.clientX - startX));
+    document.body.classList.add(resizingClass);
+    const move = (ev: PointerEvent) =>
+      onResize(clamp(startSize + (horizontal ? ev.clientY : ev.clientX) - startAt));
     const up = () => {
       setDragging(false);
-      document.body.classList.remove(styles.resizing);
+      document.body.classList.remove(resizingClass);
       handle.removeEventListener('pointermove', move);
       handle.removeEventListener('pointerup', up);
       handle.removeEventListener('pointercancel', up);
@@ -65,20 +72,26 @@ export function ResizeHandle({
   };
 
   const key = (e: React.KeyboardEvent) => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const prev = horizontal ? 'ArrowUp' : 'ArrowLeft';
+    const next = horizontal ? 'ArrowDown' : 'ArrowRight';
+    if (e.key !== prev && e.key !== next) return;
     e.preventDefault();
-    const w = pane.current?.getBoundingClientRect().width ?? min;
-    onResize(clamp(w + (e.key === 'ArrowRight' ? 16 : -16)));
+    const rect = pane.current?.getBoundingClientRect();
+    const size = horizontal ? (rect?.height ?? min) : (rect?.width ?? min);
+    onResize(clamp(size + (e.key === next ? 16 : -16)));
   };
 
+  const cls = [styles.handle, horizontal ? styles.horizontal : '', dragging ? styles.active : '']
+    .filter(Boolean)
+    .join(' ');
   return (
     <div
       role="separator"
-      aria-orientation="vertical"
+      aria-orientation={horizontal ? 'horizontal' : 'vertical'}
       aria-label={label}
       tabIndex={0}
       title="Drag to resize · double-click to reset"
-      className={dragging ? `${styles.handle} ${styles.active}` : styles.handle}
+      className={cls}
       onPointerDown={down}
       onDoubleClick={onReset}
       onKeyDown={key}

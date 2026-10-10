@@ -2126,6 +2126,8 @@ export interface ScriptRun {
   stopped: boolean;                         // Stop was asked for
   startedAt: string; endedAt: string | null;
   lastLine: string;      // last non-empty output line, terminal escapes removed
+  command: string;       // the shell command as it runs, shown in the output panel
+  commandVars: { name: string; value: string }[]; // the $VARs it names with their values, for hover
   buffered?: string;     // get_script_run only: the output so far (at most 2 MB, oldest dropped)
 }
 ```
@@ -2173,6 +2175,10 @@ export interface ScriptRun {
   `GITGEL_REPO_NAME`, `GITGEL_PROJECT` (Project entry menu only), `GITGEL_HEAD` (tip SHA),
   `GITGEL_INPUT_<ID>` for each shown input (hidden inputs are not set). Values are never pasted
   into the command, so they cannot inject shell.
+- A run's variables are display only (`command_vars`): each `$VAR` / `${VAR}` the command
+  names outside single quotes takes the run's environment value (long ones too, so the AI
+  prompt in `GITGEL_PROMPT` reads in full); `\$` stays literal and unknown variables are
+  left out. The pty always gets the raw command.
 - Every script runs in a pty (`portable-pty`, `TERM=xterm-256color`), so tools see a terminal:
   colours, progress bars and prompts work. A script that asks a question waits for an answer in
   its output panel (the toast stays on running; a click opens it). Output streams as `script-output`; the backend keeps
@@ -2189,7 +2195,18 @@ export interface ScriptRun {
 
 - A 760 × 520 modal: header with a 28px icon tile, the name (14px 600) and a mono sub line
   `repo / branch · folder` (one line, ellipsis; the folder as tooltip), a mono pill (running:
-  `running · m:ss`, neutral; exited: `exit N · m:ss`, success for 0, danger otherwise), ✕. Body:
+  `running · m:ss`, neutral; exited: `exit N · m:ss`, success for 0, danger otherwise), ✕.
+  Under the header the running command (`ScriptRun.command`: the user's script, or the git
+  action's fixed command): one mono 11px row, `$` in `accent.text` and the command in
+  `text.muted` (pre-wrapped, scrolls past 260px, no tooltip; drag its bottom border to make it
+  taller, double-click resets; the terminal below shrinks with it). A `$VAR` / `${VAR}` the
+  command names is `accent.text` with a dotted underline: hovering or focusing it opens a
+  popover with its value (`ScriptRun.commandVars`; mono 11px, wrapped, 420 × 260 at most,
+  then scrolls; the popover stays inside the window and the value selects as text). A 24px
+  Copy sits at the value's bottom-right, sticking there while a long value scrolls (✓
+  success for 1.5 s after). A variable
+  the run does not know stays plain text.
+  Body:
   the terminal (`@xterm/xterm`, pinned; JetBrains Mono 12px, 20px lines, colours from the theme
   tokens, `bg.sunken`). Footer (`ModalFooter`): while running
   Copy, Stop; when done Copy and primary "Run again" (same inputs); Close on the far left

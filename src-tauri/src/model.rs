@@ -411,6 +411,11 @@ pub struct ScriptRun {
     pub repo_label: String,
     pub repo_id: String,
     pub folder: String,
+    /// The shell command as it runs (`$SHELL -l -c`), shown in the output panel.
+    pub command: String,
+    /// The `$VAR`s the command names with their values, for the output panel's hover
+    /// (display only, including long ones like the AI prompt). The pty always gets `command`.
+    pub command_vars: Vec<CommandVar>,
     pub status: ScriptRunStatus,
     pub exit_code: Option<i32>,
     /// Set when a signal ended it, e.g. `SIGINT` after Stop.
@@ -429,6 +434,14 @@ pub struct ScriptRun {
     /// chunk whose `end` is not past it is already in `buffered`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub buffered_end: Option<u64>,
+}
+
+/// One `$VAR` a run's command names, with its value (output panel hover).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandVar {
+    pub name: String,
+    pub value: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

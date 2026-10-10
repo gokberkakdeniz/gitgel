@@ -47,3 +47,32 @@
 :global(body).resizing * {
   cursor: col-resize !important;
 }
+
+/* The bottom edge instead of the right one: no space taken, 8px tall hit area. */
+.horizontal {
+  width: auto;
+  height: 0;
+}
+
+.horizontal::before {
+  inset: -4px 0;
+  cursor: row-resize;
+}
+
+.horizontal::after {
+  top: -1px;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 2px;
+}
+
+:global(body).resizingY {
+  cursor: row-resize;
+  user-select: none;
+}
+
+:global(body).resizingY * {
+  cursor: row-resize !important;
+}

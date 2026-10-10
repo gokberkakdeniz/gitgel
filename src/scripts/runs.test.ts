@@ -91,6 +91,24 @@ describe('a run that ends before its start is answered', () => {
   });
 });
 
+describe('tokenizeCommand', () => {
+  it('marks $VAR and ${VAR} outside single quotes, leaving the rest as text', async () => {
+    const { tokenizeCommand } = await import('./OutputPanel');
+    expect(tokenizeCommand('git checkout $GITGEL_BRANCH -m "$GITGEL_MSG"')).toEqual([
+      { text: 'git checkout ' },
+      { text: '$GITGEL_BRANCH', variable: 'GITGEL_BRANCH' },
+      { text: ' -m "' },
+      { text: '$GITGEL_MSG', variable: 'GITGEL_MSG' },
+      { text: '"' },
+    ]);
+    expect(tokenizeCommand("echo '${NOT_A_VAR}' \\$LITERAL $5 ${UN_CLOSED")).toEqual([
+      { text: "echo '${NOT_A_VAR}' \\$LITERAL " },
+      { text: '$5', variable: '5' },
+      { text: ' ${UN_CLOSED' },
+    ]);
+  });
+});
+
 describe('plainText', () => {
   it('drops colours, titles and carriage returns for Copy output', async () => {
     const { plainText } = await import('./OutputPanel');
