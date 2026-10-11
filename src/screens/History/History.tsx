@@ -12,7 +12,7 @@ import { Pill } from '../../components/Pill';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
-import { startGitAction, showRunToast, useRuns } from '../../scripts/runs';
+import { nameRun, startGitAction, showRunToast, useRuns } from '../../scripts/runs';
 import { onGenerateFinished, providerLabel, providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { conflictOf } from '../../sync/operation';
@@ -182,7 +182,7 @@ export function History({ repoId, rev, backLabel }: Props) {
     if (!entryRef) return;
     // Retry and Commit Without Hooks send the same files and message again.
     const again = (noVerify: boolean) => commitNow({ ...files, noVerify });
-    void startGitAction('Commit', () => gitCommit(entryRef, files), {
+    void startGitAction(t('history.commitBtn'), () => gitCommit(entryRef, files), {
       openOnFail: true,
       done: t('history.committedTo', { rev }),
       onStart: (runId) => {
@@ -239,8 +239,9 @@ export function History({ repoId, rev, backLabel }: Props) {
       .then((run) => {
         genRun.current = run.runId;
         const runs = useRuns.getState();
+        nameRun(run.runId, t('history.genWith', { provider: providerLabel(active) }));
         runs.put(run);
-        showRunToast(run);
+        showRunToast(useRuns.getState().runs[run.runId]);
         const off = onGenerateFinished(run.runId, (r) => {
           off();
           if (genRun.current === run.runId) stop();

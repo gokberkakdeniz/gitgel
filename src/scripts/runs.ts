@@ -34,12 +34,24 @@ interface RunsState {
   showOutput: (runId: string | null) => void;
 }
 
+// The names git actions and generations show in the UI language; the backend names their runs
+// in English, and every later copy of the run (its end) keeps the name given here.
+const runNames = new Map<string, string>();
+
+/** Shows run `runId` as `name` from now on. */
+export function nameRun(runId: string, name: string): void {
+  runNames.set(runId, name);
+  const run = useRuns.getState().runs[runId];
+  if (run) useRuns.getState().put(run);
+}
+
 export const useRuns = create<RunsState>()((set, get) => ({
   runs: {},
   dialog: null,
   starts: {},
   shownRunId: null,
-  put: (run) => set((s) => ({ runs: { ...s.runs, [run.runId]: run } })),
+  put: (run) =>
+    set((s) => ({ runs: { ...s.runs, [run.runId]: { ...run, name: runNames.get(run.runId) ?? run.name } } })),
   showOutput: (runId) => {
     const before = get().shownRunId;
     set({ shownRunId: runId });
@@ -201,6 +213,7 @@ export async function startGitAction(
 ): Promise<void> {
   try {
     const run = await start();
+    nameRun(run.runId, name);
     gitActionShow.set(run.runId, show);
     show.onStart?.(run.runId);
     const runs = useRuns.getState();
@@ -211,7 +224,7 @@ export async function startGitAction(
       return;
     }
     runs.put(run);
-    showRunToast(run);
+    showRunToast(useRuns.getState().runs[run.runId]);
   } catch (err) {
     useUi.getState().showToast({ status: 'failed', message: t('scripts.couldNotStart', { name }), sub: (err as AppError).message });
   }

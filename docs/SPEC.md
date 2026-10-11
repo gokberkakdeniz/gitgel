@@ -2162,7 +2162,8 @@ export interface ScriptConfig {
 export interface ScriptRun {
   runId: string;
   scriptId: string;
-  name: string;          // filled-in name
+  name: string;          // filled-in name; a git action's or generation's is replaced by the
+                         // frontend's, in the UI language (the backend names it in English)
   icon: string;
   entryKey: string;
   repoLabel: string;     // "web-app / session-token-refresh"
@@ -2540,7 +2541,7 @@ git action in the repository.
 - **Generate message**: `generate_message_start` (`entry`, the checked `include`
   paths, `provider`: opencode, claude, cursor, antigravity or codex) asks that agent CLI for a
   commit message for the checked files, as a run (`ai:generate`, `sparkles` icon) in the entry's
-  worktree: a running toast ("Running "Generate with <provider>"…") that opens its output
+  worktree: a running toast ("Running "Generate commit message with <provider>"…") that opens its output
   panel on click, stoppable there. The prompt is built from git2 reads only: the checked
   files' patch (cut at ~12k characters) and up to 15 recent subjects from the branch, those
   touching the checked files first. The CLI's fixed command carries the prompt in
