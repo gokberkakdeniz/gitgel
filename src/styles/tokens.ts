@@ -9,6 +9,7 @@ export const darkColors = {
   bgHover: '#2a2825',
   bgSidebarActive: '#24221f',
   bgPressed: '#383631',
+  bgAvatar: '#383631',
 
   border: '#302e2a',
   borderRow: '#262420',
@@ -50,6 +51,7 @@ export const lightColors = {
   bgHover: '#ebe8e1',
   bgSidebarActive: '#e4e0d8',
   bgPressed: '#ffffff',
+  bgAvatar: '#d5d0c7',
 
   border: '#e2ded6',
   borderRow: '#ebe8e2',

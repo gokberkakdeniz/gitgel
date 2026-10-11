@@ -275,6 +275,7 @@ each file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(
 | `bg.hover` | `#2a2825` | Hovered / selected rows in popovers and lists |
 | `bg.sidebarActive` | `#24221f` | Active sidebar item |
 | `bg.pressed` | `#383631` | Active segmented button, open menu trigger |
+| `bg.avatar` | `#383631` | Author avatars (History) |
 | `border` | `#302e2a` | Default 1px borders |
 | `border.row` | `#262420` | Row dividers |
 | `border.strong` | `#383631` | Band top edge, elevated button borders |
@@ -335,6 +336,7 @@ each component uses) is the same as dark.
 | `bg.hover` | `#2a2825` | `#ebe8e1` |
 | `bg.sidebarActive` | `#24221f` | `#e4e0d8` |
 | `bg.pressed` | `#383631` | `#ffffff` (active segment, white on the grey track) |
+| `bg.avatar` | `#383631` | `#d5d0c7` |
 | `border` | `#302e2a` | `#e2ded6` |
 | `border.row` | `#262420` | `#ebe8e2` |
 | `border.strong` | `#383631` | `#d5d0c7` |
@@ -2763,7 +2765,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     (this year) or `Oct 2, 2025`, by committer time.
   - **Commit row** (`role="option"`, tooltip "Show this commit"): padding 7px 8px, radius 8, gap
     10; picked: `bg.hover`. A 24px avatar: the author's initials (first letters of the first two
-    words, upper case), 10px/600 `text.strong` on `bg.pressed`; an author whose name contains
+    words, upper case), 10px/600 `text.strong` on `bg.avatar`; an author whose name contains
     `[bot]` gets "BOT" in `text.muted` on `bg.band` with a 1px dashed `border.strong`. Then 13px
     `text.strong` subject (ellipsis) with an outline sm pill "merge" for a merge commit; line 2
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits

@@ -215,7 +215,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--bg-pressed);
+  background: var(--bg-avatar);
   font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 600;

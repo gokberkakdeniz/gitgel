@@ -10,6 +10,7 @@
   --bg-hover: #2a2825;
   --bg-sidebar-active: #24221f;
   --bg-pressed: #383631;
+  --bg-avatar: #383631;
 
   /* Borders */
   --border: #302e2a;
@@ -99,6 +100,7 @@
   --bg-hover: #ebe8e1;
   --bg-sidebar-active: #e4e0d8;
   --bg-pressed: #ffffff;
+  --bg-avatar: #d5d0c7;
 
   --border: #e2ded6;
   --border-row: #ebe8e2;
