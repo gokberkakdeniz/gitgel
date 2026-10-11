@@ -32,7 +32,7 @@ export function ResizeHandle({
   max,
   onResize,
   onReset,
-  label = 'Resize file list',
+  label,
   axis = 'x',
 }: {
   pane: React.RefObject<HTMLElement | null>;
@@ -40,7 +40,7 @@ export function ResizeHandle({
   max: number;
   onResize: (size: number) => void;
   onReset: () => void;
-  label?: string;
+  label: string;
   axis?: 'x' | 'y';
 }) {
   const [dragging, setDragging] = useState(false);

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '../../components/Button';
 import { Modal, ModalFooter, ModalHeader } from '../../components/Modal';
 import { t } from '../../i18n';
+import { cnt } from '../../lib/format';
 import { addRepos, inspectFolders } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { AppError, FolderCheck } from '../../lib/types';
@@ -61,7 +62,7 @@ function Sheet({ paths }: { paths: string[] }) {
           {t('common.cancel')}
         </Button>
         <Button variant="primary" size={36} disabled={!checks || addable === 0 || adding} onClick={add}>
-          {t('addrepos.addBtn', { n: String(addable) })}
+          {t('addrepos.addBtn', { ...cnt(addable) })}
         </Button>
       </ModalFooter>
     </Modal>

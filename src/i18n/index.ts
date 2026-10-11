@@ -42,6 +42,26 @@ function warnOnce(key: string, message: string): void {
   console.warn(message);
 }
 
+/** One message formatted; `strict` throws on any formatting error (a missing variable). */
+function format(loc: AppLocale, key: string, source: string, vars: Record<string, unknown> | undefined, strict: boolean): string {
+  const cacheKey = `${loc}${key}`;
+  let mf = compiled.get(cacheKey);
+  if (!mf) {
+    mf = new MessageFormat(loc, source, { bidiIsolation: 'none' });
+    compiled.set(cacheKey, mf);
+  }
+  let failed = false;
+  const out = mf.format(vars, () => {
+    failed = true;
+  });
+  if (failed && strict) throw new Error('format failed');
+  // messageformat 4.0.0 cannot parse a select variant whose pattern starts
+  // with an expression (`{{{`): such variants carry one leading space (see
+  // TRANSLATE.md), stripped here. No message starts with a real space
+  // (`pnpm i18n:check` rejects those), so exactly one is always safe.
+  return out.startsWith(' ') ? out.slice(1) : out;
+}
+
 /** Translate `key`, formatting its MF2 placeholders with `vars`. */
 export function t(key: string, vars?: Record<string, unknown>): string {
   const own = dicts[locale][key];
@@ -54,25 +74,14 @@ export function t(key: string, vars?: Record<string, unknown>): string {
     warnOnce(key, `i18n: missing key "${key}" for locale "${locale}", falling back to en`);
   }
   try {
-    const cacheKey = `${locale}${key}`;
-    let mf = compiled.get(cacheKey);
-    if (!mf) {
-      mf = new MessageFormat(locale, source, { bidiIsolation: 'none' });
-      compiled.set(cacheKey, mf);
-    }
-    let failed = false;
-    const out = mf.format(vars, () => {
-      failed = true;
-    });
-    if (failed) throw new Error('format failed');
-    // messageformat 4.0.0 cannot parse a select variant whose pattern starts
-    // with an expression (`{{{`): such variants carry one leading space (see
-    // TRANSLATE.md), stripped here. No message starts with a real space
-    // (`pnpm i18n:check` rejects those), so exactly one is always safe.
-    return out.startsWith(' ') ? out.slice(1) : out;
+    return format(own === undefined ? 'en' : locale, key, source, vars, true);
   } catch {
-    // Broken MF2: show the en string.
+    // Broken MF2 or a missing variable: the en message, as well as it formats.
     warnOnce(key, `i18n: broken message "${key}" for locale "${locale}", showing en`);
-    return dicts.en[key] ?? source;
+    try {
+      return format('en', key, dicts.en[key] ?? source, vars, false);
+    } catch {
+      return dicts.en[key] ?? source;
+    }
   }
 }

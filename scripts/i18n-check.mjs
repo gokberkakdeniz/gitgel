@@ -1,5 +1,8 @@
-// `pnpm i18n:check`: missing keys, placeholder / MF2 breakage → fail.
-import { readFileSync } from 'node:fs';
+// `pnpm i18n:check`: missing keys (in tr.json, or used by `t('…')` in src but not in en.json),
+// placeholder / MF2 breakage, and `t('key', { … })` calls that leave out a variable the en
+// message shows → fail.
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MessageFormat } from 'messageformat';
@@ -67,6 +70,46 @@ for (const key of Object.keys(en)) {
       errors.push(`${key}: placeholder mismatch (missing ${missing.join(', ') || '—'}, extra ${extra.join(', ') || '—'})`);
     }
   }
+}
+
+// The code's `t('ns.key', vars)` calls (`translate` too, where `t` is taken): the key must be
+// in en.json, and an object literal must give every variable the message uses (`...cnt(n)`
+// gives `n` and `d`). Dynamic keys and non-literal vars are not checked.
+const ts = createRequire(import.meta.url)('typescript');
+const src = join(dir, '..');
+const walk = (d) =>
+  readdirSync(d).flatMap((f) => {
+    const p = join(d, f);
+    return statSync(p).isDirectory() ? walk(p) : /\.tsx?$/.test(f) && !/\.test\./.test(f) ? [p] : [];
+  });
+for (const file of walk(src)) {
+  const sf = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
+  const where = (n) => `${file.slice(src.length + 1)}:${sf.getLineAndCharacterOfPosition(n.getStart()).line + 1}`;
+  const visit = (n) => {
+    const [key, vars] = n.arguments ?? [];
+    if (
+      ts.isCallExpression(n) &&
+      ts.isIdentifier(n.expression) &&
+      (n.expression.text === 't' || n.expression.text === 'translate') &&
+      key &&
+      ts.isStringLiteral(key)
+    ) {
+      if (!(key.text in en)) errors.push(`${key.text}: used in ${where(n)} but not in en.json`);
+      else if (!vars || ts.isObjectLiteralExpression(vars)) {
+        const given = new Set();
+        let open = false;
+        for (const p of vars?.properties ?? []) {
+          if (!ts.isSpreadAssignment(p)) given.add(p.name.getText(sf).replace(/['"]/g, ''));
+          else if (/^cnt\(/.test(p.expression.getText(sf))) given.add('n').add('d');
+          else open = true;
+        }
+        const missing = [...placeholders(en[key.text])].filter((v) => !given.has(v));
+        if (!open && missing.length > 0) errors.push(`${key.text}: ${where(n)} does not give ${missing.join(', ')}`);
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
 }
 
 if (errors.length > 0) {

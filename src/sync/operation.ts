@@ -133,9 +133,8 @@ export function operationVerb(op: Operation): string {
 
 export function continueOperation(e: EntrySummary, op: Operation): Promise<void> {
   const branch = e.branch ?? e.shortSha ?? '';
-  const onto = op.onto ? ` onto ${op.onto}` : '';
   const done = {
-    rebase: t('sync.rebased', { branch, onto }),
+    rebase: op.onto ? t('sync.rebased', { branch, base: op.onto }) : t('sync.rebasedPlain', { branch }),
     merge: op.other
       ? t('sync.doneMerged', { other: op.other, branch })
       : t('sync.doneMergedPlain', { branch }),

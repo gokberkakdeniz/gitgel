@@ -200,24 +200,29 @@ export function formatDate(unix: number, f: Fmt = getFmt()): string {
   return renderDate(f.date, new Date(unix * 1000), f.locale);
 }
 
+/** A Number Format's separators: thousands (`''` for the `plain-*` ones) and decimal. */
+function separators(id: string): { group: string; decimal: string } {
+  const [kind, a, b] = id.split('-');
+  if (kind === 'plain') return { group: '', decimal: a === 'comma' ? ',' : '.' };
+  const sep = (s: string) => (s === 'comma' ? ',' : s === 'dot' ? '.' : ' ');
+  return { group: sep(a), decimal: sep(b) };
+}
+
+function group(digits: string, sep: string): string {
+  return sep ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, sep) : digits;
+}
+
 /** A count with the Number Format grouping; `plain-*` shows none. Counts are integers. */
 export function formatCount(n: number, f: Fmt = getFmt()): string {
-  if (f.number !== 'group-comma-dot' && f.number !== 'group-dot-comma' && !f.number.startsWith('group-space')) {
-    return String(n);
-  }
-  const sep = f.number === 'group-comma-dot' ? ',' : f.number === 'group-dot-comma' ? '.' : ' ';
   const sign = n < 0 ? '-' : '';
-  const digits = String(Math.abs(Math.trunc(n)));
-  return sign + digits.replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+  return sign + group(String(Math.abs(Math.trunc(n))), separators(f.number).group);
 }
 
 /** A number with the Number Format separators, for the Settings samples (`1234567.89`). */
 export function formatSample(value: number, id: string): string {
-  const decimal = id === 'plain-comma' || id === 'group-dot-comma' || id === 'group-space-comma' ? ',' : '.';
-  const group = id === 'group-comma-dot' ? ',' : id === 'group-dot-comma' ? '.' : id.startsWith('group-space') ? ' ' : '';
+  const { group: sep, decimal } = separators(id);
   const [whole, frac] = String(value).split('.');
-  const grouped = group ? whole.replace(/\B(?=(\d{3})+(?!\d))/g, group) : whole;
-  return frac === undefined ? grouped : `${grouped}${decimal}${frac}`;
+  return frac === undefined ? group(whole, sep) : `${group(whole, sep)}${decimal}${frac}`;
 }
 
 /** The primary age text: relative, or absolute with the setting on. */

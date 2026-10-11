@@ -176,7 +176,7 @@ gitgel/
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
-├─ scripts/i18n-check.mjs         # `pnpm i18n:check`: en/tr key parity, MF2 validity
+├─ scripts/i18n-check.mjs         # `pnpm i18n:check`: en/tr key parity, MF2 validity, the code's keys and variables
 ├─ scripts/release.sh             # `pnpm release` (§12)
 ├─ index.html  package.json  pnpm-lock.yaml  .nvmrc  vite.config.ts  tsconfig*.json
 ├─ src/

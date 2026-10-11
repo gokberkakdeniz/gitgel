@@ -576,7 +576,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
             />
           )}
         </aside>
-        <ResizeHandle pane={fileList} min={220} max={640} onResize={setFilesWidth} onReset={() => setFilesWidth(null)} />
+        <ResizeHandle pane={fileList} min={220} max={640} onResize={setFilesWidth} onReset={() => setFilesWidth(null)} label={t('review.resizeFiles')} />
 
         <section className={parts.main}>
           {error ? (
@@ -1174,7 +1174,7 @@ export function conflictsBanner(groups: ReviewGroup[]): string | null {
   const hit = groups.filter((g) => g.entry.conflicts > 0 && !g.entry.operation);
   const n = hit.reduce((s, g) => s + g.entry.conflicts, 0);
   if (n === 0) return null;
-  return t('review.conflictsBanner', { n: String(n), m: String(hit.length) });
+  return t('review.conflictsBanner', { ...cnt(n), m: String(hit.length), e: formatCount(hit.length) });
 }
 
 export function notReviewable(entry: EntrySummary | undefined): string {

@@ -7,6 +7,7 @@ import { Pill } from '../../components/Pill';
 import { entryKey } from '../../lib/entryKey';
 import { addEntries } from '../../lib/ipc';
 import { t } from '../../i18n';
+import { cnt } from '../../lib/format';
 import type { EntryRef } from '../../lib/types';
 import { selectRepoScans, useData } from '../../state/data';
 import { selectRoute, useNav } from '../../state/nav';
@@ -152,7 +153,7 @@ function PaletteDialog({ projectId }: { projectId: string }) {
         {shown.length === 0 && <div className={styles.empty}>{t('palette.noMatches')}</div>}
       </div>
 
-      <ModalFooter note={t('palette.selectedCount', { n: String(checked.size) })}>
+      <ModalFooter note={t('palette.selectedCount', { ...cnt(checked.size) })}>
         <Button onClick={close}>{t('common.cancel')}</Button>
         <Button variant="primary" disabled={checked.size === 0} onClick={() => void add(false)}>
           {t('palette.add')}
