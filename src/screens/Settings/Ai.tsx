@@ -165,7 +165,8 @@ function ProviderEditor({
     const t = s.trim();
     return t === '' ? null : t;
   };
-  const problem = !prompt.includes('{patch}') ? t('settings.aiNeedPatch', { var: '{patch}' }) : null;
+  // Not while the default loads: the empty prompt then is no mistake.
+  const problem = ready && !prompt.includes('{patch}') ? t('settings.aiNeedPatch', { var: '{patch}' }) : null;
   const next = {
     ...settings,
     model: trimmed(model),
