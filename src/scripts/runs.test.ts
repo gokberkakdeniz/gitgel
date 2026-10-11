@@ -106,6 +106,11 @@ describe('tokenizeCommand', () => {
       { text: '$5', variable: '5' },
       { text: ' ${UN_CLOSED' },
     ]);
+    expect(tokenizeCommand(`echo "it's $X" '$Y'`)).toEqual([
+      { text: 'echo "it\'s ' },
+      { text: '$X', variable: 'X' },
+      { text: `" '$Y'` },
+    ]);
   });
 });
 

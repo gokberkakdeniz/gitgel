@@ -319,66 +319,23 @@ pub(crate) fn clean_output(text: &str) -> String {
     strip_escapes(text).replace("\r\n", "\n").trim().to_string()
 }
 
-/// The `$VAR` / `${VAR}` the command names with their values, for the output panel's
-/// hover. Display only; the pty always gets the raw command. Single-quoted parts are not
-/// collected (the shell leaves them too), `\$` stays literal, and unknown variables are
-/// left out. First appearance order, each name once.
+/// The env vars the command names (`$VAR` / `${VAR}`) with their values, for the output
+/// panel's hover. Display only: the panel's tokenizer decides which ones it marks (not in
+/// single quotes, not after `\`), so a name that also shows up there just goes unused.
 pub(crate) fn command_vars(command: &str, env: &[(String, String)]) -> Vec<CommandVar> {
-    /// A `$…` after the `$`: the name and the token's byte length (`{name}` counts braces).
-    fn var(s: &str) -> (&str, usize) {
-        if let Some(braced) = s.strip_prefix('{') {
-            return match braced.find('}') {
-                Some(end) => (&braced[..end], end + 2),
-                None => ("", 0),
-            };
-        }
-        let end = s
-            .char_indices()
-            .take_while(|(_, c)| c.is_ascii_alphanumeric() || *c == '_')
-            .last()
-            .map_or(0, |(i, c)| i + c.len_utf8());
-        (&s[..end], end)
-    }
-    let mut vars: Vec<CommandVar> = Vec::new();
-    let mut rest = command;
-    let mut single = false;
-    while let Some(c) = rest.chars().next() {
-        match c {
-            '\'' => {
-                single = !single;
-                rest = &rest[1..];
-            }
-            '\\' if !single => {
-                let mut it = rest.chars();
-                it.next();
-                rest = match it.next() {
-                    Some(next) => &rest[1 + next.len_utf8()..],
-                    None => "",
-                };
-            }
-            '$' if !single => {
-                let after = &rest[c.len_utf8()..];
-                let (name, len) = var(after);
-                if name.is_empty() {
-                    rest = after;
-                    continue;
-                }
-                if !vars.iter().any(|v| v.name == name) {
-                    if let Some(value) = env.iter().find(|(k, _)| k == name).map(|(_, v)| v) {
-                        vars.push(CommandVar {
-                            name: name.to_string(),
-                            value: value.clone(),
-                        });
-                    }
-                }
-                rest = &after[len..];
-            }
-            _ => {
-                rest = &rest[c.len_utf8()..];
-            }
-        }
-    }
-    vars
+    let named = |name: &str| {
+        let plain = format!("${name}");
+        command.match_indices(&plain).any(|(i, _)| {
+            !command[i + plain.len()..].starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_')
+        }) || command.contains(&format!("${{{name}}}"))
+    };
+    env.iter()
+        .filter(|(name, _)| named(name))
+        .map(|(name, value)| CommandVar {
+            name: name.clone(),
+            value: value.clone(),
+        })
+        .collect()
 }
 
 /// Runs a fixed read-only command in a pty and returns its output; no run is recorded.
@@ -921,31 +878,27 @@ mod tests {
     }
 
     #[test]
-    fn command_vars_collects_referenced_values() {
+    fn command_vars_are_the_named_env_vars() {
+        let var = |name: &str, value: &str| CommandVar {
+            name: name.into(),
+            value: value.into(),
+        };
         let env = vec![
             ("GITGEL_BRANCH".to_string(), "feat/x".to_string()),
+            ("GITGEL_PATH_1".to_string(), "a".to_string()),
+            ("GITGEL_PATH_10".to_string(), "j".to_string()),
             ("GITGEL_MESSAGE".to_string(), "do it".to_string()),
-            ("GITGEL_PROMPT".to_string(), "x".repeat(501)),
+            ("GIT_LITERAL_PATHSPECS".to_string(), "1".to_string()),
         ];
         assert_eq!(
             command_vars(
-                "git checkout $GITGEL_BRANCH ${GITGEL_BRANCH} -m \"$GITGEL_MESSAGE\" \
-                 '$GITGEL_BRANCH' \\$GITGEL_BRANCH $GITGEL_NOPE $5 tool -p \"$GITGEL_PROMPT\"",
+                "git checkout ${GITGEL_BRANCH} -m \"$GITGEL_MESSAGE\" -- \"$GITGEL_PATH_10\"",
                 &env
             ),
             vec![
-                CommandVar {
-                    name: "GITGEL_BRANCH".into(),
-                    value: "feat/x".into(),
-                },
-                CommandVar {
-                    name: "GITGEL_MESSAGE".into(),
-                    value: "do it".into(),
-                },
-                CommandVar {
-                    name: "GITGEL_PROMPT".into(),
-                    value: "x".repeat(501),
-                },
+                var("GITGEL_BRANCH", "feat/x"),
+                var("GITGEL_PATH_10", "j"),
+                var("GITGEL_MESSAGE", "do it"),
             ]
         );
     }

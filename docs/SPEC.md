@@ -2224,10 +2224,11 @@ export interface ScriptRun {
   `GITGEL_REPO_NAME`, `GITGEL_PROJECT` (Project entry menu only), `GITGEL_HEAD` (tip SHA),
   `GITGEL_INPUT_<ID>` for each shown input (hidden inputs are not set). Values are never pasted
   into the command, so they cannot inject shell.
-- A run's variables are display only (`command_vars`): each `$VAR` / `${VAR}` the command
-  names outside single quotes takes the run's environment value (long ones too, so the AI
-  prompt in `GITGEL_PROMPT` reads in full); `\$` stays literal and unknown variables are
-  left out. The pty always gets the raw command.
+- A run's variables are display only (`command_vars`): the run's environment values of the
+  variables its command names (long ones too, so the AI prompt in `GITGEL_PROMPT` reads in
+  full). The panel marks a `$VAR` / `${VAR}` as the shell expands it: not inside single
+  quotes (a `'` inside double quotes is no quote), not after `\`; unknown variables stay
+  plain text. The pty always gets the raw command.
 - Every script runs in a pty (`portable-pty`, `TERM=xterm-256color`), so tools see a terminal:
   colours, progress bars and prompts work. A script that asks a question waits for an answer in
   its output panel (the toast stays on running; a click opens it). Output streams as `script-output`; the backend keeps

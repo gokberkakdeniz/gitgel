@@ -28,8 +28,8 @@ export function OutputPanelHost() {
 
 const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-/** A command's pieces: plain text, or a `$VAR` / `${VAR}` token (same rules as the
- * backend's `command_vars`: single-quoted parts and `\$` stay text). */
+/** A command's pieces: plain text, or a `$VAR` / `${VAR}` token as the shell expands it:
+ * single-quoted parts and `\$` stay text; a `'` inside double quotes is no quote. */
 export function tokenizeCommand(command: string): { text: string; variable?: string }[] {
   const out: { text: string; variable?: string }[] = [];
   let text = '';
@@ -40,10 +40,12 @@ export function tokenizeCommand(command: string): { text: string; variable?: str
     }
   };
   let single = false;
+  let double = false;
   let i = 0;
   while (i < command.length) {
     const c = command[i];
-    if (c === "'") {
+    if (c === '"' && !single) double = !double;
+    if (c === "'" && !double) {
       single = !single;
       text += c;
       i++;
