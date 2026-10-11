@@ -7,6 +7,7 @@ import { Menu, MenuDivider, MenuItem } from '../components/Menu';
 import { FileOpenItems } from '../components/OpenItems';
 import { Popover } from '../components/Popover';
 import { getRemoteUrl, openRemoteLink, readFilePair } from '../lib/ipc';
+import { t } from '../i18n';
 import { useEffectiveTheme } from '../lib/theme';
 import type { DiffContext, DiffLayout, DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
@@ -74,6 +75,8 @@ interface Props {
   navRef: MutableRefObject<DiffNav | null>;
   layout: DiffLayout;
   ignoreWhitespace: boolean;
+  /** Appearance › Diff › Tab size: spaces, both panes. */
+  tabSize: number;
   /** Changes only (unchanged lines folded, `contextLines` kept around each change) or whole file. */
   context: DiffContext;
   contextLines: number;
@@ -104,6 +107,7 @@ export function DiffView({
   navRef,
   layout,
   ignoreWhitespace,
+  tabSize,
   context,
   contextLines,
   onToggleLayout,
@@ -128,8 +132,8 @@ export function DiffView({
 
   // Latest props for Monaco callbacks registered once.
   const handlers = { onNav, onStep, onToggleLayout, onToggleWhitespace, onToggleContext, onCommitStep, onFocusFilter };
-  const latest = useRef({ ...handlers, land, fileKey, layout, context, contextLines, path: change.path });
-  latest.current = { ...handlers, land, fileKey, layout, context, contextLines, path: change.path };
+  const latest = useRef({ ...handlers, land, fileKey, layout, context, contextLines, tabSize, path: change.path });
+  latest.current = { ...handlers, land, fileKey, layout, context, contextLines, tabSize, path: change.path };
 
   // Layout, whitespace and context are editor options: changed in place, never by rebuilding the
   // editor. Monaco hides whitespace-only changes by default, so the option is always given.
@@ -139,8 +143,10 @@ export function DiffView({
       renderSideBySide: layout === 'split',
       ignoreTrimWhitespace: ignoreWhitespace,
       hideUnchangedRegions: folding(context, contextLines),
+      tabSize,
+      insertSpaces: true,
     }),
-    [layout, ignoreWhitespace, context, contextLines],
+    [layout, ignoreWhitespace, context, contextLines, tabSize],
   );
 
   // The wrapper would dispose the models before the editor lets go of them, which Monaco
@@ -331,9 +337,9 @@ export function DiffView({
   };
 
   const message = data?.binary
-    ? 'Binary file not shown'
+    ? t('diff.binary')
     : data?.tooLarge
-      ? 'File is too large to show (over 1 MB)'
+      ? t('diff.tooLarge')
       : null;
 
   // New content for the file on screen (another layer, a refresh): note the line at the top
@@ -434,22 +440,22 @@ export function DiffView({
       {message && <div className={styles.message}>{message}</div>}
       {menu && (
         <Popover anchorRect={menu.rect} width={230} onClose={() => setMenu(null)}>
-          <Menu aria-label="Diff Actions" autoFocus>
+          <Menu aria-label={t('diff.actions')} autoFocus>
             <MenuItem icon={<CopyIcon />} onSelect={() => copy(fileReference(change.path, menu.from, menu.to, menu.endColumn))}>
-              Copy Relative Reference
+              {t('diff.copyRelative')}
             </MenuItem>
             {folder && (
               <MenuItem
                 icon={<CopyIcon />}
                 onSelect={() => copy(fileReference(`${folder}/${change.path}`, menu.from, menu.to, menu.endColumn))}
               >
-                Copy Absolute Reference
+                {t('diff.copyAbsolute')}
               </MenuItem>
             )}
             {link && (
               <>
                 <MenuItem icon={<CopyIcon />} onSelect={() => copy(link)}>
-                  Copy Permalink
+                  {t('diff.copyPermalink')}
                 </MenuItem>
                 <MenuItem
                   icon={<LinkIcon />}
@@ -458,7 +464,7 @@ export function DiffView({
                     setMenu(null);
                   }}
                 >
-                  Open Permalink
+                  {t('diff.openPermalink')}
                 </MenuItem>
               </>
             )}

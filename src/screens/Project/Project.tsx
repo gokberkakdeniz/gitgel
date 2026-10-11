@@ -24,7 +24,8 @@ import {
 import { basename } from '../../lib/paths';
 import { entriesSummary, nameConflict } from '../../lib/projects';
 import { entryKey } from '../../lib/entryKey';
-import { formatAge } from '../../lib/format';
+import { agoText, formatCount } from '../../lib/format';
+import { t } from '../../i18n';
 import type { EntryConfig, EntrySummary, RepoConfig } from '../../lib/types';
 import { useInvoke } from '../../lib/useInvoke';
 import { useData } from '../../state/data';
@@ -91,7 +92,7 @@ function SavedProject({ id }: { id: string }) {
         e.preventDefault();
         useNav
           .getState()
-          .push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: 'Back to project' });
+          .push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: t('project.backToProject') });
       }
     };
     window.addEventListener('keydown', onKey);
@@ -102,7 +103,7 @@ function SavedProject({ id }: { id: string }) {
   // Rows come from the view; while it loads, keep the table shape from the config.
   const rows = data?.project.id === id ? data.entries : [];
   const review = () =>
-    nav.push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: 'Back to project' });
+    nav.push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: t('project.backToProject') });
 
   return (
     <>
@@ -124,14 +125,14 @@ function SavedProject({ id }: { id: string }) {
       >
         <RefreshButton />
         <Button kbd="⌘K" className={styles.addButton} onClick={openPalette}>
-          Add Entries…
+          {t('project.addEntries')}
         </Button>
-        <Button variant="primary" title="Review Changes (⌘R)" disabled={project.entries.length === 0} onClick={review}>
-          Review Changes
+        <Button variant="primary" title={t('project.reviewChangesHint')} disabled={project.entries.length === 0} onClick={review}>
+          {t('project.reviewChanges')}
         </Button>
         <button
           type="button"
-          aria-label="Project Options"
+          aria-label={t('project.projectOptions')}
           aria-haspopup="menu"
           className={menuAt ? `${styles.optionsButton} ${styles.optionsOpen}` : styles.optionsButton}
           onClick={(e) => setMenuAt(e.currentTarget.getBoundingClientRect())}
@@ -205,8 +206,8 @@ function DraftProject() {
         draft
         subtitle={
           rows.length === 0
-            ? 'Name Your Project'
-            : `${entriesSummary(rows)} · name your project`
+            ? t('project.nameYourProject')
+            : `${entriesSummary(rows)} · ${t('project.draftSuffix')}`
         }
         onNameChange={(name) => useUi.getState().setDraftProject({ ...draft, name })}
         onRenameSave={save}
@@ -214,10 +215,10 @@ function DraftProject() {
       >
         <RefreshButton />
         <Button kbd="⌘K" className={styles.addButton} onClick={openPalette}>
-          Add Entries…
+          {t('project.addEntries')}
         </Button>
         <Button variant="primary" disabled>
-          Review Changes
+          {t('project.reviewChanges')}
         </Button>
       </ProjectHeader>
 
@@ -297,7 +298,7 @@ function ProjectHeader(props: HeaderProps) {
   const titleNode = renaming ? (
     <input
       ref={input}
-      aria-label="Project name"
+      aria-label={t('project.projectName')}
       className={editable.input}
       data-editable-title
       aria-invalid={!!conflict}
@@ -323,7 +324,7 @@ function ProjectHeader(props: HeaderProps) {
     <span
       className={editable.title}
       data-editable-title
-      title="Rename Project"
+      title={t('project.renameProject')}
       onClick={(e) => {
         titleWidth.current = e.currentTarget.offsetWidth;
         props.onRenameStart?.();
@@ -334,7 +335,7 @@ function ProjectHeader(props: HeaderProps) {
   );
 
   const sub = conflict
-    ? `A project named “${conflict}” already exists`
+    ? t('project.conflictExists', { name: conflict })
     : subtitle;
 
   return (
@@ -348,12 +349,10 @@ function EmptyProject() {
   return (
     <div className={styles.center}>
       <div className={styles.emptyBody}>
-        <h2 className={styles.emptyTitle}>No Entries Yet</h2>
-        <p className={styles.emptyText}>
-          A project groups branches that belong to one piece of work, across any of your repositories.
-        </p>
+        <h2 className={styles.emptyTitle}>{t('project.noEntries')}</h2>
+        <p className={styles.emptyText}>{t('project.noEntriesText')}</p>
         <Button variant="primary" size={40} kbd="⌘K" className={styles.emptyButton} onClick={openPalette}>
-          Add Branches…
+          {t('project.addBranches')}
         </Button>
       </div>
     </div>
@@ -383,13 +382,13 @@ function EntryTable({
   return (
     <div className={styles.table}>
       <div className={`${styles.grid} ${styles.columns}`}>
-        <span>Repo</span>
-        <span>Branch</span>
-        <span>Base</span>
-        <span>Ahead</span>
-        <span>Files</span>
-        <span>Uncommitted</span>
-        <span>State</span>
+        <span>{t('project.colRepo')}</span>
+        <span>{t('project.colBranch')}</span>
+        <span>{t('project.colBase')}</span>
+        <span>{t('project.colAhead')}</span>
+        <span>{t('project.colFiles')}</span>
+        <span>{t('project.colUncommitted')}</span>
+        <span>{t('project.colState')}</span>
         <span />
       </div>
       <div className={styles.rows}>
@@ -403,7 +402,7 @@ function EntryTable({
               <button
                 type="button"
                 className={styles.repo}
-                title={`Show ${e.repoName} on Branches`}
+                title={t('project.showOnBranches', { repo: e.repoName })}
                 onClick={() => push({ name: 'branches', focusRepoId: e.repoId })}
               >
                 {e.repoName}
@@ -418,7 +417,7 @@ function EntryTable({
                       name: 'review',
                       target: { kind: 'project', projectId },
                       focusKey: e.key,
-                      backLabel: 'Back to project',
+                      backLabel: t('project.backToProject'),
                     })
                   }
                 >
@@ -440,7 +439,7 @@ function EntryTable({
               <span className={styles.mono}>{e.ahead === null ? '—' : `↑${e.ahead}`}</span>
               <span className={styles.mono}>{e.files ?? '—'}</span>
               {e.uncommitted ? (
-                <span className={styles.dirty}>● {e.uncommitted} changed</span>
+                <span className={styles.dirty}>{t('project.changedCount', { n: formatCount(e.uncommitted) })}</span>
               ) : (
                 <span className={styles.faint}>—</span>
               )}
@@ -452,7 +451,7 @@ function EntryTable({
               />
               <button
                 type="button"
-                aria-label="Entry Options"
+                aria-label={t('project.entryOptions')}
                 className={hot ? `${styles.entryMenu} ${styles.entryMenuOpen}` : styles.entryMenu}
                 onClick={(ev) => setMenu({ key: e.key, rect: ev.currentTarget.getBoundingClientRect() })}
               >
@@ -529,20 +528,20 @@ function StatePill({
   switch (e.state) {
     case 'merged':
       return (
-        <Pill tone="success" className={cls} title={`Merged into ${e.base}`}>
-          Merged into {e.base}
+        <Pill tone="success" className={cls} title={e.base ? t('branches.mergedInto', { base: e.base }) : undefined}>
+          {t('branches.mergedInto', { base: e.base ?? '' })}
         </Pill>
       );
     case 'detached':
-      return <Pill tone="warning" className={cls}>Detached HEAD</Pill>;
+      return <Pill tone="warning" className={cls}>{t('branches.detachedHead')}</Pill>;
     case 'base_missing':
-      return clickable('warning', 'Base Missing', onBase);
+      return clickable('warning', t('branches.baseMissing'), onBase);
     case 'git_error':
-      return <Pill tone="danger" className={cls} title={e.error ?? undefined}>Git Error</Pill>;
+      return <Pill tone="danger" className={cls} title={e.error ?? undefined}>{t('branches.gitErr')}</Pill>;
     case 'branch_deleted':
-      return clickable('danger', 'Branch Deleted', onMenu);
+      return clickable('danger', t('project.branchDeleted'), onMenu);
     case 'repo_missing':
-      return clickable('danger', 'Repo Path Not Found', onSettings);
+      return clickable('danger', t('project.repoMissing'), onSettings);
     default:
       return <span className={styles.faint}>—</span>;
   }
@@ -573,35 +572,35 @@ function EntryMenu({
   const { data: exists } = useInvoke(() => commitExists(entry.repoId, tip!.sha), [tip?.sha], {
     enabled: !!tip,
   });
-  const seen = tip ? formatAge(Date.parse(tip.seenAt) / 1000) : '';
+  const seen = tip ? agoText(Date.parse(tip.seenAt) / 1000) : '';
   const hasFirst = !!tip || entry.branch !== null;
 
   return (
-    <Menu aria-label="Entry Options">
+    <Menu aria-label={t('project.entryOptions')}>
       {tip && (
         <MenuItem
           icon={<HistoryIcon />}
           disabled={exists === false}
           sub={
             exists === false
-              ? `tip ${tip.sha.slice(0, 7)} · no longer in the repository`
-              : `tip ${tip.sha.slice(0, 7)} · seen ${seen} ago`
+              ? t('project.tipGone', { sha: tip.sha.slice(0, 7) })
+              : t('project.tipSeen', { sha: tip.sha.slice(0, 7), age: seen })
           }
           onSelect={() => {
             onClose();
             push({
               name: 'review',
               target: { kind: 'branch', repoId: entry.repoId, branch: entry.branch, worktreePath: null, tipOverride: tip.sha },
-              backLabel: 'Back to project',
+              backLabel: t('project.backToProject'),
             });
           }}
         >
-          View last known state
+          {t('project.viewLastKnown')}
         </MenuItem>
       )}
       {saved && entry.branch !== null && (
         <MenuItem icon={<BranchIcon size={14} />} onSelect={onRepoint}>
-          Point to Another Branch…
+          {t('project.pointAnother')}
         </MenuItem>
       )}
       <CopyBranchItem entry={entry} onDone={onClose} />
@@ -611,7 +610,7 @@ function EntryMenu({
       <ScriptsMenu entry={entry} menu="project" project={projectName} onDone={onClose} />
       <MenuDivider />
       <MenuItem danger icon={<RemoveIcon />} onSelect={onRemove}>
-        Remove from project
+        {t('project.removeFrom')}
       </MenuItem>
       <EntryMenuNote entry={entry} />
     </Menu>
@@ -640,7 +639,7 @@ function BranchPicker({
   };
   return (
     <Popover anchorRect={anchorRect} width={300} alignRight onClose={onClose}>
-      <div role="listbox" aria-label={`Point ${entry.branch} to another branch`} className={styles.picker}>
+      <div role="listbox" aria-label={t('project.pointBranch', { branch: entry.branch ?? '' })} className={styles.picker}>
         <div className={styles.pickerFilterRow}>
           <Input
             autoFocus
@@ -648,8 +647,8 @@ function BranchPicker({
             mono
             clearable
             size={32}
-            aria-label="Search Branches"
-            placeholder="Search"
+            aria-label={t('project.searchBranches')}
+            placeholder={t('sidebar.search')}
             className={styles.pickerFilter}
             value={query}
             onChange={(q) => {
@@ -682,7 +681,7 @@ function BranchPicker({
               {b}
             </button>
           ))}
-          {data && branches.length === 0 && <div className={styles.pickerEmpty}>No branches</div>}
+          {data && branches.length === 0 && <div className={styles.pickerEmpty}>{t('project.noBranches')}</div>}
         </div>
       </div>
     </Popover>

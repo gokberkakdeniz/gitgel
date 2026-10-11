@@ -3,8 +3,10 @@
 import { listen } from '@tauri-apps/api/event';
 import { LogicalSize } from '@tauri-apps/api/dpi';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { getConfig, revealWindow as ipcRevealWindow } from '../lib/ipc';
+import { fmtFromSettings, getFmt, setFmt } from '../lib/format';
+import { getLocale, resolveLocale, setLocale } from '../i18n';
 import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from '../lib/theme';
 import type { Appearance, Config } from '../lib/types';
 import { AboutWindow } from './AboutWindow';
@@ -28,13 +30,28 @@ export function AuxApp({ label }: { label: string }) {
     return () => window.clearTimeout(timer);
   }, []);
 
+  const [, setLangTick] = useState(0);
   useEffect(() => {
     let appearance: Appearance = 'system';
     const apply = (a: Appearance) => {
       appearance = a;
       applyTheme(resolveEffective(a, systemIsDark()), a);
     };
-    void getConfig().then((c) => apply(c.settings.appearance));
+    void getConfig().then((c) => {
+      apply(c.settings.appearance);
+      let changed = false;
+      const next = resolveLocale(c.settings.language ?? 'system');
+      if (next !== getLocale()) {
+        setLocale(next);
+        changed = true;
+      }
+      const fmt = fmtFromSettings(c.settings);
+      if (JSON.stringify(fmt) !== JSON.stringify(getFmt())) {
+        setFmt(fmt);
+        changed = true;
+      }
+      if (changed) setLangTick((n) => n + 1);
+    });
     const unlisten = listen<Config>('config-changed', (e) => apply(e.payload.settings.appearance));
     const unwatch = watchSystemTheme(() => appearance);
     return () => {

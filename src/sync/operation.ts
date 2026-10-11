@@ -2,32 +2,35 @@
 // or revert stopped in an entry's worktree, started from Gitgel or not. Continue and Abort are git
 // actions.
 import { create } from 'zustand';
+import { formatCount } from '../lib/format';
+import { t } from '../i18n';
 import { gitOperation } from '../lib/ipc';
 import type { EntryRef, EntrySummary, FileChange, Operation, OperationKind } from '../lib/types';
 import { startGitAction, useRuns } from '../scripts/runs';
 import { useData } from '../state/data';
 
 const NAMES: Record<OperationKind, { pill: string; title: string; verb: string }> = {
-  rebase: { pill: 'rebasing', title: 'Rebase', verb: 'rebase' },
-  merge: { pill: 'merging', title: 'Merge', verb: 'merge' },
-  cherry_pick: { pill: 'cherry-picking', title: 'Cherry-Pick', verb: 'cherry-pick' },
-  revert: { pill: 'reverting', title: 'Revert', verb: 'revert' },
+  rebase: { pill: 'sync.pillRebasing', title: 'sync.titleRebase', verb: 'sync.verbRebase' },
+  merge: { pill: 'sync.pillMerging', title: 'sync.titleMerge', verb: 'sync.verbMerge' },
+  cherry_pick: { pill: 'sync.pillCherry', title: 'sync.titleCherry', verb: 'sync.verbCherry' },
+  revert: { pill: 'sync.pillReverting', title: 'sync.titleRevert', verb: 'sync.verbRevert' },
 };
 
 /** "Rebase", "Cherry-Pick": for Continue Rebase, Abort Merge. */
 export function operationTitle(op: Operation): string {
-  return NAMES[op.kind].title;
+  return t(NAMES[op.kind].title);
 }
 
 /** `rebasing 2/4` (Branches), `rebasing` when `short` (Review's narrower group line). */
 export function operationPill(op: Operation, short = false): string {
   const p = !short && op.step !== null && op.total !== null ? ` ${op.step}/${op.total}` : '';
-  return `${NAMES[op.kind].pill}${p}`;
+  return `${t(NAMES[op.kind].pill)}${p}`;
 }
 
 /** Where it paused: `commit 2 of 4`, else the commit. */
 function pausedAt(op: Operation): string | null {
-  if (op.step !== null && op.total !== null) return `commit ${op.step} of ${op.total}`;
+  if (op.step !== null && op.total !== null)
+    return t('sync.pausedAt', { step: formatCount(op.step), total: formatCount(op.total) });
   return op.commit;
 }
 
@@ -36,26 +39,28 @@ function pausedAt(op: Operation): string | null {
 function doing(op: Operation): string {
   switch (op.kind) {
     case 'rebase':
-      return op.onto ? `Rebasing onto ${op.onto}` : 'Rebasing';
+      return op.onto ? t('sync.doingRebaseOn', { x: op.onto }) : t('sync.doingRebase');
     case 'merge':
-      return op.other ? `Merging ${op.other}` : 'Merging';
+      return op.other ? t('sync.doingMerge', { x: op.other }) : t('sync.doingMergePlain');
     case 'cherry_pick':
-      return op.commit ? `Cherry-picking ${op.commit}` : 'Cherry-picking';
+      return op.commit ? t('sync.doingCherry', { x: op.commit }) : t('sync.doingCherryPlain');
     case 'revert':
-      return op.commit ? `Reverting ${op.commit}` : 'Reverting';
+      return op.commit ? t('sync.doingRevert', { x: op.commit }) : t('sync.doingRevertPlain');
   }
 }
 
 /** The pill's tooltip (and the Abort dialog's row): `Rebasing onto main, paused at commit 2 of 4`. */
 export function operationTooltip(op: Operation): string {
   const at = op.kind === 'rebase' ? pausedAt(op) : null;
-  return at ? `${doing(op)}, paused at ${at}` : doing(op);
+  return at ? t('sync.pausedTip', { doing: doing(op), at }) : doing(op);
 }
 
 /** The conflicts pill's tooltip: which files still have conflicts. */
 export function conflictsTooltip(e: EntrySummary): string {
   const files = e.operation?.unresolved ?? [];
-  return files.length > 0 ? `Conflicts in ${files.join(', ')}` : 'Merge conflicts in the working tree';
+  return files.length > 0
+    ? t('sync.conflictsIn', { files: files.join(', ') })
+    : t('sync.conflictsTree');
 }
 
 /** A file row's conflict mark (T2): only for a conflicted file of an operation in progress. */
@@ -69,31 +74,37 @@ export function entryLabel(e: EntrySummary): string {
   return `${e.repoName} / ${e.branch ?? e.shortSha ?? ''}`;
 }
 
-/** A piece of the banner's text: words, or a ref or SHA (mono). */
-export type BannerPart = { text: string } | { ref: string };
-
-/** Review's one-line banner (T2): `Resolve conflicts to continue rebasing` + the entry's names +
- * `(2/4)`; `Continue rebasing` once no conflicted file keeps git's markers. History's (T4) has no
- * names, so a merge ends at what it merges (`… merging main`). */
+/** Review's one-line banner (T2) as a single sentence: `Resolve conflicts to continue
+ * rebasing` + the entry's names + `(2/4)`; History's (T4) has no names, so a merge ends at
+ * what it merges (`… merging main`). One sentence (not word parts), so agglutinative
+ * languages can order it freely; the ref keeps no special styling. */
 export function operationBanner(
   op: Operation,
   names = true,
-): { tone: 'danger' | 'warning'; lead: BannerPart[]; progress: string | null } {
+): { tone: 'danger' | 'warning'; lead: string; progress: string | null } {
   const conflicts = op.unresolved.length > 0;
-  const lead: BannerPart[] = [{ text: conflicts ? 'Resolve conflicts to continue ' : 'Continue ' }];
+  const start = conflicts ? 'Resolve' : 'Continue';
+  const tail = names ? '' : 'Short';
+  let lead: string;
   switch (op.kind) {
     case 'rebase':
-      lead.push({ text: 'rebasing' });
+      lead = t(conflicts ? 'sync.leadRebaseResolve' : 'sync.leadRebaseContinue');
       break;
-    case 'merge':
-      lead.push({ text: 'merging ' }, op.other ? { ref: op.other } : { text: 'a branch' }, ...(names ? [{ text: ' into' }] : []));
+    case 'merge': {
+      const other = op.other ?? t('sync.someBranch');
+      lead = t(`sync.leadMerge${start}${tail}`, { other });
       break;
-    case 'cherry_pick':
-      lead.push({ text: 'cherry-picking ' }, op.commit ? { ref: op.commit } : { text: 'a commit' }, ...(names ? [{ text: ' onto' }] : []));
+    }
+    case 'cherry_pick': {
+      const commit = op.commit ?? t('sync.someCommit');
+      lead = t(`sync.leadCherry${start}${tail}`, { commit });
       break;
-    case 'revert':
-      lead.push({ text: 'reverting ' }, op.commit ? { ref: op.commit } : { text: 'a commit' }, ...(names ? [{ text: ' on' }] : []));
+    }
+    case 'revert': {
+      const commit = op.commit ?? t('sync.someCommit');
+      lead = t(`sync.leadRevert${start}${tail}`, { commit });
       break;
+    }
   }
   const progress = op.step !== null && op.total !== null ? `(${op.step}/${op.total})` : null;
   return { tone: conflicts ? 'danger' : 'warning', lead, progress };
@@ -101,7 +112,7 @@ export function operationBanner(
 
 /** Why Continue cannot run now, or null. */
 export function continueBlocked(op: Operation): string | null {
-  return op.unresolved.length > 0 ? 'Fix the conflicts first' : null;
+  return op.unresolved.length > 0 ? t('sync.fixFirst') : null;
 }
 
 /** The git action running in the entry's repository, if any (one at a time per repository). */
@@ -115,22 +126,40 @@ function refOf(e: EntrySummary): EntryRef {
   return { repoId: e.repoId, branch: e.branch, worktreePath: e.branch === null ? e.worktreePath : null };
 }
 
+/** The verb for Abort ("Abort the rebase?"): translated directly, never lowercased. */
+export function operationVerb(op: Operation): string {
+  return t(NAMES[op.kind].verb);
+}
+
 export function continueOperation(e: EntrySummary, op: Operation): Promise<void> {
   const branch = e.branch ?? e.shortSha ?? '';
+  const onto = op.onto ? ` onto ${op.onto}` : '';
   const done = {
-    rebase: `Rebased ${branch}${op.onto ? ` onto ${op.onto}` : ''}`,
-    merge: `Merged ${op.other ? `${op.other} ` : ''}into ${branch}`,
-    cherry_pick: `Cherry-picked ${op.commit ? `${op.commit} ` : ''}onto ${branch}`,
-    revert: `Reverted ${op.commit ? `${op.commit} ` : ''}on ${branch}`,
+    rebase: t('sync.rebased', { branch, onto }),
+    merge: op.other
+      ? t('sync.doneMerged', { other: op.other, branch })
+      : t('sync.doneMergedPlain', { branch }),
+    cherry_pick: op.commit
+      ? t('sync.doneCherry', { commit: op.commit, branch })
+      : t('sync.doneCherryPlain', { branch }),
+    revert: op.commit
+      ? t('sync.doneRevert', { commit: op.commit, branch })
+      : t('sync.doneRevertPlain', { branch }),
   }[op.kind];
   // A next commit that conflicts too ends the run with an error: git says so in the output.
-  return startGitAction(`Continue ${operationTitle(op)}`, () => gitOperation(refOf(e), false), { openOnFail: true, done });
+  return startGitAction(t('sync.actContinue', { title: operationTitle(op) }), () => gitOperation(refOf(e), false), {
+    openOnFail: true,
+    done,
+  });
 }
 
 export function abortOperation(e: EntrySummary, op: Operation): Promise<void> {
   const branch = e.branch ?? e.shortSha ?? '';
-  const done = `Aborted the ${NAMES[op.kind].verb} of ${branch}`;
-  return startGitAction(`Abort ${operationTitle(op)}`, () => gitOperation(refOf(e), true), { openOnFail: true, done });
+  const done = t('sync.doneAborted', { verb: operationVerb(op), branch });
+  return startGitAction(t('sync.actAbort', { title: operationTitle(op) }), () => gitOperation(refOf(e), true), {
+    openOnFail: true,
+    done,
+  });
 }
 
 interface OperationUi {

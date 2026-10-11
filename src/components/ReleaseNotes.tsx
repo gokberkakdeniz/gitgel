@@ -1,3 +1,4 @@
+import { formatDate } from '../lib/format';
 import type { Release } from '../lib/changelog';
 import styles from './ReleaseNotes.module.css';
 
@@ -10,7 +11,7 @@ export function ReleaseNotes({ releases, compact }: { releases: Release[]; compa
         <section key={r.version} className={compact ? `${styles.release} ${styles.compact}` : styles.release}>
           <h3 className={styles.heading}>
             <span className={styles.version}>{r.version}</span>
-            <span className={styles.date}>{formatDate(r.date, compact)}</span>
+            <span className={styles.date}>{releaseDate(r.date)}</span>
           </h3>
           {r.groups.map((g) => (
             <div key={g.title} className={styles.group}>
@@ -49,9 +50,9 @@ function Line({ text }: { text: string }) {
   );
 }
 
-/** `2026-10-06` → `Oct 6, 2026` (`Oct 6` when compact). */
-function formatDate(date: string, compact?: boolean): string {
+/** `2026-10-06` → the Appearance date pattern. */
+function releaseDate(date: string): string {
   const d = new Date(`${date}T00:00:00`);
   if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: compact ? undefined : 'numeric' });
+  return formatDate(d.getTime() / 1000);
 }

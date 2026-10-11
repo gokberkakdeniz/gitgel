@@ -5,7 +5,8 @@ import { ChevronDownIcon, ChevronRightIcon } from '../components/icons';
 import { Input } from '../components/Input';
 import { KindBadge } from '../components/KindBadge';
 import { Popover } from '../components/Popover';
-import { plural } from '../lib/format';
+import { cnt, formatCount } from '../lib/format';
+import { t } from '../i18n';
 import { basename } from '../lib/paths';
 import type { EntrySummary, FileChange, ReviewGroup, StashPush } from '../lib/types';
 import { dirLabel } from '../screens/Review/selection';
@@ -27,10 +28,10 @@ export function stashRows(groups: ReviewGroup[]): Row[] {
 export function stashNote(entries: EntrySummary[]): string {
   const perRepo = new Map<string, number>();
   for (const e of entries) perRepo.set(e.repoName, (perRepo.get(e.repoName) ?? 0) + 1);
-  const lines = ['One stash per entry, same message.'];
+  const lines = [t('stash.noteOne')];
   for (const [repo, n] of perRepo) {
-    if (n === 2) lines.push(`Both are in ${repo}, so its stack gets 2 new stashes.`);
-    else if (n > 2) lines.push(`${n} are in ${repo}, so its stack gets ${n} new stashes.`);
+    if (n === 2) lines.push(t('stash.noteTwo', { repo }));
+    else if (n > 2) lines.push(t('stash.noteMany', { n: String(n), repo }));
   }
   return lines.join(' ');
 }
@@ -84,7 +85,7 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
     <Popover anchorRect={anchorRect} width={420} alignRight onClose={onClose}>
       <div
         role="dialog"
-        aria-label="Stash Changes"
+        aria-label={t('stash.dialogTitle')}
         className={styles.dialog}
         onKeyDown={(e) => {
           // Listed in lib/shortcuts.ts.
@@ -94,9 +95,9 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
           }
         }}
       >
-        <div className={styles.title}>Stash Changes</div>
+        <div className={styles.title}>{t('stash.dialogTitle')}</div>
         <div className={styles.entries}>
-          <span className={styles.label}>In</span>
+          <span className={styles.label}>{t('stash.inLabel')}</span>
           {rows.map((r) => {
             const key = r.entry.key;
             const conflicted = r.entry.conflicts > 0;
@@ -110,7 +111,7 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
                 <div className={off ? `${styles.entry} ${styles.off}` : styles.entry}>
                   <label className={styles.entryPick}>
                     <Checkbox
-                      aria-label={`Stash ${name}`}
+                      aria-label={t('stash.stashEntry', { name })}
                       checked={all}
                       mixed={n > 0 && !all}
                       disabled={off}
@@ -120,20 +121,22 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
                     <span className={styles.branch}>{name}</span>
                   </label>
                   {conflicted ? (
-                    <span className={styles.conflict} title="Resolve its merge conflicts first; git cannot stash them.">
-                      {plural(r.entry.conflicts, 'conflict', 'conflicts')}
+                    <span className={styles.conflict} title={t('stash.conflictHint')}>
+                      {t('branches.conflictCount', { ...cnt(r.entry.conflicts) })}
                     </span>
                   ) : off ? (
-                    <span className={styles.count}>no changes</span>
+                    <span className={styles.count}>{t('stash.noChanges')}</span>
                   ) : (
                     <button
                       type="button"
                       className={styles.countButton}
                       aria-expanded={isOpen}
-                      title={isOpen ? 'Hide Files' : 'Pick Files'}
+                      title={isOpen ? t('stash.hideFiles') : t('stash.pickFiles')}
                       onClick={() => toggleOpen(key)}
                     >
-                      {all ? plural(r.files.length, 'file', 'files') : `${n} of ${plural(r.files.length, 'file', 'files')}`}
+                      {all
+                        ? t('branches.fileCount', { ...cnt(r.files.length) })
+                        : t('stash.someFiles', { n: formatCount(n), files: t('branches.fileCount', { ...cnt(r.files.length) }) })}
                       {isOpen ? <ChevronDownIcon size={10} /> : <ChevronRightIcon size={10} />}
                     </button>
                   )}
@@ -142,7 +145,7 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
                   r.files.map((f) => (
                     <label key={f.path} className={styles.file} title={f.oldPath ? `${f.oldPath} → ${f.path}` : f.path}>
                       <Checkbox
-                        aria-label={`Stash ${f.path}`}
+                        aria-label={t('stash.stashFile', { file: f.path })}
                         checked={!!picks[key]?.includes(f.path)}
                         onChange={() => toggleFile(key, f.path)}
                       />
@@ -157,15 +160,15 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="stash-message">
-            Message
+            {t('stash.messageLabel')}
           </label>
           <Input id="stash-message" size={32} value={message} onChange={setMessage} autoFocus />
         </div>
         <div className={styles.note}>{stashNote(pickedEntries)}</div>
         <div className={styles.actions}>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
           <Button variant="primary" kbd="↵" disabled={payload.length === 0} onClick={stash}>
-            Stash {plural(payload.length, 'entry', 'entries')}
+            {t('stash.stashBtn', { ...cnt(payload.length) })}
           </Button>
         </div>
       </div>

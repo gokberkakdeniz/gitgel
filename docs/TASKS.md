@@ -578,6 +578,7 @@ rather than as a task is listed the same way, marked "(on request)".
 ### Phase 23 — Commit message generation
 - [x] T23.1 Generate message backend — 2026-10-10
 - [x] T23.2 Generate message in the commit form — 2026-10-10
+- [x] T23.3 ✋ Checkpoint — message generation — 2026-10-11
 
 ### Phase 24 — AI settings
 - [x] T24.1 AI settings backend — 2026-10-10
@@ -592,17 +593,30 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) History base line is just `base <branch>`: the `Below: already in <base>` sub and the merge-base SHA are gone — 2026-10-10
 - [x] (on request) Smooth list reordering: the dragged row follows the pointer while the others glide aside, an accent line marks the drop slot, Escape cancels, lists auto-scroll at the edges — 2026-10-10
 - [x] (on request) Sidebar visibility is remembered in the config (`settings.sidebarVisible`); Review and History leave it as it is — 2026-10-10
+- [x] T24.4 ✋ Checkpoint — AI settings — 2026-10-11
+
+### Phase 25 — Multi-language support (en + tr)
+- [x] T25.1 i18n infrastructure — 2026-10-11
+- [x] T25.2 Backend: `settings.language` — 2026-10-11
+- [x] T25.3a String extraction + translation package — 2026-10-11
+  - note: 786 keys; MF2 selects need `.input {$n :string}` + bare `.match $n` in messageformat 4.0.0, and expression-first variants carry one leading space (stripped by `t()`); literal `{`/`}` impossible in patterns (`{patch}` goes through a var); banner lead became single-sentence keys (the mono ref span is gone).
+- [x] T25.3b Translation — 2026-10-11
+  - note: no Antigravity subagent available; translated by hand instead (Turkish dev tone: dal/repo/stash/commit kept or translated per key; Discard + file-menu texts copied verbatim per TRANSLATE.md).
+- [x] T25.3c Verification — 2026-10-11
+- [x] T25.4 Settings › Language + reload — 2026-10-11
+  - note: unknown `language` values read as `system` (lenient, like `diffContextLines`); the route stack persists in `sessionStorage` for the reload; aux windows sync the locale on load.
+
+### Phase 26 — Appearance settings
+- [x] T26.1 Appearance: Theme move, Formatting, Diff tab size — 2026-10-11
+  - note: counts use `$n` (raw selector) + `$d`/`$e` (display) in MF2 keys; `t()` strips one leading space (messageformat 4.0.0 `{{{` quirk); the operation banner lead is one sentence now (mono ref span gone); Discard + file-menu texts stay English verbatim; the design canvas still needs the Appearance artboards.
 
 ---
 
 ## Open
 
-### Phase 23 — Commit message generation
+### Phase 25 — Multi-language support (en + tr)
 
-#### T23.3 ✋ Checkpoint — message generation
-- **Depends on:** T23.2
+### Phase 26 — Appearance settings
 
-### Phase 24 — AI settings
-
-#### T24.4 ✋ Checkpoint — AI settings
-- **Depends on:** T24.6
+#### T26.2 ✋ Checkpoint — phases 25–26
+- **Depends on:** T26.1

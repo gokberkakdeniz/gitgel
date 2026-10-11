@@ -1,5 +1,6 @@
 // Show when (SPEC §14): CEL conditions on a branch, and on the inputs before an input.
 import { Environment } from '@marcbachmann/cel-js';
+import { t } from '../i18n';
 import type { EntrySummary, ScriptInput } from '../lib/types';
 
 /** The `branch` fields a condition can use, with their CEL types. */
@@ -97,7 +98,7 @@ function message(expr: string, raw: string, inputs: ScriptInput[] | null): strin
     const names = inBranch ? Object.keys(BRANCH_FIELDS) : (inputs ?? []).map((i) => i.id.toLowerCase());
     const where = inBranch ? 'branch' : 'inputs';
     const guess = closest(key, names);
-    return `No such field: ${where}.${key}${guess ? ` (did you mean ${guess}?)` : ''}`;
+    return t('scripts.noField', { field: `${where}.${key}` }) + (guess ? ` ${t('scripts.didMean', { guess })}` : '');
   }
   return raw.split('\n')[0];
 }
@@ -110,8 +111,9 @@ export function checkWhen(expr: string, inputs: ScriptInput[] | null = null): st
   if (!expr.trim()) return null;
   try {
     const result = (inputs ? environment(inputs) : scriptEnv).check(expr);
-    if (!result.valid) return message(expr, result.error?.message ?? 'Not a valid condition', inputs);
-    if (result.type !== 'bool' && result.type !== 'dyn') return `Must be true or false, not ${result.type}`;
+    if (!result.valid) return message(expr, result.error?.message ?? t('scripts.notValid'), inputs);
+    if (result.type !== 'bool' && result.type !== 'dyn')
+      return t('scripts.mustBool', { type: result.type });
     return null;
   } catch (e) {
     return message(expr, e instanceof Error ? e.message : String(e), inputs);

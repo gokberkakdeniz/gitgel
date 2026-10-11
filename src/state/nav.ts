@@ -20,9 +20,32 @@ interface NavState {
   forward: () => void;
 }
 
+const ROUTE_KEY = 'gitgel.route';
+
+/** The route stack survives the language reload (sessionStorage); a draft cannot. */
+function loadRoute(): { stack: Route[]; index: number } | null {
+  try {
+    if (typeof sessionStorage === 'undefined') return null;
+    const raw = sessionStorage.getItem(ROUTE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { stack: Route[]; index: number };
+    if (!Array.isArray(parsed.stack) || typeof parsed.index !== 'number') return null;
+    const names = ['branches', 'project', 'review', 'history', 'settings'];
+    const stack = parsed.stack
+      .filter((r) => r && names.includes(r.name))
+      .map((r) => (r.name === 'project' && r.projectId === 'draft' ? { name: 'branches' as const } : r));
+    if (stack.length === 0) return null;
+    return { stack, index: Math.min(Math.max(0, parsed.index), stack.length - 1) };
+  } catch {
+    return null;
+  }
+}
+
+const saved = loadRoute();
+
 export const useNav = create<NavState>()((set) => ({
-  stack: [{ name: 'branches' }],
-  index: 0,
+  stack: saved?.stack ?? [{ name: 'branches' }],
+  index: saved?.index ?? 0,
   push: (route) =>
     set((s) => ({ stack: [...s.stack.slice(0, s.index + 1), route], index: s.index + 1 })),
   replace: (route) => set((s) => ({ stack: s.stack.map((r, i) => (i === s.index ? route : r)) })),
@@ -33,6 +56,15 @@ export const useNav = create<NavState>()((set) => ({
 export const selectRoute = (s: NavState): Route => s.stack[s.index];
 export const selectCanBack = (s: NavState): boolean => s.index > 0;
 export const selectCanForward = (s: NavState): boolean => s.index < s.stack.length - 1;
+
+// Kept current for the language reload.
+useNav.subscribe((s) => {
+  try {
+    sessionStorage.setItem(ROUTE_KEY, JSON.stringify({ stack: s.stack, index: s.index }));
+  } catch {
+    // Nowhere to keep it; the reload lands on Branches.
+  }
+});
 
 /** Opens Settings on `section`, or on the section shown last. */
 export function openSettings(section?: SettingsSection) {

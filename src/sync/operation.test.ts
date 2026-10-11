@@ -25,8 +25,7 @@ const merge: Operation = {
   unresolved: [],
 };
 
-const text = (b: ReturnType<typeof operationBanner>) =>
-  b.lead.map((p) => ('text' in p ? p.text : p.ref)).join('') + (b.progress ? ` ${b.progress}` : '');
+const text = (b: ReturnType<typeof operationBanner>) => b.lead + (b.progress ? ` ${b.progress}` : '');
 
 describe('operation labels', () => {
   it('reads like the design', () => {

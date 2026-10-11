@@ -3,6 +3,7 @@ import { Button } from '../components/Button';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { MenuDivider, MenuItem } from '../components/Menu';
 import { Pill } from '../components/Pill';
+import { t } from '../i18n';
 import { stopAsking } from '../lib/prompts';
 import { tildifyHome } from '../lib/paths';
 import type { EntrySummary, Operation } from '../lib/types';
@@ -17,6 +18,7 @@ import {
   operationPill,
   operationTitle,
   operationTooltip,
+  operationVerb,
   useGitActionRunning,
   useOperationUi,
 } from './operation';
@@ -47,21 +49,11 @@ export function OperationBanner({
   const running = useGitActionRunning(entry.repoId);
   const { tone, lead, progress } = operationBanner(op, names);
   const blocked = continueBlocked(op);
-  const busy = running ? 'A git action is running' : undefined;
+  const busy = running ? t('sync.gitBusy') : undefined;
   return (
     <div role="status" className={`${styles.banner} ${styles[tone]}`}>
       <span className={styles.line}>
-        <span>
-          {lead.map((p, i) =>
-            'ref' in p ? (
-              <span key={i} className={styles.ref}>
-                {p.ref}
-              </span>
-            ) : (
-              p.text
-            ),
-          )}
-        </span>
+        <span>{lead}</span>
         {names && (
           <>
             <span className={styles.repo}>{entry.repoName}</span>
@@ -72,7 +64,7 @@ export function OperationBanner({
         {progress && <span>{progress}</span>}
       </span>
       <Button size={28} disabled={running} title={busy} onClick={() => askAbort(entry, op)}>
-        Abort
+        {t('sync.abortBtn')}
       </Button>
       <Button
         variant="primary"
@@ -81,7 +73,7 @@ export function OperationBanner({
         title={busy ?? blocked ?? undefined}
         onClick={() => void continueOperation(entry, op)}
       >
-        Continue
+        {t('sync.continueBtn')}
       </Button>
     </div>
   );
@@ -91,7 +83,7 @@ export function OperationBanner({
 export function OperationItems({ entry, op, onDone }: { entry: EntrySummary; op: Operation; onDone: () => void }) {
   const running = useGitActionRunning(entry.repoId);
   const blocked = continueBlocked(op);
-  const busy = running ? 'A git action is running' : null;
+  const busy = running ? t('sync.gitBusy') : null;
   const title = operationTitle(op);
   return (
     <>
@@ -105,7 +97,7 @@ export function OperationItems({ entry, op, onDone }: { entry: EntrySummary; op:
           void continueOperation(entry, op);
         }}
       >
-        Continue {title}
+        {t('sync.menuContinue', { title })}
       </MenuItem>
       <MenuItem
         icon="undo"
@@ -117,7 +109,7 @@ export function OperationItems({ entry, op, onDone }: { entry: EntrySummary; op:
           askAbort(entry, op);
         }}
       >
-        Abort {title}
+        {t('sync.menuAbort', { title })}
       </MenuItem>
     </>
   );
@@ -134,11 +126,11 @@ export function AbortOperationModal() {
     useOperationUi.setState({ aborting: null });
   };
   const title = operationTitle(op);
-  const verb = title.toLowerCase();
+  const verb = operationVerb(op);
   return (
     <ConfirmModal
-      aria-label={`Abort the ${verb}`}
-      title={`Abort the ${verb}?`}
+      aria-label={t('sync.abortAria', { verb })}
+      title={t('sync.abortTitle', { verb })}
       width={460}
       onClose={close}
       context={[
@@ -148,7 +140,7 @@ export function AbortOperationModal() {
       dontAsk={{ checked: dontAsk, onChange: setDontAsk }}
     >
       <Button size={36} autoFocus onClick={close}>
-        Cancel
+        {t('common.cancel')}
       </Button>
       <Button
         variant="danger"
@@ -159,7 +151,7 @@ export function AbortOperationModal() {
           void abortOperation(entry, op);
         }}
       >
-        Abort {title}
+        {t('sync.menuAbort', { title })}
       </Button>
     </ConfirmModal>
   );

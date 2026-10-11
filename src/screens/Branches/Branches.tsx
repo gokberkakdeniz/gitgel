@@ -33,7 +33,8 @@ import { RefreshButton } from '../../components/RefreshButton';
 import { Segmented } from '../../components/Segmented';
 import { openAddRepos } from '../../lib/addRepos';
 import { startDraftProject } from '../../lib/draft';
-import { formatAge, plural } from '../../lib/format';
+import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
+import { t } from '../../i18n';
 import { setRepoPinned } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import { readProjectSort, sortProjects } from '../../lib/projectSort';
@@ -65,19 +66,16 @@ export function Branches() {
 function FirstRun() {
   return (
     <>
-      <PageHeader title="Branches" subtitle="Nothing to Review Yet" />
+      <PageHeader title={t('branches.title')} subtitle={t('branches.emptySubtitle')} />
       <div className={styles.center}>
         <div className={styles.emptyBody}>
           <BranchLargeIcon className={styles.emptyIcon} />
-          <h2 className={styles.emptyTitle}>No Repositories Yet</h2>
-          <p className={styles.emptyText}>
-            Add the git repositories you want to watch. Branches and worktrees are read in place;
-            nothing is checked out or changed.
-          </p>
+          <h2 className={styles.emptyTitle}>{t('branches.noRepos')}</h2>
+          <p className={styles.emptyText}>{t('branches.noReposText')}</p>
           <Button variant="primary" size={40} className={styles.emptyButton} onClick={() => void openAddRepos()}>
-            Add Repository…
+            {t('sidebar.addRepository')}
           </Button>
-          <span className={styles.emptyHint}>Or drop folders onto this window.</span>
+          <span className={styles.emptyHint}>{t('branches.dropHint')}</span>
         </div>
       </div>
     </>
@@ -231,40 +229,34 @@ function BranchList() {
   const shownBranches = shown.reduce((n, g) => n + g.rows.filter((r) => !isBaseRow(g.scan, r)).length, 0);
   const shownStashes = shown.reduce((n, g) => n + g.stashes.length, 0);
   const subtitle = [
-    plural(shown.length, 'repo', 'repos'),
-    plural(shownBranches, 'branch', 'branches'),
-    shownStashes > 0 && plural(shownStashes, 'stash', 'stashes'),
-  ]
-    .filter(Boolean)
-    .join(' · ');
+    t('branches.subRepos', { ...cnt(shown.length) }),
+    t('branches.subBranches', { ...cnt(shownBranches) }),
+    ...(shownStashes > 0 ? [t('branches.subStashes', { ...cnt(shownStashes) })] : []),
+  ].join(' · ');
 
   let body;
   // Repos appear as they finish scanning; the rest are counted below the list.
   const pending = config.repos.length - scans.length;
   const pendingNote =
     pending > 0 ? (
-      <div className={styles.pending}>
-        Scanning {plural(pending, 'more repository', 'more repositories')}…
-      </div>
+      <div className={styles.pending}>{t('branches.pendingMore', { ...cnt(pending) })}</div>
     ) : null;
   if (groups.length === 0 && (pending > 0 || !scannedOnce)) {
-    body = <div className={`${styles.center} ${styles.muted}`}>Scanning repositories…</div>;
+    body = <div className={`${styles.center} ${styles.muted}`}>{t('branches.scanning')}</div>;
   } else if (groups.length === 0 && filter.trim()) {
-    body = <div className={`${styles.center} ${styles.muted}`}>No branches match “{filter.trim()}”</div>;
+    body = <div className={`${styles.center} ${styles.muted}`}>{t('branches.noMatch', { filter: filter.trim() })}</div>;
   } else if (groups.length === 0 && scope === 'unassigned' && counts.all > 0) {
     body = (
       <div className={styles.center}>
-        <h2 className="page-title">Every Active Branch Is in a Project</h2>
+        <h2 className="page-title">{t('branches.allInProject')}</h2>
       </div>
     );
   } else if (groups.length === 0) {
     body = (
       <div className={styles.center}>
         <div className={styles.emptyBody}>
-          <h2 className="page-title">No Active Branches</h2>
-          <p className={styles.emptyText}>
-            Branches checked out in a worktree or committed in the last {days} days show up here.
-          </p>
+          <h2 className="page-title">{t('branches.noActive')}</h2>
+          <p className={styles.emptyText}>{t('branches.noActiveText', { days: formatCount(days) })}</p>
         </div>
       </div>
     );
@@ -294,16 +286,16 @@ function BranchList() {
 
   return (
     <>
-      <PageHeader title="Branches" subtitle={subtitle}>
+      <PageHeader title={t('branches.title')} subtitle={subtitle}>
         <RefreshButton />
         <Segmented
-          aria-label="Show Branches"
+          aria-label={t('branches.showBranches')}
           size="sm"
           value={scope}
           onChange={setScope}
           options={[
-            { value: 'all', label: 'All', count: counts.all },
-            { value: 'unassigned', label: 'Not in a project', count: counts.unassigned },
+            { value: 'all', label: t('branches.scopeAll'), count: counts.all },
+            { value: 'unassigned', label: t('branches.scopeUnassigned'), count: counts.unassigned },
           ]}
         />
         <FilterField ref={filterRef} value={typed} onChange={setFilter} />
@@ -311,8 +303,8 @@ function BranchList() {
       <div className={styles.table}>
         <div className={`${styles.grid} ${styles.columns}`}>
           <span />
-          <span>Branch</span>
-          <span>Projects</span>
+          <span>{t('branches.colBranch')}</span>
+          <span>{t('branches.colProjects')}</span>
           <span />
         </div>
         {body}
@@ -335,7 +327,7 @@ function BranchList() {
             entries={[refOf(popoverEntry)]}
             label={{ branch: popoverEntry.branch ?? popoverEntry.shortSha ?? '' }}
             firstEntry={`${popoverEntry.repoName} / ${popoverEntry.branch ?? popoverEntry.shortSha}${
-              popoverEntry.base ? ` · base ${popoverEntry.base}` : ''
+              popoverEntry.base ? ` · ${t('branches.baseName', { base: popoverEntry.base })}` : ''
             }`}
             excludeProjectIds={projectsOf(config, popoverEntry.key).map((p) => p.id)}
             onAdded={setJustAdded}
@@ -376,25 +368,25 @@ function SelectionBar({ selected, onAdded }: { selected: EntrySummary[]; onAdded
   };
 
   return (
-    <div role="toolbar" aria-label="Selection" className={styles.selectionBar}>
-      <span className={styles.selCount}>{plural(selected.length, 'branch', 'branches')} selected</span>
-      <span className={styles.selRepos}>across {plural(repos, 'repo', 'repos')}</span>
+    <div role="toolbar" aria-label={t('branches.selectionBar')} className={styles.selectionBar}>
+      <span className={styles.selCount}>{t('branches.selCount', { ...cnt(selected.length) })}</span>
+      <span className={styles.selRepos}>{t('branches.selAcross', { ...cnt(repos) })}</span>
       <span className={styles.selDivider} />
       <button type="button" className={styles.selAdd} onClick={(e) => setPickAt(e.currentTarget.getBoundingClientRect())}>
-        Add to Project…
+        {t('branches.addToProject')}
         <ChevronDownIcon />
       </button>
       <Button variant="primary" onClick={newProject}>
-        New Project…
+        {t('sidebar.newProject')}
       </Button>
-      <button type="button" aria-label="Clear Selection" className={styles.selClear} onClick={clear}>
+      <button type="button" aria-label={t('branches.clearSelection')} className={styles.selClear} onClick={clear}>
         <CloseIcon />
       </button>
       {pickAt && (
         <Popover anchorRect={pickAt} above onClose={() => setPickAt(null)}>
           <ProjectPicker
             entries={refs}
-            label={plural(selected.length, 'branch', 'branches')}
+            label={t('branches.selCount', { ...cnt(selected.length) })}
             firstEntry=""
             onNewProject={newProject}
             onAdded={onAdded}
@@ -453,22 +445,22 @@ function RepoSection({
         </button>
         {scan.status === 'missing' ? (
           <Pill tone="danger" onClick={() => openSettings('repositories')}>
-            Path Not Found
+            {t('branches.pathNotFound')}
           </Pill>
         ) : scan.status === 'error' ? (
           <Pill tone="danger" title={scan.error ?? undefined}>
-            git error
+            {t('branches.gitError')}
           </Pill>
         ) : (
-          <span className={styles.count} title={plural(rows.length, 'branch', 'branches')}>
-            {rows.length}
+          <span className={styles.count} title={t('branches.subBranches', { ...cnt(rows.length) })}>
+            {formatCount(rows.length)}
           </span>
         )}
         <IconButton
           size={24}
-          aria-label={pinned ? `Unpin ${scan.name}` : `Pin ${scan.name} to top`}
+          aria-label={pinned ? t('branches.unpinName', { name: scan.name }) : t('branches.pinName', { name: scan.name })}
           aria-pressed={pinned}
-          title={pinned ? 'Unpin' : 'Pin to top'}
+          title={pinned ? t('branches.unpin') : t('branches.pinToTop')}
           className={pinned ? `${styles.pin} ${styles.pinned}` : styles.pin}
           onClick={() => void setRepoPinned(scan.repo.id, !pinned)}
         >
@@ -527,12 +519,12 @@ function StashList({
   const picked = stashes.find((st) => st.sha === menu?.sha);
   const stash = picked && { ...picked, repoId, repoName };
   const open = (sha: string) =>
-    push({ name: 'review', target: { kind: 'stashes', repoId }, focusKey: sha, backLabel: 'Back to Branches' });
+    push({ name: 'review', target: { kind: 'stashes', repoId }, focusKey: sha, backLabel: t('branches.backToBranches') });
   return (
     <div className={styles.stashes}>
       <List
-        heading="Stashes"
-        label="Stashes"
+        heading={t('branches.stashes')}
+        label={t('branches.stashes')}
         collapsed={collapsed}
         onToggle={onToggle}
         items={stashes.map((st) => ({
@@ -546,7 +538,7 @@ function StashList({
           actions: [
             {
               icon: 'more-vertical',
-              ariaLabel: 'Stash Options',
+              ariaLabel: t('branches.stashOptions'),
               active: menu?.sha === st.sha,
               onPress: (e) => {
                 e.stopPropagation();
@@ -559,15 +551,15 @@ function StashList({
       />
       {menu && stash && (
         <Popover anchorRect={menu.rect} width={240} alignRight onClose={closeMenu}>
-          <Menu aria-label="Stash actions">
+          <Menu aria-label={t('branches.stashActions')}>
             <MenuItem kbd="↵" onHover={() => setSub(null)} onSelect={() => open(menu.sha)}>
-              Review Changes
+              {t('stash.reviewChanges')}
             </MenuItem>
             <MenuItem submenu onHover={(el) => setSub({ pop: false, el })} onSelect={(el) => setSub({ pop: false, el, focus: true })}>
-              Apply to…
+              {t('stash.applyTo')}
             </MenuItem>
             <MenuItem submenu onHover={(el) => setSub({ pop: true, el })} onSelect={(el) => setSub({ pop: true, el, focus: true })}>
-              Pop to…
+              {t('stash.popTo')}
             </MenuItem>
             <MenuDivider />
             <MenuItem
@@ -579,7 +571,7 @@ function StashList({
                 askDrop(stash);
               }}
             >
-              Drop
+              {t('stash.drop')}
             </MenuItem>
           </Menu>
           {sub && (
@@ -617,11 +609,11 @@ function StashList({
 /** Remote Branches matching the filter, under the band's rows; a row opens its History. */
 function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch[] }) {
   const [menu, setMenu] = useState<{ name: string; rect: DOMRect } | null>(null);
-  const open = (rev: string) => openHistory(repoId, rev, 'Back to Branches');
+  const open = (rev: string) => openHistory(repoId, rev, t('branches.backToBranches'));
   return (
     <div className={styles.remotes}>
       <List
-        heading="Remote Branches"
+        heading={t('branches.remoteBranches')}
         items={remotes.map((r) => ({
           key: r.name,
           lead: 'icon',
@@ -629,11 +621,11 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
           title: r.name,
           titleMono: true,
           active: menu?.name === r.name,
-          sub: [{ text: formatAge(r.lastCommitAt) }],
+          sub: [{ text: ageText(r.lastCommitAt) }],
           actions: [
             {
               icon: 'more-vertical',
-              ariaLabel: 'Remote Branch Options',
+              ariaLabel: t('branches.remoteOptions'),
               active: menu?.name === r.name,
               onPress: (e) => {
                 e.stopPropagation();
@@ -641,14 +633,14 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
               },
             },
           ],
-          rowProps: { className: styles.remoteRow, title: `Show history of ${r.name}`, onClick: () => open(r.name) },
+          rowProps: { className: styles.remoteRow, title: t('branches.showHistoryOf', { name: r.name }), onClick: () => open(r.name) },
         }))}
       />
       {menu && (
         <Popover anchorRect={menu.rect} width={240} alignRight onClose={() => setMenu(null)}>
-          <Menu aria-label="Remote branch actions">
+          <Menu aria-label={t('branches.remoteActions')}>
             <MenuItem icon={<HistoryIcon />} kbd="↵" onSelect={() => open(menu.name)}>
-              Open History
+              {t('branches.openHistory')}
             </MenuItem>
             <MenuItem
               icon={<CopyIcon />}
@@ -657,7 +649,7 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
                 setMenu(null);
               }}
             >
-              Copy Branch Name
+              {t('common.copyBranchName')}
             </MenuItem>
           </Menu>
         </Popover>
@@ -670,11 +662,11 @@ function stashSub(st: StashInfo): ListSubPart[] {
   const branch: ListSubPart = st.branch
     ? st.branchExists
       ? { pill: st.branch, tone: 'accent' }
-      : { pill: `${st.branch} · deleted`, tone: 'outline' }
-    : { pill: 'Detached HEAD', tone: 'outline' };
+      : { pill: t('branches.stashDeleted', { branch: st.branch }), tone: 'outline' }
+    : { pill: t('branches.detachedHead'), tone: 'outline' };
   const parts: ListSubPart[] = [branch];
-  if (st.files !== null) parts.push({ text: plural(st.files, 'file', 'files') });
-  parts.push({ text: formatAge(st.createdAt) });
+  if (st.files !== null) parts.push({ text: t('branches.fileCount', { ...cnt(st.files) }) });
+  parts.push({ text: ageText(st.createdAt) });
   return parts;
 }
 
@@ -731,16 +723,16 @@ function Row({
       {isBase ? (
         <span />
       ) : (
-        <Checkbox aria-label={`Select ${name}`} className={styles.check} checked={selected} onChange={toggle} />
+        <Checkbox aria-label={t('branches.selectBranch', { name })} className={styles.check} checked={selected} onChange={toggle} />
       )}
       <div className={styles.branchCell}>
         {isBase ? (
           <span className={styles.nameLine}>
-            <button type="button" className={styles.branchName} onClick={() => openEntryHistory(e)} title={`Show history of ${name}`}>
+            <button type="button" className={styles.branchName} onClick={() => openEntryHistory(e)} title={t('branches.showHistoryOf', { name })}>
               <span className={styles.nameHead}>{name}</span>
             </button>
             <Pill tone="outline" size="sm">
-              base
+              {t('branches.basePill')}
             </Pill>
           </span>
         ) : (
@@ -750,7 +742,7 @@ function Row({
           </button>
         )}
         <span className={styles.subLine}>
-          {e.base && <span className={styles.base}>base {e.base}</span>}
+          {e.base && <span className={styles.base}>{t('branches.baseName', { base: e.base })}</span>}
           {e.base && <span className={styles.sep}>·</span>}
           <span title={counts.title}>
             {counts.a}
@@ -760,34 +752,42 @@ function Row({
             <span className={e.uncommitted ? styles.dirty : styles.sep}>{counts.u}</span>
           </span>
           <span className={styles.sep}>·</span>
-          <span title={e.changedAt ? 'Last change to uncommitted files' : undefined}>
-            {e.changedAt ? formatAge(e.changedAt) : e.lastCommitAt ? formatAge(e.lastCommitAt) : '—'}
+          <span
+            title={
+              e.changedAt
+                ? `${ageTitle(e.changedAt)} · ${t('branches.lastChangeUncommitted')}`
+                : e.lastCommitAt
+                  ? ageTitle(e.lastCommitAt)
+                  : undefined
+            }
+          >
+            {e.changedAt ? ageText(e.changedAt) : e.lastCommitAt ? ageText(e.lastCommitAt) : '—'}
           </span>
           <StateCell entry={e} onBase={(rect) => onPopover('base', rect)} />
           {e.operation && <OperationPill op={e.operation} />}
           {e.conflicts > 0 && (
             <Pill tone="danger" size="sm" title={conflictsTooltip(e)}>
-              {plural(e.conflicts, 'conflict', 'conflicts')}
+              {t('branches.conflictCount', { ...cnt(e.conflicts) })}
             </Pill>
           )}
         </span>
         {/* Line 3 is always there, so every row has the same height. */}
         {wt ? (
-          <span className={styles.wtLine} title={`Checked out in ${wt}`}>
+          <span className={styles.wtLine} title={t('branches.checkedOutIn', { path: wt })}>
             <WorktreeIcon size={12} className={styles.wtIcon} />
             <span className={styles.wtPath}>{wt}</span>
           </span>
         ) : (
-          <span className={`${styles.wtLine} ${styles.wtNone}`} title="The branch is not checked out anywhere.">
+          <span className={`${styles.wtLine} ${styles.wtNone}`} title={t('branches.notCheckedOutFull')}>
             <WorktreeIcon size={12} className={styles.wtIcon} />
             <span className={styles.wtPath}>—</span>
           </span>
         )}
       </div>
       {isBase ? (
-        <button type="button" className={styles.historyButton} title={`Commit history of ${name}`} onClick={() => openEntryHistory(e)}>
+        <button type="button" className={styles.historyButton} title={t('branches.baseHistoryOf', { name })} onClick={() => openEntryHistory(e)}>
           <HistoryIcon size={12} />
-          History
+          {t('branches.historyBtn')}
         </button>
       ) : (
         <button
@@ -799,20 +799,20 @@ function Row({
         >
           {n > 0 ? (
             <>
-              <span>{plural(n, 'project', 'projects')}</span>
+              <span>{t('branches.inCount', { ...cnt(n) })}</span>
               <ChevronDownIcon size={10} />
             </>
           ) : (
             <>
               <span className={styles.projectsDash}>—</span>
-              <span className={styles.projectsAdd}>+ Add</span>
+              <span className={styles.projectsAdd}>{t('branches.projectsAdd')}</span>
             </>
           )}
         </button>
       )}
       <button
         type="button"
-        aria-label="Branch Options"
+        aria-label={t('branches.branchOptions')}
         aria-haspopup="menu"
         className={popover === 'menu' ? `${styles.rowMenu} ${styles.rowMenuOpen}` : styles.rowMenu}
         onClick={(ev) => onPopover('menu', ev.currentTarget.getBoundingClientRect())}
@@ -827,7 +827,7 @@ function Row({
  * already opens History), the always-listed open items, the Scripts group, then the closing note. */
 function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: boolean; onClose: () => void }) {
   return (
-    <Menu aria-label="Branch Options" autoFocus>
+    <Menu aria-label={t('branches.branchOptions')} autoFocus>
       <CopyBranchItem entry={entry} onDone={onClose} />
       {isBase ? (
         <MenuItem
@@ -837,7 +837,7 @@ function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: bool
             openReview(entry);
           }}
         >
-          Open Review
+          {t('branches.openReview')}
         </MenuItem>
       ) : (
         (entry.branch ?? entry.headSha) && (
@@ -848,7 +848,7 @@ function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: bool
               openEntryHistory(entry);
             }}
           >
-            Open History
+            {t('branches.openHistory')}
           </MenuItem>
         )
       )}
@@ -866,13 +866,13 @@ function openReview(e: EntrySummary) {
   useNav.getState().push({
     name: 'review',
     target: { kind: 'branch', repoId: e.repoId, branch: e.branch, worktreePath: e.worktreePath, tipOverride: null },
-    backLabel: 'Back to Branches',
+    backLabel: t('branches.backToBranches'),
   });
 }
 
 /** History (SPEC §16) of a row's branch, or of its SHA for a detached HEAD. */
 function openEntryHistory(e: EntrySummary) {
-  openHistory(e.repoId, e.branch ?? e.headSha, 'Back to Branches');
+  openHistory(e.repoId, e.branch ?? e.headSha, t('branches.backToBranches'));
 }
 
 /** Flow I: the projects a branch is in, and adding it to another one. */
@@ -890,8 +890,8 @@ function ProjectsMenu({
   const push = useNav((s) => s.push);
   const projects = sortProjects(projectsOf(config, entry.key), readProjectSort());
   return (
-    <Menu aria-label={`Projects containing ${entry.branch ?? entry.shortSha}`} autoFocus>
-      <MenuLabel>In {plural(projects.length, 'project', 'projects')}</MenuLabel>
+    <Menu aria-label={t('branches.projectsFor', { name: entry.branch ?? entry.shortSha ?? '' })} autoFocus>
+      <MenuLabel>{t('branches.inCount', { ...cnt(projects.length) })}</MenuLabel>
       {projects.map((p) => (
         <MenuItem
           key={p.id}
@@ -907,7 +907,7 @@ function ProjectsMenu({
       ))}
       <MenuDivider />
       <MenuItem accent onSelect={onAddAnother}>
-        Add to Another Project…
+        {t('branches.addAnother')}
       </MenuItem>
     </Menu>
   );
@@ -918,14 +918,14 @@ function StateCell({ entry: e, onBase }: { entry: EntrySummary; onBase: (rect: D
   switch (e.state) {
     case 'merged':
       return (
-        <Pill tone="success" size="sm" title={`Merged into ${e.base}`}>
-          Merged
+        <Pill tone="success" size="sm" title={e.base ? t('branches.mergedInto', { base: e.base }) : undefined}>
+          {t('branches.merged')}
         </Pill>
       );
     case 'detached':
       return (
         <Pill tone="warning" size="sm">
-          Detached HEAD
+          {t('branches.detachedHead')}
         </Pill>
       );
     case 'base_missing':
@@ -936,13 +936,13 @@ function StateCell({ entry: e, onBase }: { entry: EntrySummary; onBase: (rect: D
           title={e.error ?? undefined}
           onClick={(ev) => onBase(ev.currentTarget.getBoundingClientRect())}
         >
-          Base Missing
+          {t('branches.baseMissing')}
         </Pill>
       );
     case 'git_error':
       return (
         <Pill tone="danger" size="sm" title={e.error ?? undefined}>
-          Git Error
+          {t('branches.gitErr')}
         </Pill>
       );
     default:

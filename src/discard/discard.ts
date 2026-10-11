@@ -1,6 +1,7 @@
 // Discard (SPEC §15 "Discard"; Hi8, D12): Uncommitted files go back to HEAD, after Confirm
 // Discard Changes unless Settings › Prompts says not to ask.
 import { create } from 'zustand';
+import { t } from '../i18n';
 import { gitDiscard } from '../lib/ipc';
 import type { EntryRef, EntrySummary, FileChange } from '../lib/types';
 import { startGitAction } from '../scripts/runs';
@@ -60,7 +61,7 @@ export function askDiscard(req: DiscardRequest): void {
 export const discardPaths = (files: FileChange[]) => files.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path]));
 
 export function discardNow(req: DiscardRequest): Promise<void> {
-  return startGitAction('Discard Changes', () =>
-    gitDiscard(req.targets.map((t) => ({ ...t.entry, paths: discardPaths(t.files) }))),
+  return startGitAction(t('discard.btnOne'), () =>
+    gitDiscard(req.targets.map((g) => ({ ...g.entry, paths: discardPaths(g.files) }))),
   );
 }

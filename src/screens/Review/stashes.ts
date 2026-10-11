@@ -1,5 +1,6 @@
 // The stashes a review lists under its files (flows P2–P3).
-import { formatAge, plural } from '../../lib/format';
+import { t } from '../../i18n';
+import { ageText, cnt } from '../../lib/format';
 import type { ProjectConfig, RepoScan, ReviewTarget, StashInfo } from '../../lib/types';
 
 export interface ReviewStash extends StashInfo {
@@ -47,17 +48,21 @@ export function reviewStashes(
 
 /** The heading of the stash section. */
 export function stashHeading(target: ReviewTarget, repoName: string): string {
-  if (target.kind === 'project') return 'Stashes of this project';
-  if (target.kind === 'branch') return 'Stashes of this branch';
-  return `Stashes in ${repoName}`;
+  if (target.kind === 'project') return t('review.stashOfProject');
+  if (target.kind === 'branch') return t('review.stashOfBranch');
+  return t('review.stashInRepo', { repo: repoName });
 }
 
 /** Line 2 of a stash row: `web-app / session-token-refresh · 1 file · 20m`; without the repo in
  * stash scope, where the header names it. */
 export function stashMeta(s: ReviewStash, withRepo = true, now?: number): string {
-  const branch = s.branch ? (s.branchExists ? s.branch : `${s.branch} (deleted)`) : 'Detached HEAD';
+  const branch = s.branch
+    ? s.branchExists
+      ? s.branch
+      : t('review.branchDeletedParen', { branch: s.branch })
+    : t('branches.detachedHead');
   const parts = [withRepo ? `${s.repoName} / ${branch}` : branch];
-  if (s.files !== null) parts.push(plural(s.files, 'file', 'files'));
-  parts.push(formatAge(s.createdAt, now));
+  if (s.files !== null) parts.push(t('branches.fileCount', { ...cnt(s.files) }));
+  parts.push(ageText(s.createdAt, now));
   return parts.join(' · ');
 }

@@ -1,3 +1,4 @@
+import { formatCount } from '../lib/format';
 import styles from './Segmented.module.css';
 
 export interface SegmentedOption<T extends string> {
@@ -54,7 +55,7 @@ export function Segmented<T extends string>({
             onClick={() => onChange(o.value)}
           >
             {o.label}
-            {o.count !== undefined && <span className={styles.count}>{o.count}</span>}
+            {o.count !== undefined && <span className={styles.count}>{formatCount(o.count)}</span>}
           </button>
         );
       })}

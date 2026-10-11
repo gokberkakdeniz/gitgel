@@ -18,7 +18,8 @@ import { CopyBranchItem, EntryMenuNote, OpenItems, entryFolder, useEntryFolder }
 import { Popover } from '../../components/Popover';
 import { Pill } from '../../components/Pill';
 import { Segmented } from '../../components/Segmented';
-import { formatAge, plural } from '../../lib/format';
+import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
+import { t } from '../../i18n';
 import { getCommitChanges, getReview, getStashChanges } from '../../lib/ipc';
 import { basename, tildifyHome } from '../../lib/paths';
 import type {
@@ -72,9 +73,9 @@ interface Props {
 }
 
 const MODE_LABELS: Record<DiffMode, string> = {
-  committed: 'Committed',
-  uncommitted: 'Uncommitted',
-  all: 'All',
+  committed: 'review.modeCommitted',
+  uncommitted: 'review.modeUncommitted',
+  all: 'review.modeAll',
 };
 
 export function Review({ target, backLabel, focusKey }: Props) {
@@ -317,7 +318,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
 
   // Diff view settings (layout, context, whitespace), remembered in the config.
   const view = useDiffView();
-  const { layout, ignoreWs, context, contextLines, viewRef } = view;
+  const { layout, ignoreWs, context, contextLines, tabSize, viewRef } = view;
 
   const stepRef = useRef(step);
   stepRef.current = step;
@@ -409,6 +410,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
       navRef={diffNav}
       layout={layout}
       ignoreWhitespace={ignoreWs}
+      tabSize={tabSize}
       onToggleLayout={() => viewRef.current.toggleLayout()}
       onToggleWhitespace={() => viewRef.current.toggleWs()}
       context={context}
@@ -427,7 +429,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
   const historyRev = target.kind === 'branch' && !target.tipOverride ? (target.branch ?? entry?.headSha ?? null) : null;
   const toHistory = useSwitchTo(
     target.kind === 'branch' && historyRev
-      ? { name: 'history', repoId: target.repoId, rev: historyRev, backLabel: 'Back to Review' }
+      ? { name: 'history', repoId: target.repoId, rev: historyRev, backLabel: t('review.backToReview') }
       : null,
   );
 
@@ -436,12 +438,12 @@ export function Review({ target, backLabel, focusKey }: Props) {
       <ReviewHeader entry={entry} target={target} backLabel={backLabel} stashes={stashes}>
         {target.kind !== 'stashes' && (
           <Segmented
-            aria-label="Diff layer"
+            aria-label={t('review.diffLayer')}
             value={mode}
             onChange={setMode}
             options={(['committed', 'uncommitted', 'all'] as const).map((m) => ({
               value: m,
-              label: MODE_LABELS[m],
+              label: t(MODE_LABELS[m]),
               count: data ? counts(m) : undefined,
             }))}
           />
@@ -459,7 +461,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
                     toHistory();
                   }}
                 >
-                  Open History
+                  {t('branches.openHistory')}
                 </MenuItem>
               )}
               <MenuItem
@@ -469,7 +471,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
                   void rescanAll(true);
                 }}
               >
-                Refresh
+                {t('review.refresh')}
               </MenuItem>
               {target.kind === 'project' && (
                 <MenuItem
@@ -479,7 +481,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
                     editProject(target.projectId);
                   }}
                 >
-                  Edit project
+                  {t('review.editProject')}
                 </MenuItem>
               )}
             </>
@@ -521,10 +523,10 @@ export function Review({ target, backLabel, focusKey }: Props) {
           )}
           {filtering && files.length === 0 && (
             <div className={styles.noMatch}>
-              <span className={styles.noMatchTitle}>No Files Match “{fileQuery}”</span>
-              <span className={styles.noMatchHint}>Searched paths in {mode} files of every entry.</span>
+              <span className={styles.noMatchTitle}>{t('review.noFilesMatch', { q: fileQuery })}</span>
+              <span className={styles.noMatchHint}>{t('review.noFilesHint', { mode: t(MODE_LABELS[mode]) })}</span>
               <button type="button" className={parts.linkButton} onClick={() => setFileQuery('')}>
-                Clear Filter
+                {t('review.clearFilter')}
               </button>
             </div>
           )}
@@ -551,13 +553,13 @@ export function Review({ target, backLabel, focusKey }: Props) {
           ))}
           {target.kind === 'project' && data && data.notInReview.length > 0 && !filtering && (
             <div className={styles.notInReview}>
-              {plural(data.notInReview.length, 'entry', 'entries')} not reviewable ·{' '}
+              {t('review.notReviewable', { ...cnt(data.notInReview.length) })} ·{' '}
               <button
                 type="button"
                 className={parts.linkButton}
                 onClick={() => push({ name: 'project', projectId: target.projectId })}
               >
-                Open project
+                {t('review.openProject')}
               </button>
             </div>
           )}
@@ -596,14 +598,14 @@ export function Review({ target, backLabel, focusKey }: Props) {
                   )}
                 </>
               ) : (
-                stashChanges && <div className={parts.empty}>No Changes</div>
+                stashChanges && <div className={parts.empty}>{t('review.noChanges')}</div>
               )}
             </>
           ) : target.kind === 'stashes' ? (
-            <div className={parts.empty}>No stashes</div>
+            <div className={parts.empty}>{t('review.noStashes')}</div>
           ) : groups.length === 0 ? (
             <div className={parts.empty}>
-              {target.kind === 'branch' ? notReviewable(entry) : EMPTY_MESSAGES[mode]}
+              {target.kind === 'branch' ? notReviewable(entry) : t(EMPTY_MESSAGES[mode])}
             </div>
           ) : group && change ? (
             <>
@@ -635,7 +637,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
               )}
             </>
           ) : (
-            <div className={parts.empty}>{EMPTY_MESSAGES[mode]}</div>
+            <div className={parts.empty}>{t(EMPTY_MESSAGES[mode])}</div>
           )}
         </section>
       </div>
@@ -663,7 +665,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
           onChosen={(base) => {
             const e = baseMenu.entry;
             if (base !== e.base) setPendingKey(e.key);
-            setBaseSaved(`Base set to ${base}`);
+            setBaseSaved(t('review.baseSaved', { base }));
           }}
         />
       )}
@@ -718,19 +720,23 @@ function ReviewHeader({
   let title = '';
   let subtitle = '';
   if (target.kind === 'branch') {
-    title = 'Review';
+    title = t('review.title');
     const rev = target.branch ?? entry?.shortSha;
-    const where = target.tipOverride ? 'last known state' : entry?.worktreePath ? tildifyHome(entry.worktreePath) : null;
+    const where = target.tipOverride
+      ? t('review.lastKnownState')
+      : entry?.worktreePath
+        ? tildifyHome(entry.worktreePath)
+        : null;
     subtitle = [entry?.repoName, rev, where].filter(Boolean).join(' · ');
   } else if (target.kind === 'stashes') {
-    title = 'Stashes';
+    title = t('review.stashesTitle');
     const repo = config?.repos.find((r) => r.id === target.repoId);
-    subtitle = `${repo ? basename(repo.path) : ''} · ${plural(stashes.length, 'stash', 'stashes')}`;
+    subtitle = `${repo ? basename(repo.path) : ''} · ${t('branches.subStashes', { ...cnt(stashes.length) })}`;
   } else {
     title = project?.name ?? '';
     if (project) {
       const repos = new Set(project.entries.map((e) => e.repoId)).size;
-      subtitle = `${plural(repos, 'repo', 'repos')} · ${plural(project.entries.length, 'branch', 'branches')}`;
+      subtitle = `${t('branches.subRepos', { ...cnt(repos) })} · ${t('branches.subBranches', { ...cnt(project.entries.length) })}`;
     }
   }
 
@@ -751,7 +757,7 @@ function ReviewHeader({
           <span
             className={editable.title}
             data-editable-title
-            title="Rename Project"
+            title={t('project.renameProject')}
             onClick={(e) => {
               titleWidth.current = e.currentTarget.offsetWidth;
               setRenaming(true);
@@ -787,13 +793,13 @@ function EntryMenu({
   );
   const rev = entry.branch ?? entry.headSha;
   return (
-    <Menu aria-label="Branch Options" autoFocus>
+    <Menu aria-label={t('branches.branchOptions')} autoFocus>
       <MenuItem
         icon={<BranchIcon size={14} />}
-        sub={`base ${entry.base ?? 'none'}`}
+        sub={t('review.baseSub', { base: entry.base ?? t('review.baseNone') })}
         onSelect={onChangeBase}
       >
-        Change Base…
+        {t('review.changeBase')}
       </MenuItem>
       <CopyBranchItem entry={entry} onDone={onClose} />
       {rev && (
@@ -801,10 +807,10 @@ function EntryMenu({
           icon={<HistoryIcon />}
           onSelect={() => {
             onClose();
-            openHistory(entry.repoId, rev, 'Back to Review');
+            openHistory(entry.repoId, rev, t('review.backToReview'));
           }}
         >
-          Open History
+          {t('branches.openHistory')}
         </MenuItem>
       )}
       <MenuDivider />
@@ -888,7 +894,7 @@ function FileGroup({
             </span>
             <button
               type="button"
-              aria-label="Branch Options"
+              aria-label={t('branches.branchOptions')}
               aria-haspopup="menu"
               className={styles.groupMenu}
               onClick={(ev) => onMenu(ev.currentTarget.getBoundingClientRect())}
@@ -902,12 +908,12 @@ function FileGroup({
           {e.operation && <OperationPill op={e.operation} short />}
           {e.conflicts > 0 && (
             <Pill tone="danger" size="sm" title={conflictsTooltip(e)}>
-              {plural(e.conflicts, 'conflict', 'conflicts')}
+              {t('branches.conflictCount', { ...cnt(e.conflicts) })}
             </Pill>
           )}
           {terms.length > 0 ? (
             <span className={styles.matchLabel}>
-              {shown.length} of {files.length}
+              {t('review.matchOf', { shown: formatCount(shown.length), total: formatCount(files.length) })}
             </span>
           ) : (
             // Mid-rebase the pills take its place; it comes back when the operation ends.
@@ -927,8 +933,8 @@ function FileGroup({
             </span>
             <button
               type="button"
-              aria-label="Show All Commits"
-              title="Show All Commits"
+              aria-label={t('review.showAll')}
+              title={t('review.showAll')}
               className={styles.chipClose}
               onClick={onClearCommit}
             >
@@ -939,8 +945,11 @@ function FileGroup({
       </div>
       {g.stackHint && (
         <div className={styles.stackHint}>
-          {g.stackHint.contains} of {g.stackHint.total} commits come from {g.stackHint.branch}. A
-          different base may fit better.
+          {t('review.stackHint', {
+            contains: formatCount(g.stackHint.contains),
+            total: formatCount(g.stackHint.total),
+            branch: g.stackHint.branch,
+          })}
         </div>
       )}
       {open && (
@@ -988,14 +997,14 @@ function FileFilter({
     <Input
       ref={inputRef}
       leftIcon="search"
-      rightText={query ? plural(count, 'file', 'files') : <Kbd>⌘K</Kbd>}
+      rightText={query ? t('branches.fileCount', { ...cnt(count) }) : <Kbd>⌘K</Kbd>}
       mono
       clearable
       className={styles.filter}
       value={query}
       onChange={onQuery}
-      placeholder="Search"
-      aria-label="Search Files"
+      placeholder={t('sidebar.search')}
+      aria-label={t('review.searchFiles')}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
@@ -1054,7 +1063,7 @@ function EntryBar({
           <button
             type="button"
             className={`${styles.repoName} ${styles.repoLink}`}
-            title={`Show ${e.repoName} on Branches`}
+            title={t('project.showOnBranches', { repo: e.repoName })}
             onClick={() => useNav.getState().push({ name: 'branches', focusRepoId: e.repoId })}
           >
             {e.repoName}
@@ -1063,14 +1072,14 @@ function EntryBar({
           <button
             type="button"
             className={`${styles.entryBranch} ${styles.repoLink}`}
-            title={`Show history of ${name}`}
-            onClick={() => openHistory(e.repoId, e.branch ?? e.headSha, 'Back to Review')}
+            title={t('branches.showHistoryOf', { name })}
+            onClick={() => openHistory(e.repoId, e.branch ?? e.headSha, t('review.backToReview'))}
           >
             {name}
           </button>
           {/* The range only when it says something the line does not (flow D7, Uncommitted). */}
           {workingTree && e.worktreePath ? (
-            <span className={styles.entryRange}>working tree {tildifyHome(e.worktreePath)}</span>
+            <span className={styles.entryRange}>{t('review.workingTree', { path: tildifyHome(e.worktreePath) })}</span>
           ) : (
             on && (
               <span className={styles.entryRange}>
@@ -1082,17 +1091,17 @@ function EntryBar({
         <span className={parts.grow} />
         <span className={parts.muted}>
           {workingTree
-            ? 'HEAD ↔ working tree'
+            ? t('review.headToTree')
             : on
-              ? `Commit ${total - index} of ${total}`
+              ? t('review.commitOf', { i: formatCount(total - index), total: formatCount(total) })
               : (
                 <>
-                  {ahead} {ahead === 1 ? 'commit' : 'commits'} ahead of{' '}
+                  {t('review.aheadOf', { ...cnt(ahead) })}{' '}
                   <button
                     type="button"
                     className={`${styles.baseLink} ${styles.repoLink}`}
-                    title={`Show history of ${e.base}`}
-                    onClick={() => openHistory(e.repoId, e.base, 'Back to Review')}
+                    title={t('branches.showHistoryOf', { name: e.base ?? '' })}
+                    onClick={() => openHistory(e.repoId, e.base, t('review.backToReview'))}
                   >
                     {e.base}
                   </button>
@@ -1103,19 +1112,19 @@ function EntryBar({
         {on && !workingTree && (
           <>
             <Stepper
-              aria-label="Step through commits"
-              up={{ 'aria-label': 'Newer commit', title: 'Newer commit (⌥⇧↑)', disabled: index <= 0 }}
-              down={{ 'aria-label': 'Older commit', title: 'Older commit (⌥⇧↓)', disabled: index >= total - 1 }}
+              aria-label={t('review.stepCommits')}
+              up={{ 'aria-label': t('review.newerCommit'), title: t('review.newerCommitHint'), disabled: index <= 0 }}
+              down={{ 'aria-label': t('review.olderCommit'), title: t('review.olderCommitHint'), disabled: index >= total - 1 }}
               onStep={onStep}
             />
             <button type="button" className={styles.showAll} onClick={() => onPick(null)}>
-              Show All Commits
+              {t('review.showAll')}
             </button>
           </>
         )}
       </div>
       {!workingTree && total > 0 && (
-        <div ref={list} role="listbox" aria-label="Commits" className={styles.commits}>
+        <div ref={list} role="listbox" aria-label={t('review.commitsList')} className={styles.commits}>
           {g.commits.map((c, i) => {
             const picked = c.sha === sha;
             const cls = [styles.commit, picked && styles.commitOn, c.fromBranch && styles.foreign]
@@ -1125,10 +1134,10 @@ function EntryBar({
               <div
                 key="upstream"
                 role="separator"
-                aria-label={`${up!.name} is at ${c.shortSha}; above it is not pushed`}
+                aria-label={t('review.notPushedHint', { name: up!.name, sha: c.shortSha })}
                 className={styles.upstreamLine}
               >
-                <span>{up!.name} · above: not pushed</span>
+                <span>{t('review.notPushed', { name: up!.name })}</span>
               </div>
             );
             return [
@@ -1138,7 +1147,7 @@ function EntryBar({
                 type="button"
                 role="option"
                 aria-selected={picked}
-                title={picked ? 'Show All Commits' : 'Show Only This Commit'}
+                title={picked ? t('review.showAll') : t('review.showOne')}
                 className={cls}
                 onClick={() => onPick(picked ? null : c.sha)}
               >
@@ -1149,7 +1158,7 @@ function EntryBar({
                     {c.fromBranch}
                   </Pill>
                 )}
-                <span className={styles.age}>{formatAge(c.committedAt)}</span>
+                <span className={styles.age} title={ageTitle(c.committedAt)}>{ageText(c.committedAt)}</span>
               </button>,
             ];
           })}
@@ -1165,22 +1174,20 @@ export function conflictsBanner(groups: ReviewGroup[]): string | null {
   const hit = groups.filter((g) => g.entry.conflicts > 0 && !g.entry.operation);
   const n = hit.reduce((s, g) => s + g.entry.conflicts, 0);
   if (n === 0) return null;
-  const files = n === 1 ? '1 file has merge conflicts' : `${n} files have merge conflicts`;
-  const where = hit.length > 1 ? ` in ${hit.length} entries` : '';
-  return `${files}${where}. Resolve ${n === 1 ? 'it' : 'them'} in your editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.`;
+  return t('review.conflictsBanner', { n: String(n), m: String(hit.length) });
 }
 
-function notReviewable(entry: EntrySummary | undefined): string {
+export function notReviewable(entry: EntrySummary | undefined): string {
   if (!entry) return '';
   switch (entry.state) {
     case 'branch_deleted':
-      return 'This Branch No Longer Exists';
+      return t('review.goneBranch');
     case 'repo_missing':
-      return 'Repository Not Found';
+      return t('review.goneRepo');
     case 'base_missing':
-      return entry.error ? `Base Missing: ${entry.error}` : 'Base Missing';
+      return entry.error ? t('review.goneBase', { error: entry.error }) : t('review.goneBaseBare');
     default:
-      return entry.error ?? 'Nothing to Review';
+      return entry.error ?? t('review.nothingToReview');
   }
 }
 

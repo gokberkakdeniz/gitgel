@@ -56,25 +56,11 @@ button,input{font-family:inherit}
 
 <sc-if value="{{isGeneral}}" hint-placeholder-val="{{true}}">
 <h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">General</h2>
-<section aria-labelledby="theme-title" style="display: flex; flex-direction: column; gap: 12px">
-<span id="theme-title" style="color: var(--text-strong)">Theme</span>
-<div role="radiogroup" aria-labelledby="theme-title" style="display: flex; gap: 16px">
-<sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
-<button role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; cursor: pointer; font-size: 12px">
-<span style="{{t.frameStyle}}">
-<sc-for list="{{t.layers}}" as="ly" hint-placeholder-count="1">
-<span style="{{ly.style}}">
-<sc-for list="{{ly.rects}}" as="rc" hint-placeholder-count="6">
-<span style="{{rc}}"></span>
-</sc-for>
-</span>
-</sc-for>
-</span>
-<span style="{{t.labelStyle}}">{{t.label}}</span>
-</button>
-</sc-for>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Language</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Language" options="{{languages}}" hint-size="230px,36px"></dc-import>
 </div>
-<span style="font-size: 12px; color: var(--text-muted)">System follows the macOS appearance and switches with it.</span>
 </section>
 <section style="display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; flex-direction: column; gap: 10px">
@@ -96,6 +82,56 @@ button,input{font-family:inherit}
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Check for Updates</span><span style="font-size: 12px; color: var(--text-muted)">At launch and every 6 hours; a new version shows in the sidebar</span></span>
 <dc-import name="Checkbox" theme="{{themeName}}" label="" aria-label="Check for Updates" checked="{{true}}" hint-size="16px,16px"></dc-import>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{isAppearance}}" hint-placeholder-val="{{false}}">
+<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Appearance</h2>
+<section aria-labelledby="theme-title" style="display: flex; flex-direction: column; gap: 12px">
+<span id="theme-title" style="color: var(--text-strong)">Theme</span>
+<div role="radiogroup" aria-labelledby="theme-title" style="display: flex; gap: 16px">
+<sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
+<button role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; cursor: pointer; font-size: 12px">
+<span style="{{t.frameStyle}}">
+<sc-for list="{{t.layers}}" as="ly" hint-placeholder-count="1">
+<span style="{{ly.style}}">
+<sc-for list="{{ly.rects}}" as="rc" hint-placeholder-count="6">
+<span style="{{rc}}"></span>
+</sc-for>
+</span>
+</sc-for>
+</span>
+<span style="{{t.labelStyle}}">{{t.label}}</span>
+</button>
+</sc-for>
+</div>
+<span style="font-size: 12px; color: var(--text-muted)">System follows the macOS appearance and switches with it.</span>
+</section>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<span style="color: var(--text-strong)">Formatting</span>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Date Format</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Date Format" options="{{dateFormats}}" hint-size="230px,36px"></dc-import>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Time Format</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Time Format" options="{{timeFormats}}" hint-size="230px,36px"></dc-import>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Number Format</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Number Format" options="{{numberFormats}}" hint-size="230px,36px"></dc-import>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Prefer absolute dates over relative dates</span></span>
+<dc-import name="Checkbox" theme="{{themeName}}" label="" aria-label="Prefer absolute dates over relative dates" checked="{{false}}" hint-size="16px,16px"></dc-import>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<span style="color: var(--text-strong)">Diff</span>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Tab size</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Tab size" options="{{tabSizes}}" hint-size="230px,36px"></dc-import>
 </div>
 </section>
 </sc-if>
@@ -159,7 +195,7 @@ button,input{font-family:inherit}
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"baseHover": {"editor": "enum", "options": ["none", "1", "2", "3"], "default": "none"}, "baseAdd": {"editor": "enum", "options": ["none", "typing", "duplicate", "invalid"], "default": "none"}, "section": {"editor": "enum", "options": ["general", "repositories", "scripts", "prompts", "shortcuts"], "default": "general"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "appearance": {"editor": "enum", "options": ["system", "light", "dark"], "default": "system"}, "terminal": {"editor": "enum", "options": ["auto", "terminal", "iterm", "wezterm", "other", "missing"], "default": "auto"}, "$preview": {"width": 1280, "height": 800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"baseHover": {"editor": "enum", "options": ["none", "1", "2", "3"], "default": "none"}, "baseAdd": {"editor": "enum", "options": ["none", "typing", "duplicate", "invalid"], "default": "none"}, "section": {"editor": "enum", "options": ["general", "appearance", "repositories", "scripts", "prompts", "shortcuts"], "default": "general"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "appearance": {"editor": "enum", "options": ["system", "light", "dark"], "default": "system"}, "terminal": {"editor": "enum", "options": ["auto", "terminal", "iterm", "wezterm", "other", "missing"], "default": "auto"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
   renderVals() {
     var ok = 'font-size: 12px; color: var(--text-muted); white-space: nowrap';
@@ -236,7 +272,7 @@ class Component extends DCLogic {
     });
     var section = (this.state && this.state.section) || this.props.section || 'general';
     // Section list (SettingsNav): icons by id.
-    var sections = [['general', 'General', ''], ['repositories', 'Repositories', '4'], ['scripts', 'Scripts', '5'], ['prompts', 'Prompts', ''], ['shortcuts', 'Shortcuts', '']].map(function (x) {
+    var sections = [['general', 'General', ''], ['appearance', 'Appearance', ''], ['repositories', 'Repositories', '4'], ['scripts', 'Scripts', '5'], ['prompts', 'Prompts', ''], ['shortcuts', 'Shortcuts', '']].map(function (x) {
       return { id: x[0], label: x[1], count: x[2], pick: function () { self.setState({ section: x[0] }); } };
     });
     // Default base: an ordered list edited one branch at a time, so there is no separator to type.
@@ -282,7 +318,7 @@ class Component extends DCLogic {
       // Prompts › Show a Confirmation Dialog Before… (Hi8, GitHub Desktop's texts and section): the confirmations that can be turned off; "Do not show this message again" in
       // the Discard dialog clears its box here. Discard all and more than 10 files always ask.
       asks: [{ label: 'Removing repositories', on: true }, { label: 'Discarding changes', on: true }, { label: 'Dropping stashes', on: true }, { label: 'Deleting projects', on: true }],
-      isRepos: section === 'repositories', isGeneral: section === 'general', isShortcuts: section === 'shortcuts', isScripts: section === 'scripts', isPrompts: section === 'prompts',
+      isRepos: section === 'repositories', isGeneral: section === 'general', isAppearance: section === 'appearance', isShortcuts: section === 'shortcuts', isScripts: section === 'scripts', isPrompts: section === 'prompts',
       // Settings › Scripts (flow N5): name, icon (Icon set) in the user's order; the Switch turns one off (in no menu) at once.
       scripts: [['Open pull request', 'pull-request'], ['Run tests', 'test'], ['Rebase on {base}…', 'rebase'], ['Copy Linear link', 'link'], ['Start dev server', 'prompt']].map(function (x) {
         var offMap = (self.state && self.state.scriptsOff) || { 'Copy Linear link': true };
@@ -294,6 +330,21 @@ class Component extends DCLogic {
       terminals: terminals,
       terminalOther: termKind === 'other',
       terminalMissing: term === 'missing',
+      languages: [['system', 'System'], ['en', 'English'], ['tr', 'Türkçe']].map(function (x) {
+        return { value: x[0], label: x[1], on: x[0] === 'system' };
+      }),
+      dateFormats: ['Oct 19, 2017 (MMM d, yyyy)', '10/19/2017 (MM/dd/yyyy)', '2017-10-19 (yyyy-MM-dd)'].map(function (x, i) {
+        return { value: x, label: x, on: i === 0 };
+      }),
+      timeFormats: ['14:30 (HH:mm)', '14:30:45 (HH:mm:ss)', '2:30 pm (h:mm aaa)'].map(function (x, i) {
+        return { value: x, label: x, on: i === 0 };
+      }),
+      numberFormats: ['1234567.89', '1234567,89', '1,234,567.89'].map(function (x, i) {
+        return { value: x, label: x, on: i === 1 };
+      }),
+      tabSizes: ['1', '2', '3', '4 (default)', '5', '6', '8', '10', '12'].map(function (x, i) {
+        return { value: x, label: x, on: i === 3 };
+      }),
       shortcutGroups: shortcutGroups,
       repos: [
         { name: 'web-app', path: '~/code/web-app', note: 'base main', noteStyle: ok, found: true, missing: false },

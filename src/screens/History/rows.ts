@@ -1,4 +1,6 @@
 // The History list (SPEC §16): Uncommitted, day labels, commits and the base line, in order.
+import { getLocale, t } from '../../i18n';
+import { formatDate, formatDateTime, getFmt } from '../../lib/format';
 import type { HistoryCommit } from '../../lib/types';
 
 export type HistoryRow =
@@ -46,26 +48,33 @@ function daysAgo(unix: number, now: Date): number {
   return Math.round((startOfDay(now) - startOfDay(new Date(unix * 1000))) / DAY_MS);
 }
 
+/** The date locale: Turkish names in Turkish, otherwise exactly as before (en-US / en-GB). */
+function dateLocaleTag(): 'tr' | 'en-US' {
+  return getLocale() === 'tr' ? 'tr' : 'en-US';
+}
+
 function monthDay(d: Date, now: Date): string {
-  const md = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const md = d.toLocaleDateString(dateLocaleTag(), { month: 'short', day: 'numeric' });
   return d.getFullYear() === now.getFullYear() ? md : `${md}, ${d.getFullYear()}`;
 }
 
-/** "Today", "Yesterday", "Oct 2" (this year) or "Oct 2, 2025". */
+/** "Today", "Yesterday", "Oct 2" (this year) or "Oct 2, 2025"; absolute mode always dates. */
 export function dayLabel(unix: number, now: Date = new Date()): string {
+  if (getFmt().absolute) return formatDate(unix);
   const n = daysAgo(unix, now);
-  if (n === 0) return 'Today';
-  if (n === 1) return 'Yesterday';
+  if (n === 0) return t('history.dayToday');
+  if (n === 1) return t('history.dayYesterday');
   return monthDay(new Date(unix * 1000), now);
 }
 
-/** "today 11:42", "yesterday 11:42", "Oct 2, 11:42" (this year) or "Oct 2, 2025". */
+/** "today 11:42", "yesterday 11:42", "Oct 2, 11:42" (this year) or "Oct 2, 2025"; absolute mode dates. */
 export function whenLabel(unix: number, now: Date = new Date()): string {
+  if (getFmt().absolute) return formatDateTime(unix);
   const d = new Date(unix * 1000);
-  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const time = d.toLocaleTimeString(getLocale() === 'tr' ? 'tr' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
   const n = daysAgo(unix, now);
-  if (n === 0) return `today ${time}`;
-  if (n === 1) return `yesterday ${time}`;
+  if (n === 0) return t('history.whenToday', { time });
+  if (n === 1) return t('history.whenYesterday', { time });
   return d.getFullYear() === now.getFullYear() ? `${monthDay(d, now)}, ${time}` : monthDay(d, now);
 }
 

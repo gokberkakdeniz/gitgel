@@ -1,7 +1,8 @@
 // Fetch, pull and push of one branch (W4a): what each can do, and how a branch stands against
 // its remote. Each runs as a git action (SPEC §15 "Sync").
 import { gitFetch, gitPull, gitPush, gitRebaseOnBase } from '../lib/ipc';
-import { plural } from '../lib/format';
+import { t as translate } from '../i18n';
+import { formatCount } from '../lib/format';
 import type { EntryRef, Operation, Upstream } from '../lib/types';
 import { operationTitle } from './operation';
 import { startGitAction } from '../scripts/runs';
@@ -31,35 +32,44 @@ export function syncState(t: SyncTarget): SyncState {
   const u = t.upstream;
   const diverged = !!u?.name && u.ahead > 0 && u.behind > 0;
   let pull: string | null = null;
-  if (!u?.name) pull = u ? `Not on ${u.remote}` : 'No remote';
-  else if (u.behind === 0) pull = 'Nothing to pull';
-  else if (!t.worktreePath) pull = 'Not checked out';
+  if (!u?.name) pull = u ? translate('sync.notOn', { remote: u.remote }) : translate('sync.noRemote');
+  else if (u.behind === 0) pull = translate('sync.nothingPull');
+  else if (!t.worktreePath) pull = translate('sync.notCheckedOut');
   let push: string | null = null;
-  const busy = t.operation ? `${operationTitle(t.operation)} in progress` : null;
+  const busy = t.operation ? translate('sync.opBusy', { op: operationTitle(t.operation) }) : null;
   if (busy && u) return { pull: busy, push: busy, diverged };
-  if (!u) push = 'No remote';
-  else if (u.behind > 0) push = `Behind ${u.remote}, pull first`;
-  else if (u.ahead === 0) push = 'Nothing to push';
+  if (!u) push = translate('sync.noRemote');
+  else if (u.behind > 0) push = translate('sync.behindRemote', { remote: u.remote });
+  else if (u.ahead === 0) push = translate('sync.nothingPush');
   return { pull, push, diverged };
 }
 
 /** `origin ↑2 ↓1`, `origin` when level, `not on origin · ↑3`. */
 export function upstreamLabel(u: Upstream): string {
-  if (!u.name) return u.ahead > 0 ? `not on ${u.remote} · ↑${u.ahead}` : `not on ${u.remote}`;
-  return [u.remote, u.ahead > 0 && `↑${u.ahead}`, u.behind > 0 && `↓${u.behind}`].filter(Boolean).join(' ');
+  if (!u.name)
+    return u.ahead > 0
+      ? translate('sync.upNotOn', { remote: u.remote, n: formatCount(u.ahead) })
+      : translate('sync.upNotOnPlain', { remote: u.remote });
+  return [u.remote, u.ahead > 0 && `↑${formatCount(u.ahead)}`, u.behind > 0 && `↓${formatCount(u.behind)}`].filter(Boolean).join(' ');
 }
 
 export function upstreamTitle(u: Upstream): string {
-  if (!u.name) return `Not on ${u.remote} yet (as of the last fetch)`;
-  if (u.ahead === 0 && u.behind === 0) return `Level with ${u.name}`;
-  return `${plural(u.ahead, 'commit', 'commits')} to push, ${plural(u.behind, 'commit', 'commits')} to pull (${u.name})`;
+  if (!u.name) return translate('sync.upNotYet', { remote: u.remote });
+  if (u.ahead === 0 && u.behind === 0) return translate('sync.upLevel', { name: u.name });
+  return translate('sync.upCounts', {
+    a: u.ahead === 1 ? '1' : '0',
+    b: u.behind === 1 ? '1' : '0',
+    na: formatCount(u.ahead),
+    nb: formatCount(u.behind),
+    name: u.name,
+  });
 }
 
 /** The warning when the branch is ahead and behind its remote. */
 export function divergedBanner(t: SyncTarget): string | null {
   const u = t.upstream;
   if (!u || !syncState(t).diverged) return null;
-  return `${t.branch} is behind ${u.remote} by ${plural(u.behind, 'commit', 'commits')}, so it cannot be pushed. Pull it first.`;
+  return translate('sync.diverged', { n: String(u.behind), d: formatCount(u.behind), branch: t.branch ?? '', remote: u.remote });
 }
 
 function refOf(t: SyncTarget): EntryRef {
@@ -68,32 +78,38 @@ function refOf(t: SyncTarget): EntryRef {
 
 // A failed sync opens its output panel: git says there what went wrong (or asks for a password).
 export function fetchRepo(t: SyncTarget): Promise<void> {
-  return startGitAction('Fetch', () => gitFetch(t.repoId), { openOnFail: true, done: `Fetched ${t.repoName}` });
+  return startGitAction(translate('sync.fetchBtn'), () => gitFetch(t.repoId), {
+    openOnFail: true,
+    done: translate('sync.fetched', { repo: t.repoName }),
+  });
 }
 
 export function pullBranch(t: SyncTarget, rebase = false): Promise<void> {
-  return startGitAction(rebase ? 'Pull (rebase)' : 'Pull', () => gitPull(refOf(t), rebase), {
+  return startGitAction(rebase ? translate('history.pullRebase') : translate('sync.pullBtn'), () => gitPull(refOf(t), rebase), {
     openOnFail: true,
-    done: `Pulled ${t.branch}`,
+    done: translate('sync.pulled', { branch: t.branch ?? '' }),
   });
 }
 
 /** The branch rebased on its base, fresh from the base's remote when it has one (SPEC §15). */
 export function rebaseOnBase(t: SyncTarget, base: string): Promise<void> {
-  return startGitAction(`Rebase on ${base}`, () => gitRebaseOnBase(refOf(t)), {
+  return startGitAction(translate('sync.rebaseOn', { base }), () => gitRebaseOnBase(refOf(t)), {
     openOnFail: true,
-    done: `Rebased ${t.branch} on ${base}`,
+    done: translate('sync.rebased', { branch: t.branch ?? '', base }),
   });
 }
 
 export function pushBranch(t: SyncTarget): Promise<void> {
-  return startGitAction('Push', () => gitPush(refOf(t)), { openOnFail: true, done: `Pushed ${t.branch}` });
+  return startGitAction(translate('sync.pushBtn'), () => gitPush(refOf(t)), {
+    openOnFail: true,
+    done: translate('sync.pushed', { branch: t.branch ?? '' }),
+  });
 }
 
 /** A diverged branch over its remote (`--force-with-lease`: only what the last fetch saw). */
 export function forcePushBranch(t: SyncTarget): Promise<void> {
-  return startGitAction('Force Push', () => gitPush(refOf(t), true), {
+  return startGitAction(translate('history.forcePush'), () => gitPush(refOf(t), true), {
     openOnFail: true,
-    done: `Force pushed ${t.branch}`,
+    done: translate('sync.forcePushed', { branch: t.branch ?? '' }),
   });
 }

@@ -137,7 +137,13 @@ mod tests {
                 "diffView": "unified",
                 "ignoreWhitespace": true,
                 "zoom": 125,
+                "language": "tr",
                 "appearance": "system",
+                "dateFormat": "dd.MM.yyyy",
+                "timeFormat": "HH.mm",
+                "numberFormat": "group-dot-comma",
+                "preferAbsoluteDates": true,
+                "diffTabSize": 8,
                 "sidebarVisible": false,
                 "diffContext": "whole",
                 "diffContextLines": 5,
@@ -219,6 +225,12 @@ mod tests {
         assert_eq!(config.settings.diff_view, crate::model::DiffLayout::Split);
         assert!(!config.settings.ignore_whitespace);
         assert_eq!(config.settings.zoom, 100);
+        assert_eq!(config.settings.language, crate::model::Language::System);
+        assert_eq!(config.settings.date_format, "MMM d, yyyy");
+        assert_eq!(config.settings.time_format, "HH:mm");
+        assert_eq!(config.settings.number_format, crate::model::NumberFormat::PlainComma);
+        assert!(!config.settings.prefer_absolute_dates);
+        assert_eq!(config.settings.diff_tab_size, 4);
         assert_eq!(config.settings.appearance, crate::model::Appearance::System);
         assert!(config.settings.sidebar_visible);
         assert_eq!(
@@ -252,6 +264,46 @@ mod tests {
                 crate::model::DiffContext::Whole
             );
         }
+    }
+
+    #[test]
+    fn unknown_language_reads_as_system() {
+        for value in [json!("en"), json!("tr"), json!("de"), json!(3)] {
+            let config: Config = serde_json::from_value(json!({
+                "version": 1,
+                "settings": { "language": value }
+            }))
+            .unwrap();
+            assert_eq!(
+                config.settings.language,
+                if value == "en" {
+                    crate::model::Language::En
+                } else if value == "tr" {
+                    crate::model::Language::Tr
+                } else {
+                    crate::model::Language::System
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn appearance_values_outside_the_choices_read_as_defaults() {
+        let config: Config = serde_json::from_value(json!({
+            "version": 1,
+            "settings": {
+                "dateFormat": "yMd", "timeFormat": 12, "numberFormat": "grouped",
+                "diffTabSize": 7
+            }
+        }))
+        .unwrap();
+        assert_eq!(config.settings.date_format, "MMM d, yyyy");
+        assert_eq!(config.settings.time_format, "HH:mm");
+        assert_eq!(
+            config.settings.number_format,
+            crate::model::NumberFormat::PlainComma
+        );
+        assert_eq!(config.settings.diff_tab_size, 4);
     }
 
     #[test]

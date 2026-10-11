@@ -4,6 +4,7 @@ import { Button } from '../../components/Button';
 import { isIconName } from '../../components/icons';
 import { List } from '../../components/List';
 import { deleteScript, exportScripts, readScriptsFile, reorderScripts, saveScript } from '../../lib/ipc';
+import { t } from '../../i18n';
 import type { AppError, Config, ScriptConfig } from '../../lib/types';
 import { ImportScripts } from '../../scripts/ImportScripts';
 import { newScript, ScriptEditor } from '../../scripts/ScriptEditor';
@@ -11,7 +12,7 @@ import { useReorder } from '../../scripts/useReorder';
 import { useUi } from '../../state/ui';
 import styles from './Settings.module.css';
 
-const FILTERS = [{ name: 'Gitgel scripts', extensions: ['json'] }];
+const FILTER_EXTENSIONS = ['json'];
 
 /** Settings › Scripts (flow N5): the user's scripts in menu order. */
 export function Scripts({ config }: { config: Config }) {
@@ -35,8 +36,8 @@ export function Scripts({ config }: { config: Config }) {
     try {
       await deleteScript(script.id);
       useUi.getState().showToast({
-        message: `“${script.name}” removed`,
-        actionLabel: 'Undo',
+        message: t('settings.scriptRemoved', { name: script.name }),
+        actionLabel: t('common.undo'),
         onAction: () =>
           void saveScript(script)
             .then(() => reorderScripts(before))
@@ -55,18 +56,23 @@ export function Scripts({ config }: { config: Config }) {
 
   const doExport = async () => {
     setError(null);
-    const path = await save({ defaultPath: 'gitgel-scripts.json', filters: FILTERS });
+    const filters = [{ name: t('settings.scriptsFilter'), extensions: FILTER_EXTENSIONS }];
+    const path = await save({ defaultPath: 'gitgel-scripts.json', filters });
     if (path) await exportScripts(path).catch(fail);
   };
 
   const doImport = async () => {
     setError(null);
-    const picked = await open({ multiple: false, directory: false, filters: FILTERS });
+    const picked = await open({
+      multiple: false,
+      directory: false,
+      filters: [{ name: t('settings.scriptsFilter'), extensions: FILTER_EXTENSIONS }],
+    });
     const path = Array.isArray(picked) ? picked[0] : picked;
     if (!path) return;
     try {
       const scripts = await readScriptsFile(path);
-      if (scripts.length === 0) setError('That file has no scripts.');
+      if (scripts.length === 0) setError(t('settings.noScriptsFile'));
       else setImporting({ path, scripts });
     } catch (e) {
       fail(e);
@@ -78,22 +84,22 @@ export function Scripts({ config }: { config: Config }) {
       <section className={styles.section}>
         <div className={styles.scriptsHead}>
           <div className={styles.scriptsTitle}>
-            <h2 className={styles.heading}>Scripts</h2>
+            <h2 className={styles.heading}>{t('settings.scriptsHeading')}</h2>
           </div>
           <div className={styles.scriptsActions}>
-            <Button onClick={() => void doImport()}>Import…</Button>
+            <Button onClick={() => void doImport()}>{t('settings.scriptsImport')}</Button>
             <Button disabled={config.scripts.length === 0} onClick={() => void doExport()}>
-              Export…
+              {t('settings.scriptsExport')}
             </Button>
             <Button variant="primary" onClick={() => setEditing(newScript())}>
-              + New Script…
+              {t('settings.scriptsNew')}
             </Button>
           </div>
         </div>
         <List
-          label="Scripts"
+          label={t('settings.scriptsList')}
           listRef={listRef}
-          empty="No scripts yet"
+          empty={t('settings.scriptsEmpty')}
           items={shown.map((s) => ({
             key: s.id,
             rowProps: {
@@ -103,23 +109,23 @@ export function Scripts({ config }: { config: Config }) {
               'data-drop-before': dropBefore(s.id) || undefined,
               'data-drop-after': dropAfter(s.id) || undefined,
             },
-            handle: { 'aria-label': `Move ${s.name}`, ...handleProps(s.id) },
+            handle: { 'aria-label': t('settings.scriptMove', { name: s.name }), ...handleProps(s.id) },
             lead: 'tile',
             icon: isIconName(s.icon) ? s.icon : 'prompt',
             title: s.name,
             titleWeight: 500,
             off: s.disabled,
-            badges: s.disabled ? [{ label: 'off', tone: 'neutral' }] : undefined,
+            badges: s.disabled ? [{ label: t('settings.aiOff'), tone: 'neutral' }] : undefined,
             actions: [
               {
                 kind: 'switch',
                 checked: !s.disabled,
-                ariaLabel: `${s.name} on`,
-                title: s.disabled ? 'Off: in no menu. Switch on to show it' : 'On: shown in its menus. Switch off to hide it',
+                ariaLabel: t('settings.scriptOn', { name: s.name }),
+                title: s.disabled ? t('settings.scriptOffHint') : t('settings.scriptOnHint'),
                 onToggle: (on) => setOn(s, on),
               },
-              { icon: 'edit', ariaLabel: `Edit ${s.name}`, onPress: () => setEditing(s) },
-              { icon: 'close', ariaLabel: `Remove ${s.name}`, onPress: () => void remove(s) },
+              { icon: 'edit', ariaLabel: t('settings.scriptEdit', { name: s.name }), onPress: () => setEditing(s) },
+              { icon: 'close', ariaLabel: t('settings.scriptRemove', { name: s.name }), onPress: () => void remove(s) },
             ],
           }))}
         />

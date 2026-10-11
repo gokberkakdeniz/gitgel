@@ -1,5 +1,6 @@
 // Writing stashes (SPEC §15): each is a git action, run and shown like a script.
 import { create } from 'zustand';
+import { t } from '../i18n';
 import { stashApply, stashDrop, stashPush } from '../lib/ipc';
 import type { EntrySummary, StashPush } from '../lib/types';
 import type { ReviewStash } from '../screens/Review/stashes';
@@ -20,16 +21,18 @@ export function askDrop(stash: ReviewStash): void {
 }
 
 export function dropStash(st: ReviewStash): Promise<void> {
-  return startGitAction(`Drop stash@{${st.index}}`, () => stashDrop(st.repoId, st.index, st.sha));
+  return startGitAction(t('stash.actDrop', { stash: `stash@{${st.index}}` }), () =>
+    stashDrop(st.repoId, st.index, st.sha),
+  );
 }
 
 /** Apply (or pop) into the worktree an entry is checked out in. */
 export function applyStash(st: ReviewStash, target: EntrySummary, pop: boolean): Promise<void> {
-  const name = `${pop ? 'Pop' : 'Apply'} stash@{${st.index}}`;
+  const name = t(pop ? 'stash.actPop' : 'stash.actApply', { stash: `stash@{${st.index}}` });
   return startGitAction(name, () => stashApply(st.repoId, st.index, st.sha, target.worktreePath ?? '', pop));
 }
 
 /** One stash per entry, one after another (P4). */
 export function pushStashes(entries: StashPush[], message: string): Promise<void> {
-  return startGitAction('Stash Changes', () => stashPush(entries, message));
+  return startGitAction(t('stash.dialogTitle'), () => stashPush(entries, message));
 }

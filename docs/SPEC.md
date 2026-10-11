@@ -58,7 +58,9 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   case. The exception is copy taken word for word from a
   reference app the user names: Discard's menu items and dialog are GitHub Desktop's ("Discard
   Changes…"). Code,
-  identifiers and comments are English.
+  identifiers and comments are English. Turkish (`src/i18n/tr.json`) translates the English
+  source (`en.json`) through MF2 (`src/i18n`, `pnpm i18n:check`); the app language is Settings
+  › General › Language.
 - Do not invent features the spec does not describe. If something is undefined, pick the
   simplest behaviour and mention it at the next checkpoint.
 - After every task these must pass:
@@ -150,7 +152,7 @@ configurable refresh.
 | Base | Stored per branch: `branchBases["<repoId>:<branch>"]`. |
 | Deleted branches | Entries keep `lastKnownTip` (SHA + when it was last seen), so a deleted branch can still show its last diff while the commit exists. |
 | Review | One screen for a whole project, files grouped per entry, one mode toggle. Single-branch review is the same screen with one group. |
-| Settings | Sections in a list: General (theme, terminal, update checks), Repositories (repos, default base order, active threshold), Scripts (the user's scripts), AI (commit message generation), Prompts (which confirmations are shown) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
+| Settings | Sections in a list: General (language, terminal, update checks), Appearance (theme, formatting, diff), Repositories (repos, default base order, active threshold), Scripts (the user's scripts), AI (commit message generation), Prompts (which confirmations are shown) and Shortcuts (read-only). Diff layout, context (changes only / whole file, lines around changes) and ignore-whitespace live in Review's view menu, font size in View › Font Size; all are stored in the config. |
 | Scripts | User shell commands run from branch menus (§14): `$SHELL -l -c`, context in `GITGEL_*` env vars; every run in a pty (`portable-pty`) with a toast that opens its output panel (drawn with `@xterm/xterm`); Show when conditions in CEL, evaluated in the frontend. |
 | Config owner | Only Rust reads and writes the config. The frontend never writes files; every change is a Tauri command. |
 | Config path | `~/Library/Application Support/com.gitgel.desktop/config.json` (Tauri `app_data_dir()`). |
@@ -174,6 +176,7 @@ gitgel/
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
+├─ scripts/i18n-check.mjs         # `pnpm i18n:check`: en/tr key parity, MF2 validity
 ├─ scripts/release.sh             # `pnpm release` (§12)
 ├─ index.html  package.json  pnpm-lock.yaml  .nvmrc  vite.config.ts  tsconfig*.json
 ├─ src/
@@ -185,6 +188,7 @@ gitgel/
 │  │            useCopy.ts  changelog.ts (CHANGELOG.md parsed, version compare)  whatsNew.ts
 │  │            prompts.ts (Settings › Prompts: "Do not show this message again")
 │  │            ai.ts (generate-finished hub, provider list; §15 "Generate message")
+│  ├─ i18n/     index.ts (`t()` wrapper over MF2, locale resolution, en fallback), en.json, tr.json, TRANSLATE.md
 │  ├─ windows/  # §7 the small windows: AuxApp (entry, theme, sizing), AboutWindow,
 │  │            # UpdateWindow, WhatsNewWindow
 │  ├─ state/    nav.ts  ui.ts  data.ts
@@ -251,7 +255,7 @@ gitgel/
 
 ## 4. Visual system
 
-Two themes, dark and light, picked in Settings › General › Theme (§5):
+Two themes, dark and light, picked in Settings › Appearance › Theme (§5):
 System (default), Light or Dark. Warm neutrals, one cool accent. Tokens are CSS variables in
 `src/styles/tokens.css` (`bg.sidebar` → `--bg-sidebar`, `text.muted` → `--text-muted`, …): dark
 values on `:root`, light values on `:root[data-theme="light"]` (see "Light theme" below); the same
@@ -1046,14 +1050,11 @@ Layout:
     right-aligned mono input + "days"; anything but an integer 1–365 restores the old value.
   - Changing either rescans every repo.
 - **General:** serif 18px heading "General".
-  - "Theme": a radiogroup of three tiles, gap 16 — **System** (default), **Light**, **Dark**.
-    Tile: 120 × 72 mini-window preview (radius 9, clipped): a 32px sidebar strip with traffic
-    lights and three lines, content with a title bar, three lines and an accent chip, drawn in
-    that theme's colours; System is split diagonally (light top-left, dark bottom-right). 12px
-    label under the tile. Selected: `0 0 0 2px accent` ring and `text.strong` 500 label; others
-    `0 0 0 1px border` and a muted label. Arrow keys move the choice (radio semantics). Under the
-    tiles, 12px muted: "System follows the macOS appearance and switches with it." A choice
-    applies at once and is saved (`settings.appearance`).
+  - "Language": a dropdown at the top (native `<select>`, as Terminal): System (default, follows
+    the browser language), English, Türkçe. The pick stays pending until a `ConfirmModal`
+    ("Reload to Change Language", Cancel / Reload) applies it: confirm saves
+    (`settings.language`) and reloads the page; Cancel reverts. The route is restored from
+    `sessionStorage` after the reload.
   - "Terminal" ("Used by “Open in …” in the branch menus"): a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
@@ -1067,6 +1068,38 @@ Layout:
     Saved at once (`settings.terminal`, `settings.terminalCommand`).
   - "Check for updates" ("At launch and every 6 hours; a new version shows in the sidebar"): a
     checkbox, on by default (`settings.checkUpdates`). Off hides a found update; on checks at once.
+- **Appearance:** serif 18px heading "Appearance".
+  - "Theme": moved from General as is — a radiogroup of three tiles, gap 16: **System**
+    (default), **Light**, **Dark**. Tile: 120 × 72 mini-window preview (radius 9, clipped): a
+    32px sidebar strip with traffic lights and three lines, content with a title bar, three lines
+    and an accent chip, drawn in that theme's colours; System is split diagonally (light
+    top-left, dark bottom-right). 12px label under the tile. Selected: `0 0 0 2px accent` ring
+    and `text.strong` 500 label; others `0 0 0 1px border` and a muted label. Arrow keys move the
+    choice (radio semantics). Under the tiles, 12px muted: "System follows the macOS appearance
+    and switches with it." A choice applies at once and is saved (`settings.appearance`).
+  - "Formatting": three dropdowns (native `<select>`, as Terminal), each option showing a sample
+    for Oct 19, 2017 14:30:45 / 1234567.89 followed by its pattern, then a checkbox:
+    - "Date Format" (`settings.dateFormat`, default `MMM d, yyyy`): `MMM d, yyyy`, `MMMM do,
+      yyyy`, `MM/dd/yyyy`, `dd/MM/yyyy`, `dd-MM-yyyy`, `dd.MM.yyyy`, `yyyy/MM/dd`, `yyyy-MM-dd`,
+      `yyyy.MM.dd`, `MM/dd/yy`, `dd/MM/yy`, `dd-MM-yy`, `dd.MM.yy`, `yy/MM/dd`, `yy-MM-dd`,
+      `yy.MM.dd`. Anything else reads as the default.
+    - "Time Format" (`settings.timeFormat`, default `HH:mm`): `HH:mm:ss`, `HH.mm.ss`, `HH:mm`,
+      `HH.mm`, `h:mm:ss aaa`, `h.mm.ss aaa`, `h:mm aaa`, `h.mm aaa`. Anything else reads as the
+      default.
+    - "Number Format" (`settings.numberFormat`, default plain `1234567,89`): `1234567.89`,
+      `1234567,89`, `1,234,567.89`, `1.234.567,89`, `1 234 567.89`, `1 234 567,89`. Applies to
+      counts only, never to SHAs, versions, years or ports.
+    - "Prefer absolute dates over relative dates": a checkbox, off by default
+      (`settings.preferAbsoluteDates`). On, every relative age shows the absolute date and time
+      instead; in absolute mode the History day labels ("Today", "Yesterday") render as full
+      dates too. The tooltip always shows the other form (relative when absolute is shown and
+      vice versa).
+    - Month names (`MMM`/`MMMM`), the `do` ordinal (`19th` in English, `19.` in Turkish) and
+      `aaa` (`am`/`pm` in English, `ÖÖ`/`ÖS` in Turkish) follow the app language (T25); the
+      order and separators come from the pattern and never change with the language.
+  - "Diff": "Tab size" (`settings.diffTabSize`, default 4): a dropdown with 1, 2, 3, 4, 5, 6, 8,
+    10, 12; anything else reads as 4. It sets the Monaco diff's tab size (split and unified,
+    spaces); the output panel is unaffected.
 - **Scripts:** see §14 "Settings › Scripts".
 - **AI**: serif 18px heading "AI".
   - "Generate commit message with AI": a `Switch`, on by default (`settings.ai.enabled`). Off
@@ -1330,6 +1363,7 @@ export interface ProjectConfig {
   entries: EntryConfig[];
 }
 export type DiffLayout = 'split' | 'unified';
+export type NumberFormat = 'plain-dot' | 'plain-comma' | 'group-comma-dot' | 'group-dot-comma' | 'group-space-dot' | 'group-space-comma';
 export interface Settings {
   defaultBaseOrder: string[];    // default ["origin/HEAD", "main", "master"]
   activeDays: number;            // default 14
@@ -1338,11 +1372,17 @@ export interface Settings {
   diffContext: 'changes' | 'whole'; // default 'changes'
   diffContextLines: 3 | 5 | 10;  // default 3; anything else reads as 3
   zoom: number;                  // View › Font Size, percent; default 100
+  language: 'system' | 'en' | 'tr'; // Settings › General › Language; default 'system'
   terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   checkUpdates: boolean;         // Settings › General › Check for updates; default true
   lastSeenVersion: string;       // version whose What's New was shown; default ''
-  appearance: 'system' | 'light' | 'dark'; // Settings › General › Theme; default 'system' (T10.1)
+  appearance: 'system' | 'light' | 'dark'; // Settings › Appearance › Theme; default 'system' (T10.1)
+  dateFormat: string;            // Settings › Appearance › Formatting › Date Format pattern; default 'MMM d, yyyy'
+  timeFormat: string;            // Settings › Appearance › Formatting › Time Format pattern; default 'HH:mm'
+  numberFormat: NumberFormat;    // Settings › Appearance › Formatting › Number Format; default 'plain-comma'
+  preferAbsoluteDates: boolean;  // Settings › Appearance › Formatting › Prefer absolute dates over relative dates; default false
+  diffTabSize: number;           // Settings › Appearance › Diff › Tab size; default 4
   sidebarVisible: boolean;       // the main sidebar is shown; remembered; default true
   prompts: Prompts;              // Settings › Prompts; every one true by default
 }
@@ -1615,7 +1655,8 @@ pub enum AppError {
   Settings dropdown, loaded the same way.
 - `state/nav.ts`: history router (`stack`, `index`; `push`, `replace`, `back`, `forward`). Routes:
   `branches` (optional `focusRepoId`), `project` (`projectId`, `'draft'` for a draft),
-  `review` (`target`, `focusKey?`, `backLabel`), `settings`.
+  `review` (`target`, `focusKey?`, `backLabel`), `settings`. The stack persists in
+  `sessionStorage` across the language reload (a draft route comes back as Branches).
 - `state/ui.ts`: sidebar visibility, Branches filter and scope, selection, draft project, palette,
   toast, add-repos sheet, open modal count.
 - `useInvoke(fetcher, deps, { repoIds?, onConfig?, enabled? })`: refetches when deps change, when
@@ -1948,7 +1989,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 421–464 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–162 (commit stepping 144–151, list 152–161), file bar 164–224 (whitespace chip 167–169, view button and menu 171–213 with Context 192–203, change navigation 214–223), split body 226–239, unified body 240–246, base menu 253–273 (sections, Default pair, pills, disabled rows, hint), base menu data per case 670–712 (`baseCase`: stacked / behind / unrelated / remote; effective base 290–291), commit selection 387–400, filter logic 402–412, 423–426, 457 and 586–587, segmented 465–472, context and fold logic 563–576 (sample hidden lines 477–485), view values 733–756 (context 740–755), commit values 758–768, theme and `embedded` values 717–718, filter values 771–782 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
-| Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–101 (Theme 59–78, tile builder 201–228; Terminal 79–96, options with disabled flag 263–266; Check for updates 97–99), Scripts 103–121 (`List` 117, items 309–314), Prompts 123–130 (data 286), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts) |
+| Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–87 (Language 59–65; Terminal 68–80, options with disabled flag 307; Check for updates 83–85), Appearance: Theme 91–110, tile builder 249; Formatting 112–130 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 131–137 with Tab size, Scripts 139–157 (`List` 117, items 309–314), Prompts 123–130 (data 286), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 232–241) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
@@ -2289,7 +2330,7 @@ export interface ScriptRun {
     cut in the middle like Branches rows; 240px tall at most, then scrolls) / ✕ the error
     (danger; the field turns invalid) / "Always shown".
   - **Open the output panel automatically** and **Ask before running**: plain `Checkbox`es.
-  - Footer: Cancel, primary "Save script". Save needs a name, a command, at least one
+  - Footer: Cancel, primary "Save". Save needs a name, a command, at least one
     menu under Show in, unique valid input ids and no `when` error; the footer note says what is
     missing.
 

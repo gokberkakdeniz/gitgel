@@ -7,6 +7,7 @@ import { Checkbox } from '../components/Checkbox';
 import { Input } from '../components/Input';
 import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 import { rememberSshKey, stopScript, writeScriptInput } from '../lib/ipc';
+import { t } from '../i18n';
 import { tildifyHome } from '../lib/paths';
 import type { ScriptRun } from '../lib/types';
 import styles from './PassphraseDialog.module.css';
@@ -68,8 +69,8 @@ function Dialog({ ask }: { ask: Ask }) {
     usePassphrase.setState({ ask: null, answer: null });
   };
   return (
-    <Modal aria-label="Passphrase" width={420} paddingTop={180} onClose={cancel}>
-      <ModalHeader title="Passphrase" sub={tildifyHome(ask.key)} subMono />
+    <Modal aria-label={t('scripts.passTitle')} width={420} paddingTop={180} onClose={cancel}>
+      <ModalHeader title={t('scripts.passTitle')} sub={tildifyHome(ask.key)} subMono />
       <form
         className={styles.body}
         onSubmit={(e) => {
@@ -82,21 +83,21 @@ function Dialog({ ask }: { ask: Ask }) {
             type="password"
             size={36}
             autoFocus
-            aria-label="Passphrase"
+            aria-label={t('scripts.passTitle')}
             value={value}
             onChange={setValue}
             invalid={ask.wrong && !value}
           />
-          {ask.wrong && <span className={styles.wrong}>Wrong passphrase</span>}
+          {ask.wrong && <span className={styles.wrong}>{t('scripts.wrongPass')}</span>}
         </div>
-        <Checkbox label="Remember in Keychain" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+        <Checkbox label={t('scripts.rememberKey')} checked={remember} onChange={(e) => setRemember(e.target.checked)} />
       </form>
       <ModalFooter>
         <Button size={36} onClick={cancel}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button variant="primary" size={36} kbd="↵" disabled={!value} onClick={submit}>
-          Continue
+          {t('scripts.continueBtn')}
         </Button>
       </ModalFooter>
     </Modal>

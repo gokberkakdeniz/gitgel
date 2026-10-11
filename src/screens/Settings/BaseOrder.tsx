@@ -2,6 +2,7 @@
 // there is no separator to type (docs/SPEC.md §5, design flow M4/M5).
 import { useState } from 'react';
 import { List } from '../../components/List';
+import { t } from '../../i18n';
 import { updateSettings } from '../../lib/ipc';
 import type { Config } from '../../lib/types';
 import styles from './Settings.module.css';
@@ -37,13 +38,13 @@ export function BaseOrder({ config }: { config: Config }) {
     <div role="group" aria-labelledby="base-title" className={styles.baseSetting}>
       <span className={`${styles.settingText} ${styles.baseText}`}>
         <span id="base-title" className={styles.settingName}>
-          Default Base
+          {t('settings.baseTitle')}
         </span>
-        <span className={styles.settingHint}>Used when a branch has no base</span>
+        <span className={styles.settingHint}>{t('settings.baseHint')}</span>
       </span>
       <div className={styles.baseColumn}>
         <List
-          label="Default Base Order"
+          label={t('settings.baseList')}
           ordered
           density="compact"
           radius={10}
@@ -55,26 +56,26 @@ export function BaseOrder({ config }: { config: Config }) {
             titleMono: true,
             actionsOnHover: true,
             actions: [
-              { icon: 'arrow-up', ariaLabel: `Move ${name} up`, disabled: i === 0, onPress: () => move(i, -1) },
-              { icon: 'arrow-down', ariaLabel: `Move ${name} down`, disabled: i === list.length - 1, onPress: () => move(i, 1) },
+              { icon: 'arrow-up', ariaLabel: t('settings.baseMoveUp', { name }), disabled: i === 0, onPress: () => move(i, -1) },
+              { icon: 'arrow-down', ariaLabel: t('settings.baseMoveDown', { name }), disabled: i === list.length - 1, onPress: () => move(i, 1) },
               // The list is never empty: the last branch cannot be removed.
               {
                 icon: 'close',
-                ariaLabel: `Remove ${name}`,
+                ariaLabel: t('settings.baseRemove', { name }),
                 disabled: list.length === 1,
                 onPress: () => save(list.filter((_, j) => j !== i)),
               },
             ],
           }))}
-          addLabel="+ Add Branch"
+          addLabel={t('settings.baseAdd')}
           onAdd={() => setDraft('')}
           adding={
             draft === null
               ? undefined
               : {
                   autoFocus: true,
-                  'aria-label': 'Add a base branch',
-                  placeholder: 'Branch name, e.g. develop',
+                  'aria-label': t('settings.baseAddLabel'),
+                  placeholder: t('settings.baseAddPh'),
                   value: draft,
                   invalid: !!error,
                   onChange: (v) => {

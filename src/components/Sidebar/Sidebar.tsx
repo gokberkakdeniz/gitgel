@@ -2,7 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import { installUpdate } from '../../lib/ipc';
 import { startDraftProject } from '../../lib/draft';
 import { openAddRepos } from '../../lib/addRepos';
-import { plural } from '../../lib/format';
+import { cnt, formatCount } from '../../lib/format';
+import { t } from '../../i18n';
 import type { AppError, ProjectConfig } from '../../lib/types';
 import { readProjectSort, sortProjects, writeProjectSort, type ProjectSort } from '../../lib/projectSort';
 import { branchCount } from '../../screens/Branches/rows';
@@ -58,13 +59,13 @@ export function Sidebar() {
     <nav ref={pane} className={styles.sidebar} style={width ? { width } : undefined}>
       <div className={styles.top} data-tauri-drag-region>
         <div className={styles.lights} data-tauri-drag-region />
-        <IconButton aria-label="Toggle sidebar" onClick={() => setSidebarVisible(false)}>
+        <IconButton aria-label={t('sidebar.toggleSidebar')} onClick={() => setSidebarVisible(false)}>
           <SidebarIcon />
         </IconButton>
-        <IconButton aria-label="Back" onClick={back} disabled={!canBack}>
+        <IconButton aria-label={t('sidebar.back')} onClick={back} disabled={!canBack}>
           <BackIcon />
         </IconButton>
-        <IconButton aria-label="Forward" onClick={forward} disabled={!canForward}>
+        <IconButton aria-label={t('sidebar.forward')} onClick={forward} disabled={!canForward}>
           <ForwardIcon />
         </IconButton>
       </div>
@@ -73,13 +74,13 @@ export function Sidebar() {
         <button
           type="button"
           className={onDraft ? `${styles.row} ${styles.active}` : styles.row}
-          title="New Project… (⌘N)"
+          title={t('sidebar.newProjectTitle')}
           onClick={() => startDraftProject([])}
         >
           <span className={styles.plus}>
             <PlusIcon />
           </span>
-          <span>New Project…</span>
+          <span>{t('sidebar.newProject')}</span>
         </button>
         <button
           type="button"
@@ -87,8 +88,8 @@ export function Sidebar() {
           onClick={() => goBranches()}
         >
           <BranchIcon className={styles.branchIcon} />
-          <span className={styles.grow}>Branches</span>
-          <span className={styles.count}>{rowCount}</span>
+          <span className={styles.grow}>{t('sidebar.branches')}</span>
+          <span className={styles.count}>{formatCount(rowCount)}</span>
         </button>
       </div>
 
@@ -99,12 +100,12 @@ export function Sidebar() {
       <div className={styles.footer}>
         <button type="button" className={styles.repoRow} onClick={() => openSettings('repositories')}>
           <FolderIcon className={styles.folderIcon} />
-          <span className={styles.grow}>{plural(repoCount, 'repository', 'repositories')}</span>
+          <span className={styles.grow}>{t('sidebar.repositories', { ...cnt(repoCount) })}</span>
         </button>
         <button
           type="button"
-          aria-label="Add Repository…"
-          title="Add Repository…"
+          aria-label={t('sidebar.addRepository')}
+          title={t('sidebar.addRepository')}
           className={styles.repoAdd}
           onClick={() => void openAddRepos()}
         >
@@ -112,7 +113,7 @@ export function Sidebar() {
         </button>
         <button
           type="button"
-          aria-label="Settings"
+          aria-label={t('sidebar.settings')}
           className={route.name === 'settings' ? `${styles.gear} ${styles.gearActive}` : styles.gear}
           onClick={() => openSettings()}
         >
@@ -120,7 +121,7 @@ export function Sidebar() {
         </button>
       </div>
     </nav>
-    <ResizeHandle pane={pane} min={200} max={400} onResize={setWidth} onReset={() => setWidth(null)} label="Resize sidebar" />
+    <ResizeHandle pane={pane} min={200} max={400} onResize={setWidth} onReset={() => setWidth(null)} label={t('sidebar.resizeSidebar')} />
     </>
   );
 }
@@ -161,7 +162,7 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
   const open = (id: string) => {
     if (!projects?.find((p) => p.id === id)?.entries.length) openPage(id);
     else if (id !== reviewId)
-      push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: 'Back' });
+      push({ name: 'review', target: { kind: 'project', projectId: id }, backLabel: t('sidebar.back') });
   };
 
   return (
@@ -175,24 +176,24 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
             clearable
             size={28}
             className={styles.projectFilter}
-            placeholder="Search"
-            aria-label="Search Projects"
+            placeholder={t('sidebar.search')}
+            aria-label={t('sidebar.searchProjects')}
             value={filter}
             onChange={setFilter}
             onKeyDown={(e) => e.key === 'Escape' && closeFilter()}
             onBlur={() => !filter && closeFilter()}
           />
         ) : (
-          <span>Projects</span>
+          <span>{t('sidebar.projects')}</span>
         )}
         <div className={styles.projectsActions}>
           {!filtering && (
-            <IconButton aria-label="Search Projects" onClick={() => setFiltering(true)}>
+            <IconButton aria-label={t('sidebar.searchProjects')} onClick={() => setFiltering(true)}>
               <SearchIcon />
             </IconButton>
           )}
           <IconButton
-            aria-label="Sort and Filter Projects"
+            aria-label={t('sidebar.sortFilterProjects')}
             onClick={(e) => setSortMenu(e.currentTarget.getBoundingClientRect())}
           >
             <SlidersIcon />
@@ -223,19 +224,19 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
         {draftName !== undefined && (
           <div className={`${styles.projectRow} ${styles.active}`}>
             <span className={`${styles.dot} ${styles.dotActive}`} />
-            <span className={styles.projectName}>{draftName || 'Untitled Project'}</span>
+            <span className={styles.projectName}>{draftName || t('project.untitled')}</span>
           </div>
         )}
       </div>
 
       {sortMenu && (
         <Popover anchorRect={sortMenu} width={200} onClose={() => setSortMenu(null)}>
-          <Menu aria-label="Sort Projects">
+          <Menu aria-label={t('sidebar.sortProjects')}>
             <MenuItem hint={sort === 'name' ? '✓' : undefined} onSelect={() => chooseSort('name')}>
-              Sort by Name
+              {t('sidebar.sortByName')}
             </MenuItem>
             <MenuItem hint={sort === 'created' ? '✓' : undefined} onSelect={() => chooseSort('created')}>
-              Sort by Date Created
+              {t('sidebar.sortByDate')}
             </MenuItem>
           </Menu>
         </Popover>
@@ -278,12 +279,11 @@ function UpdateRow() {
 
   const installing = progress !== null;
   const label = installing
-    ? `Updating…${typeof progress === 'number' ? ` ${progress}%` : ''}`
+    ? t('sidebar.updating', { progress: typeof progress === 'number' ? ` ${progress}%` : '' })
     : error
-      ? 'Update failed · Retry'
-      : `Update to ${update.version}`;
-  const title =
-    error ?? `You have ${update.currentVersion}`;
+      ? t('sidebar.updateFailed')
+      : t('sidebar.updateTo', { version: update.version });
+  const title = error ?? t('sidebar.haveVersion', { version: update.currentVersion });
   return (
     <button
       type="button"

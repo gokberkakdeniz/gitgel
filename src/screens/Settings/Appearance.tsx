@@ -1,16 +1,32 @@
-// Settings › General › Theme: the System / Light / Dark theme tiles (docs/SPEC.md §5).
-// The mini-window previews are plain elements drawn from the palette values below
-// (design/screens/Settings.dc.html `layer()`), not images.
+// Settings › Appearance: Theme tiles (moved from General), Formatting and Diff
+// (docs/SPEC.md §5). The mini-window previews are plain elements drawn from the palette
+// values below (design/screens/Settings.dc.html `layer()`), not images.
 import { useRef } from 'react';
+import { Checkbox } from '../../components/Checkbox';
+import { Select } from '../../components/Select';
+import { t } from '../../i18n';
+import {
+  DATE_FORMATS,
+  NUMBER_FORMATS,
+  TAB_SIZES,
+  TIME_FORMATS,
+  dateSample,
+  formatSample,
+  timeSample,
+  validDateFormat,
+  validNumberFormat,
+  validTabSize,
+  validTimeFormat,
+} from '../../lib/format';
 import { updateSettings } from '../../lib/ipc';
-import type { Appearance as AppearanceSetting, Config } from '../../lib/types';
+import type { Appearance as AppearanceSetting, Config, Settings } from '../../lib/types';
 import styles from './Settings.module.css';
 
 const ORDER: AppearanceSetting[] = ['system', 'light', 'dark'];
 const LABELS: Record<AppearanceSetting, string> = {
-  system: 'System',
-  light: 'Light',
-  dark: 'Dark',
+  system: 'settings.themeSystem',
+  light: 'settings.themeLight',
+  dark: 'settings.themeDark',
 };
 
 interface PreviewPalette {
@@ -71,7 +87,18 @@ function Layer({ theme, clip }: { theme: 'light' | 'dark'; clip?: boolean }) {
   );
 }
 
-export function Appearance({ config }: { config: Config }) {
+export function AppearanceSection({ config }: { config: Config }) {
+  return (
+    <>
+      <h2 className={styles.heading}>{t('settings.appearanceHeading')}</h2>
+      <ThemeGroup config={config} />
+      <FormattingGroup config={config} />
+      <DiffGroup config={config} />
+    </>
+  );
+}
+
+function ThemeGroup({ config }: { config: Config }) {
   const current: AppearanceSetting = config.settings.appearance ?? 'system';
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -94,7 +121,7 @@ export function Appearance({ config }: { config: Config }) {
   return (
     <section aria-labelledby="theme-title" className={styles.section}>
       <span id="theme-title" className={styles.settingName}>
-        Theme
+        {t('settings.themeName')}
       </span>
       <div role="radiogroup" aria-labelledby="theme-title" className={styles.tiles} onKeyDown={onKeyDown}>
         {ORDER.map((a, i) => {
@@ -124,13 +151,86 @@ export function Appearance({ config }: { config: Config }) {
                 )}
               </span>
               <span className={on ? `${styles.tileLabel} ${styles.tileLabelOn}` : styles.tileLabel}>
-                {LABELS[a]}
+                {t(LABELS[a])}
               </span>
             </button>
           );
         })}
       </div>
-      <span className={styles.settingHint}>System follows the macOS appearance and switches with it.</span>
+      <span className={styles.settingHint}>{t('settings.themeHint')}</span>
+    </section>
+  );
+}
+
+function FormattingGroup({ config }: { config: Config }) {
+  const { dateFormat, timeFormat, numberFormat, preferAbsoluteDates } = config.settings;
+  const save = (patch: Partial<Settings>) => void updateSettings({ ...config.settings, ...patch });
+  return (
+    <section className={styles.section}>
+      <span className={styles.settingName}>{t('settings.formattingName')}</span>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.dateFormat')}</span>
+        </span>
+        <Select
+          aria-label={t('settings.dateFormat')}
+          value={validDateFormat(dateFormat)}
+          onChange={(v) => save({ dateFormat: v })}
+          options={DATE_FORMATS.map((p) => ({ value: p, label: `${dateSample(p)} (${p})` }))}
+        />
+      </label>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.timeFormat')}</span>
+        </span>
+        <Select
+          aria-label={t('settings.timeFormat')}
+          value={validTimeFormat(timeFormat)}
+          onChange={(v) => save({ timeFormat: v })}
+          options={TIME_FORMATS.map((p) => ({ value: p, label: `${timeSample(p)} (${p})` }))}
+        />
+      </label>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.numberFormat')}</span>
+        </span>
+        <Select
+          aria-label={t('settings.numberFormat')}
+          value={validNumberFormat(numberFormat)}
+          onChange={(v) => save({ numberFormat: v })}
+          options={NUMBER_FORMATS.map((id) => ({ value: id, label: formatSample(1234567.89, id) }))}
+        />
+      </label>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.absoluteDates')}</span>
+        </span>
+        <Checkbox checked={preferAbsoluteDates} onChange={(e) => save({ preferAbsoluteDates: e.target.checked })} />
+      </label>
+    </section>
+  );
+}
+
+function DiffGroup({ config }: { config: Config }) {
+  const { diffTabSize } = config.settings;
+  const save = (patch: Partial<Settings>) => void updateSettings({ ...config.settings, ...patch });
+  return (
+    <section className={styles.section}>
+      <span className={styles.settingName}>{t('settings.diffName')}</span>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.tabSize')}</span>
+        </span>
+        <Select
+          aria-label={t('settings.tabSize')}
+          value={String(validTabSize(diffTabSize))}
+          onChange={(v) => save({ diffTabSize: Number(v) })}
+          options={TAB_SIZES.map((n) => ({
+            value: String(n),
+            label: n === 4 ? `${n} ${t('settings.tabDefault')}` : String(n),
+          }))}
+        />
+      </label>
     </section>
   );
 }

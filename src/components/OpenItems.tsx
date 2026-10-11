@@ -1,4 +1,5 @@
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { t } from '../i18n';
 import { openFile, openFolder } from '../lib/ipc';
 import type { Config, EntrySummary } from '../lib/types';
 import { useData } from '../state/data';
@@ -23,7 +24,7 @@ export function CopyBranchItem({ entry, onDone }: { entry: EntrySummary; onDone:
         onDone();
       }}
     >
-      Copy Branch Name
+      {t('common.copyBranchName')}
     </MenuItem>
   );
 }
@@ -58,7 +59,7 @@ export function OpenItems({ entry, onDone }: { entry: EntrySummary; onDone: () =
             icon={a.icon ? <img src={a.icon} alt="" className={styles.appIcon} /> : <TerminalIcon />}
             onSelect={() => open(a.id)}
           >
-            Open in {a.name}
+            {t('open.inApp', { app: a.name })}
           </MenuItem>
         ))}
     </>
@@ -110,7 +111,7 @@ export function FileOpenItems({
               for (const f of files) openFile(f.folder, f.path, a.id, where).catch((e) => console.error('cannot open file', e));
             }}
           >
-            Open in {a.name}
+            {t('open.inApp', { app: a.name })}
           </MenuItem>
         ))}
     </>
@@ -123,10 +124,10 @@ export function EntryMenuNote({ entry }: { entry: EntrySummary }) {
   const apps = useData((s) => s.openApps);
   const missingTerminal = apps.find((a) => a.id === 'terminal' && !a.found);
   const note = (() => {
-    if (entry.state === 'repo_missing') return 'Repository Not Found';
-    if (entry.state === 'branch_deleted') return 'Branch Deleted';
-    if (!openableFolder(entry)) return 'Not checked out';
-    if (missingTerminal) return `${missingTerminal.name} not installed`;
+    if (entry.state === 'repo_missing') return t('review.goneRepo');
+    if (entry.state === 'branch_deleted') return t('project.branchDeleted');
+    if (!openableFolder(entry)) return t('open.notCheckedOut');
+    if (missingTerminal) return t('open.termMissing', { app: missingTerminal.name });
     return null;
   })();
   if (!note) return null;

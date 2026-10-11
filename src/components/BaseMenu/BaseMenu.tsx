@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { t } from '../../i18n';
 import { getBaseOptions, setBranchBase, verifyRef } from '../../lib/ipc';
 import { useInvoke } from '../../lib/useInvoke';
 import { useData } from '../../state/data';
 import { CheckIcon } from '../icons';
 import { Input } from '../Input';
 import { Popover } from '../Popover';
-import { AUTO_TITLE, baseRows, initialRow, looksLikeSha, type BaseRow } from './baseRows';
+import { AUTO_TITLE, AUTOMATIC_LABEL, baseRows, initialRow, looksLikeSha, type BaseRow } from './baseRows';
 import styles from './BaseMenu.module.css';
 
 interface Props {
@@ -47,7 +48,7 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
 
   const rows = useMemo(() => {
     const list = data ? baseRows(data, query, custom, ownBranch) : [];
-    if (sha) list.push({ section: 'Commit', value: sha, label: `Use ${sha.slice(0, 7)}` });
+    if (sha) list.push({ section: 'Commit', value: sha, label: t('base.useSha', { sha: sha.slice(0, 7) }) });
     return list;
   }, [data, query, custom, ownBranch, sha]);
   // Opens on the base in use; typing starts again from the top.
@@ -76,9 +77,23 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
   };
 
   let lastSection: string | null = null;
+  const sectionTitle = (section: BaseRow['section']): string =>
+    t(
+      section === 'Suggested'
+        ? 'base.secSuggested'
+        : section === 'Default'
+          ? 'base.secDefault'
+          : section === 'Other Branches'
+            ? 'base.secOther'
+            : section === 'Remote Branches'
+              ? 'base.secRemote'
+              : section === 'Tags'
+                ? 'base.secTags'
+                : 'base.secCommit',
+    );
   return (
     <Popover anchorRect={anchorRect} width={340} alignRight={alignRight} onClose={onClose}>
-      <div role="listbox" aria-label={`Choose base for ${branchName}`} className={styles.menu}>
+      <div role="listbox" aria-label={t('base.chooseBase', { branch: branchName })} className={styles.menu}>
         <div className={styles.filterRow}>
           <Input
             autoFocus
@@ -86,8 +101,8 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
             mono
             clearable
             size={32}
-            aria-label="Search Branches"
-            placeholder="Search"
+            aria-label={t('project.searchBranches')}
+            placeholder={t('sidebar.search')}
             className={styles.filter}
             value={query}
             onChange={setQuery}
@@ -104,7 +119,7 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
         </div>
         <div className={styles.list}>
           {rows.map((row, i) => {
-            const title = row.section !== lastSection && row.section !== 'Commit' ? row.section : null;
+            const title = row.section !== lastSection && row.section !== 'Commit' ? sectionTitle(row.section) : null;
             lastSection = row.section;
             const dim = row.section === 'Other Branches' || row.section === 'Remote Branches';
             const cls = [styles.row, row.sub && styles.stacked, i === active && styles.active, row.disabled && styles.disabled]
@@ -114,18 +129,20 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
               row.section === 'Commit' ? styles.use : row.auto ? styles.plain : dim ? `${styles.name} ${styles.dim}` : styles.name;
             return (
               <div key={`${row.section}:${row.value}`}>
-                {title && (
-                  <div className={styles.section}>
-                    <span>{title}</span>
-                    {title === 'Default' && data?.defaults && <span className={styles.source}>from {data.defaults.source}</span>}
-                  </div>
-                )}
+              {title && (
+                <div className={styles.section}>
+                  <span>{title}</span>
+                  {title === t('base.secDefault') && data?.defaults && (
+                    <span className={styles.source}>{t('base.fromSource', { source: data.defaults.source })}</span>
+                  )}
+                </div>
+              )}
                 <button
                   type="button"
                   role="option"
                   aria-selected={!!row.selected}
                   aria-disabled={row.disabled || undefined}
-                  title={row.disabled ? 'No common ancestor with this branch' : row.auto ? AUTO_TITLE : undefined}
+                  title={row.disabled ? t('base.noAncestor') : row.auto ? t(AUTO_TITLE) : undefined}
                   className={cls}
                   onMouseMove={() => !row.disabled && setActive(i)}
                   onClick={() => void choose(row)}
@@ -135,7 +152,7 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
                     <CheckIcon />
                   </span>
                   <span className={row.sub ? styles.text : styles.grow}>
-                    <span className={nameCls}>{row.label}</span>
+                    <span className={nameCls}>{row.label === AUTOMATIC_LABEL ? t(row.label) : row.label}</span>
                     {row.sub && <span className={styles.sub}>{row.sub}</span>}
                   </span>
                   {row.note && <span className={styles.note}>{row.note}</span>}
@@ -143,7 +160,7 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
               </div>
             );
           })}
-          {data && rows.length === 0 && <div className={styles.empty}>No matching refs</div>}
+          {data && rows.length === 0 && <div className={styles.empty}>{t('base.noMatch')}</div>}
         </div>
       </div>
     </Popover>

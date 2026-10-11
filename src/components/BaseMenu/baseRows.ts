@@ -1,3 +1,5 @@
+import { t } from '../../i18n';
+import { cnt, formatCount } from '../../lib/format';
 import type { BaseCandidate, BaseOptions } from '../../lib/types';
 
 export type BaseSection = 'Suggested' | 'Default' | 'Other Branches' | 'Remote Branches' | 'Tags' | 'Commit';
@@ -18,13 +20,16 @@ export interface BaseRow {
   disabled?: boolean;
 }
 
-export const AUTO_TITLE = 'Uses whichever of the two shares the most history with this branch';
+export const AUTO_TITLE = 'base.autoTitle';
 
-const commits = (n: number) => `${n} ${n === 1 ? 'commit' : 'commits'}`;
+/** The Automatic row's label is a key, translated where it renders. */
+export const AUTOMATIC_LABEL = 'base.automatic';
+
+const commits = (n: number) => t('base.commitCount', { ...cnt(n) });
 
 function candidateNote(c: BaseCandidate): string | undefined {
-  if (c.unrelated) return 'no common ancestor';
-  if (c.sameAs) return `same as ${c.sameAs}`;
+  if (c.unrelated) return t('base.unrelated');
+  if (c.sameAs) return t('base.sameAs', { x: c.sameAs });
   return c.ahead === null ? undefined : commits(c.ahead);
 }
 
@@ -47,7 +52,7 @@ export function baseRows(o: BaseOptions, q: string, custom: boolean, branch: str
         section: 'Suggested',
         value: s.branch,
         label: s.branch,
-        sub: `Contains ${s.contains} of the ${s.total} commits shown`,
+        sub: t('base.contains', { c: formatCount(s.contains), total: formatCount(s.total) }),
         selected: stored(s.branch),
       });
     }
@@ -58,8 +63,8 @@ export function baseRows(o: BaseOptions, q: string, custom: boolean, branch: str
       rows.push({
         section: 'Default',
         value: '',
-        label: 'Automatic',
-        sub: picked ? `uses ${picked.name}` : undefined,
+        label: AUTOMATIC_LABEL,
+        sub: picked ? t('base.usesName', { name: picked.name }) : undefined,
         note: picked?.ahead != null ? commits(picked.ahead) : undefined,
         auto: true,
         selected: !custom,
@@ -88,7 +93,7 @@ export function baseRows(o: BaseOptions, q: string, custom: boolean, branch: str
   for (const r of o.remotes) {
     if (!match(r)) continue;
     const sameName = branch !== null && r.slice(r.indexOf('/') + 1) === branch;
-    rows.push({ section: 'Remote Branches', value: r, label: r, note: sameName ? 'same name' : undefined, selected: stored(r) });
+    rows.push({ section: 'Remote Branches', value: r, label: r, note: sameName ? t('base.sameName') : undefined, selected: stored(r) });
   }
   if (query) {
     for (const t of o.tags) {

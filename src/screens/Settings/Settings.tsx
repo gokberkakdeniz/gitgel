@@ -9,27 +9,30 @@ import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Select } from '../../components/Select';
 import { SettingsNav, type SettingsNavSection } from '../../components/SettingsNav';
 import { openAddRepos } from '../../lib/addRepos';
+import { cnt } from '../../lib/format';
+import { t } from '../../i18n';
 import { locateRepo, removeRepo, updateSettings } from '../../lib/ipc';
 import { stopAsking } from '../../lib/prompts';
 import { basename, tildifyHome } from '../../lib/paths';
-import type { AppError, Config, RepoConfig, TerminalChoice } from '../../lib/types';
+import type { AppError, Config, Language, RepoConfig, TerminalChoice } from '../../lib/types';
 import { useData } from '../../state/data';
 import { useUi, type SettingsSection } from '../../state/ui';
 import styles from './Settings.module.css';
 import { Ai } from './Ai';
-import { Appearance } from './Appearance';
+import { AppearanceSection } from './Appearance';
 import { BaseOrder } from './BaseOrder';
 import { Scripts } from './Scripts';
 import { parseDays } from './parse';
 import { SHORTCUTS } from '../../lib/shortcuts';
 
 const SECTIONS: SettingsNavSection<SettingsSection>[] = [
-  { id: 'general', label: 'General', icon: 'tune' },
-  { id: 'repositories', label: 'Repositories', icon: 'folder' },
-  { id: 'scripts', label: 'Scripts', icon: 'prompt' },
-  { id: 'ai', label: 'AI', icon: 'bolt' },
-  { id: 'prompts', label: 'Prompts', icon: 'help' },
-  { id: 'shortcuts', label: 'Shortcuts', icon: 'keyboard' },
+  { id: 'general', label: 'settings.navGeneral', icon: 'tune' },
+  { id: 'appearance', label: 'settings.navAppearance', icon: 'sliders' },
+  { id: 'repositories', label: 'settings.navRepositories', icon: 'folder' },
+  { id: 'scripts', label: 'settings.navScripts', icon: 'prompt' },
+  { id: 'ai', label: 'settings.aiHeading', icon: 'bolt' },
+  { id: 'prompts', label: 'settings.navPrompts', icon: 'help' },
+  { id: 'shortcuts', label: 'settings.navShortcuts', icon: 'keyboard' },
 ];
 
 /** A section list on the left, the chosen section's settings on the right (flow M). */
@@ -40,7 +43,7 @@ export function Settings() {
   if (!config) return null;
   return (
     <>
-      <PageHeader title="Settings" />
+      <PageHeader title={t('settings.settingsTitle')} />
       <div className={styles.body}>
         <SettingsNav
           sections={SECTIONS.map((s) =>
@@ -66,6 +69,8 @@ export function Settings() {
               </>
             ) : section === 'general' ? (
               <General config={config} />
+            ) : section === 'appearance' ? (
+              <AppearanceSection config={config} />
             ) : section === 'scripts' ? (
               <Scripts config={config} />
             ) : section === 'ai' ? (
@@ -111,31 +116,31 @@ function Repositories({ config }: { config: Config }) {
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.heading}>Repositories</h2>
+      <h2 className={styles.heading}>{t('settings.reposHeading')}</h2>
       <List
-        label="Repositories"
-        addLabel="+ Add Repository…"
+        label={t('settings.reposHeading')}
+        addLabel={t('sidebar.addRepository')}
         onAdd={() => void openAddRepos()}
         items={config.repos.map((repo): ListItem => {
           const s = scan[repo.id];
           const name = basename(repo.path);
-          const remove: ListAction = { icon: 'close', ariaLabel: 'Remove Repository…', onPress: () => removeRow(repo) };
+          const remove: ListAction = { icon: 'close', ariaLabel: t('settings.removeRepo'), onPress: () => removeRow(repo) };
           return {
             key: repo.id,
             title: name,
             titleWeight: 500,
             titleWidth: 96,
             detail: tildifyHome(repo.path),
-            aside: s?.status === 'missing' || s?.status === 'error' ? undefined : s?.defaultBase ? `base ${s.defaultBase}` : s ? 'no base found' : undefined,
+            aside: s?.status === 'missing' || s?.status === 'error' ? undefined : s?.defaultBase ? t('branches.baseName', { base: s.defaultBase }) : s ? t('settings.noBase') : undefined,
             actions:
               s?.status === 'missing'
                 ? [
-                    { kind: 'pill', label: 'Path Not Found', tone: 'danger' },
-                    { label: 'Locate…', variant: 'secondary', ariaLabel: `Locate ${name}`, onPress: () => void locate(repo) },
+                    { kind: 'pill', label: t('branches.pathNotFound'), tone: 'danger' },
+                    { label: t('settings.locate'), variant: 'secondary', ariaLabel: t('settings.locateName', { name }), onPress: () => void locate(repo) },
                     remove,
                   ]
                 : s?.status === 'error'
-                  ? [{ kind: 'pill', label: 'Git Error', tone: 'danger', title: s.error ?? undefined }, remove]
+                  ? [{ kind: 'pill', label: t('settings.gitErrorPill'), tone: 'danger', title: s.error ?? undefined }, remove]
                   : [remove],
           };
         })}
@@ -143,15 +148,15 @@ function Repositories({ config }: { config: Config }) {
 
       {removing && (
         <ConfirmModal
-          aria-label="Remove Repository…"
-          title={`Remove ${basename(removing.path)}?`}
+          aria-label={t('settings.removeRepo')}
+          title={t('settings.removeTitle', { name: basename(removing.path) })}
           width={440}
           onClose={closeRemoving}
-          text={`Its ${entriesOf(removing.id) === 1 ? '1 project entry is' : `${entriesOf(removing.id)} project entries are`} removed too. Nothing on disk is touched.`}
+          text={t('settings.removeText', { ...cnt(entriesOf(removing.id)) })}
           dontAsk={{ checked: dontAsk, onChange: setDontAsk }}
         >
           <Button size={36} onClick={closeRemoving}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="danger"
@@ -162,7 +167,7 @@ function Repositories({ config }: { config: Config }) {
               closeRemoving();
             }}
           >
-            Remove
+            {t('settings.removeBtn')}
           </Button>
         </ConfirmModal>
       )}
@@ -174,21 +179,21 @@ function Repositories({ config }: { config: Config }) {
 function Prompts({ config }: { config: Config }) {
   const prompts = config.settings.prompts;
   const items: [keyof Config['settings']['prompts'], string][] = [
-    ['removeRepositories', 'Removing repositories'],
-    ['discardChanges', 'Discarding changes'],
-    ['discardStash', 'Dropping stashes'],
-    ['abortOperation', 'Aborting a rebase or merge'],
-    ['deleteProjects', 'Deleting projects'],
+    ['removeRepositories', 'settings.promptRepos'],
+    ['discardChanges', 'settings.promptDiscard'],
+    ['discardStash', 'settings.promptStash'],
+    ['abortOperation', 'settings.promptAbort'],
+    ['deleteProjects', 'settings.promptDelete'],
   ];
   return (
     <section className={styles.prompts} aria-labelledby="prompts-title">
       <h2 id="prompts-title" className={styles.heading}>
-        Show a Confirmation Dialog Before…
+        {t('settings.promptsHeading')}
       </h2>
       {items.map(([key, label]) => (
         <Checkbox
           key={key}
-          label={label}
+          label={t(label)}
           checked={prompts[key]}
           onChange={(e) => void updateSettings({ ...config.settings, prompts: { ...prompts, [key]: e.target.checked } })}
         />
@@ -202,19 +207,19 @@ function Shortcuts() {
     <section className={styles.shortcuts} aria-labelledby="shortcuts-title">
       <div className={styles.shortcutsHead}>
         <h2 id="shortcuts-title" className={styles.heading}>
-          Keyboard Shortcuts
+          {t('settings.shortcutsHeading')}
         </h2>
-        <span className={styles.settingHint}>Not editable yet</span>
+        <span className={styles.settingHint}>{t('settings.shortcutsNote')}</span>
       </div>
       <div className={styles.shortcutGrid}>
         {SHORTCUTS.map((group) => (
           <div key={group.title} className={styles.shortcutCard}>
-            <div className={styles.shortcutTitle}>{group.title}</div>
+            <div className={styles.shortcutTitle}>{t(group.title)}</div>
             {group.items.map((item) => (
               <div key={`${item.label}${item.note ?? ''}`} className={styles.shortcutRow}>
                 <span className={styles.shortcutText}>
-                  <span className={styles.shortcutLabel}>{item.label}</span>
-                  {item.note && <span className={styles.shortcutNote}>{item.note}</span>}
+                  <span className={styles.shortcutLabel}>{t(item.label)}</span>
+                  {item.note && <span className={styles.shortcutNote}>{t(item.note)}</span>}
                 </span>
                 <span className={styles.keys}>
                   {item.keys.map((k, i) =>
@@ -257,8 +262,8 @@ function ActiveThreshold({ config }: { config: Config }) {
   return (
     <label className={styles.setting}>
       <span className={styles.settingText}>
-        <span className={styles.settingName}>Active Threshold</span>
-        <span className={styles.settingHint}>Branches without a worktree are listed if committed within</span>
+        <span className={styles.settingName}>{t('settings.activeName')}</span>
+        <span className={styles.settingHint}>{t('settings.activeHint')}</span>
       </span>
       <span className={styles.days}>
         <Input
@@ -276,7 +281,7 @@ function ActiveThreshold({ config }: { config: Config }) {
             }
           }}
         />
-        <span className={styles.settingHint}>days</span>
+        <span className={styles.settingHint}>{t('settings.daysUnit')}</span>
       </span>
     </label>
   );
@@ -285,14 +290,14 @@ function ActiveThreshold({ config }: { config: Config }) {
 function General({ config }: { config: Config }) {
   return (
     <>
-      <h2 className={styles.heading}>General</h2>
-      <Appearance config={config} />
+      <h2 className={styles.heading}>{t('settings.generalHeading')}</h2>
+      <LanguageSetting config={config} />
       <section className={styles.section}>
         <TerminalSetting config={config} />
         <label className={styles.setting}>
           <span className={styles.settingText}>
-            <span className={styles.settingName}>Check for Updates</span>
-            <span className={styles.settingHint}>At launch and every 6 hours; a new version shows in the sidebar</span>
+            <span className={styles.settingName}>{t('settings.checkUpdates')}</span>
+            <span className={styles.settingHint}>{t('settings.checkHint')}</span>
           </span>
           <Checkbox
             checked={config.settings.checkUpdates}
@@ -300,6 +305,56 @@ function General({ config }: { config: Config }) {
           />
         </label>
       </section>
+    </>
+  );
+}
+
+/** The UI language (flow M7): the pick stays pending until Reload applies it. */
+function LanguageSetting({ config }: { config: Config }) {
+  const saved = config.settings.language ?? 'system';
+  const [pending, setPending] = useState<Language | null>(null);
+  const shown = pending ?? saved;
+  // The saved value changed (the reload landed, or another window saved it).
+  useEffect(() => setPending(null), [saved]);
+  const reload = async () => {
+    if (!pending) return;
+    await updateSettings({ ...config.settings, language: pending });
+    window.location.reload();
+  };
+  return (
+    <>
+      <section className={styles.section}>
+        <label className={styles.setting}>
+          <span className={styles.settingText}>
+            <span className={styles.settingName}>{t('settings.languageName')}</span>
+          </span>
+          <Select<Language>
+            aria-label={t('settings.languageName')}
+            value={shown}
+            onChange={(l) => setPending(l === saved ? null : l)}
+            options={[
+              { value: 'system', label: t('settings.themeSystem') },
+              { value: 'en', label: t('settings.langEnglish') },
+              { value: 'tr', label: t('settings.langTurkish') },
+            ]}
+          />
+        </label>
+      </section>
+      {pending && (
+        <ConfirmModal
+          aria-label={t('settings.reloadTitle')}
+          title={t('settings.reloadTitle')}
+          width={440}
+          onClose={() => setPending(null)}
+        >
+          <Button size={36} onClick={() => setPending(null)}>
+            {t('common.cancel')}
+          </Button>
+          <Button variant="primary" size={36} autoFocus onClick={() => void reload()}>
+            {t('settings.reloadBtn')}
+          </Button>
+        </ConfirmModal>
+      )}
     </>
   );
 }
@@ -324,30 +379,30 @@ function TerminalSetting({ config }: { config: Config }) {
     <div className={styles.terminal}>
       <label className={styles.setting}>
         <span className={styles.settingText}>
-          <span className={styles.settingName}>Terminal</span>
-          <span className={styles.settingHint}>Used by “Open in …” in the branch menus</span>
+          <span className={styles.settingName}>{t('settings.terminalName')}</span>
+          <span className={styles.settingHint}>{t('settings.terminalHint')}</span>
         </span>
         <Select<TerminalChoice>
-          aria-label="Terminal"
+          aria-label={t('settings.terminalName')}
           value={terminal}
-          onChange={(t) => void updateSettings({ ...config.settings, terminal: t })}
+          onChange={(term) => void updateSettings({ ...config.settings, terminal: term })}
           options={[
-            { value: 'auto', label: `Automatic${termApp ? ` (${termApp.name})` : ''}` },
+            { value: 'auto', label: termApp ? t('settings.terminalAuto', { name: termApp.name }) : t('settings.terminalAutoPlain') },
             { value: 'terminal', label: 'Terminal', disabled: missing('terminal') },
             { value: 'iterm', label: 'iTerm2', disabled: missing('iterm') },
             { value: 'wezterm', label: 'WezTerm', disabled: missing('wezterm') },
-            { value: 'other', label: 'Other' },
+            { value: 'other', label: t('settings.terminalOther') },
           ]}
         />
       </label>
       {terminal === 'other' && (
         <label className={styles.terminalOther}>
-          <span className={styles.srOnly}>Terminal Command</span>
+          <span className={styles.srOnly}>{t('settings.terminalCmd')}</span>
           <Input
             mono
             size={36}
             className={styles.terminalCommand}
-            placeholder="wezterm start --cwd %"
+            placeholder={t('settings.terminalPh')}
             value={command}
             onChange={setCommand}
             onBlur={saveCommand}
@@ -359,10 +414,14 @@ function TerminalSetting({ config }: { config: Config }) {
             }}
           />
           <span className={styles.settingHint}>
-            A command, or an app name such as Ghostty. <span className={styles.mono}>%</span> becomes the worktree
-            folder; the command runs in your login shell, in that folder.
+            {t('settings.terminalCmdHint')}
           </span>
         </label>
+      )}
+      {loaded && termApp && !termApp.found && (
+        <span className={styles.terminalMissing}>
+          {t('settings.terminalMissing', { name: termApp.name })}
+        </span>
       )}
       {loaded && termApp && !termApp.found && (
         <span className={styles.terminalMissing}>

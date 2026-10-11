@@ -6,6 +6,7 @@ import { Button } from '../components/Button';
 import { ReleaseNotes } from '../components/ReleaseNotes';
 import { newerThan, parseChangelog } from '../lib/changelog';
 import { checkForUpdates, getUpdateCheck, installUpdate } from '../lib/ipc';
+import { t } from '../i18n';
 import type { AppError, UpdateCheck } from '../lib/types';
 import { closeWindow, Fitted, useEscCloses } from './AuxApp';
 import styles from './UpdateWindow.module.css';
@@ -59,39 +60,39 @@ export function UpdateWindow() {
   let buttons: React.ReactNode;
   switch (check.state) {
     case 'checking':
-      title = 'Checking for Updates…';
+      title = t('update.checking');
       body = <Bar />;
       buttons = (
         <Button size={36} className={styles.button} onClick={close}>
-          Cancel
+          {t('common.cancel')}
         </Button>
       );
       break;
     case 'upToDate':
-      title = 'You’re Up to Date';
-      body = <p className={styles.text}>Gitgel {check.currentVersion} is the newest version.</p>;
+      title = t('update.uptodate');
+      body = <p className={styles.text}>{t('update.newest', { version: check.currentVersion })}</p>;
       buttons = (
         <Button variant="primary" size={36} className={styles.button} autoFocus onClick={close}>
-          OK
+          {t('update.okBtn')}
         </Button>
       );
       break;
     case 'failed':
-      title = 'Cannot Check for Updates';
+      title = t('update.failed');
       body = <p className={styles.error}>{check.message}</p>;
       buttons = (
         <>
           <Button size={36} className={styles.button} onClick={close}>
-            Close
+            {t('common.close')}
           </Button>
           <Button variant="primary" size={36} className={styles.button} autoFocus onClick={() => void checkForUpdates()}>
-            Try Again
+            {t('update.retry')}
           </Button>
         </>
       );
       break;
     case 'available':
-      title = 'A New Version Is Available';
+      title = t('update.available');
       body = (
         <>
           <span className={styles.versions}>
@@ -100,7 +101,7 @@ export function UpdateWindow() {
             <span className={styles.to}>{check.version}</span>
           </span>
           {notes.length > 0 && (
-            <div role="region" aria-label="Release notes" tabIndex={0} className={styles.notes}>
+            <div role="region" aria-label={t('update.notesAria')} tabIndex={0} className={styles.notes}>
               <ReleaseNotes releases={notes} compact />
             </div>
           )}
@@ -109,14 +110,14 @@ export function UpdateWindow() {
           ) : error ? (
             <p className={styles.error}>{error}</p>
           ) : (
-            <p className={styles.text}>Gitgel restarts to finish the update.</p>
+            <p className={styles.text}>{t('update.restartNote')}</p>
           )}
         </>
       );
       buttons = (
         <>
           <Button size={36} className={styles.button} disabled={installing} onClick={close}>
-            Later
+            {t('update.laterBtn')}
           </Button>
           <Button
             variant="primary"
@@ -126,7 +127,7 @@ export function UpdateWindow() {
             autoFocus
             onClick={() => void install()}
           >
-            {installing ? 'Updating…' : error ? 'Try Again' : 'Update and Restart'}
+            {installing ? t('update.updating') : error ? t('update.retry') : t('update.updateRestart')}
           </Button>
         </>
       );
@@ -161,7 +162,7 @@ function Bar({ percent = null }: { percent?: number | null }) {
           style={percent === null ? undefined : { width: `${percent}%` }}
         />
       </div>
-      {percent !== null && <span className={styles.percent}>{percent < 100 ? `Downloading… ${percent}%` : 'Installing…'}</span>}
+      {percent !== null && <span className={styles.percent}>{percent < 100 ? t('update.downloading', { p: String(percent) }) : t('update.installing')}</span>}
     </div>
   );
 }

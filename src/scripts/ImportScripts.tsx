@@ -6,7 +6,8 @@ import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 import { Pill } from '../components/Pill';
 import { Segmented } from '../components/Segmented';
 import { importScripts } from '../lib/ipc';
-import { plural } from '../lib/format';
+import { cnt, formatCount } from '../lib/format';
+import { t } from '../i18n';
 import { tildifyHome } from '../lib/paths';
 import type { AppError, ScriptConfig } from '../lib/types';
 import { useData } from '../state/data';
@@ -42,7 +43,7 @@ export function ImportScripts({
       const replace = scripts.filter((_, i) => checked[i] && clashes[i] && choices[i] === 'replace').map((s) => s.name);
       await importScripts(picked, replace);
       onClose();
-      useUi.getState().showToast({ message: `Imported ${plural(picked.length, 'script', 'scripts')}` });
+      useUi.getState().showToast({ message: t('scripts.imported', { ...cnt(picked.length) }) });
     } catch (e) {
       setError((e as AppError).message);
       setBusy(false);
@@ -50,19 +51,19 @@ export function ImportScripts({
   };
 
   return (
-    <Modal aria-label="Import Scripts" width={680} paddingTop={110} onClose={onClose}>
+    <Modal aria-label={t('scripts.importTitle')} width={680} paddingTop={110} onClose={onClose}>
       <ModalHeader
-        title="Import Scripts"
-        sub={`${tildifyHome(path)} · ${plural(scripts.length, 'script', 'scripts')}`}
+        title={t('scripts.importTitle')}
+        sub={t('scripts.importSub', { path: tildifyHome(path), scripts: t('scripts.scriptCount', { ...cnt(scripts.length) }) })}
         subMono
         onClose={onClose}
       />
       <div className={styles.body}>
-        <ul aria-label="Scripts in the file" className={styles.list}>
+        <ul aria-label={t('scripts.fileList')} className={styles.list}>
           {scripts.map((s, i) => (
             <li key={i} className={checked[i] ? styles.row : `${styles.row} ${styles.off}`}>
               <Checkbox
-                aria-label={`Import ${s.name}`}
+                aria-label={t('scripts.importOne', { name: s.name })}
                 className={styles.check}
                 checked={checked[i]}
                 onChange={() => setChecked((c) => c.map((v, j) => (j === i ? !v : v)))}
@@ -73,11 +74,11 @@ export function ImportScripts({
                   <span className={styles.name}>{s.name}</span>
                   {clashes[i] ? (
                     <Pill tone="warning" size="sm">
-                      Same Name Exists
+                      {t('scripts.sameName')}
                     </Pill>
                   ) : (
                     <Pill tone="accent" size="sm">
-                      new
+                      {t('scripts.newPill')}
                     </Pill>
                   )}
                 </span>
@@ -86,16 +87,16 @@ export function ImportScripts({
               </span>
               {clashes[i] && (
                 <Segmented<Choice>
-                  aria-label={`When ${s.name} already exists`}
+                  aria-label={t('scripts.whenExists', { name: s.name })}
                   size="sm"
                   bordered
                   role="radio"
                   value={choices[i]}
                   onChange={(v) => setChoices((c) => c.map((x, j) => (j === i ? v : x)))}
                   options={[
-                    { value: 'replace', label: 'Replace' },
-                    { value: 'both', label: 'Keep both' },
-                    { value: 'skip', label: 'Skip' },
+                    { value: 'replace', label: t('scripts.optReplace') },
+                    { value: 'both', label: t('scripts.optBoth') },
+                    { value: 'skip', label: t('scripts.optSkip') },
                   ]}
                 />
               )}
@@ -104,19 +105,16 @@ export function ImportScripts({
         </ul>
         <div className={styles.warning}>
           <InfoIcon size={14} />
-          <span>
-            Scripts run as you, with your permissions. Read each command before importing. Imported scripts ask
-            before running; you can turn that off per script.
-          </span>
+          <span>{t('scripts.importWarning')}</span>
         </div>
         {error && <div className={styles.error}>{error}</div>}
       </div>
-      <ModalFooter note={`${picked.length} of ${scripts.length} selected`}>
+      <ModalFooter note={t('scripts.pickOf', { a: formatCount(picked.length), b: formatCount(scripts.length) })}>
         <Button size={36} onClick={onClose}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button variant="primary" size={36} disabled={picked.length === 0 || busy} onClick={() => void run()}>
-          Import {plural(picked.length, 'script', 'scripts')}
+          {t('scripts.importBtn', { ...cnt(picked.length) })}
         </Button>
       </ModalFooter>
     </Modal>

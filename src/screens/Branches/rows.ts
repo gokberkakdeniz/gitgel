@@ -1,5 +1,7 @@
 // Which entries the Branches screen lists: every active entry, optionally only those in no
 // project ("Not in a project").
+import { t } from '../../i18n';
+import { cnt, formatCount } from '../../lib/format';
 import { entryKey } from '../../lib/entryKey';
 import type { Config, EntrySummary, ProjectConfig, RemoteBranch, RepoScan, StashInfo } from '../../lib/types';
 
@@ -128,11 +130,19 @@ export function branchCount(config: Config | null, scans: RepoScan[]): number {
  * unknown; uncommitted is unknown when the entry is not checked out), and its tooltip. */
 export function afu(e: EntrySummary): { a: string; f: string; u: string; title: string } {
   const behind = e.behind ?? 0;
-  const a = e.ahead === null ? '—' : `↑${e.ahead}${behind > 0 ? ` ↓${behind}` : ''}`;
-  const f = e.files === null ? '—' : String(e.files);
-  const u = e.uncommitted === null ? '—' : String(e.uncommitted);
-  const ahead = e.ahead === null ? '— ahead' : `${e.ahead} ahead${behind > 0 ? ` · ${behind} behind` : ''}`;
-  const title = `${ahead} · ${f} files · ${e.uncommitted === null ? 'not checked out' : `${u} uncommitted`}`;
+  const a = e.ahead === null ? '—' : `↑${formatCount(e.ahead)}${behind > 0 ? ` ↓${formatCount(behind)}` : ''}`;
+  const f = e.files === null ? '—' : formatCount(e.files);
+  const u = e.uncommitted === null ? '—' : formatCount(e.uncommitted);
+  const ahead =
+    e.ahead === null
+      ? t('branches.aheadNone')
+      : t('branches.aheadCount', { ...cnt(e.ahead), behind: String(behind), e: formatCount(behind) });
+  const files = t('branches.filesPart', { n: f === '—' ? '—' : f });
+  const un =
+    e.uncommitted === null
+      ? t('branches.uncheckedPart')
+      : t('branches.uncommittedPart', { n: u });
+  const title = `${ahead} · ${files} · ${un}`;
   return { a, f, u, title };
 }
 

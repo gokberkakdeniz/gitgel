@@ -1,5 +1,6 @@
 import { Icon, type IconName } from '../components/icons';
-import { formatAge } from '../lib/format';
+import { agoText, formatCount } from '../lib/format';
+import { t } from '../i18n';
 import { MenuDivider, MenuItem } from '../components/Menu';
 import type { EntrySummary } from '../lib/types';
 import { useRuns } from '../scripts/runs';
@@ -26,38 +27,42 @@ export function SyncButtons({ target, fetchedAt }: { target: SyncTarget; fetched
   const st = syncState(target);
   const busy = (action: string) => running === `git:${action}`;
   return (
-    <div role="group" aria-label="Sync with the remote" className={styles.group}>
+    <div role="group" aria-label={t('sync.groupAria')} className={styles.group}>
       <SyncButton
         icon="download"
         busy={busy('fetch')}
         disabled={!!running}
-        title={`Fetch ${target.repoName} from ${u.remote}${fetchedAt != null ? ` · last fetch ${formatAge(fetchedAt)} ago` : ''}`}
+        title={t('sync.fetchTitle', {
+          repo: target.repoName,
+          remote: u.remote,
+          fetch: fetchedAt != null ? ` · ${t('sync.lastFetch', { age: agoText(fetchedAt) })}` : '',
+        })}
         className={styles.fetch}
         onClick={() => void fetchRepo(target)}
       >
-        Fetch
+        {t('sync.fetchBtn')}
       </SyncButton>
       <span className={styles.divider} />
       <SyncButton
         icon="arrow-down"
         busy={busy('pull')}
         disabled={!!running || !!st.pull}
-        title={st.pull ?? `Pull from ${u.name}`}
-        count={u.behind > 0 ? `↓${u.behind}` : undefined}
+        title={st.pull ?? t('sync.pullFrom', { name: u.name ?? '' })}
+        count={u.behind > 0 ? `↓${formatCount(u.behind)}` : undefined}
         onClick={() => void pullBranch(target)}
       >
-        Pull
+        {t('sync.pullBtn')}
       </SyncButton>
       <SyncButton
         icon="arrow-up"
         busy={busy('push')}
         disabled={!!running || !!st.push}
-        title={st.push ?? `Push to ${u.name ?? u.remote}`}
-        count={u.ahead > 0 ? `↑${u.ahead}` : undefined}
+        title={st.push ?? t('sync.pushTo', { name: u.name ?? u.remote })}
+        count={u.ahead > 0 ? `↑${formatCount(u.ahead)}` : undefined}
         className={st.push ? undefined : styles.primary}
         onClick={() => void pushBranch(target)}
       >
-        Push
+        {t('sync.pushBtn')}
       </SyncButton>
     </div>
   );
@@ -112,7 +117,7 @@ export function SyncItems({
     onDone();
     void action();
   };
-  const busy = running ? 'A sync is running' : null;
+  const busy = running ? t('sync.busy') : null;
   // Rebase on the base: a checked-out branch that has a base other than itself or its own remote
   // branch (the base branch's base is its upstream: that is Pull (rebase)).
   const base =
@@ -136,7 +141,7 @@ export function SyncItems({
       </MenuItem>
       <MenuItem
         icon="arrow-down"
-        hint={u.behind > 0 ? `↓${u.behind}` : undefined}
+        hint={u.behind > 0 ? `↓${formatCount(u.behind)}` : undefined}
         disabled={!!running || !!st.pull}
         title={busy ?? st.pull ?? undefined}
         onSelect={() => run(() => pullBranch(entry))}
@@ -155,9 +160,9 @@ export function SyncItems({
       )}
       <MenuItem
         icon="arrow-up"
-        hint={u.ahead > 0 ? `↑${u.ahead}` : undefined}
+        hint={u.ahead > 0 ? `↑${formatCount(u.ahead)}` : undefined}
         disabled={!!running || !!st.push}
-        title={busy ?? st.push ?? (u.name ? undefined : `Not on ${u.remote} yet`)}
+        title={busy ?? st.push ?? (u.name ? undefined : t('sync.pushNotYet', { remote: u.remote }))}
         onSelect={() => run(() => pushBranch(entry))}
       >
         Push

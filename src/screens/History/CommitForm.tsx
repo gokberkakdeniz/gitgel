@@ -5,7 +5,8 @@ import { BoltIcon, MoreVerticalIcon, SpinnerIcon } from '../../components/icons'
 import { Input } from '../../components/Input';
 import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
 import { Popover } from '../../components/Popover';
-import { plural } from '../../lib/format';
+import { cnt } from '../../lib/format';
+import { t } from '../../i18n';
 import type { CommitProvider } from '../../lib/types';
 import { providerLabel } from '../../lib/ai';
 import styles from './CommitForm.module.css';
@@ -61,8 +62,8 @@ export function CommitForm({
     if (ready && !committing) onCommit();
   };
   const why = committing
-    ? 'Hooks are running'
-    : (blocked ?? (files === 0 ? 'Check at least one file' : summary.trim() === '' ? 'Write a summary' : `Commit to ${rev}`));
+    ? t('history.hooksRunning')
+    : (blocked ?? (files === 0 ? t('history.checkFile') : summary.trim() === '' ? t('history.writeSummary') : t('history.commitTo', { rev })));
   const [menu, setMenu] = useState<DOMRect | null>(null);
   const canGenerate = files > 0 && !blocked && !committing && !generating;
   const off = !providers.includes(provider);
@@ -70,7 +71,7 @@ export function CommitForm({
   const noProviders = providers.length === 0;
   return (
     <form
-      aria-label="Commit"
+      aria-label={t('history.commitForm')}
       className={styles.form}
       onSubmit={(e) => {
         e.preventDefault();
@@ -81,14 +82,14 @@ export function CommitForm({
         size={32}
         value={summary}
         onChange={onSummary}
-        placeholder="Summary (required)"
-        aria-label="Summary"
+        placeholder={t('history.summaryPh')}
+        aria-label={t('history.summaryLabel')}
         disabled={committing}
         onKeyDown={submitOnKey}
       />
       <textarea
-        aria-label="Description"
-        placeholder="Description"
+        aria-label={t('history.descLabel')}
+        placeholder={t('history.descPh')}
         className={styles.description}
         value={description}
         disabled={committing}
@@ -100,15 +101,15 @@ export function CommitForm({
           <div className={styles.split}>
             <IconButton
               size={32}
-              aria-label={`Generate commit message with ${providerLabel(provider)}`}
+              aria-label={t('history.genWith', { provider: providerLabel(provider) })}
               title={
                 generating
-                  ? 'Asking for a commit message'
+                  ? t('history.askingMsg')
                   : off
-                    ? `${providerLabel(provider)} is turned off`
+                    ? t('history.provOff', { provider: providerLabel(provider) })
                     : missing(provider)
-                      ? `${providerLabel(provider)} is not installed`
-                      : `Generate commit message with ${providerLabel(provider)}`
+                      ? t('history.provMissing', { provider: providerLabel(provider) })
+                      : t('history.genWith', { provider: providerLabel(provider) })
               }
               active={menu !== null}
               disabled={!canGenerate || off || missing(provider)}
@@ -123,8 +124,8 @@ export function CommitForm({
             </IconButton>
             <IconButton
               size={32}
-              aria-label="Select different provider"
-              title={noProviders ? 'Turn on a provider first' : 'Select different provider'}
+              aria-label={t('history.pickProvider')}
+              title={noProviders ? t('history.turnOnFirst') : t('history.pickProvider')}
               active={menu !== null}
               disabled={noProviders}
               onClick={(e) => setMenu(menu ? null : e.currentTarget.getBoundingClientRect())}
@@ -136,8 +137,8 @@ export function CommitForm({
         )}
         {menu && (
           <Popover anchorRect={menu} width={220} above onClose={() => setMenu(null)}>
-            <Menu aria-label="Generate with">
-              <MenuLabel>Generate with</MenuLabel>
+            <Menu aria-label={t('history.genWithMenu')}>
+              <MenuLabel>{t('history.genWithMenu')}</MenuLabel>
               {providers.map((id) => (
                 <MenuItem
                   key={id}
@@ -160,7 +161,7 @@ export function CommitForm({
           disabled={!ready || committing}
           title={why}
         >
-          {committing ? 'Committing…' : files > 0 ? `Commit ${plural(files, 'file', 'files')}` : 'Commit'}
+          {committing ? t('history.committing') : files > 0 ? t('history.commitFiles', { ...cnt(files) }) : t('history.commitBtn')}
         </Button>
       </div>
     </form>

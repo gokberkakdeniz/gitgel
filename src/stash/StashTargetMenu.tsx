@@ -1,4 +1,6 @@
 import { Menu, MenuItem, MenuLabel } from '../components/Menu';
+import { formatCount } from '../lib/format';
+import { t } from '../i18n';
 import { tildifyHome } from '../lib/paths';
 import type { EntrySummary } from '../lib/types';
 import type { ReviewStash } from '../screens/Review/stashes';
@@ -27,16 +29,17 @@ export function StashTargetMenu({
 }) {
   const active = useData((s) => s.scan[stash.repoId]?.active);
   const targets = stashTargets(stash, active ?? []);
+  const ref = `stash@{${stash.index}}`;
   return (
-    <Menu aria-label={`${pop ? 'Pop' : 'Apply'} stash to`} autoFocus={autoFocus}>
+    <Menu aria-label={t(pop ? 'stash.targetAriaPop' : 'stash.targetAriaApply')} autoFocus={autoFocus}>
       <MenuLabel>
-        {pop ? 'Pop' : 'Apply'} stash@{`{${stash.index}}`} to
+        {t(pop ? 'stash.targetPop' : 'stash.targetApply', { stash: ref })}
       </MenuLabel>
       {targets.map((e) => (
         <MenuItem
           key={e.key}
           icon="branch"
-          desc={`${tildifyHome(e.worktreePath ?? '')}${e.uncommitted ? ` · ${e.uncommitted} uncommitted` : ''}`}
+          desc={`${tildifyHome(e.worktreePath ?? '')}${e.uncommitted ? ` · ${t('branches.uncommittedPart', { n: formatCount(e.uncommitted) })}` : ''}`}
           onSelect={() => {
             onDone();
             void applyStash(stash, e, pop);

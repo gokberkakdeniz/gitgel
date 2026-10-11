@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
+import { t } from '../../i18n';
 import styles from './Branches.module.css';
 
 interface Props {
@@ -19,8 +20,8 @@ export const FilterField = forwardRef<HTMLInputElement, Props>(function FilterFi
       clearable
       size={32}
       className={styles.filter}
-      placeholder="Search"
-      aria-label="Search Branches and Worktrees"
+      placeholder={t('sidebar.search')}
+      aria-label={t('branches.searchBranches')}
       value={value}
       onChange={onChange}
       onKeyDown={(e) => e.key === 'Escape' && e.currentTarget.blur()}

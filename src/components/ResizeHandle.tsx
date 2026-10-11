@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t } from '../i18n';
 import styles from './ResizeHandle.module.css';
 
 /** A pane width the user drags, remembered under `key`; null until they first resize it. */
@@ -90,7 +91,7 @@ export function ResizeHandle({
       aria-orientation={horizontal ? 'horizontal' : 'vertical'}
       aria-label={label}
       tabIndex={0}
-      title="Drag to resize · double-click to reset"
+      title={t('common.resizeHint')}
       className={cls}
       onPointerDown={down}
       onDoubleClick={onReset}

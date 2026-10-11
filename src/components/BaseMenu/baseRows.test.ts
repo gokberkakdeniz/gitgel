@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { t } from '../../i18n';
 import type { BaseCandidate, BaseOptions } from '../../lib/types';
-import { baseRows, initialRow, looksLikeSha, type BaseRow } from './baseRows';
+import { AUTOMATIC_LABEL, baseRows, initialRow, looksLikeSha, type BaseRow } from './baseRows';
 
 const candidate = (name: string, c: Partial<BaseCandidate> = {}): BaseCandidate => ({
   name,
@@ -26,7 +27,9 @@ const options = (o: Partial<BaseOptions> = {}): BaseOptions => ({
 });
 
 const show = (rows: BaseRow[]) =>
-  rows.map((r) => [r.section, r.label, r.sub ?? r.note ?? '', r.selected ? '✓' : '']);
+  rows.map((r) => [r.section, r.label === AUTOMATIC_LABEL ? t(r.label) : r.label, r.sub ?? r.note ?? '', r.selected ? '✓' : '']);
+
+const labels = (rows: BaseRow[]) => rows.map((r) => (r.label === AUTOMATIC_LABEL ? t(r.label) : r.label));
 
 describe('baseRows', () => {
   it('starts Default with Automatic (checked without a stored base), then both forms', () => {
@@ -61,7 +64,7 @@ describe('baseRows', () => {
       false,
       'x',
     ).filter((r) => r.section === 'Default');
-    expect(two.map((r) => [r.label, r.note, !!r.disabled])).toEqual([
+    expect(two.map((r) => [r.label === AUTOMATIC_LABEL ? t(r.label) : r.label, r.note, !!r.disabled])).toEqual([
       ['Automatic', '1 commit', false],
       ['master', 'same as origin/master', false],
       ['origin/master', 'no common ancestor', true],
@@ -72,16 +75,16 @@ describe('baseRows', () => {
       false,
       'x',
     ).filter((r) => r.section === 'Default');
-    expect(one.map((r) => r.label)).toEqual(['Automatic']);
+    expect(labels(one)).toEqual(['Automatic']);
   });
 
   it('filters every section and shows tags only when filtering', () => {
     expect(baseRows(options(), 'v1', false, null).map((r) => r.section)).toEqual(['Tags']);
-    expect(baseRows(options(), 'auto', false, null).map((r) => r.label)).toEqual(['Automatic']);
+    expect(labels(baseRows(options(), 'auto', false, null))).toEqual(['Automatic']);
   });
 
   it('opens on the checked row, skipping disabled rows', () => {
-    expect(baseRows(options(), '', false, null)[initialRow(baseRows(options(), '', false, null))].label).toBe('Automatic');
+    expect(labels(baseRows(options(), '', false, null))[initialRow(baseRows(options(), '', false, null))]).toBe('Automatic');
     const stored = baseRows(options({ current: 'master' }), '', true, null);
     expect(stored[initialRow(stored)].label).toBe('master');
   });

@@ -6,6 +6,7 @@ import { Modal, ModalFooter } from '../../components/Modal';
 import { Pill } from '../../components/Pill';
 import { entryKey } from '../../lib/entryKey';
 import { addEntries } from '../../lib/ipc';
+import { t } from '../../i18n';
 import type { EntryRef } from '../../lib/types';
 import { selectRepoScans, useData } from '../../state/data';
 import { selectRoute, useNav } from '../../state/nav';
@@ -99,7 +100,7 @@ function PaletteDialog({ projectId }: { projectId: string }) {
 
   let lastGroup: string | null = null;
   return (
-    <Modal aria-label="Add Branches or Worktrees" width={620} paddingTop={96} closeOnScrim onClose={close}>
+    <Modal aria-label={t('palette.addTitle')} width={620} paddingTop={96} closeOnScrim onClose={close}>
       <div
         className={styles.dialog}
         onKeyDown={(e) => {
@@ -115,7 +116,7 @@ function PaletteDialog({ projectId }: { projectId: string }) {
         <input
           ref={inputRef}
           autoFocus
-          aria-label="Search Branches and Worktrees"
+          aria-label={t('branches.searchBranches')}
           className={styles.input}
           value={query}
           spellCheck={false}
@@ -125,12 +126,12 @@ function PaletteDialog({ projectId }: { projectId: string }) {
           }}
           onKeyDown={onKeyDown}
         />
-        <span className={styles.hint}>fuzzy · all repos</span>
+        <span className={styles.hint}>{t('palette.hint')}</span>
       </label>
 
       <div ref={listRef} className={styles.list}>
         {shown.map((item) => {
-          const title = item.group !== lastGroup ? GROUP_TITLES[item.group] : null;
+          const title = item.group !== lastGroup ? t(GROUP_TITLES[item.group]) : null;
           lastGroup = item.group;
           return (
             <div key={item.key}>
@@ -148,13 +149,13 @@ function PaletteDialog({ projectId }: { projectId: string }) {
             </div>
           );
         })}
-        {shown.length === 0 && <div className={styles.empty}>No Matches</div>}
+        {shown.length === 0 && <div className={styles.empty}>{t('palette.noMatches')}</div>}
       </div>
 
-      <ModalFooter note={`${checked.size} selected`}>
-        <Button onClick={close}>Cancel</Button>
+      <ModalFooter note={t('palette.selectedCount', { n: String(checked.size) })}>
+        <Button onClick={close}>{t('common.cancel')}</Button>
         <Button variant="primary" disabled={checked.size === 0} onClick={() => void add(false)}>
-          Add ↵
+          {t('palette.add')}
         </Button>
       </ModalFooter>
       </div>
@@ -189,8 +190,8 @@ function Row({
         <span className={styles.branch}>{item.branch}</span>
         <span className={styles.meta}>{item.meta}</span>
       </span>
-      {item.tag === 'In Project' && <Pill tone="neutral">In Project</Pill>}
-      {item.tag === 'merged' && <Pill tone="success">Merged</Pill>}
+      {item.tag === 'In Project' && <Pill tone="neutral">{t('palette.inProject')}</Pill>}
+      {item.tag === 'merged' && <Pill tone="success">{t('branches.merged')}</Pill>}
     </label>
   );
 }

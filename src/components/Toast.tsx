@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { t } from '../i18n';
 import { useUi } from '../state/ui';
 import { CheckIcon, CloseIcon, SpinnerIcon } from './icons';
 import styles from './Toast.module.css';
@@ -25,8 +26,8 @@ export function ToastHost() {
         <button
           type="button"
           className={styles.hit}
-          aria-label="Show Output"
-          title="Show Output"
+          aria-label={t('common.showOutput')}
+          title={t('common.showOutput')}
           onClick={toast.onClick}
         />
       )}
@@ -72,8 +73,8 @@ export function ToastHost() {
         <button
           type="button"
           className={styles.close}
-          aria-label="Dismiss"
-          title="Dismiss (the script keeps running)"
+          aria-label={t('common.dismiss')}
+          title={t('common.dismissHint')}
           onClick={dismiss}
         >
           <CloseIcon size={12} />

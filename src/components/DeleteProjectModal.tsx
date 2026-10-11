@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { plural } from '../lib/format';
+import { cnt } from '../lib/format';
+import { t } from '../i18n';
 import { deleteProject } from '../lib/ipc';
 import { stopAsking } from '../lib/prompts';
 import { useData } from '../state/data';
@@ -48,18 +49,18 @@ export function DeleteProjectModal() {
 
   return (
     <ConfirmModal
-      aria-label="Delete Project"
-      title={`Delete “${project.name}”?`}
+      aria-label={t('project.deleteAria')}
+      title={t('project.deleteTitle', { name: project.name })}
       width={440}
       onClose={close}
-      text={`Removes the project and its ${plural(n, 'entry', 'entries')}. Nothing on disk is touched.`}
+      text={t('project.deleteText', { ...cnt(n) })}
       dontAsk={{ checked: dontAsk, onChange: setDontAsk }}
     >
       <Button size={36} onClick={close}>
-        Cancel
+        {t('common.cancel')}
       </Button>
       <Button variant="danger" size={36} disabled={busy} onClick={confirm}>
-        Delete Project…
+        {t('common.deleteProject')}
       </Button>
     </ConfirmModal>
   );

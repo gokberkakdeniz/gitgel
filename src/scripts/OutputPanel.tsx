@@ -10,6 +10,7 @@ import { ResizeHandle } from '../components/ResizeHandle';
 import { Modal, ModalFooter } from '../components/Modal';
 import { Pill } from '../components/Pill';
 import { getScriptRun, resizeScript, stopScript, writeScriptInput } from '../lib/ipc';
+import { t } from '../i18n';
 import type { ScriptRun } from '../lib/types';
 import { useCopy } from '../lib/useCopy';
 import { ScriptIcon } from './ScriptIcon';
@@ -235,19 +236,23 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
   const pill =
     run.status === 'failed' ? (
       <Pill tone="danger" mono>
-        could not start
+        {t('scripts.pillFailed')}
       </Pill>
     ) : running ? (
       <Pill tone="neutral" mono>
-        running · {took}
+        {t('scripts.pillRunning', { took })}
       </Pill>
     ) : run.exitCode === 0 ? (
       <Pill tone="success" mono>
-        exit 0 · {took}
+        {t('scripts.pillExit', { took })}
       </Pill>
     ) : (
       <Pill tone="danger" mono>
-        {run.stopped ? 'stopped' : run.exitCode !== null ? `exit ${run.exitCode}` : (run.signal ?? 'ended')} · {took}
+        {run.stopped
+          ? t('scripts.stStopped')
+          : run.exitCode !== null
+            ? t('scripts.stExit', { code: String(run.exitCode) })
+            : (run.signal ?? t('scripts.stEnded'))} · {took}
       </Pill>
     );
 
@@ -271,7 +276,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
   const varCopy = useCopy();
 
   return (
-    <Modal aria-label={`${run.name} output`} width={760} paddingTop={80} onClose={onClose}>
+    <Modal aria-label={t('scripts.outputAria', { name: run.name })} width={760} paddingTop={80} onClose={onClose}>
       <div className={styles.panel}>
         <div className={styles.head}>
           <ScriptIcon name={run.icon} />
@@ -282,7 +287,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
             </span>
           </div>
           {pill}
-          <IconButton aria-label="Close" onClick={onClose}>
+          <IconButton aria-label={t('common.close')} onClick={onClose}>
             <CloseIcon size={13} />
           </IconButton>
         </div>
@@ -293,24 +298,24 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
                 $
               </span>
               <span className={styles.commandText}>
-                {tokenizeCommand(run.command).map((t, i) =>
-                  t.variable && vars.has(t.variable) ? (
+                {tokenizeCommand(run.command).map((tok, i) =>
+                  tok.variable && vars.has(tok.variable) ? (
                     <span
                       key={i}
                       role="button"
                       tabIndex={0}
-                      aria-label={`${t.text} value`}
-                      aria-expanded={tip?.name === t.variable}
+                      aria-label={t('scripts.varAria', { name: tok.text })}
+                      aria-expanded={tip?.name === tok.variable}
                       className={styles.var}
-                      onMouseEnter={(e) => showTip(e.currentTarget, t.variable as string)}
+                      onMouseEnter={(e) => showTip(e.currentTarget, tok.variable as string)}
                       onMouseLeave={hideTip}
-                      onFocus={(e) => showTip(e.currentTarget, t.variable as string)}
+                      onFocus={(e) => showTip(e.currentTarget, tok.variable as string)}
                       onBlur={hideTip}
                     >
-                      {t.text}
+                      {tok.text}
                     </span>
                   ) : (
-                    <span key={i}>{t.text}</span>
+                    <span key={i}>{tok.text}</span>
                   ),
                 )}
               </span>
@@ -322,7 +327,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
               max={260}
               onResize={setCmdH}
               onReset={() => setCmdH(null)}
-              label="Resize command"
+              label={t('scripts.resizeCmd')}
             />
             {tip && (
               <Popover anchorRect={tip.rect} onClose={() => setTip(null)}>
@@ -334,8 +339,8 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
                   <div className={styles.varValue}>{vars.get(tip.name)}</div>
                   <IconButton
                     size={24}
-                    aria-label="Copy value"
-                    title="Copy value"
+                    aria-label={t('scripts.copyValue')}
+                    title={t('scripts.copyValue')}
                     className={varCopy.copied ? `${styles.varCopy} ${styles.varCopied}` : styles.varCopy}
                     onClick={() => void varCopy.copy(vars.get(tip.name) ?? '')}
                   >
@@ -348,7 +353,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
         )}
         <div
           role="log"
-          aria-label="Output"
+          aria-label={t('scripts.outputLabel')}
           className={focused && running ? `${styles.terminal} ${styles.focused}` : styles.terminal}
         >
           <div ref={box} className={styles.termBox} />
@@ -357,7 +362,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
           ruled
           lead={
             <Button size={36} onClick={onClose}>
-              Close
+              {t('common.close')}
             </Button>
           }
         >
@@ -367,7 +372,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
             className={copied ? `${styles.copy} ${styles.copied}` : styles.copy}
             onClick={() => void copyOutput()}
           >
-            {copied ? 'Copied' : 'Copy'}
+            {copied ? t('scripts.copiedBtn') : t('scripts.copyBtn')}
           </Button>
           {again && (
             <>
@@ -379,7 +384,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
                     again.skipHooks!();
                   }}
                 >
-                  Commit Without Hooks
+                  {t('scripts.noHooks')}
                 </Button>
               )}
               <Button
@@ -391,18 +396,18 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
                   again.retry();
                 }}
               >
-                Retry
+                {t('scripts.retryBtn')}
               </Button>
             </>
           )}
           {running ? (
             <Button size={36} className={styles.stop} onClick={() => void stopScript(run.runId)}>
-              Stop
+              {t('scripts.stopBtn')}
             </Button>
           ) : (
             canRunAgain && (
               <Button variant="primary" size={36} onClick={() => runAgain(run.runId)}>
-                Run again
+                {t('scripts.runAgain')}
               </Button>
             )
           )}

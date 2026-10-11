@@ -4,6 +4,7 @@ import { useUi } from '../../state/ui';
 import { setSidebarVisible } from '../../lib/sidebar';
 import { BackIcon, ForwardIcon, SidebarIcon } from '../icons';
 import { IconButton } from '../IconButton';
+import { t } from '../../i18n';
 import styles from './PageHeader.module.css';
 
 interface Props {
@@ -32,18 +33,18 @@ export function PageHeader({ title, subtitle, children, dragTitle = true, backLa
       {!sidebarVisible && (
         <div className={styles.chrome} data-tauri-drag-region>
           <div className={styles.lights} data-tauri-drag-region />
-          <IconButton aria-label="Show sidebar" onClick={() => setSidebarVisible(true)}>
+          <IconButton aria-label={t('nav.showSidebar')} onClick={() => setSidebarVisible(true)}>
             <SidebarIcon />
           </IconButton>
           <IconButton
-            aria-label={backLabel ?? 'Back'}
+            aria-label={backLabel ?? t('sidebar.back')}
             onClick={back}
             disabled={!canBack}
             className={backLabel ? styles.back : undefined}
           >
             <BackIcon />
           </IconButton>
-          <IconButton aria-label="Forward" onClick={forward} disabled={!canForward}>
+          <IconButton aria-label={t('sidebar.forward')} onClick={forward} disabled={!canForward}>
             <ForwardIcon />
           </IconButton>
         </div>

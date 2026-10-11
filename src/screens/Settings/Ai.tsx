@@ -9,6 +9,7 @@ import { Popover } from '../../components/Popover';
 import { Switch } from '../../components/Switch';
 import { AI_PROVIDERS, providerOrder, type AiProviderMeta } from '../../lib/ai';
 import { getAiStatus, getDefaultPrompt, updateSettings } from '../../lib/ipc';
+import { t } from '../../i18n';
 import { useAutoGrow } from '../../lib/useAutoGrow';
 import type { AiProviderSettings, AiStatus, CommitProvider, Config } from '../../lib/types';
 import { useReorder } from '../../scripts/useReorder';
@@ -46,24 +47,24 @@ export function Ai({ config }: { config: Config }) {
 
   return (
     <>
-      <h2 className={styles.heading}>AI</h2>
+      <h2 className={styles.heading}>{t('settings.aiHeading')}</h2>
       <section className={styles.section}>
         <label className={styles.setting}>
           <span className={styles.settingText}>
-            <span className={styles.settingName}>Generate commit message with AI</span>
-            <span className={styles.settingHint}>The commit form&apos;s bolt asks an agent CLI for the message</span>
+            <span className={styles.settingName}>{t('settings.aiGenerate')}</span>
+            <span className={styles.settingHint}>{t('settings.aiHint')}</span>
           </span>
           <Switch
-            aria-label="Generate commit message with AI"
-            title="Generate commit message with AI"
+            aria-label={t('settings.aiGenerate')}
+            title={t('settings.aiGenerate')}
             checked={ai.enabled}
             onChange={(e) => save({ ...ai, enabled: e.target.checked })}
           />
         </label>
         <List
-          label="Providers"
+          label={t('settings.aiProviders')}
           listRef={listRef}
-          empty="No providers"
+          empty={t('settings.aiEmpty')}
           items={shown.map((p) => {
             const settings = ai[p.id];
             const off = !settings.enabled;
@@ -77,32 +78,30 @@ export function Ai({ config }: { config: Config }) {
                 'data-drop-before': dropBefore(p.id) || undefined,
                 'data-drop-after': dropAfter(p.id) || undefined,
               },
-              handle: { 'aria-label': `Move ${p.label}`, ...handleProps(p.id) },
+              handle: { 'aria-label': t('settings.aiMove', { name: p.label }), ...handleProps(p.id) },
               lead: 'tile',
               icon: 'bolt',
               title: p.label,
               titleWeight: 500,
               off,
               badges: [
-                ...(gone ? [{ label: 'Not installed', tone: 'danger' as const }] : []),
-                ...(off ? [{ label: 'off', tone: 'neutral' as const }] : []),
+                ...(gone ? [{ label: t('settings.aiNotInstalled'), tone: 'danger' as const }] : []),
+                ...(off ? [{ label: t('settings.aiOff'), tone: 'neutral' as const }] : []),
               ],
               actions: [
                 {
                   kind: 'switch',
                   checked: settings.enabled,
-                  ariaLabel: `${p.label} on`,
-                  title: off
-                    ? 'Off: in no menu. Switch on to show it'
-                    : 'On: shown in the commit menu. Switch off to hide it',
+                  ariaLabel: t('settings.aiOn', { name: p.label }),
+                  title: off ? t('settings.aiOffHint') : t('settings.aiOnHint'),
                   disabled: gone,
                   onToggle: (on) => setOn(p, on),
                 },
                 {
                   icon: 'edit',
-                  ariaLabel: `Edit ${p.label}`,
+                  ariaLabel: t('settings.aiEdit', { name: p.label }),
                   disabled: gone,
-                  title: gone ? 'Not installed' : undefined,
+                  title: gone ? t('settings.aiNotInstalled') : undefined,
                   onPress: () => setEditing(p),
                 },
               ],
@@ -127,11 +126,11 @@ export function Ai({ config }: { config: Config }) {
 
 /** The prompt's variables, with what each one becomes. */
 const PROMPT_VARIABLES: [string, string][] = [
-  ['branch', 'the branch (or short SHA)'],
-  ['repo', 'the repository name'],
-  ['stat', 'the checked files, one per line'],
-  ['patch', 'their diff (required)'],
-  ['examples', "the repo's recent subjects"],
+  ['branch', 'settings.aiVarBranch'],
+  ['repo', 'settings.aiVarRepo'],
+  ['stat', 'settings.aiVarStat'],
+  ['patch', 'settings.aiVarPatch'],
+  ['examples', 'settings.aiVarExamples'],
 ];
 
 function ProviderEditor({
@@ -166,7 +165,7 @@ function ProviderEditor({
     const t = s.trim();
     return t === '' ? null : t;
   };
-  const problem = !prompt.includes('{patch}') ? 'The prompt needs {patch}' : null;
+  const problem = !prompt.includes('{patch}') ? t('settings.aiNeedPatch', { var: '{patch}' }) : null;
   const next = {
     ...settings,
     model: trimmed(model),
@@ -207,45 +206,45 @@ function ProviderEditor({
     });
   };
   return (
-    <Modal aria-label={`Edit ${meta.label}`} width={600} onClose={onClose}>
-      <ModalHeader title={`Edit ${meta.label}`} sub={meta.binary} onClose={onClose} />
+    <Modal aria-label={t('settings.aiEdit', { name: meta.label })} width={600} onClose={onClose}>
+      <ModalHeader title={t('settings.aiEdit', { name: meta.label })} sub={meta.binary} onClose={onClose} />
       <div className={styles.aiEditor}>
         <label className={styles.aiEditorField}>
-          <span className={styles.settingName}>Model</span>
+          <span className={styles.settingName}>{t('settings.aiModel')}</span>
           <Input
             mono
             size={36}
-            placeholder="Default"
-            aria-label="Model"
+            placeholder={t('settings.aiDefault')}
+            aria-label={t('settings.aiModel')}
             value={model}
             onChange={setModel}
             onKeyDown={submitOnKey}
           />
-          <span className={styles.settingHint}>Empty is the CLI&apos;s own default</span>
+          <span className={styles.settingHint}>{t('settings.aiModelHint')}</span>
         </label>
         <label className={styles.aiEditorField}>
-          <span className={styles.settingName}>Effort</span>
+          <span className={styles.settingName}>{t('settings.aiEffort')}</span>
           <Input
             mono
             size={36}
-            placeholder="Default"
-            aria-label="Effort"
+            placeholder={t('settings.aiDefault')}
+            aria-label={t('settings.aiEffort')}
             value={effort}
             onChange={setEffort}
             onKeyDown={submitOnKey}
           />
-          <span className={styles.settingHint}>Free text: the names are the model provider&apos;s own</span>
+          <span className={styles.settingHint}>{t('settings.aiEffortHint')}</span>
         </label>
         <div className={styles.aiEditorField}>
-          <span className={styles.settingName}>Prompt</span>
+          <span className={styles.settingName}>{t('settings.aiPrompt')}</span>
           <div className={styles.aiPromptWrap}>
             <textarea
               ref={promptRef}
-              aria-label="Prompt"
+              aria-label={t('settings.aiPrompt')}
               spellCheck={false}
               className={styles.aiPrompt}
               value={ready ? prompt : ''}
-              placeholder={ready ? undefined : 'Loading the default…'}
+              placeholder={ready ? undefined : t('settings.aiLoading')}
               disabled={!ready}
               onChange={(e) => setPrompt(e.target.value)}
               {...grow}
@@ -254,34 +253,34 @@ function ProviderEditor({
               <button
                 type="button"
                 className={styles.aiCorner}
-                aria-label="Reset prompt to default"
-                title="Reset to default"
+                aria-label={t('settings.aiResetLabel')}
+                title={t('settings.aiResetTitle')}
                 disabled={!canReset}
                 onClick={resetPrompt}
               >
                 <UndoIcon size={12} />
-                Reset
+                {t('settings.aiReset')}
               </button>
               <button
                 type="button"
                 className={variables ? `${styles.aiCorner} ${styles.open}` : styles.aiCorner}
                 aria-haspopup="menu"
                 aria-expanded={variables !== null}
-                title="Insert a variable"
+                title={t('settings.aiInsertVar')}
                 onClick={(e) =>
                   setVariables(variables ? null : e.currentTarget.getBoundingClientRect())
                 }
               >
-                + Variable
+                {t('settings.aiAddVar')}
                 <ChevronDownIcon size={9} />
               </button>
             </div>
           </div>
           {variables && (
             <Popover anchorRect={variables} width={280} alignRight onClose={() => setVariables(null)}>
-              <Menu aria-label="Insert a variable" autoFocus>
+              <Menu aria-label={t('settings.aiInsertVar')} autoFocus>
                 {PROMPT_VARIABLES.map(([name, note]) => (
-                  <MenuItem key={name} hint={note} onSelect={insertVariable(name)}>
+                  <MenuItem key={name} hint={t(note)} onSelect={insertVariable(name)}>
                     {`{${name}}`}
                   </MenuItem>
                 ))}
@@ -292,16 +291,16 @@ function ProviderEditor({
       </div>
       <ModalFooter note={problem && <span className={styles.problem}>{problem}</span>}>
         <Button size={36} onClick={onClose}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button
           variant="primary"
           size={36}
           disabled={!!problem || !ready || unchanged}
-          title={unchanged ? 'No changes' : undefined}
+          title={unchanged ? t('settings.aiNoChanges') : undefined}
           onClick={save}
         >
-          Save
+          {t('common.save')}
         </Button>
       </ModalFooter>
     </Modal>

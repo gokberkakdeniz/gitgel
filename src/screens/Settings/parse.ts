@@ -2,8 +2,10 @@
  * Why `name` (already trimmed) cannot join the default base list, or null. Checks git's
  * ref-name rules (`git check-ref-format`) and duplicates.
  */
+import { t } from '../../i18n';
+
 export function baseNameError(name: string, list: string[]): string | null {
-  if (list.includes(name)) return `${name} is already in the list`;
+  if (list.includes(name)) return t('settings.baseDup', { name });
   const invalid =
     name === '' ||
     name === '@' ||
@@ -16,7 +18,7 @@ export function baseNameError(name: string, list: string[]): string | null {
     name.endsWith('/') ||
     name.endsWith('.') ||
     name.split('/').some((part) => part.startsWith('.') || part.endsWith('.lock'));
-  return invalid ? 'Not a valid branch name' : null;
+  return invalid ? t('settings.baseInvalid') : null;
 }
 
 /** A whole number of days, 1–365, or null. */

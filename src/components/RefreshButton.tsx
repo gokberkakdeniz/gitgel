@@ -1,4 +1,5 @@
 import { rescanAll } from '../lib/events';
+import { t } from '../i18n';
 import { useData } from '../state/data';
 import { IconButton } from './IconButton';
 import { RefreshIcon } from './icons';
@@ -8,7 +9,7 @@ import styles from './RefreshButton.module.css';
 export function RefreshButton() {
   const refreshing = useData((s) => s.refreshing);
   return (
-    <IconButton size={32} aria-label="Refresh" onClick={() => void rescanAll(true)}>
+    <IconButton size={32} aria-label={t('review.refresh')} onClick={() => void rescanAll(true)}>
       <RefreshIcon className={refreshing ? styles.spin : undefined} />
     </IconButton>
   );

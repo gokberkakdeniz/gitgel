@@ -3,6 +3,7 @@ import { Button } from '../components/Button';
 import { Checkbox } from '../components/Checkbox';
 import { WarningIcon } from '../components/icons';
 import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
+import { t } from '../i18n';
 import { stopAsking } from '../lib/prompts';
 import { discardNow, fileCount, listsFiles, useDiscardUi } from './discard';
 import styles from './DiscardModal.module.css';
@@ -25,7 +26,7 @@ export function DiscardModal() {
     close();
     void discardNow(req);
   };
-  const title = req.all ? 'Confirm Discard All Changes' : 'Confirm Discard Changes';
+  const title = req.all ? t('discard.confirmAll') : t('discard.confirm');
   return (
     <Modal aria-label={title} width={480} paddingTop={160} onClose={close}>
       <ModalHeader title={title} onClose={close} />
@@ -34,20 +35,20 @@ export function DiscardModal() {
         <div className={styles.text}>
           <p className={styles.lead}>
             {list
-              ? 'Are you sure you want to discard all changes to:'
-              : `Are you sure you want to discard all ${n} changed files?`}
+              ? t('discard.leadList')
+              : t('discard.leadCount', { n: String(n) })}
           </p>
           {list && (
             <div className={grouped ? `${styles.files} ${styles.groups}` : styles.files}>
-              {req.targets.map((t) => (
-                <div key={`${t.entry.repoId}:${t.branch}`} className={styles.files}>
+              {req.targets.map((g) => (
+                <div key={`${g.entry.repoId}:${g.branch}`} className={styles.files}>
                   {grouped && (
                     <span className={styles.entry}>
-                      <span className={styles.repo}>{t.repoName}</span>
-                      <span className={styles.branch}>{t.branch}</span>
+                      <span className={styles.repo}>{g.repoName}</span>
+                      <span className={styles.branch}>{g.branch}</span>
                     </span>
                   )}
-                  {t.files.map((f) => (
+                  {g.files.map((f) => (
                     <span key={f.path} className={styles.path} title={f.path}>
                       {f.path}
                     </span>
@@ -56,10 +57,10 @@ export function DiscardModal() {
               ))}
             </div>
           )}
-          <p className={styles.note}>Changes can be restored by retrieving them from the Trash.</p>
+          <p className={styles.note}>{t('discard.trashNote')}</p>
           {list && (
             <Checkbox
-              label="Do not show this message again"
+              label={t('settings.dontAsk')}
               checked={dontAsk}
               onChange={(e) => setDontAsk(e.target.checked)}
             />
@@ -68,10 +69,10 @@ export function DiscardModal() {
       </div>
       <ModalFooter>
         <Button size={36} autoFocus onClick={close}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button variant="danger" size={36} onClick={confirm}>
-          {req.all ? 'Discard All Changes' : 'Discard Changes'}
+          {req.all ? t('discard.btnAll') : t('discard.btnOne')}
         </Button>
       </ModalFooter>
     </Modal>

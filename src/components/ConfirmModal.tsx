@@ -1,4 +1,5 @@
 import type { KeyboardEvent, ReactNode } from 'react';
+import { t } from '../i18n';
 import { Checkbox } from './Checkbox';
 import { Icon, type IconName } from './icons';
 import { Modal } from './Modal';
@@ -59,7 +60,7 @@ export function ConfirmModal({
         {dontAsk && (
           <Checkbox
             className={styles.dontAsk}
-            label="Do not show this message again"
+            label={t('settings.dontAsk')}
             checked={dontAsk.checked}
             onChange={(e) => dontAsk.onChange(e.target.checked)}
           />

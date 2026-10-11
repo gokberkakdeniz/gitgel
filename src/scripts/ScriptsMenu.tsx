@@ -1,5 +1,6 @@
 import { Icon, isIconName } from '../components/icons';
 import { MenuDivider, MenuItem, MenuLabel } from '../components/Menu';
+import { t } from '../i18n';
 import type { EntrySummary } from '../lib/types';
 import { useData } from '../state/data';
 import { fillName, pickScript } from './runs';
@@ -30,7 +31,7 @@ export function ScriptsMenu({
   return (
     <>
       <MenuDivider />
-      <MenuLabel>Scripts</MenuLabel>
+      <MenuLabel>{t('scripts.menuLabel')}</MenuLabel>
       {shown.map((s) => (
         <MenuItem
           key={s.id}

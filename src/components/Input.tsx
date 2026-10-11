@@ -1,5 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef, type InputHTMLAttributes, type ReactNode } from 'react';
 import { CloseIcon, Icon, type IconName } from './icons';
+import { t } from '../i18n';
 import styles from './Input.module.css';
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'size'> {
@@ -107,8 +108,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       {filled && (
         <button
           type="button"
-          aria-label="Clear"
-          title="Clear (esc)"
+          aria-label={t('common.clear')}
+          title={t('common.clearHint')}
           className={styles.clear}
           // Keeps focus in the field.
           onMouseDown={(e) => e.preventDefault()}

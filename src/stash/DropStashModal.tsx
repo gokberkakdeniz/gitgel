@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Button } from '../components/Button';
 import { ConfirmModal } from '../components/ConfirmModal';
-import { plural } from '../lib/format';
+import { cnt } from '../lib/format';
+import { t } from '../i18n';
 import { stopAsking } from '../lib/prompts';
 import { dropStash, useStashUi } from './actions';
 
@@ -15,22 +16,22 @@ export function DropStashModal() {
     useStashUi.setState({ dropping: null });
   };
   const name = `stash@{${st.index}}`;
-  const where = `${st.repoName} / ${st.branch ?? 'Detached HEAD'}${st.files !== null ? ` · ${plural(st.files, 'file', 'files')}` : ''}`;
+  const where = `${st.repoName} / ${st.branch ?? t('branches.detachedHead')}${st.files !== null ? ` · ${t('branches.fileCount', { ...cnt(st.files) })}` : ''}`;
   return (
     <ConfirmModal
-      aria-label={`Drop ${name}`}
-      title={`Drop ${name}?`}
+      aria-label={t('stash.dropAria', { name })}
+      title={t('stash.dropTitle', { name })}
       width={460}
       onClose={close}
       context={[
         { icon: 'package', text: st.message, title: st.message },
         { icon: 'branch', text: where },
       ]}
-      note="Its changes are lost unless they are somewhere else."
+      note={t('stash.dropNote')}
       dontAsk={{ checked: dontAsk, onChange: setDontAsk }}
     >
       <Button size={36} autoFocus onClick={close}>
-        Cancel
+        {t('common.cancel')}
       </Button>
       <Button
         variant="danger"
@@ -41,7 +42,7 @@ export function DropStashModal() {
           void dropStash(st);
         }}
       >
-        Drop stash
+        {t('stash.dropBtn')}
       </Button>
     </ConfirmModal>
   );

@@ -1,5 +1,6 @@
 // Running scripts from the menus (SPEC §14): the runs this window knows about and their toasts.
 import { create } from 'zustand';
+import { t } from '../i18n';
 import { runScript } from '../lib/ipc';
 import type { AppError, EntrySummary, ScriptConfig, ScriptInput, ScriptOutputChunk, ScriptRun } from '../lib/types';
 import { useUi } from '../state/ui';
@@ -162,7 +163,7 @@ export async function startScript(
   } catch (err) {
     useUi.getState().showToast({
       status: 'failed',
-      message: `“${fillName(script.name, e)}” could not start`,
+      message: t('scripts.couldNotStart', { name: fillName(script.name, e) }),
       sub: (err as AppError).message,
     });
   }
@@ -212,7 +213,7 @@ export async function startGitAction(
     runs.put(run);
     showRunToast(run);
   } catch (err) {
-    useUi.getState().showToast({ status: 'failed', message: `“${name}” could not start`, sub: (err as AppError).message });
+    useUi.getState().showToast({ status: 'failed', message: t('scripts.couldNotStart', { name }), sub: (err as AppError).message });
   }
 }
 
@@ -227,14 +228,14 @@ export function showRunToast(run: ScriptRun): void {
   if (run.status === 'running') {
     useUi.getState().showToast({
       status: 'running',
-      message: `Running “${run.name}”…`,
+      message: t('scripts.running', { name: run.name }),
       sub: run.repoLabel,
       ...output,
     });
     return;
   }
   if (run.status === 'failed') {
-    useUi.getState().showToast({ status: 'failed', message: `“${run.name}” could not start`, sub: run.lastLine });
+    useUi.getState().showToast({ status: 'failed', message: t('scripts.couldNotStart', { name: run.name }), sub: run.lastLine });
     return;
   }
   const ok = run.exitCode === 0;
@@ -243,11 +244,15 @@ export function showRunToast(run: ScriptRun): void {
     useRuns.getState().showOutput(run.runId);
     return;
   }
-  const why = run.stopped ? 'stopped' : run.exitCode !== null ? `exit ${run.exitCode}` : (run.signal ?? 'ended');
+  const why = run.stopped
+    ? t('scripts.whyStopped')
+    : run.exitCode !== null
+      ? t('scripts.whyExit', { code: String(run.exitCode) })
+      : (run.signal ?? t('scripts.whyEnded'));
   // The last line says how it went.
   useUi.getState().showToast({
     status: ok ? 'success' : 'failed',
-    message: ok ? (show?.done ?? `“${run.name}” finished`) : `“${run.name}” failed · ${why}`,
+    message: ok ? (show?.done ?? t('scripts.finished', { name: run.name })) : t('scripts.failed', { name: run.name, why }),
     sub: run.lastLine || run.repoLabel,
     ...output,
   });

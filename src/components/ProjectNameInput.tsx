@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../i18n';
 import { renameProject } from '../lib/ipc';
 import { nameConflict } from '../lib/projects';
 import type { ProjectConfig } from '../lib/types';
@@ -48,14 +49,14 @@ export function ProjectNameInput({
     <input
       ref={input}
       autoFocus
-      aria-label="Project name"
+      aria-label={t('project.projectName')}
       className={className}
       data-editable-title
       style={width ? { width } : undefined}
       spellCheck={false}
       autoComplete="off"
       aria-invalid={!!conflict}
-      title={conflict ? `A project named “${conflict}” already exists` : undefined}
+      title={conflict ? t('project.conflictExists', { name: conflict }) : undefined}
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onBlur={() => !saving && onDone()}

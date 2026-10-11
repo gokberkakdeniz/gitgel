@@ -11,6 +11,8 @@ import { FileOpenItems } from '../../components/OpenItems';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
 import { Stepper } from '../../components/Stepper';
+import { formatCount, validTabSize } from '../../lib/format';
+import { t } from '../../i18n';
 import { updateSettings } from '../../lib/ipc';
 import { basename } from '../../lib/paths';
 import { isTextField } from '../../lib/shortcuts';
@@ -33,6 +35,7 @@ export function useDiffView() {
   const ignoreWs = settings?.ignoreWhitespace ?? false;
   const context = settings?.diffContext ?? 'changes';
   const contextLines = settings?.diffContextLines ?? 3;
+  const tabSize = validTabSize(settings?.diffTabSize ?? 4);
   const saveView = (patch: Partial<Settings>) => {
     if (settings) void updateSettings({ ...settings, ...patch });
   };
@@ -56,7 +59,7 @@ export function useDiffView() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-  return { layout, ignoreWs, context, contextLines, saveView, toggleWs, viewRef };
+  return { layout, ignoreWs, context, contextLines, tabSize, saveView, toggleWs, viewRef };
 }
 
 export type DiffViewSettings = ReturnType<typeof useDiffView>;
@@ -86,8 +89,8 @@ export function FileBar({
       <span className={styles.filePath}>{file.path}</span>
       <span className={styles.muted}>{label}</span>
       {ignoreWs && (
-        <Pill tone="accent" title="Show whitespace changes (⌥W)" onClick={toggleWs}>
-          Whitespace ignored
+        <Pill tone="accent" title={t('review.showWs')} onClick={toggleWs}>
+          {t('review.wsIgnored')}
         </Pill>
       )}
       <span className={styles.grow} />
@@ -116,8 +119,8 @@ export function FileBar({
 export function DiffStat({ add, del }: { add?: number; del?: number }) {
   return (
     <>
-      {add !== undefined && <span className={styles.add}>+{add}</span>}
-      {del !== undefined && <span className={styles.del}>−{del}</span>}
+      {add !== undefined && <span className={styles.add}>+{formatCount(add)}</span>}
+      {del !== undefined && <span className={styles.del}>−{formatCount(del)}</span>}
     </>
   );
 }
@@ -149,18 +152,18 @@ function ViewMenu({
         type="button"
         aria-haspopup="menu"
         aria-expanded={!!at}
-        title="Diff view"
+        title={t('review.diffView')}
         className={at ? `${styles.viewButton} ${styles.viewButtonOpen}` : styles.viewButton}
         onClick={(e) => setAt(at ? null : e.currentTarget.getBoundingClientRect())}
       >
         {layout === 'split' ? <SplitIcon /> : <UnifiedIcon />}
-        <span>{layout === 'split' ? 'Split' : 'Unified'}</span>
+        <span>{layout === 'split' ? t('review.split') : t('review.unified')}</span>
         <ChevronDownIcon size={9} />
       </button>
       {at && (
         <Popover anchorRect={at} width={300} alignRight onClose={() => setAt(null)}>
-          <Menu aria-label="Diff view">
-            <MenuLabel>Layout</MenuLabel>
+          <Menu aria-label={t('review.diffView')}>
+            <MenuLabel>{t('review.layout')}</MenuLabel>
             {(['split', 'unified'] as const).map((l) => (
               <MenuItem
                 key={l}
@@ -171,16 +174,16 @@ function ViewMenu({
                   setAt(null);
                 }}
               >
-                {l === 'split' ? 'Split' : 'Unified'}
+                {l === 'split' ? t('review.split') : t('review.unified')}
               </MenuItem>
             ))}
             <MenuDivider />
-            <MenuLabel>Context</MenuLabel>
+            <MenuLabel>{t('review.context')}</MenuLabel>
             <MenuItem checked={context === 'changes'} kbd="⌥C" onSelect={() => onContext('changes', contextLines)}>
-              Changes only
+              {t('review.changesOnly')}
             </MenuItem>
             <MenuSegmented
-              label="Lines around changes"
+              label={t('review.linesAround')}
               disabled={context === 'whole'}
               value={String(contextLines)}
               onChange={(n) => onContext('changes', Number(n))}
@@ -195,16 +198,16 @@ function ViewMenu({
                 setAt(null);
               }}
             >
-              Whole file
+              {t('review.wholeFile')}
             </MenuItem>
             <MenuDivider />
             <MenuItem
               box={ignoreWs}
-              desc="Hide lines where only indentation or trailing spaces changed"
+              desc={t('review.wsDesc')}
               kbd="⌥W"
               onSelect={onToggleWs}
             >
-              Ignore whitespace
+              {t('review.ignoreWs')}
             </MenuItem>
           </Menu>
         </Popover>
@@ -233,28 +236,28 @@ function ChangeNav({
   const atLast = nav.count === 0 || i >= nav.count - 1;
   const prevTitle = atFirst
     ? prevFile
-      ? 'Previous (⌥↑)'
-      : 'First change'
-    : 'Previous change (⌥↑)';
+      ? t('review.prevFirst')
+      : t('review.firstChange')
+    : t('review.prevChange');
   const nextTitle = atLast
     ? nextFile
-      ? 'Next (⌥↓)'
-      : 'Last change'
-    : 'Next change (⌥↓)';
+      ? t('review.nextFirst')
+      : t('review.lastChange')
+    : t('review.nextChange');
   return (
     <>
       <span aria-live="polite" className={styles.navLabel}>
         {nav.count === 0
           ? onlyWhitespace
-            ? 'Only whitespace changed'
-            : 'No line changes'
-          : `Change ${i + 1} of ${nav.count}`}
-        {nav.count > 0 && atLast && nextFile && <span className={styles.muted}> · next file {fileName(nextFile)}</span>}
+            ? t('review.onlyWs')
+            : t('review.noLineChanges')
+          : t('review.changeOf', { i: formatCount(i + 1), n: formatCount(nav.count) })}
+        {nav.count > 0 && atLast && nextFile && <span className={styles.muted}>{t('review.nextFile', { name: fileName(nextFile) })}</span>}
       </span>
       <Stepper
-        aria-label="Jump between changes"
-        up={{ 'aria-label': 'Previous change', title: prevTitle, disabled: atFirst && !prevFile, cross: atFirst && !!prevFile }}
-        down={{ 'aria-label': 'Next change', title: nextTitle, disabled: atLast && !nextFile, cross: atLast && !!nextFile }}
+        aria-label={t('review.jumpChanges')}
+        up={{ 'aria-label': t('review.prevChangeBtn'), title: prevTitle, disabled: atFirst && !prevFile, cross: atFirst && !!prevFile }}
+        down={{ 'aria-label': t('review.nextChangeBtn'), title: nextTitle, disabled: atLast && !nextFile, cross: atLast && !!nextFile }}
         onStep={onStep}
       />
     </>
@@ -369,11 +372,11 @@ export function FileRow({
           <Highlighted text={dirLabel(f)} terms={terms} />
         </span>
         {conflict === 'unresolved' ? (
-          <span className={styles.conflictMark} title="Has conflicts" role="img" aria-label="Has conflicts">
+          <span className={styles.conflictMark} title={t('review.hasConflicts')} role="img" aria-label={t('review.hasConflicts')}>
             <Icon name="warning" size={14} />
           </span>
         ) : conflict === 'resolved' ? (
-          <span className={styles.resolvedMark} title="Conflicts resolved" role="img" aria-label="Conflicts resolved">
+          <span className={styles.resolvedMark} title={t('review.conflictsResolved')} role="img" aria-label={t('review.conflictsResolved')}>
             <Icon name="check" size={14} />
           </span>
         ) : (
@@ -388,7 +391,7 @@ export function FileRow({
           <Checkbox
             checked={check.checked}
             disabled={check.disabled}
-            aria-label={`Include ${basename(f.path)}`}
+            aria-label={t('review.includeFile', { file: basename(f.path) })}
             onChange={(e) => check.onChange(e.target.checked)}
           />
           {button}
@@ -398,7 +401,7 @@ export function FileRow({
       )}
       {menu && hasMenu && (
         <Popover anchorRect={menu} width={actions ? 230 : 220} onClose={() => setMenu(null)}>
-          <Menu aria-label={actions && actions.files.length > 1 ? `${actions.files.length} files actions` : `${basename(f.path)} actions`}>
+          <Menu aria-label={actions && actions.files.length > 1 ? t('review.filesActions', { n: formatCount(actions.files.length) }) : t('review.fileActions', { file: basename(f.path) })}>
             {actions ? (
               <UncommittedItems
                 actions={actions}
@@ -450,7 +453,7 @@ function UncommittedItems({
           onDiscard();
         }}
       >
-        {one ? 'Discard Changes…' : `Discard ${files.length} Selected Changes…`}
+        {one ? t('review.discardOne') : t('review.discardN', { n: String(files.length) })}
       </MenuItem>
       {!one && onInclude && (
         <>
@@ -462,7 +465,7 @@ function UncommittedItems({
               onInclude(true);
             }}
           >
-            Include Selected Files
+            {t('review.includeSel')}
           </MenuItem>
           <MenuItem
             icon="close"
@@ -471,18 +474,18 @@ function UncommittedItems({
               onInclude(false);
             }}
           >
-            Exclude Selected Files
+            {t('review.excludeSel')}
           </MenuItem>
         </>
       )}
       <MenuDivider />
       {absolute && (
         <MenuItem icon="copy" onSelect={() => copy(absolute)}>
-          {one ? 'Copy File Path' : 'Copy Paths'}
+          {one ? t('review.copyFile') : t('review.copyPaths')}
         </MenuItem>
       )}
       <MenuItem icon="copy" onSelect={() => copy(relative)}>
-        {one ? 'Copy Relative File Path' : 'Copy Relative Paths'}
+        {one ? t('review.copyRelFile') : t('review.copyRelPaths')}
       </MenuItem>
       {onDisk.length > 0 && (
         <>
@@ -522,9 +525,9 @@ export function StashSection({
 }) {
   const repos = useData((s) => s.config?.repos);
   return (
-    <section aria-label="Stashes" className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
+    <section aria-label={t('branches.stashes')} className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
       <div className={styles.stashHeading}>
-        {heading} · {stashes.length}
+        {heading} · {formatCount(stashes.length)}
       </div>
       {stashes.map((st) => {
         const on = st.sha === picked;

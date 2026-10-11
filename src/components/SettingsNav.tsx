@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { Icon, type IconName } from './icons';
 import styles from './SettingsNav.module.css';
 
@@ -19,7 +20,7 @@ export function SettingsNav<T extends string>({
   onPick: (id: T) => void;
 }) {
   return (
-    <nav aria-label="Settings sections" className={styles.nav}>
+    <nav aria-label={t('settings.navLabel')} className={styles.nav}>
       {sections.map((s) => (
         <button
           key={s.id}
@@ -29,7 +30,7 @@ export function SettingsNav<T extends string>({
           onClick={() => onPick(s.id)}
         >
           <Icon name={s.icon} size={16} strokeWidth={1.7} className={styles.icon} />
-          <span className={styles.label}>{s.label}</span>
+          <span className={styles.label}>{t(s.label)}</span>
           {s.count !== undefined && <span className={styles.count}>{s.count}</span>}
         </button>
       ))}

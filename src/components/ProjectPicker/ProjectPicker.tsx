@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { cnt } from '../../lib/format';
+import { t } from '../../i18n';
 import { addEntries, createProject, deleteProject, removeEntries } from '../../lib/ipc';
 import { keysOf, nameConflict } from '../../lib/projects';
 import type { EntryRef, ProjectConfig } from '../../lib/types';
@@ -85,15 +87,15 @@ function PickView({
   };
 
   return (
-    <div role="dialog" aria-label="Add to Project" className={styles.pick}>
+    <div role="dialog" aria-label={t('project.pickTitle')} className={styles.pick}>
       <div className={styles.filterRow}>
         <Input
           autoFocus
           leftIcon="search"
           clearable
           size={32}
-          aria-label="Search Projects"
-          placeholder="Search"
+          aria-label={t('sidebar.searchProjects')}
+          placeholder={t('sidebar.search')}
           className={styles.filter}
           value={filter}
           onChange={setFilter}
@@ -105,7 +107,7 @@ function PickView({
             <button key={p.id} type="button" className={styles.project} onClick={() => void pick(p)}>
               <span className={styles.projectName}>{p.name}</span>
               <span className={styles.count}>
-                {p.entries.length} {p.entries.length === 1 ? 'entry' : 'entries'}
+                {t('project.entryCount', { ...cnt(p.entries.length) })}
               </span>
             </button>
           ))}
@@ -113,7 +115,7 @@ function PickView({
       )}
       <div className={styles.newRow}>
         <button type="button" className={styles.newButton} onClick={onNew}>
-          + New Project…
+          {t('project.newBtn')}
         </button>
       </div>
     </div>
@@ -152,10 +154,10 @@ function NewView({
   };
 
   return (
-    <div role="dialog" aria-label="New Project" className={styles.form}>
-      <div className={styles.formTitle}>New Project</div>
+    <div role="dialog" aria-label={t('project.newTitle')} className={styles.form}>
+      <div className={styles.formTitle}>{t('project.newTitle')}</div>
       <label className={styles.field}>
-        <span className={styles.fieldLabel}>Name</span>
+        <span className={styles.fieldLabel}>{t('project.nameLabel')}</span>
         <Input
           autoFocus
           size={36}
@@ -166,18 +168,18 @@ function NewView({
             if (e.key === 'Enter') void create();
           }}
         />
-        {conflict && <span className={styles.error}>A project named “{conflict}” already exists</span>}
+        {conflict && <span className={styles.error}>{t('project.conflictExists', { name: conflict })}</span>}
       </label>
       <div className={styles.first}>
-        <span>First entry</span>
+        <span>{t('project.firstEntry')}</span>
         <span className={styles.firstEntry}>{firstEntry}</span>
       </div>
       <div className={styles.actions}>
         <Button className={styles.cancel} onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button variant="primary" disabled={!canCreate} onClick={() => void create()}>
-          Create &amp; add ↵
+          {t('project.createAdd')}
         </Button>
       </div>
     </div>
@@ -191,10 +193,13 @@ export type ToastLabel = { branch: string } | string;
 function announce(label: ToastLabel, project: ProjectConfig, undo: () => Promise<unknown>) {
   useUi.getState().showToast({
     code: typeof label === 'string' ? undefined : label.branch,
-    message: typeof label === 'string' ? `${label} added to ${project.name}` : `added to ${project.name}`,
-    actionLabel: 'Undo',
+    message:
+      typeof label === 'string'
+        ? t('project.addedTo', { label, project: project.name })
+        : t('project.addedToPlain', { project: project.name }),
+    actionLabel: t('common.undo'),
     onAction: () => void undo(),
-    linkLabel: 'Open Project',
+    linkLabel: t('project.openLink'),
     onLink: () => useNav.getState().push({ name: 'project', projectId: project.id }),
   });
 }

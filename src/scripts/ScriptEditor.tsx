@@ -18,7 +18,8 @@ import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 import { Pill } from '../components/Pill';
 import { Popover } from '../components/Popover';
 import { Select } from '../components/Select';
-import { plural } from '../lib/format';
+import { cnt } from '../lib/format';
+import { t } from '../i18n';
 import { middleCut } from '../screens/Branches/rows';
 import { openRemoteLink, saveScript } from '../lib/ipc';
 import { useAutoGrow } from '../lib/useAutoGrow';
@@ -40,32 +41,32 @@ const SCRIPT_ICONS: IconName[] = [
 ];
 
 const TYPES: { value: ScriptInputType; label: string }[] = [
-  { value: 'text', label: 'Text' },
-  { value: 'textarea', label: 'Long Text' },
-  { value: 'checkbox', label: 'Checkbox' },
-  { value: 'select', label: 'Select' },
-  { value: 'branch', label: 'Branch' },
+  { value: 'text', label: 'scripts.typeText' },
+  { value: 'textarea', label: 'scripts.typeLong' },
+  { value: 'checkbox', label: 'scripts.typeCheck' },
+  { value: 'select', label: 'scripts.typeSelect' },
+  { value: 'branch', label: 'scripts.typeBranch' },
 ];
 
 const VARIABLES: [string, string][] = [
-  ['$GITGEL_BRANCH', 'branch name'],
-  ['$GITGEL_BASE', 'base in use'],
-  ['$GITGEL_WORKTREE', 'empty if not checked out'],
-  ['$GITGEL_REPO', 'repository folder'],
-  ['$GITGEL_REPO_NAME', 'repository name'],
-  ['$GITGEL_PROJECT', 'project entry menu only'],
-  ['$GITGEL_HEAD', 'tip SHA'],
+  ['$GITGEL_BRANCH', 'scripts.varBranch'],
+  ['$GITGEL_BASE', 'scripts.varBase'],
+  ['$GITGEL_WORKTREE', 'scripts.varWorktree'],
+  ['$GITGEL_REPO', 'scripts.varRepo'],
+  ['$GITGEL_REPO_NAME', 'scripts.varRepoName'],
+  ['$GITGEL_PROJECT', 'scripts.varProject'],
+  ['$GITGEL_HEAD', 'scripts.varHead'],
 ];
 
 /** What the name can hold; filled in on the menu. */
 const NAME_VARIABLES: [string, string][] = [
-  ['{branch}', 'branch name'],
-  ['{base}', 'base in use'],
-  ['{repo}', 'repository name'],
+  ['{branch}', 'scripts.varBranch'],
+  ['{base}', 'scripts.varBase'],
+  ['{repo}', 'scripts.varRepoName'],
 ];
 
 const FIELD_NOTES: Partial<Record<keyof typeof BRANCH_FIELDS, string>> = {
-  project: 'string, Project menu only',
+  project: 'scripts.fieldProject',
   menu: "'branches' | 'project'",
 };
 
@@ -87,17 +88,17 @@ export function newScript(): ScriptConfig {
 
 /** What blocks Save, in the order the fields appear; null when the script can be saved. */
 export function scriptProblem(s: ScriptConfig): string | null {
-  if (!s.name.trim()) return 'Give the script a name';
-  if (!s.command.trim()) return 'Give the script a command';
-  if (s.showIn.length === 0) return 'Pick a menu under Show in';
+  if (!s.name.trim()) return t('scripts.needName');
+  if (!s.command.trim()) return t('scripts.needCommand');
+  if (s.showIn.length === 0) return t('scripts.needMenu');
   const ids = new Set<string>();
   for (const [i, input] of s.inputs.entries()) {
-    if (!/^[A-Z0-9_]+$/.test(input.id)) return `Input ID “${input.id}” may only use A–Z, 0–9 and _`;
-    if (ids.has(input.id)) return `Two inputs share the ID ${input.id}`;
+    if (!/^[A-Z0-9_]+$/.test(input.id)) return t('scripts.badId', { id: input.id });
+    if (ids.has(input.id)) return t('scripts.dupId', { id: input.id });
     ids.add(input.id);
-    if (input.type === 'select' && input.options.length === 0) return `Input ${input.id} needs at least one option`;
+    if (input.type === 'select' && input.options.length === 0) return t('scripts.needOption', { id: input.id });
     const err = checkWhen(input.when, s.inputs.slice(0, i));
-    if (err) return `Input ${input.id}: ${err}`;
+    if (err) return t('scripts.inputErr', { id: input.id, err });
   }
   return checkWhen(s.when);
 }
@@ -127,11 +128,11 @@ function MatchCount({
   useEffect(() => () => window.clearTimeout(closing.current), []);
   return (
     <>
-      <span>Matches {plural(names.length, 'branch', 'branches')}</span>
+      <span>{t('scripts.matchCount', { ...cnt(names.length) })}</span>
       {names.length > 0 && (
         <button
           type="button"
-          aria-label="Show Matching Branches"
+          aria-label={t('scripts.showMatches')}
           aria-expanded={!!rect}
           className={styles.matchHelp}
           onMouseEnter={(e) => open(e.currentTarget)}
@@ -145,7 +146,7 @@ function MatchCount({
       {rect && (
         <Popover anchorRect={rect} width={rect.width} onClose={() => setRect(null)}>
           <ul
-            aria-label="Matching branches"
+            aria-label={t('scripts.matchingBranches')}
             className={styles.matchList}
             onMouseEnter={() => window.clearTimeout(closing.current)}
             onMouseLeave={close}
@@ -226,7 +227,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
     set({
       inputs: [
         ...s.inputs,
-        { id: `INPUT_${n}`, label: 'Input', type: 'text', default: '', options: [], required: false, when: '' },
+        { id: `INPUT_${n}`, label: t('scripts.inputDefault'), type: 'text', default: '', options: [], required: false, when: '' },
       ],
     });
     setOpenInput(s.inputs.length);
@@ -259,26 +260,26 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
   const iconName = SCRIPT_ICONS.includes(s.icon) ? s.icon : 'prompt';
 
   return (
-    <Modal aria-label={initial.id ? 'Edit Script' : 'New Script'} width={600} paddingTop={110} onClose={onClose}>
-      <ModalHeader title={initial.id ? 'Edit Script' : 'New Script'} onClose={onClose} />
+    <Modal aria-label={t(initial.id ? 'scripts.editScript' : 'scripts.newScript')} width={600} paddingTop={110} onClose={onClose}>
+      <ModalHeader title={t(initial.id ? 'scripts.editScript' : 'scripts.newScript')} onClose={onClose} />
       <div className={styles.body}>
         <div className={styles.field}>
-          <span className={styles.label}>Name</span>
+          <span className={styles.label}>{t('scripts.nameLabel')}</span>
           <Input
             ref={nameRef}
             size={36}
-            aria-label="Name"
+            aria-label={t('scripts.nameLabel')}
             value={s.name}
             autoFocus={!initial.id}
-            placeholder="Run tests"
+            placeholder={t('scripts.namePh')}
             onChange={(name) => set({ name })}
             leftText={
               <button
                 type="button"
                 aria-haspopup="listbox"
                 aria-expanded={pop?.kind === 'icon'}
-                aria-label={`Icon: ${iconName}`}
-                title="Icon"
+                aria-label={t('scripts.iconName', { name: iconName })}
+                title={t('scripts.iconTitle')}
                 className={pop?.kind === 'icon' ? `${styles.iconButton} ${styles.open}` : styles.iconButton}
                 onClick={toggle('icon')}
               >
@@ -289,7 +290,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             rightText={
               <VariableButton
                 open={pop?.kind === 'name'}
-                title="Insert a Variable"
+                title={t('scripts.insertVar')}
                 className={styles.nameVar}
                 onClick={toggle('name')}
               />
@@ -300,7 +301,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
         <div className={styles.field}>
           <div className={styles.labelRow}>
             <label htmlFor="script-command" className={styles.label}>
-              Command
+              {t('scripts.commandLabel')}
             </label>
           </div>
           <div className={styles.areaWrap}>
@@ -312,12 +313,12 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
               className={`${styles.area} ${styles.grow}`}
               {...commandGrow}
               value={s.command}
-              placeholder="pnpm install --frozen-lockfile && pnpm test"
+              placeholder={t('scripts.commandPh')}
               onChange={(e) => set({ command: e.target.value })}
             />
             <VariableButton
               open={pop?.kind === 'command'}
-              title="Insert a Variable"
+              title={t('scripts.insertVar')}
               className={styles.corner}
               onClick={toggle('command')}
             />
@@ -327,7 +328,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
         <div className={styles.field}>
           <div className={styles.labelRow}>
             <span id="script-inputs" className={styles.label}>
-              Inputs
+              {t('scripts.inputsLabel')}
             </span>
           </div>
           <ul ref={reorder.listRef} aria-labelledby="script-inputs" className={styles.card}>
@@ -346,7 +347,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                   className={reorder.dragId === key ? `${styles.input} ${styles.dragging}` : styles.input}
                 >
                   <div className={styles.inputRow}>
-                    <DragHandle aria-label={`Move ${input.label}`} {...reorder.handleProps(key)} />
+                    <DragHandle aria-label={t('scripts.moveInput', { name: input.label })} {...reorder.handleProps(key)} />
                     <button
                       type="button"
                       aria-expanded={open}
@@ -364,7 +365,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                       )}
                     </button>
                     <IconButton
-                      aria-label={`Remove ${input.label}`}
+                      aria-label={t('scripts.removeInput', { name: input.label })}
                       onClick={() => {
                         set({ inputs: s.inputs.filter((_, j) => j !== i) });
                         setOpenInput(null);
@@ -376,11 +377,11 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                   {open && (
                     <div className={styles.inputGrid}>
                       <label className={styles.small}>
-                        Label
+                        {t('scripts.fLabel')}
                         <Input size={32} value={input.label} onChange={(label) => setInput(i, { label })} />
                       </label>
                       <label className={styles.small}>
-                        ID
+                        {t('scripts.fId')}
                         <Input
                           size={32}
                           mono
@@ -390,21 +391,21 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                         />
                       </label>
                       <label className={styles.small}>
-                        Type
+                        {t('scripts.fType')}
                         <Select<ScriptInputType>
-                          aria-label="Type"
+                          aria-label={t('scripts.fType')}
                           size={32}
                           className={styles.full}
                           value={input.type}
-                          options={TYPES}
+                          options={TYPES.map(({ value, label }) => ({ value, label: t(label) }))}
                           onChange={(type) => setInput(i, { type, default: type === 'checkbox' ? '' : input.default })}
                         />
                       </label>
                       {input.type === 'checkbox' ? (
                         <div className={styles.small}>
-                          Default
+                          {t('scripts.fDefault')}
                           <Checkbox
-                            label="Checked"
+                            label={t('scripts.checked')}
                             className={styles.defaultCheck}
                             checked={input.default === '1'}
                             onChange={(e) => setInput(i, { default: e.target.checked ? '1' : '' })}
@@ -412,7 +413,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                         </div>
                       ) : (
                         <label className={styles.small}>
-                          Default
+                          {t('scripts.fDefault')}
                           <Input
                             size={32}
                             mono={input.type === 'branch'}
@@ -424,14 +425,14 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                       {input.type === 'select' && (
                         <label className={`${styles.small} ${styles.span}`}>
                           <span className={styles.labelRow}>
-                            Options<span>One per line. 4 or fewer show as buttons.</span>
+                            {t('scripts.optionsLabel')}<span>{t('scripts.optionsHint')}</span>
                           </span>
                           <OptionsField options={input.options} onChange={(options) => setInput(i, { options })} />
                         </label>
                       )}
                       <label className={`${styles.small} ${styles.span}`}>
                         <span className={styles.labelRow}>
-                          Show when<span>Can use branch and the inputs above</span>
+                          {t('scripts.showWhen')}<span>{t('scripts.showWhenHint')}</span>
                         </span>
                         <span className={styles.areaWrap}>
                           <textarea
@@ -444,13 +445,13 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                             className={[styles.area, styles.areaSmall, styles.withCorner, err && styles.invalid]
                               .filter(Boolean)
                               .join(' ')}
-                            placeholder="Always"
+                            placeholder={t('scripts.alwaysPh')}
                             value={input.when}
                             onChange={(e) => setInput(i, { when: e.target.value })}
                           />
                           <VariableButton
                             open={pop?.kind === 'inputWhen' && pop.input === i}
-                            title="Insert a Field"
+                            title={t('scripts.insertField')}
                             className={styles.corner}
                             onClick={toggle('inputWhen', i)}
                           />
@@ -459,11 +460,11 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                       {input.when.trim() && (
                         <span className={[styles.result, err && styles.bad, styles.span].filter(Boolean).join(' ')}>
                           {err ? <InfoIcon size={13} /> : <CheckIcon size={13} className={styles.ok} />}
-                          {err ?? 'Valid condition'}
+                          {err ?? t('scripts.validCond')}
                         </span>
                       )}
                       <Checkbox
-                        label="Required"
+                        label={t('scripts.required')}
                         className={styles.span}
                         checked={input.required}
                         onChange={(e) => setInput(i, { required: e.target.checked })}
@@ -475,7 +476,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             })}
             <li className={styles.addRow}>
               <Button variant="link" onClick={addInput}>
-                Add Input
+                {t('scripts.addInput')}
               </Button>
             </li>
           </ul>
@@ -484,12 +485,12 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
         <div className={styles.columns}>
           <div role="radiogroup" aria-labelledby="script-runs-in" className={styles.choices}>
             <span id="script-runs-in" className={styles.label}>
-              Runs in
+              {t('scripts.runsIn')}
             </span>
             {(
               [
-                ['worktree', 'Worktree Folder', 'Hidden when the branch is not checked out'],
-                ['repo', 'Repository Folder', 'Always available'],
+                ['worktree', 'scripts.runsWorktree', 'scripts.runsWorktreeHint'],
+                ['repo', 'scripts.runsRepo', 'scripts.runsRepoHint'],
               ] as const
             ).map(([value, label, note]) => (
               <button
@@ -502,25 +503,25 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
               >
                 <span className={s.runsIn === value ? `${styles.dot} ${styles.dotOn}` : styles.dot} />
                 <span className={styles.radioText}>
-                  <span className={styles.strong}>{label}</span>
-                  <span className={styles.hint}>{note}</span>
+                  <span className={styles.strong}>{t(label)}</span>
+                  <span className={styles.hint}>{t(note)}</span>
                 </span>
               </button>
             ))}
           </div>
           <div role="group" aria-labelledby="script-show-in" className={styles.choices}>
             <span id="script-show-in" className={styles.label}>
-              Show in
+              {t('scripts.showIn')}
             </span>
             {(
               [
-                ['branches', 'Branches Row Menu'],
-                ['project', 'Project Entry Menu'],
+                ['branches', 'scripts.showBranches'],
+                ['project', 'scripts.showProject'],
               ] as const
             ).map(([menu, label]) => (
               <Checkbox
                 key={menu}
-                label={label}
+                label={t(label)}
                 checked={s.showIn.includes(menu)}
                 onChange={(e) =>
                   set({ showIn: e.target.checked ? [...s.showIn, menu] : s.showIn.filter((m) => m !== menu) })
@@ -533,14 +534,14 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
         <div className={styles.field}>
           <div className={styles.labelRow}>
             <label htmlFor="script-when" className={styles.label}>
-              Show when
+              {t('scripts.showWhen')}
             </label>
             <button
               type="button"
               className={styles.hintLink}
               onClick={() => void openRemoteLink(CEL_SYNTAX).catch((e) => console.error('cannot open link', e))}
             >
-              CEL Syntax
+              {t('scripts.celSyntax')}
             </button>
           </div>
           <div className={styles.areaWrap}>
@@ -553,12 +554,12 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
               aria-describedby="script-when-result"
               className={whenError ? `${styles.area} ${styles.invalid}` : styles.area}
               value={s.when}
-              placeholder="branch.ahead > 0 && !branch.merged"
+              placeholder={t('scripts.whenPh')}
               onChange={(e) => set({ when: e.target.value })}
             />
             <VariableButton
               open={pop?.kind === 'when'}
-              title="Insert a Field"
+              title={t('scripts.insertField')}
               className={styles.corner}
               onClick={toggle('when')}
             />
@@ -574,19 +575,19 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             ) : s.when.trim() ? (
               <MatchCount names={names} fieldRef={whenRef} />
             ) : (
-              <span>Always shown</span>
+              <span>{t('scripts.alwaysShown')}</span>
             )}
           </div>
         </div>
 
         <Checkbox
-          label="Open the output panel automatically"
+          label={t('scripts.openOutput')}
           checked={s.openOutput}
           onChange={(e) => set({ openOutput: e.target.checked })}
         />
 
         <Checkbox
-          label="Ask before running"
+          label={t('scripts.askFirst')}
           checked={s.askFirst}
           onChange={(e) => set({ askFirst: e.target.checked })}
         />
@@ -595,17 +596,17 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
         note={<span className={styles.problem}>{saveError ?? (s.name || s.command ? problem : null)}</span>}
       >
         <Button size={36} onClick={onClose}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button variant="primary" size={36} disabled={!!problem || busy} onClick={() => void save()}>
-          Save Script
+          {t('common.save')}
         </Button>
       </ModalFooter>
 
       {pop?.kind === 'icon' && (
         <Popover anchorRect={pop.rect} width={264} onClose={() => setPop(null)}>
-          <div role="listbox" aria-label="Icon" className={styles.iconPicker}>
-            <span className={styles.pickerLabel}>Icon</span>
+          <div role="listbox" aria-label={t('scripts.iconTitle')} className={styles.iconPicker}>
+            <span className={styles.pickerLabel}>{t('scripts.iconTitle')}</span>
             <div className={styles.iconGrid}>
               {SCRIPT_ICONS.map((name) => (
                 <button
@@ -630,11 +631,11 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
       )}
       {pop?.kind === 'name' && (
         <Popover anchorRect={pop.rect} width={280} alignRight onClose={() => setPop(null)}>
-          <Menu aria-label="Insert a Variable" autoFocus>
+          <Menu aria-label={t('scripts.insertVar')} autoFocus>
             {NAME_VARIABLES.map(([name, note]) => (
               <MenuItem
                 key={name}
-                hint={note}
+                hint={t(note)}
                 onSelect={() => insertAt(nameRef.current, s.name, name, (v) => set({ name: v }))}
               >
                 <span className={styles.varName}>{name}</span>
@@ -645,12 +646,15 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
       )}
       {pop?.kind === 'command' && (
         <Popover anchorRect={pop.rect} width={300} alignRight onClose={() => setPop(null)}>
-          <Menu aria-label="Insert a Variable" autoFocus>
+          <Menu aria-label={t('scripts.insertVar')} autoFocus>
             {[
-              ...VARIABLES,
-              ...s.inputs.map((x): [string, string] => [`$GITGEL_INPUT_${x.id}`, `input · ${x.label}`]),
-            ].map(([name, note]) => (
-              <MenuItem key={name} hint={note} onSelect={() => insert(commandRef, 'command', name)}>
+              ...VARIABLES.map(([name, note]): [string, string] => [name, t(note)]),
+              ...s.inputs.map((x): [string, string] => [
+                `$GITGEL_INPUT_${x.id}`,
+                t('scripts.varInput', { label: x.label }),
+              ]),
+            ].map(([name, hint]) => (
+              <MenuItem key={name} hint={hint} onSelect={() => insert(commandRef, 'command', name)}>
                 <span className={styles.varName}>{name}</span>
               </MenuItem>
             ))}
@@ -659,11 +663,11 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
       )}
       {pop?.kind === 'when' && (
         <Popover anchorRect={pop.rect} width={320} alignRight onClose={() => setPop(null)}>
-          <Menu aria-label="Insert a Field" autoFocus>
+          <Menu aria-label={t('scripts.insertField')} autoFocus>
             {(Object.keys(BRANCH_FIELDS) as (keyof typeof BRANCH_FIELDS)[]).map((f) => (
               <MenuItem
                 key={f}
-                hint={FIELD_NOTES[f] ?? BRANCH_FIELDS[f]}
+                hint={f === 'project' ? t('scripts.fieldProject') : (FIELD_NOTES[f] ?? BRANCH_FIELDS[f])}
                 onSelect={() => insert(whenRef, 'when', `branch.${f}`)}
               >
                 <span className={styles.varName}>branch.{f}</span>
@@ -674,18 +678,18 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
       )}
       {pop?.kind === 'inputWhen' && pop.input !== undefined && s.inputs[pop.input] && (
         <Popover anchorRect={pop.rect} width={320} alignRight onClose={() => setPop(null)}>
-          <Menu aria-label="Insert a Field" autoFocus>
+          <Menu aria-label={t('scripts.insertField')} autoFocus>
             {[
               ...(Object.keys(BRANCH_FIELDS) as (keyof typeof BRANCH_FIELDS)[]).map((f): [string, string] => [
                 `branch.${f}`,
-                FIELD_NOTES[f] ?? BRANCH_FIELDS[f],
+                f === 'project' ? t('scripts.fieldProject') : (FIELD_NOTES[f] ?? BRANCH_FIELDS[f]),
               ]),
               // Only the inputs above this one can be used.
               ...s.inputs
                 .slice(0, pop.input)
                 .map((x): [string, string] => [
                   `inputs.${x.id.toLowerCase()}`,
-                  `${x.type === 'checkbox' ? 'bool' : 'string'} · ${x.label}`,
+                  t(x.type === 'checkbox' ? 'scripts.varBool' : 'scripts.varString', { label: x.label }),
                 ]),
             ].map(([name, note]) => {
               const at = pop.input!;

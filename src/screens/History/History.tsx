@@ -23,7 +23,8 @@ import { StashBar } from '../../stash/StashBar';
 import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
-import { formatAge, plural } from '../../lib/format';
+import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
+import { t } from '../../i18n';
 import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, openRemoteLink } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
@@ -179,7 +180,7 @@ export function History({ repoId, rev, backLabel }: Props) {
     const again = (noVerify: boolean) => commitNow({ ...files, noVerify });
     void startGitAction('Commit', () => gitCommit(entryRef, files), {
       openOnFail: true,
-      done: `Committed to ${rev}`,
+      done: t('history.committedTo', { rev }),
       onStart: (runId) => {
         // The form empties when the commit lands; a failed one keeps the message.
         const ended = () => {
@@ -216,11 +217,11 @@ export function History({ repoId, rev, backLabel }: Props) {
     // From the menu: generate with the picked provider at once.
     const active = forced ?? provider;
     if (!enabledProviders.includes(active)) {
-      useUi.getState().showToast({ status: 'failed', message: `${active} is turned off` });
+      useUi.getState().showToast({ status: 'failed', message: t('history.providerOff', { provider: active }) });
       return;
     }
     if (aiStatus && !aiStatus.some((s) => s.id === active && s.installed)) {
-      useUi.getState().showToast({ status: 'failed', message: `${active} is not installed` });
+      useUi.getState().showToast({ status: 'failed', message: t('history.providerMissing', { provider: active }) });
       return;
     }
     // The answer may land on another branch: only this form takes it.
@@ -249,7 +250,7 @@ export function History({ repoId, rev, backLabel }: Props) {
           if (here.current !== mine) return;
           if (r.cancelled) return;
           if (r.error || !r.summary) {
-            ui.showToast({ status: 'failed', message: r.error ?? 'No message generated' });
+            ui.showToast({ status: 'failed', message: r.error ?? t('history.noMessage') });
             return;
           }
           setSummary(r.summary);
@@ -430,7 +431,7 @@ export function History({ repoId, rev, backLabel }: Props) {
   };
 
   const view = useDiffView();
-  const { layout, ignoreWs, context, contextLines, viewRef } = view;
+  const { layout, ignoreWs, context, contextLines, tabSize, viewRef } = view;
   // The list column's width once dragged; until then 380px.
   const listPane = useRef<HTMLDivElement>(null);
   const [listWidth, setListWidth] = useStoredWidth('gitgel.historyListWidth');
@@ -452,7 +453,7 @@ export function History({ repoId, rev, backLabel }: Props) {
       ? {
           name: 'review',
           target: { kind: 'branch', repoId, branch: entry.branch, worktreePath: entry.worktreePath, tipOverride: null },
-          backLabel: 'Back to History',
+          backLabel: t('history.backToHistory'),
         }
       : null,
   );
@@ -461,13 +462,19 @@ export function History({ repoId, rev, backLabel }: Props) {
   let label = '';
   if (data?.tip) {
     label = search
-      ? `${commits.length}${data.more ? '+' : ''} matching ${commits.length === 1 && !data.more ? 'commit' : 'commits'}`
-      : `${rev} · ${plural(data.total ?? commits.length, 'commit', 'commits')}`;
+      ? t('history.searchLabel', {
+          n: formatCount(commits.length) + (data.more ? '+' : ''),
+          one: commits.length === 1 && !data.more ? '1' : '0',
+        })
+      : t('history.revLabel', {
+          rev,
+          commits: t('history.commitCount', { ...cnt(data.total ?? commits.length) }),
+        });
   }
 
   return (
     <div className={parts.screen}>
-      <PageHeader title="History" subtitle={subtitle} backLabel={backLabel}>
+      <PageHeader title={t('history.title')} subtitle={subtitle} backLabel={backLabel}>
         <Input
           ref={searchInput}
           size={32}
@@ -477,8 +484,8 @@ export function History({ repoId, rev, backLabel }: Props) {
           className={styles.search}
           value={query}
           onChange={setQuery}
-          placeholder="Search Commits"
-          aria-label="Search commit messages, SHAs and paths"
+          placeholder={t('history.searchCommits')}
+          aria-label={t('history.searchHint')}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               // Input clears a filled field first; this second Esc leaves it.
@@ -501,7 +508,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                     toReview();
                   }}
                 >
-                  Open Review
+                  {t('branches.openReview')}
                 </MenuItem>
               )}
               <MenuItem
@@ -511,7 +518,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                   void rescanAll(true);
                 }}
               >
-                Refresh
+                {t('review.refresh')}
               </MenuItem>
               {entry && (
                 <>
@@ -531,7 +538,7 @@ export function History({ repoId, rev, backLabel }: Props) {
       </PageHeader>
       {wipMenu && (
         <Popover anchorRect={wipMenu} width={230} onClose={() => setWipMenu(null)}>
-          <Menu aria-label="Uncommitted Changes Actions">
+          <Menu aria-label={t('history.wipActions')}>
             <MenuItem
               danger
               disabled={wipFiles.length === 0}
@@ -540,7 +547,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 discard(wipFiles, true);
               }}
             >
-              Discard All Changes…
+              {t('history.discardAll')}
             </MenuItem>
             <MenuItem
               icon="package"
@@ -550,7 +557,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 stashAction.open?.(wipMenu);
               }}
             >
-              Stash All Changes…
+              {t('history.stashAll')}
             </MenuItem>
           </Menu>
         </Popover>
@@ -562,11 +569,11 @@ export function History({ repoId, rev, backLabel }: Props) {
           <span className={parts.grow}>{diverged}</span>
           {!syncState(syncTarget).pull && (
             <Button size={24} onClick={() => void pullBranch(syncTarget, true)}>
-              Pull (rebase)
+              {t('history.pullRebase')}
             </Button>
           )}
           <Button size={24} onClick={() => void forcePushBranch(syncTarget)}>
-            Force Push
+            {t('history.forcePush')}
           </Button>
         </Banner>
       )}
@@ -576,7 +583,7 @@ export function History({ repoId, rev, backLabel }: Props) {
           <aside
             ref={list}
             role="listbox"
-            aria-label="Commits"
+            aria-label={t('history.commitsList')}
             className={styles.list}
             onScroll={onScroll}
             onKeyDown={(e) => {
@@ -616,18 +623,18 @@ export function History({ repoId, rev, backLabel }: Props) {
                 onWipMenu={setWipMenu}
               />
             ))}
-            {data && !data.tip && <div className={styles.listEmpty}>{rev} not found</div>}
+            {data && !data.tip && <div className={styles.listEmpty}>{t('history.revNotFound', { rev })}</div>}
             {data?.tip && commits.length === 0 && !wip && (
               <div className={styles.listEmpty}>
                 {search ? (
                   <>
-                    <span>No commits match “{search}”</span>
+                    <span>{t('history.noMatch', { q: search })}</span>
                     <button type="button" className={parts.linkButton} onClick={() => setQuery('')}>
-                      Clear Search
+                      {t('history.clearSearch')}
                     </button>
                   </>
                 ) : (
-                  'No commits'
+                  t('history.noCommits')
                 )}
               </div>
             )}
@@ -635,7 +642,7 @@ export function History({ repoId, rev, backLabel }: Props) {
           {stashes.length > 0 && (
             <div className={styles.stashPane}>
               <StashSection
-                heading="Stashes of this branch"
+                heading={t('review.stashOfBranch')}
                 stashes={stashes}
                 picked={stash?.sha}
                 changes={filesOpen ? stashChanges : undefined}
@@ -659,9 +666,9 @@ export function History({ repoId, rev, backLabel }: Props) {
               committing={committing}
               blocked={
                 !staged
-                  ? 'Reading the index'
+                  ? t('history.readingIndex')
                   : (entry?.conflicts ?? 0) > 0
-                    ? 'Resolve the merge conflicts first'
+                    ? t('history.resolveFirst')
                     : null
               }
               provider={provider}
@@ -683,7 +690,7 @@ export function History({ repoId, rev, backLabel }: Props) {
             />
           )}
         </div>
-        <ResizeHandle pane={listPane} min={280} max={640} onResize={setListWidth} onReset={() => setListWidth(null)} label="Resize list" />
+        <ResizeHandle pane={listPane} min={280} max={640} onResize={setListWidth} onReset={() => setListWidth(null)} label={t('history.resizeList')} />
 
         <section className={parts.main}>
           {error ? (
@@ -701,10 +708,10 @@ export function History({ repoId, rev, backLabel }: Props) {
                 file={file}
                 label={
                   current === WIP
-                    ? 'HEAD ↔ working tree'
+                    ? t('review.headToTree')
                     : stash
                       ? `${stashBase.slice(0, 7)} ↔ stash@{${stash.index}}`
-                      : `${commitChanges?.parent?.slice(0, 7) ?? 'empty tree'} ↔ ${commit?.shortSha}`
+                      : `${commitChanges?.parent?.slice(0, 7) ?? t('review.emptyTree')} ↔ ${commit?.shortSha}`
                 }
                 view={view}
                 nav={nav}
@@ -727,6 +734,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 navRef={diffNav}
                 layout={layout}
                 ignoreWhitespace={ignoreWs}
+                tabSize={tabSize}
                 onToggleLayout={() => viewRef.current.toggleLayout()}
                 onToggleWhitespace={() => viewRef.current.toggleWs()}
                 context={context}
@@ -738,7 +746,7 @@ export function History({ repoId, rev, backLabel }: Props) {
             </>
           )}
           {!error && (commitChanges || stashChanges) && files.length === 0 && current !== WIP && (
-            <div className={parts.empty}>No changes</div>
+            <div className={parts.empty}>{t('history.noChanges')}</div>
           )}
         </section>
       </div>
@@ -814,7 +822,7 @@ function ListRow({
             checked={files.every(check.on)}
             mixed={!files.every(check.on) && files.some(check.on)}
             disabled={check.disabled}
-            label={files.every(check.on) ? 'Unselect all' : 'Select all'}
+            label={files.every(check.on) ? t('history.unselectAll') : t('history.selectAll')}
             onChange={(e) => check.onAll(e.target.checked)}
           />
         </div>
@@ -845,7 +853,7 @@ function ListRow({
         <div className={styles.baseLine}>
           <div className={styles.baseRow}>
             <span className={styles.baseRule} />
-            <span className={styles.baseLabel}>base {row.base}</span>
+            <span className={styles.baseLabel}>{t('branches.baseName', { base: row.base })}</span>
             <span className={styles.baseRule} />
           </div>
         </div>
@@ -858,7 +866,7 @@ function ListRow({
             type="button"
             role="option"
             aria-selected={on}
-            title="Show uncommitted changes (HEAD ↔ working tree)"
+            title={t('history.showWip')}
             className={on ? `${styles.wip} ${styles.rowOn}` : styles.wip}
             onClick={() => onPick(WIP)}
             onContextMenu={(e) => {
@@ -871,17 +879,17 @@ function ListRow({
             </span>
             <span className={styles.rowText}>
               <span className={styles.subjectLine}>
-                <span className={styles.wipTitle}>Uncommitted changes</span>
+                <span className={styles.wipTitle}>{t('history.wipTitle')}</span>
                 {wipFailed && (
                   <Pill tone="danger" size="sm">
-                    commit failed
+                    {t('history.commitFailed')}
                   </Pill>
                 )}
               </span>
               <span className={styles.meta}>
-                {plural(wipCount, 'file', 'files')}
-                {wipConflicts > 0 ? ` · ${plural(wipConflicts, 'conflict', 'conflicts')}` : ''}
-                {wipAge ? ` · ${formatAge(wipAge)}` : ''}
+                {t('branches.fileCount', { ...cnt(wipCount) })}
+                {wipConflicts > 0 ? ` · ${t('branches.conflictCount', { ...cnt(wipConflicts) })}` : ''}
+                {wipAge ? ` · ${ageText(wipAge)}` : ''}
               </span>
             </span>
           </button>
@@ -895,20 +903,20 @@ function ListRow({
       const cls = [styles.commit, on && styles.rowOn, c.inBase && styles.shared].filter(Boolean).join(' ');
       return (
         <>
-          <button type="button" role="option" aria-selected={on} title="Show this commit" className={cls} onClick={() => onPick(c.sha)}>
+          <button type="button" role="option" aria-selected={on} title={t('history.showCommit')} className={cls} onClick={() => onPick(c.sha)}>
             <Avatar author={c.author} size={24} />
             <span className={styles.rowText}>
               <span className={styles.subjectLine}>
                 <span className={styles.subject}>{c.subject}</span>
                 {c.parents > 1 && (
                   <Pill tone="outline" size="sm">
-                    merge
+                    {t('history.merge')}
                   </Pill>
                 )}
               </span>
               <span className={styles.metaLine}>
-                <span className={styles.metaWho}>
-                  {c.author} · {formatAge(c.committedAt)}
+                <span className={styles.metaWho} title={c.committedAt ? ageTitle(c.committedAt) : undefined}>
+                  {c.author} · {ageText(c.committedAt)}
                 </span>
                 <span className={styles.sha}>{c.shortSha}</span>
               </span>
@@ -951,7 +959,7 @@ function ShaLink({ repoId, sha, short }: { repoId: string; sha: string; short: s
     <button
       type="button"
       className={`${styles.sha} ${styles.shaLink} selectable`}
-      title="Open remote"
+      title={t('history.openRemote')}
       onClick={(e) => {
         // A drag that selects the hash should not open the link.
         const sel = window.getSelection();
@@ -974,7 +982,7 @@ function CommitHeader({
   commit: HistoryCommit;
   changes: CommitChanges | undefined;
 }) {
-  const t = changes ? totals(changes.files) : null;
+  const stat = changes ? totals(changes.files) : null;
   const headRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const { copied, copy } = useCopy();
@@ -1030,8 +1038,8 @@ function CommitHeader({
           <ShaLink repoId={repoId} sha={c.sha} short={c.shortSha} />
           <IconButton
             size={24}
-            aria-label={copied ? 'Copied' : 'Copy Full SHA'}
-            title={copied ? 'Copied' : 'Copy Full SHA'}
+            aria-label={copied ? t('history.copied') : t('history.copySha')}
+            title={copied ? t('history.copied') : t('history.copySha')}
             className={copied ? styles.copied : undefined}
             onClick={() => void copy(c.sha)}
           >
@@ -1041,8 +1049,8 @@ function CommitHeader({
         {changes && (
           <>
             <span className={parts.dot}>·</span>
-            <span>{plural(changes.files.length, 'file', 'files')}</span>
-            <DiffStat add={t!.add} del={t!.del} />
+            <span>{t('branches.fileCount', { ...cnt(changes.files.length) })}</span>
+            <DiffStat add={stat!.add} del={stat!.del} />
           </>
         )}
       </div>
@@ -1051,11 +1059,11 @@ function CommitHeader({
 }
 
 function WipHeader({ worktree, files }: { worktree: string | null; files: FileChange[] }) {
-  const t = totals(files);
+  const stat = totals(files);
   return (
     <div className={styles.head}>
       <div className={parts.entryLine}>
-        <span className={parts.barTitle}>Uncommitted changes</span>
+        <span className={parts.barTitle}>{t('history.wipTitle')}</span>
       </div>
       <div className={parts.barMeta}>
         {worktree && (
@@ -1064,8 +1072,8 @@ function WipHeader({ worktree, files }: { worktree: string | null; files: FileCh
             <span className={parts.dot}>·</span>
           </>
         )}
-        <span>{plural(files.length, 'file', 'files')}</span>
-        <DiffStat add={t.add} del={t.del} />
+        <span>{t('branches.fileCount', { ...cnt(files.length) })}</span>
+        <DiffStat add={stat.add} del={stat.del} />
       </div>
     </div>
   );

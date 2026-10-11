@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { t } from '../i18n';
 import { IconButton } from './IconButton';
 import { MoreVerticalIcon } from './icons';
 import { Menu } from './Menu';
@@ -13,8 +14,8 @@ export function PageMenu({ children }: { children: (close: () => void, anchor: D
     <>
       <IconButton
         size={32}
-        aria-label="More actions"
-        title="More actions"
+        aria-label={t('common.moreActions')}
+        title={t('common.moreActions')}
         aria-haspopup="menu"
         aria-expanded={!!at}
         active={!!at}
@@ -24,7 +25,7 @@ export function PageMenu({ children }: { children: (close: () => void, anchor: D
       </IconButton>
       {at && (
         <Popover anchorRect={at} width={240} alignRight onClose={() => setAt(null)}>
-          <Menu aria-label="More actions" autoFocus>
+          <Menu aria-label={t('common.moreActions')} autoFocus>
             {children(() => setAt(null), at)}
           </Menu>
         </Popover>

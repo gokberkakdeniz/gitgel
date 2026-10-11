@@ -76,6 +76,24 @@ pub struct Settings {
     pub diff_context_lines: u32,
     /// View › Font Size: the window's zoom, in percent.
     pub zoom: u32,
+    /// Settings › General › Language; configs from before it load as `system`.
+    #[serde(deserialize_with = "language")]
+    pub language: Language,
+    /// Settings › Appearance › Formatting › Date Format pattern; anything outside the
+    /// choices reads as the default.
+    #[serde(deserialize_with = "date_format")]
+    pub date_format: String,
+    /// Settings › Appearance › Formatting › Time Format pattern; same leniency.
+    #[serde(deserialize_with = "time_format")]
+    pub time_format: String,
+    /// Settings › Appearance › Formatting › Number Format.
+    #[serde(deserialize_with = "number_format")]
+    pub number_format: NumberFormat,
+    /// Settings › Appearance › Formatting › Prefer absolute dates over relative dates.
+    pub prefer_absolute_dates: bool,
+    /// Settings › Appearance › Diff › Tab size; anything outside the choices reads as 4.
+    #[serde(deserialize_with = "tab_size")]
+    pub diff_tab_size: u32,
     /// Settings › Appearance; configs from before it load as `system`.
     pub appearance: Appearance,
     /// Whether the main sidebar is shown; remembered, configs from before it load as shown.
@@ -194,6 +212,12 @@ impl Default for Settings {
             diff_context: DiffContext::Changes,
             diff_context_lines: 3,
             zoom: 100,
+            language: Language::System,
+            date_format: "MMM d, yyyy".into(),
+            time_format: "HH:mm".into(),
+            number_format: NumberFormat::PlainComma,
+            prefer_absolute_dates: false,
+            diff_tab_size: 4,
             appearance: Appearance::System,
             sidebar_visible: true,
             terminal: TerminalChoice::Auto,
@@ -206,6 +230,115 @@ impl Default for Settings {
     }
 }
 
+/// Settings › Appearance › Formatting › Number Format: which separators a count shows.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum NumberFormat {
+    PlainDot,
+    /// The default: no grouping, comma decimals (`1234567,89`).
+    #[default]
+    PlainComma,
+    GroupCommaDot,
+    GroupDotComma,
+    GroupSpaceDot,
+    GroupSpaceComma,
+}
+
+/// The Date Format choices (SPEC §5 "Appearance").
+pub const DATE_FORMATS: [&str; 16] = [
+    "MMM d, yyyy",
+    "MMMM do, yyyy",
+    "MM/dd/yyyy",
+    "dd/MM/yyyy",
+    "dd-MM-yyyy",
+    "dd.MM.yyyy",
+    "yyyy/MM/dd",
+    "yyyy-MM-dd",
+    "yyyy.MM.dd",
+    "MM/dd/yy",
+    "dd/MM/yy",
+    "dd-MM-yy",
+    "dd.MM.yy",
+    "yy/MM/dd",
+    "yy-MM-dd",
+    "yy.MM.dd",
+];
+
+/// The Time Format choices (SPEC §5 "Appearance").
+pub const TIME_FORMATS: [&str; 8] = [
+    "HH:mm:ss",
+    "HH.mm.ss",
+    "HH:mm",
+    "HH.mm",
+    "h:mm:ss aaa",
+    "h.mm.ss aaa",
+    "h:mm aaa",
+    "h.mm aaa",
+];
+
+/// The Tab size choices (SPEC §5 "Appearance › Diff").
+pub const TAB_SIZES: [u32; 9] = [1, 2, 3, 4, 5, 6, 8, 10, 12];
+
+pub fn valid_date_format(s: &str) -> &str {
+    if DATE_FORMATS.contains(&s) {
+        s
+    } else {
+        "MMM d, yyyy"
+    }
+}
+
+pub fn valid_time_format(s: &str) -> &str {
+    if TIME_FORMATS.contains(&s) {
+        s
+    } else {
+        "HH:mm"
+    }
+}
+
+pub fn valid_tab_size(n: u32) -> u32 {
+    if TAB_SIZES.contains(&n) {
+        n
+    } else {
+        4
+    }
+}
+
+/// Reads `dateFormat` leniently: a value outside the choices is the default.
+fn date_format<'de, D: Deserializer<'de>>(d: D) -> Result<String, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(valid_date_format(value.as_str().unwrap_or_default()).to_string())
+}
+
+/// Reads `timeFormat` leniently: a value outside the choices is the default.
+fn time_format<'de, D: Deserializer<'de>>(d: D) -> Result<String, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(valid_time_format(value.as_str().unwrap_or_default()).to_string())
+}
+
+/// Reads `numberFormat` leniently: an unknown value is the default.
+fn number_format<'de, D: Deserializer<'de>>(d: D) -> Result<NumberFormat, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(match value.as_str() {
+        Some("plain-dot") => NumberFormat::PlainDot,
+        Some("group-comma-dot") => NumberFormat::GroupCommaDot,
+        Some("group-dot-comma") => NumberFormat::GroupDotComma,
+        Some("group-space-dot") => NumberFormat::GroupSpaceDot,
+        Some("group-space-comma") => NumberFormat::GroupSpaceComma,
+        _ => NumberFormat::PlainComma,
+    })
+}
+
+/// Reads `diffTabSize` leniently: a value outside the choices is 4.
+fn tab_size<'de, D: Deserializer<'de>>(d: D) -> Result<u32, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(valid_tab_size(
+        value
+            .as_u64()
+            .and_then(|n| u32::try_from(n).ok())
+            .unwrap_or(4),
+    ))
+}
+
 /// The lines-around-changes choices; anything else counts as 3.
 pub fn valid_context_lines(n: u32) -> u32 {
     if matches!(n, 3 | 5 | 10) {
@@ -213,6 +346,17 @@ pub fn valid_context_lines(n: u32) -> u32 {
     } else {
         3
     }
+}
+
+/// Reads `language` leniently: an unknown value is `system`, so a hand-edited
+/// config never gets set aside for it (missing values use the struct default).
+fn language<'de, D: Deserializer<'de>>(d: D) -> Result<Language, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(match value.as_str() {
+        Some("en") => Language::En,
+        Some("tr") => Language::Tr,
+        _ => Language::System,
+    })
 }
 
 /// Reads `diffContextLines` leniently: a value that is not 3, 5 or 10 (or not a number) is 3,
@@ -243,6 +387,16 @@ pub enum Appearance {
     System,
     Light,
     Dark,
+}
+
+/// Settings › General › Language: the UI language; `system` follows the OS/browser.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Language {
+    #[default]
+    System,
+    En,
+    Tr,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../../components/Button';
 import { Modal, ModalFooter, ModalHeader } from '../../components/Modal';
-import { plural } from '../../lib/format';
+import { t } from '../../i18n';
 import { addRepos, inspectFolders } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { AppError, FolderCheck } from '../../lib/types';
@@ -39,12 +39,10 @@ function Sheet({ paths }: { paths: string[] }) {
   };
 
   return (
-    <Modal aria-label="Add Repositories" width={600} paddingTop={110} onClose={close}>
+    <Modal aria-label={t('addrepos.title')} width={600} paddingTop={110} onClose={close}>
       <ModalHeader
-        title="Add Repositories"
-        sub={`${plural(paths.length, 'folder', 'folders')} selected. ${
-          hasRepos ? 'Repositories already in Gitgel are skipped.' : 'Worktree folders resolve to their main repository.'
-        }`}
+        title={t('addrepos.title')}
+        sub={t(hasRepos ? 'addrepos.subSkip' : 'addrepos.subNew', { n: String(paths.length) })}
       />
       <div className={styles.list}>
         {checks?.map((c, i) => (
@@ -60,10 +58,10 @@ function Sheet({ paths }: { paths: string[] }) {
       </div>
       <ModalFooter ruled={false}>
         <Button size={36} onClick={close}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button variant="primary" size={36} disabled={!checks || addable === 0 || adding} onClick={add}>
-          Add {plural(addable, 'repository', 'repositories')}
+          {t('addrepos.addBtn', { n: String(addable) })}
         </Button>
       </ModalFooter>
     </Modal>
@@ -82,20 +80,20 @@ export function note(c: FolderCheck): string {
   switch (c.kind) {
     case 'repo':
       return c.defaultBase
-        ? `Git repository · default base ${c.defaultBase}`
-        : 'Git repository · no default base found';
+        ? t('addrepos.noteBase', { base: c.defaultBase })
+        : t('addrepos.noteNoBase');
     case 'resolved':
       return c.via === 'worktree'
-        ? `Worktree of ${repo} · adds the main repository`
-        : `Inside ${repo} · adds the repository root`;
+        ? t('addrepos.noteWorktree', { repo })
+        : t('addrepos.noteInside', { repo });
     case 'duplicate':
       if (c.via === 'worktree') {
         return c.duplicateOf === 'config'
-          ? `Worktree of ${repo} · already added, skipped`
-          : `Worktree of ${repo} · already in this list, skipped`;
+          ? t('addrepos.noteWtAdded', { repo })
+          : t('addrepos.noteWtBatch', { repo });
       }
-      return c.duplicateOf === 'config' ? 'Already added · skipped' : 'Already in this list · skipped';
+      return c.duplicateOf === 'config' ? t('addrepos.noteAdded') : t('addrepos.noteBatch');
     case 'not_git':
-      return 'Not a git repository · skipped';
+      return t('addrepos.noteNotGit');
   }
 }

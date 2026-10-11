@@ -1,15 +1,16 @@
 // What the Add palette lists: every scanned entry, grouped, with its meta line.
 import Fuse from 'fuse.js';
-import { formatAge, plural } from '../../lib/format';
+import { t } from '../../i18n';
+import { agoText, cnt, formatCount } from '../../lib/format';
 import { refOf, refOfOther } from '../../lib/projects';
 import type { EntryRef, RepoScan } from '../../lib/types';
 
 export type PaletteGroup = 'worktrees' | 'active' | 'older';
 
 export const GROUP_TITLES: Record<PaletteGroup, string> = {
-  worktrees: 'Worktrees',
-  active: 'Active branches',
-  older: 'Older · found by search',
+  worktrees: 'palette.groupWorktrees',
+  active: 'palette.groupActive',
+  older: 'palette.groupOlder',
 };
 
 export interface PaletteItem {
@@ -33,7 +34,7 @@ export function paletteItems(
   projectName: string,
   now: number = Date.now() / 1000,
 ): PaletteItem[] {
-  const age = (t: number | null) => (t ? `${formatAge(t, now)} ago` : null);
+  const age = (t2: number | null) => (t2 ? agoText(t2, now) : null);
   const join = (parts: (string | null | false)[]) => parts.filter(Boolean).join(' · ');
   const items: PaletteItem[] = [];
   for (const scan of scans) {
@@ -42,15 +43,15 @@ export function paletteItems(
       const merged = e.state === 'merged';
       const group: PaletteGroup = e.worktreePath ? 'worktrees' : 'active';
       const stats = [
-        e.ahead !== null && `↑${e.ahead}`,
-        e.files !== null && plural(e.files, 'file', 'files'),
+        e.ahead !== null && `↑${formatCount(e.ahead)}`,
+        e.files !== null && t('branches.fileCount', { ...cnt(e.files) }),
       ];
       const meta = inside
-        ? join([e.repoName, `already in ${projectName}`])
+        ? join([e.repoName, t('palette.alreadyIn', { project: projectName })])
         : merged
-          ? join([e.repoName, `merged into ${e.base}`, age(e.lastCommitAt)])
+          ? join([e.repoName, t('palette.mergedInto', { base: e.base ?? '' }), age(e.lastCommitAt)])
           : group === 'worktrees'
-            ? join([e.repoName, ...stats, !!e.uncommitted && `● ${e.uncommitted} uncommitted`])
+            ? join([e.repoName, ...stats, !!e.uncommitted && t('palette.uncommittedCount', { n: formatCount(e.uncommitted) })])
             : join([e.repoName, ...stats, age(e.lastCommitAt)]);
       items.push({
         key: e.key,
@@ -76,8 +77,8 @@ export function paletteItems(
         repoName: o.repoName,
         worktreePath: null,
         meta: inside
-          ? join([o.repoName, `already in ${projectName}`])
-          : join([o.repoName, o.merged && `merged into ${scan.defaultBase}`, age(o.lastCommitAt)]),
+          ? join([o.repoName, t('palette.alreadyIn', { project: projectName })])
+          : join([o.repoName, o.merged && t('palette.mergedInto', { base: scan.defaultBase ?? '' }), age(o.lastCommitAt)]),
         tag: inside ? 'In Project' : o.merged ? 'merged' : null,
         disabled: inside,
       });

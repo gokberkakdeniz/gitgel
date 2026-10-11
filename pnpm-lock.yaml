@@ -44,6 +44,9 @@ importers:
       fuse.js:
         specifier: 7.5.0
         version: 7.5.0
+      messageformat:
+        specifier: 4.0.0
+        version: 4.0.0
       monaco-editor:
         specifier: 0.57.0
         version: 0.57.0
@@ -489,6 +492,10 @@ packages:
     engines: {node: '>= 18'}
     hasBin: true
 
+  messageformat@4.0.0:
+    resolution: {integrity: sha512-XKmJ/ffTWToWOlHJzt85ZChQgVGC0LHzNWuNK8zuYpNySsB0nIEmytOdSAOW9ETKtkajAUJf520m5gFHHnrTYg==}
+    engines: {node: ^20.19 || ^22.12 || >=24}
+
   monaco-editor@0.57.0:
     resolution: {integrity: sha512-5BkI9KGoqrNvBGUe15/QlZq3OooZ8WLg1AxTpaqHRCP3HNpzPPZKE2EDz8M7c+VRmCeUw1Brp4cx/PWm3kI/5A==}
 
@@ -932,6 +939,8 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.6.0
 
   marked@14.0.0: {}
+
+  messageformat@4.0.0: {}
 
   monaco-editor@0.57.0:
     dependencies:

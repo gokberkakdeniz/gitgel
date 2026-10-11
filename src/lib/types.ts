@@ -27,6 +27,8 @@ export interface ProjectConfig {
 export type DiffLayout = 'split' | 'unified';
 export type DiffContext = 'changes' | 'whole';
 export type Appearance = 'system' | 'light' | 'dark';
+export type Language = 'system' | 'en' | 'tr';
+export type NumberFormat = 'plain-dot' | 'plain-comma' | 'group-comma-dot' | 'group-dot-comma' | 'group-space-dot' | 'group-space-comma';
 export interface Settings {
   defaultBaseOrder: string[];
   activeDays: number;
@@ -35,6 +37,12 @@ export interface Settings {
   diffContext: DiffContext; // changes only (folded) or the whole file
   diffContextLines: number; // lines kept around each change: 3, 5 or 10
   zoom: number; // View › Font Size, percent
+  language: Language; // Settings › General › Language
+  dateFormat: string; // Settings › Appearance › Formatting › Date Format pattern
+  timeFormat: string; // Settings › Appearance › Formatting › Time Format pattern
+  numberFormat: NumberFormat; // Settings › Appearance › Formatting › Number Format
+  preferAbsoluteDates: boolean; // Settings › Appearance › Formatting › Prefer absolute dates
+  diffTabSize: number; // Settings › Appearance › Diff › Tab size
   appearance: Appearance; // Settings › Appearance
   sidebarVisible: boolean; // the main sidebar is shown; remembered
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"

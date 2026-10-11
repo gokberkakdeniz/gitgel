@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MenuItem } from '../components/Menu';
+import { t } from '../i18n';
 import type { ReviewGroup } from '../lib/types';
 import { StashDialog, stashRows } from './StashDialog';
 
@@ -15,13 +16,13 @@ export function useStashAction(groups: ReviewGroup[]) {
       <MenuItem
         icon="package"
         disabled={!any}
-        title={any ? undefined : 'Resolve the merge conflicts first; git cannot stash them'}
+        title={any ? undefined : t('stash.conflictHint')}
         onSelect={() => {
           close();
           setRect(anchor);
         }}
       >
-        Stash
+        {t('stash.menuItem')}
       </MenuItem>
     );
   const dialog = rect && <StashDialog groups={groups} anchorRect={rect} onClose={() => setRect(null)} />;

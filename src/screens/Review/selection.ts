@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 import { dirname } from '../../lib/paths';
 import type { DiffMode, EntrySummary, FileChange, ReviewGroup } from '../../lib/types';
 
@@ -39,9 +40,9 @@ export function resolveSelection(
 /** Dimmed folder next to the file name: `src/auth`, `src/auth ← old/path.ts`, `scripts · untracked`. */
 export function dirLabel(change: FileChange): string {
   const dir = dirname(change.path) || '.';
-  if (change.kind === 'R' && change.oldPath) return `${dir} ← ${change.oldPath}`;
-  if (change.kind === 'U') return `${dir} · untracked`;
-  if (change.kind === 'C') return `${dir} · conflict`;
+  if (change.kind === 'R' && change.oldPath) return t('review.dirRenamed', { dir, old: change.oldPath });
+  if (change.kind === 'U') return t('review.dirUntracked', { dir });
+  if (change.kind === 'C') return t('review.dirConflict', { dir });
   return dir;
 }
 
@@ -55,13 +56,13 @@ export function defaultMode(groups: ReviewGroup[]): DiffMode {
 
 /** What the diff compares, shown in the file bar. */
 export function compareLabel(mode: DiffMode, entry: EntrySummary): string {
-  if (mode === 'uncommitted') return 'HEAD ↔ working tree';
-  if (mode === 'all' && entry.worktreePath) return 'merge-base ↔ working tree';
-  return `merge-base ↔ ${entry.branch ?? entry.shortSha}`;
+  if (mode === 'uncommitted') return t('review.headToTree');
+  if (mode === 'all' && entry.worktreePath) return t('review.baseToTree');
+  return t('review.baseToBranch', { ref: entry.branch ?? entry.shortSha ?? '' });
 }
 
 export const EMPTY_MESSAGES: Record<DiffMode, string> = {
-  committed: 'No Committed Changes',
-  uncommitted: 'No Uncommitted Changes',
-  all: 'No Changes',
+  committed: 'review.emptyCommitted',
+  uncommitted: 'review.emptyUncommitted',
+  all: 'review.noChanges',
 };

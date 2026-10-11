@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { t } from '../i18n';
 import { IconButton } from './IconButton';
 import { CloseIcon } from './icons';
 import { createPortal } from 'react-dom';
@@ -73,7 +74,7 @@ export function ModalHeader({
         {sub && <div className={subMono ? `${styles.sub} ${styles.subMono}` : styles.sub}>{sub}</div>}
       </div>
       {onClose && (
-        <IconButton aria-label="Close" onClick={onClose}>
+        <IconButton aria-label={t('common.close')} onClick={onClose}>
           <CloseIcon size={13} />
         </IconButton>
       )}

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import styles from './App.module.css';
 import { AuxBlocker } from './components/AuxBlocker';
 import { FolderPlusIcon } from './components/icons';
@@ -13,6 +13,9 @@ import { AbortOperationModal } from './sync/OperationUi';
 import { DiscardModal } from './discard/DiscardModal';
 import { startDraftProject } from './lib/draft';
 import { startEventBridge } from './lib/events';
+import { fmtFromSettings, getFmt, setFmt } from './lib/format';
+import { getLocale, resolveLocale, setLocale } from './i18n';
+import { t } from './i18n';
 import { revealWindow } from './lib/ipc';
 import { isTextField } from './lib/shortcuts';
 import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from './lib/theme';
@@ -50,6 +53,28 @@ export default function App() {
   useEffect(() => {
     if (appearance) applyTheme(resolveEffective(appearance, systemIsDark()), appearance);
   }, [appearance]);
+
+  // The UI language and formats (Settings › General, Appearance): the config wins once
+  // loaded; until then the module defaults (the browser language) stand. One re-render,
+  // before paint.
+  const settings = useData((s) => s.config?.settings);
+  const [, setLangTick] = useState(0);
+  useLayoutEffect(() => {
+    let changed = false;
+    const next = resolveLocale(settings?.language ?? 'system');
+    if (next !== getLocale()) {
+      setLocale(next);
+      changed = true;
+    }
+    if (settings) {
+      const fmt = fmtFromSettings(settings);
+      if (JSON.stringify(fmt) !== JSON.stringify(getFmt())) {
+        setFmt(fmt);
+        changed = true;
+      }
+    }
+    if (changed) setLangTick((n) => n + 1);
+  }, [settings]);
 
   // ⌘N: new project (flow C), from anywhere unless a modal is open. ⌘R never reloads the
   // webview; on the Project screen it opens the review. ⌘← / ⌘→ (and ⌘[ / ⌘]): back / forward.
@@ -117,7 +142,7 @@ export default function App() {
         <div className={styles.drop} aria-hidden>
           <div className={styles.dropPill}>
             <FolderPlusIcon className={styles.dropIcon} />
-            Drop folders to add repositories
+            {t('addrepos.dropHint')}
           </div>
         </div>
       )}

@@ -7,6 +7,7 @@ import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 import { Segmented } from '../components/Segmented';
 import { Select } from '../components/Select';
 import { getBaseOptions } from '../lib/ipc';
+import { t } from '../i18n';
 import { tildifyHome } from '../lib/paths';
 import { useInvoke } from '../lib/useInvoke';
 import { useData } from '../state/data';
@@ -35,8 +36,8 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
   );
   const note = missing
     ? missing.input.type === 'branch'
-      ? 'Pick a branch to run'
-      : `Fill in ${missing.input.label} to run`
+      ? t('scripts.pickBranch')
+      : t('scripts.fillToRun', { label: missing.input.label })
     : '';
   const folder = script.runsIn === 'worktree' ? (entry.worktreePath ?? '') : repoPath;
   const branch = entry.branch ?? entry.shortSha ?? '';
@@ -63,8 +64,8 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
   if (shown.length === 0) {
     return (
       <ConfirmModal
-        aria-label={`Run ${name}`}
-        title={`Run “${name}”?`}
+        aria-label={t('scripts.runAria', { name })}
+        title={t('scripts.runTitle', { name })}
         width={460}
         onClose={onClose}
         onKeyDown={onKeyDown}
@@ -74,10 +75,10 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
         ]}
       >
         <Button size={36} onClick={onClose}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button variant="primary" size={36} kbd="⌘↵" autoFocus onClick={run}>
-          Run
+          {t('scripts.runBtn')}
         </Button>
       </ConfirmModal>
     );
@@ -121,7 +122,7 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
                   value={value}
                   onChange={(v) => set(input.id, v)}
                   options={[
-                    { value: '', label: 'Pick one', disabled: true },
+                    { value: '', label: t('scripts.pickOne'), disabled: true },
                     ...input.options.map((o) => ({ value: o, label: o })),
                   ]}
                 />
@@ -134,7 +135,7 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
                   value={value}
                   onChange={(v) => set(input.id, v)}
                   options={[
-                    { value: '', label: 'Pick a branch', disabled: true },
+                    { value: '', label: t('scripts.pickBranchPh'), disabled: true },
                     ...(options?.branches ?? (value ? [value] : [])).map((b) => ({ value: b, label: b })),
                   ]}
                 />
@@ -173,10 +174,10 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
         </div>
         <ModalFooter note={note}>
           <Button size={36} onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="primary" size={36} kbd="⌘↵" disabled={!!missing} onClick={run}>
-            Run
+            {t('scripts.runBtn')}
           </Button>
         </ModalFooter>
       </div>
