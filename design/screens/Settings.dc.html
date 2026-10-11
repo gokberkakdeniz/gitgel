@@ -154,6 +154,17 @@ button,input{font-family:inherit}
 
 </sc-if>
 
+<sc-if value="{{isAi}}" hint-placeholder-val="{{false}}">
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">AI</h2>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Generate commit message with AI</span><span style="font-size: 12px; color: var(--text-muted)">The commit form's bolt asks an agent CLI for the message</span></span>
+<dc-import name="Switch" theme="{{themeName}}" checked="{{true}}" aria-label="Generate commit message with AI" hint-size="32px,18px"></dc-import>
+</div>
+<dc-import name="List" theme="none" label="Providers" items="{{aiItems}}" empty="No providers" hint-size="100%,250px"></dc-import>
+</section>
+</sc-if>
+
 <sc-if value="{{isPrompts}}" hint-placeholder-val="{{false}}">
 <section role="group" aria-labelledby="ask-title" style="display: flex; flex-direction: column; gap: 12px">
 <h2 id="ask-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Show a Confirmation Dialog Before…</h2>
@@ -195,7 +206,7 @@ button,input{font-family:inherit}
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"baseHover": {"editor": "enum", "options": ["none", "1", "2", "3"], "default": "none"}, "baseAdd": {"editor": "enum", "options": ["none", "typing", "duplicate", "invalid"], "default": "none"}, "section": {"editor": "enum", "options": ["general", "appearance", "repositories", "scripts", "prompts", "shortcuts"], "default": "general"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "appearance": {"editor": "enum", "options": ["system", "light", "dark"], "default": "system"}, "terminal": {"editor": "enum", "options": ["auto", "terminal", "iterm", "wezterm", "other", "missing"], "default": "auto"}, "$preview": {"width": 1280, "height": 800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"baseHover": {"editor": "enum", "options": ["none", "1", "2", "3"], "default": "none"}, "baseAdd": {"editor": "enum", "options": ["none", "typing", "duplicate", "invalid"], "default": "none"}, "section": {"editor": "enum", "options": ["general", "appearance", "repositories", "scripts", "ai", "prompts", "shortcuts"], "default": "general"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "appearance": {"editor": "enum", "options": ["system", "light", "dark"], "default": "system"}, "terminal": {"editor": "enum", "options": ["auto", "terminal", "iterm", "wezterm", "other", "missing"], "default": "auto"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
   renderVals() {
     var ok = 'font-size: 12px; color: var(--text-muted); white-space: nowrap';
@@ -272,7 +283,7 @@ class Component extends DCLogic {
     });
     var section = (this.state && this.state.section) || this.props.section || 'general';
     // Section list (SettingsNav): icons by id.
-    var sections = [['general', 'General', ''], ['appearance', 'Appearance', ''], ['repositories', 'Repositories', '4'], ['scripts', 'Scripts', '5'], ['prompts', 'Prompts', ''], ['shortcuts', 'Shortcuts', '']].map(function (x) {
+    var sections = [['general', 'General', ''], ['appearance', 'Appearance', ''], ['repositories', 'Repositories', '4'], ['scripts', 'Scripts', '5'], ['ai', 'AI', ''], ['prompts', 'Prompts', ''], ['shortcuts', 'Shortcuts', '']].map(function (x) {
       return { id: x[0], label: x[1], count: x[2], pick: function () { self.setState({ section: x[0] }); } };
     });
     // Default base: an ordered list edited one branch at a time, so there is no separator to type.
@@ -318,7 +329,7 @@ class Component extends DCLogic {
       // Prompts › Show a Confirmation Dialog Before… (Hi8, GitHub Desktop's texts and section): the confirmations that can be turned off; "Do not show this message again" in
       // the Discard dialog clears its box here. Discard all and more than 10 files always ask.
       asks: [{ label: 'Removing repositories', on: true }, { label: 'Discarding changes', on: true }, { label: 'Dropping stashes', on: true }, { label: 'Deleting projects', on: true }],
-      isRepos: section === 'repositories', isGeneral: section === 'general', isAppearance: section === 'appearance', isShortcuts: section === 'shortcuts', isScripts: section === 'scripts', isPrompts: section === 'prompts',
+      isRepos: section === 'repositories', isGeneral: section === 'general', isAppearance: section === 'appearance', isShortcuts: section === 'shortcuts', isScripts: section === 'scripts', isAi: section === 'ai', isPrompts: section === 'prompts',
       // Settings › Scripts (flow N5): name, icon (Icon set) in the user's order; the Switch turns one off (in no menu) at once.
       scripts: [['Open pull request', 'pull-request'], ['Run tests', 'test'], ['Rebase on {base}…', 'rebase'], ['Copy Linear link', 'link'], ['Start dev server', 'prompt']].map(function (x) {
         var offMap = (self.state && self.state.scriptsOff) || { 'Copy Linear link': true };
@@ -373,6 +384,15 @@ class Component extends DCLogic {
         badges: sc.off ? [{ label: 'off', tone: 'neutral' }] : [],
         actions: [{ kind: 'switch', checked: sc.on, ariaLabel: 'On', title: sc.switchTitle, onPress: sc.toggle },
           { icon: 'edit', ariaLabel: 'Edit Script', href: 'FlowN6.dc.html' }, x('Remove script')] };
+    });
+    // Settings › AI (SPEC §5): one row per agent CLI in menu order (the topmost switched-on and
+    // installed one is the bolt's default); a missing CLI has its Switch and ✎ disabled.
+    out.aiItems = [['OpenCode', 'on'], ['Claude Code', 'on'], ['Cursor', 'missing'], ['Antigravity', 'off'], ['Codex', 'on']].map(function (p) {
+      var off = p[1] === 'off', gone = p[1] === 'missing';
+      return { handle: true, lead: 'tile', icon: 'bolt', title: p[0], titleWeight: '500', off: off,
+        badges: (gone ? [{ label: 'Not installed', tone: 'danger' }] : []).concat(off ? [{ label: 'off', tone: 'neutral' }] : []),
+        actions: [{ kind: 'switch', checked: !off, disabled: gone, ariaLabel: p[0] + ' on', title: off ? 'Off: in no menu. Switch on to show it' : 'On: shown in the commit menu. Switch off to hide it' },
+          { icon: 'edit', ariaLabel: 'Edit ' + p[0], disabled: gone, title: gone ? 'Not installed' : '' }] };
     });
     return out;
   }
