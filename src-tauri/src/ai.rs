@@ -61,7 +61,7 @@ impl Provider {
     /// The fixed command (the prompt travels in `GITGEL_PROMPT`, SPEC §0). opencode's
     /// default format mixes its trace into stdout, so it runs as JSON events and only the
     /// answer's text is kept. `model` / `effort` add their flags (effort only where the CLI
-    /// has one: opencode, Antigravity and Codex).
+    /// has one, see `effort_supported`).
     fn command(&self, model: bool, effort: bool) -> String {
         let prompt = "\"$GITGEL_PROMPT\"";
         let model = if model {
@@ -69,32 +69,34 @@ impl Provider {
         } else {
             ""
         };
+        let effort_flag = |flag: &str| {
+            if effort {
+                format!(" {flag} \"$GITGEL_EFFORT\"")
+            } else {
+                String::new()
+            }
+        };
         match self {
             Provider::Opencode => {
-                let effort = if effort {
-                    " --variant \"$GITGEL_EFFORT\""
-                } else {
-                    ""
-                };
+                let effort = effort_flag("--variant");
                 format!("opencode run --format json{model}{effort} {prompt}")
             }
             // No sandbox flag: anything that would prompt is denied instead, so the
             // CLI can read but not act (the patch is already in the prompt).
             Provider::Claude => {
-                format!("claude -p {prompt} --output-format text --permission-prompts none{model}")
+                let effort = effort_flag("--effort");
+                format!(
+                    "claude -p {prompt} --output-format text --permission-prompts none{model}{effort}"
+                )
             }
             // `agent` is Cursor's primary command (`cursor-agent` is its legacy alias).
             Provider::Cursor => format!("agent -p {prompt} --output-format text{model}"),
             Provider::Antigravity => {
-                let effort = if effort {
-                    " --effort \"$GITGEL_EFFORT\""
-                } else {
-                    ""
-                };
+                let effort = effort_flag("--effort");
                 format!("agy -p {prompt} --sandbox --output-format text --print-timeout 5m{model}{effort}")
             }
             // Read-only by default, explicit here; without `--force` cursor only proposes too.
-            // The effort override is TOML, so its value carries quotes.
+            // The effort override is TOML, so the command quotes its value.
             Provider::Codex => {
                 let effort = if effort {
                     " -c \"model_reasoning_effort=\\\"$GITGEL_EFFORT\\\"\""
@@ -127,13 +129,10 @@ impl Provider {
         }
     }
 
-    /// opencode (`--variant`), Antigravity (`--effort`) and Codex (`model_reasoning_effort`)
-    /// take one; the variant names are the model provider's own.
+    /// opencode (`--variant`), Claude Code and Antigravity (`--effort`) and Codex
+    /// (`model_reasoning_effort`) take one; the names are the model provider's own.
     fn effort_supported(&self) -> bool {
-        matches!(
-            self,
-            Provider::Opencode | Provider::Antigravity | Provider::Codex
-        )
+        !matches!(self, Provider::Cursor)
     }
 }
 
@@ -301,27 +300,20 @@ pub fn start(
                 .filter(|e| !e.is_empty()),
         )
         .flatten();
+    // Codex reads the override as a TOML string, which the command quotes.
     if provider == Provider::Codex
-        && effort.is_some_and(|e| e.contains('"') || e.chars().any(char::is_control))
+        && effort.is_some_and(|e| e.contains(['"', '\\']) || e.chars().any(char::is_control))
     {
         return Err(AppError::Invalid(
-            "Effort cannot contain quotes or line breaks.".into(),
+            "Effort cannot contain quotes, backslashes or line breaks.".into(),
         ));
     }
     let mut env = vec![("GITGEL_PROMPT".to_string(), prompt)];
     if let Some(model) = model {
         env.push(("GITGEL_MODEL".to_string(), model.to_string()));
     }
-    // Codex reads the override as TOML, so its value carries quotes.
     if let Some(effort) = effort {
-        env.push((
-            "GITGEL_EFFORT".to_string(),
-            if provider == Provider::Codex {
-                format!("\"{effort}\"")
-            } else {
-                effort.to_string()
-            },
-        ));
+        env.push(("GITGEL_EFFORT".to_string(), effort.to_string()));
     }
     let run = run::launch(
         state,
@@ -547,7 +539,7 @@ fn style_examples(
             continue;
         };
         let subject = summary.to_string();
-        if touches(&repo, &commit, include)? && filed.len() < MAX_FILE_EXAMPLES {
+        if filed.len() < MAX_FILE_EXAMPLES && touches(&repo, &commit, include)? {
             filed.push(subject.clone());
         }
         if recent.len() < MAX_EXAMPLES {
@@ -659,22 +651,34 @@ fn opencode_text(stream: &str) -> Result<String, AppError> {
     })))
 }
 
-/// The answer, without code fences: its first line is the summary, the rest the description.
+/// The answer, without code fences or surrounding blank lines: its first line is the
+/// summary, the rest (paragraphs kept) the description.
 fn parse(text: &str) -> GeneratedMessage {
-    let mut lines: Vec<&str> = text.lines().map(str::trim).collect();
-    while lines.first().is_some_and(|l| l.starts_with("```")) {
-        lines.remove(0);
-    }
-    while lines.last().is_some_and(|l| *l == "```") {
-        lines.pop();
-    }
-    let mut lines = lines.into_iter().filter(|l| !l.is_empty());
-    let summary = lines.next().unwrap_or_default();
-    let summary: String = summary.chars().take(72).collect();
-    let rest: Vec<&str> = lines.collect();
+    let blank_or_fence = |l: &&str| l.trim().is_empty() || l.trim_start().starts_with("```");
+    let lines: Vec<&str> = text.lines().map(str::trim_end).collect();
+    let start = lines
+        .iter()
+        .position(|l| !blank_or_fence(l))
+        .unwrap_or(lines.len());
+    let end = lines
+        .iter()
+        .rposition(|l| !blank_or_fence(l))
+        .map_or(start, |i| i + 1);
+    let lines = &lines[start..end.max(start)];
+    let summary: String = lines
+        .first()
+        .map_or("", |l| l.trim())
+        .chars()
+        .take(72)
+        .collect();
+    let body = lines.get(1..).unwrap_or_default();
+    let body = &body[body
+        .iter()
+        .position(|l| !l.is_empty())
+        .unwrap_or(body.len())..];
     GeneratedMessage {
-        summary: summary.trim().to_string(),
-        description: rest.join("\n").trim().to_string(),
+        summary: summary.trim_end().to_string(),
+        description: body.join("\n"),
     }
 }
 
@@ -684,9 +688,12 @@ mod tests {
 
     #[test]
     fn output_splits_into_summary_and_description() {
-        let m = parse("feat(sync): show progress\n\nLonger why here.\nTwo lines.");
+        let m = parse("feat(sync): show progress\n\nLonger why here.\nTwo lines.\n\n- one\n  more");
         assert_eq!(m.summary, "feat(sync): show progress");
-        assert_eq!(m.description, "Longer why here.\nTwo lines.");
+        assert_eq!(
+            m.description,
+            "Longer why here.\nTwo lines.\n\n- one\n  more"
+        );
     }
 
     #[test]
@@ -703,6 +710,10 @@ mod tests {
         assert_eq!(
             Provider::Claude.command(false, false),
             r#"claude -p "$GITGEL_PROMPT" --output-format text --permission-prompts none"#
+        );
+        assert_eq!(
+            Provider::Claude.command(true, true),
+            r#"claude -p "$GITGEL_PROMPT" --output-format text --permission-prompts none --model "$GITGEL_MODEL" --effort "$GITGEL_EFFORT""#
         );
         assert_eq!(
             Provider::Opencode.command(true, true),
@@ -724,7 +735,7 @@ mod tests {
         assert!(Provider::Opencode.effort_supported());
         assert!(Provider::Antigravity.effort_supported());
         assert!(Provider::Codex.effort_supported());
-        assert!(!Provider::Claude.effort_supported());
+        assert!(Provider::Claude.effort_supported());
         assert!(!Provider::Cursor.effort_supported());
     }
 
@@ -746,7 +757,7 @@ mod tests {
 
     #[test]
     fn fenced_answers_are_unwrapped() {
-        let m = parse("```\nfeat(x): ok\n\nBody.\n```");
+        let m = parse("\n```text\nfeat(x): ok\n\nBody.\n```\n");
         assert_eq!(m.summary, "feat(x): ok");
         assert_eq!(m.description, "Body.");
     }

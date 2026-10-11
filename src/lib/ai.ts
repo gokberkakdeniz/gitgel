@@ -2,7 +2,7 @@
 // backend's `generate-finished` event.
 import type { CommitProvider, GenerateFinished } from './types';
 
-/** The agent CLIs, in menu order: their labels, binaries and whether the CLI takes `--effort`. */
+/** The agent CLIs, in menu order: their labels, binaries and whether the CLI takes an effort. */
 export interface AiProviderMeta {
   id: CommitProvider;
   label: string;
@@ -11,7 +11,7 @@ export interface AiProviderMeta {
 }
 export const AI_PROVIDERS: AiProviderMeta[] = [
   { id: 'opencode', label: 'OpenCode', binary: 'opencode', effort: true },
-  { id: 'claude', label: 'Claude Code', binary: 'claude', effort: false },
+  { id: 'claude', label: 'Claude Code', binary: 'claude', effort: true },
   { id: 'cursor', label: 'Cursor', binary: 'agent', effort: false },
   { id: 'antigravity', label: 'Antigravity', binary: 'agy', effort: true },
   { id: 'codex', label: 'Codex', binary: 'codex', effort: true },
@@ -31,9 +31,22 @@ export function providerOrder(order: string[]): CommitProvider[] {
 
 type Listener = (result: GenerateFinished) => void;
 const listeners = new Map<string, Set<Listener>>();
+// Answers that arrived before their starter subscribed: a run that cannot start ends before
+// `generate_message_start` returns.
+const early = new Map<string, GenerateFinished>();
 
-/** Calls back with one generation run's answer; returns the unsubscribe. */
+/** Calls back with one generation run's answer (later, even when it is already here); returns
+ * the unsubscribe. */
 export function onGenerateFinished(runId: string, listener: Listener): () => void {
+  const done = early.get(runId);
+  if (done) {
+    early.delete(runId);
+    let live = true;
+    queueMicrotask(() => live && listener(done));
+    return () => {
+      live = false;
+    };
+  }
   const set = listeners.get(runId) ?? new Set();
   set.add(listener);
   listeners.set(runId, set);
@@ -43,7 +56,9 @@ export function onGenerateFinished(runId: string, listener: Listener): () => voi
   };
 }
 
-/** `generate-finished`: to whoever started that run, if still around. */
+/** `generate-finished`: to whoever started that run, or kept until it subscribes. */
 export function applyGenerateFinished(result: GenerateFinished): void {
-  listeners.get(result.runId)?.forEach((l) => l(result));
+  const set = listeners.get(result.runId);
+  if (set) set.forEach((l) => l(result));
+  else early.set(result.runId, result);
 }

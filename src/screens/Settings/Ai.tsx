@@ -222,19 +222,21 @@ function ProviderEditor({
           />
           <span className={styles.settingHint}>{t('settings.aiModelHint')}</span>
         </label>
-        <label className={styles.aiEditorField}>
-          <span className={styles.settingName}>{t('settings.aiEffort')}</span>
-          <Input
-            mono
-            size={36}
-            placeholder={t('settings.aiDefault')}
-            aria-label={t('settings.aiEffort')}
-            value={effort}
-            onChange={setEffort}
-            onKeyDown={submitOnKey}
-          />
-          <span className={styles.settingHint}>{t('settings.aiEffortHint')}</span>
-        </label>
+        {meta.effort && (
+          <label className={styles.aiEditorField}>
+            <span className={styles.settingName}>{t('settings.aiEffort')}</span>
+            <Input
+              mono
+              size={36}
+              placeholder={t('settings.aiDefault')}
+              aria-label={t('settings.aiEffort')}
+              value={effort}
+              onChange={setEffort}
+              onKeyDown={submitOnKey}
+            />
+            <span className={styles.settingHint}>{t('settings.aiEffortHint')}</span>
+          </label>
+        )}
         <div className={styles.aiEditorField}>
           <span className={styles.settingName}>{t('settings.aiPrompt')}</span>
           <div className={styles.aiPromptWrap}>

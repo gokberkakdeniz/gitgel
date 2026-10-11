@@ -13,7 +13,7 @@ import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
 import { startGitAction, showRunToast, useRuns } from '../../scripts/runs';
-import { onGenerateFinished, providerOrder } from '../../lib/ai';
+import { onGenerateFinished, providerLabel, providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { conflictOf } from '../../sync/operation';
 import { OperationBanner } from '../../sync/OperationUi';
@@ -217,11 +217,11 @@ export function History({ repoId, rev, backLabel }: Props) {
     // From the menu: generate with the picked provider at once.
     const active = forced ?? provider;
     if (!enabledProviders.includes(active)) {
-      useUi.getState().showToast({ status: 'failed', message: t('history.providerOff', { provider: active }) });
+      useUi.getState().showToast({ status: 'failed', message: t('history.providerOff', { provider: providerLabel(active) }) });
       return;
     }
     if (aiStatus && !aiStatus.some((s) => s.id === active && s.installed)) {
-      useUi.getState().showToast({ status: 'failed', message: t('history.providerMissing', { provider: active }) });
+      useUi.getState().showToast({ status: 'failed', message: t('history.providerMissing', { provider: providerLabel(active) }) });
       return;
     }
     // The answer may land on another branch: only this form takes it.

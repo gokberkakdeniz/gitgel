@@ -21,7 +21,7 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::{refs, worktrees};
 use crate::model::{
-    CommandVar, entry_key, EntryRef, ScriptConfig, ScriptFolder, ScriptOutputChunk, ScriptRun,
+    entry_key, CommandVar, EntryRef, ScriptConfig, ScriptFolder, ScriptOutputChunk, ScriptRun,
     ScriptRunStatus, UpdateReason,
 };
 use crate::scan;

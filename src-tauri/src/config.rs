@@ -228,7 +228,10 @@ mod tests {
         assert_eq!(config.settings.language, crate::model::Language::System);
         assert_eq!(config.settings.date_format, "MMM d, yyyy");
         assert_eq!(config.settings.time_format, "HH:mm");
-        assert_eq!(config.settings.number_format, crate::model::NumberFormat::PlainComma);
+        assert_eq!(
+            config.settings.number_format,
+            crate::model::NumberFormat::PlainComma
+        );
         assert!(!config.settings.prefer_absolute_dates);
         assert_eq!(config.settings.diff_tab_size, 4);
         assert_eq!(config.settings.appearance, crate::model::Appearance::System);

@@ -217,8 +217,8 @@ gitgel/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
    ├─ capabilities/default.json
    └─ src/
-       ├─ main.rs  lib.rs          # lib.rs: run(), plugins, command registration
-      ├─ ai.rs                  # commit message generation (§15 "Generate message")
+      ├─ main.rs  lib.rs          # lib.rs: run(), plugins, command registration
+      ├─ ai.rs                    # commit message generation (§15 "Generate message")
       ├─ menu.rs                  # app menu: Settings…, Check for Updates…, View › Font Size, Help items
       ├─ logs.rs                  # Help › Show Logs in Finder
       ├─ appearance.rs            # main window theme and background; shown by the page (`reveal_window`)
@@ -1018,8 +1018,8 @@ Layout:
   (padding 16px 10px, 1px `border.row` on its right) and the chosen section's pane (scrolls on
   its own; content max 760px, padding 28px 32px 40px, groups 28px apart). Sections: 34px rows
   (radius 8, 13px, 16px muted icon, gap 10): **General** (sliders), **Repositories** (folder icon,
-   repo count in mono 12 muted on the right), **Scripts** (prompt icon, script count; §14),
-   **AI** (bolt icon), **Prompts** (help), **Shortcuts** (keyboard). The chosen one:
+  repo count in mono 12 muted on the right), **Scripts** (prompt icon, script count; §14),
+  **AI** (bolt icon), **Prompts** (help), **Shortcuts** (keyboard). The chosen one:
   `bg.sidebarActive`, `text.strong` 500, `aria-current="page"`; others hover `bg.sunken`.
   Settings opens on the section shown last (General at first; kept for the session).
   The sidebar's "N repositories" row and every "path not found" link open Repositories; the
@@ -1110,11 +1110,12 @@ Layout:
   - One `List` row per provider, in menu order (drag the handle to reorder; ↑ / ↓ on the
     focused handle): a `bolt` tile, its 500-weight name, a danger sm pill "Not installed" when
     its CLI is missing, a neutral sm pill "off" when switched off, then a `Switch` (off hides
-    it from the commit menu) and ✎. While its     CLI is missing the `Switch` and ✎ are disabled;
+    it from the commit menu) and ✎. While its CLI is missing the `Switch` and ✎ are disabled;
     the handle never is. ✎ opens an "Edit <provider>" modal: a 36px mono
     `Input` "Model" (placeholder `Default`; empty = the CLI's own default), a 36px mono
-    `Input` "Effort" (placeholder `Default`; empty = default; free text — the names are the
-    model provider's own, e.g. opencode variants like `max`), and a growing mono textarea
+    `Input` "Effort" (only for the CLIs that take one, not Cursor; placeholder `Default`;
+    empty = default; free text — the names are the model provider's own, e.g. opencode
+    variants like `max`), and a growing mono textarea
     "Prompt" (the effective prompt: the provider's own when untouched) with a
     "+ Variable" menu (`{branch}`, `{repo}`, `{stat}`, `{patch}`, `{examples}`; inserted at
     the cursor); Cancel / primary "Save". Saved on Save, trimmed; an empty model, prompt or
@@ -2547,12 +2548,12 @@ git action in the repository.
   Claude denies anything that would prompt, cursor without `--force`). Past 5.5 minutes the run is stopped (agy's own print timeout is
   5 minutes). The answer arrives as `generate-finished`: the provider's text (opencode's
   `text` events) split into summary (first line) and description (the rest), or an error; a
-  stopped run stays quiet. The run rescans nothing and toasts nothing at its end.
+  stopped run stays quiet; blank lines inside the description are kept. The run rescans nothing and toasts nothing at its end.
   The provider, model, effort and prompt template come from Settings › AI: `--model
   "$GITGEL_MODEL"` when a model is set (all five), `--variant "$GITGEL_EFFORT"` for opencode,
-  `--effort "$GITGEL_EFFORT"` for Antigravity and `-c
-  "model_reasoning_effort=\"$GITGEL_EFFORT\""` for Codex when an effort is set (free text, so
-  quotes and line breaks are refused). The template fills `{branch}`, `{repo}`, `{stat}`,
+  `--effort "$GITGEL_EFFORT"` for Claude Code and Antigravity and `-c
+  "model_reasoning_effort=\"$GITGEL_EFFORT\""` for Codex when an effort is set (free text;
+  for Codex quotes, backslashes and line breaks are refused). The template fills `{branch}`, `{repo}`, `{stat}`,
   `{patch}` and `{examples}`; without one of its own the built-in default is sent. A
   provider switched off is refused too.
 
