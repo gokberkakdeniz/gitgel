@@ -519,11 +519,12 @@ inputs and textareas (the diff has its own menu, §5 Review).
 ### Sidebar (`Sidebar.dc.html`)
 
 - 260px, `bg.sidebar`, right border `border.row`. Its right border is a drag handle (8px
-   hit area, `col-resize`; a 2px accent line on hover, focus and drag); 200–400px, ←/→ by
-   16px when focused, double-click resets. The width is remembered on this machine
-   (`localStorage`); whether the sidebar is shown is remembered in the config
-   (`settings.sidebarVisible`). Review and History leave it as it is; with it hidden the
-   header shows a show-sidebar button next to the traffic lights.
+  hit area, `col-resize`; a 2px accent line on hover, focus and drag); 200–400px, ←/→ by
+  16px when focused, double-click resets. The width is remembered on this machine
+  (`localStorage`); whether the sidebar is shown is remembered in the config
+  (`settings.sidebarVisible`, also cached in `localStorage` so a launch draws it right before
+  the config loads). Review and History leave it as it is; with it hidden the header shows a
+  show-sidebar button next to the traffic lights.
 - **Top row** (52px, drag region): traffic-light space, 28px icon buttons: sidebar toggle, Back,
   Forward (disabled colour `#5c5a55` when history does not allow it).
 - **Nav** (40px rows, radius 10, 14px; active `bg.sidebarActive` + `text.strong`):

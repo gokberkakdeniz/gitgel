@@ -62,8 +62,20 @@ interface UiState {
 
 let toastId = 0;
 
+/** Where `lib/sidebar.ts` caches the sidebar's visibility, so a launch draws it right before
+ * the config arrives. */
+export const SIDEBAR_CACHE_KEY = 'gitgel.sidebarVisible';
+
+function cachedSidebarVisible(): boolean {
+  try {
+    return localStorage.getItem(SIDEBAR_CACHE_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
 export const useUi = create<UiState>()((set) => ({
-  sidebarVisible: true,
+  sidebarVisible: cachedSidebarVisible(),
   branchesFilter: '',
   selectedKeys: [],
   draftProject: null,
