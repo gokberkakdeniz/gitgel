@@ -297,7 +297,6 @@
   "history.commitTo": "Commit to {$rev}",
   "history.genWith": "Generate commit message with {$provider}",
   "history.askingMsg": "Asking for a commit message",
-  "history.pickProvider": "Select different provider",
   "history.turnOnFirst": "Turn on a provider first",
   "history.genWithMenu": "Generate with",
   "history.committing": "Committing…",

@@ -80,7 +80,7 @@ export function Ai({ config }: { config: Config }) {
               },
               handle: { 'aria-label': t('settings.aiMove', { name: p.label }), ...handleProps(p.id) },
               lead: 'tile',
-              icon: 'bolt',
+              icon: 'sparkles',
               title: p.label,
               titleWeight: 500,
               off,

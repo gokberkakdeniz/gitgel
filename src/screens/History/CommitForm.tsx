@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
-import { BoltIcon, MoreVerticalIcon, SpinnerIcon } from '../../components/icons';
+import { SparklesIcon, SpinnerIcon } from '../../components/icons';
 import { Input } from '../../components/Input';
 import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
 import { Popover } from '../../components/Popover';
@@ -13,8 +13,8 @@ import styles from './CommitForm.module.css';
 
 /** The commit form under History's list while Uncommitted is picked (W1a): summary, description
  * and the button; ⌘↵ in either field commits. Locked while the commit (and its hooks) runs.
- * The bolt asks the default provider's CLI for a message for the checked files (SPEC §15); its
- * menu (⋮ or right-click) generates with another one. */
+ * The ✦ at the summary's end asks the default provider's CLI for a message for the checked
+ * files (SPEC §15); right-click on it generates with another one. */
 export function CommitForm({
   rev,
   summary,
@@ -40,20 +40,20 @@ export function CommitForm({
   committing: boolean;
   /** Why Commit cannot run besides an empty summary or no files; null when nothing blocks it. */
   blocked: string | null;
-  /** The bolt's provider: the menu's topmost; null when the menu is empty. */
+  /** The ✦'s provider: the menu's topmost; null when the menu is empty. */
   provider: CommitProvider | null;
   /** The menu's providers: switched on and installed, in menu order. */
   providers: CommitProvider[];
-  /** Why the bolt cannot run while `provider` is null. */
+  /** Why the ✦ cannot run while `provider` is null. */
   noProvider: string;
   generating: boolean;
-  /** The control shows when AI is on (Settings › AI). */
+  /** The ✦ shows when AI is on (Settings › AI). */
   aiEnabled: boolean;
   onSummary: (value: string) => void;
   onDescription: (value: string) => void;
   onCommit: () => void;
-  /** The bolt generates with the default; a menu pick generates with the picked one at
-   * once, leaving the default alone. */
+  /** The ✦ generates with the default; a menu pick generates with the picked one at once,
+   * leaving the default alone. */
   onGenerate: (provider?: CommitProvider) => void;
 }) {
   const ready = summary.trim() !== '' && files > 0 && !blocked;
@@ -85,6 +85,25 @@ export function CommitForm({
         aria-label={t('history.summaryLabel')}
         disabled={committing}
         onKeyDown={submitOnKey}
+        rightText={
+          aiEnabled && (
+            <IconButton
+              size={24}
+              aria-label={generateWith}
+              title={generating ? t('history.askingMsg') : generateWith}
+              active={menu !== null}
+              disabled={!canGenerate || !provider}
+              onClick={() => onGenerate()}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                if (providers.length > 0) setMenu(e.currentTarget.getBoundingClientRect());
+              }}
+              className={styles.generate}
+            >
+              {generating ? <SpinnerIcon size={13} className={styles.spin} /> : <SparklesIcon size={14} />}
+            </IconButton>
+          )
+        }
       />
       <textarea
         aria-label={t('history.descLabel')}
@@ -95,66 +114,34 @@ export function CommitForm({
         onChange={(e) => onDescription(e.target.value)}
         onKeyDown={submitOnKey}
       />
-      <div className={styles.actions}>
-        {aiEnabled && (
-          <div className={styles.split}>
-            <IconButton
-              size={32}
-              aria-label={generateWith}
-              title={generating ? t('history.askingMsg') : generateWith}
-              active={menu !== null}
-              disabled={!canGenerate || !provider}
-              onClick={() => onGenerate()}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                if (providers.length > 0) setMenu(e.currentTarget.getBoundingClientRect());
-              }}
-              className={styles.splitMain}
-            >
-              {generating ? <SpinnerIcon size={14} className={styles.spin} /> : <BoltIcon size={14} />}
-            </IconButton>
-            <IconButton
-              size={32}
-              aria-label={t('history.pickProvider')}
-              title={provider ? t('history.pickProvider') : noProvider}
-              active={menu !== null}
-              disabled={!provider}
-              onClick={(e) => setMenu(menu ? null : e.currentTarget.getBoundingClientRect())}
-              className={styles.splitMenu}
-            >
-              <MoreVerticalIcon size={15} />
-            </IconButton>
-          </div>
-        )}
-        {menu && (
-          <Popover anchorRect={menu} width={220} above onClose={() => setMenu(null)}>
-            <Menu aria-label={t('history.genWithMenu')}>
-              <MenuLabel>{t('history.genWithMenu')}</MenuLabel>
-              {providers.map((id) => (
-                <MenuItem
-                  key={id}
-                  onSelect={() => {
-                    onGenerate(id);
-                    setMenu(null);
-                  }}
-                >
-                  {providerLabel(id)}
-                </MenuItem>
-              ))}
-            </Menu>
-          </Popover>
-        )}
-        <Button
-          type="submit"
-          variant="primary"
-          className={styles.commit}
-          icon={committing ? 'spinner' : undefined}
-          disabled={!ready || committing}
-          title={why}
-        >
-          {committing ? t('history.committing') : files > 0 ? t('history.commitFiles', { ...cnt(files) }) : t('history.commitBtn')}
-        </Button>
-      </div>
+      {menu && (
+        <Popover anchorRect={menu} width={220} alignRight onClose={() => setMenu(null)}>
+          <Menu aria-label={t('history.genWithMenu')}>
+            <MenuLabel>{t('history.genWithMenu')}</MenuLabel>
+            {providers.map((id) => (
+              <MenuItem
+                key={id}
+                onSelect={() => {
+                  onGenerate(id);
+                  setMenu(null);
+                }}
+              >
+                {providerLabel(id)}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Popover>
+      )}
+      <Button
+        type="submit"
+        variant="primary"
+        className={styles.commit}
+        icon={committing ? 'spinner' : undefined}
+        disabled={!ready || committing}
+        title={why}
+      >
+        {committing ? t('history.committing') : files > 0 ? t('history.commitFiles', { ...cnt(files) }) : t('history.commitBtn')}
+      </Button>
     </form>
   );
 }

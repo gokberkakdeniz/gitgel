@@ -320,7 +320,7 @@ pub fn start(
         run::Launch {
             script_id: format!("{AI_PREFIX}generate"),
             name: format!("Generate with {}", provider.tool()),
-            icon: "bolt".into(),
+            icon: "sparkles".into(),
             entry_key: entry_key(
                 &repo_id,
                 entry.branch.as_deref(),

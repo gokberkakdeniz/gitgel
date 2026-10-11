@@ -1019,7 +1019,7 @@ Layout:
   its own; content max 760px, padding 28px 32px 40px, groups 28px apart). Sections: 34px rows
   (radius 8, 13px, 16px muted icon, gap 10): **General** (sliders), **Repositories** (folder icon,
   repo count in mono 12 muted on the right), **Scripts** (prompt icon, script count; §14),
-  **AI** (bolt icon), **Prompts** (help), **Shortcuts** (keyboard). The chosen one:
+  **AI** (sparkles icon), **Prompts** (help), **Shortcuts** (keyboard). The chosen one:
   `bg.sidebarActive`, `text.strong` 500, `aria-current="page"`; others hover `bg.sunken`.
   Settings opens on the section shown last (General at first; kept for the session).
   The sidebar's "N repositories" row and every "path not found" link open Repositories; the
@@ -1105,10 +1105,10 @@ Layout:
   - "Generate commit message with AI": a `Switch`, on by default (`settings.ai.enabled`). Off
     hides the commit form's generate control; a run asked for meanwhile is refused.
   - No default provider is stored: the default is the topmost switched-on and installed
-    provider in menu order (reorder with the handle to change it); the commit form's bolt generates
-    with it.
+    provider in menu order (reorder with the handle to change it); the commit form's ✦
+    generates with it.
   - One `List` row per provider, in menu order (drag the handle to reorder; ↑ / ↓ on the
-    focused handle): a `bolt` tile, its 500-weight name, a danger sm pill "Not installed" when
+    focused handle): a `sparkles` tile, its 500-weight name, a danger sm pill "Not installed" when
     its CLI is missing, a neutral sm pill "off" when switched off, then a `Switch` (off hides
     it from the commit menu) and ✎. While its CLI is missing the `Switch` and ✎ are disabled;
     the handle never is. ✎ opens an "Edit <provider>" modal: a 36px mono
@@ -2539,7 +2539,7 @@ git action in the repository.
   message again. Stopping the run does not open it.
 - **Generate message**: `generate_message_start` (`entry`, the checked `include`
   paths, `provider`: opencode, claude, cursor, antigravity or codex) asks that agent CLI for a
-  commit message for the checked files, as a run (`ai:generate`, `bolt` icon) in the entry's
+  commit message for the checked files, as a run (`ai:generate`, `sparkles` icon) in the entry's
   worktree: a running toast ("Running "Generate with <provider>"…") that opens its output
   panel on click, stoppable there. The prompt is built from git2 reads only: the checked
   files' patch (cut at ~12k characters) and up to 15 recent subjects from the branch, those
@@ -2786,15 +2786,14 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   no summary, no file checked, or merge conflicts, each saying why in the tooltip). ⌘↵ in either
   field commits. While the commit runs (hooks included) the form is locked and the button reads
   "Committing…" with a spinner.
-  - **Generate message**: left of the Commit button one joined split control: a 32px `bolt`
+  - **Generate message**: a 24px `sparkles` (✦) icon button at the end of the summary field
     (tooltip `Generate commit message with <provider>`, the default: the topmost switched-on
-    and installed provider in menu order) that fills the summary and description,
-    which stay editable, and a 32px `more-vertical` (⋮) opening its menu (the switched-on
-    providers in menu order; switched off or missing ones are not listed at all);
-    picking one generates with it at once, leaving the default alone; right-click on the bolt
-    works too. With no provider to list both are disabled, their tooltip saying why ("Turn on
-    a provider first", or "<provider> is not installed"). While it runs the bolt is a
-    spinner, and a running toast opens the generation's output panel on click, so a slow
+    and installed provider in menu order) that fills the summary and description, which stay
+    editable. Right-click on it opens its menu (the switched-on providers in menu order;
+    switched off or missing ones are not listed at all); picking one generates with it at
+    once, leaving the default alone. With no provider to list it is disabled, its tooltip
+    saying why ("Turn on a provider first", or "<provider> is not installed"). While it runs
+    the ✦ is a spinner, and a running toast opens the generation's output panel on click, so a slow
     provider can be watched (and stopped); a failure shows a failed toast and leaves the form
     alone.
   - **Boxes:** a file row's `Checkbox` includes it. Above the files a 28px row has a `Checkbox` (mixed

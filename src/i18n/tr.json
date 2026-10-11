@@ -371,7 +371,6 @@
   "history.commitTo": "{$rev}'e Commit",
   "history.genWith": "{$provider} ile commit mesajı oluştur",
   "history.askingMsg": "Commit mesajı isteniyor",
-  "history.pickProvider": "Farklı sağlayıcı seç",
   "history.turnOnFirst": "Önce bir sağlayıcı aç",
   "history.genWithMenu": "Şununla oluştur",
   "history.committing": "Commit ediliyor…",

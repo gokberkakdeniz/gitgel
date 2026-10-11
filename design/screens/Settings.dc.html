@@ -386,10 +386,10 @@ class Component extends DCLogic {
           { icon: 'edit', ariaLabel: 'Edit Script', href: 'FlowN6.dc.html' }, x('Remove script')] };
     });
     // Settings › AI (SPEC §5): one row per agent CLI in menu order (the topmost switched-on and
-    // installed one is the bolt's default); a missing CLI has its Switch and ✎ disabled.
+    // installed one is the commit form's ✦ default); a missing CLI has its Switch and ✎ disabled.
     out.aiItems = [['OpenCode', 'on'], ['Claude Code', 'on'], ['Cursor', 'missing'], ['Antigravity', 'off'], ['Codex', 'on']].map(function (p) {
       var off = p[1] === 'off', gone = p[1] === 'missing';
-      return { handle: true, lead: 'tile', icon: 'bolt', title: p[0], titleWeight: '500', off: off,
+      return { handle: true, lead: 'tile', icon: 'sparkles', title: p[0], titleWeight: '500', off: off,
         badges: (gone ? [{ label: 'Not installed', tone: 'danger' }] : []).concat(off ? [{ label: 'off', tone: 'neutral' }] : []),
         actions: [{ kind: 'switch', checked: !off, disabled: gone, ariaLabel: p[0] + ' on', title: off ? 'Off: in no menu. Switch on to show it' : 'On: shown in the commit menu. Switch off to hide it' },
           { icon: 'edit', ariaLabel: 'Edit ' + p[0], disabled: gone, title: gone ? 'Not installed' : '' }] };

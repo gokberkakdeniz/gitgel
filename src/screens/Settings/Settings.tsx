@@ -30,7 +30,7 @@ const SECTIONS: SettingsNavSection<SettingsSection>[] = [
   { id: 'appearance', label: 'settings.navAppearance', icon: 'sliders' },
   { id: 'repositories', label: 'settings.navRepositories', icon: 'folder' },
   { id: 'scripts', label: 'settings.navScripts', icon: 'prompt' },
-  { id: 'ai', label: 'settings.aiHeading', icon: 'bolt' },
+  { id: 'ai', label: 'settings.aiHeading', icon: 'sparkles' },
   { id: 'prompts', label: 'settings.navPrompts', icon: 'help' },
   { id: 'shortcuts', label: 'settings.navShortcuts', icon: 'keyboard' },
 ];

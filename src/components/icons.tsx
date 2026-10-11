@@ -518,6 +518,16 @@ export function BoltIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   );
 }
 
+/** AI: a large and a small four-point star. */
+export function SparklesIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.6} className={className}>
+      <path d="M10 6c.6 4 3 6.4 7 7-4 .6-6.4 3-7 7-.6-4-3-6.4-7-7 4-.6 6.4-3 7-7Z" />
+      <path d="M18 3c.3 1.8 1.2 2.7 3 3-1.8.3-2.7 1.2-3 3-.3-1.8-1.2-2.7-3-3 1.8-.3 2.7-1.2 3-3Z" />
+    </Svg>
+  );
+}
+
 /** An open arc; spin it with an animation in the caller's CSS. */
 export function SpinnerIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   return (
@@ -571,6 +581,7 @@ const ICONS = {
   rocket: RocketIcon,
   bug: BugIcon,
   bolt: BoltIcon,
+  sparkles: SparklesIcon,
   gear: GearIcon,
   sliders: SlidersIcon,
   tune: TuneIcon,

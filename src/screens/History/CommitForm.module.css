@@ -37,30 +37,13 @@
   opacity: 0.6;
 }
 
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-/* One joined control: bolt generates, ⋮ opens the provider menu. */
-.split {
-  display: flex;
-  flex-shrink: 0;
-}
-
-.splitMain {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.splitMenu {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-left: 0;
+/* The ✦ inside the summary field: generates the message. */
+.generate {
+  margin-right: -2px;
 }
 
 .commit {
-  flex: 1;
+  width: 100%;
   justify-content: center;
 }
 
