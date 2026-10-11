@@ -167,7 +167,7 @@ describe('a generation run', () => {
 });
 
 describe('a git action', () => {
-  it('keeps the name it was started with, in the UI language, when its run ends', async () => {
+  it('says what it does while running and keeps its UI-language name when it ends', async () => {
     const { applyRunExited, startGitAction, useRuns } = await import('./runs');
     const run = {
       runId: 'run_push',
@@ -178,8 +178,10 @@ describe('a git action', () => {
       lastLine: '',
       repoLabel: 'gitgel / master',
     } as never;
-    await startGitAction('Gönder', async () => run);
+    const { useUi } = await import('../state/ui');
+    await startGitAction('Gönder', 'Gönderiliyor…', async () => run);
     expect(useRuns.getState().runs.run_push.name).toBe('Gönder');
+    expect(useUi.getState().toast?.message).toBe('Gönderiliyor…');
     applyRunExited({ ...(run as object), status: 'exited', exitCode: 0 } as never);
     expect(useRuns.getState().runs.run_push.name).toBe('Gönder');
   });

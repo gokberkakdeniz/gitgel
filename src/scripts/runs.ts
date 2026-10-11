@@ -34,13 +34,17 @@ interface RunsState {
   showOutput: (runId: string | null) => void;
 }
 
-// The names git actions and generations show in the UI language; the backend names their runs
-// in English, and every later copy of the run (its end) keeps the name given here.
+// How git actions and generations show in the UI language: the name (the output panel, the
+// end toast; the backend names their runs in English, and every later copy of the run keeps
+// the name given here) and what the running toast says ("Pushing…" rather than a script's
+// "Running “Push”…").
 const runNames = new Map<string, string>();
+const runningTexts = new Map<string, string>();
 
-/** Shows run `runId` as `name` from now on. */
-export function nameRun(runId: string, name: string): void {
+/** Shows run `runId` as `name`, its running toast saying `running`. */
+export function nameRun(runId: string, name: string, running: string): void {
   runNames.set(runId, name);
+  runningTexts.set(runId, running);
   const run = useRuns.getState().runs[runId];
   if (run) useRuns.getState().put(run);
 }
@@ -208,12 +212,13 @@ export function gitActionAgain(runId: string): GitActionAgain | undefined {
  * no Run again. `name` is for the toast when it cannot start. */
 export async function startGitAction(
   name: string,
+  running: string,
   start: () => Promise<ScriptRun>,
   show: GitActionShow = {},
 ): Promise<void> {
   try {
     const run = await start();
-    nameRun(run.runId, name);
+    nameRun(run.runId, name, running);
     gitActionShow.set(run.runId, show);
     show.onStart?.(run.runId);
     const runs = useRuns.getState();
@@ -241,7 +246,7 @@ export function showRunToast(run: ScriptRun): void {
   if (run.status === 'running') {
     useUi.getState().showToast({
       status: 'running',
-      message: t('scripts.running', { name: run.name }),
+      message: runningTexts.get(run.runId) ?? t('scripts.running', { name: run.name }),
       sub: run.repoLabel,
       ...output,
     });

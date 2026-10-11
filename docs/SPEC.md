@@ -2206,8 +2206,9 @@ export interface ScriptRun {
 - A pick: inputs or `askFirst` → the run dialog (O); otherwise it runs at once. With `openOutput`
   its output panel opens as it starts. A script already running for that entry is not started
   twice: its output panel opens instead.
-- Every run shows a toast. While running: spinner, "Running “<name>”…", mono `repo / branch` sub
-  line; it stays until the run ends. Then ✓ "“<name>” finished" or ✕ "“<name>” failed · exit
+- Every run shows a toast. While running: spinner, "Running “<name>”…" (a git action or a
+  message generation says what it does instead: "Pushing…", "Committing…", "Generating a commit
+  message with <provider>…"), mono `repo / branch` sub line; it stays until the run ends. Then ✓ "“<name>” finished" or ✕ "“<name>” failed · exit
   <code>" (or "· stopped") with the last output line as the sub line (`repo / branch` when there
   is none). Clicking the toast opens the run's output panel. While that panel is open the run has
   no toast (the panel's pill says the same); closing the panel while it still runs brings the
@@ -2532,7 +2533,7 @@ changed, deleted; a rename's old path too), staged files left unchecked are unst
 changed. Refused before running: an empty summary, no file, an entry that is not checked out, another
 git action in the repository.
 
-- **Running** (`HistH7`): the run toast “Running “Commit”…” (sub `repo / branch`); a click opens the
+- **Running** (`HistH7`): the run toast “Committing…” (sub `repo / branch`); a click opens the
   output panel with the hooks' output.
 - **Failed** (`HistH8`): the output panel opens by itself. Its footer, besides Close and Copy, has
   the buttons "Commit without hooks"
@@ -2541,7 +2542,7 @@ git action in the repository.
 - **Generate message**: `generate_message_start` (`entry`, the checked `include`
   paths, `provider`: opencode, claude, cursor, antigravity or codex) asks that agent CLI for a
   commit message for the checked files, as a run (`ai:generate`, `sparkles` icon) in the entry's
-  worktree: a running toast ("Running "Generate commit message with <provider>"…") that opens its output
+  worktree: a running toast ("Generating a commit message with <provider>…") that opens its output
   panel on click, stoppable there. The prompt is built from git2 reads only: the checked
   files' patch (cut at ~12k characters) and up to 15 recent subjects from the branch, those
   touching the checked files first. The CLI's fixed command carries the prompt in

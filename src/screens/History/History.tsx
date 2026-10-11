@@ -182,7 +182,7 @@ export function History({ repoId, rev, backLabel }: Props) {
     if (!entryRef) return;
     // Retry and Commit Without Hooks send the same files and message again.
     const again = (noVerify: boolean) => commitNow({ ...files, noVerify });
-    void startGitAction(t('history.commitBtn'), () => gitCommit(entryRef, files), {
+    void startGitAction(t('history.commitBtn'), t('history.committing'), () => gitCommit(entryRef, files), {
       openOnFail: true,
       done: t('history.committedTo', { rev }),
       onStart: (runId) => {
@@ -239,7 +239,11 @@ export function History({ repoId, rev, backLabel }: Props) {
       .then((run) => {
         genRun.current = run.runId;
         const runs = useRuns.getState();
-        nameRun(run.runId, t('history.genWith', { provider: providerLabel(active) }));
+        nameRun(
+          run.runId,
+          t('history.genWith', { provider: providerLabel(active) }),
+          t('history.generating', { provider: providerLabel(active) }),
+        );
         runs.put(run);
         showRunToast(useRuns.getState().runs[run.runId]);
         const off = onGenerateFinished(run.runId, (r) => {

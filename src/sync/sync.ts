@@ -78,29 +78,31 @@ function refOf(t: SyncTarget): EntryRef {
 
 // A failed sync opens its output panel: git says there what went wrong (or asks for a password).
 export function fetchRepo(t: SyncTarget): Promise<void> {
-  return startGitAction(translate('sync.fetchBtn'), () => gitFetch(t.repoId), {
+  return startGitAction(translate('sync.fetchBtn'), translate('sync.fetching'), () => gitFetch(t.repoId), {
     openOnFail: true,
     done: translate('sync.fetched', { repo: t.repoName }),
   });
 }
 
 export function pullBranch(t: SyncTarget, rebase = false): Promise<void> {
-  return startGitAction(rebase ? translate('history.pullRebase') : translate('sync.pullBtn'), () => gitPull(refOf(t), rebase), {
-    openOnFail: true,
-    done: translate('sync.pulled', { branch: t.branch ?? '' }),
-  });
+  return startGitAction(
+    rebase ? translate('history.pullRebase') : translate('sync.pullBtn'),
+    rebase ? translate('sync.pullingRebase') : translate('sync.pulling'),
+    () => gitPull(refOf(t), rebase),
+    { openOnFail: true, done: translate('sync.pulled', { branch: t.branch ?? '' }) },
+  );
 }
 
 /** The branch rebased on its base, fresh from the base's remote when it has one (SPEC §15). */
 export function rebaseOnBase(t: SyncTarget, base: string): Promise<void> {
-  return startGitAction(translate('sync.rebaseOn', { base }), () => gitRebaseOnBase(refOf(t)), {
+  return startGitAction(translate('sync.rebaseOn', { base }), translate('sync.rebasingOn', { base }), () => gitRebaseOnBase(refOf(t)), {
     openOnFail: true,
     done: translate('sync.rebased', { branch: t.branch ?? '', base }),
   });
 }
 
 export function pushBranch(t: SyncTarget): Promise<void> {
-  return startGitAction(translate('sync.pushBtn'), () => gitPush(refOf(t)), {
+  return startGitAction(translate('sync.pushBtn'), translate('sync.pushing'), () => gitPush(refOf(t)), {
     openOnFail: true,
     done: translate('sync.pushed', { branch: t.branch ?? '' }),
   });
@@ -108,7 +110,7 @@ export function pushBranch(t: SyncTarget): Promise<void> {
 
 /** A diverged branch over its remote (`--force-with-lease`: only what the last fetch saw). */
 export function forcePushBranch(t: SyncTarget): Promise<void> {
-  return startGitAction(translate('history.forcePush'), () => gitPush(refOf(t), true), {
+  return startGitAction(translate('history.forcePush'), translate('sync.forcePushing'), () => gitPush(refOf(t), true), {
     openOnFail: true,
     done: translate('sync.forcePushed', { branch: t.branch ?? '' }),
   });

@@ -21,18 +21,21 @@ export function askDrop(stash: ReviewStash): void {
 }
 
 export function dropStash(st: ReviewStash): Promise<void> {
-  return startGitAction(t('stash.actDrop', { stash: `stash@{${st.index}}` }), () =>
+  const stash = `stash@{${st.index}}`;
+  return startGitAction(t('stash.actDrop', { stash }), t('stash.dropping', { stash }), () =>
     stashDrop(st.repoId, st.index, st.sha),
   );
 }
 
 /** Apply (or pop) into the worktree an entry is checked out in. */
 export function applyStash(st: ReviewStash, target: EntrySummary, pop: boolean): Promise<void> {
-  const name = t(pop ? 'stash.actPop' : 'stash.actApply', { stash: `stash@{${st.index}}` });
-  return startGitAction(name, () => stashApply(st.repoId, st.index, st.sha, target.worktreePath ?? '', pop));
+  const stash = `stash@{${st.index}}`;
+  const name = t(pop ? 'stash.actPop' : 'stash.actApply', { stash });
+  const running = t(pop ? 'stash.popping' : 'stash.applying', { stash });
+  return startGitAction(name, running, () => stashApply(st.repoId, st.index, st.sha, target.worktreePath ?? '', pop));
 }
 
 /** One stash per entry, one after another (P4). */
 export function pushStashes(entries: StashPush[], message: string): Promise<void> {
-  return startGitAction(t('stash.dialogTitle'), () => stashPush(entries, message));
+  return startGitAction(t('stash.dialogTitle'), t('stash.stashing'), () => stashPush(entries, message));
 }

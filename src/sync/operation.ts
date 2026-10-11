@@ -146,19 +146,23 @@ export function continueOperation(e: EntrySummary, op: Operation): Promise<void>
       : t('sync.doneRevertPlain', { branch }),
   }[op.kind];
   // A next commit that conflicts too ends the run with an error: git says so in the output.
-  return startGitAction(t('sync.actContinue', { title: operationTitle(op) }), () => gitOperation(refOf(e), false), {
-    openOnFail: true,
-    done,
-  });
+  return startGitAction(
+    t('sync.actContinue', { title: operationTitle(op) }),
+    t('sync.continuing', { verb: operationVerb(op) }),
+    () => gitOperation(refOf(e), false),
+    { openOnFail: true, done },
+  );
 }
 
 export function abortOperation(e: EntrySummary, op: Operation): Promise<void> {
   const branch = e.branch ?? e.shortSha ?? '';
   const done = t('sync.doneAborted', { verb: operationVerb(op), branch });
-  return startGitAction(t('sync.actAbort', { title: operationTitle(op) }), () => gitOperation(refOf(e), true), {
-    openOnFail: true,
-    done,
-  });
+  return startGitAction(
+    t('sync.actAbort', { title: operationTitle(op) }),
+    t('sync.aborting', { verb: operationVerb(op) }),
+    () => gitOperation(refOf(e), true),
+    { openOnFail: true, done },
+  );
 }
 
 interface OperationUi {
