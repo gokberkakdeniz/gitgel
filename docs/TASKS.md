@@ -609,6 +609,7 @@ rather than as a task is listed the same way, marked "(on request)".
 ### Phase 26 — Appearance settings
 - [x] T26.1 Appearance: Theme move, Formatting, Diff tab size — 2026-10-11
   - note: counts use `$n` (raw selector) + `$d`/`$e` (display) in MF2 keys; `t()` strips one leading space (messageformat 4.0.0 `{{{` quirk); the operation banner lead is one sentence now (mono ref span gone); Discard + file-menu texts stay English verbatim; the design canvas still needs the Appearance artboards.
+- [x] (on request) Turkish git terms follow VS Code's Turkish language pack (depo, dal, çalışma ağacı, geçici kayıt, getir / çek / gönder, yeniden temellendir…; commit stays); glossary in `src/i18n/TRANSLATE.md` — 2026-10-11
 
 ---
 

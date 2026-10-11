@@ -32,5 +32,13 @@ green when you are done: same key set as `en.json`, same placeholders, valid MF2
   script output, log text, CEL expressions, file paths, keycap names (⌘ ⌥ ⇧),
   and the Discard dialog's texts (they quote GitHub Desktop word for word —
   copy the `en` value unchanged).
+- Git terms in Turkish follow VS Code's Turkish language pack (`vscode-loc`, its git
+  extension): repository → depo, remote → uzak depo, branch → dal, worktree and working
+  tree → çalışma ağacı, stash → geçici kayıt (stash → geçici kaydet, apply → uygula,
+  drop → bırak, pop → al), fetch → getir, pull → çek, push → gönder (force → zorla),
+  merge → birleştir(me), merge base → birleştirme temeli, rebase → yeniden
+  temellendir(me), cherry-pick → seçerek uygula(ma), revert → geri döndür(me),
+  checkout → kullanıma al, abort → durdur, discard → at, sync → eşitle, tag → etiket.
+  Commit stays "commit", as VS Code has it.
 - Output nothing besides the JSON: no explanations, no comments, no trailing
   commas. Values are single-line strings; `\n` never appears in them.
