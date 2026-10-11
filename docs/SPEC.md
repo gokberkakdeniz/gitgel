@@ -1104,8 +1104,8 @@ Layout:
 - **AI**: serif 18px heading "AI".
   - "Generate commit message with AI": a `Switch`, on by default (`settings.ai.enabled`). Off
     hides the commit form's generate control; a run asked for meanwhile is refused.
-  - No default provider is stored: the default is the topmost switched-on provider in
-    menu order (reorder with the handle to change it); the commit form's bolt generates
+  - No default provider is stored: the default is the topmost switched-on and installed
+    provider in menu order (reorder with the handle to change it); the commit form's bolt generates
     with it.
   - One `List` row per provider, in menu order (drag the handle to reorder; ↑ / ↓ on the
     focused handle): a `bolt` tile, its 500-weight name, a danger sm pill "Not installed" when
@@ -2788,11 +2788,12 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   "Committing…" with a spinner.
   - **Generate message**: left of the Commit button one joined split control: a 32px `bolt`
     (tooltip `Generate commit message with <provider>`, the default: the topmost switched-on
-    provider in menu order) that fills the summary and description,
+    and installed provider in menu order) that fills the summary and description,
     which stay editable, and a 32px `more-vertical` (⋮) opening its menu (the switched-on
-    providers in menu order (switched off or missing ones are not listed at all);
+    providers in menu order; switched off or missing ones are not listed at all);
     picking one generates with it at once, leaving the default alone; right-click on the bolt
-    works too). While it runs the bolt is a
+    works too. With no provider to list both are disabled, their tooltip saying why ("Turn on
+    a provider first", or "<provider> is not installed"). While it runs the bolt is a
     spinner, and a running toast opens the generation's output panel on click, so a slow
     provider can be watched (and stopped); a failure shows a failed toast and leaves the form
     alone.

@@ -13,8 +13,8 @@ import styles from './CommitForm.module.css';
 
 /** The commit form under History's list while Uncommitted is picked (W1a): summary, description
  * and the button; ⌘↵ in either field commits. Locked while the commit (and its hooks) runs.
- * The bolt asks the provider's CLI for a message for the checked files (SPEC §15), its menu
- * (right-click) picks the provider. */
+ * The bolt asks the default provider's CLI for a message for the checked files (SPEC §15); its
+ * menu (⋮ or right-click) generates with another one. */
 export function CommitForm({
   rev,
   summary,
@@ -24,9 +24,9 @@ export function CommitForm({
   blocked,
   provider,
   providers,
+  noProvider,
   generating,
   aiEnabled,
-  installed,
   onSummary,
   onDescription,
   onCommit,
@@ -40,14 +40,15 @@ export function CommitForm({
   committing: boolean;
   /** Why Commit cannot run besides an empty summary or no files; null when nothing blocks it. */
   blocked: string | null;
-  provider: CommitProvider;
+  /** The bolt's provider: the menu's topmost; null when the menu is empty. */
+  provider: CommitProvider | null;
   /** The menu's providers: switched on and installed, in menu order. */
   providers: CommitProvider[];
+  /** Why the bolt cannot run while `provider` is null. */
+  noProvider: string;
   generating: boolean;
   /** The control shows when AI is on (Settings › AI). */
   aiEnabled: boolean;
-  /** Whether each CLI is installed; null while unknown (nothing is disabled). */
-  installed: Record<CommitProvider, boolean> | null;
   onSummary: (value: string) => void;
   onDescription: (value: string) => void;
   onCommit: () => void;
@@ -66,9 +67,7 @@ export function CommitForm({
     : (blocked ?? (files === 0 ? t('history.checkFile') : summary.trim() === '' ? t('history.writeSummary') : t('history.commitTo', { rev })));
   const [menu, setMenu] = useState<DOMRect | null>(null);
   const canGenerate = files > 0 && !blocked && !committing && !generating;
-  const off = !providers.includes(provider);
-  const missing = (id: CommitProvider) => installed !== null && !installed[id];
-  const noProviders = providers.length === 0;
+  const generateWith = provider ? t('history.genWith', { provider: providerLabel(provider) }) : noProvider;
   return (
     <form
       aria-label={t('history.commitForm')}
@@ -101,22 +100,14 @@ export function CommitForm({
           <div className={styles.split}>
             <IconButton
               size={32}
-              aria-label={t('history.genWith', { provider: providerLabel(provider) })}
-              title={
-                generating
-                  ? t('history.askingMsg')
-                  : off
-                    ? t('history.provOff', { provider: providerLabel(provider) })
-                    : missing(provider)
-                      ? t('history.provMissing', { provider: providerLabel(provider) })
-                      : t('history.genWith', { provider: providerLabel(provider) })
-              }
+              aria-label={generateWith}
+              title={generating ? t('history.askingMsg') : generateWith}
               active={menu !== null}
-              disabled={!canGenerate || off || missing(provider)}
+              disabled={!canGenerate || !provider}
               onClick={() => onGenerate()}
               onContextMenu={(e) => {
                 e.preventDefault();
-                setMenu(e.currentTarget.getBoundingClientRect());
+                if (providers.length > 0) setMenu(e.currentTarget.getBoundingClientRect());
               }}
               className={styles.splitMain}
             >
@@ -125,9 +116,9 @@ export function CommitForm({
             <IconButton
               size={32}
               aria-label={t('history.pickProvider')}
-              title={noProviders ? t('history.turnOnFirst') : t('history.pickProvider')}
+              title={provider ? t('history.pickProvider') : noProvider}
               active={menu !== null}
-              disabled={noProviders}
+              disabled={!provider}
               onClick={(e) => setMenu(menu ? null : e.currentTarget.getBoundingClientRect())}
               className={styles.splitMenu}
             >

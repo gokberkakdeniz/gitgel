@@ -250,7 +250,6 @@
   "review.branchDeletedParen": "{$branch} (deleted)",
   "history.backToHistory": "Back to History",
   "history.committedTo": "Committed to {$rev}",
-  "history.providerOff": "{$provider} is turned off",
   "history.providerMissing": "{$provider} is not installed",
   "history.noMessage": "No message generated",
   "history.title": "History",
