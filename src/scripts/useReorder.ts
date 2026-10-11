@@ -29,7 +29,11 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
     id: string;
     base: string[];
     from: number;
+    /** The pointer's start, in list coordinates (the list's top edge is 0). */
     startY: number;
+    /** The other rows' midpoints as laid out at the start, in list coordinates: rows that
+     * glide aside, or a list that auto-scrolls, never move them. */
+    mids: number[];
     height: number;
     minDy: number;
     maxDy: number;
@@ -45,26 +49,8 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
     key: (ev: globalThis.KeyboardEvent) => void;
   } | null>(null);
 
-  // Unmount mid-drag: drop the listeners, restore the body. Never commits.
-  useEffect(
-    () => () => {
-      const d = drag.current;
-      if (!d) return;
-      cancelAnimationFrame(d.raf);
-      window.removeEventListener('pointermove', d.move);
-      window.removeEventListener('pointerup', d.up);
-      window.removeEventListener('pointercancel', d.cancel);
-      window.removeEventListener('keydown', d.key, true);
-      document.body.style.cursor = d.prevCursor;
-      document.body.style.userSelect = d.prevSelect;
-      drag.current = null;
-    },
-    [],
-  );
-
-  const finish = (commit: boolean) => {
-    const d = drag.current;
-    if (!d) return;
+  // Drops the listeners and restores the body.
+  const release = (d: NonNullable<typeof drag.current>) => {
     cancelAnimationFrame(d.raf);
     window.removeEventListener('pointermove', d.move);
     window.removeEventListener('pointerup', d.up);
@@ -72,8 +58,22 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
     window.removeEventListener('keydown', d.key, true);
     document.body.style.cursor = d.prevCursor;
     document.body.style.userSelect = d.prevSelect;
-    const slot = slotRef.current;
     drag.current = null;
+  };
+
+  // Unmount mid-drag: never commits.
+  useEffect(
+    () => () => {
+      if (drag.current) release(drag.current);
+    },
+    [],
+  );
+
+  const finish = (commit: boolean) => {
+    const d = drag.current;
+    if (!d) return;
+    release(d);
+    const slot = slotRef.current;
     slotRef.current = null;
     setMotion(null);
     setDragId(null);
@@ -84,12 +84,14 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
     }
   };
 
-  const handleMove = (ev: globalThis.PointerEvent) => {
+  // The dragged row and the slot for the pointer at `clientY`; also after an auto-scroll,
+  // which moves the list under a still pointer.
+  const update = (clientY: number) => {
     const d = drag.current;
     const list = listRef.current;
     if (!d || !list) return;
-    d.lastY = ev.clientY;
-    const raw = ev.clientY - d.startY;
+    const y = clientY - list.getBoundingClientRect().top;
+    const raw = y - d.startY;
     // A press is not a drag until the pointer really moves.
     if (!d.active && Math.abs(raw) < 4) return;
     if (!d.active) {
@@ -99,15 +101,16 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
       d.raf = requestAnimationFrame(scrollTick);
     }
     const dy = Math.min(d.maxDy, Math.max(d.minDy, raw));
-    const rows = [...list.querySelectorAll<HTMLElement>('[data-reorder]')];
-    const slot = slotForPointer(
-      rows.filter((_, i) => i !== d.from).map((r) => mid(r)),
-      ev.clientY,
-    );
+    const slot = slotForPointer(d.mids, y);
     if (slotRef.current === slot && dyRef.current === dy) return;
     slotRef.current = slot;
     dyRef.current = dy;
     setMotion({ dy, slot });
+  };
+
+  const handleMove = (ev: globalThis.PointerEvent) => {
+    if (drag.current) drag.current.lastY = ev.clientY;
+    update(ev.clientY);
   };
 
   const scrollTick = () => {
@@ -118,8 +121,10 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
       const r = el.getBoundingClientRect();
       const m = 56;
       const v = 14;
+      const before = el.scrollTop;
       if (d.lastY < r.top + m) el.scrollTop -= v * (1 - Math.max(0, d.lastY - r.top) / m);
       else if (d.lastY > r.bottom - m) el.scrollTop += v * (1 - Math.max(0, r.bottom - d.lastY) / m);
+      if (el.scrollTop !== before) update(d.lastY);
     }
     d.raf = requestAnimationFrame(scrollTick);
   };
@@ -143,13 +148,15 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
     if (!list || rows.length === 0 || from === -1 || !box) return;
     const first = rows[0].getBoundingClientRect();
     const last = rows[rows.length - 1].getBoundingClientRect();
+    const top = list.getBoundingClientRect().top;
     const up = () => finish(true);
     const cancel = () => finish(false);
     drag.current = {
       id,
       base,
       from,
-      startY: e.clientY,
+      startY: e.clientY - top,
+      mids: rows.filter((_, i) => i !== from).map((r) => mid(r) - top),
       height: box.height,
       minDy: first.top - box.top,
       maxDy: last.bottom - box.bottom,
