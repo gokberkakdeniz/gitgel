@@ -610,14 +610,13 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] T26.1 Appearance: Theme move, Formatting, Diff tab size — 2026-10-11
   - note: counts use `$n` (raw selector) + `$d`/`$e` (display) in MF2 keys; `t()` strips one leading space (messageformat 4.0.0 `{{{` quirk); the operation banner lead is one sentence now (mono ref span gone); Discard + file-menu texts stay English verbatim; the design canvas still needs the Appearance artboards.
 - [x] (on request) Turkish git terms follow VS Code's Turkish language pack (depo, dal, çalışma ağacı, geçici kayıt, getir / çek / gönder, yeniden temellendir…; commit stays); glossary in `src/i18n/TRANSLATE.md` — 2026-10-11
+- [x] (on request) No "· next file <name>" beside Review's change counter; the accent ↓ and its tooltip say it — 2026-10-11
+- [x] (on request) The commit form's generate control is a 24px ✦ (`sparkles`) at the end of the summary field (right-click picks the provider); Settings › AI and generation runs use `sparkles` too — 2026-10-11
+- [x] (on request) Git actions and generations show in the UI language and say what they do while running ("Pushing…", "Committing…", "Generating a commit message with <provider>…"); scripts keep "Running “<name>”…" — 2026-10-11
+- [x] T26.2 ✋ Checkpoint — phases 25–26 — 2026-10-11
 
 ---
 
 ## Open
 
-### Phase 25 — Multi-language support (en + tr)
-
-### Phase 26 — Appearance settings
-
-#### T26.2 ✋ Checkpoint — phases 25–26
-- **Depends on:** T26.1
+No open tasks.
