@@ -957,7 +957,6 @@ pub struct HistoryPage {
     pub total: Option<u32>,
     /// Commits not reachable from the base; `None` without a base.
     pub ahead: Option<u32>,
-    pub merge_base: Option<String>,
     /// Modification time of `FETCH_HEAD`, unix seconds; `None` if never fetched.
     pub fetched_at: Option<i64>,
     /// When `rev` is a local branch: where it is pushed to (W4a).

@@ -40,7 +40,6 @@ pub fn get_history(
             more: false,
             total: None,
             ahead: None,
-            merge_base: None,
             fetched_at,
             upstream: None,
         });
@@ -89,8 +88,7 @@ pub fn get_history(
         commits: walked.commits,
         more: walked.more,
         total,
-        ahead: split.as_ref().map(|s| s.ahead.len() as u32),
-        merge_base: split.and_then(|s| s.merge_base),
+        ahead: split.map(|s| s.ahead.len() as u32),
         fetched_at,
         upstream,
     })

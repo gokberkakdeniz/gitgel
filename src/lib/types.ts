@@ -350,7 +350,6 @@ export interface HistoryPage {
   more: boolean; // more commits (or matches) past `limit`
   total: number | null; // commits reachable from the tip; null while searching
   ahead: number | null; // commits not in the base; null without a base
-  mergeBase: string | null;
   fetchedAt: number | null; // FETCH_HEAD's modification time; null if never fetched
   upstream: Upstream | null; // when rev is a local branch: where it is pushed to (W4a)
 }
