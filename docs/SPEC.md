@@ -864,9 +864,8 @@ Layout:
 - **Jump between changes** (flow D4): counter "Change i of n" (`aria-live="polite"`, tabular
   numbers) and a ↑ ↓ pair. The current change has the 3px accent bar in both panes; jumping
   scrolls it to the top third of the view. At the last change of a file, ↓ turns accent
-  (`rgba(79,143,163,0.18)`, `#a3cad6` icon), its tooltip becomes "Next (⌥↓)", the
-  counter adds muted "· next file <name>", and pressing it opens the next file in list order
-  (expanding a collapsed group) at its first change. ↑ at the first change does the same
+  (`rgba(79,143,163,0.18)`, `#a3cad6` icon), its tooltip becomes "Next (⌥↓)", and pressing it
+  opens the next file in list order (expanding a collapsed group) at its first change. ↑ at the first change does the same
   backwards and lands on the previous file's last change. Disabled only at the very first / last
   change of the whole list ("First change" / "Last change"). Scrolling by hand moves "current" to
   the first change in view. Picking a file lands on its first change. A file with no line

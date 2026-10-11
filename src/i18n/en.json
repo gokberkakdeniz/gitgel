@@ -228,7 +228,6 @@
   "review.onlyWs": "Only whitespace changed",
   "review.noLineChanges": "No line changes",
   "review.changeOf": "Change {$i} of {$n}",
-  "review.nextFile": "· next file {$name}",
   "review.jumpChanges": "Jump between changes",
   "review.prevChangeBtn": "Previous change",
   "review.nextChangeBtn": "Next change",

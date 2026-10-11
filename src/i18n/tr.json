@@ -298,7 +298,6 @@
   "review.onlyWs": "Sadece boşluklar değişmiş",
   "review.noLineChanges": "Satır değişikliği yok",
   "review.changeOf": "Değişiklik {$i} / {$n}",
-  "review.nextFile": "· sonraki dosya {$name}",
   "review.jumpChanges": "Değişiklikler arası geçiş",
   "review.prevChangeBtn": "Önceki değişiklik",
   "review.nextChangeBtn": "Sonraki değişiklik",

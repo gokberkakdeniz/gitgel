@@ -188,7 +188,7 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 <span style="width: 1px; height: 16px; background: var(--border); margin: 0 2px"></span>
-<span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{navLabel}}<span style="color: var(--text-muted)">{{navNext}}</span></span>
+<span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{navLabel}}</span>
 <dc-import name="Stepper" theme="none" up-disabled="{{prevDisabled}}" down-disabled="{{nextDisabled}}" up-cross="{{prevCross}}" down-cross="{{nextCross}}" up-title="{{prevTitle}}" down-title="{{nextTitle}}" on-up="{{prevChange}}" on-down="{{nextChange}}" hint-size="60px,30px"></dc-import>
 </div>
 
@@ -565,7 +565,6 @@ class Component extends DCLogic {
     var si = navKeys.indexOf(sel);
     var nextKey = si >= 0 ? navKeys[si + 1] : navKeys[0], prevKey = si >= 0 ? navKeys[si - 1] : navKeys[navKeys.length - 1];
     var atLast = hIdx === nH - 1, atFirst = hIdx === 0;
-    var shortName = function (k) { return k.split('/').pop(); };
     var openGroupOf = function (k) { var c = Object.assign({}, collapsed); c[k.split(':')[0]] = false; return c; };
     var nextChange = function () {
       if (!atLast) self.setState({ hunk: hIdx + 1 });
@@ -709,7 +708,6 @@ class Component extends DCLogic {
       backLabel: project ? 'Back to project' : 'Back to Branches',
       modes: modes, groups: groups, lines: lines,
       navLabel: 'Change ' + (hIdx + 1) + ' of ' + nH,
-      navNext: atLast && nextKey ? ' · next file ' + shortName(nextKey) : '',
       prevChange: prevChange, nextChange: nextChange,
       prevDisabled: atFirst && !prevKey, nextDisabled: atLast && !nextKey,
       prevTitle: atFirst ? (prevKey ? 'Previous (⌥↑)' : 'First change') : 'Previous change (⌥↑)',

@@ -125,8 +125,6 @@ export function DiffStat({ add, del }: { add?: number; del?: number }) {
   );
 }
 
-const fileName = (id: string | undefined) => (id ? basename(id.split('\u0000')[1]) : '');
-
 /** Layout, context and Ignore whitespace; applies to every diff and is remembered. */
 function ViewMenu({
   layout,
@@ -252,7 +250,6 @@ function ChangeNav({
             ? t('review.onlyWs')
             : t('review.noLineChanges')
           : t('review.changeOf', { i: formatCount(i + 1), n: formatCount(nav.count) })}
-        {nav.count > 0 && atLast && nextFile && <span className={styles.muted}>{t('review.nextFile', { name: fileName(nextFile) })}</span>}
       </span>
       <Stepper
         aria-label={t('review.jumpChanges')}
