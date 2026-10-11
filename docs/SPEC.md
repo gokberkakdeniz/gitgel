@@ -215,6 +215,7 @@ gitgel/
 │  └─ monaco/   setup.ts  theme.ts  language.ts  DiffView.tsx  position.ts  changeNav.ts
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
+   ├─ Info.plist                  # merged into the bundle's: LSEnvironment (MallocLargeCache=0)
    ├─ capabilities/default.json
    └─ src/
       ├─ main.rs  lib.rs          # lib.rs: run(), plugins, command registration
@@ -1964,8 +1965,9 @@ No polling. The backend watches the file system, recomputes what changed and pus
 - **Committed detail** for Review (committed files, commits with `fromBranch`, stack candidates)
   per `(repo, tip, base tip)`.
 - **Merged state** per repo: which branch tips are reachable from the default base, from one
-  time-ordered history walk instead of an ancestry check per branch; when the base moves forward
-  only its new commits are walked.
+  time-ordered history walk instead of an ancestry check per branch (it reads a commit's date
+  for the stop condition only every 1024 commits: each read keeps the whole commit in libgit2's
+  object cache); when the base moves forward only its new commits are walked.
 - **Working-tree state** per worktree folder, valid while its HEAD is unchanged and the watcher
   reports nothing in it: uncommitted count, the HEAD ↔ working tree list, and the merge-base ↔
   working tree list per merge-base (computed only on the paths the committed and uncommitted
@@ -1978,7 +1980,9 @@ No polling. The backend watches the file system, recomputes what changed and pus
   needed once the results above are stored, so every full scan ends by closing the pooled
   repositories and handing freed memory back to macOS (`src-tauri/src/memory.rs`); they reopen
   on the next request. The scan log line reports the object cache and the memory before and
-  after.
+  after. The app is launched with `MallocLargeCache=0` (`src-tauri/Info.plist` `LSEnvironment`;
+  `main.rs` removes it so child processes do not inherit it): macOS malloc would otherwise keep
+  the freed large blocks, ~100 MB after the first scan of a long history.
 
 ---
 

@@ -208,6 +208,11 @@ pub struct MergedState {
 /// Commit dates are not strictly ordered; walk this far past the oldest tip before giving up.
 const DATE_SLACK: i64 = 86_400;
 
+/// The merged walk reads a commit's date only every this many commits: a read parses the whole
+/// commit into libgit2's object cache, which on a long history (vscode) cost a second and over
+/// 100 MB. Walking up to this many commits past the cutoff is cheap.
+const DATE_CHECK_EVERY: usize = 1024;
+
 /// Answers "is this tip merged into `base`?" for every `(tip, commit time)`, reusing `prev`.
 /// One history walk replaces an ancestry check per branch, which is slow in long histories.
 pub fn merged_tips(
@@ -261,7 +266,7 @@ pub fn merged_tips(
         walk.set_sorting(Sort::TIME)?;
         walk.push(base_oid)?;
         let mut left = unresolved.len();
-        for oid in walk {
+        for (i, oid) in walk.enumerate() {
             let oid = oid?;
             if let Some((tip, _)) = unresolved.get(&oid) {
                 state.merged.insert(tip.clone());
@@ -270,7 +275,7 @@ pub fn merged_tips(
                     break;
                 }
             }
-            if repo.find_commit(oid)?.time().seconds() < cutoff {
+            if i % DATE_CHECK_EVERY == 0 && repo.find_commit(oid)?.time().seconds() < cutoff {
                 break;
             }
         }

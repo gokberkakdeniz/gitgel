@@ -1,6 +1,7 @@
 //! Keeps the app's memory down between scans. libgit2 caches objects per open repository (up to
 //! 256 MB in total), which speeds a scan up but is not needed afterwards: the results live in
-//! `cache.rs`.
+//! `cache.rs`. Freed blocks go back to macOS because the app is launched with
+//! `MallocLargeCache=0` (`Info.plist`); malloc would otherwise keep the large ones for reuse.
 
 use crate::state::AppState;
 
