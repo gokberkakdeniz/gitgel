@@ -2546,7 +2546,8 @@ git action in the repository.
   files' patch (cut at ~12k characters) and up to 15 recent subjects from the branch, those
   touching the checked files first. The CLI's fixed command carries the prompt in
   `GITGEL_PROMPT`; it never writes to the repository (codex and Antigravity run sandboxed,
-  Claude denies anything that would prompt, cursor without `--force`). Past 5.5 minutes the run is stopped (agy's own print timeout is
+  Claude denies anything that would prompt, opencode runs its read-only `plan` agent
+  (`--agent plan`), cursor without `--force`). Past 5.5 minutes the run is stopped (agy's own print timeout is
   5 minutes). The answer arrives as `generate-finished`: the provider's text (opencode's
   `text` events) split into summary (first line) and description (the rest), or an error; a
   stopped run stays quiet; blank lines inside the description are kept. The run rescans nothing and toasts nothing at its end.

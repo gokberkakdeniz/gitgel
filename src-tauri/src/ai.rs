@@ -60,7 +60,7 @@ impl Provider {
 
     /// The fixed command (the prompt travels in `GITGEL_PROMPT`, SPEC §0). opencode's
     /// default format mixes its trace into stdout, so it runs as JSON events and only the
-    /// answer's text is kept. `model` / `effort` add their flags (effort only where the CLI
+    /// answer's text is kept; its `plan` agent denies edits (the default `build` allows all). `model` / `effort` add their flags (effort only where the CLI
     /// has one, see `effort_supported`).
     fn command(&self, model: bool, effort: bool) -> String {
         let prompt = "\"$GITGEL_PROMPT\"";
@@ -79,7 +79,7 @@ impl Provider {
         match self {
             Provider::Opencode => {
                 let effort = effort_flag("--variant");
-                format!("opencode run --format json{model}{effort} {prompt}")
+                format!("opencode run --format json --agent plan{model}{effort} {prompt}")
             }
             // No sandbox flag: anything that would prompt is denied instead, so the
             // CLI can read but not act (the patch is already in the prompt).
@@ -717,7 +717,7 @@ mod tests {
         );
         assert_eq!(
             Provider::Opencode.command(true, true),
-            r#"opencode run --format json --model "$GITGEL_MODEL" --variant "$GITGEL_EFFORT" "$GITGEL_PROMPT""#
+            r#"opencode run --format json --agent plan --model "$GITGEL_MODEL" --variant "$GITGEL_EFFORT" "$GITGEL_PROMPT""#
         );
         assert_eq!(
             Provider::Cursor.command(false, false),
