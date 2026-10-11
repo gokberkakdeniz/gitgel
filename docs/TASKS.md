@@ -614,6 +614,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) The commit form's generate control is a 24px ✦ (`sparkles`) at the end of the summary field (right-click picks the provider); Settings › AI and generation runs use `sparkles` too — 2026-10-11
 - [x] (on request) Git actions and generations show in the UI language and say what they do while running ("Pushing…", "Committing…", "Generating a commit message with <provider>…"); scripts keep "Running “<name>”…" — 2026-10-11
 - [x] T26.2 ✋ Checkpoint — phases 25–26 — 2026-10-11
+- [x] (on request) Canvas: M7 Settings › Appearance and M8 Settings › AI boards, L3 shows Appearance, the format selects list every choice — 2026-10-11
 
 ---
 
