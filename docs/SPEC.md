@@ -2562,7 +2562,7 @@ git action in the repository.
   Claude denies anything that would prompt, opencode runs its read-only `plan` agent
   (`--agent plan`), cursor without `--force`). Past 5.5 minutes the run is stopped (agy's own print timeout is
   5 minutes). The answer arrives as `generate-finished`: the provider's text (opencode's
-  `text` events) split into summary (first line) and description (the rest), or an error; a
+  `text` events, codex's block after its last `codex` line up to `tokens used`) split into summary (first line) and description (the rest), or an error; a
   stopped run stays quiet; blank lines inside the description are kept. The run rescans nothing and toasts nothing at its end.
   The provider, model, effort and prompt template come from Settings › AI: `--model
   "$GITGEL_MODEL"` when a model is set (all five), `--variant "$GITGEL_EFFORT"` for opencode,

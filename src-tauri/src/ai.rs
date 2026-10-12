@@ -389,6 +389,7 @@ impl Watcher {
                     let text = run::clean_output(run.buffered.as_deref().unwrap_or(""));
                     let answer = match self.provider {
                         Provider::Opencode => opencode_text(&text),
+                        Provider::Codex => codex_text(&text),
                         _ => {
                             if text.is_empty() {
                                 Err(AppError::Invalid(format!("{tool} returned no message.")))
@@ -651,6 +652,28 @@ fn opencode_text(stream: &str) -> Result<String, AppError> {
     })))
 }
 
+/// Codex's terminal output: its banner, the prompt, warnings and trace come first; the
+/// answer is the block after the last `codex` line, up to `tokens used`.
+fn codex_text(output: &str) -> Result<String, AppError> {
+    let lines: Vec<&str> = output.lines().collect();
+    let answer = match lines.iter().rposition(|l| l.trim() == "codex") {
+        Some(i) => {
+            let rest = &lines[i + 1..];
+            let end = rest
+                .iter()
+                .position(|l| l.trim() == "tokens used")
+                .unwrap_or(rest.len());
+            rest[..end].join("\n")
+        }
+        None => output.to_string(),
+    };
+    if answer.trim().is_empty() {
+        Err(AppError::Invalid("Codex returned no message.".into()))
+    } else {
+        Ok(answer)
+    }
+}
+
 /// The answer, without code fences or surrounding blank lines: its first line is the
 /// summary, the rest (paragraphs kept) the description.
 fn parse(text: &str) -> GeneratedMessage {
@@ -793,6 +816,23 @@ mod tests {
             opencode_text(stream).unwrap(),
             "feat(history): generate message"
         );
+    }
+
+    #[test]
+    fn codex_keeps_only_the_answer() {
+        let output = concat!(
+            "OpenAI Codex v0.153.2\n--------\nworkdir: /tmp/x\n--------\n",
+            "user\nWrite the commit message.\ncodex\n\n",
+            "warning: Ignoring unknown features requirement ultrafast_mode\n",
+            "codex\nfix(sheets): reserve spacing in workflow steps layout\n",
+            "tokens used\n22,129\n",
+        );
+        assert_eq!(
+            codex_text(output).unwrap(),
+            "fix(sheets): reserve spacing in workflow steps layout"
+        );
+        assert_eq!(codex_text("feat(x): plain").unwrap(), "feat(x): plain");
+        assert!(codex_text("codex\ntokens used\n1\n").is_err());
     }
 
     #[test]
