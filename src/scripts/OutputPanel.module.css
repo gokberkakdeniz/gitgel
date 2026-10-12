@@ -31,12 +31,38 @@
 }
 
 .sub {
-  overflow: hidden;
+  display: flex;
+  gap: 5px;
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+/* Repo, branch and folder each shrink to an ellipsis; a click copies the whole. */
+.part {
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
   text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.part:hover {
+  color: var(--text-body);
+}
+
+.part.copied {
+  color: var(--success-text);
+}
+
+.sep {
+  flex-shrink: 0;
 }
 
 /* The running command, above the terminal. Its bottom border drags taller. */

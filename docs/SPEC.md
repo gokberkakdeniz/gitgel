@@ -2261,7 +2261,8 @@ export interface ScriptRun {
 ### Output panel (N4)
 
 - A 760 × 520 modal: header with a 28px icon tile, the name (14px 600) and a mono sub line
-  `repo · ~/folder` (one line, ellipsis; `repo / branch · folder` as tooltip), a mono pill (running:
+  `repo / branch · ~/folder` (one line; each part ends in an ellipsis when long, has its full
+  text as tooltip and copies it on click, turning `success.text` for 1.5 s), a mono pill (running:
   `running · m:ss`, neutral; exited: `exit N · m:ss`, success for 0, danger otherwise), ✕.
   Under the header the running command (`ScriptRun.command`: the user's script, or the git
   action's fixed command): one mono 11px row, `$` in `accent.text` and the command in

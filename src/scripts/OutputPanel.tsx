@@ -277,6 +277,7 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
   const { copied, copy } = useCopy();
   const copyOutput = () => copy(async () => plainText((await getScriptRun(run.runId)).buffered ?? ''));
   const varCopy = useCopy();
+  const [repo, branch] = run.repoLabel.split(' / ');
 
   return (
     <Modal aria-label={t('scripts.outputAria', { name: run.name })} width={760} paddingTop={80} onClose={onClose}>
@@ -285,10 +286,17 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
           <ScriptIcon name={run.icon} />
           <div className={styles.titles}>
             <h2 className={styles.title}>{run.name}</h2>
-            {/* The repo only: the branch is long and the folder already says which worktree. */}
-            <span className={styles.sub} title={`${run.repoLabel} · ${run.folder}`}>
-              {run.repoLabel.split(' / ')[0]} · {tildifyHome(run.folder)}
-            </span>
+            <div className={styles.sub}>
+              <CopyPart text={repo} />
+              {branch && (
+                <>
+                  <span className={styles.sep}>/</span>
+                  <CopyPart text={branch} />
+                </>
+              )}
+              <span className={styles.sep}>·</span>
+              <CopyPart text={run.folder} shown={tildifyHome(run.folder)} />
+            </div>
           </div>
           {pill}
           <IconButton aria-label={t('common.close')} onClick={onClose}>
@@ -418,5 +426,21 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
         </ModalFooter>
       </div>
     </Modal>
+  );
+}
+
+/** One part of the header's sub line (repo, branch, folder): cut with an ellipsis when long,
+ * copied on click. */
+function CopyPart({ text, shown = text }: { text: string; shown?: string }) {
+  const { copied, copy } = useCopy();
+  return (
+    <button
+      type="button"
+      className={copied ? `${styles.part} ${styles.copied}` : styles.part}
+      title={copied ? t('scripts.copiedBtn') : text}
+      onClick={() => void copy(text)}
+    >
+      {shown}
+    </button>
   );
 }
