@@ -286,15 +286,15 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
           <ScriptIcon name={run.icon} />
           <div className={styles.titles}>
             <h2 className={styles.title}>{run.name}</h2>
-            <div className={styles.sub}>
+            <div className={branch ? styles.sub : `${styles.sub} ${styles.noBranch}`}>
               <CopyPart text={repo} />
               {branch && (
                 <>
-                  <span className={styles.sep}>/</span>
+                  <span>/</span>
                   <CopyPart text={branch} />
                 </>
               )}
-              <span className={styles.sep}>·</span>
+              <span>·</span>
               <CopyPart text={run.folder} shown={tildifyHome(run.folder)} />
             </div>
           </div>

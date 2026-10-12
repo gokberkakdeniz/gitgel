@@ -30,9 +30,13 @@
   text-overflow: ellipsis;
 }
 
+/* Repo and separators keep their width; branch and folder share what is left equally (grid
+   grows both tracks evenly up to their text), so a long one never squeezes the other away. */
 .sub {
-  display: flex;
-  gap: 5px;
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, max-content) max-content minmax(0, max-content);
+  justify-content: start;
+  column-gap: 5px;
   min-width: 0;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -40,7 +44,12 @@
   white-space: nowrap;
 }
 
-/* Repo, branch and folder each shrink to an ellipsis; a click copies the whole. */
+/* No branch (a detached HEAD, a repo-wide action): repo · folder. */
+.sub.noBranch {
+  grid-template-columns: max-content max-content minmax(0, max-content);
+}
+
+/* Branch and folder shrink to an ellipsis; a click copies the whole. */
 .part {
   min-width: 0;
   overflow: hidden;
@@ -59,10 +68,6 @@
 
 .part.copied {
   color: var(--success-text);
-}
-
-.sep {
-  flex-shrink: 0;
 }
 
 /* The running command, above the terminal. Its bottom border drags taller. */
