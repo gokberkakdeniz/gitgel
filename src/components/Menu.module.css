@@ -29,13 +29,13 @@
   cursor: default;
 }
 
-/* At most two lines: a long filled-in name (a script's) breaks anywhere and ends in "…". */
+/* One line: a long filled-in name (a script's) ends in "…". */
 .label {
   flex-grow: 1;
   min-width: 0;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   overflow: hidden;
   overflow-wrap: anywhere;
 }

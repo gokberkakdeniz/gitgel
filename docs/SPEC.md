@@ -2215,8 +2215,8 @@ export interface ScriptRun {
 
 - After the open items: divider, section label "Scripts", then each script that is not turned
   off, whose `showIn` has this menu and whose `when` matches, in the Settings order, with its icon
-  and filled-in name (at most two lines, then "…"; the whole name as tooltip; menu item labels
-  in general stop at two lines). No group (and no "Scripts" label) when none is left.
+  and filled-in name (one line, then "…"; the whole name as tooltip; menu item labels
+  in general stay on one line). No group (and no "Scripts" label) when none is left.
 - Scripts that cannot run are left out, not shown disabled: every script when the repo is
   missing, and `runsIn: 'worktree'` scripts when the branch is not checked out; the menu's closing
   note (§6 open items) covers them: "Not checked out".
