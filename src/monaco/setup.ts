@@ -1,54 +1,21 @@
-// Monaco from the local bundle (no CDN), with its workers. Loaded before App in main.tsx.
+// Monaco from the local bundle (no CDN), with its diff worker. Loaded before App in main.tsx.
 import { loader } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
 import EditorWorker from 'monaco-editor/editor/editor.worker?worker';
-import CssWorker from 'monaco-editor/language/css/css.worker?worker';
-import HtmlWorker from 'monaco-editor/language/html/html.worker?worker';
-import JsonWorker from 'monaco-editor/language/json/json.worker?worker';
-import TsWorker from 'monaco-editor/language/typescript/ts.worker?worker';
 import { language as rubyLanguage } from 'monaco-editor/languages/definitions/ruby/ruby';
+import * as monaco from './monaco';
 import { guardTopLevelEnd } from './ruby';
 import { defineTheme } from './theme';
 
+// The only worker: it computes diffs (and CSS color swatches); there are no language services.
 self.MonacoEnvironment = {
-  getWorker(_id: string, label: string) {
-    switch (label) {
-      case 'json':
-        return new JsonWorker();
-      case 'css':
-      case 'scss':
-      case 'less':
-        return new CssWorker();
-      case 'html':
-      case 'handlebars':
-      case 'razor':
-        return new HtmlWorker();
-      case 'typescript':
-      case 'javascript':
-        return new TsWorker();
-      default:
-        return new EditorWorker();
-    }
-  },
+  getWorker: () => new EditorWorker(),
 };
-
-// Review is read-only and sees files out of their project: no red squiggles.
-for (const defaults of [monaco.typescript.typescriptDefaults, monaco.typescript.javascriptDefaults]) {
-  defaults.setDiagnosticsOptions({
-    noSemanticValidation: true,
-    noSyntaxValidation: true,
-    noSuggestionDiagnostics: true,
-  });
-}
-monaco.json.jsonDefaults.setDiagnosticsOptions({ validate: false });
-for (const defaults of [monaco.css.cssDefaults, monaco.css.scssDefaults, monaco.css.lessDefaults]) {
-  defaults.setOptions({ validate: false });
-}
 
 // Registered directly, it replaces the grammar Monaco would load on first use.
 monaco.languages.setMonarchTokensProvider('ruby', guardTopLevelEnd(rubyLanguage));
 
-loader.config({ monaco });
+// Typed for the full entry; the wrapper uses only `editor`.
+loader.config({ monaco: monaco as unknown as typeof import('monaco-editor') });
 defineTheme(monaco);
 
 /** Resolves once JetBrains Mono is loaded and Monaco has measured it. */

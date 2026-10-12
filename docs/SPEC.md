@@ -159,7 +159,7 @@ configurable refresh.
 | Logs | `tauri-plugin-log` → `~/Library/Logs/com.gitgel.desktop/Gitgel.log`, up to 3 × 2 MB. Git errors are logged with `log::warn!`. Debug level (watch rounds) only in dev builds. Every line ends with the process's memory footprint. |
 | Package manager | pnpm, version pinned in `package.json` `packageManager`. |
 | Frontend | React + TypeScript + Vite, state in zustand. Backend data arrives two ways: **push** (config and scan result live in a store, updated by backend events) and **request/response** (review, project view, file contents, base options, commit changes) through a small `useInvoke` hook that refetches when a related repo event arrives. No React Query. Styling: CSS Modules + CSS variables. Fuzzy search: fuse.js. |
-| Diff | `@monaco-editor/react` + `monaco-editor`, bundled locally (`loader.config({ monaco })`), never from a CDN. |
+| Diff | `@monaco-editor/react` + `monaco-editor`, bundled locally (`loader.config({ monaco })`), never from a CDN. Loaded from `src/monaco/monaco.ts`: the editor API, the Monarch grammars, JSON's tokenizer and the read-only contributions, without the TypeScript, CSS, HTML and JSON language services; the editor worker is the only worker. |
 | Fonts | Instrument Sans, Source Serif 4, JetBrains Mono via `@fontsource/*`, bundled. The app works offline. |
 | Bundle id | `com.gitgel.desktop` (must not end in `.app`). |
 | Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). Release notes come from `CHANGELOG.md`. |
@@ -212,7 +212,7 @@ gitgel/
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
-│  └─ monaco/   setup.ts  theme.ts  language.ts  DiffView.tsx  position.ts  changeNav.ts
+│  └─ monaco/   monaco.ts  setup.ts  theme.ts  language.ts  DiffView.tsx  position.ts  changeNav.ts
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
    ├─ Info.plist                  # merged into the bundle's: LSEnvironment (MallocLargeCache=0)

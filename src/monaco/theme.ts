@@ -110,7 +110,7 @@ function definition(p: Palette): Monaco.editor.IStandaloneThemeData {
   };
 }
 
-export function defineTheme(monaco: typeof Monaco) {
+export function defineTheme(monaco: Pick<typeof Monaco, 'editor'>) {
   monaco.editor.defineTheme(MONACO_THEMES.dark, definition(paletteOf('dark')));
   monaco.editor.defineTheme(MONACO_THEMES.light, definition(paletteOf('light')));
 }

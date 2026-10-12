@@ -1,6 +1,6 @@
 import { DiffEditor } from '@monaco-editor/react';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-import * as monaco from 'monaco-editor';
+import * as monaco from './monaco';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { CopyIcon, LinkIcon } from '../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../components/Menu';

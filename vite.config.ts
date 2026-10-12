@@ -24,7 +24,7 @@ export default defineConfig(() => ({
       '@tauri-apps/plugin-dialog',
       '@tauri-apps/api/window',
       '@monaco-editor/react',
-      'monaco-editor',
+      'monaco-editor/editor/editor.api',
     ],
   },
 
