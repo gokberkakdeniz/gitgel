@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.1.21 — 2026-10-12
+
+### New
+- Generate commit messages with AI.
+- Turkish translation.
+- Discard changes, with a copy in the Trash.
+- Continue or abort a rebase or merge in progress.
+
+### Improved
+- Lower memory use.
+- Smaller app size.
+- Resizable App and History sidebars.
+- History opens on Uncommitted changes first.
+- Commit links for GitHub, GitLab and Bitbucket.
+- Date, time, number format and diff tab size settings.
+- Script output shows the running command.
+- Toasts name the running action.
+- Remembered sidebar visibility.
+- Scripts' Show when lists matching branches.
+- Selectable commit details.
+- Smoother script reordering.
+- macOS title case in buttons and menus.
+- History's base line shows only the branch.
+- No worktree path on History's Uncommitted row.
+- No next file hint beside Review's change counter.
+
+### Fixed
+- History keeps the picked file in view.
+- Author avatars show in the light theme.
+
 ## 0.1.20 — 2026-10-09
 
 ### New
