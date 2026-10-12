@@ -203,7 +203,7 @@
   "review.olderCommit": "Older commit",
   "review.olderCommitHint": "Older commit (⌥⇧↓)",
   "review.commitsList": "Commits",
-  "review.notPushed": "{$name} · above: not pushed",
+  "review.notPushed": "above: not pushed",
   "review.notPushedHint": "{$name} is at {$sha}; above it is not pushed",
   "review.emptyTree": "empty tree",
   "review.conflictsBanner": ".input {$n :string} .input {$m :string} .match $n $m 1 1 {{1 file has merge conflicts. Resolve it in your editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.}} * 1 {{ {$d} files have merge conflicts. Resolve them in your editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.}} 1 * {{1 file has merge conflicts in {$e} entries. Resolve it in your editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.}} * * {{ {$d} files have merge conflicts in {$e} entries. Resolve them in your editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.}}",

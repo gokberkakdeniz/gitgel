@@ -800,8 +800,8 @@ Layout:
   `HEAD ↔ working tree`). Links take `accent.hover` on hover.
 - **Commit list** (max ≈132px, scrolls; hidden in Uncommitted): rows with mono 12
   `accent.text` short SHA, subject, and mono 11 muted age. When some listed commits are not on the
-  remote, a dashed **upstream line** (18px, mono 10 muted `origin/<branch> · above: not pushed`
-  between two 1px dashed `border.strong` rules) sits above the newest commit the remote has (the
+  remote, a dashed **upstream line** (18px, mono 10 muted `above: not pushed`
+  between two 1px dashed `border.strong` rules; the upstream is named only in its `aria-label`) sits above the newest commit the remote has (the
   upstream's `mergeBase`); none when every listed commit is pushed or none is. Commits that belong to another branch
   (stacked) are at 60% opacity with a mono 11 warning pill naming the branch.
 - **One commit at a time** (flow D7): every commit row is a button (`role="option"`, tooltip

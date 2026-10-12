@@ -1135,7 +1135,7 @@ function EntryBar({
                 aria-label={t('review.notPushedHint', { name: up!.name, sha: c.shortSha })}
                 className={styles.upstreamLine}
               >
-                <span>{t('review.notPushed', { name: up!.name })}</span>
+                <span>{t('review.notPushed')}</span>
               </div>
             );
             return [

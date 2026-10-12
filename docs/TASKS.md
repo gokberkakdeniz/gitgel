@@ -622,6 +622,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Release notes: New / Improved / Fixed defined (a new detail or control in an existing panel or setting is Improved); a feature new in the release gets one line, without its own fixes and tweaks; lines most important first, no control icons, no tiny details (`.claude/agents/changelog-writer.md`, §12) — 2026-10-12
 - [x] (on request) Generate with Codex: the message is only Codex's answer block, not its banner, prompt and warnings — 2026-10-12
 - [x] (on request) Project page (and a project's Review): the header around the title drags the window; only the title's text renames — 2026-10-12
+- [x] (on request) Review's not-pushed line reads only "above: not pushed"; the upstream name is gone from it — 2026-10-12
 
 ---
 

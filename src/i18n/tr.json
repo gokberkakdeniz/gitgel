@@ -277,7 +277,7 @@
   "review.olderCommit": "Eski commit",
   "review.olderCommitHint": "Eski commit (⌥⇧↓)",
   "review.commitsList": "Commit'ler",
-  "review.notPushed": "{$name} · üstü gönderilmedi",
+  "review.notPushed": "üstü gönderilmedi",
   "review.notPushedHint": "{$name}, {$sha} konumunda; üstü gönderilmedi",
   "review.emptyTree": "boş ağaç",
   "review.conflictsBanner": ".input {$n :string} .input {$m :string} .match $n $m 1 1 {{1 dosyada, 1 kayıtta birleştirme çakışması var. Editöründe veya terminalde çöz; Gitgel çakışma işaretlerini Commitlenmeyen katmanda gösterir.}} * 1 {{ {$d} dosyada, 1 kayıtta birleştirme çakışması var. Editöründe veya terminalde çöz; Gitgel çakışma işaretlerini Commitlenmeyen katmanda gösterir.}} 1 * {{1 dosyada, {$e} kayıtta birleştirme çakışması var. Editöründe veya terminalde çöz; Gitgel çakışma işaretlerini Commitlenmeyen katmanda gösterir.}} * * {{ {$d} dosyada, {$e} kayıtta birleştirme çakışması var. Editöründe veya terminalde çöz; Gitgel çakışma işaretlerini Commitlenmeyen katmanda gösterir.}}",
