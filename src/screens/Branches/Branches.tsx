@@ -21,7 +21,7 @@ import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
 import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { conflictsTooltip } from '../../sync/operation';
 import { OperationPill } from '../../sync/OperationUi';
-import { SyncItems } from '../../sync/SyncButtons';
+import { RepoFetchButton, SyncItems } from '../../sync/SyncButtons';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { askDrop } from '../../stash/actions';
 import { StashTargetMenu } from '../../stash/StashTargetMenu';
@@ -428,6 +428,7 @@ function RepoSection({
   onPopover: (p: RowPopover) => void;
 }) {
   const pinned = config.pinnedRepos.includes(scan.repo.id);
+  const remote = scan.active.find((e) => e.upstream)?.upstream?.remote ?? scan.remotes[0]?.name.split('/')[0];
   return (
     <section id={`repo-${scan.repo.id}`} className={styles.section}>
       <div className={flash ? `${styles.band} ${styles.flash}` : styles.band}>
@@ -443,6 +444,9 @@ function RepoSection({
           <span className={styles.repoName}>{scan.name}</span>
           <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
         </button>
+        {scan.status === 'ok' && remote && (
+          <RepoFetchButton repoId={scan.repo.id} repoName={scan.name} remote={remote} className={styles.fetch} />
+        )}
         {scan.status === 'missing' ? (
           <Pill tone="danger" onClick={() => openSettings('repositories')}>
             {t('branches.pathNotFound')}

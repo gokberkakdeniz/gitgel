@@ -600,6 +600,10 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     (tooltip "Pin to top" / "Unpin"). It shows while the band is hovered or the button has
     focus, and always on a pinned band, where it is `accent.text`. Pins are kept in the config
     (`pinnedRepos`); removing a repo drops its pin.
+  - **Fetch**: before the count, a 24px icon button with a 13px `download` icon (tooltip
+    `Fetch <repo> from origin`) that fetches the repository (§15 "Sync"). Only for a repo with
+    a remote; it shows while the band is hovered, the button has focus or its fetch runs (the
+    icon spins); disabled while a sync runs in the repo.
 - **Row** (same grid, bottom border `border.row`):
   - Checkbox: visible only on the hovered row; once anything is selected, all are visible.
   - **Branch** cell, three lines (gap 3), so every row has the same height:
@@ -2575,7 +2579,7 @@ git action in the repository.
 ### Sync (W4a)
 
 Fetch, Pull and Push of one branch: buttons in the History header, and a group in the branch
-menus (Branches row, Project entry, Review entry). Review's header has none: it only shows where
+menus (Branches row, Project entry, Review entry); Fetch also on each Branches repo band. Review's header has none: it only shows where
 each branch stands. Each is a git action as above (`upload` icon; toast sub line `repo / branch`,
 `repo` for Fetch). Gitgel never fetches on its own, force-pushes only when asked ("Force push",
 `--force-with-lease`), and syncs one branch at a time.

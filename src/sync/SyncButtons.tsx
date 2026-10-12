@@ -1,4 +1,5 @@
 import { Icon, type IconName } from '../components/icons';
+import { IconButton } from '../components/IconButton';
 import { agoText, formatCount } from '../lib/format';
 import { t } from '../i18n';
 import { MenuDivider, MenuItem } from '../components/Menu';
@@ -91,6 +92,24 @@ function SyncButton({
       {children}
       {count && <span className={styles.count}>{count}</span>}
     </button>
+  );
+}
+
+/** Fetch of a whole repository: a 24px button in its Branches band. Spins while it runs. */
+export function RepoFetchButton({ repoId, repoName, remote, className }: { repoId: string; repoName: string; remote: string; className?: string }) {
+  const running = useRunningSync(repoId);
+  const busy = running === 'git:fetch';
+  return (
+    <IconButton
+      size={24}
+      aria-label={t('sync.fetchBtn')}
+      title={running && !busy ? t('sync.busy') : t('sync.fetchTitle', { repo: repoName, remote, fetch: '' })}
+      disabled={!!running}
+      className={busy ? `${className ?? ''} ${styles.running}` : className}
+      onClick={() => void fetchRepo({ repoId, repoName, branch: null, worktreePath: null, upstream: null })}
+    >
+      <Icon name={busy ? 'spinner' : 'download'} size={13} className={busy ? styles.spin : undefined} />
+    </IconButton>
   );
 }
 
