@@ -429,6 +429,10 @@ export function History({ repoId, rev, backLabel }: Props) {
   useEffect(() => {
     list.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
   }, [current]);
+  // And the picked file under it (next / previous change steps through them).
+  useEffect(() => {
+    listPane.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [current, file?.path]);
   const onScroll = (e: React.UIEvent<HTMLElement>) => {
     const el = e.currentTarget;
     const nearEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 400;
