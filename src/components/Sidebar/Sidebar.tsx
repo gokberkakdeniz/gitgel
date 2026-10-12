@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { installUpdate } from '../../lib/ipc';
 import { startDraftProject } from '../../lib/draft';
 import { openAddRepos } from '../../lib/addRepos';
@@ -54,6 +54,20 @@ export function Sidebar() {
   const pane = useRef<HTMLElement>(null);
   const [width, setWidth] = useStoredWidth('gitgel.sidebarWidth');
 
+  // Too narrow for "N repositories" (the header counts them too): the row hides and the "+" stays.
+  const repoLabel = useRef<HTMLSpanElement>(null);
+  const [repoNarrow, setRepoNarrow] = useState(false);
+  const repoText = t('sidebar.repositories', { ...cnt(repoCount) });
+  useLayoutEffect(() => {
+    const el = repoLabel.current;
+    if (!el) return;
+    const measure = () => setRepoNarrow(el.scrollWidth > el.clientWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [repoText]);
+
   return (
     <>
     <nav ref={pane} className={styles.sidebar} style={width ? { width } : undefined}>
@@ -97,10 +111,16 @@ export function Sidebar() {
 
       <UpdateRow />
 
-      <div className={styles.footer}>
-        <button type="button" className={styles.repoRow} onClick={() => openSettings('repositories')}>
+      <div className={repoNarrow ? `${styles.footer} ${styles.narrow}` : styles.footer}>
+        <button
+          type="button"
+          className={styles.repoRow}
+          tabIndex={repoNarrow ? -1 : undefined}
+          aria-hidden={repoNarrow || undefined}
+          onClick={() => openSettings('repositories')}
+        >
           <FolderIcon className={styles.folderIcon} />
-          <span className={styles.grow}>{t('sidebar.repositories', { ...cnt(repoCount) })}</span>
+          <span ref={repoLabel} className={styles.grow}>{repoText}</span>
         </button>
         <button
           type="button"

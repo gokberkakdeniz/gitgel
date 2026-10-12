@@ -183,6 +183,17 @@
   cursor: pointer;
 }
 
+/* One line; measured for overflow (Sidebar.tsx). */
+.repoRow .grow {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Too narrow for the label: the row keeps its place (to measure) but is not shown. */
+.narrow .repoRow {
+  visibility: hidden;
+}
+
 .repoRow:hover {
   background: var(--bg-sunken);
 }
@@ -204,6 +215,7 @@
 }
 
 .footer:hover .repoAdd,
+.narrow .repoAdd,
 .repoAdd:focus-visible {
   visibility: visible;
 }

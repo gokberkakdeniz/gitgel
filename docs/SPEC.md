@@ -555,7 +555,8 @@ inputs and textareas (the diff has its own menu, §5 Review).
 - **Footer** (56px, top border `#2a2825`): a 36px link row (folder icon + "N repositories",
   "1 repository") → Settings. On footer hover the row gets `bg.sunken` and a 32px "+" button
   appears (aria-label "Add repository", title "Add repository"; hidden but space kept
-  otherwise) that opens the folder picker and the add-repositories sheet. The gear → Settings is
+  otherwise) that opens the folder picker and the add-repositories sheet. When the sidebar is too
+  narrow for the row's text, the row is hidden and the "+" always shows. The gear → Settings is
   on the far right (`bg.sidebarActive` while on Settings).
 
 ### Branches (`Main.dc.html`)
