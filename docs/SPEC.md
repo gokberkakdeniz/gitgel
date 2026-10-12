@@ -2828,7 +2828,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   copies the full SHA; ✓ and "Copied" for 1.5 s); a hand selection across the header copies as one line (line breaks from the
   layout, and the body's within a wider selection, are collapsed to spaces, `·` to `-`, the relative time to `y/m/d h:i:s`), `·`
   `N files`, `+a` (`success`), `−d` (`danger`). For Uncommitted: "Uncommitted changes", meta
-  `<~worktree> · N files +a −d`. Then Review's file bar (compare label `<parent> ↔ <sha>` or `HEAD
+  `N files +a −d` (the worktree is in the subtitle). Then Review's file bar (compare label `<parent> ↔ <sha>` or `HEAD
   ↔ working tree`, whitespace chip, view menu, change navigation over the picked row's files) and
   the diff, with Review's view settings and ⌥V / ⌥C / ⌥W / ⌥↑ / ⌥↓.
 - **Refresh:** the page is fetched again when the repo is updated (`repo-updated`), keeping the

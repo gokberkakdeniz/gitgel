@@ -694,7 +694,7 @@ export function History({ repoId, rev, backLabel }: Props) {
           {error ? (
             <div className={parts.empty}>{error.message}</div>
           ) : current === WIP ? (
-            <WipHeader worktree={worktree} files={wipFiles} />
+            <WipHeader files={wipFiles} />
           ) : stash ? (
             <StashBar stash={stash} base={stashBase} />
           ) : commit ? (
@@ -1056,7 +1056,8 @@ function CommitHeader({
   );
 }
 
-function WipHeader({ worktree, files }: { worktree: string | null; files: FileChange[] }) {
+// The worktree path is already in the page subtitle.
+function WipHeader({ files }: { files: FileChange[] }) {
   const stat = totals(files);
   return (
     <div className={styles.head}>
@@ -1064,12 +1065,6 @@ function WipHeader({ worktree, files }: { worktree: string | null; files: FileCh
         <span className={parts.barTitle}>{t('history.wipTitle')}</span>
       </div>
       <div className={parts.barMeta}>
-        {worktree && (
-          <>
-            <span>{worktree}</span>
-            <span className={parts.dot}>·</span>
-          </>
-        )}
         <span>{t('branches.fileCount', { ...cnt(files.length) })}</span>
         <DiffStat add={stat.add} del={stat.del} />
       </div>

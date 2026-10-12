@@ -309,7 +309,7 @@ class Component extends DCLogic {
       line('add', 23, '  await store.delete(s.id);'), line('ctx', 24, '  return next;'), line('ctx', 25, '}')];
     var c;
     var left = wipLeft, right = wipRight;
-    var wipPane = { isOne: false, subject: 'Uncommitted changes', hasBody: false, isRange: false, lead: '~/code/wt/token-refresh · ', files: '3 files', add: '+29', del: '−1',
+    var wipPane = { isOne: false, subject: 'Uncommitted changes', hasBody: false, isRange: false, lead: '', files: '3 files', add: '+29', del: '−1',
       path: 'src/auth/refresh.ts', compare: 'HEAD ↔ working tree', nav: 'Change 1 of 2', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
     if (s === 'menu') {
       c = { isOne: true, subject: 'Persist refresh id with the session', hasBody: true, isRange: false,
