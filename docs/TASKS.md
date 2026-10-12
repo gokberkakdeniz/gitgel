@@ -625,6 +625,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Review's not-pushed line reads only "above: not pushed"; the upstream name is gone from it — 2026-10-12
 - [x] (on request) Branches: each repo band has a Fetch button (hover, before the count) for a repo with a remote — 2026-10-12
 - [x] (on request) Output panel: the sub line is `repo · ~/folder`, without the branch (full label in its tooltip) — 2026-10-12
+- [x] (on request) Generate with Cursor runs with `--trust`, so its workspace trust prompt no longer ends the run — 2026-10-12
 
 ---
 

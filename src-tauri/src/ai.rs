@@ -90,7 +90,8 @@ impl Provider {
                 )
             }
             // `agent` is Cursor's primary command (`cursor-agent` is its legacy alias).
-            Provider::Cursor => format!("agent -p {prompt} --output-format text{model}"),
+            // `--trust` answers its workspace trust prompt, which ends a headless run.
+            Provider::Cursor => format!("agent -p {prompt} --trust --output-format text{model}"),
             Provider::Antigravity => {
                 let effort = effort_flag("--effort");
                 format!("agy -p {prompt} --sandbox --output-format text --print-timeout 5m{model}{effort}")
@@ -744,7 +745,7 @@ mod tests {
         );
         assert_eq!(
             Provider::Cursor.command(false, false),
-            r#"agent -p "$GITGEL_PROMPT" --output-format text"#
+            r#"agent -p "$GITGEL_PROMPT" --trust --output-format text"#
         );
         assert_eq!(
             Provider::Antigravity.command(true, true),
