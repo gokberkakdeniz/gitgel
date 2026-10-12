@@ -2088,7 +2088,12 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   and `spctl --assess` pass.
 - **Release notes:** `CHANGELOG.md` holds one `## <version> — YYYY-MM-DD`
   section per release, newest first, with `### New`, `### Improved` and `### Fixed` groups of
-  `- ` lines in the user's terms (empty groups left out). Claude writes the section when a
+  `- ` lines in the user's terms (empty groups left out). New is a feature the user did not have;
+  Improved is something that existed doing or showing more (a new detail, option or control
+  in an existing panel or setting); Fixed is a bug from an earlier release. A feature new in the
+  release gets one line: its own fixes and tweaks are left out, and its parts join that line only
+  when needed to find or use it. Lines go most important first, name what a control does rather
+  than its icon, and skip details too small to notice. Claude writes the section when a
   release is asked for: it reads the commits since the previous `chore: release v…` commit, keeps
   only what a user would notice (no refactors, design canvas, docs, tests or tooling) and puts
   it in the same commit as the version bump (`chore: release v<version>`). `release.sh` stops

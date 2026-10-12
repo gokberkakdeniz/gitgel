@@ -619,6 +619,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Memory: Monaco loads without its TypeScript, CSS, HTML and JSON language services (`src/monaco/monaco.ts`; only the editor worker; JSON keeps its tokenizer); hovers and folded-region breadcrumbs from those services are gone (frontend assets 16.2 → 6.4 MB; WebContent with TS, JSON and CSS diffs opened ~260 → ~190 MB) — 2026-10-12
 - [x] (on request) Commit form: the ✦ generate button is hidden, not disabled, when no provider is switched on and installed — 2026-10-12
 - [x] (on request) Sidebar footer: too narrow for "N repositories", the row hides and the "+" always shows — 2026-10-12
+- [x] (on request) Release notes: New / Improved / Fixed defined (a new detail or control in an existing panel or setting is Improved); a feature new in the release gets one line, without its own fixes and tweaks; lines most important first, no control icons, no tiny details (`.claude/agents/changelog-writer.md`, §12) — 2026-10-12
 
 ---
 
