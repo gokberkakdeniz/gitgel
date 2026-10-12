@@ -627,6 +627,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Output panel: the sub line keeps the repo whole, branch and folder share the rest equally (ellipsis when long), each part copies on click — 2026-10-12
 - [x] (on request) Generate with Cursor runs with `--trust`, so its workspace trust prompt no longer ends the run — 2026-10-12
 - [x] (on request) Review entry bar: a long branch name ends in an ellipsis instead of running under the ahead / upstream text — 2026-10-12
+- [x] (on request) Menus: an item's label stops at two lines and ends in "…" (long script names break anywhere; the whole name as tooltip) — 2026-10-12
 
 ---
 

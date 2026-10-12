@@ -29,8 +29,15 @@
   cursor: default;
 }
 
+/* At most two lines: a long filled-in name (a script's) breaks anywhere and ends in "…". */
 .label {
   flex-grow: 1;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .stacked {
@@ -73,6 +80,7 @@
 }
 
 .oneLine {
+  display: block;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;

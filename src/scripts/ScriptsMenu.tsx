@@ -36,6 +36,7 @@ export function ScriptsMenu({
         <MenuItem
           key={s.id}
           icon={<Icon name={isIconName(s.icon) ? s.icon : 'prompt'} size={14} strokeWidth={1.8} />}
+          title={fillName(s.name, entry)}
           onSelect={() => {
             onDone();
             pickScript(s, entry, menu, project);
