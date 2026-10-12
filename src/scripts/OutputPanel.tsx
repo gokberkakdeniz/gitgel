@@ -9,6 +9,7 @@ import { Popover } from '../components/Popover';
 import { ResizeHandle } from '../components/ResizeHandle';
 import { Modal, ModalFooter } from '../components/Modal';
 import { Pill } from '../components/Pill';
+import { tildifyHome } from '../lib/paths';
 import { getScriptRun, resizeScript, stopScript, writeScriptInput } from '../lib/ipc';
 import { t } from '../i18n';
 import type { ScriptRun } from '../lib/types';
@@ -284,8 +285,9 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
           <ScriptIcon name={run.icon} />
           <div className={styles.titles}>
             <h2 className={styles.title}>{run.name}</h2>
-            <span className={styles.sub} title={run.folder}>
-              {run.repoLabel} · {run.folder}
+            {/* The repo only: the branch is long and the folder already says which worktree. */}
+            <span className={styles.sub} title={`${run.repoLabel} · ${run.folder}`}>
+              {run.repoLabel.split(' / ')[0]} · {tildifyHome(run.folder)}
             </span>
           </div>
           {pill}
