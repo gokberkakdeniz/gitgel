@@ -155,10 +155,6 @@ export function History({ repoId, rev, backLabel }: Props) {
   );
   // The bolt's provider: the menu's topmost; none when nothing switched on is installed.
   const provider = menuProviders[0] ?? null;
-  const noProvider =
-    enabledProviders.length === 0
-      ? t('history.turnOnFirst')
-      : t('history.providerMissing', { provider: providerLabel(enabledProviders[0]) });
   const [generating, setGenerating] = useState(false);
   // The generation this form waits for; a late answer never unlocks a newer one.
   const genRun = useRef<string | null>(null);
@@ -220,10 +216,7 @@ export function History({ repoId, rev, backLabel }: Props) {
     if (!entryRef || generating) return;
     // From the menu: generate with the picked provider at once.
     const active = forced ?? provider;
-    if (!active) {
-      useUi.getState().showToast({ status: 'failed', message: noProvider });
-      return;
-    }
+    if (!active) return;
     // The answer may land on another branch: only this form takes it.
     const mine = here.current;
     const stop = () => {
@@ -682,7 +675,6 @@ export function History({ repoId, rev, backLabel }: Props) {
               }
               provider={provider}
               providers={menuProviders}
-              noProvider={noProvider}
               generating={generating}
               aiEnabled={ai?.enabled ?? true}
               onSummary={setSummary}

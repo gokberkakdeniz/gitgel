@@ -617,6 +617,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Canvas: M7 Settings › Appearance and M8 Settings › AI boards, L3 shows Appearance, the format selects list every choice — 2026-10-11
 - [x] (on request) Memory: the merged walk reads a commit's date every 1024 commits instead of every commit, and the app launches with `MallocLargeCache=0` (`Info.plist` LSEnvironment) so freed memory goes back to macOS (bench repos, cold scan: peak 294 → 248 MB, 147 → 38 MB after it; vscode merged walk 1.6 → 0.75 s) — 2026-10-11
 - [x] (on request) Memory: Monaco loads without its TypeScript, CSS, HTML and JSON language services (`src/monaco/monaco.ts`; only the editor worker; JSON keeps its tokenizer); hovers and folded-region breadcrumbs from those services are gone (frontend assets 16.2 → 6.4 MB; WebContent with TS, JSON and CSS diffs opened ~260 → ~190 MB) — 2026-10-12
+- [x] (on request) Commit form: the ✦ generate button is hidden, not disabled, when no provider is switched on and installed — 2026-10-12
 
 ---
 

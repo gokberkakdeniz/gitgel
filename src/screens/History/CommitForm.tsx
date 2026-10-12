@@ -24,7 +24,6 @@ export function CommitForm({
   blocked,
   provider,
   providers,
-  noProvider,
   generating,
   aiEnabled,
   onSummary,
@@ -40,12 +39,10 @@ export function CommitForm({
   committing: boolean;
   /** Why Commit cannot run besides an empty summary or no files; null when nothing blocks it. */
   blocked: string | null;
-  /** The ✦'s provider: the menu's topmost; null when the menu is empty. */
+  /** The ✦'s provider: the menu's topmost; null (no ✦) when the menu is empty. */
   provider: CommitProvider | null;
   /** The menu's providers: switched on and installed, in menu order. */
   providers: CommitProvider[];
-  /** Why the ✦ cannot run while `provider` is null. */
-  noProvider: string;
   generating: boolean;
   /** The ✦ shows when AI is on (Settings › AI). */
   aiEnabled: boolean;
@@ -67,7 +64,7 @@ export function CommitForm({
     : (blocked ?? (files === 0 ? t('history.checkFile') : summary.trim() === '' ? t('history.writeSummary') : t('history.commitTo', { rev })));
   const [menu, setMenu] = useState<DOMRect | null>(null);
   const canGenerate = files > 0 && !blocked && !committing && !generating;
-  const generateWith = provider ? t('history.genWith', { provider: providerLabel(provider) }) : noProvider;
+  const generateWith = provider ? t('history.genWith', { provider: providerLabel(provider) }) : '';
   return (
     <form
       aria-label={t('history.commitForm')}
@@ -86,13 +83,14 @@ export function CommitForm({
         disabled={committing}
         onKeyDown={submitOnKey}
         rightText={
-          aiEnabled && (
+          aiEnabled &&
+          provider && (
             <IconButton
               size={24}
               aria-label={generateWith}
               title={generating ? t('history.askingMsg') : generateWith}
               active={menu !== null}
-              disabled={!canGenerate || !provider}
+              disabled={!canGenerate}
               onClick={() => onGenerate()}
               onContextMenu={(e) => {
                 e.preventDefault();

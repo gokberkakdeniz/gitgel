@@ -2799,8 +2799,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     and installed provider in menu order) that fills the summary and description, which stay
     editable. Right-click on it opens its menu (the switched-on providers in menu order;
     switched off or missing ones are not listed at all); picking one generates with it at
-    once, leaving the default alone. With no provider to list it is disabled, its tooltip
-    saying why ("Turn on a provider first", or "<provider> is not installed"). While it runs
+    once, leaving the default alone. With no provider to list it is hidden. While it runs
     the ✦ is a spinner, and a running toast opens the generation's output panel on click, so a slow
     provider can be watched (and stopped); a failure shows a failed toast and leaves the form
     alone.
