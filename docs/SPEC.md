@@ -797,7 +797,7 @@ Layout:
     groups are collapsed.
 - **Entry bar** (padding 12px 18px, bottom border): 14px/600 repo name (link: goes to Branches,
   scrolls to that repo's band and highlights it briefly), mono 12 branch (link: opens its History,
-  §16; tooltip `Show history of <branch>`), a mono 11 muted range only when it adds something
+  §16; tooltip `Show history of <branch>`; a long one ends in an ellipsis before the right side), a mono 11 muted range only when it adds something
   (`working tree <~path>` in Uncommitted, `<parent>..<sha>` with a commit picked), and on the
   right 12px muted `N commits ahead of <base>`, the base a link to its History, then
   ` · <upstream state>` (Uncommitted:

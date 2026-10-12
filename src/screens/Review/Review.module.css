@@ -99,11 +99,19 @@
   min-width: 0;
 }
 
+.entryNames .repoName {
+  flex-shrink: 0;
+}
+
+/* A long branch ends in an ellipsis before the counts on the right (its tooltip names it). */
 .entryBranch {
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-body);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .entryRange {
