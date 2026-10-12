@@ -12,21 +12,18 @@ interface Props {
   subtitle?: ReactNode;
   /** Right-hand actions. */
   children?: ReactNode;
-  /** Off where clicking the title renames the project (Project, Review of a project). */
-  dragTitle?: boolean;
   /** A page opened from another (Review, History) names where Back goes and draws it stronger. */
   backLabel?: string;
 }
 
 /** The 64px page header. With the sidebar hidden it leaves room for the traffic lights and
  * shows the show-sidebar, back and forward buttons. */
-export function PageHeader({ title, subtitle, children, dragTitle = true, backLabel }: Props) {
+export function PageHeader({ title, subtitle, children, backLabel }: Props) {
   const sidebarVisible = useUi((s) => s.sidebarVisible);
   const canBack = useNav(selectCanBack);
   const canForward = useNav(selectCanForward);
   const back = useNav((s) => s.back);
   const forward = useNav((s) => s.forward);
-  const drag = dragTitle ? { 'data-tauri-drag-region': true } : {};
 
   return (
     <header className={sidebarVisible ? styles.header : `${styles.header} ${styles.bare}`} data-tauri-drag-region>
@@ -49,12 +46,13 @@ export function PageHeader({ title, subtitle, children, dragTitle = true, backLa
           </IconButton>
         </div>
       )}
-      <div className={styles.titles} {...drag}>
-        <h1 className="page-title" {...drag}>
+      {/* An editable title inside (no drag attribute of its own) still takes its click. */}
+      <div className={styles.titles} data-tauri-drag-region>
+        <h1 className="page-title" data-tauri-drag-region>
           {title}
         </h1>
         {subtitle && (
-          <div className={styles.subtitle} {...drag}>
+          <div className={styles.subtitle} data-tauri-drag-region>
             {subtitle}
           </div>
         )}

@@ -512,7 +512,7 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
 1280 × 800 (min 1100 × 680), overlay title bar with hidden title; the native traffic lights sit
 top-left (≈70px kept free). Title rows (sidebar top row, page headers) carry
 `data-tauri-drag-region` on the element itself, never on buttons or inputs, and not on the
-Project title (a click renames it). The default webview context menu is disabled except in
+Project title's text (a click renames it; the space around it still drags). The default webview context menu is disabled except in
 inputs and textareas (the diff has its own menu, §5 Review).
 
 ---

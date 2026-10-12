@@ -743,8 +743,6 @@ function ReviewHeader({
   return (
     <PageHeader
       backLabel={backLabel}
-      // Project scope: click renames the project in place, as on its page.
-      dragTitle={!project}
       title={
         renaming && project ? (
           <ProjectNameInput

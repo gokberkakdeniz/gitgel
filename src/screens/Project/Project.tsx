@@ -339,7 +339,7 @@ function ProjectHeader(props: HeaderProps) {
     : subtitle;
 
   return (
-    <PageHeader title={titleNode} subtitle={<span className={conflict ? styles.danger : undefined}>{sub}</span>} dragTitle={false}>
+    <PageHeader title={titleNode} subtitle={<span className={conflict ? styles.danger : undefined}>{sub}</span>}>
       {children}
     </PageHeader>
   );
