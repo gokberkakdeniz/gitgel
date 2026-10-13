@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.22 — 2026-10-13
+
+### New
+- Amend the newest commit from History.
+- Switch Branch (⇧⌘B) opens another branch's History.
+
+### Improved
+- ⌘B shows or hides the sidebar.
+- Fetch on each Branches repo.
+- Script output copies its repo, branch and folder on click.
+
+### Fixed
+- AI commit messages from Codex keep only its answer.
+- AI commit messages work with Cursor.
+- History's diverged banner buttons wait for a running git action.
+- A long branch in Review no longer runs under the counts.
+- Long script names in menus end in an ellipsis.
+- Project header drags the window beside its title.
+
 ## 0.1.21 — 2026-10-12
 
 ### New
