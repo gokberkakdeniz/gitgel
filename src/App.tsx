@@ -18,6 +18,7 @@ import { getLocale, resolveLocale, setLocale } from './i18n';
 import { t } from './i18n';
 import { revealWindow } from './lib/ipc';
 import { isTextField } from './lib/shortcuts';
+import { setSidebarVisible } from './lib/sidebar';
 import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from './lib/theme';
 import { useFolderDrop } from './lib/useFolderDrop';
 import { useWhatsNewAfterUpdate } from './lib/whatsNew';
@@ -78,6 +79,7 @@ export default function App() {
 
   // ⌘N: new project (flow C), from anywhere unless a modal is open. ⌘R never reloads the
   // webview; on the Project screen it opens the review. ⌘← / ⌘→ (and ⌘[ / ⌘]): back / forward.
+  // ⌘B shows or hides the sidebar.
   // ⌘, (Settings) is the app menu's. Listed in lib/shortcuts.ts. Caught before the diff: Monaco
   // takes ⌘← / ⌘→ (line start / end) and stops them there.
   useEffect(() => {
@@ -95,6 +97,10 @@ export default function App() {
       if (e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'n' && useUi.getState().modalCount === 0) {
         e.preventDefault();
         startDraftProject([]);
+      }
+      if (e.metaKey && !e.shiftKey && !e.altKey && e.code === 'KeyB' && useUi.getState().modalCount === 0) {
+        e.preventDefault();
+        setSidebarVisible(!useUi.getState().sidebarVisible);
       }
     };
     window.addEventListener('keydown', onKey, true);

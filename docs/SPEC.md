@@ -1246,6 +1246,7 @@ Forward are caught before Monaco (which would take ⌘← / ⌘→ for line star
 | Group | Action | Keys | Where |
 |---|---|---|---|
 | General | New project | ⌘N | everywhere, unless a modal is open |
+| | Show / hide sidebar | ⌘B | everywhere, unless a modal is open |
 | | Back / Forward | ⌘[ / ⌘] (physical keys; ⌘ğ / ⌘ü on a Turkish Q layout), also ⌘← / ⌘→ outside text fields (the diff is not one) | everywhere |
 | | Settings | ⌘, | app menu |
 | | Font size | ⌘- / ⌘. , ⌘0 resets | View menu |

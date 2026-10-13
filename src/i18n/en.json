@@ -365,6 +365,7 @@
   "shortcuts.review": "Review",
   "shortcuts.lists": "Lists and dialogs",
   "shortcuts.newProject": "New Project…",
+  "shortcuts.toggleSidebar": "Show or hide sidebar",
   "shortcuts.back": "Back",
   "shortcuts.backNote": "also ⌘←",
   "shortcuts.forward": "Forward",
