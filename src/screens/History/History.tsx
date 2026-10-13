@@ -15,7 +15,7 @@ import { Checkbox } from '../../components/Checkbox';
 import { nameRun, startGitAction, showRunToast, useRuns } from '../../scripts/runs';
 import { onGenerateFinished, providerLabel, providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
-import { conflictOf } from '../../sync/operation';
+import { conflictOf, useGitActionRunning } from '../../sync/operation';
 import { OperationBanner } from '../../sync/OperationUi';
 import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
 import { divergedBanner, forcePushBranch, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
@@ -502,6 +502,8 @@ export function History({ repoId, rev, backLabel }: Props) {
     operation: entry?.operation ?? null,
   };
   const diverged = divergedBanner(syncTarget);
+  // Its buttons wait while a git action runs in the repository (one at a time).
+  const gitBusy = useGitActionRunning(repoId);
   const stashAction = useStashAction(wipReview?.groups ?? []);
   // Only an active branch (or a detached worktree's SHA) has a Review.
   const toReview = useSwitchTo(
@@ -671,11 +673,21 @@ export function History({ repoId, rev, backLabel }: Props) {
         <Banner tone="warning">
           <span className={parts.grow}>{diverged}</span>
           {!syncState(syncTarget).pull && (
-            <Button size={24} onClick={() => void pullBranch(syncTarget, true)}>
+            <Button
+              size={24}
+              disabled={gitBusy}
+              title={gitBusy ? t('sync.gitBusy') : undefined}
+              onClick={() => void pullBranch(syncTarget, true)}
+            >
               {t('history.pullRebase')}
             </Button>
           )}
-          <Button size={24} onClick={() => void forcePushBranch(syncTarget)}>
+          <Button
+            size={24}
+            disabled={gitBusy}
+            title={gitBusy ? t('sync.gitBusy') : undefined}
+            onClick={() => void forcePushBranch(syncTarget)}
+          >
             {t('history.forcePush')}
           </Button>
         </Banner>

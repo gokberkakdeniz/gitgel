@@ -2613,7 +2613,8 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   ones carry the reason as tooltip. While a sync runs in the repository all three are disabled
   and the running one's icon spins. Diverged: a warning banner under the header, `<branch> is
   behind origin by 1 commit, so it cannot be pushed. Pull it first.`, with a 24px "Pull (rebase)"
-  button when checked out and a 24px "Force push" button.
+  button when checked out and a 24px "Force push" button; both are disabled ("A git action is
+  running") while any git action runs in the repository, the force push itself included.
 - **Branch menus** (`FlowR1`): after the open items, a divider, then "Fetch"
   (`download`), "Pull" (`arrow-down`, hint `↓N`), "Pull (rebase)" (`rebase`; only when diverged
   and checked out), "Rebase on `<base>`" (`rebase`; a checked-out branch whose base, custom or
