@@ -340,6 +340,10 @@ pub struct CommitFiles {
     /// `--no-verify`: the commit hooks are skipped (the failed output panel's "Commit without
     /// hooks").
     pub no_verify: bool,
+    /// Amend (Hi10): the SHA of the newest commit, which `--amend` replaces; refused when HEAD
+    /// moved since. The files may then be none (only the message changes).
+    #[serde(default)]
+    pub amend: Option<String>,
 }
 
 /// How the one command of a Commit is built.
@@ -351,6 +355,7 @@ pub(super) struct CommitShape {
     pub unstage: usize,
     pub body: bool,
     pub no_verify: bool,
+    pub amend: bool,
 }
 
 /// Paths whose staged state differs from HEAD in the entry's worktree: the boxes of Uncommitted
@@ -367,7 +372,8 @@ pub fn staged_paths(state: &AppState, entry: &EntryRef) -> Result<Vec<String>, A
 
 /// Commit (W1a): the checked files of the entry's worktree become one commit. The index is made
 /// to match the boxes (checked files staged whole, staged files left unchecked taken out), then
-/// `git commit` runs with the user's hooks (husky, lefthook, `core.hooksPath`).
+/// `git commit` runs with the user's hooks (husky, lefthook, `core.hooksPath`); `--amend` for an
+/// Amend (Hi10).
 pub fn commit(
     state: &AppState,
     entry: EntryRef,
@@ -378,7 +384,7 @@ pub fn commit(
     if summary.is_empty() {
         return Err(AppError::Invalid("Write a summary.".into()));
     }
-    if files.include.is_empty() {
+    if files.include.is_empty() && files.amend.is_none() {
         return Err(AppError::Invalid("Pick at least one file.".into()));
     }
     if files
@@ -400,6 +406,14 @@ pub fn commit(
     let staged = {
         let shared = state.pool.get(&tree.path)?;
         let wt = lock(&shared);
+        if let Some(sha) = &files.amend {
+            let head = wt.head().and_then(|h| h.peel_to_commit()).ok();
+            if head.map(|c| c.id().to_string()).as_deref() != Some(sha.as_str()) {
+                return Err(AppError::Invalid(
+                    "The branch has a new commit; amend again.".into(),
+                ));
+            }
+        }
         worktrees::staged(&wt)?.0
     };
     let unstage: Vec<&String> = staged
@@ -429,12 +443,13 @@ pub fn commit(
         unstage: unstage.len(),
         body: !body.is_empty(),
         no_verify: files.no_verify,
+        amend: files.amend.is_some(),
     };
     run::launch(
         state,
         Launch {
             script_id: format!("{ACTION_PREFIX}commit"),
-            name: "Commit".into(),
+            name: if shape.amend { "Amend" } else { "Commit" }.into(),
             icon: ICON.into(),
             entry_key: entry_key(
                 &repo.id,
@@ -950,11 +965,16 @@ pub(super) fn commit_command(shape: CommitShape) -> String {
             list("GITGEL_UNSTAGE", shape.unstage)
         ));
     }
-    steps.push(format!(
-        "{git} add -A --{}",
-        list("GITGEL_PATH", shape.paths)
-    ));
+    if shape.paths > 0 {
+        steps.push(format!(
+            "{git} add -A --{}",
+            list("GITGEL_PATH", shape.paths)
+        ));
+    }
     let mut commit = format!("{git} commit");
+    if shape.amend {
+        commit.push_str(" --amend");
+    }
     if shape.no_verify {
         commit.push_str(" --no-verify");
     }
@@ -1151,6 +1171,7 @@ mod tests {
             unstage: 0,
             body: false,
             no_verify: false,
+            amend: false,
         };
         assert_eq!(
             commit_command(plain),
@@ -1161,10 +1182,23 @@ mod tests {
             unstage: 1,
             body: true,
             no_verify: true,
+            amend: false,
         };
         assert_eq!(
             commit_command(full),
             r#"git -C "$GITGEL_FOLDER" reset -q -- "$GITGEL_UNSTAGE_1" && git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" && git -C "$GITGEL_FOLDER" commit --no-verify -m "$GITGEL_SUMMARY" -m "$GITGEL_BODY""#
+        );
+        // Amend with no files: only the message changes.
+        let amend = CommitShape {
+            paths: 0,
+            unstage: 1,
+            body: false,
+            no_verify: false,
+            amend: true,
+        };
+        assert_eq!(
+            commit_command(amend),
+            r#"git -C "$GITGEL_FOLDER" reset -q -- "$GITGEL_UNSTAGE_1" && git -C "$GITGEL_FOLDER" commit --amend -m "$GITGEL_SUMMARY""#
         );
     }
 }

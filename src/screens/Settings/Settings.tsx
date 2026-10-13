@@ -183,6 +183,7 @@ function Prompts({ config }: { config: Config }) {
     ['discardChanges', 'settings.promptDiscard'],
     ['discardStash', 'settings.promptStash'],
     ['abortOperation', 'settings.promptAbort'],
+    ['amendPushed', 'settings.promptAmend'],
     ['deleteProjects', 'settings.promptDelete'],
   ];
   return (

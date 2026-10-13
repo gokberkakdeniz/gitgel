@@ -201,7 +201,7 @@ gitgel/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
 │  │            # Review/parts.tsx (+ parts.module.css): file bar (view menu, change navigation),
 │  │            #   file row, stash section, diff view settings, page layout (shared with History, §16)
-│  │            # History/: the History screen, its list rows, the commit form and Switch Branch (§16)
+│  │            # History/: the History screen, its list rows, the commit form, Switch Branch and AmendModal (§16)
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
@@ -1135,9 +1135,10 @@ Layout:
 - **Prompts** (M6, `FlowM6`; GitHub Desktop's section and texts): serif 18px heading "Show a
   confirmation dialog before...", then one `Checkbox` per line, gap 12: "Removing repositories"
   (the Repositories ✕), "Discarding changes" (§15 "Discard"), "Dropping stashes" (Drop, P6),
-  "Deleting projects" (flow G), "Aborting a rebase or merge" (T3). All on by default (`settings.prompts`); off, the action runs
+  "Deleting projects" (flow G), "Aborting a rebase or merge" (T3), "Amending pushed commits"
+  (Hi10). All on by default (`settings.prompts`); off, the action runs
   without its dialog. Saved at once. Each of those dialogs has a `Checkbox` "Do not show this
-  message again" above its buttons (`ConfirmModal`'s `dontAsk`; Confirm Discard Changes its own,
+  message again" above its buttons (`ConfirmModal`'s `dontAsk`; Confirm Discard Changes and Amend Will Require Force Push their own,
   §15); confirming with it checked turns its box here off (`src/lib/prompts.ts`).
 - **Shortcuts:** serif 18px heading "Keyboard shortcuts" + muted "Not editable yet"; four cards
   (`bg.sunken`, radius 12, padding 6px 0) in a `repeat(2, minmax(max-content, 1fr))` grid, gap 12
@@ -1403,6 +1404,7 @@ export interface Prompts {       // "Show a Confirmation Dialog Before…"
   discardStash: boolean;         // Drop (P6)
   deleteProjects: boolean;       // flow G
   abortOperation: boolean;       // Abort of a rebase or merge (T3)
+  amendPushed: boolean;          // Amend of a commit already on the remote (Hi10)
 }
 export interface Config {
   version: 1;
@@ -1730,7 +1732,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `stash_push` | `entries: StashPush[]` (an `EntryRef` with `paths: string[] \| null`, `untracked`), `message: string` | `ScriptRun` (one git action for all entries, §15) |
 | `stash_apply` | `repoId, index, sha, worktreePath, pop: boolean` | `ScriptRun` |
 | `stash_drop` | `repoId, index, sha` | `ScriptRun` |
-| `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`include: string[]`, `summary`, `description`, `noVerify`) | `ScriptRun` (§15 "Commit") |
+| `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`include: string[]`, `summary`, `description`, `noVerify`, `amend`: the newest commit's SHA or null) | `ScriptRun` (§15 "Commit") |
 | `get_staged_paths` | `entry: EntryRef` | `string[]` (paths staged in the entry's worktree) |
 | `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`) | `ScriptRun` (§15 "Discard") |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
@@ -2004,7 +2006,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–87 (Language 59–65; Terminal 68–80, options with disabled flag 307; Check for updates 83–85), Appearance: Theme 91–110, tile builder 249; Formatting 112–130 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 131–137 with Tab size, Scripts 139–157 (`List` 117, items 309–314), Prompts 123–130 (data 286), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79) |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
@@ -2552,7 +2554,9 @@ Commit (W1a, in History, §16) is a git action too: name "Commit", `package` ico
 `GIT_LITERAL_PATHSPECS=1`. So the index ends up as the boxes say: checked files go in whole (new,
 changed, deleted; a rename's old path too), staged files left unchecked are unstaged and stay
 changed. Refused before running: an empty summary, no file, an entry that is not checked out, another
-git action in the repository.
+git action in the repository. An Amend (§16, Hi10) is the same run with `--amend` after `commit`
+(name "Amend", no `add` when no file is checked) and the newest commit's SHA: it is refused when
+the worktree's HEAD is another commit by then.
 
 - **Running** (`HistH7`): the run toast “Committing…” (sub `repo / branch`); a click opens the
   output panel with the hooks' output.
@@ -2733,7 +2737,7 @@ never edits `~/.ssh`:
 A branch's commits, newest first, each one shown on its own against its first parent, like
 GitHub Desktop's History tab. Reads are a revwalk and diffs; the writes are Commit and Discard (§15).
 Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `HistH7`,
-`HistH8`, `HistH9`, `HistH10.dc.html` (§11).
+`HistH8`, `HistH9`, `HistH10`, `HistH11.dc.html` (§11).
 
 - **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
   branch, a remote-tracking branch or a SHA) and walks from it by committer time, newest first
@@ -2796,7 +2800,10 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     `[bot]` gets "BOT" in `text.muted` on `bg.band` with a 1px dashed `border.strong`. Then 13px
     `text.strong` subject (ellipsis) with an outline sm pill "merge" for a merge commit; line 2
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
-    below the base line: subject `text.muted`, row opacity 0.7.
+    below the base line: subject `text.muted`, row opacity 0.7. Right-click on it (`HistH11`,
+    Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
+    in a worktree; disabled while a commit runs or mid-operation) and a divider, then "Copy SHA"
+    (`copy`). The commit being amended carries an accent sm pill "amending" after its subject.
   - **Base line** (`HistH4`): when `ahead` > 0, after the last commit not in the base: a 1px
     `border.strong` rule on both sides of mono 11 muted `base <base>`.
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -2834,6 +2841,25 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **After it ends:** success empties the form and shows the toast “Committed to <rev>”. A failure
     (a hook exited non-zero, or git refused) keeps the message and the boxes, opens the output
     panel, and puts the pill on the Uncommitted row, until the next commit starts.
+  - **Amend** (`HistH11`, Hi10; GitHub Desktop's flow and texts): "Amend Commit…" on the newest
+    commit. When that commit is on the remote already (the upstream has no commits to push), it
+    first asks "Amend Will Require Force Push" (`AmendModal`, 560px, as Confirm Discard Changes:
+    the warning icon, "Are you sure you want to amend?", "At the end of the amend flow, Gitgel
+    will enable you to force push the branch to update the upstream branch. Force pushing will
+    alter the history on the remote and potentially cause problems for others collaborating on
+    this branch.", "Do not show this message again" (Settings › Prompts › "Amending pushed
+    commits"), Cancel (focused) and primary "Begin Amend"). Then the form is in amend mode: the
+    summary and description are the commit's (the text there before is kept aside), Uncommitted
+    is picked when there is one, and the form stays whatever row is picked. Above the button a
+    `border.strong` rule with a 16px "i" in `accent.text` in its middle, then centred 12px muted
+    "Your changes will modify your **most recent commit**. <u>Stop amending</u> to make these
+    changes as a new commit." (bold `text.strong`; the link `accent.text`, underlined). Stop
+    amending puts the earlier text back. The button reads "Amend Last Commit" (tooltip `Amend
+    <sha> on <rev>`; "Amending…" while it runs) and needs a summary but no file: the checked
+    files go into the commit, none changes only the message. Success empties the form and ends
+    amend mode (toast “Amended the last commit of <rev>”); a commit on the remote leaves the
+    branch diverged, so the diverged banner offers Force Push. If the branch gets a new commit
+    meanwhile, amend mode ends by itself.
 - **Picking:** on opening, Uncommitted when there is one, else the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,
   Uncommitted included. Clicking the picked row again folds its file list, and opens it again;

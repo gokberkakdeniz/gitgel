@@ -630,6 +630,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Menus: an item's label stays on one line and ends in "…" (a long script name has its whole name as tooltip) — 2026-10-12
 - [x] (on request) History: "Switch Branch…" (⇧⌘B) in the page menu opens the Add palette's dialog for the repo's branches (worktrees, active; older and remote while searching); a pick opens that branch's History in place; canvas Hi9 (`HistH10.dc.html`) — 2026-10-13
 - [x] (on request) ⌘B shows or hides the sidebar — 2026-10-13
+- [x] (on request) Amend as GitHub Desktop: "Amend Commit…" in the newest commit's right-click menu (with Copy SHA), "Amend Will Require Force Push" first when it is on the remote (Settings › Prompts › "Amending pushed commits"), the commit form in amend mode with "Stop amending" and "Amend Last Commit" (`git commit --amend`, files optional); canvas Hi10 (`HistH11.dc.html`), moved from the WIP page (W2a) — 2026-10-13
 
 ---
 

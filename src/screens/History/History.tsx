@@ -29,6 +29,7 @@ import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, get
 import { tildifyHome } from '../../lib/paths';
 import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { commitUrl } from '../../monaco/reference';
@@ -40,6 +41,7 @@ import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSwitchTo, typ
 import parts from '../Review/parts.module.css';
 import type { ReviewStash } from '../Review/stashes';
 import styles from './History.module.css';
+import { AmendModal } from './AmendModal';
 import { CommitForm } from './CommitForm';
 import { SwitchBranchDialog } from './SwitchBranch';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
@@ -122,9 +124,14 @@ export function History({ repoId, rev, backLabel }: Props) {
   };
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
+  // Amend (Hi10): the newest commit the form rewrites, and the form as it was before, which Stop
+  // amending puts back.
+  const [amending, setAmending] = useState<{ sha: string; short: string; summary: string; description: string } | null>(null);
+  const [askAmend, setAskAmend] = useState<HistoryCommit | null>(null);
   useEffect(() => {
     setSummary('');
     setDescription('');
+    setAmending(null);
   }, [repoId, rev]);
   // Generate message (SPEC §15): the provider's CLI writes the form for the checked files.
   // The default is the topmost switched-on provider in menu order (Settings › AI).
@@ -174,14 +181,17 @@ export function History({ repoId, rev, backLabel }: Props) {
   );
   const commitFailed =
     !!lastCommit && lastCommit.status === 'exited' && lastCommit.exitCode !== 0 && !lastCommit.stopped;
-  const included = wipFiles.filter(checked);
+  const included = wip ? wipFiles.filter(checked) : [];
   const commitNow = (files: CommitFiles) => {
     if (!entryRef) return;
     // Retry and Commit Without Hooks send the same files and message again.
     const again = (noVerify: boolean) => commitNow({ ...files, noVerify });
-    void startGitAction(t('history.commitBtn'), t('history.committing'), () => gitCommit(entryRef, files), {
+    const amend = !!files.amend;
+    const name = amend ? t('amend.button') : t('history.commitBtn');
+    const running = amend ? t('history.amending') : t('history.committing');
+    void startGitAction(name, running, () => gitCommit(entryRef, files), {
       openOnFail: true,
-      done: t('history.committedTo', { rev }),
+      done: amend ? t('history.amended', { rev }) : t('history.committedTo', { rev }),
       onStart: (runId) => {
         // The form empties when the commit lands; a failed one keeps the message.
         const ended = () => {
@@ -191,6 +201,7 @@ export function History({ repoId, rev, backLabel }: Props) {
             setSummary('');
             setDescription('');
             setBoxes({});
+            setAmending(null);
           }
           return true;
         };
@@ -209,7 +220,28 @@ export function History({ repoId, rev, backLabel }: Props) {
       summary,
       description,
       noVerify: false,
+      amend: amending?.sha ?? null,
     });
+  const beginAmend = (c: HistoryCommit) => {
+    setAmending((a) => a ?? { sha: c.sha, short: c.shortSha, summary, description });
+    setSummary(c.subject);
+    setDescription(c.body);
+    if (wip) pick(WIP);
+  };
+  // A commit already on the remote asks first (Settings › Prompts can turn that off).
+  const startAmend = (c: HistoryCommit) => {
+    const up = data?.upstream;
+    const pushed = !!up?.name && up.ahead === 0;
+    const ask = useData.getState().config?.settings.prompts.amendPushed !== false;
+    if (pushed && ask) setAskAmend(c);
+    else beginAmend(c);
+  };
+  const stopAmend = () => {
+    if (!amending) return;
+    setSummary(amending.summary);
+    setDescription(amending.description);
+    setAmending(null);
+  };
   // Where the form is: a late answer fills another branch's form never.
   const here = useRef('');
   here.current = `${repoId}${rev}`;
@@ -349,6 +381,14 @@ export function History({ repoId, rev, backLabel }: Props) {
   };
   // The Uncommitted row's right-click menu: Discard All Changes, Stash All Changes.
   const [wipMenu, setWipMenu] = useState<DOMRect | null>(null);
+  // A commit row's right-click menu (Hi10): Amend Commit… on the newest one, Copy SHA.
+  const [commitMenu, setCommitMenu] = useState<{ commit: HistoryCommit; at: DOMRect } | null>(null);
+  // HEAD moved under the form (a commit made elsewhere): amending would rewrite another commit.
+  const tip = data?.tip ?? null;
+  useEffect(() => {
+    if (amending && tip && tip !== amending.sha && !committing) stopAmend();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tip]);
   const [land, setLand] = useState<'first' | 'last'>('first');
   // The picked row lists its files under it; clicking it again folds them (and back).
   const [filesOpen, setFilesOpen] = useState(true);
@@ -592,6 +632,39 @@ export function History({ repoId, rev, backLabel }: Props) {
           </Menu>
         </Popover>
       )}
+      {commitMenu && (
+        <Popover anchorRect={commitMenu.at} width={200} onClose={() => setCommitMenu(null)}>
+          <Menu aria-label={t('history.commitMenu', { sha: commitMenu.commit.shortSha })}>
+            {commitMenu.commit.sha === tip && entry?.worktreePath && (
+              <>
+                <MenuItem
+                  icon="pencil"
+                  disabled={committing || !!entry.operation || amending?.sha === commitMenu.commit.sha}
+                  onSelect={() => {
+                    setCommitMenu(null);
+                    startAmend(commitMenu.commit);
+                  }}
+                >
+                  {t('amend.menuAmend')}
+                </MenuItem>
+                <MenuDivider />
+              </>
+            )}
+            <MenuItem
+              icon="copy"
+              onSelect={() => {
+                setCommitMenu(null);
+                void writeText(commitMenu.commit.sha);
+              }}
+            >
+              {t('history.menuCopySha')}
+            </MenuItem>
+          </Menu>
+        </Popover>
+      )}
+      {askAmend && (
+        <AmendModal onClose={() => setAskAmend(null)} onBegin={() => beginAmend(askAmend)} />
+      )}
       {entry?.operation && <OperationBanner entry={entry} op={entry.operation} names={false} />}
       {/* Mid-rebase the branch only looks diverged. */}
       {diverged && !entry?.operation && (
@@ -651,6 +724,8 @@ export function History({ repoId, rev, backLabel }: Props) {
                 actions={current === WIP ? wipActions : undefined}
                 conflict={current === WIP && entry ? (f) => conflictOf(entry, f) : undefined}
                 onWipMenu={setWipMenu}
+                onCommitMenu={(commit, at) => setCommitMenu({ commit, at })}
+                amending={amending?.sha ?? null}
               />
             ))}
             {data && !data.tip && <div className={styles.listEmpty}>{t('history.revNotFound', { rev })}</div>}
@@ -687,15 +762,16 @@ export function History({ repoId, rev, backLabel }: Props) {
               />
             </div>
           )}
-          {current === WIP && wip && (
+          {((current === WIP && wip) || amending) && (
             <CommitForm
               rev={rev}
               summary={summary}
               description={description}
               files={included.length}
+              amend={amending?.short ?? null}
               committing={committing}
               blocked={
-                !staged
+                wip && !staged
                   ? t('history.readingIndex')
                   : (entry?.conflicts ?? 0) > 0
                     ? t('history.resolveFirst')
@@ -708,6 +784,7 @@ export function History({ repoId, rev, backLabel }: Props) {
               onSummary={setSummary}
               onDescription={setDescription}
               onCommit={commitChecked}
+              onStopAmend={stopAmend}
               onGenerate={generateChecked}
             />
           )}
@@ -803,6 +880,8 @@ function ListRow({
   picks,
   actions,
   onWipMenu,
+  onCommitMenu,
+  amending,
   conflict,
 }: {
   row: HistoryRow;
@@ -833,6 +912,10 @@ function ListRow({
   actions?: (f: FileChange) => FileActions;
   /** A right-click on the Uncommitted row, at the pointer. */
   onWipMenu: (at: DOMRect) => void;
+  /** A right-click on a commit row, at the pointer. */
+  onCommitMenu: (commit: HistoryCommit, at: DOMRect) => void;
+  /** The commit being amended (Hi10): its row says so. */
+  amending: string | null;
   /** Uncommitted's conflicted files of an operation in progress: ⚠ / ✓ (T4). */
   conflict?: (f: FileChange) => 'unresolved' | 'resolved' | undefined;
 }) {
@@ -925,7 +1008,18 @@ function ListRow({
       const cls = [styles.commit, on && styles.rowOn, c.inBase && styles.shared].filter(Boolean).join(' ');
       return (
         <>
-          <button type="button" role="option" aria-selected={on} title={t('history.showCommit')} className={cls} onClick={() => onPick(c.sha)}>
+          <button
+            type="button"
+            role="option"
+            aria-selected={on}
+            title={t('history.showCommit')}
+            className={cls}
+            onClick={() => onPick(c.sha)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              onCommitMenu(c, new DOMRect(e.clientX, e.clientY, 0, 0));
+            }}
+          >
             <Avatar author={c.author} size={24} />
             <span className={styles.rowText}>
               <span className={styles.subjectLine}>
@@ -933,6 +1027,11 @@ function ListRow({
                 {c.parents > 1 && (
                   <Pill tone="outline" size="sm">
                     {t('history.merge')}
+                  </Pill>
+                )}
+                {amending === c.sha && (
+                  <Pill tone="accent" size="sm">
+                    {t('history.amendingPill')}
                   </Pill>
                 )}
               </span>

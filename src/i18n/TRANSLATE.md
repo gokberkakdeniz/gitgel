@@ -30,8 +30,8 @@ green when you are done: same key set as `en.json`, same placeholders, valid MF2
 - Dates, times and ages stay out: they render through the app's format settings.
 - Non-translatables, copied verbatim: SHA/path/branch/commit names, git and
   script output, log text, CEL expressions, file paths, keycap names (⌘ ⌥ ⇧),
-  and the Discard dialog's texts (they quote GitHub Desktop word for word —
-  copy the `en` value unchanged).
+  and the Discard and Amend texts (`discard.*`, `amend.*`: they quote GitHub
+  Desktop word for word — copy the `en` value unchanged).
 - Git terms in Turkish follow VS Code's Turkish language pack (`vscode-loc`, its git
   extension): repository → depo, remote → uzak depo, branch → dal, worktree and working
   tree → çalışma ağacı, stash → geçici kayıt (stash → geçici kaydet, apply → uygula,

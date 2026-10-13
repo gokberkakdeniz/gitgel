@@ -125,6 +125,8 @@ pub struct Prompts {
     pub delete_projects: bool,
     /// Abort of a rebase, merge, cherry-pick or revert (T3).
     pub abort_operation: bool,
+    /// Amend of a commit already on the remote (Hi10).
+    pub amend_pushed: bool,
 }
 
 impl Default for Prompts {
@@ -135,6 +137,7 @@ impl Default for Prompts {
             discard_stash: true,
             delete_projects: true,
             abort_operation: true,
+            amend_pushed: true,
         }
     }
 }

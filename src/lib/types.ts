@@ -59,6 +59,7 @@ export interface Prompts {
   discardStash: boolean;
   deleteProjects: boolean;
   abortOperation: boolean; // Abort of a rebase, merge, cherry-pick or revert (T3)
+  amendPushed: boolean; // Amend of a commit already on the remote (Hi10)
 }
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
@@ -233,6 +234,7 @@ export interface CommitFiles {
   summary: string;
   description: string;
   noVerify: boolean; // skip the commit hooks (Commit Without Hooks)
+  amend?: string | null; // Amend (Hi10): the newest commit's SHA, which `--amend` replaces
 }
 /** An agent CLI that writes a commit message (SPEC §15 "Generate message"). */
 export type CommitProvider = 'opencode' | 'claude' | 'cursor' | 'antigravity' | 'codex';

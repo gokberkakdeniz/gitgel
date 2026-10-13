@@ -56,3 +56,58 @@
     transform: rotate(360deg);
   }
 }
+
+/* Amending (Hi10): a rule with an "i" in its middle, then the note, centred. */
+.amend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.amendRule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-text);
+}
+
+.amendRule::before,
+.amendRule::after {
+  content: '';
+  flex-grow: 1;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.amendText {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.amendText strong {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.stop {
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--accent-text);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.stop:hover {
+  color: var(--accent-hover);
+}
+
+.stop:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

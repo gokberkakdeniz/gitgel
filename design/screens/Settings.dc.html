@@ -328,7 +328,7 @@ class Component extends DCLogic {
       section: section,
       // Prompts › Show a Confirmation Dialog Before… (Hi8, GitHub Desktop's texts and section): the confirmations that can be turned off; "Do not show this message again" in
       // the Discard dialog clears its box here. Discard all and more than 10 files always ask.
-      asks: [{ label: 'Removing repositories', on: true }, { label: 'Discarding changes', on: true }, { label: 'Dropping stashes', on: true }, { label: 'Deleting projects', on: true }],
+      asks: [{ label: 'Removing repositories', on: true }, { label: 'Discarding changes', on: true }, { label: 'Dropping stashes', on: true }, { label: 'Aborting a rebase or merge', on: true }, { label: 'Amending pushed commits', on: true }, { label: 'Deleting projects', on: true }],
       isRepos: section === 'repositories', isGeneral: section === 'general', isAppearance: section === 'appearance', isShortcuts: section === 'shortcuts', isScripts: section === 'scripts', isAi: section === 'ai', isPrompts: section === 'prompts',
       // Settings › Scripts (flow N5): name, icon (Icon set) in the user's order; the Switch turns one off (in no menu) at once.
       scripts: [['Open pull request', 'pull-request'], ['Run tests', 'test'], ['Rebase on {base}…', 'rebase'], ['Copy Linear link', 'link'], ['Start dev server', 'prompt']].map(function (x) {

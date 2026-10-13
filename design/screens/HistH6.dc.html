@@ -104,7 +104,10 @@ button,input,textarea{font-family:inherit}
 <form aria-label="Commit" style="flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: var(--bg-sidebar)">
 <div style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px"><input aria-label="Summary" placeholder="Summary (required)" value="{{summary}}" style="flex-grow: 1; min-width: 0; height: 100%; padding: 0; background: transparent; border: 0; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none"><button type="button" aria-label="Generate commit message with OpenCode" title="Generate commit message with OpenCode" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="sparkles" size="14" hint-size="14px,14px"></dc-import></button></div>
 <textarea aria-label="Description" placeholder="Description" value="{{body}}" style="height: 56px; box-sizing: border-box; width: 100%; padding: 7px 10px; resize: none; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-size: 12px; line-height: 1.45; outline: none"></textarea>
-<sc-if value="{{hasNote}}" hint-placeholder-val="{{false}}"><span style="{{noteStyle}}">{{note}}</span></sc-if>
+<sc-if value="{{amend}}" hint-placeholder-val="{{false}}"><div role="note" style="display: flex; flex-direction: column; gap: 6px; padding-top: 2px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="flex-grow: 1; height: 1px; background: var(--border-strong)"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5.5M12 7.5v.01"></path></svg><span style="flex-grow: 1; height: 1px; background: var(--border-strong)"></span></div>
+<p style="margin: 0; font-size: 12px; line-height: 1.5; text-align: center; color: var(--text-muted)">Your changes will modify your <strong style="font-weight: 600; color: var(--text-strong)">most recent commit</strong>. <button type="button" style="padding: 0; background: none; border: 0; font: inherit; color: var(--accent-text); text-decoration: underline; cursor: pointer">Stop amending</button> to make these changes as a new commit.</p>
+</div></sc-if>
 <dc-import name="Button" theme="{{themeName}}" variant="primary" size="32" width="100%" label="{{commitLabel}}" icon="{{commitIcon}}" disabled="{{committing}}" title="{{commitTitle}}" hint-size="100%,32px"></dc-import>
 </form>
 </sc-if>
@@ -200,7 +203,7 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","squash","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"operation":{"editor":"boolean","default":false},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","squash","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"operation":{"editor":"boolean","default":false},"pushed":{"editor":"boolean","default":false},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -209,7 +212,8 @@ class Component extends DCLogic {
     // state: commit (W1a: Uncommitted picked, its files have checkboxes, the commit form under
     // the list), lines (W1b: lines picked in the diff, the file's box shows "some"), hooks (W1c:
     // hooks run, a running toast that opens the output), failed (W1d: the output dialog, as the
-    // Scripts output N4), amend (W2a), squash (W2b: a range of commits picked with ⇧-click),
+    // Scripts output N4), amend (Hi10: the form in amend mode, filled from the newest commit; its
+    // row says "amending"), squash (W2b: a range of commits picked with ⇧-click),
     // menu (W2c: a commit's menu). The list shows two lines: the upstream (origin/<branch>,
     // dashed: above it is not pushed yet) and the base (as Hi3).
     var wipOpen = s !== 'squash' && s !== 'menu';
@@ -293,7 +297,10 @@ class Component extends DCLogic {
     var c2 = commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m', { sel: s === 'squash', pick: s === 'menu' });
     var c2Files = s === 'menu' ? [file('M', 'store.ts', 'src/auth', '+9', '−1', true), file('M', 'refresh.ts', 'src/auth', '+2', '−1')] : [];
     var allRow = { isAll: true };
-    var items = [wip].concat(wipOpen ? (cmode === 'panel' ? [allRow].concat(wipFiles) : wipFiles) : [], [day('Today'), c1, c2], c2Files, [upstream,
+    // pushed (Hi10's dialog): the branch is all on origin, the upstream line sits above the newest commit.
+    var pushed = !!this.props.pushed;
+    if (pushed) upstream = { isLine: true, label: 'origin/session-token-refresh · e8b2c41', sub: '', ruleStyle: rule(true) };
+    var items = [wip].concat(wipOpen ? (cmode === 'panel' ? [allRow].concat(wipFiles) : wipFiles) : [], pushed ? [day('Today'), upstream, c1, c2] : [day('Today'), c1, c2], c2Files, pushed ? [] : [upstream], [
       commit('b41f9e3', 'Add refresh token rotation flag', 'Can Öztürk', '3h'),
       day('Yesterday'), commit('2e7c1d0', 'Scaffold token refresh service', 'Can Öztürk', '1d'),
       base,
@@ -371,12 +378,9 @@ class Component extends DCLogic {
       summary: amend ? 'Retry refresh once on network error' : 'Rotate tokens on refresh',
       body: amend ? 'A dropped connection during refresh logged people out. Retry once with the same refresh id.' : (s === 'hooks' || s === 'failed') ? 'Delete the old session when a token is rotated.' : '',
       amend: amend,
-      hasNote: amend,
-      note: 'e8b2c41 is not on origin yet, so amending it is safe.',
-      noteStyle: 'font-size: 12px; line-height: 1.45; color: var(--' + (amend ? 'text-muted' : 'danger') + ')',
-      commitLabel: committing ? 'Committing…' : amend ? 'Amend e8b2c41' : 'Commit 2 files',
+      commitLabel: committing ? 'Committing…' : amend ? 'Amend Last Commit' : 'Commit 2 files',
       commitIcon: committing ? 'spinner' : 'none',
-      commitTitle: op ? 'Resolve the merge conflicts first' : committing ? 'Hooks are running' : 'Commit to session-token-refresh',
+      commitTitle: op ? 'Resolve the merge conflicts first' : committing ? 'Hooks are running' : amend ? 'Amend e8b2c41 on session-token-refresh' : 'Commit to session-token-refresh',
       committing: committing || op,
       c: c, left: left, right: right,
       isSplit: s !== 'lines', isPick: s === 'lines', uni: uni,

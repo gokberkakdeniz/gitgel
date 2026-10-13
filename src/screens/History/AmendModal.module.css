@@ -1,0 +1,27 @@
+/* Amend Will Require Force Push (HistH11): a warning icon beside the text, as Confirm Discard Changes. */
+.body {
+  display: flex;
+  gap: 16px;
+  padding: 4px 24px 22px;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--warning);
+}
+
+.text {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.lead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-body);
+}

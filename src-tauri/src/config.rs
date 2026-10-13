@@ -153,7 +153,7 @@ mod tests {
                 "lastSeenVersion": "0.1.15",
                 "prompts": { "removeRepositories": true, "discardChanges": false,
                              "discardStash": true, "deleteProjects": false,
-                             "abortOperation": true },
+                             "abortOperation": true, "amendPushed": true },
                 "ai": {
                     // `provider` was the stored default: old files still load it, but it is
                     // not saved back (the default is the topmost switched-on provider now).
