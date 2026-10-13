@@ -2,8 +2,8 @@
 // (docs/SPEC.md §5). The mini-window previews are plain elements drawn from the palette
 // values below (design/screens/Settings.dc.html `layer()`), not images.
 import { useRef } from 'react';
-import { Checkbox } from '../../components/Checkbox';
 import { Select } from '../../components/Select';
+import { Switch } from '../../components/Switch';
 import { t } from '../../i18n';
 import {
   DATE_FORMATS,
@@ -205,7 +205,12 @@ function FormattingGroup({ config }: { config: Config }) {
         <span className={styles.settingText}>
           <span className={styles.settingName}>{t('settings.absoluteDates')}</span>
         </span>
-        <Checkbox checked={preferAbsoluteDates} onChange={(e) => save({ preferAbsoluteDates: e.target.checked })} />
+        <Switch
+          aria-label={t('settings.absoluteDates')}
+          title={t('settings.absoluteDates')}
+          checked={preferAbsoluteDates}
+          onChange={(e) => save({ preferAbsoluteDates: e.target.checked })}
+        />
       </label>
     </section>
   );

@@ -6,7 +6,8 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'role'>;
 /**
  * Turns a thing on or off at once, with no Save (a `Checkbox` picks options in a form). A drawn
  * 28×16 track with a 12px knob over the native input, which keeps focus and keyboard. It has no
- * label of its own: give it an aria-label and a title.
+ * label of its own: give it an aria-label and a title. It sits on the right of its row, after the
+ * setting's name.
  */
 export function Switch({ className, ...rest }: Props) {
   return (

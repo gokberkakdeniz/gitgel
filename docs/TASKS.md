@@ -635,6 +635,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Settings: no hint lines under Terminal and Check for Updates; Check for Updates is a switch — 2026-10-13
 - [x] (on request) Settings: a setting row is at least 36px tall, and General's three rows are one group, so rows are evenly spaced — 2026-10-13
 - [x] (on request) Settings › Terminal: the "not installed" warning shows once, translated (an untranslated copy showed under it) — 2026-10-13
+- [x] (on request) Rule: a `Checkbox` comes before its text, a `Switch` sits on the right of a setting row (SPEC, canvas Checkbox and Switch specs); Prefer absolute dates is a switch — 2026-10-13
 
 ---
 

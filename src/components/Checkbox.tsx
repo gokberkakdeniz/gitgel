@@ -15,7 +15,8 @@ interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
 
 /**
  * A drawn 16px box: accent fill with a check when on, a 1.5px border when off. The native input
- * stays underneath for focus, keyboard and forms. Without a label, give it an aria-label.
+ * stays underneath for focus, keyboard and forms. Without a label, give it an aria-label. The box
+ * comes before its text; a setting row that applies at once takes a `Switch` on its right instead.
  */
 export function Checkbox({ className, label, sub, card, checked, mixed, ...rest }: Props) {
   const box = (

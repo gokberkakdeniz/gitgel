@@ -445,11 +445,14 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   Default base and Scripts; no screen draws its own card list.
 - `Checkbox`: a drawn 16px box, radius 4: accent fill with an 11px check when on, 1.5px
   `border.strong` when off; optional `label` (13px `text.strong`), a 12px muted `sub` line, and
-  `card` (a `bg.sunken` box, radius 12, padding 12px 14px).
+  `card` (a `bg.sunken` box, radius 12, padding 12px 14px). The box always comes before its
+  text: an option in a form, dialog or list, or a row to act on.
 - `Switch`: turns a thing on or off at once, with no Save (a `Checkbox` picks
   options in a form or rows to act on). A 28×16 track, radius 8, 12px knob: `accent` with the knob
   right when on, `bg.track` with a 1px `border.strong` outline and the knob left when off. No
-  label of its own: an aria-label and a tooltip (`Switch.dc.html`, `SwitchSpec.dc.html`).
+  label of its own: an aria-label and a tooltip (`Switch.dc.html`, `SwitchSpec.dc.html`). It
+  always sits on the right of its row, after the setting's name: a setting row that applies at
+  once never takes a `Checkbox` (`CheckboxSpec.dc.html`).
 - `Select`: `bg.elevated`, 1px border, radius 8, 32 or 36px, a 12px chevron 12px from the right;
   a native `<select>` (Settings › Terminal) with an optional 14px leading icon; focused: accent
   border + 2px ring. The listbox trigger with a faint placeholder (`Select.dc.html` without
@@ -1099,7 +1102,7 @@ Layout:
     - "Number Format" (`settings.numberFormat`, default plain `1234567,89`): `1234567.89`,
       `1234567,89`, `1,234,567.89`, `1.234.567,89`, `1 234 567.89`, `1 234 567,89`. Applies to
       counts only, never to SHAs, versions, years or ports.
-    - "Prefer absolute dates over relative dates": a checkbox, off by default
+    - "Prefer absolute dates over relative dates": a switch, off by default
       (`settings.preferAbsoluteDates`). On, every relative age shows the absolute date and time
       instead; in absolute mode the History day labels ("Today", "Yesterday") render as full
       dates too. The tooltip always shows the other form (relative when absolute is shown and
