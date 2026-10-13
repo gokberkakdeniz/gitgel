@@ -1063,7 +1063,7 @@ Layout:
     ("Reload to Change Language", Cancel / Reload) applies it: confirm saves
     (`settings.language`) and reloads the page; Cancel reverts. The route is restored from
     `sessionStorage` after the reload.
-  - "Terminal" ("Used by “Open in …” in the branch menus"): a 230 × 36px
+  - "Terminal": a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
     Terminal, iTerm2, WezTerm, "Other". Terminals that are not installed are disabled. At
@@ -1074,8 +1074,8 @@ Layout:
     the command runs in your login shell, in that folder." When the chosen app is not installed,
     a right-aligned 12px `warning` line: "<Name> is not installed; the menus show it disabled".
     Saved at once (`settings.terminal`, `settings.terminalCommand`).
-  - "Check for updates" ("At launch and every 6 hours; a new version shows in the sidebar"): a
-    checkbox, on by default (`settings.checkUpdates`). Off hides a found update; on checks at once.
+  - "Check for updates": a switch, on by default (`settings.checkUpdates`). Off hides a found
+    update; on checks at once.
 - **Appearance:** serif 18px heading "Appearance".
   - "Theme": moved from General as is — a radiogroup of three tiles, gap 16: **System**
     (default), **Light**, **Dark**. Tile: 120 × 72 mini-window preview (radius 9, clipped): a

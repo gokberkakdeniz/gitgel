@@ -8,6 +8,7 @@ import { Input } from '../../components/Input';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Select } from '../../components/Select';
 import { SettingsNav, type SettingsNavSection } from '../../components/SettingsNav';
+import { Switch } from '../../components/Switch';
 import { openAddRepos } from '../../lib/addRepos';
 import { cnt } from '../../lib/format';
 import { t } from '../../i18n';
@@ -298,9 +299,10 @@ function General({ config }: { config: Config }) {
         <label className={styles.setting}>
           <span className={styles.settingText}>
             <span className={styles.settingName}>{t('settings.checkUpdates')}</span>
-            <span className={styles.settingHint}>{t('settings.checkHint')}</span>
           </span>
-          <Checkbox
+          <Switch
+            aria-label={t('settings.checkUpdates')}
+            title={t('settings.checkUpdates')}
             checked={config.settings.checkUpdates}
             onChange={(e) => void updateSettings({ ...config.settings, checkUpdates: e.target.checked })}
           />
@@ -381,7 +383,6 @@ function TerminalSetting({ config }: { config: Config }) {
       <label className={styles.setting}>
         <span className={styles.settingText}>
           <span className={styles.settingName}>{t('settings.terminalName')}</span>
-          <span className={styles.settingHint}>{t('settings.terminalHint')}</span>
         </span>
         <Select<TerminalChoice>
           aria-label={t('settings.terminalName')}

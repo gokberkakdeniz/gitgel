@@ -65,7 +65,7 @@ button,input{font-family:inherit}
 <section style="display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; flex-direction: column; gap: 10px">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Terminal</span><span style="font-size: 12px; color: var(--text-muted)">Used by “Open in …” in the branch menus</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Terminal</span></span>
 <dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Terminal" options="{{terminals}}" hint-size="230px,36px"></dc-import>
 </div>
 <sc-if value="{{terminalOther}}" hint-placeholder-val="{{false}}">
@@ -80,8 +80,8 @@ button,input{font-family:inherit}
 </sc-if>
 </div>
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Check for Updates</span><span style="font-size: 12px; color: var(--text-muted)">At launch and every 6 hours; a new version shows in the sidebar</span></span>
-<dc-import name="Checkbox" theme="{{themeName}}" label="" aria-label="Check for Updates" checked="{{true}}" hint-size="16px,16px"></dc-import>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Check for Updates</span></span>
+<dc-import name="Switch" theme="{{themeName}}" checked="{{true}}" aria-label="Check for Updates" hint-size="32px,18px"></dc-import>
 </div>
 </section>
 </sc-if>
