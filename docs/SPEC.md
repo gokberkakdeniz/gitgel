@@ -1024,7 +1024,8 @@ Layout:
 
 - A page header, serif 22px "Settings". Under it, like VS Code's settings, a 200px section list
   (padding 16px 10px, 1px `border.row` on its right) and the chosen section's pane (scrolls on
-  its own; content max 760px, padding 28px 32px 40px, groups 28px apart). Sections: 34px rows
+  its own; content max 760px, padding 28px 32px 40px, groups 28px apart; a setting row is at
+  least 36px tall, rows 14px apart). Sections: 34px rows
   (radius 8, 13px, 16px muted icon, gap 10): **General** (sliders), **Repositories** (folder icon,
   repo count in mono 12 muted on the right), **Scripts** (prompt icon, script count; §14),
   **AI** (sparkles icon), **Prompts** (help), **Shortcuts** (keyboard). The chosen one:
@@ -1057,7 +1058,8 @@ Layout:
   - "Active threshold" ("Branches without a worktree are listed if committed within"): 60px
     right-aligned mono input + "days"; anything but an integer 1–365 restores the old value.
   - Changing either rescans every repo.
-- **General:** serif 18px heading "General".
+- **General:** serif 18px heading "General", then Language, Terminal and Check for updates in one
+  group.
   - "Language": a dropdown at the top (native `<select>`, as Terminal): System (default, follows
     the browser language), English, Türkçe. The pick stays pending until a `ConfirmModal`
     ("Reload to Change Language", Cancel / Reload) applies it: confirm saves

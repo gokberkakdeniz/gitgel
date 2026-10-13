@@ -293,8 +293,8 @@ function General({ config }: { config: Config }) {
   return (
     <>
       <h2 className={styles.heading}>{t('settings.generalHeading')}</h2>
-      <LanguageSetting config={config} />
       <section className={styles.section}>
+        <LanguageSetting config={config} />
         <TerminalSetting config={config} />
         <label className={styles.setting}>
           <span className={styles.settingText}>
@@ -326,23 +326,21 @@ function LanguageSetting({ config }: { config: Config }) {
   };
   return (
     <>
-      <section className={styles.section}>
-        <label className={styles.setting}>
-          <span className={styles.settingText}>
-            <span className={styles.settingName}>{t('settings.languageName')}</span>
-          </span>
-          <Select<Language>
-            aria-label={t('settings.languageName')}
-            value={shown}
-            onChange={(l) => setPending(l === saved ? null : l)}
-            options={[
-              { value: 'system', label: t('settings.themeSystem') },
-              { value: 'en', label: t('settings.langEnglish') },
-              { value: 'tr', label: t('settings.langTurkish') },
-            ]}
-          />
-        </label>
-      </section>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.languageName')}</span>
+        </span>
+        <Select<Language>
+          aria-label={t('settings.languageName')}
+          value={shown}
+          onChange={(l) => setPending(l === saved ? null : l)}
+          options={[
+            { value: 'system', label: t('settings.themeSystem') },
+            { value: 'en', label: t('settings.langEnglish') },
+            { value: 'tr', label: t('settings.langTurkish') },
+          ]}
+        />
+      </label>
       {pending && (
         <ConfirmModal
           aria-label={t('settings.reloadTitle')}

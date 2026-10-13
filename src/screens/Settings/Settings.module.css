@@ -48,6 +48,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  /* A switch or checkbox row is as tall as one with a 36px select or input. */
+  min-height: 36px;
 }
 .settingText {
   display: flex;
