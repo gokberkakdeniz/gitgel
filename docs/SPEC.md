@@ -163,7 +163,7 @@ configurable refresh.
 | Fonts | Instrument Sans, Source Serif 4, JetBrains Mono via `@fontsource/*`, bundled. The app works offline. |
 | Bundle id | `com.gitgel.desktop` (must not end in `.app`). |
 | Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). Release notes come from `CHANGELOG.md`. |
-| Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the tap's `gitgel/latest.json` at launch and on window focus, at most every 6 hours; installs a signed build on request and restarts through LaunchServices (`open -n`), so the new version comes to the front focused; the window also takes focus when it is first shown (§12 "Updates"). |
+| Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the tap's `gitgel/latest.json` at launch, on window focus and every 5 minutes of awake time, at most every hour (a failed check is retried at the next one); installs a signed build on request and restarts through LaunchServices (`open -n`), so the new version comes to the front focused; the window also takes focus when it is first shown (§12 "Updates"). |
 
 ---
 

@@ -14,9 +14,13 @@ use crate::config;
 use crate::error::AppError;
 use crate::state::AppState;
 
-/// Automatic checks run at launch and when the window gains focus, at most this often. Wall
-/// time, so a Mac that slept overnight checks on the next focus.
-const CHECK_EVERY: Duration = Duration::from_secs(6 * 60 * 60);
+/// Automatic checks run at launch, when the window gains focus and on a timer, at most this
+/// often. Wall time, so a Mac that slept overnight is due as soon as it wakes.
+const CHECK_EVERY: Duration = Duration::from_secs(60 * 60);
+
+/// How often the timer looks whether a check is due. It counts awake time only, so after a sleep
+/// with the window still focused (no focus event) the check runs within this long.
+const TICK: Duration = Duration::from_secs(5 * 60);
 
 /// Managed state: the newest update found, and whether one is being installed.
 #[derive(Default)]
@@ -107,7 +111,18 @@ pub fn check_if_due(app: &AppHandle) {
     tauri::async_runtime::spawn(async move {
         if let Err(e) = check(&app).await {
             log::warn!("update check failed: {e}");
+            // Right after a wake the network may not be up yet: the next focus or tick retries.
+            inner(&app).last_check = None;
         }
+    });
+}
+
+/// Starts the timer that runs `check_if_due` every `TICK` while the app is open.
+pub fn start_timer(app: &AppHandle) {
+    let app = app.clone();
+    std::thread::spawn(move || loop {
+        std::thread::sleep(TICK);
+        check_if_due(&app);
     });
 }
 

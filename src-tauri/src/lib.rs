@@ -87,9 +87,10 @@ pub fn run() {
             menu::apply_zoom(app.handle(), zoom);
             appearance::show_main_window(app.handle(), appearance);
             updates::check_if_due(app.handle());
+            updates::start_timer(app.handle());
             Ok(())
         })
-        // Automatic update checks run at launch and on focus, at most every 6 hours.
+        // Automatic update checks run at launch, on focus and on a timer, at most every hour.
         .on_window_event(|window, event| match event {
             WindowEvent::Focused(true) => updates::check_if_due(window.app_handle()),
             WindowEvent::Destroyed if windows::Aux::from_label(window.label()).is_some() => {
