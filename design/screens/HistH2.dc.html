@@ -134,7 +134,7 @@ button,input,textarea{font-family:inherit}
 </div>
 </section>
 </div>
-<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><div style="position: absolute; right: 16px; top: 54px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="240" label="More actions" items="{{pageMenu}}" hint-size="240px,330px"></dc-import></div></sc-if>
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><div style="position: absolute; right: 16px; top: 54px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="240" label="More actions" items="{{pageMenu}}" hint-size="240px,362px"></dc-import></div></sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;main&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;main&quot;},&quot;pageMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
@@ -225,9 +225,10 @@ class Component extends DCLogic {
     // pageMenu: the ⋮ open (Hi4).
     out.menuOpen = !!this.props.pageMenu;
     out.menuShut = !this.props.pageMenu;
-    // The page menu (⋮, History): Open review and Refresh, then the branch menu's items without
-    // Open history / Change base (SPEC §16 "History").
+    // The page menu (⋮, History): Switch Branch (Hi9), Open review and Refresh, then the branch
+    // menu's items without Open history / Change base (SPEC §16 "History").
     out.pageMenu = [
+      { label: 'Switch Branch…', icon: 'branch', kbd: '⇧⌘B' },
       { label: 'Open Review', icon: 'split', kbd: '⌥H' },
       { label: 'Refresh', icon: 'refresh' },
       { kind: 'sep' },

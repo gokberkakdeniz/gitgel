@@ -201,7 +201,7 @@ gitgel/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
 │  │            # Review/parts.tsx (+ parts.module.css): file bar (view menu, change navigation),
 │  │            #   file row, stash section, diff view settings, page layout (shared with History, §16)
-│  │            # History/: the History screen, its list rows and the commit form (§16)
+│  │            # History/: the History screen, its list rows, the commit form and Switch Branch (§16)
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
@@ -1262,6 +1262,7 @@ Forward are caught before Monaco (which would take ⌘← / ⌘→ for line star
 | | Ignore whitespace | ⌥W | |
 | | Review / History | ⌥H | the same branch's other page (also in the diff) |
 | | Changes only / Whole file | ⌥C | |
+| | Switch branch | ⇧⌘B | History (opens Switch Branch) |
 | Lists and dialogs | Move | ↑ / ↓ | |
 | | Mark row | Space | Add palette |
 | | Run script | ⌘↵ | script run dialog |
@@ -2003,7 +2004,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 231–234), Repositories 35–55 (repository `List` 38, items 296–300; Default base `List` 44 with rows, actions and add states 235–262 and 301–308; Active threshold 50–54), General 57–87 (Language 59–65; Terminal 68–80, options with disabled flag 307; Check for updates 83–85), Appearance: Theme 91–110, tile builder 249; Formatting 112–130 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 131–137 with Tab size, Scripts 139–157 (`List` 117, items 309–314), Prompts 123–130 (data 286), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 232–241) |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
@@ -2732,7 +2733,7 @@ never edits `~/.ssh`:
 A branch's commits, newest first, each one shown on its own against its first parent, like
 GitHub Desktop's History tab. Reads are a revwalk and diffs; the writes are Commit and Discard (§15).
 Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `HistH7`,
-`HistH8`, `HistH9.dc.html` (§11).
+`HistH8`, `HistH9`, `HistH10.dc.html` (§11).
 
 - **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
   branch, a remote-tracking branch or a SHA) and walks from it by committer time, newest first
@@ -2755,13 +2756,21 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     searches (debounced 200 ms); Esc clears it.
   - Fetch / Pull / Push (§15 "Sync"), only when `rev` is a local branch with a remote; the last
     fetch's age (`fetchedAt`) is in Fetch's tooltip.
-  - The page menu (⋮, as Review's): "Stash" (§15, with this one entry; only when `rev`
+  - The page menu (⋮, as Review's): "Switch Branch…" (`branch`, ⇧⌘B; below), "Stash" (§15, with this one entry; only when `rev`
     is checked out in a worktree with uncommitted changes), "Open review" (`split`, ⌥H; only
     when `rev` is an active entry: its branch Review, or going back to it), "Refresh".
     When `rev` is an active entry, a divider and then the branch menu's items (§5 "Entry menu"):
     "Copy branch name" (not for a detached SHA) and a divider, the open items, "Rebase on <base>" (not
     Fetch / Pull / Push: the header has them), the Scripts group (menu `branches`), the closing note; not "Open history" or "Change base"
     (`HistH5.dc.html`, Hi4).
+- **Switch Branch** (⇧⌘B, or the page menu; `History/SwitchBranch.tsx`, `HistH10.dc.html`): the Add
+  palette's dialog (620px, top 96px; Esc or a click outside closes it) for this repo only, with
+  the repo name in the hint and no checkboxes or footer. Groups: Worktrees, Active branches,
+  Older · found by search, Remote Branches (the last two only while searching, at most 50 each).
+  Meta: `<~worktree> · ↑N · N files · ● N uncommitted`, or the age; merged ones carry the
+  "Merged" pill. `rev` itself is dimmed with a neutral pill "Current". A click, or ↵ on the row
+  reached with ↑ / ↓, opens History on that branch in place of this one (`replace`: Back still
+  leads where it did).
 - **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Its right
   border is a drag handle (8px hit area, `col-resize`; a 2px accent line on hover, focus and
   drag); 280–640px, ←/→ by 16px when focused, double-click resets. The width is remembered

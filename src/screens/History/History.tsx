@@ -41,6 +41,7 @@ import parts from '../Review/parts.module.css';
 import type { ReviewStash } from '../Review/stashes';
 import styles from './History.module.css';
 import { CommitForm } from './CommitForm';
+import { SwitchBranchDialog } from './SwitchBranch';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
 
 /** Commits asked for at a time; scrolling near the end asks for this many more. */
@@ -417,6 +418,19 @@ export function History({ repoId, rev, backLabel }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // ⇧⌘B opens Switch Branch. Listed in lib/shortcuts.ts.
+  const [switching, setSwitching] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.metaKey || !e.shiftKey || e.altKey || e.code !== 'KeyB') return;
+      if (useUi.getState().modalCount > 0) return;
+      e.preventDefault();
+      setSwitching(true);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   // Keep the picked row in view when it changes from outside the list.
   const list = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -500,6 +514,17 @@ export function History({ repoId, rev, backLabel }: Props) {
         <PageMenu>
           {(close, anchor) => (
             <>
+              <MenuItem
+                icon="branch"
+                kbd="⇧⌘B"
+                disabled={!repoScan}
+                onSelect={() => {
+                  close();
+                  setSwitching(true);
+                }}
+              >
+                {t('history.switchBranch')}
+              </MenuItem>
               {entry?.worktreePath && stashAction.item(close, anchor)}
               {toReview && (
                 <MenuItem
@@ -537,6 +562,9 @@ export function History({ repoId, rev, backLabel }: Props) {
           )}
         </PageMenu>
         {stashAction.dialog}
+        {switching && repoScan && (
+          <SwitchBranchDialog scan={repoScan} rev={rev} onClose={() => setSwitching(false)} />
+        )}
       </PageHeader>
       {wipMenu && (
         <Popover anchorRect={wipMenu} width={230} onClose={() => setWipMenu(null)}>

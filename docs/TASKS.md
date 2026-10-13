@@ -628,6 +628,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Generate with Cursor runs with `--trust`, so its workspace trust prompt no longer ends the run — 2026-10-12
 - [x] (on request) Review entry bar: a long branch name ends in an ellipsis instead of running under the ahead / upstream text — 2026-10-12
 - [x] (on request) Menus: an item's label stays on one line and ends in "…" (a long script name has its whole name as tooltip) — 2026-10-12
+- [x] (on request) History: "Switch Branch…" (⇧⌘B) in the page menu opens the Add palette's dialog for the repo's branches (worktrees, active; older and remote while searching); a pick opens that branch's History in place; canvas Hi9 (`HistH10.dc.html`) — 2026-10-13
 - [x] (on request) ⌘B shows or hides the sidebar — 2026-10-13
 
 ---
