@@ -634,6 +634,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Update checks run at most every hour (was 6), also on a 5-minute timer so a Mac woken with Gitgel focused finds a new version, and a failed check retries at the next one — 2026-10-13
 - [x] (on request) Settings: no hint lines under Terminal and Check for Updates; Check for Updates is a switch — 2026-10-13
 - [x] (on request) Settings: a setting row is at least 36px tall, and General's three rows are one group, so rows are evenly spaced — 2026-10-13
+- [x] (on request) Settings › Terminal: the "not installed" warning shows once, translated (an untranslated copy showed under it) — 2026-10-13
 
 ---
 

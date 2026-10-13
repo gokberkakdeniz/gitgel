@@ -423,11 +423,6 @@ function TerminalSetting({ config }: { config: Config }) {
           {t('settings.terminalMissing', { name: termApp.name })}
         </span>
       )}
-      {loaded && termApp && !termApp.found && (
-        <span className={styles.terminalMissing}>
-          {termApp.name} is not installed; the menus show it disabled
-        </span>
-      )}
     </div>
   );
 }
