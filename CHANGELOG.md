@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.23 — 2026-10-13
+
+### Improved
+- Update checks every hour, and after a Mac wakes.
+
 ## 0.1.22 — 2026-10-13
 
 ### New
