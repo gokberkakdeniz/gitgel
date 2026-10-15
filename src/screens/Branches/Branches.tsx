@@ -22,6 +22,7 @@ import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenI
 import { conflictsTooltip } from '../../sync/operation';
 import { OperationPill } from '../../sync/OperationUi';
 import { RepoFetchButton, SyncItems } from '../../sync/SyncButtons';
+import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { askDrop } from '../../stash/actions';
 import { StashTargetMenu } from '../../stash/StashTargetMenu';
@@ -828,7 +829,8 @@ function Row({
 }
 
 /** The row's ⋯ menu: Copy Branch Name and Open History (Open Review on the base row, whose name
- * already opens History), the always-listed open items, the Scripts group, then the closing note. */
+ * already opens History), the always-listed open items, the Scripts group, Delete Branch…, then
+ * the closing note. */
 function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: boolean; onClose: () => void }) {
   return (
     <Menu aria-label={t('branches.branchOptions')} autoFocus>
@@ -860,6 +862,7 @@ function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: bool
       <OpenItems entry={entry} onDone={onClose} />
       <SyncItems entry={entry} onDone={onClose} />
       <ScriptsMenu entry={entry} menu="branches" onDone={onClose} />
+      <DeleteBranchItem entry={entry} onDone={onClose} />
       <EntryMenuNote entry={entry} />
     </Menu>
   );

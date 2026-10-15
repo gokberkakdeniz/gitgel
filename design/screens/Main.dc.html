@@ -236,6 +236,9 @@ class Component extends DCLogic {
         [{ label: 'Copy Linear link', icon: 'link' }],
         noWt ? [] : [{ label: 'Start dev server', icon: 'prompt' }]);
     }
+    // Delete Branch… (R2) last; a checked-out branch too (its folder switches to the base or its
+    // worktree is removed).
+    rowMenuItems = rowMenuItems.concat([{ kind: 'sep' }, { label: 'Delete Branch…', icon: 'trash', danger: true }]);
     // One note closes the menu, after a divider: why some items are missing.
     var menuNote = rowMenu === 'terminalMissing' ? 'iTerm2 not installed'
       : noWt ? 'Not checked out'

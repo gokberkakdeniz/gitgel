@@ -208,7 +208,8 @@ gitgel/
 │  │            # Discard Changes), picks.ts (⌘ / ⇧-click picking of Uncommitted's files)
 │  ├─ sync/     # §15 sync (W4a): sync.ts (what Fetch / Pull / Push can do, labels), SyncButtons
 │  │            # (History header buttons, SyncItems: the branch menus' group); operation.ts +
-│  │            # OperationUi (operations in progress: pill, banner, Continue / Abort, T3 dialog)
+│  │            # OperationUi (operations in progress: pill, banner, Continue / Abort, T3 dialog);
+│  │            # DeleteBranch (the branch menus' Delete Branch… and its confirmation)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
@@ -490,7 +491,8 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   serif 22px title, then a 14px `text.body` text (Delete project, Remove repository; gap 10, the
   buttons 10px under it) or a `bg.sunken` box naming what it acts on (padding 12px 14px, radius
   10, mono 12 `text.code`, one row per thing with a 14px muted icon) and a 13px muted note (Drop
-  stash P6, Run O3; gap 14, the buttons 4px under it); with `dontAsk`, a `Checkbox` "Do not show
+  stash P6, Run O3, Delete branch; gap 14, the buttons 4px under it); with `options`, a `Checkbox`
+  each that changes the action (Delete branch: stash the changes, also on the remote); with `dontAsk`, a `Checkbox` "Do not show
   this message again" above the buttons (Delete project, Remove repository, Drop stash; §5
   Settings "Prompts"); 36px buttons on the right, the action last.
 - `Stepper`: ↑ ↓ in one framed group (`bg.elevated`, 1px border, radius 8, padding 2, gap 2;
@@ -652,7 +654,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     anywhere on the row opens it at the pointer): "Copy branch name"
     (hidden for a detached HEAD), then the open items as in the Project entry menu (with a divider
     between the two groups); icons as there; then the Sync group (§15 "Sync"); then the Scripts
-    group (§14, flow N1–N2). ↑/↓/↵/Esc
+    group (§14, flow N1–N2); then "Delete Branch…" (§15 "Delete branch"). ↑/↓/↵/Esc
     work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
 - **Base branch row** (`HistH1.dc.html`): the repo's base branch (§1) is always
@@ -777,7 +779,8 @@ Layout:
   - **Entry menu** (260px, right-aligned under "⋮"; right-clicking the header opens it at the
     pointer): "Change base" (sub `base <ref>`) opens the Base menu at the same anchor; then the Branches row menu without "Open
     review": "Copy branch name", "Open history" (back label "Back to Review"), the open items,
-    the Sync group (§15 "Sync"), then the Scripts group as the Branches menu (the Project menu in a project review). The
+    the Sync group (§15 "Sync"), then the Scripts group as the Branches menu (the Project menu in a project review),
+    then "Delete Branch…" (§15 "Delete branch"). The
     header has no base control: the entry bar shows the base in use.
   - Commit chip (when the entry is scoped to one commit, see below).
   - Stacked warning (margin 0 8px 6px 28px, padding 7px 10px, radius 8, warning tone):
@@ -978,10 +981,10 @@ Layout:
       says "Repository not found" / "Branch deleted" (a gone detached worktree counts as deleted). A chosen terminal
       that is not installed is left out and the note says "<Name> not installed". The note is 12px `warning.text`, line-height 1.45, padding
       6px 10px 4px, with a 14px circle-i icon.
-    - One note at most per menu, at its very end after a divider (below Remove from project in
-      the Project entry menu), never inside a group. A group left empty takes its divider with
+    - One note at most per menu, at its very end after a divider (below Remove from project and
+      Delete Branch… in the Project entry menu), never inside a group. A group left empty takes its divider with
       it (no divider at either end of a menu or twice in a row).
-  - Divider, danger "Remove from project".
+  - Divider, danger "Remove from project", then "Delete Branch…" (§15 "Delete branch").
 - **Project menu** (230px; also on the sidebar's right-click): "Rename" (hint "F2"), divider,
   danger "Delete project".
 - **Rename:** the title becomes an in-place input in the title's own box (at least 340px wide,
@@ -2014,6 +2017,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
+| Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `FlowD11` (`menu` sync), `HistH2` (page menu) |
 | Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
 | Discard | `HistH9`, `FlowD12.dc.html` | canvas page "Review & History": Hi8 (`HistH9` mounts `HistH6` with `selected`) History's Uncommitted with files picked, their menu (23–25, data 87–111; `count` two / one / all: the Uncommitted row's menu) and Confirm Discard Changes (26–49, data 112–116); D12 (`FlowD12` mounts `Diff` with `selected`) the same in a project review, the dialog's files under their entry (data 87–96) |
@@ -2651,6 +2655,45 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   (git's message, or a prompt for a password or passphrase, is there). One that cannot start shows
   the usual `“<name>” could not start` toast.
 
+### Delete branch
+
+"Delete Branch…" (`trash`, danger) at the end of the branch menus (Branches row, Review entry,
+History page menu, after the Scripts group and a divider; Project entry, under "Remove from
+project"), before the closing note. Only for a local branch that is there, is not its repo's base
+branch and has no operation in progress (left out otherwise, not disabled); disabled while a git
+action runs in the repository ("A git action is running").
+
+- **Confirmation** (`sync/DeleteBranch.tsx`, `ConfirmModal`, 460px; R2): title `Delete <branch>?`,
+  rows `<repo> / <branch>` (`branch`) and, when checked out, its folder (`folder`, `~/…`). The note
+  says what else happens, in this order: `N commits are lost: they are on no other branch or
+  remote.` (`danger.text`; `get_branch_loss`, `refs::branch_loss`: the branch's commits that no
+  other local branch, tag or remote-tracking branch has, the stash not counted; with the remote
+  option, its own remote-tracking branch does not count either; none when 0), `The
+  folder switches to <base>.` (checked out in the repository folder) or `The worktree folder is
+  removed.` (a linked worktree), `N uncommitted changes are lost.` (when they are not stashed).
+  Options: `Stash N uncommitted changes` (checked; when the checkout has any), `Also delete
+  origin/<branch>` (unchecked; when the remote has it). Cancel (focused) and danger "Delete
+  Branch". Always asked.
+- **Run** (`git_delete_branch`, script id `git:delete-branch`, `trash` icon, toast sub line `repo /
+  branch`), in the repository folder, steps joined with `&&`, values in `GITGEL_*` variables:
+  1. With the remote option: `git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF"`
+     (`refs/heads/<branch on the remote>`, the Keychain keys loaded as for a sync), so a refused
+     push changes nothing.
+  2. Checked out, with the stash option (or nothing to stash): `git -C "$GITGEL_FOLDER" stash push
+     --include-untracked --message "Before deleting <branch>"`.
+  3. In the repository folder: without the stash option `reset -q --hard` and `clean -fdq` there,
+     then `git -C "$GITGEL_FOLDER" switch -q "$GITGEL_BASE"` (the repo's base branch). In a linked
+     worktree: `git worktree remove --force "$GITGEL_FOLDER"`.
+  4. `git branch -D "$GITGEL_BRANCH"`.
+
+  Refused for the base branch, an operation in progress, or a tip that is no longer the one the
+  menu showed (the repo is rescanned). Success toast `Deleted <branch>`; a failure opens the
+  output panel. A project entry on it becomes "branch deleted".
+- **After** (`leaveDeletedBranch`, `state/nav.ts`): when the branch's own Review or History is
+  showing, every page about the branch leaves the navigation stack (forward ones too) and
+  Branches shows; inside a project (a project page or project review under it), the project page
+  it was opened from shows instead. Elsewhere nothing moves.
+
 ### Operations in progress
 
 A rebase, merge, cherry-pick or revert that git stopped in an entry's worktree, usually on
@@ -2772,7 +2815,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     when `rev` is an active entry: its branch Review, or going back to it), "Refresh".
     When `rev` is an active entry, a divider and then the branch menu's items (§5 "Entry menu"):
     "Copy branch name" (not for a detached SHA) and a divider, the open items, "Rebase on <base>" (not
-    Fetch / Pull / Push: the header has them), the Scripts group (menu `branches`), the closing note; not "Open history" or "Change base"
+    Fetch / Pull / Push: the header has them), the Scripts group (menu `branches`), "Delete Branch…", the closing note; not "Open history" or "Change base"
     (`HistH5.dc.html`, Hi4).
 - **Switch Branch** (⇧⌘B, or the page menu; `History/SwitchBranch.tsx`, `HistH10.dc.html`): the Add
   palette's dialog (620px, top 96px; Esc or a click outside closes it) for this repo only, with

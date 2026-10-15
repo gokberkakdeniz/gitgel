@@ -638,6 +638,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Rule: a `Checkbox` comes before its text, a `Switch` sits on the right of a setting row (SPEC, canvas Checkbox and Switch specs); Prefer absolute dates is a switch — 2026-10-13
 - [x] (on request) History: the commit form is kept per branch while the app runs (leaving History and coming back keeps the message) — 2026-10-15
 - [x] (on request) Every git action (stash, discard, commit, sync) that fails opens its output panel by itself — 2026-10-15
+- [x] (on request) Delete Branch… in the branch menus (`git branch -D` after a confirmation that counts the commits lost with it; a checked-out branch's folder switches to the base, a linked worktree is removed, its changes stashed unless unchecked; optionally the remote branch too; its own Review or History then goes to Branches, or back into the project); canvas R2 (`FlowR2.dc.html`) — 2026-10-15
 
 ---
 

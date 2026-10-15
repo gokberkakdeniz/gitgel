@@ -77,6 +77,22 @@ export function openSettings(section?: SettingsSection) {
 // change here reloads the page instead.
 import.meta.hot?.accept(() => window.location.reload());
 
+/** After a branch is deleted (SPEC §15 "Delete branch"), when its Review or History is shown:
+ * every page about it leaves the stack (forward ones too), and Branches shows, unless the pages
+ * under it are in a project (then the project page or review it was opened from). */
+export function leaveDeletedBranch(repoId: string, branch: string) {
+  const about = (r: Route) =>
+    (r.name === 'review' && r.target.kind === 'branch' && r.target.repoId === repoId && r.target.branch === branch) ||
+    (r.name === 'history' && r.repoId === repoId && r.rev === branch);
+  useNav.setState((s) => {
+    if (!about(s.stack[s.index])) return s;
+    const stack = s.stack.slice(0, s.index + 1).filter((r) => !about(r));
+    const inProject = stack.some((r) => r.name === 'project' || (r.name === 'review' && r.target.kind === 'project'));
+    if (!inProject && stack[stack.length - 1]?.name !== 'branches') stack.push({ name: 'branches' });
+    return { stack, index: stack.length - 1 };
+  });
+}
+
 /** A branch's History (SPEC §16); Back is named after the page it is opened from. */
 export function openHistory(repoId: string, rev: string | null | undefined, backLabel: string) {
   if (rev) useNav.getState().push({ name: 'history', repoId, rev, backLabel });

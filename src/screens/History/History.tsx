@@ -18,6 +18,7 @@ import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { conflictOf, useGitActionRunning } from '../../sync/operation';
 import { OperationBanner } from '../../sync/OperationUi';
 import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
+import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import { divergedBanner, forcePushBranch, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
 import { StashBar } from '../../stash/StashBar';
 import { useStashAction } from '../../stash/StashAction';
@@ -584,6 +585,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                   <OpenItems entry={entry} onDone={close} />
                   <SyncItems entry={entry} onDone={close} rebaseOnly />
                   <ScriptsMenu entry={entry} menu="branches" onDone={close} />
+                  <DeleteBranchItem entry={entry} onDone={close} />
                   <EntryMenuNote entry={entry} />
                 </>
               )}

@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type {
   AiStatus,
   BaseOptions,
+  BranchLoss,
   CommitChanges,
   CommitFiles,
   CommitProvider,
@@ -171,6 +172,15 @@ export const gitRebaseOnBase = (entry: EntryRef) => invoke<ScriptRun>('git_rebas
 export const gitPush = (entry: EntryRef, force = false) => invoke<ScriptRun>('git_push', { entry, force });
 /** Continue or abort the operation stopped in the entry's worktree. */
 export const gitOperation = (entry: EntryRef, abort: boolean) => invoke<ScriptRun>('git_operation', { entry, abort });
+
+/** Delete Branch: `git branch -D` of a branch whose tip is still `sha`, after switching its
+ * checkout to the base or removing its worktree (its changes stashed with `stash`); with
+ * `remote`, its branch on the remote first. */
+/** Delete Branch's note: the branch's commits on no other branch, tag or remote-tracking branch. */
+export const getBranchLoss = (repoId: string, branch: string) =>
+  invoke<BranchLoss>('get_branch_loss', { repoId, branch });
+export const gitDeleteBranch = (repoId: string, branch: string, sha: string, remote: boolean, stash: boolean) =>
+  invoke<ScriptRun>('git_delete_branch', { repoId, branch, sha, remote, stash });
 
 /** Commit (W1a): the checked files of the entry's worktree, with the message. */
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });

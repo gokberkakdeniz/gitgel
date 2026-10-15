@@ -28,8 +28,11 @@ body{margin:0}
 </div>
 </sc-if>
 <sc-if value="{{hasNote}}" hint-placeholder-val="{{false}}">
-<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted)">{{note}}</p>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted)"><span style="color: var(--danger)">{{lost}}</span>{{note}}</p>
 </sc-if>
+<sc-for list="{{options}}" as="o" hint-placeholder-count="0">
+<dc-import name="Checkbox" theme="none" checked="{{o.checked}}" label="{{o.label}}" hint-size="240px,20px"></dc-import>
+</sc-for>
 <sc-if value="{{dontAsk}}" hint-placeholder-val="{{false}}">
 <dc-import name="Checkbox" theme="none" checked="{{false}}" label="Do not show this message again" hint-size="240px,20px"></dc-import>
 </sc-if>
@@ -40,7 +43,7 @@ body{margin:0}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Delete “Session auth refresh”?"},"text":{"editor":"text","default":"Removes the project and its 6 entries. Nothing on disk is touched."},"note":{"editor":"text","default":""},"dontAsk":{"editor":"boolean","default":false},"width":{"editor":"int","default":440},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"label":{"editor":null},"context":{"editor":null},"buttons":{"editor":null},"$preview":{"width":440,"height":190}}'>
+<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Delete “Session auth refresh”?"},"text":{"editor":"text","default":"Removes the project and its 6 entries. Nothing on disk is touched."},"note":{"editor":"text","default":""},"options":{"editor":null},"lost":{"editor":"text","default":""},"dontAsk":{"editor":"boolean","default":false},"width":{"editor":"int","default":440},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"label":{"editor":null},"context":{"editor":null},"buttons":{"editor":null},"$preview":{"width":440,"height":190}}'>
 class Component extends DCLogic {
   renderVals() {
     // The app's ConfirmModal (src/components/ConfirmModal.tsx), the dialog box without its scrim:
@@ -49,7 +52,9 @@ class Component extends DCLogic {
     // right, the action last. With the box the parts sit 14px apart (10px without) and the buttons
     // 4px under it (10px under the text). dontAsk: a "Do not show this message again" checkbox above
     // the buttons (GitHub Desktop's; it turns the dialog's Settings › Prompts box off, M6), on the
-    // dialogs Prompts lists: Delete project, Remove repository, Drop stash.
+    // dialogs Prompts lists: Delete project, Remove repository, Drop stash. options: checkboxes
+    // ({ label, checked }) that change the action, above it (Delete branch R2: stash the changes,
+    // also delete origin/<branch>).
     var p = this.props;
     var context = p.context || [];
     var boxed = context.length > 0;
@@ -62,8 +67,11 @@ class Component extends DCLogic {
       hasText: p.text == null ? !boxed : !!p.text,
       hasContext: boxed,
       context: context.map(function (c) { return { icon: c.icon, text: c.text, title: c.title || '' }; }),
+      // lost: the note's danger lead (Delete branch R2: commits on no other branch or remote).
+      lost: p.lost ? p.lost + (p.note ? ' ' : '') : '',
       note: p.note || '',
-      hasNote: !!p.note,
+      hasNote: !!(p.note || p.lost),
+      options: (p.options || []).map(function (o) { return { label: o.label, checked: !!o.checked }; }),
       dontAsk: !!p.dontAsk,
       buttons: buttons.map(function (b) { return { label: b.label, variant: b.variant || 'secondary', kbd: b.kbd || '' }; }),
       boxStyle: 'position: relative; width: ' + (p.width || 440) + 'px; box-sizing: border-box; display: flex; flex-direction: column; gap: ' + (boxed ? 14 : 10) + 'px; padding: 22px 24px 18px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); font-family: \'Instrument Sans\', -apple-system, sans-serif; font-size: 13px; color: var(--text-body)',

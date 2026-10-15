@@ -3,6 +3,7 @@
 use git2::{BranchType, Oid, Repository};
 
 use crate::error::AppError;
+use crate::model::BranchLoss;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LocalBranch {
@@ -125,6 +126,42 @@ fn default_remote(repo: &Repository) -> Option<String> {
         [only] => Some(only.clone()),
         _ => None,
     }
+}
+
+/// The commits of `branch` that no other ref has (SPEC §15 "Delete branch"): every local branch,
+/// tag and remote-tracking branch is hidden from its tip except itself and, for `lost_with_remote`,
+/// its remote-tracking branch. The stash does not count: its commits sit on top of a branch.
+pub fn branch_loss(repo: &Repository, branch: &str) -> Result<BranchLoss, AppError> {
+    let own = format!("refs/heads/{branch}");
+    let tip = repo.refname_to_id(&own)?;
+    let remote = tracking(repo, branch)
+        .and_then(|t| t.tracking)
+        .map(|name| format!("refs/remotes/{name}"));
+    let count = |keep_remote: bool| -> Result<u32, AppError> {
+        let mut walk = repo.revwalk()?;
+        walk.push(tip)?;
+        for r in repo.references()?.flatten() {
+            let Ok(name) = r.name() else { continue };
+            if name == own
+                || name == "refs/stash"
+                || (!keep_remote && Some(name) == remote.as_deref())
+            {
+                continue;
+            }
+            if let Ok(commit) = r.peel_to_commit() {
+                walk.hide(commit.id())?;
+            }
+        }
+        Ok(walk.flatten().count() as u32)
+    };
+    Ok(BranchLoss {
+        lost: count(true)?,
+        lost_with_remote: if remote.is_some() {
+            count(false)?
+        } else {
+            count(true)?
+        },
+    })
 }
 
 /// Tag names, sorted.
@@ -325,6 +362,28 @@ mod tests {
         assert!(branches[0].last_commit_at > branches[1].last_commit_at);
         assert_eq!(resolve_commit(&t.repo, "feat/x~1"), Some(a.to_string()));
         assert_eq!(resolve_commit(&t.repo, "nope"), None);
+    }
+
+    #[test]
+    fn branch_loss_counts_commits_on_no_other_ref() {
+        let t = TestRepo::new();
+        let a = t.commit_on("main", &[("a", Some(b"a"))], "init", 4);
+        t.branch_from("feat", a);
+        let b = t.commit_on("feat", &[("b", Some(b"b"))], "b", 3);
+        t.commit_on("feat", &[("c", Some(b"c"))], "c", 2);
+        // Nothing pushed: both commits go.
+        let lost = |l, r| BranchLoss {
+            lost: l,
+            lost_with_remote: r,
+        };
+        assert_eq!(branch_loss(&t.repo, "feat").unwrap(), lost(2, 2));
+        // One pushed: only the other goes, unless the remote branch goes too.
+        t.set_remote("origin/feat", b);
+        t.set_upstream("feat", "origin/feat");
+        assert_eq!(branch_loss(&t.repo, "feat").unwrap(), lost(1, 2));
+        // Merged into main: nothing goes.
+        t.set_branch("main", t.repo.refname_to_id("refs/heads/feat").unwrap());
+        assert_eq!(branch_loss(&t.repo, "feat").unwrap(), lost(0, 0));
     }
 
     #[test]

@@ -11,7 +11,7 @@ use crate::config;
 use crate::config::new_id;
 use crate::error::AppError;
 use crate::git::{operation, refs, stash, worktrees};
-use crate::model::{entry_key, EntryRef, OperationKind, ScriptRun, UpdateReason};
+use crate::model::{entry_key, BranchLoss, EntryRef, OperationKind, ScriptRun, UpdateReason};
 use crate::scan;
 use crate::state::{lock, AppState};
 
@@ -368,6 +368,14 @@ pub fn staged_paths(state: &AppState, entry: &EntryRef) -> Result<Vec<String>, A
     let shared = state.pool.get(&tree.path)?;
     let wt = lock(&shared);
     Ok(worktrees::staged(&wt)?.0)
+}
+
+/// What deleting `branch` loses (Delete Branch's note). Read only.
+pub fn branch_loss(state: &AppState, repo_id: &str, branch: &str) -> Result<BranchLoss, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    let shared = state.pool.get(&repo.path)?;
+    let git = lock(&shared);
+    refs::branch_loss(&git, branch)
 }
 
 /// Commit (W1a): the checked files of the entry's worktree become one commit. The index is made
@@ -872,6 +880,156 @@ pub fn operation(state: &AppState, entry: EntryRef, abort: bool) -> Result<Scrip
     )
 }
 
+/// Where the branch Delete Branch removes is checked out.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum CheckedOut {
+    No,
+    /// The repository folder: it switches to the repo's base branch first.
+    Main,
+    /// A linked worktree: it is removed first.
+    Linked,
+}
+
+/// Delete Branch (SPEC §15 "Delete branch"): `git branch -D` of a local branch whose tip is still
+/// `sha` (what the confirmation showed), in the repository folder. Checked out in the repository
+/// folder, that switches to the repo's base branch first; in a linked worktree, the worktree is
+/// removed first. The checkout's uncommitted changes go to a stash with `stash`, else they are
+/// dropped. With `remote`, `git push <remote> --delete` of the branch comes first of all, so a
+/// refused push changes nothing.
+pub fn delete_branch(
+    state: &AppState,
+    repo_id: &str,
+    branch: &str,
+    sha: &str,
+    remote: bool,
+    stash: bool,
+) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    repo.not_busy(state)?;
+    let base = lock(&state.last_scan)
+        .get(&repo.id)
+        .and_then(|s| s.base_branch.clone());
+    if base.as_deref() == Some(branch) {
+        return Err(AppError::Invalid(format!("{branch} is the base branch.")));
+    }
+    let tree = repo
+        .trees
+        .iter()
+        .find(|w| w.branch.as_deref() == Some(branch));
+    if let Some(tree) = tree {
+        let shared = state.pool.get(&tree.path)?;
+        if operation::read(&lock(&shared)).is_some() {
+            return Err(AppError::Invalid(format!(
+                "An operation is in progress in {}.",
+                repo.label(tree)
+            )));
+        }
+    }
+    let (tip, tracking) = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        let tip = git
+            .find_branch(branch, git2::BranchType::Local)
+            .ok()
+            .and_then(|b| b.get().target())
+            .map(|o| o.to_string());
+        (tip, refs::tracking(&git, branch))
+    };
+    if tip.as_deref() != Some(sha) {
+        scan::rescan_repo(state, &repo.id, UpdateReason::Rescan, None);
+        return Err(AppError::Invalid(format!(
+            "{branch} changed. Look at it again."
+        )));
+    }
+    let mut env = vec![("GITGEL_BRANCH".to_string(), branch.to_string())];
+    let checked_out = match tree {
+        None => CheckedOut::No,
+        Some(t) => {
+            env.push((
+                "GITGEL_FOLDER".into(),
+                t.path.to_string_lossy().into_owned(),
+            ));
+            env.push(("GITGEL_MESSAGE".into(), format!("Before deleting {branch}")));
+            if t.name.is_none() {
+                let base = base.ok_or_else(|| {
+                    AppError::Invalid(format!("{} has no base branch to switch to.", repo.name))
+                })?;
+                env.push(("GITGEL_BASE".into(), base));
+                CheckedOut::Main
+            } else {
+                CheckedOut::Linked
+            }
+        }
+    };
+    if remote {
+        let t = tracking
+            .filter(|t| t.tracking.is_some())
+            .ok_or_else(|| AppError::Invalid(format!("{branch} is not on a remote.")))?;
+        env.push(("GITGEL_REMOTE".into(), t.remote));
+        env.push((
+            "GITGEL_REMOTE_REF".into(),
+            format!("refs/heads/{}", t.branch),
+        ));
+    }
+    let command = delete_branch_command(remote, checked_out, stash);
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}delete-branch"),
+            name: format!("Delete {branch}"),
+            icon: "trash".into(),
+            entry_key: entry_key(
+                &repo.id,
+                Some(branch),
+                tree.map(|t| t.path.to_string_lossy()).as_deref(),
+            ),
+            repo_label: format!("{} / {branch}", repo.name),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: repo.main.clone(),
+            command: if remote {
+                format!("{LOAD_KEYS}{command}")
+            } else {
+                command
+            },
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `[git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF" &&] [<the checkout's changes> &&
+/// <switch or remove> &&] git branch -D "$GITGEL_BRANCH"`: only fixed text and quoted variables.
+/// The changes go to a stash (`stash push` of a clean checkout saves nothing and succeeds), or are
+/// dropped (`reset --hard` and `clean -fd`; a linked worktree's `remove --force` drops them).
+pub(super) fn delete_branch_command(remote: bool, checked_out: CheckedOut, stash: bool) -> String {
+    let git = "git -C \"$GITGEL_FOLDER\"";
+    let mut steps = Vec::new();
+    if remote {
+        steps.push("git push \"$GITGEL_REMOTE\" --delete \"$GITGEL_REMOTE_REF\"".to_string());
+    }
+    if checked_out != CheckedOut::No && stash {
+        steps.push(format!(
+            "{git} stash push --include-untracked --message \"$GITGEL_MESSAGE\""
+        ));
+    }
+    match checked_out {
+        CheckedOut::No => {}
+        CheckedOut::Main => {
+            if !stash {
+                steps.push(format!("{git} reset -q --hard"));
+                steps.push(format!("{git} clean -fdq"));
+            }
+            steps.push(format!("{git} switch -q \"$GITGEL_BASE\""));
+        }
+        CheckedOut::Linked => {
+            steps.push("git worktree remove --force \"$GITGEL_FOLDER\"".to_string());
+        }
+    }
+    steps.push("git branch -D \"$GITGEL_BRANCH\"".to_string());
+    steps.join(" && ")
+}
+
 /// Where a base ref lives on a remote, as `(remote, branch on the remote)`: a local branch's
 /// upstream when the remote has it, or a remote-tracking ref split at its remote (`origin/HEAD`
 /// followed to the branch it points at). `None` for a base only here.
@@ -1079,6 +1237,30 @@ mod tests {
         assert_eq!(
             operation_command("rebase", false, 2),
             r#"git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" "$GITGEL_PATH_2" && git -C "$GITGEL_FOLDER" rebase --continue"#
+        );
+    }
+
+    #[test]
+    fn delete_branch_commands_hold_no_values() {
+        assert_eq!(
+            delete_branch_command(false, CheckedOut::No, true),
+            r#"git branch -D "$GITGEL_BRANCH""#
+        );
+        assert_eq!(
+            delete_branch_command(true, CheckedOut::No, true),
+            r#"git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF" && git branch -D "$GITGEL_BRANCH""#
+        );
+        assert_eq!(
+            delete_branch_command(false, CheckedOut::Main, true),
+            r#"git -C "$GITGEL_FOLDER" stash push --include-untracked --message "$GITGEL_MESSAGE" && git -C "$GITGEL_FOLDER" switch -q "$GITGEL_BASE" && git branch -D "$GITGEL_BRANCH""#
+        );
+        assert_eq!(
+            delete_branch_command(false, CheckedOut::Main, false),
+            r#"git -C "$GITGEL_FOLDER" reset -q --hard && git -C "$GITGEL_FOLDER" clean -fdq && git -C "$GITGEL_FOLDER" switch -q "$GITGEL_BASE" && git branch -D "$GITGEL_BRANCH""#
+        );
+        assert_eq!(
+            delete_branch_command(true, CheckedOut::Linked, false),
+            r#"git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF" && git worktree remove --force "$GITGEL_FOLDER" && git branch -D "$GITGEL_BRANCH""#
         );
     }
 

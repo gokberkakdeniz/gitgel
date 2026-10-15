@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2 · Delete a branch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--accent-rgb:79,143,163;--danger:#ee9a90;--shadow:rgba(0,0,0,0.5);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--accent-rgb:58,123,143;--danger:#b3463b;--shadow:rgba(40,32,20,0.18);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Main" theme="{{themeName}}" popover="none" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div style="position: relative; margin-top: 180px">
+<dc-import name="ConfirmModal" theme="none" width="{{460}}" title="{{title}}" context="{{context}}" lost="{{lost}}" note="{{note}}" options="{{options}}" buttons="{{buttons}}" hint-size="460px,300px"></dc-import>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"case": {"editor": "enum", "options": ["worktree", "noStash", "notCheckedOut"], "default": "worktree"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
+class Component extends DCLogic {
+renderVals() {
+// Delete Branch… (the branch menus' last item): a confirmation laid out like P6. The note says
+// what else happens: commits on no other branch, tag or remote, in danger (none when 0; with
+// "Also delete origin/…" checked, the remote's copies count too), the folder switching to the
+// base (repository folder) or the worktree folder going (a linked worktree), and the uncommitted
+// changes being lost once "Stash" is unchecked. Options: Stash (checked; only with changes), Also
+// delete origin/<branch> (unchecked; only when the remote has it). Cancel has the focus.
+// worktree / noStash: session-token-refresh, 2 of its commits not pushed, checked out in a linked
+// worktree with 3 changes. notCheckedOut: feat/billing-v2, all pushed: nothing is lost.
+var theme = this.props.theme ?? 'dark';
+var c = this.props.case || 'worktree';
+var wt = c !== 'notCheckedOut';
+var stash = c === 'worktree';
+return { themeClass: 'theme-' + theme, themeName: theme,
+  title: wt ? 'Delete session-token-refresh?' : 'Delete feat/billing-v2?',
+  context: wt ? [{ icon: 'branch', text: 'web-app / session-token-refresh' }, { icon: 'folder', text: '~/code/wt/token-refresh' }]
+    : [{ icon: 'branch', text: 'web-app / feat/billing-v2' }],
+  lost: wt ? '2 commits are lost: they are on no other branch or remote.' : '',
+  note: wt ? 'The worktree folder is removed.' + (stash ? '' : ' 3 uncommitted changes are lost.') : '',
+  options: (wt ? [{ label: 'Stash 3 uncommitted changes', checked: stash }] : [])
+    .concat([{ label: wt ? 'Also delete origin/session-token-refresh' : 'Also delete origin/feat/billing-v2', checked: false }]),
+  buttons: [{ label: 'Cancel' }, { label: 'Delete Branch', variant: 'danger' }] };
+}
+}
+</script>
+</body>
+</html>

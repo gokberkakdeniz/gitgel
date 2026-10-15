@@ -222,7 +222,10 @@ class Component extends DCLogic {
       { label: 'Rebase on main', icon: 'rebase' },
       { label: 'Push', icon: 'arrow-up', hint: '↑2', disabled: true },
       // Diverged only: --force-with-lease, over what the last fetch saw.
-      { label: 'Force Push', icon: 'arrow-up' }
+      { label: 'Force Push', icon: 'arrow-up' },
+      // Delete Branch… (R2).
+      { kind: 'sep' },
+      { label: 'Delete Branch…', icon: 'trash', danger: true }
     ];
     var m = this.props.menu || 'file';
     var row = function (on) { return 'display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 28px; border-radius: 8px; background: ' + (on ? 'var(--bg-hover)' : 'transparent'); };

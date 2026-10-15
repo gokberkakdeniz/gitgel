@@ -236,7 +236,10 @@ class Component extends DCLogic {
       { kind: 'sep' },
       { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
       { kind: 'sep' },
-      { label: 'Rebase on main', icon: 'rebase' }
+      { label: 'Rebase on main', icon: 'rebase' },
+      // Delete Branch… (R2).
+      { kind: 'sep' },
+      { label: 'Delete Branch…', icon: 'trash', danger: true }
     ];
     return out;
   }

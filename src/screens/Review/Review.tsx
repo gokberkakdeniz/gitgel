@@ -43,6 +43,7 @@ import { StashBar } from '../../stash/StashBar';
 import { conflictOf, conflictsTooltip } from '../../sync/operation';
 import { OperationBanner, OperationPill } from '../../sync/OperationUi';
 import { SyncItems } from '../../sync/SyncButtons';
+import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import { upstreamLabel, upstreamTitle } from '../../sync/sync';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
@@ -819,6 +820,7 @@ function EntryMenu({
       ) : (
         <ScriptsMenu entry={entry} menu="branches" onDone={onClose} />
       )}
+      <DeleteBranchItem entry={entry} onDone={onClose} />
       <EntryMenuNote entry={entry} />
     </Menu>
   );

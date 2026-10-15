@@ -185,6 +185,11 @@ export interface Operation {
   total: number | null;
   unresolved: string[]; // conflicted files that still have git's markers: Continue waits for none
 }
+/** What deleting a branch loses: its commits on no other branch, tag or remote-tracking branch. */
+export interface BranchLoss {
+  lost: number; // its own remote-tracking branch kept
+  lostWithRemote: number; // its remote branch deleted too
+}
 /** A branch against its remote, as of the last fetch (W4a). */
 export interface Upstream {
   remote: string; // e.g. "origin"

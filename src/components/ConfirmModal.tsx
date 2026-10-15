@@ -22,6 +22,7 @@ export function ConfirmModal({
   text,
   context,
   note,
+  options,
   dontAsk,
   children,
 }: {
@@ -36,6 +37,9 @@ export function ConfirmModal({
   context?: ConfirmContext[];
   /** Muted, under the box. */
   note?: ReactNode;
+  /** Checkboxes that change what the action does (Delete Branch: stash the changes, also on the
+   * remote). */
+  options?: { label: string; checked: boolean; onChange: (checked: boolean) => void }[];
   /** "Do not show this message again" (Settings › Prompts, M6): its state; the caller turns the
    * prompt off when the action is confirmed with it checked. */
   dontAsk?: { checked: boolean; onChange: (checked: boolean) => void };
@@ -57,6 +61,15 @@ export function ConfirmModal({
           </div>
         )}
         {note && <p className={styles.note}>{note}</p>}
+        {options?.map((o) => (
+          <Checkbox
+            key={o.label}
+            className={styles.dontAsk}
+            label={o.label}
+            checked={o.checked}
+            onChange={(e) => o.onChange(e.target.checked)}
+          />
+        ))}
         {dontAsk && (
           <Checkbox
             className={styles.dontAsk}

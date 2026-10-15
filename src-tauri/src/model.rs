@@ -717,6 +717,17 @@ pub struct Operation {
     pub unresolved: Vec<String>,
 }
 
+/// What deleting a branch loses (SPEC §15 "Delete branch"): its commits on no other branch, tag
+/// or remote-tracking branch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BranchLoss {
+    /// Its own remote-tracking branch kept.
+    pub lost: u32,
+    /// Its remote branch deleted too.
+    pub lost_with_remote: u32,
+}
+
 /// A branch against its remote (`refs::tracking`), as of the last fetch.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

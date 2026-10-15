@@ -1,0 +1,4 @@
+/* Commits that go with the branch: the note's danger part. */
+.lost {
+  color: var(--danger-text);
+}

@@ -6,9 +6,9 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
-    BaseOptions, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck, HistoryPage,
-    OpenApp, ProjectConfig, ProjectView, RemoteInfo, ReviewData, ReviewTarget, ScanResult,
-    ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
+    BaseOptions, BranchLoss, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck,
+    HistoryPage, OpenApp, ProjectConfig, ProjectView, RemoteInfo, ReviewData, ReviewTarget,
+    ScanResult, ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{
@@ -632,6 +632,24 @@ pub async fn git_operation(
     .await
 }
 
+/// Delete Branch: `git branch -D` of a branch whose tip is still `sha`, after switching its
+/// checkout to the base or removing its worktree (its changes stashed with `stash`); with
+/// `remote`, its branch on the remote first.
+#[tauri::command]
+pub async fn git_delete_branch(
+    state: State<'_, AppState>,
+    repo_id: String,
+    branch: String,
+    sha: String,
+    remote: bool,
+    stash: bool,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::delete_branch(state, &repo_id, &branch, &sha, remote, stash)
+    })
+    .await
+}
+
 /// Commit (W1a): the checked files of the entry's worktree, with the message.
 #[tauri::command]
 pub async fn git_commit(
@@ -682,6 +700,19 @@ pub async fn git_discard(
     entries: Vec<scripts::git::DiscardFiles>,
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| scripts::git::discard(state, entries)).await
+}
+
+/// Delete Branch's note: the branch's commits on no other branch, tag or remote-tracking branch.
+#[tauri::command]
+pub async fn get_branch_loss(
+    state: State<'_, AppState>,
+    repo_id: String,
+    branch: String,
+) -> Result<BranchLoss, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::branch_loss(state, &repo_id, &branch)
+    })
+    .await
 }
 
 /// The paths git's index has staged in the entry's worktree (Uncommitted's boxes start checked).

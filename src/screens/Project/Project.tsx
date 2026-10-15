@@ -5,6 +5,7 @@ import { BranchIcon, ChevronDownIcon, HistoryIcon, MoreIcon, RemoveIcon } from '
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { SyncItems } from '../../sync/SyncButtons';
+import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
@@ -612,6 +613,7 @@ function EntryMenu({
       <MenuItem danger icon={<RemoveIcon />} onSelect={onRemove}>
         {t('project.removeFrom')}
       </MenuItem>
+      <DeleteBranchItem entry={entry} onDone={onClose} divider={false} />
       <EntryMenuNote entry={entry} />
     </Menu>
   );

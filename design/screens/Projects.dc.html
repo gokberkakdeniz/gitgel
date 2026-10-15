@@ -164,7 +164,8 @@ class Component extends DCLogic {
       // Real app icons (from macOS), drawn grayscale; the placeholders stand in for them.
       openMenuTop: openCase === 'notCheckedOut' ? 267 : openCase === 'repoMissing' ? 432 : 157,
       openMenuItems: [point, copy, sep].concat(apps(openCase === 'repoMissing'),
-        [sep, remove],
+        // Delete Branch… (R2) under Remove; none in a missing repo.
+        [sep, remove], openCase === 'repoMissing' ? [] : [{ label: 'Delete Branch…', icon: 'trash', danger: true }],
         // One note closes the menu, after a divider.
         openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [sep, { kind: 'note', label: openCase === 'repoMissing' ? 'Repository Not Found' : 'Not checked out' }] : []),
       deletedMenuItems: [{ label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true }, point, copy, sep].concat(apps(true),

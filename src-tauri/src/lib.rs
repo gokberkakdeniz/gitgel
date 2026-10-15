@@ -164,6 +164,8 @@ pub fn run() {
             commands::git_pull,
             commands::git_rebase_on_base,
             commands::git_operation,
+            commands::git_delete_branch,
+            commands::get_branch_loss,
             commands::git_commit,
             commands::generate_message_start,
             commands::get_ai_status,
