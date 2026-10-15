@@ -83,9 +83,9 @@ class Component extends DCLogic {
 renderVals() {
 // Checkout Branch…: first in the branch menu's Sync group (before Fetch / Pull / Push), for a
 // branch checked out nowhere; a Remote Branches row's menu has it too (remote: the remote branch
-// becomes a local one tracking it). A modal (460px) with New Branch's list, in its order: New
-// worktree (the folder, <repo>-worktrees/<branch>, and Choose…), then the repo's worktrees (the
-// repository folder, then the linked ones by folder; on the right the branch each is on, then →;
+// becomes a local one tracking it). A modal (460px) with New Branch's list, in its (Settings')
+// order: the repository folder, New worktree (the folder, <repo>-worktrees/<branch>, and
+// Choose…), then the linked worktrees by folder (a worktree's row: the branch it is on, then →;
 // the row's tooltip the folder; long folder and branch names cut from the middle). A picked worktree with uncommitted changes opens Bring to <branch>
 // (default) / Stash under it. It opens on Settings › Repositories › Check Out New Branches In
 // (New worktree when that is picked, else the repository folder). Click a row to pick it (the
