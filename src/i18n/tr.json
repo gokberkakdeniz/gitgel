@@ -348,7 +348,7 @@
   "history.searchHint": "Commit mesajı, SHA ve yollarda ara",
   "history.wipActions": "Commitlenmemiş İşlemleri",
   "history.discardAll": "Tüm Değişiklikleri At…",
-  "history.stashAll": "Tüm Değişiklikleri Geçici Kaydet…",
+  "history.stashAll": "Tümünü Geçici Kaydet…",
   "history.pullRebase": "Çek (Yeniden Temellendir)",
   "history.forcePush": "Gönder (Zorla)",
   "history.commitsList": "Commit'ler",
