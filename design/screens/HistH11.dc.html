@@ -26,11 +26,11 @@ button{font-family:inherit}
 <sc-if value="{{isConfirm}}" hint-placeholder-val="{{false}}">
 <div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
 <div role="alertdialog" aria-labelledby="amend-title" style="position: relative; margin-top: 160px; width: 560px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
-<dc-import name="ModalHeader" theme="{{themeName}}" title="Amend Will Require Force Push" sub="" close="{{true}}" title-id="amend-title" hint-size="100%,64px"></dc-import>
+<dc-import name="ModalHeader" theme="{{themeName}}" title="Confirm Amend" sub="" close="{{true}}" title-id="amend-title" hint-size="100%,64px"></dc-import>
 <div style="display: flex; gap: 16px; padding: 4px 24px 22px">
 <span style="flex-shrink: 0; display: flex"><dc-import name="Icon" icon="warning" size="28" stroke="1.6" color="var(--warning)" hint-size="28px,28px"></dc-import></span>
 <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px">
-<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-body)">Are you sure you want to amend?</p>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-body)">Amend will require force push. Are you sure you want to amend?</p>
 <p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-body)">At the end of the amend flow, Gitgel will enable you to force push the branch to update the upstream branch. Force pushing will alter the history on the remote and potentially cause problems for others collaborating on this branch.</p>
 <dc-import name="Checkbox" theme="none" checked="{{false}}" label="Do not show this message again" hint-size="220px,20px"></dc-import>
 </div>
@@ -66,7 +66,7 @@ class Component extends DCLogic {
         { kind: 'sep' },
         { label: 'Copy SHA', icon: 'copy' }
       ],
-      buttons: [{ label: 'Cancel' }, { label: 'Begin Amend', variant: 'primary' }]
+      buttons: [{ label: 'Cancel' }, { label: 'Amend', variant: 'primary' }]
     };
   }
 }

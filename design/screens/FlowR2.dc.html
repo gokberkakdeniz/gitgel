@@ -44,7 +44,7 @@ var c = this.props.case || 'worktree';
 var wt = c !== 'notCheckedOut';
 var stash = c === 'worktree';
 return { themeClass: 'theme-' + theme, themeName: theme,
-  title: wt ? 'Delete session-token-refresh?' : 'Delete feat/billing-v2?',
+  title: 'Confirm Delete Branch',
   context: wt ? [{ icon: 'branch', text: 'web-app / session-token-refresh' }, { icon: 'folder', text: '~/code/wt/token-refresh' }]
     : [{ icon: 'branch', text: 'web-app / feat/billing-v2' }],
   lost: wt ? '2 commits are lost: they are on no other branch or remote.' : '',

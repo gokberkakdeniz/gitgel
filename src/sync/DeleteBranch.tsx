@@ -147,8 +147,8 @@ export function DeleteBranchModal() {
   ];
   return (
     <ConfirmModal
-      aria-label={t('branches.deleteAria', { branch })}
-      title={t('branches.deleteTitle', { branch })}
+      aria-label={t('branches.deleteTitle')}
+      title={t('branches.deleteTitle')}
       width={460}
       onClose={close}
       context={context}

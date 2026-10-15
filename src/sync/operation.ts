@@ -9,11 +9,11 @@ import type { EntryRef, EntrySummary, FileChange, Operation, OperationKind } fro
 import { startGitAction, useRuns } from '../scripts/runs';
 import { useData } from '../state/data';
 
-const NAMES: Record<OperationKind, { pill: string; title: string; verb: string }> = {
-  rebase: { pill: 'sync.pillRebasing', title: 'sync.titleRebase', verb: 'sync.verbRebase' },
-  merge: { pill: 'sync.pillMerging', title: 'sync.titleMerge', verb: 'sync.verbMerge' },
-  cherry_pick: { pill: 'sync.pillCherry', title: 'sync.titleCherry', verb: 'sync.verbCherry' },
-  revert: { pill: 'sync.pillReverting', title: 'sync.titleRevert', verb: 'sync.verbRevert' },
+const NAMES: Record<OperationKind, { pill: string; title: string; verb: string; abort: string }> = {
+  rebase: { pill: 'sync.pillRebasing', title: 'sync.titleRebase', verb: 'sync.verbRebase', abort: 'sync.abortTitleRebase' },
+  merge: { pill: 'sync.pillMerging', title: 'sync.titleMerge', verb: 'sync.verbMerge', abort: 'sync.abortTitleMerge' },
+  cherry_pick: { pill: 'sync.pillCherry', title: 'sync.titleCherry', verb: 'sync.verbCherry', abort: 'sync.abortTitleCherry' },
+  revert: { pill: 'sync.pillReverting', title: 'sync.titleRevert', verb: 'sync.verbRevert', abort: 'sync.abortTitleRevert' },
 };
 
 /** "Rebase", "Cherry-Pick": for Continue Rebase, Abort Merge. */
@@ -129,6 +129,11 @@ function refOf(e: EntrySummary): EntryRef {
 /** The verb for Abort ("Abort the rebase?"): translated directly, never lowercased. */
 export function operationVerb(op: Operation): string {
   return t(NAMES[op.kind].verb);
+}
+
+/** "Confirm Abort Rebase": the abort confirmation's title. */
+export function abortTitle(op: Operation): string {
+  return t(NAMES[op.kind].abort);
 }
 
 export function continueOperation(e: EntrySummary, op: Operation): Promise<void> {

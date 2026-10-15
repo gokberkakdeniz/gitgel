@@ -24,19 +24,19 @@ button,input{font-family:inherit}
 <div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
 
 <div style="position: relative; margin-top: 180px">
-<dc-import name="ConfirmModal" theme="none" width="{{460}}" title="Run “Rebase on main…”?" context="{{context}}" buttons="{{buttons}}" hint-size="460px,200px"></dc-import>
+<dc-import name="ConfirmModal" theme="none" width="{{460}}" title="Confirm Run Script" context="{{context}}" buttons="{{buttons}}" hint-size="460px,230px"></dc-import>
 </div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
 renderVals() {
-// "Ask before running" with no input to fill: a short confirmation (like Delete project) instead
-// of the run dialog. The card says where it runs; ⌘↵ runs, Esc cancels.
+// "Ask before running" with no input to fill: a short confirmation (like Drop stash) instead
+// of the run dialog. The card names the script and where it runs; ⌘↵ runs, Esc cancels.
 var theme = this.props.theme ?? 'dark';
 return { themeClass: 'theme-' + theme, themeName: theme,
-  context: [{ icon: 'branch', text: 'web-app / session-token-refresh' }, { icon: 'folder', text: '~/code/web-app-wt/session-token-refresh' }],
-  buttons: [{ label: 'Cancel' }, { label: 'Run', variant: 'primary', kbd: '⌘↵' }] };
+  context: [{ icon: 'rebase', text: 'Rebase on main…' }, { icon: 'branch', text: 'web-app / session-token-refresh' }, { icon: 'folder', text: '~/code/web-app-wt/session-token-refresh' }],
+  buttons: [{ label: 'Cancel' }, { label: 'Run Script', variant: 'primary', kbd: '⌘↵' }] };
 }
 }
 </script>

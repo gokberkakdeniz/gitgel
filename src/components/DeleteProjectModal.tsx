@@ -49,18 +49,19 @@ export function DeleteProjectModal() {
 
   return (
     <ConfirmModal
-      aria-label={t('project.deleteAria')}
-      title={t('project.deleteTitle', { name: project.name })}
+      aria-label={t('project.deleteTitle')}
+      title={t('project.deleteTitle')}
       width={440}
       onClose={close}
-      text={t('project.deleteText', { ...cnt(n) })}
+      context={[{ icon: 'folder', text: project.name }]}
+      note={t('project.deleteText', { ...cnt(n) })}
       dontAsk={{ checked: dontAsk, onChange: setDontAsk }}
     >
-      <Button size={36} onClick={close}>
+      <Button size={36} autoFocus onClick={close}>
         {t('common.cancel')}
       </Button>
       <Button variant="danger" size={36} disabled={busy} onClick={confirm}>
-        {t('common.deleteProject')}
+        {t('project.deleteBtn')}
       </Button>
     </ConfirmModal>
   );

@@ -185,7 +185,7 @@ Drop folders to add repositories
 </div>
 </sc-for>
 </div>
-<dc-import name="ModalFooter" theme="{{themeName}}" note="" ruled="{{false}}" buttons="{{sheetButtons}}" hint-size="100%,64px"></dc-import>
+<dc-import name="ModalFooter" theme="{{themeName}}" note="{{sheetNote}}" ruled="{{false}}" buttons="{{sheetButtons}}" hint-size="100%,64px"></dc-import>
 </div>
 </div>
 </sc-if>
@@ -348,7 +348,8 @@ class Component extends DCLogic {
       showDrop: !empty && !!this.props.dropping,
       repoHover: !empty && !!this.props.repoHover,
       sheetSubtitle: empty ? '4 folders selected. Worktree folders resolve to their main repository.' : '3 folders selected. Repositories already in Gitgel are skipped.',
-      sheetButtons: [{ label: 'Cancel' }, { label: empty ? 'Add 2 repositories' : 'Add 1 repository', variant: 'primary' }],
+      sheetNote: empty ? '2 repositories to add' : '1 repository to add',
+      sheetButtons: [{ label: 'Cancel' }, { label: 'Add Repositories', variant: 'primary' }],
       showPick: !empty && popover === 'pick',
       showNew: !empty && popover === 'new',
       showToast: !empty && added,

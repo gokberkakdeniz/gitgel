@@ -19,12 +19,12 @@ export function DropStashModal() {
   const where = `${st.repoName} / ${st.branch ?? t('branches.detachedHead')}${st.files !== null ? ` · ${t('branches.fileCount', { ...cnt(st.files) })}` : ''}`;
   return (
     <ConfirmModal
-      aria-label={t('stash.dropAria', { name })}
-      title={t('stash.dropTitle', { name })}
+      aria-label={t('stash.dropTitle')}
+      title={t('stash.dropTitle')}
       width={460}
       onClose={close}
       context={[
-        { icon: 'package', text: st.message, title: st.message },
+        { icon: 'package', text: `${name} · ${st.message}`, title: st.message },
         { icon: 'branch', text: where },
       ]}
       note={t('stash.dropNote')}

@@ -149,14 +149,15 @@ function Repositories({ config }: { config: Config }) {
 
       {removing && (
         <ConfirmModal
-          aria-label={t('settings.removeRepo')}
-          title={t('settings.removeTitle', { name: basename(removing.path) })}
+          aria-label={t('settings.removeTitle')}
+          title={t('settings.removeTitle')}
           width={440}
           onClose={closeRemoving}
-          text={t('settings.removeText', { ...cnt(entriesOf(removing.id)) })}
+          context={[{ icon: 'folder', text: tildifyHome(removing.path), title: removing.path }]}
+          note={t('settings.removeText', { ...cnt(entriesOf(removing.id)) })}
           dontAsk={{ checked: dontAsk, onChange: setDontAsk }}
         >
-          <Button size={36} onClick={closeRemoving}>
+          <Button size={36} autoFocus onClick={closeRemoving}>
             {t('common.cancel')}
           </Button>
           <Button
@@ -346,6 +347,7 @@ function LanguageSetting({ config }: { config: Config }) {
           aria-label={t('settings.reloadTitle')}
           title={t('settings.reloadTitle')}
           width={440}
+          text={t('settings.reloadText')}
           onClose={() => setPending(null)}
         >
           <Button size={36} onClick={() => setPending(null)}>

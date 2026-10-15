@@ -57,12 +57,12 @@ function Sheet({ paths }: { paths: string[] }) {
         ))}
         {(error ?? addError) && <div className={styles.error}>{(error ?? addError)!.message}</div>}
       </div>
-      <ModalFooter ruled={false}>
+      <ModalFooter ruled={false} note={checks && t('addrepos.addCount', { ...cnt(addable) })}>
         <Button size={36} onClick={close}>
           {t('common.cancel')}
         </Button>
         <Button variant="primary" size={36} disabled={!checks || addable === 0 || adding} onClick={add}>
-          {t('addrepos.addBtn', { ...cnt(addable) })}
+          {t('addrepos.addBtn')}
         </Button>
       </ModalFooter>
     </Modal>

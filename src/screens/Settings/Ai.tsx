@@ -207,8 +207,8 @@ function ProviderEditor({
     });
   };
   return (
-    <Modal aria-label={t('settings.aiEdit', { name: meta.label })} width={600} onClose={onClose}>
-      <ModalHeader title={t('settings.aiEdit', { name: meta.label })} sub={meta.binary} onClose={onClose} />
+    <Modal aria-label={t('settings.aiEditTitle')} width={600} onClose={onClose}>
+      <ModalHeader title={t('settings.aiEditTitle')} sub={`${meta.label} · ${meta.binary}`} onClose={onClose} />
       <div className={styles.aiEditor}>
         <label className={styles.aiEditorField}>
           <span className={styles.settingName}>{t('settings.aiModel')}</span>

@@ -87,7 +87,7 @@ button{font-family:inherit}
 
 <sc-if value="{{showDelete}}" hint-placeholder-val="{{false}}">
 <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: flex-start; padding-top: 180px">
-<dc-import name="ConfirmModal" title="Delete “Session auth refresh”?" text="Removes the project and its 6 entries. Nothing on disk is touched." dont-ask="{{true}}" hint-size="440px,220px"></dc-import>
+<dc-import name="ConfirmModal" title="Confirm Delete Project" context="{{deleteContext}}" note="Removes the project and its 6 entries. Nothing on disk is touched." dont-ask="{{true}}" buttons="{{deleteButtons}}" hint-size="440px,260px"></dc-import>
 </div>
 </sc-if>
 </div>
@@ -145,6 +145,8 @@ class Component extends DCLogic {
     var remove = { label: 'Remove from project', icon: 'remove', danger: true };
     var subtitle = variant === 'full' ? '6 entries across 4 repos' : variant === 'one' ? '1 entry · web-app' : 'Empty';
     return {
+      deleteContext: [{ icon: 'folder', text: 'Session auth refresh' }],
+      deleteButtons: [{ label: 'Cancel' }, { label: 'Delete Project', variant: 'danger' }],
       renaming: rename !== 'none',
       notRenaming: rename === 'none',
       draftName: fresh ? 'Untitled Project' : conflict ? 'Rate limiting rollout' : 'Session token refresh',

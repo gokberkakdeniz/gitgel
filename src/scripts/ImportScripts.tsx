@@ -114,7 +114,7 @@ export function ImportScripts({
           {t('common.cancel')}
         </Button>
         <Button variant="primary" size={36} disabled={picked.length === 0 || busy} onClick={() => void run()}>
-          {t('scripts.importBtn', { ...cnt(picked.length) })}
+          {t('scripts.importBtn')}
         </Button>
       </ModalFooter>
     </Modal>

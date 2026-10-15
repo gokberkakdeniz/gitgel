@@ -17,16 +17,16 @@
 <p style="margin: 0; max-width: 820px; color: #a09d96; line-height: 1.55">A short confirmation, 180px from the top over the scrim: a serif 22px title, then a text, or a <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">bg.sunken</span> box naming what it acts on (one 14px icon row each) with a muted note; 36px buttons on the right, the action last. No <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">ModalHeader</span> / <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e0ddd6">ModalFooter</span>.</p>
 </div>
 <section style="display: flex; flex-direction: column; gap: 12px">
-<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Text · Delete project (G), Remove repository</h2>
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Text · Reload</h2>
 <div style="display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap">
 <dc-import name="ConfirmModal" hint-size="440px,190px"></dc-import>
-<dc-import name="ConfirmModal" title="Remove api-server?" text="Its 2 project entries are removed too. Nothing on disk is touched." buttons="{{remove}}" hint-size="440px,190px"></dc-import>
 </div>
 </section>
 <section style="display: flex; flex-direction: column; gap: 12px">
-<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Context box · Drop stash (P6), Run (O3)</h2>
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a09d96">Context box · Drop stash (P6), Remove repository</h2>
 <div style="display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap">
-<dc-import name="ConfirmModal" width="{{460}}" title="Drop stash@{0}?" context="{{drop}}" note="Its changes are lost unless they are somewhere else." buttons="{{dropButtons}}" hint-size="460px,250px"></dc-import>
+<dc-import name="ConfirmModal" width="{{460}}" title="Confirm Drop Stash" context="{{drop}}" note="Its changes are lost unless they are somewhere else." buttons="{{dropButtons}}" hint-size="460px,250px"></dc-import>
+<dc-import name="ConfirmModal" title="Confirm Remove Repository" context="{{removeContext}}" note="Its 2 project entries are removed too. Nothing on disk is touched." buttons="{{remove}}" hint-size="440px,230px"></dc-import>
 </div>
 </section>
 </div>
@@ -34,7 +34,7 @@
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1040,"height":640}}'>
 class Component extends DCLogic {
   renderVals() {
-    return { remove: [{ label: 'Cancel' }, { label: 'Remove', variant: 'danger' }], drop: [{ icon: 'package', text: 'debug logging for refresh' }, { icon: 'branch', text: 'web-app / session-token-refresh · 1 file' }], dropButtons: [{ label: 'Cancel' }, { label: 'Drop stash', variant: 'danger' }] };
+    return { remove: [{ label: 'Cancel' }, { label: 'Remove Repository', variant: 'danger' }], removeContext: [{ icon: 'folder', text: '~/code/api-server' }], drop: [{ icon: 'package', text: 'stash@{0} · debug logging for refresh' }, { icon: 'branch', text: 'web-app / session-token-refresh · 1 file' }], dropButtons: [{ label: 'Cancel' }, { label: 'Drop Stash', variant: 'danger' }] };
   }
 }
 </script>

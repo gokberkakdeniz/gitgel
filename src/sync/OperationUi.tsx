@@ -10,6 +10,7 @@ import type { EntrySummary, Operation } from '../lib/types';
 import styles from './OperationUi.module.css';
 import {
   abortOperation,
+  abortTitle,
   askAbort,
   continueBlocked,
   continueOperation,
@@ -18,7 +19,6 @@ import {
   operationPill,
   operationTitle,
   operationTooltip,
-  operationVerb,
   useGitActionRunning,
   useOperationUi,
 } from './operation';
@@ -126,11 +126,10 @@ export function AbortOperationModal() {
     useOperationUi.setState({ aborting: null });
   };
   const title = operationTitle(op);
-  const verb = operationVerb(op);
   return (
     <ConfirmModal
-      aria-label={t('sync.abortAria', { verb })}
-      title={t('sync.abortTitle', { verb })}
+      aria-label={abortTitle(op)}
+      title={abortTitle(op)}
       width={460}
       onClose={close}
       context={[

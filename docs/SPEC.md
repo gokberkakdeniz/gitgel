@@ -488,13 +488,18 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   left, buttons on the right, primary last.
 - `ConfirmModal`: a short confirmation in a `Modal` (180px from the top, no `ModalHeader` /
   `ModalFooter`; `ConfirmModal.dc.html`, `ConfirmModalSpec.dc.html`): padding 22px 24px 18px, a
-  serif 22px title, then a 14px `text.body` text (Delete project, Remove repository; gap 10, the
+  serif 22px title, then a 14px `text.body` text (Reload; gap 10, the
   buttons 10px under it) or a `bg.sunken` box naming what it acts on (padding 12px 14px, radius
   10, mono 12 `text.code`, one row per thing with a 14px muted icon) and a 13px muted note (Drop
-  stash P6, Run O3, Delete branch; gap 14, the buttons 4px under it); with `options`, a `Checkbox`
+  stash P6, Run O3, Delete branch, Delete project, Remove repository; gap 14, the buttons 4px under it); with `options`, a `Checkbox`
   each that changes the action (Delete branch: stash the changes, also on the remote); with `dontAsk`, a `Checkbox` "Do not show
   this message again" above the buttons (Delete project, Remove repository, Drop stash; §5
   Settings "Prompts"); 36px buttons on the right, the action last.
+- Modal texts: a confirmation's title is `Confirm <Action>` (Confirm Delete Branch, Confirm
+  Discard Changes), never a name; what it acts on is in its box. Other modals have a fixed title
+  (Add Repositories, Edit Provider, Run Script); a name or path goes in the sub line. The action
+  button names the action in Title Case, without "…" or a count (a count is the footer note);
+  Cancel is focused when the action is danger. The aria-label is the title.
 - `Stepper`: ↑ ↓ in one framed group (`bg.elevated`, 1px border, radius 8, padding 2, gap 2;
   buttons 26×24, radius 6, 14px chevrons; `Stepper.dc.html`, `StepperSpec.dc.html`): Review's and
   History's change navigation and Review's commit stepping. A button that cannot step is
@@ -992,8 +997,9 @@ Layout:
   border turns accent, no ring; text selected; the subtitle stays. A name conflict
   (case-insensitive, itself excluded) turns the border and subtitle danger: `A project named "X" already exists`; ↵
   then does nothing, as with an empty name. Esc or a click elsewhere cancels.
-- **Delete confirm** (440px modal): serif 22px `Delete "Name"?`, "Removes the project and its N
-  entries. Nothing on disk is touched." ("its 1 entry"), Cancel / danger "Delete project". Afterwards Branches.
+- **Delete confirm** (440px modal): serif 22px "Confirm Delete Project", a `folder` row with the
+  name, "Removes the project and its N entries. Nothing on disk is touched." ("its 1 entry"),
+  Cancel (focused) / danger "Delete Project". Afterwards Branches.
   With Settings › Prompts › "Deleting projects" off it deletes without asking.
 - **Empty project:** centred serif 28px "No entries yet", "A project groups branches that belong
   to one piece of work, across any of your repositories.", 40px primary "Add branches ⌘K".
@@ -1010,7 +1016,7 @@ Layout:
   there is **no project picker**. Works for a draft project too.
 - 620px dialog, centred, top 96px, radius 16, over the scrim. Search row 56px: search icon, 16px
   input (focused), 12px muted "fuzzy · all repos". List max 470px. Footer (`bg.sunken`):
-  "N selected" … Cancel, primary "Add ↵".
+  "N selected" … Cancel, primary "Add ↵" (`kbd`).
 - Groups: **Worktrees** (active entries checked out somewhere), **Active branches** (the rest of
   the active ones), **Older · found by search** (all other local branches; only while searching,
   at most 50).
@@ -1046,8 +1052,8 @@ Layout:
   - Locate: the picked folder must be a repository (or resolve to one) not already added under
     another id; errors show as a failed toast with the picked folder under the message ("Not a git
     repository", "Already added as <name>"). Fixes every entry of that repo.
-  - ✕ asks first only when projects use the repo (and Prompts › "Removing repositories" is on): `Remove <name>?` · "Its N project entries are
-    removed too. Nothing on disk is touched." · Cancel / danger "Remove". Removing drops the repo,
+  - ✕ asks first only when projects use the repo (and Prompts › "Removing repositories" is on): "Confirm Remove Repository" · a `folder` row (`~/…`) · "Its N project entries are
+    removed too. Nothing on disk is touched." · Cancel (focused) / danger "Remove Repository". Removing drops the repo,
     its branch bases and its project entries.
   - Under the card, "Default base" ("Used when a branch has no base"; label level with the first
     row): an ordered list, one branch per row, so no separator is ever typed (flow M4/M5). A 280px
@@ -1068,7 +1074,7 @@ Layout:
   group.
   - "Language": a dropdown at the top (native `<select>`, as Terminal): System (default, follows
     the browser language), English, Türkçe. The pick stays pending until a `ConfirmModal`
-    ("Reload to Change Language", Cancel / Reload) applies it: confirm saves
+    ("Confirm Reload", "Gitgel reloads to show the new language.", Cancel / Reload) applies it: confirm saves
     (`settings.language`) and reloads the page; Cancel reverts. The route is restored from
     `sessionStorage` after the reload.
   - "Terminal": a 230 × 36px
@@ -1127,7 +1133,7 @@ Layout:
     focused handle): a `sparkles` tile, its 500-weight name, a danger sm pill "Not installed" when
     its CLI is missing, a neutral sm pill "off" when switched off, then a `Switch` (off hides
     it from the commit menu) and ✎. While its CLI is missing the `Switch` and ✎ are disabled;
-    the handle never is. ✎ opens an "Edit <provider>" modal: a 36px mono
+    the handle never is. ✎ opens an "Edit Provider" modal (sub `<provider> · <cli>`): a 36px mono
     `Input` "Model" (placeholder `Default`; empty = the CLI's own default), a 36px mono
     `Input` "Effort" (only for the CLIs that take one, not Cursor; placeholder `Default`;
     empty = default; free text — the names are the model provider's own, e.g. opencode
@@ -1146,7 +1152,7 @@ Layout:
   "Deleting projects" (flow G), "Aborting a rebase or merge" (T3), "Amending pushed commits"
   (Hi10). All on by default (`settings.prompts`); off, the action runs
   without its dialog. Saved at once. Each of those dialogs has a `Checkbox` "Do not show this
-  message again" above its buttons (`ConfirmModal`'s `dontAsk`; Confirm Discard Changes and Amend Will Require Force Push their own,
+  message again" above its buttons (`ConfirmModal`'s `dontAsk`; Confirm Discard Changes and Confirm Amend their own,
   §15); confirming with it checked turns its box here off (`src/lib/prompts.ts`).
 - **Shortcuts:** serif 18px heading "Keyboard shortcuts" + muted "Not editable yet"; four cards
   (`bg.sunken`, radius 12, padding 6px 0) in a `repeat(2, minmax(max-content, 1fr))` grid, gap 12
@@ -1173,8 +1179,8 @@ Layout:
   - repeated in the same batch: `Already in this list · skipped` (worktree:
     `Worktree of <~repo> · already in this list, skipped`)
   - not a repo: `Not a git repository · skipped`
-- Footer (`bg.sunken`): Cancel and primary "Add N repositories" ("Add 1 repository"), counting
-  only new repos; disabled when there are none.
+- Footer (`bg.sunken`): the note "N repositories to add" ("1 repository to add"), counting only
+  new repos, then Cancel and primary "Add Repositories", disabled when there are none.
 
 ### Drop overlay
 
@@ -1191,7 +1197,7 @@ open.
 - **A · First run.** Branches is empty ("No repositories yet"). **Add repository** (multi-folder
   picker) or dropping folders opens the sheet, which checks each folder: ✓ git repository with
   its default base; ↪ worktree or subfolder, resolved to the main repository (duplicates
-  skipped); ✕ not a repository, skipped. "Add N repositories" fills Branches.
+  skipped); ✕ not a repository, skipped. "Add Repositories" fills Branches.
 - **A · More repositories later.** The sidebar footer's "+", Settings' "+ Add repository" and
   dropping folders on any screen all end in the same sheet.
 - **B · Project from a Branches row.** "+ Add" in a row's Projects cell opens the project
@@ -2309,19 +2315,20 @@ export interface ScriptRun {
 
 ### Run dialog: inputs and Ask before running (O1, O2)
 
-- A 600px modal: `ModalHeader` with the filled-in name and a mono sub line
-  `repo / branch · <folder it runs in>`, ✕. One field per
+- A 600px modal: `ModalHeader` "Run Script" with a mono sub line
+  `<filled-in name> · repo / branch · <folder it runs in>`, ✕. One field per
   shown input, in order: text (36px `Input`), textarea, checkbox (`Checkbox` with the label),
   select (≤ 4 options: bordered radio `Segmented`; more: `Select`), branch (a `Select` with a
   branch icon listing the repo's local branches; mono; placeholder "Pick a branch"; read from
   disk with git2 when the dialog opens, through `get_base_options` as the "Point to another
   branch…" picker does; no fetch, so a branch only on the remote is not listed). The command is
   not shown (the user saw it when writing the script). Footer: a note only when Run is disabled
-  ("Pick a branch to run"), then Cancel and primary "Run ⌘↵".
+  ("Pick a branch to run"), then Cancel and primary "Run Script ⌘↵".
 - "Ask before running" with no shown input (O3): a 460px confirmation laid out like Delete
-  project: serif 22px `Run “<name>”?`, a `bg.sunken` card (radius 10, padding 12px 14px, mono
-  12px) with a branch-icon row `repo / branch` and a folder-icon row with the folder it runs in
-  (ellipsis; full path as tooltip), then Cancel and primary "Run ⌘↵" (focused).
+  project: serif 22px "Confirm Run Script", a `bg.sunken` card (radius 10, padding 12px 14px, mono
+  12px) with a row of the filled-in name (the script's icon), a branch-icon row `repo / branch`
+  and a folder-icon row with the folder it runs in (ellipsis; full path as tooltip), then Cancel
+  and primary "Run Script ⌘↵" (focused).
 - Each input's `when` is evaluated again on every change; a hidden input is not validated and not
   set. A `when` that fails keeps the field shown with the error under it. Required inputs must be
   filled for Run.
@@ -2385,7 +2392,7 @@ export interface ScriptRun {
   line (runs in · menus, then "Opens the output" when `openOutput`); a conflicting row has Replace / Keep both / Skip (bordered
   radio `Segmented`). A warning note: "Scripts run as you, with your permissions. Read each
   command before importing. Imported scripts ask before running; you can turn that off per
-  script." Footer: "N of M selected", Cancel, primary "Import N scripts". Imported scripts get
+  script." Footer: "N of M selected", Cancel, primary "Import Scripts". Imported scripts get
   `askFirst: true`; "Keep both" adds " (2)" to the name.
 - Teams share a file by keeping it in the repo; everyone imports it. There is no "trust this
   repo" flow.
@@ -2500,9 +2507,9 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
   touching anything ("Your local changes to the following files would be overwritten by merge");
   that is git's own guard and is shown as is.
 - **Drop** (P6; Drop in the menu or the pane): a 460px confirmation laid out like O3: serif 22px
-  `Drop stash@{n}?`, a `bg.sunken` card with a `package` row (the message) and a `branch` row
+  "Confirm Drop Stash", a `bg.sunken` card with a `package` row (`stash@{n} · <message>`) and a `branch` row
   `repo / branch · N files`, 13px muted "Its changes are lost unless they are somewhere else.",
-  then Cancel (focused) and danger "Drop stash". Runs `git stash drop 'stash@{n}'` in the
+  then Cancel (focused) and danger "Drop Stash". Runs `git stash drop 'stash@{n}'` in the
   repository folder, named "Drop stash@{n}". The stash review then picks the newest stash (above).
   With Settings › Prompts › "Dropping stashes" off it drops without asking.
 
@@ -2668,7 +2675,7 @@ project"), before the closing note. Only for a local branch that is there, is no
 branch and has no operation in progress (left out otherwise, not disabled); disabled while a git
 action runs in the repository ("A git action is running").
 
-- **Confirmation** (`sync/DeleteBranch.tsx`, `ConfirmModal`, 460px; R2): title `Delete <branch>?`,
+- **Confirmation** (`sync/DeleteBranch.tsx`, `ConfirmModal`, 460px; R2): title "Confirm Delete Branch",
   rows `<repo> / <branch>` (`branch`) and, when checked out, its folder (`folder`, `~/…`). The note
   says what else happens, in this order: `N commits are lost: they are on no other branch or
   remote.` (`danger.text`; `get_branch_loss`, `refs::branch_loss`: the branch's commits that no
@@ -2747,7 +2754,7 @@ when one starts, moves on or ends (§10 "Change watching").
   on <branch>`); a next commit that conflicts too fails the run, which opens its output panel, and
   the banner moves on (`3 of 4`).
 - **Abort** (`abort: true`, `git:abort`, "Abort Rebase"): `git -C "$GITGEL_FOLDER" rebase --abort`
-  (…). Asks first (T3, `ConfirmModal`, 460px): title `Abort the rebase?`, rows `<repo> /
+  (…). Asks first (T3, `ConfirmModal`, 460px): title "Confirm Abort Rebase" ("Confirm Abort Merge", …), rows `<repo> /
   <branch>` (`branch`) and the pill's tooltip (`rebase`), no note, "Do not show this message
   again", Cancel (focused) and danger "Abort Rebase"; Settings › Prompts › "Aborting a rebase or
   merge" off skips it. Success toast `Aborted the rebase of <branch>` (`Aborted the merge of
@@ -2900,12 +2907,12 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     panel, and puts the pill on the Uncommitted row, until the next commit starts.
   - **Amend** (`HistH11`, Hi10; GitHub Desktop's flow and texts): "Amend Commit…" on the newest
     commit. When that commit is on the remote already (the upstream has no commits to push), it
-    first asks "Amend Will Require Force Push" (`AmendModal`, 560px, as Confirm Discard Changes:
-    the warning icon, "Are you sure you want to amend?", "At the end of the amend flow, Gitgel
+    first asks "Confirm Amend" (`AmendModal`, 560px, as Confirm Discard Changes:
+    the warning icon, "Amend will require force push. Are you sure you want to amend?", "At the end of the amend flow, Gitgel
     will enable you to force push the branch to update the upstream branch. Force pushing will
     alter the history on the remote and potentially cause problems for others collaborating on
     this branch.", "Do not show this message again" (Settings › Prompts › "Amending pushed
-    commits"), Cancel (focused) and primary "Begin Amend"). Then the form is in amend mode: the
+    commits"), Cancel (focused) and primary "Amend"). Then the form is in amend mode: the
     summary and description are the commit's (the text there before is kept aside), Uncommitted
     is picked when there is one, and the form stays whatever row is picked. Above the button a
     `border.strong` rule with a 16px "i" in `accent.text` in its middle, then centred 12px muted

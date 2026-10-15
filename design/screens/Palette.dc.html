@@ -64,7 +64,7 @@ class Component extends DCLogic {
         rowStyle: 'display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px; cursor: pointer; ' + (active ? 'background: #2a2825; ' : '') + (inProject ? 'opacity: 0.55; cursor: default' : '')
       };
     };
-    return { footerButtons: [{ label: 'Cancel', size: 32 }, { label: 'Add ↵', variant: 'primary', size: 32 }], groups: [
+    return { footerButtons: [{ label: 'Cancel', size: 32 }, { label: 'Add', kbd: '↵', variant: 'primary', size: 32 }], groups: [
       { title: 'Worktrees', items: [
         row('token-rotation-job', 'api-server · ↑2 · 4 files · ● 1 uncommitted', '', true, true),
         row('refresh-endpoint', 'api-server · ↑3 · 6 files', '', true, false),

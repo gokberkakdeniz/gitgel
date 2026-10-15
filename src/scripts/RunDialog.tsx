@@ -64,12 +64,13 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
   if (shown.length === 0) {
     return (
       <ConfirmModal
-        aria-label={t('scripts.runAria', { name })}
-        title={t('scripts.runTitle', { name })}
+        aria-label={t('scripts.runTitle')}
+        title={t('scripts.runTitle')}
         width={460}
         onClose={onClose}
         onKeyDown={onKeyDown}
         context={[
+          { icon: script.icon, text: name },
           { icon: 'branch', text: where },
           ...(folder ? [{ icon: 'folder' as const, text: tildifyHome(folder), title: folder }] : []),
         ]}
@@ -85,11 +86,11 @@ function RunDialog({ request, onClose }: { request: RunRequest; onClose: () => v
   }
 
   return (
-    <Modal aria-label={name} width={600} paddingTop={110} onClose={onClose}>
+    <Modal aria-label={t('scripts.runFormTitle')} width={600} paddingTop={110} onClose={onClose}>
       <div className={styles.dialog} onKeyDown={onKeyDown}>
         <ModalHeader
-          title={name}
-          sub={`${where}${folder ? ` · ${tildifyHome(folder)}` : ''}`}
+          title={t('scripts.runFormTitle')}
+          sub={`${name} · ${where}${folder ? ` · ${tildifyHome(folder)}` : ''}`}
           subMono
           onClose={onClose}
         />

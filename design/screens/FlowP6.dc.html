@@ -24,7 +24,7 @@ button,input,textarea{font-family:inherit}
 <div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
 
 <div style="position: relative; margin-top: 180px">
-<dc-import name="ConfirmModal" theme="none" width="{{460}}" title="Drop stash@{0}?" context="{{context}}" note="Its changes are lost unless they are somewhere else." dont-ask="{{true}}" buttons="{{buttons}}" hint-size="460px,280px"></dc-import>
+<dc-import name="ConfirmModal" theme="none" width="{{460}}" title="Confirm Drop Stash" context="{{context}}" note="Its changes are lost unless they are somewhere else." dont-ask="{{true}}" buttons="{{buttons}}" hint-size="460px,280px"></dc-import>
 </div>
 </div>
 </x-dc>
@@ -32,12 +32,12 @@ button,input,textarea{font-family:inherit}
 class Component extends DCLogic {
 renderVals() {
 // Drop (Branches stash menu, or the stash pane's button): a confirmation laid out like O3.
-// Cancel has the focus; "Drop stash" runs `git stash drop 'stash@{0}'` in the repository folder,
+// Cancel has the focus; "Drop Stash" runs `git stash drop 'stash@{0}'` in the repository folder,
 // then the stash review picks the newest stash.
 var theme = this.props.theme ?? 'dark';
 return { themeClass: 'theme-' + theme, themeName: theme,
-  context: [{ icon: 'package', text: 'debug logging for refresh' }, { icon: 'branch', text: 'web-app / session-token-refresh · 1 file' }],
-  buttons: [{ label: 'Cancel' }, { label: 'Drop stash', variant: 'danger' }] };
+  context: [{ icon: 'package', text: 'stash@{0} · debug logging for refresh' }, { icon: 'branch', text: 'web-app / session-token-refresh · 1 file' }],
+  buttons: [{ label: 'Cancel' }, { label: 'Drop Stash', variant: 'danger' }] };
 }
 }
 </script>
