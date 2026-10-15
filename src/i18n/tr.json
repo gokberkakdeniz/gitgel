@@ -584,6 +584,7 @@
   "scripts.iconName": "Simge: {$name}",
   "scripts.iconTitle": "Simge",
   "scripts.insertVar": "Değişken ekle",
+  "scripts.addVariable": "Değişken Ekle",
   "scripts.commandLabel": "Komut",
   "scripts.commandPh": "pnpm install --frozen-lockfile && pnpm test",
   "scripts.inputsLabel": "Girdiler",

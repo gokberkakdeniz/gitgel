@@ -147,7 +147,7 @@ export function SyncItems({
       <>
         <MenuDivider />
         <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => rebaseOnBase(entry, base))}>
-          Rebase on {base}
+          {t('sync.rebaseOn', { base })}
         </MenuItem>
       </>
     );
@@ -156,7 +156,7 @@ export function SyncItems({
     <>
       <MenuDivider />
       <MenuItem icon="download" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => fetchRepo(entry))}>
-        Fetch
+        {t('sync.fetchBtn')}
       </MenuItem>
       <MenuItem
         icon="arrow-down"
@@ -165,16 +165,16 @@ export function SyncItems({
         title={busy ?? st.pull ?? undefined}
         onSelect={() => run(() => pullBranch(entry))}
       >
-        Pull
+        {t('sync.pullBtn')}
       </MenuItem>
       {st.diverged && !st.pull && (
         <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => pullBranch(entry, true))}>
-          Pull (rebase)
+          {t('history.pullRebase')}
         </MenuItem>
       )}
       {base && (
         <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => rebaseOnBase(entry, base))}>
-          Rebase on {base}
+          {t('sync.rebaseOn', { base })}
         </MenuItem>
       )}
       <MenuItem
@@ -184,11 +184,11 @@ export function SyncItems({
         title={busy ?? st.push ?? (u.name ? undefined : t('sync.pushNotYet', { remote: u.remote }))}
         onSelect={() => run(() => pushBranch(entry))}
       >
-        Push
+        {t('sync.pushBtn')}
       </MenuItem>
       {st.diverged && (
         <MenuItem icon="arrow-up" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => forcePushBranch(entry))}>
-          Force Push
+          {t('history.forcePush')}
         </MenuItem>
       )}
     </>

@@ -735,7 +735,7 @@ function VariableButton({
       className={open ? `${className} ${styles.open}` : className}
       onClick={onClick}
     >
-      Add Variable
+      {t('scripts.addVariable')}
       <ChevronDownIcon size={9} />
     </button>
   );

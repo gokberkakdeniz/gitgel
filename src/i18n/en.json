@@ -509,6 +509,7 @@
   "scripts.iconName": "Icon: {$name}",
   "scripts.iconTitle": "Icon",
   "scripts.insertVar": "Insert a Variable",
+  "scripts.addVariable": "Add Variable",
   "scripts.commandLabel": "Command",
   "scripts.commandPh": "pnpm install --frozen-lockfile && pnpm test",
   "scripts.inputsLabel": "Inputs",
