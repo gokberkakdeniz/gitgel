@@ -51,6 +51,10 @@ button,input{font-family:inherit}
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Active Threshold</span><span style="font-size: 12px; color: var(--text-muted)">Branches without a worktree are listed if committed within</span></span>
 <span style="display: flex; align-items: center; gap: 8px"><dc-import name="Input" theme="{{themeName}}" size="36" width="60px" value="14" label="Active threshold in days" left-icon="none" right-text="" clearable="{{false}}" align="right" hint-size="60px,36px"></dc-import><span style="color: var(--text-muted)">days</span></span>
 </label>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Check Out New Branches In</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Check Out New Branches In" options="{{newBranchChoices}}" hint-size="230px,36px"></dc-import>
+</div>
 </section>
 </sc-if>
 
@@ -339,6 +343,10 @@ class Component extends DCLogic {
       terminals: terminals,
       terminalOther: termKind === 'other',
       terminalMissing: term === 'missing',
+      // Repositories › Check Out New Branches In: the row New Branch (V2) opens on.
+      newBranchChoices: [['main', 'Repository folder'], ['worktree', 'New worktree'], ['none', 'Branch only']].map(function (x) {
+        return { value: x[0], label: x[1], on: x[0] === 'main' };
+      }),
       languages: [['system', 'System'], ['en', 'English'], ['tr', 'Türkçe']].map(function (x) {
         return { value: x[0], label: x[1], on: x[0] === 'system' };
       }),

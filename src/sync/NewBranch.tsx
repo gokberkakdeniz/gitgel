@@ -16,6 +16,7 @@ import type { AppError, NewBranchCheckout, NewBranchProblem, RepoScan } from '..
 import { startGitAction, useRuns } from '../scripts/runs';
 import { baseChoices, defaultParent, folderName } from './branchDefaults';
 import styles from './NewBranch.module.css';
+import { useData } from '../state/data';
 import { useGitActionRunning } from './operation';
 
 const PROBLEM: Record<NewBranchProblem, string> = {
@@ -58,9 +59,9 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
   const bases = useMemo(() => baseChoices(scan), [scan]);
   const [name, setName] = useState('');
   const [base, setBase] = useState(bases[0] ?? '');
-  // Check out: a new worktree (default), the repository folder (its changes brought along or
-  // stashed) or the branch only.
-  const [where, setWhere] = useState<Where>('worktree');
+  // Check out: a new worktree, the repository folder (its changes brought along or stashed) or
+  // the branch only; it opens on Settings › Repositories' choice.
+  const [where, setWhere] = useState<Where>(() => useData.getState().config?.settings.newBranchCheckout ?? 'main');
   const [bring, setBring] = useState(true);
   const [parent, setParent] = useState(() => defaultParent(scan.repo.path));
   // Typed by hand: it no longer follows the name.

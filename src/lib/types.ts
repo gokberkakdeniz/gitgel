@@ -30,6 +30,7 @@ export type Appearance = 'system' | 'light' | 'dark';
 export type Language = 'system' | 'en' | 'tr';
 export type NumberFormat = 'plain-dot' | 'plain-comma' | 'group-comma-dot' | 'group-dot-comma' | 'group-space-dot' | 'group-space-comma';
 export interface Settings {
+  newBranchCheckout: 'worktree' | 'main' | 'none'; // the row New Branch opens with
   defaultBaseOrder: string[];
   activeDays: number;
   diffView: DiffLayout; // review layout, remembered

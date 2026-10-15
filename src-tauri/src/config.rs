@@ -151,6 +151,7 @@ mod tests {
                 "terminalCommand": "Ghostty",
                 "checkUpdates": false,
                 "lastSeenVersion": "0.1.15",
+                "newBranchCheckout": "worktree",
                 "prompts": { "removeRepositories": true, "discardChanges": false,
                              "discardStash": true, "deleteProjects": false,
                              "abortOperation": true, "amendPushed": true },

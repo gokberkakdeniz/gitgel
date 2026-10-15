@@ -66,6 +66,7 @@ export function Settings() {
                 <section className={styles.section}>
                   <BaseOrder config={config} />
                   <ActiveThreshold config={config} />
+                  <NewBranchCheckout config={config} />
                 </section>
               </>
             ) : section === 'general' ? (
@@ -243,6 +244,28 @@ function Shortcuts() {
         ))}
       </div>
     </section>
+  );
+}
+
+/** The row New Branch opens with (§15 "New branch"). */
+function NewBranchCheckout({ config }: { config: Config }) {
+  type Where = Config['settings']['newBranchCheckout'];
+  return (
+    <label className={styles.setting}>
+      <span className={styles.settingText}>
+        <span className={styles.settingName}>{t('settings.newBranchName')}</span>
+      </span>
+      <Select<Where>
+        aria-label={t('settings.newBranchName')}
+        value={config.settings.newBranchCheckout}
+        onChange={(v) => void updateSettings({ ...config.settings, newBranchCheckout: v })}
+        options={[
+          { value: 'main', label: t('branches.newSwitch') },
+          { value: 'worktree', label: t('branches.newWorktree') },
+          { value: 'none', label: t('branches.newBranchOnly') },
+        ]}
+      />
+    </label>
   );
 }
 

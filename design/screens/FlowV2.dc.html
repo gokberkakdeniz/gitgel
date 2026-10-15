@@ -104,7 +104,8 @@ renderVals() {
 // - Repository folder (sub: the folder and the branch it is on now): with uncommitted changes
 //   there, "3 uncommitted changes" and two rows, Bring to new branch (default) / Stash.
 // - Branch only: no options.
-// Click a row to pick it (the board is interactive). case: the row picked first. dirty: the
+// It opens on Settings › Repositories › Check Out New Branches In (Repository folder unless
+// changed). Click a row to pick it (the board is interactive). case: the row picked first. dirty: the
 // repository folder has uncommitted changes (else that row has no options and no chevron).
 var self = this;
 var theme = this.props.theme ?? 'dark';

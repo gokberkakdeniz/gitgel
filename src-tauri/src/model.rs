@@ -112,6 +112,19 @@ pub struct Settings {
     pub prompts: Prompts,
     /// Settings › AI: commit message generation; configs from before it have it on.
     pub ai: AiSettings,
+    /// Settings › Repositories › where New Branch checks a branch out unless another row is
+    /// picked; configs from before it use the repository folder.
+    pub new_branch_checkout: NewBranchCheckoutDefault,
+}
+
+/// The row New Branch opens with (SPEC §15 "New branch").
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum NewBranchCheckoutDefault {
+    Worktree,
+    #[default]
+    Main,
+    None,
 }
 
 /// Settings › Prompts (M6): "Show a confirmation dialog before..." each of these.
@@ -229,6 +242,7 @@ impl Default for Settings {
             last_seen_version: String::new(),
             prompts: Prompts::default(),
             ai: AiSettings::default(),
+            new_branch_checkout: NewBranchCheckoutDefault::Main,
         }
     }
 }

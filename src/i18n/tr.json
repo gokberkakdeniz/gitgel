@@ -512,6 +512,7 @@
   "settings.shortcutsNote": "Henüz düzenlenemez",
   "settings.activeName": "Aktiflik Eşiği",
   "settings.activeHint": "Çalışma ağacı olmayan dallar şu sürede commit edildiyse listelenir",
+  "settings.newBranchName": "Yeni Dalları Şurada Aç",
   "settings.daysUnit": "gün",
   "settings.terminalName": "Terminal",
   "settings.terminalAuto": "Otomatik ({$name})",

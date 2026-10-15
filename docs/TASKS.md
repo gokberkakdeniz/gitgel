@@ -644,6 +644,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) The branch menus' Fetch, Pull, Pull (rebase), Rebase on <base>, Push and Force Push, and the script editor's Add Variable, go through i18n (they were English in Turkish) — 2026-10-15
 - [x] (on request) Turkish for the texts left in English: Discard (menu items and dialog), Amend, Copy (Relative) File Path / Paths, Include / Exclude Selected Files, stash Pop, CEL Syntax, Prompt; `TRANSLATE.md` no longer keeps `discard.*` and `amend.*` English (amend → düzelt) — 2026-10-15
 - [x] (on request) New Branch: a "+" on each Branches repo band opens a form (name, base, check out in a new worktree beside the repository `<repo>-worktrees/<branch>`, the repository folder with its uncommitted changes brought along or stashed, or nowhere); it runs `git worktree add --no-track -b`, `git switch --no-track -c` (after `git stash push`) or `git branch --no-track` as a git action; canvas V2, V3 (`FlowV2.dc.html`, `FlowV3.dc.html`) — 2026-10-15
+- [x] (on request) Settings › Repositories › "Check Out New Branches In" (Repository folder by default, New worktree, Branch only; `settings.newBranchCheckout`): the row New Branch opens on — 2026-10-15
 
 ---
 

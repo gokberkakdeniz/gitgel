@@ -484,6 +484,7 @@
   "settings.shortcutsNote": "Not editable yet",
   "settings.activeName": "Active Threshold",
   "settings.activeHint": "Branches without a worktree are listed if committed within",
+  "settings.newBranchName": "Check Out New Branches In",
   "settings.daysUnit": "days",
   "settings.terminalName": "Terminal",
   "settings.terminalAuto": "Automatic ({$name})",
