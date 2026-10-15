@@ -2037,7 +2037,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
-| New branch | `FlowV1.dc.html` | canvas page "Branch actions": V1, the form under a repo band's "+" (`case` worktree, repoFolder, repoFolderConflict, nowhere, exists); the "+" on the bands of `Main` (`newBranch` shows it open) |
+| New branch | `FlowV1.dc.html` | canvas page "Branch actions": V1, the form under a repo band's "+" (`case` worktree, repoFolder, repoFolderConflict, branchOnly, exists); the "+" on the bands of `Main` (`newBranch` shows it open) |
 | Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `FlowD11` (`menu` sync), `HistH2` (page menu) |
 | Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
@@ -2688,13 +2688,15 @@ A Branches repo band's "+" (§5) opens it under the button (`sync/NewBranch.tsx`
   field closes it; a "Search" filter (words, any order), the check on the base in use, ↑ / ↓ and
   ↵ to pick. It lists the repo's default base, its base branch, the other local branches by
   name, then the remote branches no local branch has (`branchDefaults.ts` `baseChoices`), the
-  default base picked. "Check out in" (`Segmented` sm, bordered, radio): "New Worktree"
-  (default) / "Repository Folder" / "Nowhere".
-  - New Worktree: "Folder" (`Input` 32, mono, `~/…`) and "Choose…" (folder picker). The folder
-    follows the name, `<repo folder's parent>/<repo>-worktrees/<branch, "/" as "-">`, until it is
-    typed in; Choose… picks the folder that holds it (it follows the name again).
-  - Repository Folder, with uncommitted changes there: "N uncommitted changes" (`Segmented` sm,
-    bordered, radio): "Bring to New Branch" (default) / "Stash".
+  default base picked. Then `Checkbox`es:
+  - "Check out" (checked). Cleared: the branch only (Nowhere below).
+    - Under it, indented 24px: "In a new worktree" (checked): "Folder" (`Input` 32, mono, `~/…`)
+      and "Choose…" (folder picker). The folder follows the name, `<repo folder's
+      parent>/<repo>-worktrees/<branch, "/" as "-">`, until it is typed in; Choose… picks the
+      folder that holds it (it follows the name again).
+    - Cleared, the repository folder switches to the branch (Repository Folder below); with
+      uncommitted changes there, "Bring N uncommitted changes" (checked; cleared, they are
+      stashed).
 
   A danger 12px line under the fields says what stops it; Cancel / primary "Create Branch ↵"
   (disabled until the name is there and the checks pass, and while a git action runs in the

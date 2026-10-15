@@ -130,6 +130,15 @@
   text-align: center;
 }
 
+/* Under "Check out", lined up with its text. */
+.nested {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: -4px;
+  padding-left: 24px;
+}
+
 .folderRow {
   display: flex;
   gap: 8px;

@@ -1,6 +1,6 @@
 // New Branch (SPEC §15 "New branch"): a git action from a Branches repo band's "+", making a
 // branch from a base, checked out in a new linked worktree, in the repository folder (its
-// uncommitted changes brought along or stashed) or nowhere.
+// uncommitted changes brought along or stashed) or not at all.
 import { open } from '@tauri-apps/plugin-dialog';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../components/Button';
@@ -8,7 +8,7 @@ import { IconButton } from '../components/IconButton';
 import { CheckIcon, ChevronDownIcon, Icon, PlusIcon } from '../components/icons';
 import { Input } from '../components/Input';
 import { Popover } from '../components/Popover';
-import { Segmented } from '../components/Segmented';
+import { Checkbox } from '../components/Checkbox';
 import { t } from '../i18n';
 import { cnt } from '../lib/format';
 import { checkNewBranch, gitCreateBranch, setBranchBase } from '../lib/ipc';
@@ -59,8 +59,12 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
   const bases = useMemo(() => baseChoices(scan), [scan]);
   const [name, setName] = useState('');
   const [base, setBase] = useState(bases[0] ?? '');
-  const [where, setWhere] = useState<Where>('worktree');
+  // Check out: in a new worktree (default), else the repository folder switches to it (its
+  // changes brought along, or stashed when that box is cleared). Not checked out: the branch only.
+  const [checkOut, setCheckOut] = useState(true);
+  const [inWorktree, setInWorktree] = useState(true);
   const [bring, setBring] = useState(true);
+  const where: Where = !checkOut ? 'none' : inWorktree ? 'worktree' : 'main';
   const [parent, setParent] = useState(() => defaultParent(scan.repo.path));
   // Typed by hand: it no longer follows the name.
   const [typed, setTyped] = useState<string | null>(null);
@@ -174,59 +178,39 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
           </label>
           <BasePicker id="new-branch-base" bases={bases} value={base} onChange={setBase} />
         </div>
-        <div className={styles.field}>
-          <span className={styles.label}>{t('branches.newCheckout')}</span>
-          <Segmented
-            size="sm"
-            bordered
-            role="radio"
-            aria-label={t('branches.newCheckout')}
-            options={[
-              { value: 'worktree' as Where, label: t('branches.newInWorktree') },
-              { value: 'main' as Where, label: t('branches.newInMain') },
-              { value: 'none' as Where, label: t('branches.newInNone') },
-            ]}
-            value={where}
-            onChange={setWhere}
-          />
-        </div>
-        {where === 'main' && dirty > 0 && (
-          <div className={styles.field}>
-            <span className={styles.label}>{t('branches.newChanges', { ...cnt(dirty) })}</span>
-            <Segmented
-              size="sm"
-              bordered
-              role="radio"
-              aria-label={t('branches.newChanges', { ...cnt(dirty) })}
-              options={[
-                { value: 'bring', label: t('branches.newBring') },
-                { value: 'stash', label: t('branches.newStash') },
-              ]}
-              value={bring ? 'bring' : 'stash'}
-              onChange={(v) => setBring(v === 'bring')}
-            />
-          </div>
-        )}
-        {where === 'worktree' && (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="new-branch-folder">
-              {t('branches.newFolder')}
-            </label>
-            <div className={styles.folderRow}>
-              <Input
-                id="new-branch-folder"
-                size={32}
-                mono
-                spellCheck={false}
-                autoComplete="off"
-                className={styles.folder}
-                invalid={problem === 'badFolder' || problem === 'folderNotEmpty'}
-                title={shown}
-                value={shown}
-                onChange={setTyped}
+        <Checkbox label={t('branches.newCheckOut')} checked={checkOut} onChange={(e) => setCheckOut(e.target.checked)} />
+        {checkOut && (
+          <div className={styles.nested}>
+            <Checkbox label={t('branches.newInWorktree')} checked={inWorktree} onChange={(e) => setInWorktree(e.target.checked)} />
+            {!inWorktree && dirty > 0 && (
+              <Checkbox
+                label={t('branches.newBringChanges', { ...cnt(dirty) })}
+                checked={bring}
+                onChange={(e) => setBring(e.target.checked)}
               />
-              <Button onClick={() => void choose()}>{t('branches.newChoose')}</Button>
-            </div>
+            )}
+            {inWorktree && (
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="new-branch-folder">
+                  {t('branches.newFolder')}
+                </label>
+                <div className={styles.folderRow}>
+                  <Input
+                    id="new-branch-folder"
+                    size={32}
+                    mono
+                    spellCheck={false}
+                    autoComplete="off"
+                    className={styles.folder}
+                    invalid={problem === 'badFolder' || problem === 'folderNotEmpty'}
+                    title={shown}
+                    value={shown}
+                    onChange={setTyped}
+                  />
+                  <Button onClick={() => void choose()}>{t('branches.newChoose')}</Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
         {message && <div className={styles.error}>{message}</div>}
