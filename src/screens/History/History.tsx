@@ -190,7 +190,6 @@ export function History({ repoId, rev, backLabel }: Props) {
     const name = amend ? t('amend.button') : t('history.commitBtn');
     const running = amend ? t('history.amending') : t('history.committing');
     void startGitAction(name, running, () => gitCommit(entryRef, files), {
-      openOnFail: true,
       done: amend ? t('history.amended', { rev }) : t('history.committedTo', { rev }),
       onStart: (runId) => {
         // The form empties when the commit lands; a failed one keeps the message.

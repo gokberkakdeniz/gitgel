@@ -185,10 +185,9 @@ export async function startScript(
   }
 }
 
-/** How a git action's end is shown (sync, W4a). */
+/** How a git action's end is shown (sync, W4a). A failed one opens its output panel instead of
+ * a toast. */
 export interface GitActionShow {
-  /** A failed run opens its output panel instead of a toast. */
-  openOnFail?: boolean;
   /** The success toast's message instead of “<name>” finished. */
   done?: string;
   /** The run's id, as soon as it has one. */
@@ -258,7 +257,7 @@ export function showRunToast(run: ScriptRun): void {
   }
   const ok = run.exitCode === 0;
   const show = gitActionShow.get(run.runId);
-  if (!ok && show?.openOnFail && !run.stopped) {
+  if (!ok && show && !run.stopped) {
     useRuns.getState().showOutput(run.runId);
     return;
   }

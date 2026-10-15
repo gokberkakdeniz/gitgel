@@ -150,7 +150,7 @@ export function continueOperation(e: EntrySummary, op: Operation): Promise<void>
     t('sync.actContinue', { title: operationTitle(op) }),
     t('sync.continuing', { verb: operationVerb(op) }),
     () => gitOperation(refOf(e), false),
-    { openOnFail: true, done },
+    { done },
   );
 }
 
@@ -161,7 +161,7 @@ export function abortOperation(e: EntrySummary, op: Operation): Promise<void> {
     t('sync.actAbort', { title: operationTitle(op) }),
     t('sync.aborting', { verb: operationVerb(op) }),
     () => gitOperation(refOf(e), true),
-    { openOnFail: true, done },
+    { done },
   );
 }
 

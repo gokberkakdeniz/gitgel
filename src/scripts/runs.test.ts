@@ -185,6 +185,23 @@ describe('a git action', () => {
     applyRunExited({ ...(run as object), status: 'exited', exitCode: 0 } as never);
     expect(useRuns.getState().runs.run_push.name).toBe('Gönder');
   });
+
+  it('opens its output panel when it fails', async () => {
+    const { applyRunExited, startGitAction, useRuns } = await import('./runs');
+    const run = {
+      runId: 'run_drop',
+      scriptId: 'git:stash-drop',
+      status: 'running',
+      exitCode: null,
+      name: 'Drop',
+      lastLine: '',
+      repoLabel: 'gitgel / master',
+    } as never;
+    await startGitAction('Drop', 'Dropping…', async () => run);
+    applyRunExited({ ...(run as object), status: 'exited', exitCode: 1 } as never);
+    expect(useRuns.getState().shownRunId).toBe('run_drop');
+    useRuns.getState().showOutput(null);
+  });
 });
 
 describe('a run whose output panel is open', () => {

@@ -2443,7 +2443,8 @@ Every write is a git action (§0): a run on the scripts' runner (§14 "Running":
 pty, `TERM=xterm-256color`) whose command is fixed by Gitgel; values are only in `GITGEL_*`
 variables, quoted (`"$GITGEL_MESSAGE"`), and the stash as `'stash@{n}'`, so the command reads the
 same in sh, bash, zsh and fish. It has the run toast and output panel of a script (name and
-`package` icon below; no "Run again"), and its repositories are rescanned when it ends.
+`package` icon below; no "Run again"), and its repositories are rescanned when it ends. One that
+fails (exits non-zero, not stopped) opens its output panel by itself instead of the failed toast.
 
 - **Checks before running** (backend): the folders come from the repository's worktree list
   (git2), never from the frontend; `stash@{n}` must still point at the SHA the screen showed,
