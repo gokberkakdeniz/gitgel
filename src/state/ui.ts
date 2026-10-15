@@ -30,6 +30,22 @@ export interface Toast {
   owner?: string;
 }
 
+/** History's commit form for one branch (`commitDraftKey`), kept while the app runs so leaving
+ * History and coming back finds it as it was. */
+export interface CommitDraft {
+  summary: string;
+  description: string;
+  /** Amend (Hi10): the newest commit the form rewrites, and the form as it was before, which Stop
+   * amending puts back. */
+  amending: { sha: string; short: string; summary: string; description: string } | null;
+}
+
+export const EMPTY_COMMIT_DRAFT: CommitDraft = { summary: '', description: '', amending: null };
+
+export function commitDraftKey(repoId: string, rev: string): string {
+  return `${repoId}\n${rev}`;
+}
+
 /** The Settings section on the right of its section list (flow M). */
 export type SettingsSection = 'general' | 'appearance' | 'repositories' | 'scripts' | 'ai' | 'prompts' | 'shortcuts';
 
@@ -45,6 +61,7 @@ interface UiState {
   auxWindows: string[]; // About / Software Update / What's New windows open (`aux-windows`)
   deletingProjectId: string | null; // the delete confirmation is open for this project
   settingsSection: SettingsSection; // the last one shown; Settings opens on it
+  commitDrafts: Record<string, CommitDraft>;
   setSidebarVisible: (visible: boolean) => void;
   setBranchesFilter: (filter: string) => void;
   setSelectedKeys: (keys: string[]) => void;
@@ -58,6 +75,8 @@ interface UiState {
   modalClosed: () => void;
   setDeletingProjectId: (id: string | null) => void;
   setSettingsSection: (section: SettingsSection) => void;
+  /** Changes a branch's commit form; an empty one is dropped. */
+  setCommitDraft: (key: string, patch: Partial<CommitDraft>) => void;
 }
 
 let toastId = 0;
@@ -87,6 +106,7 @@ export const useUi = create<UiState>()((set) => ({
   setAuxWindows: (auxWindows) => set({ auxWindows }),
   deletingProjectId: null,
   settingsSection: 'general',
+  commitDrafts: {},
   setSidebarVisible: (sidebarVisible) => set({ sidebarVisible }),
   setBranchesFilter: (branchesFilter) => set({ branchesFilter }),
   setSelectedKeys: (selectedKeys) => set({ selectedKeys }),
@@ -99,6 +119,13 @@ export const useUi = create<UiState>()((set) => ({
   modalClosed: () => set((s) => ({ modalCount: Math.max(0, s.modalCount - 1) })),
   setDeletingProjectId: (deletingProjectId) => set({ deletingProjectId }),
   setSettingsSection: (settingsSection) => set({ settingsSection }),
+  setCommitDraft: (key, patch) =>
+    set((s) => {
+      const draft = { ...(s.commitDrafts[key] ?? EMPTY_COMMIT_DRAFT), ...patch };
+      const { [key]: _, ...rest } = s.commitDrafts;
+      const empty = draft.summary === '' && draft.description === '' && draft.amending === null;
+      return { commitDrafts: empty ? rest : { ...rest, [key]: draft } };
+    }),
 }));
 
 // Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a

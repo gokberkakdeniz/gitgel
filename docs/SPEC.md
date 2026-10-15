@@ -2830,7 +2830,9 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   and a full-width primary 32px button "Commit N files" (tooltip `Commit to <rev>`; disabled with
   no summary, no file checked, or merge conflicts, each saying why in the tooltip). ⌘↵ in either
   field commits. While the commit runs (hooks included) the form is locked and the button reads
-  "Committing…" with a spinner.
+  "Committing…" with a spinner. Each branch keeps its form (summary, description, amending)
+  while the app runs: leaving History or picking another branch and coming back finds it as it
+  was; a generated message fills the form of the branch it was asked on.
   - **Generate message**: a 24px `sparkles` (✦) icon button at the end of the summary field
     (tooltip `Generate commit message with <provider>`, the default: the topmost switched-on
     and installed provider in menu order) that fills the summary and description, which stay

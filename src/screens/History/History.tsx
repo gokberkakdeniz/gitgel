@@ -36,7 +36,7 @@ import { commitUrl } from '../../monaco/reference';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { CopyBranchItem, EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
-import { useUi } from '../../state/ui';
+import { type CommitDraft, commitDraftKey, EMPTY_COMMIT_DRAFT, useUi } from '../../state/ui';
 import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSwitchTo, type FileActions } from '../Review/parts';
 import parts from '../Review/parts.module.css';
 import type { ReviewStash } from '../Review/stashes';
@@ -122,17 +122,11 @@ export function History({ repoId, rev, backLabel }: Props) {
     if (staged && staged.length > 0) return staged.includes(f.path) || (!!f.oldPath && staged.includes(f.oldPath));
     return f.kind !== 'U';
   };
-  const [summary, setSummary] = useState('');
-  const [description, setDescription] = useState('');
-  // Amend (Hi10): the newest commit the form rewrites, and the form as it was before, which Stop
-  // amending puts back.
-  const [amending, setAmending] = useState<{ sha: string; short: string; summary: string; description: string } | null>(null);
+  // The form is kept per branch in the store, so leaving History and coming back keeps it.
+  const draftKey = commitDraftKey(repoId, rev);
+  const { summary, description, amending } = useUi((s) => s.commitDrafts[draftKey]) ?? EMPTY_COMMIT_DRAFT;
+  const setDraft = (patch: Partial<CommitDraft>, key = draftKey) => useUi.getState().setCommitDraft(key, patch);
   const [askAmend, setAskAmend] = useState<HistoryCommit | null>(null);
-  useEffect(() => {
-    setSummary('');
-    setDescription('');
-    setAmending(null);
-  }, [repoId, rev]);
   // Generate message (SPEC §15): the provider's CLI writes the form for the checked files.
   // The default is the topmost switched-on provider in menu order (Settings › AI).
   const ai = useData((s) => s.config?.settings.ai ?? null);
@@ -192,15 +186,14 @@ export function History({ repoId, rev, backLabel }: Props) {
     void startGitAction(name, running, () => gitCommit(entryRef, files), {
       done: amend ? t('history.amended', { rev }) : t('history.committedTo', { rev }),
       onStart: (runId) => {
+        const key = draftKey;
         // The form empties when the commit lands; a failed one keeps the message.
         const ended = () => {
           const r = useRuns.getState().runs[runId];
           if (!r || r.status === 'running') return false;
           if (r.status === 'exited' && r.exitCode === 0) {
-            setSummary('');
-            setDescription('');
+            setDraft(EMPTY_COMMIT_DRAFT, key);
             setBoxes({});
-            setAmending(null);
           }
           return true;
         };
@@ -222,9 +215,11 @@ export function History({ repoId, rev, backLabel }: Props) {
       amend: amending?.sha ?? null,
     });
   const beginAmend = (c: HistoryCommit) => {
-    setAmending((a) => a ?? { sha: c.sha, short: c.shortSha, summary, description });
-    setSummary(c.subject);
-    setDescription(c.body);
+    setDraft({
+      amending: amending ?? { sha: c.sha, short: c.shortSha, summary, description },
+      summary: c.subject,
+      description: c.body,
+    });
     if (wip) pick(WIP);
   };
   // A commit already on the remote asks first (Settings › Prompts can turn that off).
@@ -237,20 +232,15 @@ export function History({ repoId, rev, backLabel }: Props) {
   };
   const stopAmend = () => {
     if (!amending) return;
-    setSummary(amending.summary);
-    setDescription(amending.description);
-    setAmending(null);
+    setDraft({ summary: amending.summary, description: amending.description, amending: null });
   };
-  // Where the form is: a late answer fills another branch's form never.
-  const here = useRef('');
-  here.current = `${repoId}${rev}`;
   const generateChecked = (forced?: CommitProvider) => {
     if (!entryRef || generating) return;
     // From the menu: generate with the picked provider at once.
     const active = forced ?? provider;
     if (!active) return;
-    // The answer may land on another branch: only this form takes it.
-    const mine = here.current;
+    // The answer fills the form of the branch it was asked on, never the one shown when it lands.
+    const mine = draftKey;
     const stop = () => {
       genRun.current = null;
       setGenerating(false);
@@ -277,14 +267,12 @@ export function History({ repoId, rev, backLabel }: Props) {
           // Its running toast is done, whatever took its place stays.
           const ui = useUi.getState();
           if (ui.toast?.owner === run.runId) ui.dismissToast();
-          if (here.current !== mine) return;
           if (r.cancelled) return;
           if (r.error || !r.summary) {
             ui.showToast({ status: 'failed', message: r.error ?? t('history.noMessage') });
             return;
           }
-          setSummary(r.summary);
-          setDescription(r.description ?? '');
+          setDraft({ summary: r.summary, description: r.description ?? '' }, mine);
         });
       })
       .catch((e: unknown) => {
@@ -792,8 +780,8 @@ export function History({ repoId, rev, backLabel }: Props) {
               providers={menuProviders}
               generating={generating}
               aiEnabled={ai?.enabled ?? true}
-              onSummary={setSummary}
-              onDescription={setDescription}
+              onSummary={(value) => setDraft({ summary: value })}
+              onDescription={(value) => setDraft({ description: value })}
               onCommit={commitChecked}
               onStopAmend={stopAmend}
               onGenerate={generateChecked}
