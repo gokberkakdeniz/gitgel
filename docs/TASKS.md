@@ -642,6 +642,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) A worktree removed from inside the repository folder (`git worktree add <name>`) no longer stays in the main worktree's Uncommitted (also when removed with `git worktree remove`): a scan that finds a worktree folder made or removed inside another drops that one's cached status; the watcher reacts to `worktrees` going and to a nested worktree folder; the rescan after a git action updates the watch list — 2026-10-15
 - [x] (on request) Modal titles and buttons standardized: confirmations are titled `Confirm <Action>` with no name (Confirm Delete Branch, Confirm Drop Stash, Confirm Amend, …) and show what they act on in their box; fixed form titles (Edit Provider, Run Script); action buttons name the action without "…" or a count — 2026-10-15
 - [x] (on request) The branch menus' Fetch, Pull, Pull (rebase), Rebase on <base>, Push and Force Push, and the script editor's Add Variable, go through i18n (they were English in Turkish) — 2026-10-15
+- [x] (on request) Turkish for the texts left in English: Discard (menu items and dialog), Amend, Copy (Relative) File Path / Paths, Include / Exclude Selected Files, stash Pop, CEL Syntax, Prompt; `TRANSLATE.md` no longer keeps `discard.*` and `amend.*` English (amend → düzelt) — 2026-10-15
 
 ---
 
