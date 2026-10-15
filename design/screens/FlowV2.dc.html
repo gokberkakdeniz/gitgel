@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>V2 · New branch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-hover:#2a2825;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--accent:#4f8fa3;--accent-text:#7fb3c4;--on-accent:#141311;--accent-rgb:79,143,163;--danger:#ee9a90;--danger-text:#ee9a90;--shadow:rgba(0,0,0,0.45)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-hover:#ebe8e1;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--accent:#3a7b8f;--accent-text:#2c6a7d;--on-accent:#ffffff;--accent-rgb:58,123,143;--danger:#b3463b;--danger-text:#b3463b;--shadow:rgba(40,32,20,0.14)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Main" theme="{{themeName}}" popover="none" new-branch="{{true}}" hint-size="1280px,800px"></dc-import>
+</div>
+
+<div role="dialog" aria-label="New Branch" style="position: absolute; left: 770px; top: 149px; width: 400px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 16px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 12px 32px var(--shadow)">
+<div style="display: flex; align-items: baseline; gap: 10px">
+<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; letter-spacing: -0.3px; color: var(--text-strong)">New Branch</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">web-app</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="v2-name" style="font-size: 12px; font-weight: 500; color: var(--text-body)">Name</label>
+<input id="v2-name" value="feat/job-queue" style="{{nameStyle}}">
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="v2-base" style="font-size: 12px; font-weight: 500; color: var(--text-body)">Base</label>
+<button id="v2-base" type="button" aria-haspopup="listbox" style="width: 100%; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 11px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); cursor: pointer">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; stroke: var(--text-muted)"><circle cx="6" cy="6" r="2.2"></circle><circle cx="6" cy="18" r="2.2"></circle><circle cx="18" cy="9" r="2.2"></circle><path d="M6 8.2v7.6"></path><path d="M18 11.2c0 3-3 4.3-9.8 5"></path></svg>
+<span style="flex-grow: 1; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 12px">origin/main</span>
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; color: var(--text-muted)"><path d="m6 9 6 6 6-6"></path></svg>
+</button>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span id="v2-checkout" style="font-size: 12px; font-weight: 500; color: var(--text-body)">Check out</span>
+<div role="radiogroup" aria-labelledby="v2-checkout" style="display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 10px; overflow: hidden">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+<div style="{{r.wrapStyle}}">
+<button type="button" role="radio" aria-checked="{{r.on}}" aria-expanded="{{r.expanded}}" onClick="{{r.pick}}" style="{{r.rowStyle}}">
+<span style="{{r.boxStyle}}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{r.checkStyle}}"><path d="m5 12 5 5 9-10"></path></svg></span>
+<span style="flex-grow: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px">
+<span style="font-size: 13px; color: var(--text-strong); white-space: nowrap">{{r.title}}</span>
+<span style="min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{r.sub}}</span>
+</span>
+<sc-if value="{{r.hasMore}}" hint-placeholder-val="{{true}}">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{r.chevronStyle}}"><path d="m6 9 6 6 6-6"></path></svg>
+</sc-if>
+</button>
+
+<sc-if value="{{r.showFolder}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; gap: 8px; padding: 0 12px 12px 38px">
+<span style="position: relative; flex-grow: 1; min-width: 0; display: flex">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; left: 10px; top: 10px; stroke: var(--text-muted)"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
+<input aria-label="Folder" value="…/web-app-worktrees/feat-job-queue" title="~/code/web-app-worktrees/feat-job-queue" style="{{folderStyle}}">
+</span>
+<button type="button" style="height: 32px; flex-shrink: 0; padding: 0 12px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text-strong); font-size: 13px; font-weight: 500; cursor: pointer">Choose…</button>
+</div>
+</sc-if>
+
+<sc-if value="{{r.showChanges}}" hint-placeholder-val="{{false}}">
+<div role="radiogroup" aria-label="3 uncommitted changes" style="display: flex; flex-direction: column; gap: 2px; padding: 0 12px 10px 38px">
+<span style="padding-bottom: 4px; font-size: 12px; color: var(--text-muted)">3 uncommitted changes</span>
+<sc-for list="{{changes}}" as="c" hint-placeholder-count="2">
+<button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="{{c.rowStyle}}">
+<span style="{{c.boxStyle}}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{c.checkStyle}}"><path d="m5 12 5 5 9-10"></path></svg></span>
+<span style="font-size: 13px; color: var(--text-strong)">{{c.title}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<button type="button" style="height: 32px; padding: 0 14px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text-strong); font-size: 13px; font-weight: 500; cursor: pointer">Cancel</button>
+<button type="button" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 500; cursor: pointer">Create Branch <span style="font-size: 11px; opacity: 0.7">↵</span></button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"case":{"editor":"enum","options":["worktree","checkout","branchOnly"],"default":"worktree"},"dirty":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+// New Branch: the "+" on a Branches repo band (shown on hover, before Fetch) opens this form
+// under it, the repo's name beside its title. Name, Base (the repo's default base first; a list
+// with a filter opens under the field), then
+// "Check out": one list of rows, one picked (a check box, accent when picked). A picked row that
+// has options opens them under it (accordion), the others stay one line:
+// - New worktree: the folder (<repo folder's parent>/<repo>-worktrees/<branch, / as ->; its end
+//   in view) and Choose….
+// - Repository folder (sub: the folder and the branch it is on now): with uncommitted changes
+//   there, "3 uncommitted changes" and two rows, Bring to new branch (default) / Stash.
+// - Branch only: no options.
+// Click a row to pick it (the board is interactive). case: the row picked first. dirty: the
+// repository folder has uncommitted changes (else that row has no options and no chevron).
+var self = this;
+var theme = this.props.theme ?? 'dark';
+var st = this.state || {};
+var pick = st.pick || this.props.case || 'worktree';
+var change = st.change || 'bring';
+var dirty = this.props.dirty !== false;
+var field = function (focus) {
+  return 'width: 100%; min-width: 0; height: 32px; box-sizing: border-box; padding: 0 10px; background: var(--bg-sunken); border: 1px solid ' +
+    (focus ? 'var(--accent)' : 'var(--border)') + '; border-radius: 8px; outline: none; color: var(--text-strong); font-family: \'JetBrains Mono\', monospace; font-size: 12px' +
+    (focus ? '; box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.2)' : '');
+};
+var box = function (on) {
+  return 'width: 16px; height: 16px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 4px; ' +
+    (on ? 'background: var(--accent); border: 0; color: var(--on-accent)' : 'background: transparent; border: 1.5px solid var(--border-strong)');
+};
+var defs = [
+  { id: 'worktree', title: 'New worktree', sub: '', more: true },
+  { id: 'checkout', title: 'Repository folder', sub: '~/code/web-app · main', more: dirty },
+  { id: 'branchOnly', title: 'Branch only', sub: '', more: false }
+];
+return { themeClass: 'theme-' + theme, themeName: theme,
+  nameStyle: field(true),
+  folderStyle: field(false) + '; flex-grow: 1; padding-left: 30px; background: var(--bg-elevated)',
+  rows: defs.map(function (d, i) {
+    var on = d.id === pick;
+    return {
+      title: d.title, sub: d.sub, on: on, hasMore: d.more, expanded: on && d.more,
+      showFolder: on && d.id === 'worktree',
+      showChanges: on && d.id === 'checkout' && dirty,
+      pick: function () { self.setState({ pick: d.id }); },
+      wrapStyle: (i ? 'border-top: 1px solid var(--border-row); ' : '') + (on ? 'background: rgba(var(--accent-rgb), 0.08)' : ''),
+      rowStyle: 'width: 100%; height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: transparent; border: 0; text-align: left; cursor: pointer',
+      boxStyle: box(on),
+      checkStyle: on ? '' : 'visibility: hidden',
+      chevronStyle: 'flex-shrink: 0; color: var(--text-muted); transition: transform 0.15s; ' + (on ? '' : 'transform: rotate(-90deg)')
+    };
+  }),
+  changes: [['bring', 'Bring to new branch'], ['stash', 'Stash']].map(function (c) {
+    var on = c[0] === change;
+    return {
+      title: c[1], on: on,
+      pick: function () { self.setState({ change: c[0] }); },
+      rowStyle: 'height: 28px; display: flex; align-items: center; gap: 10px; padding: 0; background: transparent; border: 0; text-align: left; cursor: pointer',
+      boxStyle: box(on),
+      checkStyle: on ? '' : 'visibility: hidden'
+    };
+  })
+};
+}
+}
+</script>
+</body>
+</html>

@@ -2,13 +2,12 @@
 // branch from a base, checked out in a new linked worktree, in the repository folder (its
 // uncommitted changes brought along or stashed) or not at all.
 import { open } from '@tauri-apps/plugin-dialog';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button } from '../components/Button';
 import { IconButton } from '../components/IconButton';
 import { CheckIcon, ChevronDownIcon, Icon, PlusIcon } from '../components/icons';
 import { Input } from '../components/Input';
 import { Popover } from '../components/Popover';
-import { Checkbox } from '../components/Checkbox';
 import { t } from '../i18n';
 import { cnt } from '../lib/format';
 import { checkNewBranch, gitCreateBranch, setBranchBase } from '../lib/ipc';
@@ -59,15 +58,15 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
   const bases = useMemo(() => baseChoices(scan), [scan]);
   const [name, setName] = useState('');
   const [base, setBase] = useState(bases[0] ?? '');
-  // Two boxes, at most one checked: a new worktree (default), or the repository folder switching
-  // to it (its changes brought along, or stashed when that box is cleared). Neither: the branch
-  // only.
+  // Check out: a new worktree (default), the repository folder (its changes brought along or
+  // stashed) or the branch only.
   const [where, setWhere] = useState<Where>('worktree');
   const [bring, setBring] = useState(true);
-  const toggle = (box: 'worktree' | 'main', on: boolean) => setWhere(on ? box : 'none');
   const [parent, setParent] = useState(() => defaultParent(scan.repo.path));
   // Typed by hand: it no longer follows the name.
   const [typed, setTyped] = useState<string | null>(null);
+  // The folder's end (the branch's folder) stays in view while it is not being edited.
+  const folderInput = useRef<HTMLInputElement>(null);
   const [problem, setProblem] = useState<NewBranchProblem | null>(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,11 +76,17 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
   const branch = name.trim();
   const shown = typed ?? tildifyHome(`${parent}/${folderName(name)}`);
   const folder = expandHome(shown.trim());
-  // The repository folder's uncommitted changes: they come along or are stashed.
-  const dirty = useMemo(() => {
-    const main = scan.active.find((e) => e.worktreePath && trimSlash(e.worktreePath) === trimSlash(scan.repo.path));
-    return main?.uncommitted ?? 0;
-  }, [scan]);
+  useLayoutEffect(() => {
+    const el = folderInput.current;
+    if (el && document.activeElement !== el) el.scrollLeft = el.scrollWidth;
+  }, [shown, where]);
+  // The repository folder: what it has checked out now, and its uncommitted changes (they come
+  // along or are stashed).
+  const main = useMemo(
+    () => scan.active.find((e) => e.worktreePath && trimSlash(e.worktreePath) === trimSlash(scan.repo.path)),
+    [scan],
+  );
+  const dirty = main?.uncommitted ?? 0;
   const checkout = useMemo<NewBranchCheckout>(
     () =>
       where === 'worktree'
@@ -165,7 +170,10 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
           }
         }}
       >
-        <div className={styles.title}>{t('branches.newBranch')}</div>
+        <div className={styles.head}>
+          <span className={styles.title}>{t('branches.newBranch')}</span>
+          <span className={styles.repo}>{scan.name}</span>
+        </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="new-branch-name">
             {t('branches.newName')}
@@ -178,43 +186,52 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
           </label>
           <BasePicker id="new-branch-base" bases={bases} value={base} onChange={setBase} />
         </div>
-        <Checkbox
-          label={t('branches.newWorktree')}
-          checked={where === 'worktree'}
-          onChange={(e) => toggle('worktree', e.target.checked)}
-        />
-        {where === 'worktree' && (
-          <div className={`${styles.field} ${styles.nested}`}>
-            <label className={styles.label} htmlFor="new-branch-folder">
-              {t('branches.newFolder')}
-            </label>
-            <div className={styles.folderRow}>
-              <Input
-                id="new-branch-folder"
-                size={32}
-                mono
-                spellCheck={false}
-                autoComplete="off"
-                className={styles.folder}
-                invalid={problem === 'badFolder' || problem === 'folderNotEmpty'}
-                title={shown}
-                value={shown}
-                onChange={setTyped}
-              />
-              <Button onClick={() => void choose()}>{t('branches.newChoose')}</Button>
-            </div>
+        <div className={styles.field}>
+          <span id="new-branch-checkout" className={styles.label}>
+            {t('branches.newCheckOut')}
+          </span>
+          <div role="radiogroup" aria-labelledby="new-branch-checkout" className={styles.choices}>
+            <Choice
+              title={t('branches.newWorktree')}
+              on={where === 'worktree'}
+              more
+              onPick={() => setWhere('worktree')}
+            >
+              <div className={styles.folderRow}>
+                <Input
+                  ref={folderInput}
+                  size={32}
+                  mono
+                  leftIcon="folder"
+                  spellCheck={false}
+                  autoComplete="off"
+                  aria-label={t('branches.newFolder')}
+                  className={styles.folder}
+                  invalid={problem === 'badFolder' || problem === 'folderNotEmpty'}
+                  title={shown}
+                  value={shown}
+                  onChange={setTyped}
+                  onBlur={(e) => (e.currentTarget.scrollLeft = e.currentTarget.scrollWidth)}
+                />
+                <Button onClick={() => void choose()}>{t('branches.newChoose')}</Button>
+              </div>
+            </Choice>
+            <Choice
+              title={t('branches.newSwitch')}
+              sub={`${tildifyHome(scan.repo.path)}${main ? ` · ${main.branch ?? main.shortSha ?? ''}` : ''}`}
+              on={where === 'main'}
+              more={dirty > 0}
+              onPick={() => setWhere('main')}
+            >
+              <div role="radiogroup" aria-label={t('branches.newChanges', { ...cnt(dirty) })} className={styles.changes}>
+                <span className={styles.changesLabel}>{t('branches.newChanges', { ...cnt(dirty) })}</span>
+                <SubChoice title={t('branches.newBring')} on={bring} onPick={() => setBring(true)} />
+                <SubChoice title={t('branches.newStash')} on={!bring} onPick={() => setBring(false)} />
+              </div>
+            </Choice>
+            <Choice title={t('branches.newBranchOnly')} on={where === 'none'} onPick={() => setWhere('none')} />
           </div>
-        )}
-        <Checkbox label={t('branches.newSwitch')} checked={where === 'main'} onChange={(e) => toggle('main', e.target.checked)} />
-        {where === 'main' && dirty > 0 && (
-          <div className={styles.nested}>
-            <Checkbox
-              label={t('branches.newBringChanges', { ...cnt(dirty) })}
-              checked={bring}
-              onChange={(e) => setBring(e.target.checked)}
-            />
-          </div>
-        )}
+        </div>
         {message && <div className={styles.error}>{message}</div>}
         <div className={styles.actions}>
           <Button onClick={onClose}>{t('common.cancel')}</Button>
@@ -230,6 +247,55 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
         </div>
       </div>
     </Popover>
+  );
+}
+
+/** A row of the Check out list: a box (checked when picked), the title and a mono sub line. A
+ * picked row with `more` opens its `children` under it, and its chevron turns down. */
+function Choice({
+  title,
+  sub,
+  on,
+  more,
+  onPick,
+  children,
+}: {
+  title: string;
+  sub?: string;
+  on: boolean;
+  more?: boolean;
+  onPick: () => void;
+  children?: ReactNode;
+}) {
+  return (
+    <div className={on ? `${styles.choice} ${styles.choiceOn}` : styles.choice}>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={on}
+        aria-expanded={more ? on : undefined}
+        className={styles.choiceRow}
+        onClick={onPick}
+      >
+        <span className={on ? `${styles.box} ${styles.boxOn}` : styles.box}>{on && <CheckIcon size={10} />}</span>
+        <span className={styles.choiceText}>
+          <span className={styles.choiceTitle}>{title}</span>
+          {sub && <span className={styles.choiceSub}>{sub}</span>}
+        </span>
+        {more && <ChevronDownIcon size={12} className={on ? styles.chevron : `${styles.chevron} ${styles.chevronShut}`} />}
+      </button>
+      {on && more && <div className={styles.choiceMore}>{children}</div>}
+    </div>
+  );
+}
+
+/** One of the picked row's own options (Bring / Stash): a smaller row with the same box. */
+function SubChoice({ title, on, onPick }: { title: string; on: boolean; onPick: () => void }) {
+  return (
+    <button type="button" role="radio" aria-checked={on} className={styles.subChoice} onClick={onPick}>
+      <span className={on ? `${styles.box} ${styles.boxOn}` : styles.box}>{on && <CheckIcon size={10} />}</span>
+      <span className={styles.choiceTitle}>{title}</span>
+    </button>
   );
 }
 

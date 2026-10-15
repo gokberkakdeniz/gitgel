@@ -6,11 +6,29 @@
   padding: 16px;
 }
 
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
 .title {
   font-family: var(--font-serif);
   font-size: 18px;
   letter-spacing: -0.3px;
   color: var(--text-strong);
+}
+
+/* The repository it is made in, beside the title (the form covers its band). */
+.repo {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .field {
@@ -130,12 +148,126 @@
   text-align: center;
 }
 
-/* Under its checkbox, lined up with the box's text. */
-.nested {
+/* Check out (V2): one list of rows, one picked; a picked row with options opens them under it. */
+.choices {
   display: flex;
   flex-direction: column;
-  margin-top: -4px;
-  padding-left: 24px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.choice + .choice {
+  border-top: 1px solid var(--border-row);
+}
+
+.choiceOn {
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+.choiceRow {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choiceRow:focus-visible,
+.subChoice:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* The app's checkbox, drawn: 16px, radius 4, accent with a check when picked. */
+.box {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  color: var(--on-accent);
+}
+
+.boxOn {
+  background: var(--accent);
+  border: 0;
+}
+
+.choiceText {
+  min-width: 0;
+  flex-grow: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.choiceTitle {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.choiceSub {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+
+.chevronShut {
+  transform: rotate(-90deg);
+}
+
+/* Under the row, lined up with its title. */
+.choiceMore {
+  padding: 0 12px 12px 38px;
+}
+
+.changes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: -2px;
+}
+
+.changesLabel {
+  padding-bottom: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.subChoice {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  text-align: left;
+  cursor: pointer;
 }
 
 .folderRow {
