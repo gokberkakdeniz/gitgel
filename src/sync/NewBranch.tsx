@@ -59,12 +59,12 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
   const bases = useMemo(() => baseChoices(scan), [scan]);
   const [name, setName] = useState('');
   const [base, setBase] = useState(bases[0] ?? '');
-  // Check out: in a new worktree (default), else the repository folder switches to it (its
-  // changes brought along, or stashed when that box is cleared). Not checked out: the branch only.
-  const [checkOut, setCheckOut] = useState(true);
-  const [inWorktree, setInWorktree] = useState(true);
+  // Two boxes, at most one checked: a new worktree (default), or the repository folder switching
+  // to it (its changes brought along, or stashed when that box is cleared). Neither: the branch
+  // only.
+  const [where, setWhere] = useState<Where>('worktree');
   const [bring, setBring] = useState(true);
-  const where: Where = !checkOut ? 'none' : inWorktree ? 'worktree' : 'main';
+  const toggle = (box: 'worktree' | 'main', on: boolean) => setWhere(on ? box : 'none');
   const [parent, setParent] = useState(() => defaultParent(scan.repo.path));
   // Typed by hand: it no longer follows the name.
   const [typed, setTyped] = useState<string | null>(null);
@@ -178,39 +178,41 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
           </label>
           <BasePicker id="new-branch-base" bases={bases} value={base} onChange={setBase} />
         </div>
-        <Checkbox label={t('branches.newCheckOut')} checked={checkOut} onChange={(e) => setCheckOut(e.target.checked)} />
-        {checkOut && (
-          <div className={styles.nested}>
-            <Checkbox label={t('branches.newInWorktree')} checked={inWorktree} onChange={(e) => setInWorktree(e.target.checked)} />
-            {!inWorktree && dirty > 0 && (
-              <Checkbox
-                label={t('branches.newBringChanges', { ...cnt(dirty) })}
-                checked={bring}
-                onChange={(e) => setBring(e.target.checked)}
+        <Checkbox
+          label={t('branches.newWorktree')}
+          checked={where === 'worktree'}
+          onChange={(e) => toggle('worktree', e.target.checked)}
+        />
+        {where === 'worktree' && (
+          <div className={`${styles.field} ${styles.nested}`}>
+            <label className={styles.label} htmlFor="new-branch-folder">
+              {t('branches.newFolder')}
+            </label>
+            <div className={styles.folderRow}>
+              <Input
+                id="new-branch-folder"
+                size={32}
+                mono
+                spellCheck={false}
+                autoComplete="off"
+                className={styles.folder}
+                invalid={problem === 'badFolder' || problem === 'folderNotEmpty'}
+                title={shown}
+                value={shown}
+                onChange={setTyped}
               />
-            )}
-            {inWorktree && (
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="new-branch-folder">
-                  {t('branches.newFolder')}
-                </label>
-                <div className={styles.folderRow}>
-                  <Input
-                    id="new-branch-folder"
-                    size={32}
-                    mono
-                    spellCheck={false}
-                    autoComplete="off"
-                    className={styles.folder}
-                    invalid={problem === 'badFolder' || problem === 'folderNotEmpty'}
-                    title={shown}
-                    value={shown}
-                    onChange={setTyped}
-                  />
-                  <Button onClick={() => void choose()}>{t('branches.newChoose')}</Button>
-                </div>
-              </div>
-            )}
+              <Button onClick={() => void choose()}>{t('branches.newChoose')}</Button>
+            </div>
+          </div>
+        )}
+        <Checkbox label={t('branches.newSwitch')} checked={where === 'main'} onChange={(e) => toggle('main', e.target.checked)} />
+        {where === 'main' && dirty > 0 && (
+          <div className={styles.nested}>
+            <Checkbox
+              label={t('branches.newBringChanges', { ...cnt(dirty) })}
+              checked={bring}
+              onChange={(e) => setBring(e.target.checked)}
+            />
           </div>
         )}
         {message && <div className={styles.error}>{message}</div>}

@@ -130,11 +130,10 @@
   text-align: center;
 }
 
-/* Under "Check out", lined up with its text. */
+/* Under its checkbox, lined up with the box's text. */
 .nested {
   display: flex;
   flex-direction: column;
-  gap: 14px;
   margin-top: -4px;
   padding-left: 24px;
 }

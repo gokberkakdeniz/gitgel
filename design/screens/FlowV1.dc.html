@@ -39,16 +39,9 @@ button,input{font-family:inherit}
 </button>
 </div>
 
-<dc-import name="Checkbox" theme="none" label="Check out" checked="{{checkOut}}" hint-size="200px,20px"></dc-import>
-
-<sc-if value="{{checkOut}}" hint-placeholder-val="{{true}}">
-<div style="display: flex; flex-direction: column; gap: 14px; margin-top: -4px; padding-left: 24px">
-<dc-import name="Checkbox" theme="none" label="In a new worktree" checked="{{worktree}}" hint-size="200px,20px"></dc-import>
-<sc-if value="{{showChanges}}" hint-placeholder-val="{{false}}">
-<dc-import name="Checkbox" theme="none" label="Bring 3 uncommitted changes" checked="{{true}}" hint-size="240px,20px"></dc-import>
-</sc-if>
+<dc-import name="Checkbox" theme="none" label="Create worktree" checked="{{worktree}}" hint-size="200px,20px"></dc-import>
 <sc-if value="{{worktree}}" hint-placeholder-val="{{true}}">
-<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; flex-direction: column; gap: 6px; margin-top: -4px; padding-left: 24px">
 <label for="v1-folder" style="font-size: 12px; font-weight: 500; color: var(--text-body)">Folder</label>
 <div style="display: flex; gap: 8px">
 <input id="v1-folder" value="{{folder}}" title="{{folder}}" style="{{folderStyle}}">
@@ -56,6 +49,10 @@ button,input{font-family:inherit}
 </div>
 </div>
 </sc-if>
+<dc-import name="Checkbox" theme="none" label="Switch to it in the repository folder" checked="{{showChanges}}" hint-size="280px,20px"></dc-import>
+<sc-if value="{{showChanges}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; margin-top: -4px; padding-left: 24px">
+<dc-import name="Checkbox" theme="none" label="Bring 3 uncommitted changes" checked="{{true}}" hint-size="240px,20px"></dc-import>
 </div>
 </sc-if>
 
@@ -75,16 +72,16 @@ class Component extends DCLogic {
 renderVals() {
 // New Branch: the "+" on a Branches repo band (shown on hover, before Fetch) opens this form
 // under it. Name, Base (the repo's default base first; a list with a filter opens under the
-// field), then checkboxes: Check out (checked; cleared: the branch only) and under it In a new
-// worktree (checked; Folder <repo folder's parent>/<repo>-worktrees/<branch, / as ->, following
-// the name until typed in; Choose… picks the folder that holds it). Cleared, the repository
-// folder switches to the branch; with uncommitted changes there, Bring N uncommitted changes
-// (checked; cleared, they are stashed). Checked as it is typed: a danger line says what stops
+// field), then two checkboxes, at most one checked: Create worktree (checked; under it Folder
+// <repo folder's parent>/<repo>-worktrees/<branch, / as ->, following the name until typed in;
+// Choose… picks the folder that holds it) and Switch to it in the repository folder (under it,
+// with uncommitted changes there, Bring N uncommitted changes: checked; cleared, they are
+// stashed). Neither: the branch only. Checked as it is typed: a danger line says what stops
 // it and Create Branch stays disabled. Runs `git worktree add --no-track -b`, `git switch
 // --no-track -c` (after `git stash push` when not brought) or `git branch --no-track`.
 // worktree: feat/job-queue from origin/main into ~/code/web-app-worktrees/feat-job-queue.
 // repoFolder: the repository folder has 3 changes, they come along. repoFolderConflict: one of
-// them also changed on the base, so they cannot come along. branchOnly: Check out cleared.
+// them also changed on the base, so they cannot come along. branchOnly: neither box checked.
 // exists: the name is taken.
 var theme = this.props.theme ?? 'dark';
 var c = this.props.case || 'worktree';
@@ -100,7 +97,6 @@ var off = !!error;
 return { themeClass: 'theme-' + theme, themeName: theme,
   name: name,
   nameStyle: field(true, c === 'exists'),
-  checkOut: where !== 'none',
   worktree: where === 'worktree',
   showChanges: where === 'main',
   folder: '~/code/web-app-worktrees/' + name.replace(/\//g, '-'),

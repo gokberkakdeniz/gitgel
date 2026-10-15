@@ -2688,15 +2688,15 @@ A Branches repo band's "+" (§5) opens it under the button (`sync/NewBranch.tsx`
   field closes it; a "Search" filter (words, any order), the check on the base in use, ↑ / ↓ and
   ↵ to pick. It lists the repo's default base, its base branch, the other local branches by
   name, then the remote branches no local branch has (`branchDefaults.ts` `baseChoices`), the
-  default base picked. Then `Checkbox`es:
-  - "Check out" (checked). Cleared: the branch only (Nowhere below).
-    - Under it, indented 24px: "In a new worktree" (checked): "Folder" (`Input` 32, mono, `~/…`)
-      and "Choose…" (folder picker). The folder follows the name, `<repo folder's
-      parent>/<repo>-worktrees/<branch, "/" as "-">`, until it is typed in; Choose… picks the
-      folder that holds it (it follows the name again).
-    - Cleared, the repository folder switches to the branch (Repository Folder below); with
-      uncommitted changes there, "Bring N uncommitted changes" (checked; cleared, they are
-      stashed).
+  default base picked. Then two `Checkbox`es, at most one checked (checking one clears the
+  other); neither: the branch only (Nowhere below):
+  - "Create worktree" (checked; New Worktree below). Under it, indented 24px: "Folder" (`Input`
+    32, mono, `~/…`) and "Choose…" (folder picker). The folder follows the name, `<repo folder's
+    parent>/<repo>-worktrees/<branch, "/" as "-">`, until it is typed in; Choose… picks the
+    folder that holds it (it follows the name again).
+  - "Switch to it in the repository folder" (Repository Folder below). Under it, with
+    uncommitted changes there: "Bring N uncommitted changes" (checked; cleared, they are
+    stashed).
 
   A danger 12px line under the fields says what stops it; Cancel / primary "Create Branch ↵"
   (disabled until the name is there and the checks pass, and while a git action runs in the
