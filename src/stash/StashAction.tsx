@@ -8,7 +8,7 @@ import { StashDialog, stashRows } from './StashDialog';
  * checked-out entry has uncommitted changes, disabled while they all have merge conflicts. The
  * dialog opens under the ⋮ button. */
 export function useStashAction(groups: ReviewGroup[]) {
-  const [rect, setRect] = useState<DOMRect | null>(null);
+  const [at, setAt] = useState<{ rect: DOMRect; pointer: boolean } | null>(null);
   const rows = stashRows(groups).filter((r) => r.files.length > 0);
   const any = rows.some((r) => r.entry.conflicts === 0);
   const item = (close: () => void, anchor: DOMRect) =>
@@ -19,15 +19,17 @@ export function useStashAction(groups: ReviewGroup[]) {
         title={any ? undefined : t('stash.conflictHint')}
         onSelect={() => {
           close();
-          setRect(anchor);
+          setAt({ rect: anchor, pointer: false });
         }}
       >
         {t('stash.menuItem')}
       </MenuItem>
     );
-  const dialog = rect && <StashDialog groups={groups} anchorRect={rect} onClose={() => setRect(null)} />;
-  /** Opens the dialog at `anchor` (Stash All Changes in History's Uncommitted menu); null when
-   * nothing can be stashed (no changes, or merge conflicts everywhere). */
-  const open = rows.length > 0 && any ? (anchor: DOMRect) => setRect(anchor) : null;
+  const dialog = at && (
+    <StashDialog groups={groups} anchorRect={at.rect} atPointer={at.pointer} onClose={() => setAt(null)} />
+  );
+  /** Opens the dialog at the pointer (Stash All Changes in History's Uncommitted right-click
+   * menu); null when nothing can be stashed (no changes, or merge conflicts everywhere). */
+  const open = rows.length > 0 && any ? (pointer: DOMRect) => setAt({ rect: pointer, pointer: true }) : null;
   return { item, dialog, open };
 }

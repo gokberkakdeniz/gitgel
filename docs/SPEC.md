@@ -2535,7 +2535,7 @@ for word (§0). Canvas boards `HistH9` (Hi8, History) and `FlowD12` (D12, Review
   one after another). Each file is read from its own entry's worktree, so picks across repos
   with the same paths copy and open the right files. A commit's or a stash's files keep the open items alone.
 - **Uncommitted row menu** (History, right-click the "Uncommitted changes" row): danger "Discard
-  All Changes…" and "Stash All Changes…" (`package`; opens Stash (P4) at the pointer, disabled
+  All Changes…" and "Stash All Changes…" (`package`; opens Stash (P4) at the pointer, to its right as the menu, disabled
   when nothing can be stashed).
 - **Confirm Discard Changes** (`Modal` 480px, 160px from the top): `ModalHeader` "Confirm Discard
   Changes" with ✕ ("Confirm Discard All Changes" for Discard All Changes); a body (padding 4px

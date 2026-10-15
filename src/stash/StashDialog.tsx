@@ -57,9 +57,21 @@ export function stashPayload(rows: Row[], picks: Record<string, string[]>): Stas
   });
 }
 
-/** Stash Changes (flow P4), under the ⋮ menu's Stash in Review and History. Each entry lists its
- * files under it (open when there is one entry); its box picks them all or none. */
-export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGroup[]; anchorRect: DOMRect; onClose: () => void }) {
+/** Stash Changes (flow P4), under the ⋮ menu's Stash in Review and History, or at the pointer
+ * from Uncommitted's right-click menu (`atPointer`: it opens to the right of it, as the menu did).
+ * Each entry lists its files under it (open when there is one entry); its box picks them all or
+ * none. */
+export function StashDialog({
+  groups,
+  anchorRect,
+  atPointer,
+  onClose,
+}: {
+  groups: ReviewGroup[];
+  anchorRect: DOMRect;
+  atPointer?: boolean;
+  onClose: () => void;
+}) {
   const rows = stashRows(groups);
   const [picks, setPicks] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(rows.map((r) => [r.entry.key, r.entry.conflicts > 0 ? [] : r.files.map((f) => f.path)])),
@@ -82,7 +94,7 @@ export function StashDialog({ groups, anchorRect, onClose }: { groups: ReviewGro
   const toggleOpen = (key: string) => setOpen((o) => (o.includes(key) ? o.filter((k) => k !== key) : [...o, key]));
 
   return (
-    <Popover anchorRect={anchorRect} width={420} alignRight onClose={onClose}>
+    <Popover anchorRect={anchorRect} width={420} alignRight={!atPointer} onClose={onClose}>
       <div
         role="dialog"
         aria-label={t('stash.dialogTitle')}
