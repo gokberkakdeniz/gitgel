@@ -51,7 +51,7 @@ button,input{font-family:inherit}
 <span style="{{r.boxStyle}}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{r.checkStyle}}"><path d="m5 12 5 5 9-10"></path></svg></span>
 <span style="flex-grow: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px">
 <span style="font-size: 13px; color: var(--text-strong); white-space: nowrap">{{r.title}}</span>
-<span style="min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{r.sub}}</span>
+<span title="{{r.subTitle}}" style="min-width: 0; margin-left: auto; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{r.sub}}</span>
 </span>
 <sc-if value="{{r.hasMore}}" hint-placeholder-val="{{true}}">
 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{r.chevronStyle}}"><path d="m6 9 6 6 6-6"></path></svg>
@@ -101,7 +101,7 @@ renderVals() {
 // has options opens them under it (accordion), the others stay one line:
 // - New worktree: the folder (<repo folder's parent>/<repo>-worktrees/<branch, / as ->; its end
 //   in view) and Choose….
-// - Repository folder (sub: the folder and the branch it is on now): with uncommitted changes
+// - Repository folder (on the right: the branch it is on now, then →; it switches from it): with uncommitted changes
 //   there, "3 uncommitted changes" and two rows, Bring to new branch (default) / Stash.
 // - Branch only: no options.
 // It opens on Settings › Repositories › Check Out New Branches In (Repository folder unless
@@ -124,7 +124,7 @@ var box = function (on) {
 };
 var defs = [
   { id: 'worktree', title: 'New worktree', sub: '', more: true },
-  { id: 'checkout', title: 'Repository folder', sub: '~/code/web-app · main', more: dirty },
+  { id: 'checkout', title: 'Repository folder', sub: 'main →', more: dirty },
   { id: 'branchOnly', title: 'Branch only', sub: '', more: false }
 ];
 return { themeClass: 'theme-' + theme, themeName: theme,
@@ -133,7 +133,7 @@ return { themeClass: 'theme-' + theme, themeName: theme,
   rows: defs.map(function (d, i) {
     var on = d.id === pick;
     return {
-      title: d.title, sub: d.sub, on: on, hasMore: d.more, expanded: on && d.more,
+      title: d.title, sub: d.sub, subTitle: d.sub ? 'The repository folder is on main' : '', on: on, hasMore: d.more, expanded: on && d.more,
       showFolder: on && d.id === 'worktree',
       showChanges: on && d.id === 'checkout' && dirty,
       pick: function () { self.setState({ pick: d.id }); },

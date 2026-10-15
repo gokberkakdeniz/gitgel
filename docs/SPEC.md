@@ -2703,8 +2703,8 @@ A Branches repo band's "+" (§5) opens it under the button (`sync/NewBranch.tsx`
     and "Choose…" (folder picker). The folder follows the name, `<repo folder's
     parent>/<repo>-worktrees/<branch, "/" as "-">`, until it is typed in; Choose… picks the
     folder that holds it (it follows the name again).
-  - "Repository folder" (Repository Folder below), sub line mono 11 muted `<folder> · <branch it
-    has now>`: with uncommitted changes there, "N uncommitted changes" (12px muted) and two 28px
+  - "Repository folder" (Repository Folder below), on the right mono 11 muted `<branch it is on
+    now> →` (tooltip "The repository folder is on <branch>"): with uncommitted changes there, "N uncommitted changes" (12px muted) and two 28px
     rows, "Bring to new branch" (default) / "Stash". With none, no options and no chevron.
   - "Branch only" (Nowhere below): no options.
 

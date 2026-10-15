@@ -88,6 +88,8 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
     [scan],
   );
   const dirty = main?.uncommitted ?? 0;
+  // What it switches from.
+  const from = main ? (main.branch ?? main.shortSha) : null;
   const checkout = useMemo<NewBranchCheckout>(
     () =>
       where === 'worktree'
@@ -219,7 +221,8 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
             </Choice>
             <Choice
               title={t('branches.newSwitch')}
-              sub={`${tildifyHome(scan.repo.path)}${main ? ` · ${main.branch ?? main.shortSha ?? ''}` : ''}`}
+              sub={from ? `${from} →` : undefined}
+              subTitle={from ? t('branches.newSwitchFrom', { branch: from }) : undefined}
               on={where === 'main'}
               more={dirty > 0}
               onPick={() => setWhere('main')}
@@ -251,18 +254,21 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
   );
 }
 
-/** A row of the Check out list: a box (checked when picked), the title and a mono sub line. A
+/** A row of the Check out list: a box (checked when picked), the title and a mono note. A
  * picked row with `more` opens its `children` under it, and its chevron turns down. */
 function Choice({
   title,
   sub,
+  subTitle,
   on,
   more,
   onPick,
   children,
 }: {
   title: string;
+  /** Mono 11 muted, on the right (before the chevron). */
   sub?: string;
+  subTitle?: string;
   on: boolean;
   more?: boolean;
   onPick: () => void;
@@ -281,7 +287,11 @@ function Choice({
         <span className={on ? `${styles.box} ${styles.boxOn}` : styles.box}>{on && <CheckIcon size={10} />}</span>
         <span className={styles.choiceText}>
           <span className={styles.choiceTitle}>{title}</span>
-          {sub && <span className={styles.choiceSub}>{sub}</span>}
+          {sub && (
+            <span className={styles.choiceSub} title={subTitle}>
+              {sub}
+            </span>
+          )}
         </span>
         {more && <ChevronDownIcon size={12} className={on ? styles.chevron : `${styles.chevron} ${styles.chevronShut}`} />}
       </button>

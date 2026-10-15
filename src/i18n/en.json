@@ -77,6 +77,7 @@
   "branches.newCheckOut": "Check out",
   "branches.newWorktree": "New worktree",
   "branches.newSwitch": "Repository folder",
+  "branches.newSwitchFrom": "The repository folder is on {$branch}",
   "branches.newBranchOnly": "Branch only",
   "branches.newChanges": ".input {$n :string} .match $n 1 {{1 uncommitted change}} * {{ {$d} uncommitted changes}}",
   "branches.newBring": "Bring to new branch",

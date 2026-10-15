@@ -103,6 +103,7 @@
   "branches.newCheckOut": "Şurada aç",
   "branches.newWorktree": "Yeni çalışma ağacı",
   "branches.newSwitch": "Depo klasörü",
+  "branches.newSwitchFrom": "Depo klasörü şu an {$branch} dalında",
   "branches.newBranchOnly": "Sadece dal",
   "branches.newChanges": "{$d} commit'lenmemiş değişiklik",
   "branches.newBring": "Yeni dala taşı",
