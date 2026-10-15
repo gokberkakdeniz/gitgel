@@ -128,7 +128,22 @@ pub fn classify(index: &WatchIndex, path: &Path) -> Option<Change> {
         })
         .collect();
     if parts.is_empty() {
-        return None;
+        // A linked worktree's folder inside another worktree made or removed (`git worktree add
+        // <name>` in the repository folder): that one's untracked files changed.
+        return match kind {
+            RootKind::Worktree { repo_id, path } => index
+                .roots
+                .iter()
+                .any(|(outer, k)| {
+                    matches!(k, RootKind::Worktree { .. })
+                        && outer != path
+                        && path.starts_with(outer)
+                })
+                .then(|| Change::Refs {
+                    repo_id: repo_id.clone(),
+                }),
+            RootKind::GitDir { .. } => None,
+        };
     }
     match kind {
         RootKind::GitDir {
@@ -160,8 +175,8 @@ pub fn classify(index: &WatchIndex, path: &Path) -> Option<Change> {
                 // An operation started, moved on or ended (a merge leaves HEAD where it is).
                 [head] if OPERATION_HEADS.contains(head) => refs(),
                 ["rebase-merge" | "rebase-apply", ..] => refs(),
-                // A worktree was added or removed.
-                ["worktrees", _] => refs(),
+                // A worktree was added or removed (git removes `worktrees` with the last one).
+                ["worktrees"] | ["worktrees", _] => refs(),
                 ["worktrees", _, "HEAD"] => refs(),
                 ["worktrees", _, head] if OPERATION_HEADS.contains(head) => refs(),
                 ["worktrees", _, "rebase-merge" | "rebase-apply", ..] => refs(),
@@ -424,6 +439,7 @@ mod tests {
         assert_eq!(c("/r/app/.git/worktrees/feat/HEAD"), refs());
         assert_eq!(c("/r/app/.git/worktrees/feat/index"), wt("/wt/feat", ""));
         assert_eq!(c("/r/app/.git/worktrees/new"), refs());
+        assert_eq!(c("/r/app/.git/worktrees"), refs());
         assert_eq!(c("/r/app/.git/worktrees/new/index"), refs());
         assert_eq!(c("/r/app/.git/logs/refs/stash"), refs());
         assert_eq!(c("/r/app/.git/MERGE_HEAD"), refs());
@@ -453,6 +469,21 @@ mod tests {
         assert_eq!(c("/wt/feat/.git"), None);
         assert_eq!(c("/elsewhere/x"), None);
         assert_eq!(c("/r/application/x"), None);
+    }
+
+    #[test]
+    fn a_worktree_folder_inside_the_repository_folder() {
+        let layout = RepoLayout {
+            git_dir: p("/r/app/.git"),
+            worktrees: vec![(None, p("/r/app")), (Some("x".into()), p("/r/app/x"))],
+        };
+        let ix = WatchIndex::new(desired_roots(&[("r_1".into(), layout)]));
+        let c = |s: &str| classify(&ix, &p(s));
+        // Made or removed: the repository folder's untracked files changed.
+        assert_eq!(c("/r/app/x"), refs());
+        assert_eq!(c("/r/app/x/src/a.ts"), wt("/r/app/x", "src/a.ts"));
+        // The repository folder itself is no news.
+        assert_eq!(c("/r/app"), None);
     }
 
     #[test]

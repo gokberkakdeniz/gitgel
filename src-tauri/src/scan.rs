@@ -175,6 +175,12 @@ fn fill(
             .map(|w| (w.name.clone(), w.path.clone()))
             .collect(),
     };
+    // A worktree made or removed inside another one changes that one's untracked files: its
+    // cached status is read again (whichever scan sees the change first).
+    lock(cache).note_worktrees(
+        &repo_cfg.id,
+        layout.worktrees.iter().map(|(_, p)| p.clone()).collect(),
+    );
     let checked_out: HashMap<&str, &Path> = wts
         .iter()
         .filter_map(|w| Some((w.branch.as_deref()?, w.path.as_path())))

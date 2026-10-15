@@ -639,6 +639,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) History: the commit form is kept per branch while the app runs (leaving History and coming back keeps the message) — 2026-10-15
 - [x] (on request) Every git action (stash, discard, commit, sync) that fails opens its output panel by itself — 2026-10-15
 - [x] (on request) Delete Branch… in the branch menus (`git branch -D` after a confirmation that counts the commits lost with it; a checked-out branch's folder switches to the base, a linked worktree is removed, its changes stashed unless unchecked; optionally the remote branch too; its own Review or History then goes to Branches, or back into the project); canvas R2 (`FlowR2.dc.html`) — 2026-10-15
+- [x] (on request) A worktree removed from inside the repository folder (`git worktree add <name>`) no longer stays in the main worktree's Uncommitted (also when removed with `git worktree remove`): a scan that finds a worktree folder made or removed inside another drops that one's cached status; the watcher reacts to `worktrees` going and to a nested worktree folder; the rescan after a git action updates the watch list — 2026-10-15
 
 ---
 

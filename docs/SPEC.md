@@ -1955,23 +1955,28 @@ No polling. The backend watches the file system, recomputes what changed and pus
   | `worktrees/<name>/HEAD` | `Refs` |
   | `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `rebase-merge/**`, `rebase-apply/**` (also under `worktrees/<name>/`) | `Refs` (an operation started, moved on or ended; a merge leaves HEAD as it is) |
   | `worktrees/<name>/index` | `Worktree` (that worktree) |
-  | adding/removing `worktrees/<name>` | `Refs` (worktree list changed) |
+  | adding/removing `worktrees/<name>`, or `worktrees` itself (git removes it with the last one) | `Refs` (worktree list changed) |
   | anything else (`objects/`, other `logs/`, `*.lock`, `FETCH_HEAD`, …) | ignored |
 
-  Under a worktree root, the `.git` file is ignored and everything else is `Worktree` after the
+  A linked worktree's root folder itself, when it lies inside another worktree, is `Refs` (made
+  or removed). Under a worktree root, the `.git` file is ignored and everything else is `Worktree` after the
   `.gitignore` filter (checked from the top-most ancestor down and cached per batch, so thousands
   of events under `node_modules/` cost one check).
 - **Work:** the debouncer callback only forwards to a channel. One worker thread waits, drains
   every queued batch, reduces them to a set of `(repo, kind, worktree)` jobs (a `Refs` job for a
   repo absorbs its `Worktree` jobs) and runs them:
   - `Refs` → rescan that repo (unmoved branches come from the cache); update the watch list if
-    the worktree list changed.
+    the worktree list changed. A worktree folder made or removed inside another worktree (`git
+    worktree add <name>` puts it in the repository folder) changes that one's untracked files,
+    but its events are filed under the inner root: every scan notes the repo's worktree folders
+    (`Cache::note_worktrees`) and, when one appeared or went inside another, drops that outer
+    worktree's cached state before reading it.
   - `Worktree` → drop that worktree's cached state, recompute its uncommitted count and update the
     entry in the stored scan (including `merged`/`ok` transitions).
   - Then `repo-updated`. Each round is logged with its jobs and timings.
 - `sync_watches` diffs the desired roots against the current ones; it runs at startup, after full
-  scans, after rescans that changed the worktree list, and after adding, removing or locating a
-  repo. A failed `watch` is logged; that root then relies on focus and refresh rescans.
+  scans, after rescans that changed the worktree list (also the rescan after a git action or
+  script), and after adding, removing or locating a repo. A failed `watch` is logged; that root then relies on focus and refresh rescans.
 
 ### Caches
 

@@ -697,8 +697,13 @@ fn finish(state: &AppState, run_id: &str, ended: Ended) {
     // The script may have committed, rebased or pushed (SPEC §14 "Decisions"); a message
     // generation (`ai:…`) never writes, so it rescans nothing.
     if info.status == ScriptRunStatus::Exited && !info.script_id.starts_with(crate::ai::AI_PREFIX) {
+        let mut layout_changed = false;
         for repo_id in std::iter::once(&info.repo_id).chain(&also_rescan) {
-            scan::rescan_repo(state, repo_id, UpdateReason::Rescan, None);
+            layout_changed |= scan::rescan_repo(state, repo_id, UpdateReason::Rescan, None);
+        }
+        // A worktree it added or removed is watched, or no longer, right away.
+        if layout_changed {
+            crate::watch::sync_watches(state);
         }
     }
 }

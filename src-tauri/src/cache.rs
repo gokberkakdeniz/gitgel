@@ -45,6 +45,8 @@ pub struct Cache {
     detail: HashMap<Key, CommittedDetail>,
     /// Per worktree folder (canonical).
     workdirs: HashMap<std::path::PathBuf, WorkdirState>,
+    /// Per repository: its worktree folders as the last scan found them.
+    worktree_folders: HashMap<String, Vec<std::path::PathBuf>>,
     /// Per (repo, commit): a commit never changes, so these are kept until the repo is removed.
     commits: HashMap<(String, String), CommitChanges>,
     /// Per (repo, stash commit): like commits, a stash never changes.
@@ -176,6 +178,21 @@ impl Cache {
         self.workdirs.remove(path);
     }
 
+    /// A scan's worktree folders for `repo_id`. One made or removed inside another worktree
+    /// (`git worktree add <name>` in the repository folder) changes that one's untracked files,
+    /// but the watcher files its events under the inner folder: the outer one's state is dropped.
+    pub fn note_worktrees(&mut self, repo_id: &str, folders: Vec<std::path::PathBuf>) {
+        let Some(old) = self
+            .worktree_folders
+            .insert(repo_id.to_string(), folders.clone())
+        else {
+            return;
+        };
+        for path in enclosing_worktrees(&old, &folders) {
+            self.workdirs.remove(&path);
+        }
+    }
+
     /// The refresh button: read every working tree again.
     pub fn invalidate_workdirs(&mut self) {
         self.workdirs.clear();
@@ -219,12 +236,65 @@ impl Cache {
         self.commits.retain(|k, _| k.0 != repo_id);
         self.stashes.retain(|k, _| k.0 != repo_id);
         self.commit_counts.retain(|k, _| k.0 != repo_id);
+        self.worktree_folders.remove(repo_id);
     }
+}
+
+/// The worktree folders, in either list, that hold a folder found in only one of them.
+fn enclosing_worktrees(
+    old: &[std::path::PathBuf],
+    new: &[std::path::PathBuf],
+) -> Vec<std::path::PathBuf> {
+    let changed: Vec<&std::path::PathBuf> = old
+        .iter()
+        .filter(|p| !new.contains(p))
+        .chain(new.iter().filter(|p| !old.contains(p)))
+        .collect();
+    let mut out: Vec<std::path::PathBuf> = old
+        .iter()
+        .chain(new)
+        .filter(|w| changed.iter().any(|c| *c != *w && c.starts_with(w)))
+        .cloned()
+        .collect();
+    out.sort();
+    out.dedup();
+    out
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_worktree_made_or_removed_inside_another_drops_that_ones_state() {
+        let p = std::path::PathBuf::from;
+        let main = vec![p("/r")];
+        let nested = vec![p("/r"), p("/r/x")];
+        let apart = vec![p("/r"), p("/wt/x")];
+        assert_eq!(enclosing_worktrees(&nested, &main), vec![p("/r")]);
+        assert_eq!(enclosing_worktrees(&main, &nested), vec![p("/r")]);
+        assert!(enclosing_worktrees(&apart, &main).is_empty());
+        assert!(enclosing_worktrees(&nested, &nested).is_empty());
+
+        let mut cache = Cache::default();
+        let state = || WorkdirState {
+            head: "h".into(),
+            count: Some(1),
+            uncommitted: None,
+            changed_at: None,
+            all: HashMap::new(),
+        };
+        cache.workdirs.insert(p("/r"), state());
+        cache.workdirs.insert(p("/wt/x"), state());
+        cache.note_worktrees("r_1", nested.clone());
+        assert!(
+            cache.workdirs.contains_key(&p("/r")),
+            "first scan: nothing to compare"
+        );
+        cache.note_worktrees("r_1", main.clone());
+        assert!(!cache.workdirs.contains_key(&p("/r")));
+        assert!(cache.workdirs.contains_key(&p("/wt/x")));
+    }
 
     fn stats() -> CommittedStats {
         CommittedStats {
