@@ -190,6 +190,11 @@ export interface BranchLoss {
   lost: number; // its own remote-tracking branch kept
   lostWithRemote: number; // its remote branch deleted too
 }
+/** What stops New Branch (`check_new_branch`). */
+export type NewBranchProblem = 'badName' | 'exists' | 'badFolder' | 'folderNotEmpty' | 'mainBusy' | 'cannotBring';
+/** Where New Branch checks the branch out: a new linked worktree, the repository folder (its
+ * uncommitted changes brought along, or stashed first) or nowhere. */
+export type NewBranchCheckout = { kind: 'worktree'; folder: string } | { kind: 'main'; bring: boolean } | { kind: 'none' };
 /** A branch against its remote, as of the last fetch (W4a). */
 export interface Upstream {
   remote: string; // e.g. "origin"

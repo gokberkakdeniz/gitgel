@@ -1,7 +1,8 @@
 //! Git actions (SPEC §0, §15 "Writing stashes"): Gitgel's own writes, made by the user's `git`
 //! on the scripts' runner. The command text is fixed here; values (folders, the message) go in
 //! `GITGEL_*` variables, quoted, so nothing typed or read from disk is ever run as shell. Folders
-//! come from the repository's worktree list, never from the frontend.
+//! come from the repository's worktree list, never from the frontend, except New Branch's new
+//! worktree folder (checked first).
 
 use std::path::{Path, PathBuf};
 
@@ -10,8 +11,11 @@ use serde::Deserialize;
 use crate::config;
 use crate::config::new_id;
 use crate::error::AppError;
-use crate::git::{operation, refs, stash, worktrees};
-use crate::model::{entry_key, BranchLoss, EntryRef, OperationKind, ScriptRun, UpdateReason};
+use crate::git::{diff, operation, refs, stash, worktrees};
+use crate::model::{
+    entry_key, BranchLoss, EntryRef, NewBranchCheckout, NewBranchProblem, OperationKind, ScriptRun,
+    UpdateReason,
+};
 use crate::scan;
 use crate::state::{lock, AppState};
 
@@ -1030,6 +1034,190 @@ pub(super) fn delete_branch_command(remote: bool, checked_out: CheckedOut, stash
     steps.join(" && ")
 }
 
+/// New Branch's checks (SPEC §15 "New branch"). Read only: the name is one git takes for a branch
+/// (and not an option) and no local branch has it; the folder, when there is one, is absolute and
+/// missing or empty (`git worktree add` makes it and its parents).
+pub(super) fn new_branch_problem(
+    git: &git2::Repository,
+    branch: &str,
+    folder: Option<&Path>,
+) -> Option<NewBranchProblem> {
+    if branch.starts_with('-')
+        || branch == "HEAD"
+        || branch == "@"
+        || !git2::Branch::name_is_valid(branch).unwrap_or(false)
+    {
+        return Some(NewBranchProblem::BadName);
+    }
+    if git.find_branch(branch, git2::BranchType::Local).is_ok() {
+        return Some(NewBranchProblem::Exists);
+    }
+    let folder = folder?;
+    if !folder.is_absolute() {
+        return Some(NewBranchProblem::BadFolder);
+    }
+    match std::fs::read_dir(folder) {
+        Ok(mut entries) => entries
+            .next()
+            .is_some()
+            .then_some(NewBranchProblem::FolderNotEmpty),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+        Err(_) => Some(NewBranchProblem::BadFolder),
+    }
+}
+
+/// Where New Branch checks the branch out (SPEC §15 "New branch").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum NewBranchRun {
+    /// A new linked worktree in `$GITGEL_FOLDER`.
+    Worktree,
+    /// The repository folder switches to it, its uncommitted changes coming along.
+    Switch,
+    /// The same, its uncommitted changes stashed first.
+    StashSwitch,
+    /// Nowhere: the branch only.
+    Branch,
+}
+
+/// The repository folder's part of the checks, for checking out there: no operation in progress
+/// or conflicts, and with `bring`, no uncommitted file that also differs between HEAD and the
+/// base (`git switch` would refuse to carry it).
+fn main_problem(
+    state: &AppState,
+    repo: &Repo,
+    base: &str,
+    bring: bool,
+) -> Result<Option<NewBranchProblem>, AppError> {
+    let shared = state.pool.get(&repo.main)?;
+    let wt = lock(&shared);
+    if operation::read(&wt).is_some() || !operation::unmerged(&wt)?.is_empty() {
+        return Ok(Some(NewBranchProblem::MainBusy));
+    }
+    let Some(to) = refs::resolve_commit(&wt, base) else {
+        return Ok(None);
+    };
+    if bring && diff::changes_block_switch(&wt, git2::Oid::from_str(&to)?)? {
+        return Ok(Some(NewBranchProblem::CannotBring));
+    }
+    Ok(None)
+}
+
+/// New Branch's checks for the dialog, as it is filled in, and again before the run. Read only.
+pub fn check_new_branch(
+    state: &AppState,
+    repo_id: &str,
+    branch: &str,
+    base: &str,
+    checkout: &NewBranchCheckout,
+) -> Result<Option<NewBranchProblem>, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    let folder = match checkout {
+        NewBranchCheckout::Worktree { folder } => Some(Path::new(folder.as_str())),
+        _ => None,
+    };
+    {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        if let Some(problem) = new_branch_problem(&git, branch, folder) {
+            return Ok(Some(problem));
+        }
+    }
+    match checkout {
+        NewBranchCheckout::Main { bring } => main_problem(state, &repo, base, *bring),
+        _ => Ok(None),
+    }
+}
+
+/// New Branch (SPEC §15 "New branch"): `branch` from the commit `base` resolves to now, with no
+/// upstream, checked out as `checkout` says: in a new linked worktree, in the repository folder
+/// (its uncommitted changes brought along or stashed first), or nowhere. Runs in the repository
+/// folder. The worktree folder is the one path that comes from the frontend: it is checked as
+/// above and only ever goes in a variable.
+pub fn create_branch(
+    state: &AppState,
+    repo_id: &str,
+    branch: &str,
+    base: &str,
+    checkout: NewBranchCheckout,
+) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    repo.not_busy(state)?;
+    if let Some(problem) = check_new_branch(state, repo_id, branch, base, &checkout)? {
+        return Err(AppError::Invalid(match problem {
+            NewBranchProblem::BadName => format!("{branch} is not a valid branch name."),
+            NewBranchProblem::Exists => format!("{branch} already exists."),
+            NewBranchProblem::BadFolder => "The folder is not a folder path.".into(),
+            NewBranchProblem::FolderNotEmpty => "The folder is not empty.".into(),
+            NewBranchProblem::MainBusy => {
+                "The repository folder has an operation in progress.".into()
+            }
+            NewBranchProblem::CannotBring => {
+                format!("The uncommitted changes conflict with {base}.")
+            }
+        }));
+    }
+    let sha = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        refs::resolve_commit(&git, base)
+            .ok_or_else(|| AppError::Invalid(format!("{base} is not a commit.")))?
+    };
+    let mut env = vec![
+        ("GITGEL_BRANCH".to_string(), branch.to_string()),
+        ("GITGEL_BASE".to_string(), sha),
+    ];
+    let main = repo.main.to_string_lossy().into_owned();
+    let (run, tree) = match checkout {
+        NewBranchCheckout::Worktree { folder } => {
+            env.push(("GITGEL_FOLDER".into(), folder.clone()));
+            (NewBranchRun::Worktree, Some(folder))
+        }
+        NewBranchCheckout::Main { bring: true } => (NewBranchRun::Switch, Some(main)),
+        NewBranchCheckout::Main { bring: false } => {
+            env.push((
+                "GITGEL_MESSAGE".into(),
+                format!("Before switching to {branch}"),
+            ));
+            (NewBranchRun::StashSwitch, Some(main))
+        }
+        NewBranchCheckout::None => (NewBranchRun::Branch, None),
+    };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}new-branch"),
+            name: format!("Create {branch}"),
+            icon: "branch".into(),
+            entry_key: entry_key(&repo.id, Some(branch), tree.as_deref()),
+            repo_label: format!("{} / {branch}", repo.name),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: repo.main.clone(),
+            command: create_branch_command(run),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `git worktree add -b`, `git switch -c` (after `git stash push` for StashSwitch) or `git
+/// branch`, each `--no-track` so a remote base does not become the upstream: only fixed text and
+/// quoted variables.
+pub(super) fn create_branch_command(run: NewBranchRun) -> String {
+    let switch = r#"git switch --no-track -c "$GITGEL_BRANCH" "$GITGEL_BASE""#;
+    match run {
+        NewBranchRun::Worktree => {
+            r#"git worktree add --no-track -b "$GITGEL_BRANCH" "$GITGEL_FOLDER" "$GITGEL_BASE""#
+                .into()
+        }
+        NewBranchRun::Switch => switch.into(),
+        NewBranchRun::StashSwitch => {
+            format!(r#"git stash push --include-untracked --message "$GITGEL_MESSAGE" && {switch}"#)
+        }
+        NewBranchRun::Branch => r#"git branch --no-track "$GITGEL_BRANCH" "$GITGEL_BASE""#.into(),
+    }
+}
+
 /// Where a base ref lives on a remote, as `(remote, branch on the remote)`: a local branch's
 /// upstream when the remote has it, or a remote-tracking ref split at its remote (`origin/HEAD`
 /// followed to the branch it points at). `None` for a base only here.
@@ -1237,6 +1425,55 @@ mod tests {
         assert_eq!(
             operation_command("rebase", false, 2),
             r#"git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" "$GITGEL_PATH_2" && git -C "$GITGEL_FOLDER" rebase --continue"#
+        );
+    }
+
+    #[test]
+    fn create_branch_commands_hold_no_values() {
+        assert_eq!(
+            create_branch_command(NewBranchRun::Branch),
+            r#"git branch --no-track "$GITGEL_BRANCH" "$GITGEL_BASE""#
+        );
+        assert_eq!(
+            create_branch_command(NewBranchRun::Worktree),
+            r#"git worktree add --no-track -b "$GITGEL_BRANCH" "$GITGEL_FOLDER" "$GITGEL_BASE""#
+        );
+        assert_eq!(
+            create_branch_command(NewBranchRun::Switch),
+            r#"git switch --no-track -c "$GITGEL_BRANCH" "$GITGEL_BASE""#
+        );
+        assert_eq!(
+            create_branch_command(NewBranchRun::StashSwitch),
+            r#"git stash push --include-untracked --message "$GITGEL_MESSAGE" && git switch --no-track -c "$GITGEL_BRANCH" "$GITGEL_BASE""#
+        );
+    }
+
+    #[test]
+    fn new_branch_problem_checks_the_name_and_folder() {
+        let t = crate::git::testutil::TestRepo::new();
+        t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        let p = |name: &str, folder: Option<&Path>| new_branch_problem(&t.repo, name, folder);
+        assert_eq!(p("feat/x", None), None);
+        for bad in ["", "-x", "HEAD", "a..b", "a b", "x.lock", "a/", "@"] {
+            assert_eq!(p(bad, None), Some(NewBranchProblem::BadName), "{bad:?}");
+        }
+        assert_eq!(p("main", None), Some(NewBranchProblem::Exists));
+        let dir = tempfile::tempdir().unwrap();
+        let missing = dir.path().join("wt/feat-x");
+        assert_eq!(p("feat/x", Some(&missing)), None);
+        assert_eq!(p("feat/x", Some(dir.path())), None);
+        std::fs::write(dir.path().join("f"), "x").unwrap();
+        assert_eq!(
+            p("feat/x", Some(dir.path())),
+            Some(NewBranchProblem::FolderNotEmpty)
+        );
+        assert_eq!(
+            p("feat/x", Some(&dir.path().join("f"))),
+            Some(NewBranchProblem::BadFolder)
+        );
+        assert_eq!(
+            p("feat/x", Some(Path::new("rel/dir"))),
+            Some(NewBranchProblem::BadFolder)
         );
     }
 

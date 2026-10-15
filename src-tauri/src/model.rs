@@ -728,6 +728,37 @@ pub struct BranchLoss {
     pub lost_with_remote: u32,
 }
 
+/// What stops New Branch (SPEC §15 "New branch"), for the dialog's message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum NewBranchProblem {
+    /// Not a name git takes for a branch.
+    BadName,
+    /// A local branch has it.
+    Exists,
+    /// Not an absolute path, or a file.
+    BadFolder,
+    /// A folder with something in it.
+    FolderNotEmpty,
+    /// Checking out in the repository folder: an operation in progress or conflicts there.
+    MainBusy,
+    /// Bringing the repository folder's changes: one of its changed files also differs between
+    /// HEAD and the base, so `git switch` would refuse.
+    CannotBring,
+}
+
+/// Where New Branch checks the new branch out.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum NewBranchCheckout {
+    /// A new linked worktree in `folder` (absolute, missing or empty).
+    Worktree { folder: String },
+    /// The repository folder; `bring` its uncommitted changes along, else stash them first.
+    Main { bring: bool },
+    /// Nowhere.
+    None,
+}
+
 /// A branch against its remote (`refs::tracking`), as of the last fetch.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

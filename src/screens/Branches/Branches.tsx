@@ -21,6 +21,7 @@ import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
 import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { conflictsTooltip } from '../../sync/operation';
 import { OperationPill } from '../../sync/OperationUi';
+import { NewBranchButton } from '../../sync/NewBranch';
 import { RepoFetchButton, SyncItems } from '../../sync/SyncButtons';
 import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
@@ -445,6 +446,7 @@ function RepoSection({
           <span className={styles.repoName}>{scan.name}</span>
           <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
         </button>
+        {scan.status === 'ok' && <NewBranchButton scan={scan} className={styles.newBranch} />}
         {scan.status === 'ok' && remote && (
           <RepoFetchButton repoId={scan.repo.id} repoName={scan.name} remote={remote} className={styles.fetch} />
         )}

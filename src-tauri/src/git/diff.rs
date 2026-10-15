@@ -251,10 +251,49 @@ pub fn uncommitted_count(wt_repo: &Repository) -> Result<usize, AppError> {
     Ok(delta_count(&head_diff(wt_repo)?))
 }
 
+/// Whether `git switch -c <new> <to>` in this worktree would refuse to carry its uncommitted
+/// changes: a file changed here (staged, unstaged or untracked; a rename's old path too) also
+/// differs between HEAD and `to`. Read only.
+pub fn changes_block_switch(wt_repo: &Repository, to: Oid) -> Result<bool, AppError> {
+    let head = wt_repo.head()?.peel_to_commit()?.id();
+    if head == to {
+        return Ok(false);
+    }
+    let paths: Vec<String> = uncommitted(wt_repo)?
+        .into_iter()
+        .flat_map(|c| std::iter::once(c.path).chain(c.old_path))
+        .collect();
+    if paths.is_empty() {
+        return Ok(false);
+    }
+    Ok(tree_diff_paths(wt_repo, head, to, &paths)?.deltas().len() > 0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::git::testutil::TestRepo;
+
+    #[test]
+    fn changes_block_switch_only_on_files_the_base_changes() {
+        let t = TestRepo::new();
+        let main = t.commit_on("main", &[("a", Some(b"a")), ("b", Some(b"b"))], "init", 3);
+        t.branch_from("other", main);
+        let other = t.commit_on("other", &[("b", Some(b"b2")), ("c", Some(b"c"))], "b c", 2);
+        t.point_head("main");
+        t.checkout_main();
+        let block = |to| changes_block_switch(&t.repo, to).unwrap();
+        assert!(!block(other));
+        t.write_file(t.path(), "a", b"a2");
+        assert!(!block(other));
+        assert!(!block(main));
+        t.write_file(t.path(), "b", b"b3");
+        assert!(block(other));
+        assert!(!block(main));
+        t.write_file(t.path(), "b", b"b");
+        t.write_file(t.path(), "c", b"mine");
+        assert!(block(other));
+    }
 
     fn find<'a>(changes: &'a [FileChange], path: &str) -> &'a FileChange {
         changes

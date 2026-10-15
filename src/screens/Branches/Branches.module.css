@@ -196,13 +196,17 @@
   visibility: hidden;
 }
 
-.fetch {
+.fetch,
+.newBranch {
   flex-shrink: 0;
   visibility: hidden;
 }
 
 .band:hover .fetch,
 .fetch:focus-visible,
+.band:hover .newBranch,
+.newBranch:focus-visible,
+.newBranch[aria-expanded='true'],
 .band:hover .pin,
 .pin:focus-visible,
 .pin.pinned {

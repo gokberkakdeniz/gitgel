@@ -7,8 +7,9 @@ use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
     BaseOptions, BranchLoss, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck,
-    HistoryPage, OpenApp, ProjectConfig, ProjectView, RemoteInfo, ReviewData, ReviewTarget,
-    ScanResult, ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
+    HistoryPage, NewBranchCheckout, NewBranchProblem, OpenApp, ProjectConfig, ProjectView,
+    RemoteInfo, ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun, Settings,
+    StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{
@@ -646,6 +647,36 @@ pub async fn git_delete_branch(
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
         scripts::git::delete_branch(state, &repo_id, &branch, &sha, remote, stash)
+    })
+    .await
+}
+
+/// New Branch: `branch` from `base`, with no upstream, checked out as `checkout` says.
+#[tauri::command]
+pub async fn git_create_branch(
+    state: State<'_, AppState>,
+    repo_id: String,
+    branch: String,
+    base: String,
+    checkout: NewBranchCheckout,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::create_branch(state, &repo_id, &branch, &base, checkout)
+    })
+    .await
+}
+
+/// New Branch's checks as the dialog is filled in.
+#[tauri::command]
+pub async fn check_new_branch(
+    state: State<'_, AppState>,
+    repo_id: String,
+    branch: String,
+    base: String,
+    checkout: NewBranchCheckout,
+) -> Result<Option<NewBranchProblem>, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::check_new_branch(state, &repo_id, &branch, &base, &checkout)
     })
     .await
 }

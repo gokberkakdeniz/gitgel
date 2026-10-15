@@ -14,6 +14,8 @@ import type {
   FilePair,
   FolderCheck,
   HistoryPage,
+  NewBranchCheckout,
+  NewBranchProblem,
   OpenApp,
   ProjectConfig,
   ProjectView,
@@ -181,6 +183,13 @@ export const getBranchLoss = (repoId: string, branch: string) =>
   invoke<BranchLoss>('get_branch_loss', { repoId, branch });
 export const gitDeleteBranch = (repoId: string, branch: string, sha: string, remote: boolean, stash: boolean) =>
   invoke<ScriptRun>('git_delete_branch', { repoId, branch, sha, remote, stash });
+
+/** New Branch: `branch` from `base`, with no upstream, checked out as `checkout` says. */
+export const gitCreateBranch = (repoId: string, branch: string, base: string, checkout: NewBranchCheckout) =>
+  invoke<ScriptRun>('git_create_branch', { repoId, branch, base, checkout });
+/** New Branch's checks as the dialog is filled in. */
+export const checkNewBranch = (repoId: string, branch: string, base: string, checkout: NewBranchCheckout) =>
+  invoke<NewBranchProblem | null>('check_new_branch', { repoId, branch, base, checkout });
 
 /** Commit (W1a): the checked files of the entry's worktree, with the message. */
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });

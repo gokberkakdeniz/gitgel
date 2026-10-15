@@ -209,7 +209,8 @@ gitgel/
 │  ├─ sync/     # §15 sync (W4a): sync.ts (what Fetch / Pull / Push can do, labels), SyncButtons
 │  │            # (History header buttons, SyncItems: the branch menus' group); operation.ts +
 │  │            # OperationUi (operations in progress: pill, banner, Continue / Abort, T3 dialog);
-│  │            # DeleteBranch (the branch menus' Delete Branch… and its confirmation)
+│  │            # DeleteBranch (the branch menus' Delete Branch… and its confirmation);
+│  │            # NewBranch + branchDefaults.ts (a repo band's "+": New Branch, flow V)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
@@ -614,6 +615,10 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     `Fetch <repo> from origin`) that fetches the repository (§15 "Sync"). Only for a repo with
     a remote; it shows while the band is hovered, the button has focus or its fetch runs (the
     icon spins); disabled while a sync runs in the repo.
+  - **New Branch**: before Fetch, a 24px icon button with a 13px `plus` icon (tooltip `New branch
+    in <repo>`) that opens New Branch under it (§15 "New branch", flow V). Only for a repo that
+    opens; it shows while the band is hovered, the button has focus or its form is open; disabled
+    while a git action runs in the repo.
 - **Row** (same grid, bottom border `border.row`):
   - Checkbox: visible only on the hovered row; once anything is selected, all are visible.
   - **Branch** cell, three lines (gap 3), so every row has the same height:
@@ -1238,6 +1243,10 @@ open.
   as the script starts. When a script exits its repo is rescanned.
 - **O · Script inputs.** A script with inputs opens the run dialog first (O1, O2); one with
   "Ask before running" and nothing to fill in asks in a short confirmation (O3); ⌘↵ runs it.
+- **V · New branch.** A Branches repo band's "+" opens New Branch (V1): a name, a base (the repo's
+  default) and where to check it out: a new worktree beside the repository (default), the
+  repository folder (its uncommitted changes brought along or stashed) or nowhere. Create Branch
+  runs as a git action; the new branch then shows in the band.
 - **P · Stashes.** Each repo band on Branches lists its stash stack (P1); a stash opens the
   stash review (P3). Project and branch reviews list the stashes taken on their branches under
   the files (P2). Picking one shows what it holds, against the commit it was taken on. Stash
@@ -2019,7 +2028,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Screen | File | Key lines |
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
-| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 56–61, row 63–82 (checked-out icon 66–73, Diff cell 76, Projects cell 78, ⋯ button 80), row and cell styles 229–284 (row menu target 239–241, checked-out, sub and Diff values 274–282), filter logic 308–317 and 347–355, empty state 89–99, picker 101–114, new-project form 116–132, projects menu 134–150, row menu 152–163 and 337–346, toast 165–171, selection bar 172–185, drop overlay 188–195, sheet 197–221 and 360–369; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
+| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
 | Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 421–464 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–162 (commit stepping 144–151, list 152–161), file bar 164–224 (whitespace chip 167–169, view button and menu 171–213 with Context 192–203, change navigation 214–223), split body 226–239, unified body 240–246, base menu 253–273 (sections, Default pair, pills, disabled rows, hint), base menu data per case 670–712 (`baseCase`: stacked / behind / unrelated / remote; effective base 290–291), commit selection 387–400, filter logic 402–412, 423–426, 457 and 586–587, segmented 465–472, context and fold logic 563–576 (sample hidden lines 477–485), view values 733–756 (context 740–755), commit values 758–768, theme and `embedded` values 717–718, filter values 771–782 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
@@ -2028,6 +2037,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
+| New branch | `FlowV1.dc.html` | canvas page "Branch actions": V1, the form under a repo band's "+" (`case` worktree, repoFolder, repoFolderConflict, nowhere, exists); the "+" on the bands of `Main` (`newBranch` shows it open) |
 | Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `FlowD11` (`menu` sync), `HistH2` (page menu) |
 | Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
@@ -2666,6 +2676,51 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
 - **Failures**: a sync that exits non-zero opens its output panel (N4) instead of the failed toast
   (git's message, or a prompt for a password or passphrase, is there). One that cannot start shows
   the usual `“<name>” could not start` toast.
+
+### New branch
+
+A Branches repo band's "+" (§5) opens it under the button (`sync/NewBranch.tsx`, `Popover`, 400px;
+`FlowV1.dc.html`, V1). Esc or a click outside closes it.
+
+- **Form:** serif 18px "New Branch"; "Name" (`Input` 32, mono, focused); "Base" (a field drawn
+  as a `Select` 32, mono, `branch` icon, full width; not a native select, whose macOS menu jumps
+  over the field): a click opens a list under it as wide as the field, another click on the
+  field closes it; a "Search" filter (words, any order), the check on the base in use, ↑ / ↓ and
+  ↵ to pick. It lists the repo's default base, its base branch, the other local branches by
+  name, then the remote branches no local branch has (`branchDefaults.ts` `baseChoices`), the
+  default base picked. "Check out in" (`Segmented` sm, bordered, radio): "New Worktree"
+  (default) / "Repository Folder" / "Nowhere".
+  - New Worktree: "Folder" (`Input` 32, mono, `~/…`) and "Choose…" (folder picker). The folder
+    follows the name, `<repo folder's parent>/<repo>-worktrees/<branch, "/" as "-">`, until it is
+    typed in; Choose… picks the folder that holds it (it follows the name again).
+  - Repository Folder, with uncommitted changes there: "N uncommitted changes" (`Segmented` sm,
+    bordered, radio): "Bring to New Branch" (default) / "Stash".
+
+  A danger 12px line under the fields says what stops it; Cancel / primary "Create Branch ↵"
+  (disabled until the name is there and the checks pass, and while a git action runs in the
+  repo).
+- **Checks** (`check_new_branch`, read only, 150 ms after the last change; again before the run):
+  the name is one git takes for a branch, not `HEAD` or `@` and not starting with `-` ("Not a
+  valid branch name"), and no local branch has it ("<branch> already exists"). New Worktree: the
+  folder is absolute and not a file ("Not a folder path") and missing or empty ("The folder is not
+  empty"). Repository Folder: no operation in progress or conflicts there ("The repository folder
+  has an operation in progress"); bringing the changes, none of the changed files (staged,
+  unstaged, untracked) also differs between HEAD and the base (`diff::changes_block_switch`;
+  `git switch` would refuse: "The changes conflict with <base>", so they are stashed instead).
+- **Run** (`git_create_branch`, script id `git:new-branch`, `branch` icon, toast sub line `repo /
+  branch`), in the repository folder, the base resolved to its commit when it starts, values in
+  `GITGEL_*` variables:
+  - New Worktree: `git worktree add --no-track -b "$GITGEL_BRANCH" "$GITGEL_FOLDER"
+    "$GITGEL_BASE"` (makes the folder and its parents).
+  - Repository Folder: `git switch --no-track -c "$GITGEL_BRANCH" "$GITGEL_BASE"` (the changes
+    come along); with Stash, `git stash push --include-untracked --message "Before switching to
+    <branch>"` first.
+  - Nowhere: `git branch --no-track "$GITGEL_BRANCH" "$GITGEL_BASE"`.
+
+  `--no-track`: a remote base does not become its upstream. The worktree folder is the one path a
+  git action takes from the frontend; it goes only in the variable. Success toast `Created
+  <branch>`; a failure opens the output panel. A base other than the repo's default base is then
+  stored for the branch (`set_branch_base`).
 
 ### Delete branch
 

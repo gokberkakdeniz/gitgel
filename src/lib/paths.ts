@@ -19,6 +19,12 @@ export function tildifyHome(path: string): string {
   return tildify(path, home);
 }
 
+/** `~/code/x` → `/Users/me/code/x`; anything else unchanged. */
+export function expandHome(path: string): string {
+  if (!home || !(path === '~' || path.startsWith('~/'))) return path;
+  return home.replace(/\/+$/, '') + path.slice(1);
+}
+
 export function basename(path: string): string {
   const trimmed = path.replace(/\/+$/, '');
   return trimmed.slice(trimmed.lastIndexOf('/') + 1);
