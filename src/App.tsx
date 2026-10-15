@@ -10,6 +10,7 @@ import { PassphraseDialog } from './scripts/PassphraseDialog';
 import { RunDialogHost } from './scripts/RunDialog';
 import { DropStashModal } from './stash/DropStashModal';
 import { AbortOperationModal } from './sync/OperationUi';
+import { CheckoutBranchModal } from './sync/CheckoutBranch';
 import { DeleteBranchModal } from './sync/DeleteBranch';
 import { DiscardModal } from './discard/DiscardModal';
 import { startDraftProject } from './lib/draft';
@@ -142,6 +143,7 @@ export default function App() {
       <DropStashModal />
       <AbortOperationModal />
       <DeleteBranchModal />
+      <CheckoutBranchModal />
       <DiscardModal />
       <PassphraseDialog />
       <ToastHost />

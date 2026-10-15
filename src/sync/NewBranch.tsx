@@ -59,8 +59,8 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
   const bases = useMemo(() => baseChoices(scan), [scan]);
   const [name, setName] = useState('');
   const [base, setBase] = useState(bases[0] ?? '');
-  // Check out: a new worktree, the repository folder (its changes brought along or stashed) or
-  // the branch only; it opens on Settings › Repositories' choice.
+  // Check out, in Settings' order: the repository folder (its changes brought along or stashed),
+  // a new worktree or the branch only; it opens on Settings › Repositories' choice.
   const [where, setWhere] = useState<Where>(() => useData.getState().config?.settings.newBranchCheckout ?? 'main');
   const [bring, setBring] = useState(true);
   const [parent, setParent] = useState(() => defaultParent(scan.repo.path));
@@ -195,6 +195,20 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
           </span>
           <div role="radiogroup" aria-labelledby="new-branch-checkout" className={styles.choices}>
             <Choice
+              title={t('branches.newSwitch')}
+              sub={from ? `${from} →` : undefined}
+              subTitle={from ? t('branches.newSwitchFrom', { branch: from }) : undefined}
+              on={where === 'main'}
+              more={dirty > 0}
+              onPick={() => setWhere('main')}
+            >
+              <div role="radiogroup" aria-label={t('branches.newChanges', { ...cnt(dirty) })} className={styles.changes}>
+                <span className={styles.changesLabel}>{t('branches.newChanges', { ...cnt(dirty) })}</span>
+                <SubChoice title={t('branches.newBring')} on={bring} onPick={() => setBring(true)} />
+                <SubChoice title={t('branches.newStash')} on={!bring} onPick={() => setBring(false)} />
+              </div>
+            </Choice>
+            <Choice
               title={t('branches.newWorktree')}
               on={where === 'worktree'}
               more
@@ -219,20 +233,6 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
                 <Button onClick={() => void choose()}>{t('branches.newChoose')}</Button>
               </div>
             </Choice>
-            <Choice
-              title={t('branches.newSwitch')}
-              sub={from ? `${from} →` : undefined}
-              subTitle={from ? t('branches.newSwitchFrom', { branch: from }) : undefined}
-              on={where === 'main'}
-              more={dirty > 0}
-              onPick={() => setWhere('main')}
-            >
-              <div role="radiogroup" aria-label={t('branches.newChanges', { ...cnt(dirty) })} className={styles.changes}>
-                <span className={styles.changesLabel}>{t('branches.newChanges', { ...cnt(dirty) })}</span>
-                <SubChoice title={t('branches.newBring')} on={bring} onPick={() => setBring(true)} />
-                <SubChoice title={t('branches.newStash')} on={!bring} onPick={() => setBring(false)} />
-              </div>
-            </Choice>
             <Choice title={t('branches.newBranchOnly')} on={where === 'none'} onPick={() => setWhere('none')} />
           </div>
         </div>
@@ -255,9 +255,11 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
 }
 
 /** A row of the Check out list: a box (checked when picked), the title and a mono note. A
- * picked row with `more` opens its `children` under it, and its chevron turns down. */
-function Choice({
+ * picked row with `more` opens its `children` under it, and its chevron turns down. Checkout
+ * Branch's list too. Long titles and notes cut from the middle (`MiddleCut`). */
+export function Choice({
   title,
+  tip,
   sub,
   subTitle,
   on,
@@ -266,6 +268,8 @@ function Choice({
   children,
 }: {
   title: string;
+  /** The row's tooltip. */
+  tip?: string;
   /** Mono 11 muted, on the right (before the chevron). */
   sub?: string;
   subTitle?: string;
@@ -282,14 +286,17 @@ function Choice({
         aria-checked={on}
         aria-expanded={more ? on : undefined}
         className={styles.choiceRow}
+        title={tip}
         onClick={onPick}
       >
         <span className={on ? `${styles.box} ${styles.boxOn}` : styles.box}>{on && <CheckIcon size={10} />}</span>
         <span className={styles.choiceText}>
-          <span className={styles.choiceTitle}>{title}</span>
+          <span className={styles.choiceTitle}>
+            <MiddleCut text={title} tail={10} />
+          </span>
           {sub && (
             <span className={styles.choiceSub} title={subTitle}>
-              {sub}
+              <MiddleCut text={sub} tail={6} />
             </span>
           )}
         </span>
@@ -300,13 +307,29 @@ function Choice({
   );
 }
 
-/** One of the picked row's own options (Bring / Stash): a smaller row with the same box. */
-function SubChoice({ title, on, onPick }: { title: string; on: boolean; onPick: () => void }) {
+/** One of the picked row's own options (Bring / Stash): a smaller row with the same box.
+ * A long title cuts from the middle; the tooltip keeps the full text. */
+export function SubChoice({ title, on, onPick }: { title: string; on: boolean; onPick: () => void }) {
   return (
-    <button type="button" role="radio" aria-checked={on} className={styles.subChoice} onClick={onPick}>
+    <button type="button" role="radio" aria-checked={on} title={title} className={styles.subChoice} onClick={onPick}>
       <span className={on ? `${styles.box} ${styles.boxOn}` : styles.box}>{on && <CheckIcon size={10} />}</span>
-      <span className={styles.choiceTitle}>{title}</span>
+      <span className={styles.choiceTitle}>
+        <MiddleCut text={title} tail={10} />
+      </span>
     </button>
+  );
+}
+
+/** Long text cut from the middle: the start and the last `tail` characters stay visible, the
+ * cut between them gets an ellipsis. Text that fits renders unchanged. */
+export function MiddleCut({ text, tail = 8 }: { text: string; tail?: number }) {
+  const head = text.length > tail ? text.slice(0, text.length - tail) : text;
+  const end = text.length > tail ? text.slice(text.length - tail) : '';
+  return (
+    <>
+      <span className={styles.cutStart}>{head}</span>
+      {end && <span className={styles.cutEnd}>{end}</span>}
+    </>
   );
 }
 

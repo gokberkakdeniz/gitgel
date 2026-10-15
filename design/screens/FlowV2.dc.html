@@ -123,8 +123,8 @@ var box = function (on) {
     (on ? 'background: var(--accent); border: 0; color: var(--on-accent)' : 'background: transparent; border: 1.5px solid var(--border-strong)');
 };
 var defs = [
-  { id: 'worktree', title: 'New worktree', sub: '', more: true },
   { id: 'checkout', title: 'Repository folder', sub: 'main →', more: dirty },
+  { id: 'worktree', title: 'New worktree', sub: '', more: true },
   { id: 'branchOnly', title: 'Branch only', sub: '', more: false }
 ];
 return { themeClass: 'theme-' + theme, themeName: theme,

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>V4 · Checkout branch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-hover:#2a2825;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--accent:#4f8fa3;--accent-text:#7fb3c4;--on-accent:#141311;--accent-rgb:79,143,163;--danger:#ee9a90;--danger-text:#ee9a90;--shadow-modal:0 24px 60px rgba(0,0,0,0.5);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-hover:#ebe8e1;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--on-accent:#ffffff;--accent-rgb:58,123,143;--danger:#b3463b;--danger-text:#b3463b;--shadow-modal:0 24px 60px rgba(40,32,20,0.28);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Main" theme="{{themeName}}" popover="none" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div role="dialog" aria-label="Checkout Branch" style="position: relative; margin-top: 140px; width: 460px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px 18px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-modal)">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong)">Checkout Branch</div>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">{{sub}}</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span id="v4-where" style="font-size: 12px; font-weight: 500; color: var(--text-body)">Check out</span>
+<div role="radiogroup" aria-labelledby="v4-where" style="display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 10px; overflow: hidden">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<div style="{{r.wrapStyle}}">
+<button type="button" role="radio" aria-checked="{{r.on}}" aria-expanded="{{r.expanded}}" title="{{r.tip}}" onClick="{{r.pick}}" style="{{r.rowStyle}}">
+<span style="{{r.boxStyle}}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{r.checkStyle}}"><path d="m5 12 5 5 9-10"></path></svg></span>
+<span style="flex-grow: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; overflow: hidden">
+<span style="min-width: 0; flex: 1 1 auto; display: flex; overflow: hidden; font-size: 13px; color: var(--text-strong); white-space: nowrap"><span style="min-width: 0; flex: 1 1 auto; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{r.titleHead}}</span><span style="flex: 0 0 auto; white-space: nowrap">{{r.titleEnd}}</span></span>
+<span title="{{r.subTitle}}" style="min-width: 0; flex: 0 1 auto; max-width: 50%; margin-left: auto; display: flex; overflow: hidden; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)"><span style="min-width: 0; flex: 1 1 auto; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{r.subHead}}</span><span style="flex: 0 0 auto; white-space: nowrap">{{r.subEnd}}</span></span>
+</span>
+<sc-if value="{{r.hasMore}}" hint-placeholder-val="{{true}}">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{r.chevronStyle}}"><path d="m6 9 6 6 6-6"></path></svg>
+</sc-if>
+</button>
+
+<sc-if value="{{r.showFolder}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; gap: 8px; padding: 0 12px 12px 38px">
+<span style="position: relative; flex-grow: 1; min-width: 0; display: flex">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; left: 10px; top: 10px; stroke: var(--text-muted)"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"></path></svg>
+<input aria-label="Folder" value="…/web-app-worktrees/feat-billing-v2" title="~/code/web-app-worktrees/feat-billing-v2" style="{{folderStyle}}">
+</span>
+<button type="button" style="height: 32px; flex-shrink: 0; padding: 0 12px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text-strong); font-size: 13px; font-weight: 500; cursor: pointer">Choose…</button>
+</div>
+</sc-if>
+
+<sc-if value="{{r.showChanges}}" hint-placeholder-val="{{false}}">
+<div role="radiogroup" aria-label="3 uncommitted changes" style="display: flex; flex-direction: column; gap: 2px; padding: 0 12px 10px 38px">
+<span style="padding-bottom: 4px; font-size: 12px; color: var(--text-muted)">3 uncommitted changes</span>
+<sc-for list="{{changes}}" as="c" hint-placeholder-count="2">
+<button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="{{c.rowStyle}}">
+<span style="{{c.boxStyle}}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{c.checkStyle}}"><path d="m5 12 5 5 9-10"></path></svg></span>
+<span style="font-size: 13px; color: var(--text-strong)">{{c.title}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<button type="button" style="height: 36px; padding: 0 16px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text-strong); font-size: 13px; font-weight: 500; cursor: pointer">Cancel</button>
+<button type="button" style="height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 500; cursor: pointer">Checkout <span style="font-size: 11px; opacity: 0.7">↵</span></button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"case":{"editor":"enum","options":["repository","worktree","new"],"default":"worktree"},"remote":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+// Checkout Branch…: first in the branch menu's Sync group (before Fetch / Pull / Push), for a
+// branch checked out nowhere; a Remote Branches row's menu has it too (remote: the remote branch
+// becomes a local one tracking it). A modal (460px) with New Branch's list, in its order: New
+// worktree (the folder, <repo>-worktrees/<branch>, and Choose…), then the repo's worktrees (the
+// repository folder, then the linked ones by folder; on the right the branch each is on, then →;
+// the row's tooltip the folder; long folder and branch names cut from the middle). A picked worktree with uncommitted changes opens Bring to <branch>
+// (default) / Stash under it. It opens on Settings › Repositories › Check Out New Branches In
+// (New worktree when that is picked, else the repository folder). Click a row to pick it (the
+// board is interactive). case: the row picked first (worktree: the linked one with 3 changes).
+var self = this;
+var theme = this.props.theme ?? 'dark';
+var st = this.state || {};
+var pick = st.pick || this.props.case || 'worktree';
+var change = st.change || 'bring';
+var remote = this.props.remote === true;
+var branch = 'feat/billing-v2';
+var box = function (on) {
+  return 'width: 16px; height: 16px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 4px; ' +
+    (on ? 'background: var(--accent); border: 0; color: var(--on-accent)' : 'background: transparent; border: 1.5px solid var(--border-strong)');
+};
+var defs = [
+  { id: 'repository', title: 'Repository folder', from: 'main', tip: '~/code/web-app', dirty: false },
+  { id: 'new', title: 'New worktree', from: '', tip: '', dirty: false },
+  { id: 'worktree', title: 'token-refresh', from: 'session-token-refresh', tip: '~/code/wt/token-refresh', dirty: true }
+];
+// Long names cut from the middle (as sync/NewBranch.tsx MiddleCut): the start and the last
+// `tail` characters stay, the cut between them gets an ellipsis; short text renders unchanged.
+var cut = function (s, tail) {
+  return s.length > tail
+    ? { head: s.slice(0, s.length - tail), end: s.slice(s.length - tail) }
+    : { head: s, end: '' };
+};
+return { themeClass: 'theme-' + theme, themeName: theme,
+  sub: 'web-app / ' + (remote ? 'origin/' : '') + branch,
+  folderStyle: 'width: 100%; min-width: 0; height: 32px; box-sizing: border-box; padding: 0 10px 0 30px; flex-grow: 1; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; outline: none; color: var(--text-strong); font-family: \'JetBrains Mono\', monospace; font-size: 12px',
+  rows: defs.map(function (d, i) {
+    var on = d.id === pick;
+    var more = d.id === 'new' || d.dirty;
+    var title = cut(d.title, 10);
+    var sub = cut(d.from ? d.from + ' →' : '', 6);
+    return {
+      titleHead: title.head, titleEnd: title.end, tip: d.tip,
+      subHead: sub.head, subEnd: sub.end, subTitle: d.from ? 'The folder is on ' + d.from : '',
+      on: on, hasMore: more, expanded: on && more,
+      showFolder: on && d.id === 'new',
+      showChanges: on && d.dirty,
+      pick: function () { self.setState({ pick: d.id }); },
+      wrapStyle: (i ? 'border-top: 1px solid var(--border-row); ' : '') + (on ? 'background: rgba(var(--accent-rgb), 0.08)' : ''),
+      rowStyle: 'width: 100%; height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: transparent; border: 0; text-align: left; cursor: pointer',
+      boxStyle: box(on),
+      checkStyle: on ? '' : 'visibility: hidden',
+      chevronStyle: 'flex-shrink: 0; color: var(--text-muted); transition: transform 0.15s; ' + (on ? '' : 'transform: rotate(-90deg)')
+    };
+  }),
+  changes: [['bring', 'Bring to ' + branch], ['stash', 'Stash']].map(function (c) {
+    var on = c[0] === change;
+    return {
+      title: c[1], on: on,
+      pick: function () { self.setState({ change: c[0] }); },
+      rowStyle: 'height: 28px; display: flex; align-items: center; gap: 10px; padding: 0; background: transparent; border: 0; text-align: left; cursor: pointer',
+      boxStyle: box(on),
+      checkStyle: on ? '' : 'visibility: hidden'
+    };
+  })
+};
+}
+}
+</script>
+</body>
+</html>

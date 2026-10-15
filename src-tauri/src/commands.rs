@@ -6,10 +6,10 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
-    BaseOptions, BranchLoss, CommitChanges, Config, EntryRef, FileChange, FilePair, FolderCheck,
-    HistoryPage, NewBranchCheckout, NewBranchProblem, OpenApp, ProjectConfig, ProjectView,
-    RemoteInfo, ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun, Settings,
-    StashChanges, TerminalOption,
+    BaseOptions, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config, EntryRef,
+    FileChange, FilePair, FolderCheck, HistoryPage, NewBranchCheckout, NewBranchProblem, OpenApp,
+    ProjectConfig, ProjectView, RemoteInfo, ReviewData, ReviewTarget, ScanResult, ScriptConfig,
+    ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{
@@ -677,6 +677,37 @@ pub async fn check_new_branch(
 ) -> Result<Option<NewBranchProblem>, AppError> {
     blocking(&state, move |state| {
         scripts::git::check_new_branch(state, &repo_id, &branch, &base, &checkout)
+    })
+    .await
+}
+
+/// Checkout Branch: a local branch checked out nowhere, or with `remote` a remote branch as a
+/// local one tracking it, checked out where `target` says.
+#[tauri::command]
+pub async fn git_checkout_branch(
+    state: State<'_, AppState>,
+    repo_id: String,
+    branch: String,
+    remote: bool,
+    target: CheckoutTarget,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::checkout_branch(state, &repo_id, &branch, remote, target)
+    })
+    .await
+}
+
+/// Checkout Branch's checks as the dialog is filled in.
+#[tauri::command]
+pub async fn check_checkout(
+    state: State<'_, AppState>,
+    repo_id: String,
+    branch: String,
+    remote: bool,
+    target: CheckoutTarget,
+) -> Result<Option<CheckoutProblem>, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::check_checkout(state, &repo_id, &branch, remote, &target)
     })
     .await
 }

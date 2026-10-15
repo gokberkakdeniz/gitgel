@@ -1,0 +1,35 @@
+/* Checkout Branch (FlowV4.dc.html): the New Branch list in a modal. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  padding: 22px 24px 18px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  letter-spacing: -0.3px;
+  color: var(--text-strong);
+}
+
+/* `<repo> / <branch>`. */
+.sub {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Many worktrees scroll; the buttons stay. */
+.list {
+  max-height: 360px;
+  overflow-y: auto;
+}

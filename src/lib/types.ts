@@ -196,6 +196,11 @@ export type NewBranchProblem = 'badName' | 'exists' | 'badFolder' | 'folderNotEm
 /** Where New Branch checks the branch out: a new linked worktree, the repository folder (its
  * uncommitted changes brought along, or stashed first) or nowhere. */
 export type NewBranchCheckout = { kind: 'worktree'; folder: string } | { kind: 'main'; bring: boolean } | { kind: 'none' };
+/** What stops Checkout Branch (`check_checkout`). */
+export type CheckoutProblem = 'unavailable' | 'exists' | 'noWorktree' | 'busy' | 'cannotBring' | 'badFolder' | 'folderNotEmpty';
+/** Where Checkout Branch checks the branch out: one of the repo's worktrees, which switches to it
+ * (its uncommitted changes brought along, or stashed first), or a new linked worktree. */
+export type CheckoutTarget = { kind: 'existing'; folder: string; bring: boolean } | { kind: 'new'; folder: string };
 /** A branch against its remote, as of the last fetch (W4a). */
 export interface Upstream {
   remote: string; // e.g. "origin"

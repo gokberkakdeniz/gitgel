@@ -168,6 +168,7 @@
 
 .choiceRow {
   width: 100%;
+  min-width: 0;
   height: 40px;
   display: flex;
   align-items: center;
@@ -177,6 +178,7 @@
   border: 0;
   text-align: left;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .choiceRow:focus-visible,
@@ -210,10 +212,14 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
+  overflow: hidden;
 }
 
 .choiceTitle {
-  flex-shrink: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  overflow: hidden;
   font-size: 13px;
   color: var(--text-strong);
   white-space: nowrap;
@@ -221,13 +227,30 @@
 
 .choiceSub {
   min-width: 0;
+  flex: 0 1 auto;
+  max-width: 50%;
   margin-left: auto;
+  display: flex;
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
+}
+
+/* Long names cut from the middle: the start shrinks with an ellipsis, the end stays.
+ * Short text renders unchanged. */
+.cutStart {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cutEnd {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .chevron {
@@ -260,6 +283,8 @@
 
 .subChoice {
   height: 28px;
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -269,6 +294,7 @@
   border-radius: 4px;
   text-align: left;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .folderRow {

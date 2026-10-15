@@ -1,8 +1,8 @@
 //! Git actions (SPEC §0, §15 "Writing stashes"): Gitgel's own writes, made by the user's `git`
 //! on the scripts' runner. The command text is fixed here; values (folders, the message) go in
 //! `GITGEL_*` variables, quoted, so nothing typed or read from disk is ever run as shell. Folders
-//! come from the repository's worktree list, never from the frontend, except New Branch's new
-//! worktree folder (checked first).
+//! come from the repository's worktree list, never from the frontend, except the new worktree
+//! folder of New Branch and Checkout Branch (checked first).
 
 use std::path::{Path, PathBuf};
 
@@ -13,8 +13,8 @@ use crate::config::new_id;
 use crate::error::AppError;
 use crate::git::{diff, operation, refs, stash, worktrees};
 use crate::model::{
-    entry_key, BranchLoss, EntryRef, NewBranchCheckout, NewBranchProblem, OperationKind, ScriptRun,
-    UpdateReason,
+    entry_key, BranchLoss, CheckoutProblem, CheckoutTarget, EntryRef, NewBranchCheckout,
+    NewBranchProblem, OperationKind, ScriptRun, UpdateReason,
 };
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -1052,17 +1052,31 @@ pub(super) fn new_branch_problem(
     if git.find_branch(branch, git2::BranchType::Local).is_ok() {
         return Some(NewBranchProblem::Exists);
     }
-    let folder = folder?;
+    new_folder_issue(folder?).map(|issue| match issue {
+        FolderIssue::Bad => NewBranchProblem::BadFolder,
+        FolderIssue::NotEmpty => NewBranchProblem::FolderNotEmpty,
+    })
+}
+
+/// What is wrong with a new worktree's folder.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FolderIssue {
+    /// Not an absolute path, or a file.
+    Bad,
+    /// Something is in it.
+    NotEmpty,
+}
+
+/// A new worktree's folder must be absolute and missing or empty (`git worktree add` makes it and
+/// its parents).
+fn new_folder_issue(folder: &Path) -> Option<FolderIssue> {
     if !folder.is_absolute() {
-        return Some(NewBranchProblem::BadFolder);
+        return Some(FolderIssue::Bad);
     }
     match std::fs::read_dir(folder) {
-        Ok(mut entries) => entries
-            .next()
-            .is_some()
-            .then_some(NewBranchProblem::FolderNotEmpty),
+        Ok(mut entries) => entries.next().is_some().then_some(FolderIssue::NotEmpty),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
-        Err(_) => Some(NewBranchProblem::BadFolder),
+        Err(_) => Some(FolderIssue::Bad),
     }
 }
 
@@ -1215,6 +1229,250 @@ pub(super) fn create_branch_command(run: NewBranchRun) -> String {
             format!(r#"git stash push --include-untracked --message "$GITGEL_MESSAGE" && {switch}"#)
         }
         NewBranchRun::Branch => r#"git branch --no-track "$GITGEL_BRANCH" "$GITGEL_BASE""#.into(),
+    }
+}
+
+/// What Checkout Branch checks out: a local branch checked out nowhere, or a remote-tracking
+/// branch (`origin/feat`) as a new local branch (`feat`) tracking it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct CheckoutSource {
+    /// The local branch.
+    local: String,
+    /// The remote-tracking ref it starts from (`refs/remotes/origin/feat`), for a remote branch.
+    start: Option<String>,
+    tip: git2::Oid,
+}
+
+/// The branch to check out, or what stops it. A local branch must not be checked out in any of
+/// `trees`; a remote one's local name (after the remote, as Branches splits it) must be free.
+/// Names starting with `-` are refused, as git would read them as options.
+fn checkout_source(
+    git: &git2::Repository,
+    trees: &[worktrees::WorktreeInfo],
+    branch: &str,
+    remote: bool,
+) -> Result<CheckoutSource, CheckoutProblem> {
+    let found = |name: &str, kind| {
+        git.find_branch(name, kind)
+            .ok()
+            .and_then(|b| b.get().target())
+    };
+    if remote {
+        let local = branch
+            .split_once('/')
+            .map(|(_, b)| b)
+            .filter(|b| !b.is_empty() && !b.starts_with('-'))
+            .ok_or(CheckoutProblem::Unavailable)?;
+        let tip = found(branch, git2::BranchType::Remote).ok_or(CheckoutProblem::Unavailable)?;
+        if found(local, git2::BranchType::Local).is_some() {
+            return Err(CheckoutProblem::Exists);
+        }
+        return Ok(CheckoutSource {
+            local: local.to_string(),
+            start: Some(format!("refs/remotes/{branch}")),
+            tip,
+        });
+    }
+    let tip = found(branch, git2::BranchType::Local)
+        .filter(|_| !branch.starts_with('-'))
+        .ok_or(CheckoutProblem::Unavailable)?;
+    if trees.iter().any(|w| w.branch.as_deref() == Some(branch)) {
+        return Err(CheckoutProblem::Unavailable);
+    }
+    Ok(CheckoutSource {
+        local: branch.to_string(),
+        start: None,
+        tip,
+    })
+}
+
+/// A Checkout Branch that passed its checks: the branch, the folder, and for an existing
+/// worktree (which switches to it) whether its changes come along.
+struct CheckoutPlan {
+    source: CheckoutSource,
+    folder: String,
+    bring: Option<bool>,
+}
+
+/// Checkout Branch's checks (SPEC §15 "Checkout branch"). Read only. An existing worktree must be
+/// one of the repo's, with no operation in progress or conflicts, and with `bring`, no uncommitted
+/// file that also differs between its HEAD and the branch (`git switch` would refuse to carry
+/// it). A new worktree's folder is checked as New Branch's.
+fn plan_checkout(
+    state: &AppState,
+    repo: &Repo,
+    branch: &str,
+    remote: bool,
+    target: &CheckoutTarget,
+) -> Result<Result<CheckoutPlan, CheckoutProblem>, AppError> {
+    let source = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        match checkout_source(&git, &repo.trees, branch, remote) {
+            Ok(source) => source,
+            Err(problem) => return Ok(Err(problem)),
+        }
+    };
+    match target {
+        CheckoutTarget::New { folder } => Ok(match new_folder_issue(Path::new(folder)) {
+            Some(FolderIssue::Bad) => Err(CheckoutProblem::BadFolder),
+            Some(FolderIssue::NotEmpty) => Err(CheckoutProblem::FolderNotEmpty),
+            None => Ok(CheckoutPlan {
+                source,
+                folder: folder.clone(),
+                bring: None,
+            }),
+        }),
+        CheckoutTarget::Existing { folder, bring } => {
+            let wanted = Path::new(folder).canonicalize().ok();
+            let Some(tree) = repo.trees.iter().find(|w| Some(&w.path) == wanted.as_ref()) else {
+                return Ok(Err(CheckoutProblem::NoWorktree));
+            };
+            let shared = state.pool.get(&tree.path)?;
+            let wt = lock(&shared);
+            if operation::read(&wt).is_some() || !operation::unmerged(&wt)?.is_empty() {
+                return Ok(Err(CheckoutProblem::Busy));
+            }
+            if *bring && diff::changes_block_switch(&wt, source.tip)? {
+                return Ok(Err(CheckoutProblem::CannotBring));
+            }
+            Ok(Ok(CheckoutPlan {
+                source,
+                folder: tree.path.to_string_lossy().into_owned(),
+                bring: Some(*bring),
+            }))
+        }
+    }
+}
+
+/// Checkout Branch's checks for the dialog, as it is filled in, and again before the run.
+pub fn check_checkout(
+    state: &AppState,
+    repo_id: &str,
+    branch: &str,
+    remote: bool,
+    target: &CheckoutTarget,
+) -> Result<Option<CheckoutProblem>, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    Ok(plan_checkout(state, &repo, branch, remote, target)?.err())
+}
+
+/// How Checkout Branch runs (SPEC §15 "Checkout branch").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum CheckoutRun {
+    /// The worktree in `$GITGEL_FOLDER` switches to the branch; `stash` its uncommitted changes
+    /// first, else they come along.
+    Switch { stash: bool, track: bool },
+    /// A new linked worktree in `$GITGEL_FOLDER`.
+    Worktree { track: bool },
+}
+
+/// Checkout Branch (SPEC §15 "Checkout branch"): a local branch checked out nowhere, or a remote
+/// branch as a new local branch tracking it, checked out in one of the repo's worktrees (which
+/// switches to it, its uncommitted changes brought along or stashed first) or in a new linked
+/// worktree. Runs in the repository folder.
+pub fn checkout_branch(
+    state: &AppState,
+    repo_id: &str,
+    branch: &str,
+    remote: bool,
+    target: CheckoutTarget,
+) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    repo.not_busy(state)?;
+    let plan = match plan_checkout(state, &repo, branch, remote, &target)? {
+        Ok(plan) => plan,
+        Err(problem) => {
+            scan::rescan_repo(state, &repo.id, UpdateReason::Rescan, None);
+            return Err(AppError::Invalid(match problem {
+                CheckoutProblem::Unavailable => format!("{branch} cannot be checked out now."),
+                CheckoutProblem::Exists => format!("{branch} already exists here."),
+                CheckoutProblem::NoWorktree => {
+                    "The folder is not a worktree of the repository.".into()
+                }
+                CheckoutProblem::Busy => "The folder has an operation in progress.".into(),
+                CheckoutProblem::CannotBring => {
+                    format!("The uncommitted changes conflict with {branch}.")
+                }
+                CheckoutProblem::BadFolder => "The folder is not a folder path.".into(),
+                CheckoutProblem::FolderNotEmpty => "The folder is not empty.".into(),
+            }));
+        }
+    };
+    let CheckoutPlan {
+        source,
+        folder,
+        bring,
+    } = plan;
+    let local = source.local;
+    let track = source.start.is_some();
+    let mut env = vec![
+        ("GITGEL_BRANCH".to_string(), local.clone()),
+        ("GITGEL_FOLDER".to_string(), folder.clone()),
+    ];
+    if let Some(start) = source.start {
+        env.push(("GITGEL_START".into(), start));
+    }
+    let run = match bring {
+        Some(bring) => {
+            if !bring {
+                env.push((
+                    "GITGEL_MESSAGE".into(),
+                    format!("Before switching to {local}"),
+                ));
+            }
+            CheckoutRun::Switch {
+                stash: !bring,
+                track,
+            }
+        }
+        None => CheckoutRun::Worktree { track },
+    };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}checkout-branch"),
+            name: format!("Checkout {local}"),
+            icon: "branch".into(),
+            entry_key: entry_key(&repo.id, Some(&local), Some(&folder)),
+            repo_label: format!("{} / {local}", repo.name),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: repo.main.clone(),
+            command: checkout_command(run),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `[git -C "$GITGEL_FOLDER" stash push … &&] git -C "$GITGEL_FOLDER" switch …` or `git worktree
+/// add …`; a remote branch becomes a local one tracking it (`--track -c` / `--track -b`, from
+/// `$GITGEL_START`): only fixed text and quoted variables.
+pub(super) fn checkout_command(run: CheckoutRun) -> String {
+    let git = r#"git -C "$GITGEL_FOLDER""#;
+    match run {
+        CheckoutRun::Switch { stash, track } => {
+            let switch = if track {
+                format!(r#"{git} switch --track -c "$GITGEL_BRANCH" "$GITGEL_START""#)
+            } else {
+                format!(r#"{git} switch "$GITGEL_BRANCH""#)
+            };
+            if stash {
+                format!(
+                    r#"{git} stash push --include-untracked --message "$GITGEL_MESSAGE" && {switch}"#
+                )
+            } else {
+                switch
+            }
+        }
+        CheckoutRun::Worktree { track: true } => {
+            r#"git worktree add --track -b "$GITGEL_BRANCH" "$GITGEL_FOLDER" "$GITGEL_START""#
+                .into()
+        }
+        CheckoutRun::Worktree { track: false } => {
+            r#"git worktree add "$GITGEL_FOLDER" "$GITGEL_BRANCH""#.into()
+        }
     }
 }
 
@@ -1475,6 +1733,59 @@ mod tests {
             p("feat/x", Some(Path::new("rel/dir"))),
             Some(NewBranchProblem::BadFolder)
         );
+    }
+
+    #[test]
+    fn checkout_commands_hold_no_values() {
+        let switch = |stash, track| checkout_command(CheckoutRun::Switch { stash, track });
+        assert_eq!(
+            switch(false, false),
+            r#"git -C "$GITGEL_FOLDER" switch "$GITGEL_BRANCH""#
+        );
+        assert_eq!(
+            switch(true, false),
+            r#"git -C "$GITGEL_FOLDER" stash push --include-untracked --message "$GITGEL_MESSAGE" && git -C "$GITGEL_FOLDER" switch "$GITGEL_BRANCH""#
+        );
+        assert_eq!(
+            switch(false, true),
+            r#"git -C "$GITGEL_FOLDER" switch --track -c "$GITGEL_BRANCH" "$GITGEL_START""#
+        );
+        assert_eq!(
+            checkout_command(CheckoutRun::Worktree { track: false }),
+            r#"git worktree add "$GITGEL_FOLDER" "$GITGEL_BRANCH""#
+        );
+        assert_eq!(
+            checkout_command(CheckoutRun::Worktree { track: true }),
+            r#"git worktree add --track -b "$GITGEL_BRANCH" "$GITGEL_FOLDER" "$GITGEL_START""#
+        );
+    }
+
+    #[test]
+    fn checkout_source_takes_free_branches() {
+        let t = crate::git::testutil::TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        t.branch_from("feat", tip);
+        t.add_origin();
+        t.set_remote("origin/main", tip);
+        t.set_remote("origin/fix/x", tip);
+        let trees = vec![worktrees::WorktreeInfo {
+            path: t.path().to_path_buf(),
+            name: None,
+            head: tip.to_string(),
+            branch: Some("main".into()),
+        }];
+        let src = |b: &str, remote| checkout_source(&t.repo, &trees, b, remote);
+        let feat = src("feat", false).unwrap();
+        assert_eq!((feat.local.as_str(), feat.start), ("feat", None));
+        let fix = src("origin/fix/x", true).unwrap();
+        assert_eq!(fix.local, "fix/x");
+        assert_eq!(fix.start.as_deref(), Some("refs/remotes/origin/fix/x"));
+        // Checked out already, or not there.
+        assert_eq!(src("main", false), Err(CheckoutProblem::Unavailable));
+        assert_eq!(src("nope", false), Err(CheckoutProblem::Unavailable));
+        assert_eq!(src("origin/nope", true), Err(CheckoutProblem::Unavailable));
+        // A local branch has its name.
+        assert_eq!(src("origin/main", true), Err(CheckoutProblem::Exists));
     }
 
     #[test]

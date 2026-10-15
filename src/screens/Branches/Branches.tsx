@@ -19,10 +19,11 @@ import {
 } from '../../components/icons';
 import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
 import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
-import { conflictsTooltip } from '../../sync/operation';
+import { conflictsTooltip, useGitActionRunning } from '../../sync/operation';
 import { OperationPill } from '../../sync/OperationUi';
 import { NewBranchButton } from '../../sync/NewBranch';
 import { RepoFetchButton, SyncItems } from '../../sync/SyncButtons';
+import { openCheckout } from '../../sync/CheckoutBranch';
 import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { askDrop } from '../../stash/actions';
@@ -616,6 +617,7 @@ function StashList({
 /** Remote Branches matching the filter, under the band's rows; a row opens its History. */
 function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch[] }) {
   const [menu, setMenu] = useState<{ name: string; rect: DOMRect } | null>(null);
+  const running = useGitActionRunning(repoId);
   const open = (rev: string) => openHistory(repoId, rev, t('branches.backToBranches'));
   return (
     <div className={styles.remotes}>
@@ -657,6 +659,18 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
               }}
             >
               {t('common.copyBranchName')}
+            </MenuItem>
+            <MenuDivider />
+            <MenuItem
+              icon="worktree"
+              disabled={running}
+              title={running ? t('sync.gitBusy') : undefined}
+              onSelect={() => {
+                setMenu(null);
+                openCheckout({ repoId, branch: menu.name, remote: true });
+              }}
+            >
+              {t('branches.checkoutMenu')}
             </MenuItem>
           </Menu>
         </Popover>

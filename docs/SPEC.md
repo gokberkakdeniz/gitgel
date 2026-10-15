@@ -210,6 +210,7 @@ gitgel/
 │  │            # (History header buttons, SyncItems: the branch menus' group); operation.ts +
 │  │            # OperationUi (operations in progress: pill, banner, Continue / Abort, T3 dialog);
 │  │            # DeleteBranch (the branch menus' Delete Branch… and its confirmation);
+│  │            # CheckoutBranch (the Sync group's Checkout Branch… and its dialog, flow V4);
 │  │            # NewBranch + branchDefaults.ts (a repo band's "+": New Branch, flow V)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
@@ -691,7 +692,8 @@ Every active branch, whether or not it is in a project, and each repo's base bra
   filter (their name or the repo name), newest first. Only those with no local twin: not the
   upstream of a local branch and not `<remote>/<local name>`; never `*/HEAD`. Row: `branch` icon,
   mono name, sub line the tip's age; the row opens History (§16) on it (tooltip `Show history of
-  <name>`), its ⋮ menu has "Open history" (↵) and "Copy branch name". A repo with only remote
+  <name>`), its ⋮ menu has "Open history" (↵), "Copy branch name", a divider and "Checkout
+  Branch…" (§15 "Checkout branch"). A repo with only remote
   matches still gets its band. The subtitle counts its repo but not the remote branches; the band
   count leaves them out too.
 - Repos sorted by their newest row, rows newest first (by the age shown). Pinned repos come
@@ -2042,6 +2044,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | New branch | `FlowV2.dc.html`, `FlowV3.dc.html` | canvas page "Branch actions": V2, the form under a repo band's "+", interactive (`case` worktree, checkout, branchOnly: the row picked first; `dirty`: the repository folder has changes); V3 mounts it with Repository folder picked; the "+" on the bands of `Main` (`newBranch` shows it open) |
+| Checkout branch | `FlowV4.dc.html` | canvas page "Branch actions": V4, the dialog over Branches, interactive (`case` repository, worktree, new: the row picked first; `remote`: from a Remote Branches row) |
 | Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `FlowD11` (`menu` sync), `HistH2` (page menu) |
 | Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
@@ -2651,13 +2654,15 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   behind origin by 1 commit, so it cannot be pushed. Pull it first.`, with a 24px "Pull (rebase)"
   button when checked out and a 24px "Force push" button; both are disabled ("A git action is
   running") while any git action runs in the repository, the force push itself included.
-- **Branch menus** (`FlowR1`): after the open items, a divider, then "Fetch"
+- **Branch menus** (`FlowR1`): after the open items, a divider, then "Checkout Branch…" (§15
+  "Checkout branch"; only for a branch checked out nowhere, so also without a remote), "Fetch"
   (`download`), "Pull" (`arrow-down`, hint `↓N`), "Pull (rebase)" (`rebase`; only when diverged
   and checked out), "Rebase on `<base>`" (`rebase`; a checked-out branch whose base, custom or
   the repo's default, is not itself or its own remote branch: the base branch's base is its
   upstream), "Push" (`arrow-up`, hint `↑N`), "Force push" (`arrow-up`; only when diverged). Disabled items carry the reason as tooltip ("A sync is running"
-  while one runs; Push of a branch the remote lacks: `Not on origin yet`). No group for a detached HEAD, a branch without a remote, a deleted branch or a
-  missing repository. While an operation is in progress the group is its Continue / Abort
+  while one runs; Push of a branch the remote lacks: `Not on origin yet`). No sync items for a detached HEAD, a branch without a remote, a deleted branch or a
+  missing repository. History's page menu, whose header has Fetch / Pull / Push, keeps only
+  Checkout Branch… and Rebase on `<base>` of the group. While an operation is in progress the group is its Continue / Abort
   instead (§15 "Operations in progress"; also for a detached HEAD).
 - **Fetch**: `git fetch --all --prune` in the repository folder. Success toast `Fetched <repo>`.
 - **Pull**: `git pull [--rebase] "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<branch on the
@@ -2693,19 +2698,19 @@ A Branches repo band's "+" (§5) opens it under the button (`sync/NewBranch.tsx`
   ↵ to pick. It lists the repo's default base, its base branch, the other local branches by
   name, then the remote branches no local branch has (`branchDefaults.ts` `baseChoices`), the
   default base picked. "Check out": opens on Settings › Repositories' "Check Out New Branches
-  In" (Repository folder unless changed); a list (`bg.sunken`, 1px `border`, radius 10; 40px rows
+  In" (Repository folder unless changed); a list in Settings' order (`bg.sunken`, 1px `border`, radius 10; 40px rows
   split by `border.row`) of three rows, one picked (a 16px box drawn as the `Checkbox`, accent
   with a check when picked; the picked row `rgba(accent, 0.08)`). A picked row with options opens
   them under it, indented to its title (38px), and its 12px chevron turns down; the others stay
   one line:
+  - "Repository folder" (Repository Folder below), on the right mono 11 muted `<branch it is on
+    now> →` (tooltip "The repository folder is on <branch>"): with uncommitted changes there, "N uncommitted changes" (12px muted) and two 28px
+    rows, "Bring to new branch" (default) / "Stash". With none, no options and no chevron.
   - "New worktree" (New Worktree below): the folder (`Input` 32, mono, `folder` icon,
     no label, `~/…`; while it is not being edited its end, the branch's folder, stays in view)
     and "Choose…" (folder picker). The folder follows the name, `<repo folder's
     parent>/<repo>-worktrees/<branch, "/" as "-">`, until it is typed in; Choose… picks the
     folder that holds it (it follows the name again).
-  - "Repository folder" (Repository Folder below), on the right mono 11 muted `<branch it is on
-    now> →` (tooltip "The repository folder is on <branch>"): with uncommitted changes there, "N uncommitted changes" (12px muted) and two 28px
-    rows, "Bring to new branch" (default) / "Stash". With none, no options and no chevron.
   - "Branch only" (Nowhere below): no options.
 
   A danger 12px line under the fields says what stops it; Cancel / primary "Create Branch ↵"
@@ -2729,10 +2734,50 @@ A Branches repo band's "+" (§5) opens it under the button (`sync/NewBranch.tsx`
     <branch>"` first.
   - Nowhere: `git branch --no-track "$GITGEL_BRANCH" "$GITGEL_BASE"`.
 
-  `--no-track`: a remote base does not become its upstream. The worktree folder is the one path a
-  git action takes from the frontend; it goes only in the variable. Success toast `Created
+  `--no-track`: a remote base does not become its upstream. The worktree folder is, with Checkout
+  Branch's, the one path a git action takes from the frontend; it goes only in the variable. Success toast `Created
   <branch>`; a failure opens the output panel. A base other than the repo's default base is then
   stored for the branch (`set_branch_base`).
+
+### Checkout branch
+
+"Checkout Branch…" (`worktree`) first in the branch menus' Sync group (§15 "Sync"), for a local
+branch that is there and checked out nowhere; also in a Remote Branches row's menu (K2), where the
+remote branch becomes a local one of its name after the remote, tracking it. Disabled while a git
+action runs in the repository ("A git action is running").
+
+- **Dialog** (`sync/CheckoutBranch.tsx`, `Modal` 460px, top 140px; `FlowV4.dc.html`, V4): serif
+  22px "Checkout Branch", under it mono 12px muted `<repo> / <branch>`; "Check out": New Branch's
+  list in its order (Settings'): "Repository folder", "New worktree" (the folder,
+  `<repo>-worktrees/<branch, "/" as "-">` beside the repository folder, and "Choose…", as New
+  Branch's), then the repo's linked worktrees by folder, titled with the folder's name. A
+  worktree's row has on the right mono 11 muted `<branch it is on> →` (tooltip `The folder is on
+  <branch>`) and its folder as tooltip (`~/…`). Long folder and branch names cut from the middle
+  (the start and the end stay visible). A picked worktree with uncommitted changes
+  opens "N uncommitted changes" and "Bring to <branch>" (default) / "Stash" under it. It opens on
+  New worktree when Settings › Repositories' "Check Out New Branches In" is New worktree, else
+  on the repository folder. A danger 12px line says what stops it; Cancel / primary "Checkout ↵"
+  (focused; disabled until the checks pass, and while a git action runs). Esc closes it.
+- **Checks** (`check_checkout`, read only, 150 ms after the last change; again before the run):
+  the local branch is there and checked out nowhere, or the remote branch is there ("<branch>
+  cannot be checked out") and no local branch has its name ("<branch> already exists"); names
+  starting with `-` are refused. An existing worktree: one of the repo's ("The folder is not a
+  worktree of the repository"), with no operation in progress or conflicts ("The folder has an
+  operation in progress"); bringing the changes, none of its changed files also differs between
+  its HEAD and the branch ("The changes conflict with <branch>"). A new worktree's folder as New
+  Branch's ("Not a folder path", "The folder is not empty").
+- **Run** (`git_checkout_branch`, script id `git:checkout-branch`, `branch` icon, toast sub line
+  `repo / branch`), in the repository folder, values in `GITGEL_*` variables:
+  - Existing worktree: `git -C "$GITGEL_FOLDER" switch "$GITGEL_BRANCH"` (the changes come
+    along); with Stash, `git -C "$GITGEL_FOLDER" stash push --include-untracked --message
+    "Before switching to <branch>"` first. A remote branch: `switch --track -c "$GITGEL_BRANCH"
+    "$GITGEL_START"` (`refs/remotes/<remote branch>`).
+  - New worktree: `git worktree add "$GITGEL_FOLDER" "$GITGEL_BRANCH"`; a remote branch: `git
+    worktree add --track -b "$GITGEL_BRANCH" "$GITGEL_FOLDER" "$GITGEL_START"`.
+
+  An existing worktree's folder is taken from the repo's worktree list; a new one is checked and
+  goes only in the variable. Success toast `Checked out <branch>`; a failure opens the output
+  panel.
 
 ### Delete branch
 

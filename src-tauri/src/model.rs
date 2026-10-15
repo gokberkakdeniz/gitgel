@@ -773,6 +773,38 @@ pub enum NewBranchCheckout {
     None,
 }
 
+/// What stops Checkout Branch (SPEC §15 "Checkout branch"), for the dialog's message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CheckoutProblem {
+    /// The local branch is gone or checked out somewhere already, or the remote branch is gone.
+    Unavailable,
+    /// A remote branch whose local name a local branch has.
+    Exists,
+    /// Not one of the repo's worktrees.
+    NoWorktree,
+    /// The worktree has an operation in progress or conflicts.
+    Busy,
+    /// Bringing the worktree's changes: one of its changed files also differs between HEAD and
+    /// the branch, so `git switch` would refuse.
+    CannotBring,
+    /// A new worktree: not an absolute path, or a file.
+    BadFolder,
+    /// A new worktree: a folder with something in it.
+    FolderNotEmpty,
+}
+
+/// Where Checkout Branch checks the branch out.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum CheckoutTarget {
+    /// One of the repo's worktrees (the repository folder too), which switches to it; `bring`
+    /// its uncommitted changes along, else stash them first.
+    Existing { folder: String, bring: bool },
+    /// A new linked worktree in `folder` (absolute, missing or empty).
+    New { folder: String },
+}
+
 /// A branch against its remote (`refs::tracking`), as of the last fetch.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

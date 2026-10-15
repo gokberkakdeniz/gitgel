@@ -4,6 +4,8 @@ import type {
   AiStatus,
   BaseOptions,
   BranchLoss,
+  CheckoutProblem,
+  CheckoutTarget,
   CommitChanges,
   CommitFiles,
   CommitProvider,
@@ -190,6 +192,14 @@ export const gitCreateBranch = (repoId: string, branch: string, base: string, ch
 /** New Branch's checks as the dialog is filled in. */
 export const checkNewBranch = (repoId: string, branch: string, base: string, checkout: NewBranchCheckout) =>
   invoke<NewBranchProblem | null>('check_new_branch', { repoId, branch, base, checkout });
+
+/** Checkout Branch: a local branch checked out nowhere, or with `remote` a remote branch as a
+ * local one tracking it, checked out where `target` says. */
+export const gitCheckoutBranch = (repoId: string, branch: string, remote: boolean, target: CheckoutTarget) =>
+  invoke<ScriptRun>('git_checkout_branch', { repoId, branch, remote, target });
+/** Checkout Branch's checks as the dialog is filled in. */
+export const checkCheckout = (repoId: string, branch: string, remote: boolean, target: CheckoutTarget) =>
+  invoke<CheckoutProblem | null>('check_checkout', { repoId, branch, remote, target });
 
 /** Commit (W1a): the checked files of the entry's worktree, with the message. */
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });

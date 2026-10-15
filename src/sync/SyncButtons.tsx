@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { MenuDivider, MenuItem } from '../components/Menu';
 import type { EntrySummary } from '../lib/types';
 import { useRuns } from '../scripts/runs';
+import { canCheckout, CheckoutBranchItem } from './CheckoutBranch';
 import { OperationItems } from './OperationUi';
 import styles from './SyncButtons.module.css';
 import { fetchRepo, forcePushBranch, pullBranch, pushBranch, rebaseOnBase, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
@@ -130,7 +131,15 @@ export function SyncItems({
   const u = entry.upstream;
   // While a rebase or merge is stopped there, its Continue and Abort take the group's place (T1).
   if (entry.operation) return <OperationItems entry={entry} op={entry.operation} onDone={onDone} />;
-  if (!entry.branch || !u || entry.state === 'repo_missing' || entry.state === 'branch_deleted') return null;
+  // Checkout Branch… leads the group, for a branch checked out nowhere.
+  const checkout = canCheckout(entry) && <CheckoutBranchItem entry={entry} onDone={onDone} />;
+  if (!entry.branch || !u || entry.state === 'repo_missing' || entry.state === 'branch_deleted')
+    return checkout ? (
+      <>
+        <MenuDivider />
+        {checkout}
+      </>
+    ) : null;
   const st = syncState(entry);
   const run = (action: () => Promise<void>) => {
     onDone();
@@ -142,19 +151,23 @@ export function SyncItems({
   const base =
     entry.worktreePath && entry.base && entry.base !== entry.branch && entry.base !== u.name ? entry.base : null;
   if (rebaseOnly) {
-    if (!base) return null;
+    if (!base && !checkout) return null;
     return (
       <>
         <MenuDivider />
-        <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => rebaseOnBase(entry, base))}>
-          {t('sync.rebaseOn', { base })}
-        </MenuItem>
+        {checkout}
+        {base && (
+          <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => rebaseOnBase(entry, base))}>
+            {t('sync.rebaseOn', { base })}
+          </MenuItem>
+        )}
       </>
     );
   }
   return (
     <>
       <MenuDivider />
+      {checkout}
       <MenuItem icon="download" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => fetchRepo(entry))}>
         {t('sync.fetchBtn')}
       </MenuItem>
