@@ -4,6 +4,7 @@ macOS app (Tauri 2 + React/TS + Monaco) for reviewing branches and worktrees acr
 
 - Spec (UI, behaviour, architecture, types, git rules): `docs/SPEC.md`.
 - Tasks and their status: `docs/TASKS.md` (its top section says how to write and complete one).
+- Open questions to look at later (not tasks yet): `docs/NOTES.md`.
 - Visual reference per screen: `design/screens/*.dc.html` (design-tool markup, read for values; do not render or copy the template syntax).
 
 Rules:
