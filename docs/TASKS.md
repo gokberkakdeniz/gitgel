@@ -649,6 +649,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) History opens a long branch at once (vscode main 1.7 s → a few ms): the walk is unsorted (`git log`'s order) instead of `Sort::TIME`, which read the whole graph first; the commit count comes after the page, from `get_commit_count` on its own repository handle — 2026-10-16
 - [x] (on request) History's list has no `<rev> · N commits` label any more (the subtitle names the rev; counting read the whole graph); only a search shows `N matching commits` — 2026-10-16
 - [x] (on request) The scan's merged check walks unsorted too, so it stops at its date cutoff instead of reading the whole graph first (rails-sized history: ~470 ms → ~8 ms when the other branches are recent) — 2026-10-16
+- [x] (on request) The window no longer rubber-bands when scrolled over a part that does not scroll (the header stays put) — 2026-10-16
 
 ---
 

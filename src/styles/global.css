@@ -4,6 +4,13 @@ body,
   height: 100%;
 }
 
+/* The window itself never scrolls or rubber-bands; only inner panes do. */
+html,
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   background: var(--bg-main);
