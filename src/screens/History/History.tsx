@@ -827,7 +827,7 @@ export function History({ repoId, rev, backLabel }: Props) {
             )}
             {revertable(commitMenu.commit) && (
               <MenuItem
-                icon="back"
+                icon="revert"
                 onHover={() => setCherrySub(null)}
                 onSelect={() => {
                   setCommitMenu(null);

@@ -2998,7 +2998,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     below the base line: subject `text.muted`, row opacity 0.7. Right-click on it (`HistH11`,
     Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
-    "Revert Changes" (`back`, below), "Cherry-Pick to" (`rebase`, a
+    "Revert Changes" (`revert`, below), "Cherry-Pick to" (`rebase`, a
     chevron; `HistH12`, Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; `HistH14`, Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Base line** (`HistH4`): when `ahead` > 0, after the last commit not in the base: a 1px
     `border.strong` rule on both sides of mono 11 muted `base <base>`.

@@ -413,6 +413,15 @@ export function UndoIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   );
 }
 
+/** Revert Changes: a hooked arrow back, apart from Undo's circle. */
+export function RevertIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
+      <path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </Svg>
+  );
+}
+
 export function DownloadIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   return (
     <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
@@ -559,6 +568,7 @@ const ICONS = {
   remove: RemoveIcon,
   trash: TrashIcon,
   undo: UndoIcon,
+  revert: RevertIcon,
   history: HistoryIcon,
   pin: PinIcon,
   download: DownloadIcon,
