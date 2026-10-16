@@ -35,7 +35,8 @@ green when you are done: same key set as `en.json`, same placeholders, valid MF2
   tree → çalışma ağacı, stash → geçici kayıt (stash → geçici kaydet, apply → uygula,
   drop → bırak, pop → al), fetch → getir, pull → çek, push → gönder (force → zorla),
   merge → birleştir(me), merge base → birleştirme temeli, rebase → yeniden
-  temellendir(me), cherry-pick → seçerek uygula(ma), revert → geri döndür(me),
+  temellendir(me), cherry-pick → tek tek seç (the action; one in progress: seçerek
+  uygula(ma)), revert → geri döndür(me),
   checkout → kullanıma al, abort → durdur, discard → at, amend → düzelt, sync → eşitle, tag → etiket.
   Commit stays "commit", as VS Code has it.
 - Output nothing besides the JSON: no explanations, no comments, no trailing
