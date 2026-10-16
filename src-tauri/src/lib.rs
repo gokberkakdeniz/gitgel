@@ -116,6 +116,7 @@ pub fn run() {
             commands::get_commit_changes,
             commands::get_stash_changes,
             commands::get_history,
+            commands::get_commit_count,
             commands::read_file_pair,
             commands::get_remote_url,
             commands::create_project,

@@ -383,10 +383,9 @@ pub fn base_split(repo: &Repository, tip: &str, base: &str) -> Result<BaseSplit,
     Ok(BaseSplit { ahead, merge_base })
 }
 
-/// Commits reachable from `tip`, newest first by committer time (no topological pass, so the
-/// first page does not read the whole graph), at most `limit`. With `terms` (lower-case words)
-/// only commits whose text or changed paths hold every term. `ahead`: the commits not in the
-/// base; the others are `in_base`.
+/// Commits reachable from `tip`, newest first in `git log`'s order, at most `limit`. With
+/// `terms` (lower-case words) only commits whose text or changed paths hold every term.
+/// `ahead`: the commits not in the base; the others are `in_base`.
 pub fn walk(
     repo: &Repository,
     tip: &str,
@@ -394,8 +393,10 @@ pub fn walk(
     terms: &[String],
     limit: usize,
 ) -> Result<Walked, AppError> {
+    // Unsorted: libgit2 then queues each commit's parents by committer date as it goes, which is
+    // `git log`'s order. Any sort mode (`Sort::TIME` too) first walks the whole graph, a second
+    // on vscode, before the first commit comes out.
     let mut walk = repo.revwalk()?;
-    walk.set_sorting(Sort::TIME)?;
     walk.push(Oid::from_str(tip)?)?;
     let mut commits = Vec::new();
     for oid in walk {

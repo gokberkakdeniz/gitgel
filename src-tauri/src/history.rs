@@ -1,6 +1,9 @@
 //! A branch's history for the History screen (§16): pages, search, the refs it can show.
 
+use std::ffi::OsStr;
 use std::path::Path;
+
+use git2::{Repository, RepositoryOpenFlags};
 
 use crate::config;
 use crate::error::AppError;
@@ -57,18 +60,14 @@ pub fn get_history(
             limit.clamp(1, MAX_LIMIT),
         )
     })?;
-    let total = if terms.is_empty() {
-        let cached = lock(&state.cache).commit_count(repo_id, &tip);
-        match cached {
-            Some(n) => Some(n),
-            None => {
-                let n = t.time("count", || history::commit_count(&repo, &tip))?;
-                lock(&state.cache).put_commit_count(repo_id, &tip, n);
-                Some(n)
-            }
-        }
-    } else {
+    // Counting reads the whole graph (a second on vscode), so a long history leaves it to
+    // `get_commit_count`.
+    let total = if !terms.is_empty() {
         None
+    } else if walked.more {
+        lock(&state.cache).commit_count(repo_id, &tip)
+    } else {
+        Some(walked.commits.len() as u32)
     };
     // A local branch syncs with its remote; without it there, its commits on top of the base
     // are what the remote lacks.
@@ -92,6 +91,32 @@ pub fn get_history(
         fetched_at,
         upstream,
     })
+}
+
+/// How many commits History lists in all for `tip` (§16), cached per (repo, tip). Reads on its
+/// own `Repository`: the pooled one stays free for the page and the diffs meanwhile, and the
+/// commits read here leave libgit2's object cache when it closes.
+pub fn get_commit_count(state: &AppState, repo_id: &str, tip: &str) -> Result<u32, AppError> {
+    if let Some(n) = lock(&state.cache).commit_count(repo_id, tip) {
+        return Ok(n);
+    }
+    let repo_cfg = repo_of(state, repo_id)?;
+    let mut t = Timings::start();
+    let n = t.time("count", || {
+        let repo = Repository::open_ext(
+            &repo_cfg.path,
+            RepositoryOpenFlags::NO_SEARCH,
+            &[] as &[&OsStr],
+        )?;
+        history::commit_count(&repo, tip)
+    })?;
+    lock(&state.cache).put_commit_count(repo_id, tip, n);
+    log::info!(
+        "commit count {} in {}: {t} · {n} commits",
+        tip.get(..7).unwrap_or(tip),
+        repo_cfg.path
+    );
+    Ok(n)
 }
 
 fn repo_of(state: &AppState, repo_id: &str) -> Result<RepoConfig, AppError> {

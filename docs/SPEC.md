@@ -1599,9 +1599,9 @@ export interface HistoryCommit {
 export interface HistoryPage {
   rev: string;                    // as asked for
   tip: string | null;             // null => the rev does not resolve
-  commits: HistoryCommit[];       // newest first (committer time), at most `limit`
+  commits: HistoryCommit[];       // newest first (`git log`'s order), at most `limit`
   more: boolean;                  // the walk has more commits (or matches) past `limit`
-  total: number | null;           // commits reachable from the tip; null while searching
+  total: number | null;           // commits reachable from the tip; null while searching, or until counted (get_commit_count)
   ahead: number | null;           // commits not in the base; null without a base
   fetchedAt: number | null;       // FETCH_HEAD's modification time; null if never fetched
   upstream: Upstream | null;      // when rev is a local branch: where it is pushed to (§15 "Sync")
@@ -2914,11 +2914,15 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
 `HistH8`, `HistH9`, `HistH10`, `HistH11.dc.html` (§11).
 
 - **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
-  branch, a remote-tracking branch or a SHA) and walks from it by committer time, newest first
-  (`Sort::TIME`, no topological pass, so the first page does not read the whole graph), returning
-  the first `limit` commits. A page further down is the same call with a larger `limit` (the list
-  asks for 200 more when scrolled near its end). `total` counts every commit reachable from the
-  tip; it is cached per (repo, tip). With `base` (the entry's base) the commits not reachable from
+  branch, a remote-tracking branch or a SHA) and walks from it newest first in `git log`'s order
+  (an unsorted revwalk, which queues parents by committer date as it goes; any libgit2 sort mode,
+  `Sort::TIME` too, walks the whole graph before the first commit), returning the first `limit`
+  commits. A page further down is the same call with a larger `limit` (the list asks for 200 more
+  when scrolled near its end). `total` counts every commit reachable from the tip; it is cached
+  per (repo, tip). It reads the whole graph, so when the walk has more than the page and no count
+  is cached, `total` is null and the list asks `get_commit_count` for it afterwards; that runs on
+  its own `Repository` (the pooled one stays free, and the commits it read leave libgit2's cache
+  when it closes). With `base` (the entry's base) the commits not reachable from
   it are counted (`ahead`) and the rest are `inBase`. `query`: every word (the Branches filter
   rule) must appear in the subject, body, author name or email, the full SHA, or a path the
   commit changed against its first parent (read only when the text did not match); the walk goes
@@ -2953,7 +2957,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   border is a drag handle (8px hit area, `col-resize`; a 2px accent line on hover, focus and
   drag); 280–640px, ←/→ by 16px when focused, double-click resets. The width is remembered
   on this machine (`localStorage`). Label (section
-  label style, padding 14px 16px 6px) `<rev> · N commits` (`total`), while searching `N matching
+  label style, padding 14px 16px 6px) `<rev> · N commits` (`total`; `<rev>` alone until counted), while searching `N matching
   commits` (`N+` while there are more). Rows (padding 0 8px 8px, gap 2):
   - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with
     uncommitted files; never while searching): first, above the day labels. 1px dashed

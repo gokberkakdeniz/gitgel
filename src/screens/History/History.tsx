@@ -26,7 +26,7 @@ import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
 import { t } from '../../i18n';
-import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, openRemoteLink } from '../../lib/ipc';
+import { getAiStatus, getCommitChanges, getCommitCount, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, openRemoteLink } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
@@ -89,6 +89,14 @@ export function History({ repoId, rev, backLabel }: Props) {
     { repoIds: [repoId] },
   );
   const commits = useMemo(() => data?.commits ?? [], [data]);
+  // A long history's count comes after the page: it reads the whole graph.
+  const tip = data?.tip ?? null;
+  const { data: counted } = useInvoke(
+    () => getCommitCount(repoId, tip!).then((n) => ({ tip, n })),
+    [repoId, tip],
+    { enabled: !!tip && !search && data?.total === null },
+  );
+  const total = data?.total ?? (counted && counted.tip === tip ? counted.n : null);
 
   // Uncommitted: a checked-out branch with changes in its working tree, never while searching.
   const wip = !search && !!entry?.worktreePath && (entry.uncommitted ?? 0) > 0;
@@ -372,7 +380,6 @@ export function History({ repoId, rev, backLabel }: Props) {
   // A commit row's right-click menu (Hi10): Amend Commit… on the newest one, Copy SHA.
   const [commitMenu, setCommitMenu] = useState<{ commit: HistoryCommit; at: DOMRect } | null>(null);
   // HEAD moved under the form (a commit made elsewhere): amending would rewrite another commit.
-  const tip = data?.tip ?? null;
   useEffect(() => {
     if (amending && tip && tip !== amending.sha && !committing) stopAmend();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -512,10 +519,9 @@ export function History({ repoId, rev, backLabel }: Props) {
           n: formatCount(commits.length) + (data.more ? '+' : ''),
           one: commits.length === 1 && !data.more ? '1' : '0',
         })
-      : t('history.revLabel', {
-          rev,
-          commits: t('history.commitCount', { ...cnt(data.total ?? commits.length) }),
-        });
+      : total === null
+        ? rev
+        : t('history.revLabel', { rev, commits: t('history.commitCount', { ...cnt(total) }) });
   }
 
   return (

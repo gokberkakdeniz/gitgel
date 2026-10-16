@@ -63,6 +63,10 @@ export const getStashChanges = (repoId: string, sha: string) =>
 export const getHistory = (repoId: string, rev: string, base: string | null, query: string, limit: number) =>
   invoke<HistoryPage>('get_history', { repoId, rev, base, query, limit });
 
+/** How many commits `tip` has in all, when `getHistory` left `total` null on a long history. */
+export const getCommitCount = (repoId: string, tip: string) =>
+  invoke<number>('get_commit_count', { repoId, tip });
+
 
 export const readFilePair = (repoId: string, worktreePath: string | null, change: FileChange) =>
   invoke<FilePair>('read_file_pair', { repoId, worktreePath, change });
