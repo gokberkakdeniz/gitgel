@@ -15,3 +15,6 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   (a commit running or mid-operation), Discard All Changes (no files), Stash All Changes / Stash
   (nothing to stash), Project's missing-folder item, History's item disabled without a scan.
   Proposal: keep the first group disabled, leave out the second.
+- **A commit menu in Review** (2026-10-16). The canvas had W2d: Review's commit row (right-click or
+  ⋯) with Copy SHA and Show in History only, rewriting left to History. Removed from the canvas as
+  not needed now; to think about later.
