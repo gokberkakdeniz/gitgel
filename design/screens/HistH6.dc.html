@@ -19,26 +19,7 @@ button,input,textarea{font-family:inherit}
 </style>
 </helmet>
 <div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; flex-direction: column; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
-<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--bg-main)">
-<div style="display: flex; gap: 8px; margin-right: -4px">
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
-</div>
-<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><dc-import name="Icon" icon="sidebar" hint-size="17px,17px"></dc-import></button>
-<a href="HistH1.dc.html" aria-label="Back to Branches" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px"><dc-import name="Icon" icon="back" hint-size="17px,17px"></dc-import></a>
-<button aria-label="Forward" disabled style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)"><dc-import name="Icon" icon="forward" hint-size="17px,17px"></dc-import></button>
-<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-left: 4px">
-<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap">History</span>
-<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">web-app · ~/code/wt/token-refresh</span>
-</div>
-<div style="flex-grow: 1"></div>
-<div style="display: flex; align-items: center; gap: 10px">
-<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search Commits" label="Search commit messages, SHAs and paths" right-text="" hint-size="200px,32px"></dc-import>
-<span title="Last fetch (FETCH_HEAD)" style="font-size: 12px; color: var(--text-faint); white-space: nowrap">Fetched 3h ago</span>
-<button aria-label="Refresh" title="Refresh" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><dc-import name="Icon" icon="refresh" size="14" hint-size="14px,14px"></dc-import></button>
-</div>
-</header>
+<dc-import name="PageHeader" page="history" theme="none" chrome="{{true}}" back-href="HistH1.dc.html" back-label="Back to Branches" title="History" subtitle="web-app · session-token-refresh · ~/code/wt/token-refresh" push="{{push}}" hint-size="100%,64px"></dc-import>
 <sc-if value="{{op}}" hint-placeholder-val="{{false}}"><div role="status" style="display: flex; align-items: center; gap: 12px; min-height: 40px; box-sizing: border-box; padding: 6px 12px 6px 20px; font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(var(--danger-rgb), 0.12); color: var(--danger)">
 <span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Resolve conflicts to continue rebasing (2/4)</span>
 <dc-import name="Button" theme="none" label="Abort" variant="secondary" size="28" hint-size="64px,28px"></dc-import>
@@ -189,7 +170,7 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","range","squash"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"operation":{"editor":"boolean","default":false},"pushed":{"editor":"boolean","default":false},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;commit&quot;,&quot;lines&quot;,&quot;hooks&quot;,&quot;failed&quot;,&quot;amend&quot;,&quot;range&quot;,&quot;squash&quot;],&quot;default&quot;:&quot;lines&quot;},&quot;composer&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;panel&quot;,&quot;dialog&quot;,&quot;index&quot;,&quot;sections&quot;],&quot;default&quot;:&quot;panel&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;operation&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;pushed&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;selected&quot;:{&quot;editor&quot;:null},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -358,7 +339,7 @@ class Component extends DCLogic {
     var committing = s === 'hooks';
     var amend = s === 'amend';
     return {
-      themeClass: 'theme-' + t, themeName: t, op: op,
+      themeClass: 'theme-' + t, themeName: t, push: pushed ? '' : '↑2', op: op,
       multi: many,
       items: items,
       showComposer: wipOpen && cmode === 'panel',

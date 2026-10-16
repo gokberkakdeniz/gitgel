@@ -19,24 +19,7 @@ button{font-family:inherit}
 <dc-import name="Sidebar" active="{{activeProject}}" inbox-count="{{inboxCount}}" projects="{{sidebarProjects}}" hint-size="260px,800px"></dc-import>
 
 <main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
-<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 16px 0 28px; border-bottom: 1px solid #302e2a">
-<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
-<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}">
-<h1 title="Rename Project" style="margin: 0; display: block; box-sizing: border-box; width: fit-content; min-width: 340px; height: 30px; margin-left: -7px; padding: 0 6px; border: 1px solid transparent; border-radius: 8px; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; line-height: 28px; letter-spacing: -0.3px; color: #faf9f5; cursor: text">Session auth refresh</h1>
-</sc-if>
-<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}">
-<label style="display: flex">
-<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Project name</span>
-<input value="{{draftName}}" style="{{renameInputStyle}}">
-</label>
-</sc-if>
-<div style="{{subtitleStyle}}">{{subtitle}}</div>
-</div>
-<dc-import name="Button" variant="secondary" size="32" icon="refresh" label="" aria-label="Refresh" hint-size="32px,32px"></dc-import>
-<dc-import name="Button" label="Add Entries…" kbd="⌘K" href="Palette.dc.html" hint-size="126px,32px"></dc-import>
-<dc-import name="Button" variant="primary" label="Review Changes" href="Diff.dc.html" hint-size="130px,32px"></dc-import>
-<dc-import name="Button" variant="secondary" size="32" icon="more" label="" aria-label="Project Options" active="{{projectMenu}}" hint-size="32px,32px"></dc-import>
-</header>
+<dc-import name="PageHeader" page="project" theme="dark" chrome="{{false}}" title="Session auth refresh" subtitle="{{subtitle}}" renaming="{{renaming}}" draft-name="{{draftName}}" rename-conflict="{{renameConflict}}" menu-open="{{projectMenu}}" review-off="{{isEmpty}}" hint-size="100%,64px"></dc-import>
 
 <sc-if value="{{hasRows}}" hint-placeholder-val="{{true}}">
 <div style="display: flex; flex-direction: column">
@@ -131,7 +114,6 @@ class Component extends DCLogic {
     var rename = fresh ? 'edit' : (this.props.rename ?? 'none');
     var conflict = rename === 'conflict';
     var projectMenu = !!this.props.projectMenu;
-    var ring = conflict ? '#ee9a90' : '#4f8fa3';
     // Real app icons (from macOS), drawn grayscale; the Menu's app placeholders stand in for them.
     // Nothing to open (missing repo, deleted branch): the open items are left out.
     var apps = function (off) {
@@ -147,13 +129,10 @@ class Component extends DCLogic {
     return {
       deleteContext: [{ icon: 'folder', text: 'Session auth refresh' }],
       deleteButtons: [{ label: 'Cancel' }, { label: 'Delete Project', variant: 'danger' }],
-      renaming: rename !== 'none',
+      renaming: rename !== 'none', renameConflict: conflict,
       notRenaming: rename === 'none',
       draftName: fresh ? 'Untitled Project' : conflict ? 'Rate limiting rollout' : 'Session token refresh',
       activeProject: fresh ? 'Untitled Project' : 'Session auth refresh',
-      // The title's own box (EditableTitle): same 30px, 6px padding and 1px border as the title, so the
-      // name does not move; editing only turns the border accent (danger on a conflict), no glow.
-      renameInputStyle: 'display: block; box-sizing: border-box; width: 340px; height: 30px; margin: 0 0 0 -7px; padding: 0 6px; background: #1a1917; border-radius: 8px; outline: none; box-shadow: none; color: #faf9f5; font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; border: 1px solid ' + ring,
       subtitleStyle: 'font-size: 12px; ' + (conflict ? 'color: #ee9a90' : 'color: #a09d96'),
       showProjectMenu: projectMenu,
       showDelete: !!this.props.confirmDelete,

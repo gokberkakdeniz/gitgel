@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Page header</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<header class="{{themeClass}}" style="{{headerStyle}}">
+<sc-if value="{{chrome}}" hint-placeholder-val="{{false}}">
+<div aria-hidden="true" style="display: flex; gap: 8px; margin-right: -4px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><dc-import name="Icon" icon="sidebar" hint-size="17px,17px"></dc-import></button>
+<a href="{{backHref}}" aria-label="{{backLabel}}" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px"><dc-import name="Icon" icon="back" hint-size="17px,17px"></dc-import></a>
+<button aria-label="Forward" disabled style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)"><dc-import name="Icon" icon="forward" hint-size="17px,17px"></dc-import></button>
+</sc-if>
+<div style="{{titlesStyle}}">
+<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}">
+<h1 title="{{titleHint}}" style="{{titleStyle}}">{{title}}</h1>
+</sc-if>
+<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}">
+<label style="display: flex">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Project name</span>
+<input value="{{draftName}}" style="{{renameStyle}}">
+</label>
+</sc-if>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{true}}">
+<div style="{{subStyle}}">{{subtitle}}</div>
+</sc-if>
+</div>
+<sc-if value="{{hasActions}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; gap: 10px">
+<sc-if value="{{isBranches}}" hint-placeholder-val="{{false}}">
+<dc-import name="Button" theme="none" variant="secondary" size="32" icon="refresh" label="" aria-label="Refresh" title="Refresh" hint-size="32px,32px"></dc-import>
+<dc-import name="Segmented" theme="none" size="sm" label="Show Branches" options="{{scopes}}" hint-size="220px,32px"></dc-import>
+<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search" label="Search Branches and Worktrees" value="{{search}}" hint-size="200px,32px"></dc-import>
+</sc-if>
+<sc-if value="{{isHistory}}" hint-placeholder-val="{{false}}">
+<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search Commits" label="Search commit messages, SHAs and paths" right-text="" value="{{search}}" hint-size="200px,32px"></dc-import>
+<div role="group" aria-label="Sync with the remote" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
+<button title="{{fetchTitle}}" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-family: inherit; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="download" size="12" hint-size="12px,12px"></dc-import>Fetch</button>
+<span style="width: 1px; height: 16px; background: var(--border)"></span>
+<button disabled="{{pullOff}}" title="{{pullTitle}}" style="{{pullStyle}}"><dc-import name="Icon" icon="arrow-down" size="12" hint-size="12px,12px"></dc-import>Pull<sc-if value="{{hasPull}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">{{pull}}</span></sc-if></button>
+<button disabled="{{pushOff}}" title="{{pushTitle}}" style="{{pushStyle}}"><dc-import name="Icon" icon="arrow-up" size="12" hint-size="12px,12px"></dc-import>Push<sc-if value="{{hasPush}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">{{push}}</span></sc-if></button>
+</div>
+</sc-if>
+<sc-if value="{{isReview}}" hint-placeholder-val="{{false}}">
+<dc-import name="Segmented" theme="none" size="md" label="Diff layer" options="{{modes}}" hint-size="300px,34px"></dc-import>
+</sc-if>
+<sc-if value="{{isProject}}" hint-placeholder-val="{{false}}">
+<dc-import name="Button" theme="none" variant="secondary" size="32" icon="refresh" label="" aria-label="Refresh" title="Refresh" hint-size="32px,32px"></dc-import>
+<dc-import name="Button" theme="none" label="Add Entries…" kbd="⌘K" href="Palette.dc.html" hint-size="126px,32px"></dc-import>
+<dc-import name="Button" theme="none" variant="primary" label="Review Changes" href="{{reviewHref}}" disabled="{{reviewOff}}" hint-size="130px,32px"></dc-import>
+<dc-import name="Button" theme="none" variant="secondary" size="32" icon="more" label="" aria-label="Project Options" title="Project Options" active="{{menuOpen}}" hint-size="32px,32px"></dc-import>
+</sc-if>
+<sc-if value="{{hasPageMenu}}" hint-placeholder-val="{{false}}">
+<dc-import name="Button" theme="none" variant="secondary" size="32" icon="more-vertical" label="" aria-label="More actions" title="More actions" active="{{menuOpen}}" hint-size="32px,32px"></dc-import>
+</sc-if>
+</div>
+</sc-if>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"page":{"editor":"enum","options":["branches","history","review","stashes","project","settings"],"default":"history"},"title":{"editor":"text","default":"History"},"subtitle":{"editor":"text","default":"web-app · session-token-refresh · ~/code/wt/token-refresh"},"chrome":{"editor":"boolean","default":true},"menuOpen":{"editor":"boolean","default":false},"push":{"editor":"text","default":"↑2"},"pull":{"editor":"text","default":""},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"actions":{"editor":null},"backHref":{"editor":null},"backLabel":{"editor":null},"subDanger":{"editor":null},"search":{"editor":null},"scopes":{"editor":null},"modes":{"editor":null},"repo":{"editor":null},"remote":{"editor":null},"fetched":{"editor":null},"upstream":{"editor":null},"editable":{"editor":null},"renaming":{"editor":null},"draftName":{"editor":null},"renameConflict":{"editor":null},"reviewHref":{"editor":null},"reviewOff":{"editor":null},"$preview":{"width":1020,"height":64}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The app's PageHeader (src/components/PageHeader) with each page's actions, so every screen
+    // mounts this one instead of drawing its own: 64px, serif 22px title over a 12px muted
+    // subtitle, actions 10px apart on the right.
+    // chrome: the sidebar is hidden, so the header starts with the traffic lights, show-sidebar,
+    // Back (to backHref) and Forward; padding 16px, else 28px on the left.
+    // page: branches (Refresh, All / Not in a project, Search ⌘K) · history (Search Commits, Fetch /
+    // Pull / Push, ⋮) · review (Committed / Uncommitted / All, ⋮) · stashes (⋮) · project
+    // (Refresh, Add Entries…, Review Changes, ⋯) · settings (title only). The less used actions
+    // (Stash, Refresh, Switch Branch, Edit project) are in ⋮; menuOpen draws it (or ⋯) pressed,
+    // the screen places the Menu itself.
+    // History: push / pull are the counts ("↑2", "↓3"), empty = nothing to push / pull (disabled);
+    // a push count makes Push the primary button.
+    // Project (and a project's Review): editable draws the title as the rename box; renaming
+    // swaps in the input (renameConflict: danger ring and subtitle).
+    var p = this.props;
+    var page = p.page || 'history';
+    var chrome = p.chrome == null ? page === 'history' : !!p.chrome;
+    var editable = !!p.editable || page === 'project';
+    var renaming = !!p.renaming;
+    var conflict = !!p.renameConflict;
+    var sub = p.subtitle == null ? '' : String(p.subtitle);
+    var push = p.push == null ? '' : String(p.push);
+    var pull = p.pull == null ? '' : String(p.pull);
+    var repo = p.repo || 'web-app';
+    var remote = p.remote || 'origin';
+    var upstream = p.upstream || 'origin/session-token-refresh';
+    var sync = 'height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-family: inherit; font-size: 12px; white-space: nowrap; ';
+    var syncStyle = function (on, primary) {
+      return sync + (on && primary ? 'background: var(--accent); color: var(--on-accent); font-weight: 600' : 'background: transparent; color: var(--text-body); font-weight: 500' + (on ? '' : '; opacity: 0.5'));
+    };
+    var serif = 'margin: 0; font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap; ';
+    var box = 'box-sizing: border-box; height: 30px; line-height: 28px; margin-left: -7px; padding: 0 6px; border-radius: 8px; ';
+    return {
+      themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
+      headerStyle: 'box-sizing: border-box; width: 100%; height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px 0 ' + (chrome ? 16 : 28) + 'px; border-bottom: 1px solid var(--border); background: var(--bg-main); font-family: \'Instrument Sans\', -apple-system, sans-serif',
+      chrome: chrome,
+      backHref: p.backHref || 'Main.dc.html',
+      backLabel: p.backLabel || 'Back to Branches',
+      titlesStyle: 'display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0' + (chrome ? '; margin-left: 4px' : ''),
+      title: p.title == null ? 'History' : p.title,
+      titleHint: editable ? 'Rename Project' : undefined,
+      titleStyle: serif + (editable ? box + 'display: block; width: fit-content; border: 1px solid transparent; cursor: text' : ''),
+      notRenaming: !renaming, renaming: renaming,
+      draftName: p.draftName || '',
+      renameStyle: box + 'display: block; width: 340px; margin-top: 0; margin-bottom: 0; background: var(--bg-sunken); outline: none; box-shadow: none; color: var(--text-strong); font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; border: 1px solid ' + (conflict ? 'var(--danger)' : 'var(--accent)'),
+      hasSub: !!sub, subtitle: sub,
+      subStyle: 'font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ' + (p.subDanger || conflict ? 'var(--danger)' : 'var(--text-muted)'),
+      hasActions: page !== 'settings' && p.actions !== false,
+      isBranches: page === 'branches', isHistory: page === 'history', isReview: page === 'review', isProject: page === 'project',
+      hasPageMenu: page === 'history' || page === 'review' || page === 'stashes',
+      menuOpen: !!p.menuOpen,
+      search: p.search || '',
+      scopes: p.scopes || [{ label: 'All', count: '4', on: true }, { label: 'Not in a project', count: '2' }],
+      modes: p.modes || [{ label: 'Committed', count: '15', on: true }, { label: 'Uncommitted', count: '6' }, { label: 'All', count: '18' }],
+      fetchTitle: 'Fetch ' + repo + ' from ' + remote + ' · last fetch ' + (p.fetched || '3h ago'),
+      pull: pull, hasPull: !!pull, pullOff: !pull, pullStyle: syncStyle(!!pull, false),
+      pullTitle: pull ? 'Pull from ' + upstream : 'Nothing to pull',
+      push: push, hasPush: !!push, pushOff: !push, pushStyle: syncStyle(!!push, true),
+      pushTitle: push ? 'Push to ' + upstream : 'Nothing to push',
+      reviewHref: p.reviewHref || 'Diff.dc.html',
+      reviewOff: !!p.reviewOff
+    };
+  }
+}
+</script>
+</body>
+</html>

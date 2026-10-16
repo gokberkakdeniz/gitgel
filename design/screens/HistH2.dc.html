@@ -18,31 +18,7 @@ button,input,textarea{font-family:inherit}
 </style>
 </helmet>
 <div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; flex-direction: column; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
-<header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--bg-main)">
-<div style="display: flex; gap: 8px; margin-right: -4px">
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
-</div>
-<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><dc-import name="Icon" icon="sidebar" hint-size="17px,17px"></dc-import></button>
-<a href="HistH1.dc.html" aria-label="Back to Branches" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px"><dc-import name="Icon" icon="back" hint-size="17px,17px"></dc-import></a>
-<button aria-label="Forward" disabled style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)"><dc-import name="Icon" icon="forward" hint-size="17px,17px"></dc-import></button>
-<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-left: 4px">
-<span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap">History</span>
-<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{subtitle}}</span>
-</div>
-<div style="flex-grow: 1"></div>
-<div style="display: flex; align-items: center; gap: 10px">
-<dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search Commits" label="Search commit messages, SHAs and paths" right-text="" hint-size="200px,32px"></dc-import>
-<div role="group" aria-label="Sync with the remote" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
-<button title="Fetch web-app from origin · last fetch 3h ago" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="download" size="12" hint-size="12px,12px"></dc-import>Fetch</button>
-<span style="width: 1px; height: 16px; background: var(--border)"></span>
-<button disabled title="Nothing to pull" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-body); font-weight: 500; opacity: 0.5"><dc-import name="Icon" icon="arrow-down" size="12" hint-size="12px,12px"></dc-import>Pull</button>
-<sc-if value="{{pushOff}}" hint-placeholder-val="{{true}}"><button disabled title="Nothing to push" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-body); font-weight: 500; opacity: 0.5"><dc-import name="Icon" icon="arrow-up" size="12" hint-size="12px,12px"></dc-import>Push</button></sc-if><sc-if value="{{pushOn}}" hint-placeholder-val="{{false}}"><button title="Push to origin/session-token-refresh" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; white-space: nowrap; background: var(--accent); color: var(--on-accent); font-weight: 600"><dc-import name="Icon" icon="arrow-up" size="12" hint-size="12px,12px"></dc-import>Push<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">↑2</span></button></sc-if>
-</div>
-<sc-if value="{{menuShut}}" hint-placeholder-val="{{true}}"><button aria-label="More actions" title="More actions" aria-haspopup="menu" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if><sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><button aria-label="More actions" title="More actions" aria-haspopup="menu" aria-expanded="true" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-pressed); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button></sc-if>
-</div>
-</header>
+<dc-import name="PageHeader" page="history" theme="none" chrome="{{true}}" back-href="HistH1.dc.html" back-label="Back to Branches" title="History" subtitle="{{subtitle}}" push="{{push}}" menu-open="{{menuOpen}}" hint-size="100%,64px"></dc-import>
 <div style="flex-grow: 1; display: flex; min-height: 0">
 <aside style="width: 380px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; overflow: hidden">
 <div role="listbox" aria-label="Commits" style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; padding: 6px 8px 8px; min-height: 0; overflow: hidden">
@@ -217,7 +193,7 @@ class Component extends DCLogic {
         c: rotateDetail, left: rotateLeft, right: rotateRight };
     }
     out.themeClass = 'theme-' + t;
-    out.themeName = t;
+    out.themeName = t; out.push = v === 'branch' ? '↑2' : '';
     // A feature branch has commits to push (Hi3); main has none.
     out.pushOn = v === 'branch';
     out.pushOff = v !== 'branch';

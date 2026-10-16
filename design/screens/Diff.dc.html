@@ -19,33 +19,7 @@ button,input{font-family:inherit}
 </helmet>
 <div class="{{themeClass}}" style="width: {{rootW}}px; height: 800px; display: flex; flex-direction: column; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
 
-<header style="{{headerStyle}}">
-<sc-if value="{{showChrome}}" hint-placeholder-val="{{true}}">
-<div style="display: flex; gap: 8px; margin-right: -4px">
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
-<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
-</div>
-<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)">
-<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="M9.5 4.5v15"></path></svg>
-</button>
-<a href="{{backHref}}" aria-label="{{backLabel}}" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px">
-<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m11 6-6 6 6 6"></path></svg>
-</a>
-<button aria-label="Forward" disabled="{{true}}" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)">
-<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
-</button>
-</sc-if>
-<div style="{{titlesStyle}}">
-<span style="{{titleStyle}}">{{title}}</span>
-<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{subtitle}}</span>
-</div>
-<div style="flex-grow: 1"></div>
-<div style="display: flex; align-items: center; gap: 10px">
-<dc-import name="Segmented" theme="{{themeName}}" size="md" label="Diff layer" options="{{modes}}" hint-size="300px,34px"></dc-import>
-<dc-import name="Button" theme="{{themeName}}" variant="secondary" size="32" icon="more-vertical" label="" aria-label="More actions" title="More actions" hint-size="32px,32px"></dc-import>
-</div>
-</header>
+<dc-import name="PageHeader" page="review" theme="none" chrome="{{showChrome}}" back-href="{{backHref}}" back-label="{{backLabel}}" title="{{title}}" subtitle="{{subtitle}}" editable="{{showEditProject}}" modes="{{modes}}" hint-size="100%,64px"></dc-import>
 
 <sc-if value="{{showBanner}}" hint-placeholder-val="{{false}}">
 <div role="status" style="{{bannerStyle}}">{{banner}}</div>
@@ -695,12 +669,7 @@ class Component extends DCLogic {
       themeClass: 'theme-' + (this.props.theme || 'dark'), themeName: this.props.theme || 'dark',
       rootW: embedded ? 1020 : 1280, asideW: resizing ? 380 : embedded ? 280 : 310, resizing: resizing,
  showChrome: !embedded,
-      // As the other page headers: 64px, 28px left (16px when the sidebar is hidden and the chrome
-      // starts the header), 16px right, actions 10px apart. With the sidebar shown its top row has
-      // back and forward, so the header has none.
-      headerStyle: 'height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px 0 ' + (embedded ? 28 : 16) + 'px; border-bottom: 1px solid var(--border); background: var(--bg-main)',
-      titlesStyle: 'display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-left: ' + (embedded ? 0 : 4) + 'px',
-      titleStyle: 'font-family: \'Source Serif 4\', Georgia, serif; font-size: 22px; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap' + (project ? '; box-sizing: border-box; height: 30px; line-height: 28px; margin-left: -7px; padding: 0 6px; border: 1px solid transparent; border-radius: 8px' : ''),
+      // The header is PageHeader; with the sidebar shown its top row has back and forward, so no chrome.
       showEditProject: project,
       title: project ? 'Session auth refresh' : 'Review',
       subtitle: project ? '4 repos · 6 branches' : 'api-server · rate-limit-middleware · ' + G[0].wt,
