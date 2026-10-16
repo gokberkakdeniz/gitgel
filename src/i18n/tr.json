@@ -680,7 +680,7 @@
   "scripts.fillToRun": "Çalıştırmak için {$label} doldur",
   "scripts.pickOne": "Birini seç",
   "scripts.pickBranchPh": "Dal seç",
-  "scripts.menuLabel": "Betikler",
+  "scripts.menuRun": "Betiği Çalıştır",
   "scripts.pillFailed": "başlatılamadı",
   "scripts.pillRunning": "çalışıyor · {$took}",
   "scripts.pillExit": "exit 0 · {$took}",

@@ -611,7 +611,7 @@
   "scripts.fillToRun": "Fill in {$label} to run",
   "scripts.pickOne": "Pick one",
   "scripts.pickBranchPh": "Pick a branch",
-  "scripts.menuLabel": "Scripts",
+  "scripts.menuRun": "Run Script",
   "scripts.pillFailed": "could not start",
   "scripts.pillRunning": "running · {$took}",
   "scripts.pillExit": "exit 0 · {$took}",

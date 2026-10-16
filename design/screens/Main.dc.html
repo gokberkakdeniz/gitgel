@@ -139,6 +139,11 @@ button,input{font-family:inherit}
 <dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch Options" items="{{rowMenuItems}}" hint-size="260px,230px"></dc-import>
 </div>
 </sc-if>
+<sc-if value="{{showSubMenu}}" hint-placeholder-val="{{false}}">
+<div style="{{subMenuStyle}}">
+<dc-import name="Menu" theme="{{themeName}}" width="260" label="Run Script" items="{{subMenuItems}}" hint-size="260px,180px"></dc-import>
+</div>
+</sc-if>
 
 <sc-if value="{{showToast}}" hint-placeholder-val="{{false}}">
 <div style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%)">
@@ -226,16 +231,19 @@ class Component extends DCLogic {
       [['Open in Finder', 'finder'], ['Open in Cursor', 'cursor'], ['Open in VS Code', 'vscode']].concat(rowMenu === 'terminalMissing' ? [] : [['Open in Terminal', 'terminal']]).map(function (o) {
         return { label: o[0], app: o[1] };
       }));
+    var subMenuItems = null;
     if (scripts) {
       // Open pull request and Copy Linear link run in the repository folder; Run tests, Rebase and
       // Start dev server need the worktree, so they are left out when it is not checked out.
       // Start dev server also has Show when branch.repo == 'web-app' && branch.checkedOut.
-      rowMenuItems = rowMenuItems.concat(
-        [{ kind: 'sep' }, { kind: 'label', label: 'Scripts' },
-         { label: 'Open pull request', icon: 'pull-request', active: noWt }],
+      // Two or more go in the Run Script submenu (one would be an item of its own), shown open
+      // on the left of the menu, as the app's Popover does when there is no room on the right.
+      subMenuItems = [].concat(
+        [{ label: 'Open pull request', icon: 'pull-request', active: noWt }],
         noWt ? [] : [{ label: 'Run tests', icon: 'test', active: true }, { label: 'Rebase on main…', icon: 'rebase' }],
         [{ label: 'Copy Linear link', icon: 'link' }],
         noWt ? [] : [{ label: 'Start dev server', icon: 'prompt' }]);
+      rowMenuItems = rowMenuItems.concat([{ kind: 'sep' }, { label: 'Run Script', icon: 'prompt', submenu: true, active: true }]);
     }
     // Delete Branch… (R2) last; a checked-out branch too (its folder switches to the base or its
     // worktree is removed).
@@ -246,7 +254,12 @@ class Component extends DCLogic {
       : '';
     if (menuNote) rowMenuItems = rowMenuItems.concat([{ kind: 'sep' }, { kind: 'note', label: menuNote, tall: menuNote.length > 90 }]);
     var menuHeight = 14;
-    rowMenuItems.forEach(function (it) { menuHeight += it.kind === 'sep' ? 9 : it.kind === 'label' ? 25 : it.kind === 'note' ? (it.tall ? 64 : 46) : 33; });
+    var subAt = 0;
+    rowMenuItems.forEach(function (it) {
+      if (it.submenu) subAt = menuHeight - 7;
+      menuHeight += it.kind === 'sep' ? 9 : it.kind === 'label' ? 25 : it.kind === 'note' ? (it.tall ? 64 : 46) : 33;
+    });
+    var menuTop = Math.min(rowMenu === 'notCheckedOut' ? 364 : 214, 800 - menuHeight - 12);
     var menuTarget = rowMenu === 'worktree' || rowMenu === 'terminalMissing' ? 'session-token-refresh' : rowMenu === 'notCheckedOut' ? 'feat/billing-v2' : null;
     var grid = 'display: grid; grid-template-columns: 16px minmax(0, 1fr) 104px 24px; column-gap: 8px; align-items: center; padding: 10px 26px 10px 28px; border-bottom: 1px solid var(--border-row); color: var(--text-body); ';
     var chip = 'justify-self: end; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 8px; font-family: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; ';
@@ -363,8 +376,12 @@ class Component extends DCLogic {
       showRowMenu: !empty && menuTarget !== null,
       // Not checked out: the items stay enabled and open the repository folder (the note says so).
       // Kept inside the window like the app's Popover: below the ⋮, moved up when it would not fit.
-      rowMenuStyle: 'position: absolute; top: ' + Math.min(rowMenu === 'notCheckedOut' ? 364 : 214, 800 - menuHeight - 12) + 'px; right: 26px',
+      rowMenuStyle: 'position: absolute; top: ' + menuTop + 'px; right: 26px',
       rowMenuItems: rowMenuItems,
+      showSubMenu: !empty && menuTarget !== null && !!subMenuItems,
+      // Its top 6px above the Run Script item's, 2px left of the menu.
+      subMenuStyle: 'position: absolute; top: ' + (menuTop + subAt - 6) + 'px; right: 288px',
+      subMenuItems: subMenuItems || [],
       scriptRun: scriptRun,
       showRunToast: !empty && !added && scriptRun !== 'none',
       runMessage: { running: 'Running “Run tests”…', success: '“Run tests” finished', failed: '“Run tests” failed · exit 1' }[scriptRun] || '',
