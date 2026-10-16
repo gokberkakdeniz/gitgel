@@ -15,6 +15,7 @@ export const AI_PROVIDERS: AiProviderMeta[] = [
   { id: 'cursor', label: 'Cursor', binary: 'agent', effort: false },
   { id: 'antigravity', label: 'Antigravity', binary: 'agy', effort: true },
   { id: 'codex', label: 'Codex', binary: 'codex', effort: true },
+  { id: 'foundation', label: 'Apple Foundation Models', binary: 'fm', effort: false },
 ];
 
 export const providerLabel = (provider: CommitProvider) =>

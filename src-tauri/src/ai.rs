@@ -45,6 +45,7 @@ pub enum Provider {
     Cursor,
     Antigravity,
     Codex,
+    Foundation,
 }
 
 impl Provider {
@@ -55,6 +56,7 @@ impl Provider {
             Provider::Cursor => "Cursor",
             Provider::Antigravity => "Antigravity",
             Provider::Codex => "Codex",
+            Provider::Foundation => "Apple Foundation Models",
         }
     }
 
@@ -106,6 +108,9 @@ impl Provider {
                 };
                 format!("codex exec --ephemeral --sandbox read-only{model}{effort} {prompt}")
             }
+            // Apple's on-device model: no tools unless asked for, so it cannot act. The
+            // streamed answer redraws, so it is printed whole.
+            Provider::Foundation => format!("fm respond --no-stream{model} {prompt}"),
         }
     }
 
@@ -117,6 +122,7 @@ impl Provider {
             Provider::Cursor => "cursor",
             Provider::Antigravity => "antigravity",
             Provider::Codex => "codex",
+            Provider::Foundation => "foundation",
         }
     }
 
@@ -127,13 +133,14 @@ impl Provider {
             Provider::Cursor => &ai.cursor,
             Provider::Antigravity => &ai.antigravity,
             Provider::Codex => &ai.codex,
+            Provider::Foundation => &ai.foundation,
         }
     }
 
     /// opencode (`--variant`), Claude Code and Antigravity (`--effort`) and Codex
     /// (`model_reasoning_effort`) take one; the names are the model provider's own.
     fn effort_supported(&self) -> bool {
-        !matches!(self, Provider::Cursor)
+        !matches!(self, Provider::Cursor | Provider::Foundation)
     }
 }
 
@@ -157,14 +164,15 @@ struct GenerateFinished {
 
 /// Whether each provider's CLI is installed: its binary through the login shell.
 pub fn status() -> Vec<ProviderStatus> {
-    const ALL: [Provider; 5] = [
+    const ALL: [Provider; 6] = [
         Provider::Opencode,
         Provider::Claude,
         Provider::Cursor,
         Provider::Antigravity,
         Provider::Codex,
+        Provider::Foundation,
     ];
-    const BINS: [&str; 5] = ["opencode", "claude", "agent", "agy", "codex"];
+    const BINS: [&str; 6] = ["opencode", "claude", "agent", "agy", "codex", "fm"];
     // `command -v` one per line when found (`;`-joined: fish-safe); `true` keeps the exit 0.
     let command = BINS
         .iter()
@@ -755,12 +763,17 @@ mod tests {
             Provider::Codex.command(false, true),
             r#"codex exec --ephemeral --sandbox read-only -c "model_reasoning_effort=\"$GITGEL_EFFORT\"" "$GITGEL_PROMPT""#
         );
+        assert_eq!(
+            Provider::Foundation.command(true, false),
+            r#"fm respond --no-stream --model "$GITGEL_MODEL" "$GITGEL_PROMPT""#
+        );
         // Effort is only offered where the CLI takes one.
         assert!(Provider::Opencode.effort_supported());
         assert!(Provider::Antigravity.effort_supported());
         assert!(Provider::Codex.effort_supported());
         assert!(Provider::Claude.effort_supported());
         assert!(!Provider::Cursor.effort_supported());
+        assert!(!Provider::Foundation.effort_supported());
     }
 
     #[test]

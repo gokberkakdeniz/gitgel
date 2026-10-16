@@ -169,6 +169,7 @@ pub struct AiSettings {
     pub cursor: AiProviderSettings,
     pub antigravity: AiProviderSettings,
     pub codex: AiProviderSettings,
+    pub foundation: AiProviderSettings,
 }
 
 /// One provider's switch, model, effort and prompt template; an empty model, effort or
@@ -194,7 +195,7 @@ impl Default for AiSettings {
     fn default() -> Self {
         AiSettings {
             enabled: true,
-            order: ["opencode", "claude", "cursor", "antigravity", "codex"]
+            order: ["opencode", "claude", "cursor", "antigravity", "codex", "foundation"]
                 .into_iter()
                 .map(str::to_string)
                 .collect(),
@@ -203,6 +204,7 @@ impl Default for AiSettings {
             cursor: AiProviderSettings::default(),
             antigravity: AiProviderSettings::default(),
             codex: AiProviderSettings::default(),
+            foundation: AiProviderSettings::default(),
         }
     }
 }

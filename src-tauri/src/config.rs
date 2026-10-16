@@ -164,7 +164,8 @@ mod tests {
                     "claude": { "enabled": true, "model": null, "effort": null, "prompt": null },
                     "cursor": { "enabled": true, "model": null, "effort": null, "prompt": null },
                     "antigravity": { "enabled": true, "model": null, "effort": "high", "prompt": null },
-                    "codex": { "enabled": true, "model": null, "effort": null, "prompt": null }
+                    "codex": { "enabled": true, "model": null, "effort": null, "prompt": null },
+                    "foundation": { "enabled": true, "model": null, "effort": null, "prompt": null }
                 }
             },
             "scripts": [{

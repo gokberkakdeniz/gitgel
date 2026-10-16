@@ -1147,7 +1147,7 @@ Layout:
     it from the commit menu) and ✎. While its CLI is missing the `Switch` and ✎ are disabled;
     the handle never is. ✎ opens an "Edit Provider" modal (sub `<provider> · <cli>`): a 36px mono
     `Input` "Model" (placeholder `Default`; empty = the CLI's own default), a 36px mono
-    `Input` "Effort" (only for the CLIs that take one, not Cursor; placeholder `Default`;
+    `Input` "Effort" (only for the CLIs that take one, not Cursor or Apple Foundation Models; placeholder `Default`;
     empty = default; free text — the names are the model provider's own, e.g. opencode
     variants like `max`), and a growing mono textarea
     "Prompt" (the effective prompt: the provider's own when untouched) with a
@@ -2609,7 +2609,7 @@ the worktree's HEAD is another commit by then.
   (the same commit with `--no-verify`) and "Retry" (primary, ⌘↵), which send the same files and
   message again. Stopping the run does not open it.
 - **Generate message**: `generate_message_start` (`entry`, the checked `include`
-  paths, `provider`: opencode, claude, cursor, antigravity or codex) asks that agent CLI for a
+  paths, `provider`: opencode, claude, cursor, antigravity, codex or foundation) asks that agent CLI for a
   commit message for the checked files, as a run (`ai:generate`, `sparkles` icon) in the entry's
   worktree: a running toast ("Generating a commit message with <provider>…") that opens its output
   panel on click, stoppable there. The prompt is built from git2 reads only: the checked
@@ -2617,12 +2617,13 @@ the worktree's HEAD is another commit by then.
   touching the checked files first. The CLI's fixed command carries the prompt in
   `GITGEL_PROMPT`; it never writes to the repository (codex and Antigravity run sandboxed,
   Claude denies anything that would prompt, opencode runs its read-only `plan` agent
-  (`--agent plan`), cursor with `--trust` but without `--force`). Past 5.5 minutes the run is stopped (agy's own print timeout is
+  (`--agent plan`), cursor with `--trust` but without `--force`, Apple Foundation Models (`fm respond
+  --no-stream`, Apple's on-device model) with no tools). Past 5.5 minutes the run is stopped (agy's own print timeout is
   5 minutes). The answer arrives as `generate-finished`: the provider's text (opencode's
   `text` events, codex's block after its last `codex` line up to `tokens used`) split into summary (first line) and description (the rest), or an error; a
   stopped run stays quiet; blank lines inside the description are kept. The run rescans nothing and toasts nothing at its end.
   The provider, model, effort and prompt template come from Settings › AI: `--model
-  "$GITGEL_MODEL"` when a model is set (all five), `--variant "$GITGEL_EFFORT"` for opencode,
+  "$GITGEL_MODEL"` when a model is set (all six), `--variant "$GITGEL_EFFORT"` for opencode,
   `--effort "$GITGEL_EFFORT"` for Claude Code and Antigravity and `-c
   "model_reasoning_effort=\"$GITGEL_EFFORT\""` for Codex when an effort is set (free text;
   for Codex quotes, backslashes and line breaks are refused). The template fills `{branch}`, `{repo}`, `{stat}`,

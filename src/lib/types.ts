@@ -253,7 +253,7 @@ export interface CommitFiles {
   amend?: string | null; // Amend (Hi10): the newest commit's SHA, which `--amend` replaces
 }
 /** An agent CLI that writes a commit message (SPEC §15 "Generate message"). */
-export type CommitProvider = 'opencode' | 'claude' | 'cursor' | 'antigravity' | 'codex';
+export type CommitProvider = 'opencode' | 'claude' | 'cursor' | 'antigravity' | 'codex' | 'foundation';
 /** One provider's switch, model, effort and prompt; empty is the default. */
 export interface AiProviderSettings {
   enabled: boolean; // off hides the provider from the commit menu
@@ -270,6 +270,7 @@ export interface AiSettings {
   cursor: AiProviderSettings;
   antigravity: AiProviderSettings;
   codex: AiProviderSettings;
+  foundation: AiProviderSettings;
 }
 /** One agent CLI: whether it is installed (`get_ai_status`). */
 export interface AiStatus {

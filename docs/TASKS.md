@@ -654,6 +654,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Undo Commit: History's commit menu on the newest unpushed commit runs `git reset --soft` to its parent; its changes stay staged and its message refills an empty form — 2026-10-16
 - [x] (on request) Branch menus: two or more scripts go in a Run Script submenu; a single script stays an item of its own — 2026-10-16
 - [x] (on request) Menu items follow the HIG: title case in English and Turkish, "…" only before a dialog (Stash…, Drop…; not on Apply to / Pop to submenus), the sort menu's check on the left, Turkish Continue reads "… İşlemine Devam Et" — 2026-10-16
+- [x] (on request) Apple Foundation Models provider: the on-device model writes commit messages through `fm respond --no-stream` (model only, no effort) — 2026-10-16
 
 ---
 
