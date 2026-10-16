@@ -201,7 +201,7 @@ gitgel/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
 │  │            # Review/parts.tsx (+ parts.module.css): file bar (view menu, change navigation),
 │  │            #   file row, stash section, diff view settings, page layout (shared with History, §16)
-│  │            # History/: the History screen, its list rows, the commit form, Switch Branch and AmendModal (§16)
+│  │            # History/: the History screen, its list rows, the commit form, Switch Branch, AmendModal and CherryPickMenu (§16)
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
@@ -2039,7 +2039,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 235–238), Repositories 35–59 (repository `List` 38, items 300–304; Default base `List` 44 with rows, actions and add states 239–266 and 305–312; Active threshold 50–53, Check Out New Branches In 54–57), General 61–91 (Language 63–69; Terminal 72–84, options with disabled flag 311; Check for updates 87–89), Appearance: Theme 95–114, tile builder 253; Formatting 116–134 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 135–141 with Tab size, Scripts 143–161 (`List` 121, items 313–318), Prompts 127–134 (data 290), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit) |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit); `HistH12` (Hi11) Cherry-Pick to over `HistH6`: the commit menu and its target picker (`picker`) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | New branch | `FlowV2.dc.html`, `FlowV3.dc.html` | canvas page "Branch actions": V2, the form under a repo band's "+", interactive (`case` worktree, checkout, branchOnly: the row picked first; `dirty`: the repository folder has changes); V3 mounts it with Repository folder picked; the "+" on the bands of `Main` (`newBranch` shows it open) |
@@ -2910,7 +2910,7 @@ never edits `~/.ssh`:
 A branch's commits, newest first, each one shown on its own against its first parent, like
 GitHub Desktop's History tab. Reads are a revwalk and diffs; the writes are Commit and Discard (§15).
 Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `HistH7`,
-`HistH8`, `HistH9`, `HistH10`, `HistH11.dc.html` (§11).
+`HistH8`, `HistH9`, `HistH10`, `HistH11`, `HistH12.dc.html` (§11).
 
 - **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
   branch, a remote-tracking branch or a SHA) and walks from it newest first in `git log`'s order
@@ -2976,8 +2976,8 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
     below the base line: subject `text.muted`, row opacity 0.7. Right-click on it (`HistH11`,
     Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
-    in a worktree; disabled while a commit runs or mid-operation) and a divider, then "Copy SHA"
-    (`copy`). The commit being amended carries an accent sm pill "amending" after its subject.
+    in a worktree; disabled while a commit runs or mid-operation), "Cherry-Pick to" (`rebase`, a
+    chevron; `HistH12`, Hi11, below) and a divider, then "Copy SHA" (`copy`). The commit being amended carries an accent sm pill "amending" after its subject.
   - **Base line** (`HistH4`): when `ahead` > 0, after the last commit not in the base: a 1px
     `border.strong` rule on both sides of mono 11 muted `base <base>`.
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -3036,6 +3036,19 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     amend mode (toast “Amended the last commit of <rev>”); a commit on the remote leaves the
     branch diverged, so the diverged banner offers Force Push. If the branch gets a new commit
     meanwhile, amend mode ends by itself.
+  - **Cherry-Pick to** (`HistH12`, Hi11; `CherryPickMenu`): opens a 280px picker beside the item
+    on hover or click (→ from the keyboard, ← back), like Apply to (P5): label "Cherry-pick <sha>
+    to", then one item per checked-out entry of the repository but the one History shows (scan
+    order): `branch` icon, the branch (short SHA when detached), desc the folder (`~/…`) plus
+    ` · N uncommitted`, or ` · rebasing` (the operation's pill) for a worktree with an operation
+    in progress, which is disabled (tooltip "The folder has an operation in progress"). No other
+    checked-out entry: the item is disabled, tooltip "No other branch is checked out". A pick
+    runs `git cherry-pick "$GITGEL_COMMIT"` (`-m 1` for a merge commit) in that folder as a git
+    action (script id `git:cherry-pick`, name "Cherry-Pick <sha>", toast “Cherry-picking
+    <sha>…”, then “Cherry-picked <sha> onto <branch>”). Refused before running: another git action
+    in the repository, an operation in progress there, a commit the repository does not have. On
+    conflicts git stops, the toast fails with git's last line, and the entry shows the
+    cherry-pick in progress (§15 "Operations in progress": pill, Continue / Abort).
 - **Picking:** on opening, Uncommitted when there is one, else the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,
   Uncommitted included. Clicking the picked row again folds its file list, and opens it again;

@@ -43,6 +43,7 @@ import parts from '../Review/parts.module.css';
 import type { ReviewStash } from '../Review/stashes';
 import styles from './History.module.css';
 import { AmendModal } from './AmendModal';
+import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
 import { CommitForm } from './CommitForm';
 import { SwitchBranchDialog } from './SwitchBranch';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
@@ -372,6 +373,10 @@ export function History({ repoId, rev, backLabel }: Props) {
   const [wipMenu, setWipMenu] = useState<DOMRect | null>(null);
   // A commit row's right-click menu (Hi10): Amend Commit… on the newest one, Copy SHA.
   const [commitMenu, setCommitMenu] = useState<{ commit: HistoryCommit; at: DOMRect } | null>(null);
+  // Cherry-Pick to's picker, beside its item (Hi11).
+  const [cherrySub, setCherrySub] = useState<{ el: HTMLElement; focus?: boolean } | null>(null);
+  useEffect(() => setCherrySub(null), [commitMenu]);
+  const cherryTo = cherryTargets(repoScan?.active ?? [], entry);
   // HEAD moved under the form (a commit made elsewhere): amending would rewrite another commit.
   useEffect(() => {
     if (amending && tip && tip !== amending.sha && !committing) stopAmend();
@@ -627,6 +632,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 <MenuItem
                   icon="pencil"
                   disabled={committing || !!entry.operation || amending?.sha === commitMenu.commit.sha}
+                  onHover={() => setCherrySub(null)}
                   onSelect={() => {
                     setCommitMenu(null);
                     startAmend(commitMenu.commit);
@@ -634,11 +640,22 @@ export function History({ repoId, rev, backLabel }: Props) {
                 >
                   {t('amend.menuAmend')}
                 </MenuItem>
-                <MenuDivider />
               </>
             )}
             <MenuItem
+              icon="rebase"
+              submenu
+              disabled={cherryTo.length === 0}
+              title={cherryTo.length === 0 ? t('cherry.none') : undefined}
+              onHover={(el) => setCherrySub({ el })}
+              onSelect={(el) => setCherrySub({ el, focus: true })}
+            >
+              {t('cherry.menu')}
+            </MenuItem>
+            <MenuDivider />
+            <MenuItem
               icon="copy"
+              onHover={() => setCherrySub(null)}
               onSelect={() => {
                 setCommitMenu(null);
                 void writeText(commitMenu.commit.sha);
@@ -647,6 +664,32 @@ export function History({ repoId, rev, backLabel }: Props) {
               {t('history.menuCopySha')}
             </MenuItem>
           </Menu>
+          {cherrySub && (
+            <Popover
+              anchor={cherrySub.el}
+              anchorRect={cherrySub.el.getBoundingClientRect()}
+              side="right"
+              width={280}
+              onClose={() => setCherrySub(null)}
+            >
+              <div
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowLeft') return;
+                  e.preventDefault();
+                  cherrySub.el.focus();
+                  setCherrySub(null);
+                }}
+              >
+                <CherryPickMenu
+                  repoId={repoId}
+                  commit={commitMenu.commit}
+                  targets={cherryTo}
+                  autoFocus={!!cherrySub.focus}
+                  onDone={() => setCommitMenu(null)}
+                />
+              </div>
+            </Popover>
+          )}
         </Popover>
       )}
       {askAmend && (

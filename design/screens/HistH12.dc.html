@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hi11 · Cherry-pick a commit</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+.theme-dark{--bg-main:#141311}
+.theme-light{--bg-main:#fbfaf7}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; background: var(--bg-main); overflow: hidden">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="HistH6" theme="{{themeName}}" state="commit" pushed="{{false}}" hint-size="1280px,800px"></dc-import>
+</div>
+<div style="position: absolute; left: 210px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="200" label="e8b2c41 actions" items="{{menu}}" hint-size="200px,124px"></dc-import></div>
+<sc-if value="{{showPicker}}" hint-placeholder-val="{{true}}">
+<div style="position: absolute; left: 414px; top: 333px; z-index: 6"><dc-import name="Menu" theme="{{themeName}}" width="280" label="Cherry-pick to" items="{{targets}}" hint-size="280px,190px"></dc-import></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"picker":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var t = this.props.theme || 'dark';
+    var picker = this.props.picker !== false;
+    // History of web-app / session-token-refresh (Hi5), right-click on its newest commit e8b2c41.
+    // Cherry-Pick to opens the target picker beside it on hover or click (→ from the keyboard,
+    // ← back), like Apply to (P5). On an older commit the menu is Cherry-Pick to and Copy SHA.
+    // Targets: the repo's other checked-out entries (the rev shown left out; a detached worktree
+    // by its short SHA), desc the folder plus "· N uncommitted". A worktree with an operation in
+    // progress is disabled, its desc says which. A pick runs git cherry-pick <sha> there (-m 1 for
+    // a merge commit) as a git action; a conflict stops it and flow T takes over on that row.
+    return {
+      themeClass: 'theme-' + t, themeName: t, showPicker: picker,
+      menu: [
+        { label: 'Amend Commit…', icon: 'pencil' },
+        { label: 'Cherry-Pick to', icon: 'rebase', submenu: true, active: picker },
+        { kind: 'sep' },
+        { label: 'Copy SHA', icon: 'copy' }
+      ],
+      targets: [
+        { kind: 'label', label: 'Cherry-pick e8b2c41 to' },
+        { label: 'main', icon: 'branch', desc: '~/code/web-app', active: true },
+        { label: 'feat/job-queue', icon: 'branch', desc: '~/code/wt/job-queue · 3 uncommitted' },
+        { label: 'token-rotation-job', icon: 'branch', desc: '~/code/wt/token-rotation · rebasing', disabled: true, title: 'A rebase is in progress here' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

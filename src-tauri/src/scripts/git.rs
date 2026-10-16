@@ -884,6 +884,70 @@ pub fn operation(state: &AppState, entry: EntryRef, abort: bool) -> Result<Scrip
     )
 }
 
+/// Cherry-Pick to (SPEC §16, Hi11): `git cherry-pick <sha>` (`-m 1` for a merge commit) in one of
+/// the repository's worktrees. Refused while that worktree has an operation in progress; a
+/// conflict stops git there, and the operation then shows on its entry (§15).
+pub fn cherry_pick(
+    state: &AppState,
+    repo_id: &str,
+    sha: &str,
+    worktree_path: &str,
+) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    repo.not_busy(state)?;
+    let wanted = Path::new(worktree_path).canonicalize()?;
+    let tree = repo
+        .trees
+        .iter()
+        .find(|w| w.path == wanted)
+        .ok_or_else(|| {
+            AppError::Invalid(format!(
+                "{worktree_path} is not a worktree of {}.",
+                repo.name
+            ))
+        })?;
+    let (merge, full) = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        if operation::read(&wt).is_some() || !operation::unmerged(&wt)?.is_empty() {
+            return Err(AppError::Invalid(format!(
+                "{} has an operation in progress.",
+                repo.label(tree)
+            )));
+        }
+        let commit = git2::Oid::from_str(sha)
+            .and_then(|oid| wt.find_commit(oid))
+            .map_err(|_| AppError::NotFound(format!("commit {sha}")))?;
+        (commit.parent_count() > 1, commit.id().to_string())
+    };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}cherry-pick"),
+            name: format!("Cherry-Pick {}", &full[..7]),
+            icon: "rebase".into(),
+            entry_key: entry_key(
+                &repo.id,
+                tree.branch.as_deref(),
+                Some(&tree.path.to_string_lossy()),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: cherry_pick_command(merge),
+            env: with_git_env(vec![("GITGEL_COMMIT".into(), full)]),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `git cherry-pick [-m 1] "$GITGEL_COMMIT"`: only fixed text and a quoted variable.
+pub(super) fn cherry_pick_command(merge: bool) -> String {
+    let mainline = if merge { " -m 1" } else { "" };
+    format!("git cherry-pick{mainline} \"$GITGEL_COMMIT\"")
+}
+
 /// Where the branch Delete Branch removes is checked out.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum CheckedOut {
@@ -1683,6 +1747,18 @@ mod tests {
         assert_eq!(
             operation_command("rebase", false, 2),
             r#"git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" "$GITGEL_PATH_2" && git -C "$GITGEL_FOLDER" rebase --continue"#
+        );
+    }
+
+    #[test]
+    fn cherry_pick_commands_hold_no_values() {
+        assert_eq!(
+            cherry_pick_command(false),
+            r#"git cherry-pick "$GITGEL_COMMIT""#
+        );
+        assert_eq!(
+            cherry_pick_command(true),
+            r#"git cherry-pick -m 1 "$GITGEL_COMMIT""#
         );
     }
 

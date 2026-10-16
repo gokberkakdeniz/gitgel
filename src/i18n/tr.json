@@ -877,5 +877,11 @@
   "amend.stop": "Düzeltmeyi bırakın",
   "amend.noteAfter": "ve değişiklikleri yeni bir commit olarak kaydedin.",
   "amend.button": "Son Commit’i Düzelt",
+  "cherry.menu": "Şuraya Seçerek Uygula",
+  "cherry.target": "Seçerek uygula: {$sha}",
+  "cherry.targetAria": "Seçerek uygulanacak dal",
+  "cherry.act": "Seçerek uygula: {$sha}",
+  "cherry.running": "{$sha} seçerek uygulanıyor…",
+  "cherry.none": "Başka açık dal yok",
   "settings.settingsTitle": "Ayarlar"
 }

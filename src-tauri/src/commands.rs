@@ -633,6 +633,20 @@ pub async fn git_operation(
     .await
 }
 
+/// Cherry-Pick to: `git cherry-pick` of the commit `sha` in one of the repository's worktrees.
+#[tauri::command]
+pub async fn git_cherry_pick(
+    state: State<'_, AppState>,
+    repo_id: String,
+    sha: String,
+    worktree_path: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::cherry_pick(state, &repo_id, &sha, &worktree_path)
+    })
+    .await
+}
+
 /// Delete Branch: `git branch -D` of a branch whose tip is still `sha`, after switching its
 /// checkout to the base or removing its worktree (its changes stashed with `stash`); with
 /// `remote`, its branch on the remote first.
