@@ -687,8 +687,6 @@
   "stash.actPop": "Pop {$stash}",
   "stash.targetAriaPop": "Pop stash to",
   "stash.targetAriaApply": "Apply stash to",
-  "stash.targetPop": "Pop {$stash} to",
-  "stash.targetApply": "Apply {$stash} to",
   "stash.dropping": "Dropping {$stash}…",
   "stash.applying": "Applying {$stash}…",
   "stash.popping": "Popping {$stash}…",

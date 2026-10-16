@@ -195,8 +195,6 @@
   "stash.actPop": "Al: {$stash}",
   "stash.targetAriaPop": "Geçici kaydı al",
   "stash.targetAriaApply": "Geçici kaydı uygula",
-  "stash.targetPop": "Al: {$stash}",
-  "stash.targetApply": "Uygula: {$stash}",
   "stash.dropping": "{$stash} bırakılıyor…",
   "stash.applying": "{$stash} uygulanıyor…",
   "stash.popping": "{$stash} alınıyor…",

@@ -84,7 +84,7 @@ button,input,textarea{font-family:inherit}
 </div><div style="padding: 8px 26px 8px 52px; border-bottom: 1px solid var(--border-row)"><dc-import name="List" theme="none" label="Stashes" heading="Stashes" collapsed="{{true}}" items="{{stashesApi}}" hint-size="100%,150px"></dc-import></div>
 </div>
 <div style="position: absolute; top: 364px; left: 741px; z-index: 5"><dc-import name="Menu" theme="none" width="240" label="Stash actions" items="{{stashMenu}}" hint-size="240px,170px"></dc-import></div>
-<sc-if value="{{picker}}" hint-placeholder-val="{{false}}"><div style="position: absolute; top: 397px; left: 459px; z-index: 6"><dc-import name="Menu" theme="none" width="280" label="Apply stash to" items="{{pickMenu}}" hint-size="280px,170px"></dc-import></div></sc-if>
+<sc-if value="{{picker}}" hint-placeholder-val="{{false}}"><div style="position: absolute; top: 397px; left: 459px; z-index: 6"><dc-import name="Menu" theme="none" width="280" label="Apply stash to" items="{{pickMenu}}" hint-size="280px,140px"></dc-import></div></sc-if>
 </main>
 </div>
 </x-dc>
@@ -97,8 +97,9 @@ class Component extends DCLogic {
     // api-server's list is collapsed: its bottom padding drops to the top's 8px.
     // picker (P5, FlowP5.dc.html): the pointer on Apply to: the worktree picker opens beside it (here on its left, as
     // there is no room on the right; → / click open it from the keyboard, ← goes back). One item per checked-out branch of the
-    // repo, the branch the stash was taken on first; desc the folder, plus its uncommitted count.
-    // A pick runs `git stash apply 'stash@{0}'` there (Pop to: "Pop stash@{0} to", `pop`); the
+    // repo, the branch the stash was taken on first, no heading: the branch, under it the folder,
+    // nothing else; each one line, "…" when long. A pick runs `git stash apply 'stash@{0}'` there
+    // (Pop to: `pop`); the
     // same picker opens under the stash pane's Apply / Pop buttons (P2, P3).
     var picker = !!this.props.picker;
     var more = function (open) { return [{ icon: 'more-vertical', ariaLabel: 'Stash Options', active: open }]; };
@@ -112,9 +113,9 @@ class Component extends DCLogic {
         { label: 'Apply to…', submenu: true, active: picker, href: picker ? undefined : 'FlowP5.dc.html' },
         { label: 'Pop to…', submenu: true },
         { kind: 'sep' }, { label: 'Drop', kbd: '⌫', danger: true, href: 'FlowP6.dc.html' }],
-      pickMenu: [{ kind: 'label', label: 'Apply stash@{0} to' },
-        { label: 'session-token-refresh', icon: 'branch', desc: '~/code/wt/token-refresh · 3 uncommitted', active: true },
-        { label: 'session-cookie-cleanup', icon: 'branch', desc: '~/code/wt/cookie-cleanup · 1 uncommitted' },
+      pickMenu: [
+        { label: 'session-token-refresh', icon: 'branch', desc: '~/code/wt/token-refresh', active: true },
+        { label: 'session-cookie-cleanup', icon: 'branch', desc: '~/code/wt/cookie-cleanup' },
         { label: 'main', icon: 'branch', desc: '~/code/web-app' }],
       stashesWeb: [stash(0, 'debug logging for refresh', 'session-token-refresh', false, '1 file', '20m', true),
         stash(1, 'WIP on old-login: 71be0c2 Try new login form', 'old-login', true, '5 files', '3w', false)],

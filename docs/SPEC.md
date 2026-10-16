@@ -2512,10 +2512,10 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
   on the real index; the copy is deleted when the run ends. Toast sub line `repo / branch` for one
   entry, else `N entries`.
 - **Worktree picker** (P5; Apply to / Pop to in the Branches stash menu, Apply / Pop in the
-  stash pane when its branch is not checked out): a 280px menu, label "Apply stash@{n} to" (or "Pop stash@{n} to"), then one item
+  stash pane when its branch is not checked out): a 280px menu with no label, one item
   per checked-out entry of the repository (scan order, the branch the stash was taken on first):
-  `branch` icon, the branch (short SHA when detached), desc the folder (`~/…`) plus
-  ` · N uncommitted` when it has changes. A pick runs `git stash apply 'stash@{n}'` (or `pop`) in
+  `branch` icon, the branch (short SHA when detached) and under it the folder (`~/…`), nothing
+  else; each on one line, ending in "…" when long. A pick runs `git stash apply 'stash@{n}'` (or `pop`) in
   that folder, named "Apply stash@{n}" / "Pop stash@{n}", sub line `repo / branch`. With
   conflicts git leaves the markers in the files and keeps the stash (also for pop); the toast is
   failed with git's last line, and Gitgel does nothing more.
@@ -3037,8 +3037,8 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     branch diverged, so the diverged banner offers Force Push. If the branch gets a new commit
     meanwhile, amend mode ends by itself.
   - **Cherry-Pick to** (`HistH12`, Hi11; `CherryPickMenu`): opens a 280px picker beside the item
-    on hover or click (→ from the keyboard, ← back), like Apply to (P5) but with no label: one
-    item per checked-out entry of the repository but the one History shows (scan
+    on hover or click (→ from the keyboard, ← back), like Apply to (P5): one item per
+    checked-out entry of the repository but the one History shows (scan
     order): `branch` icon, the branch (short SHA when detached) and under it the folder (`~/…`),
     nothing else; each on one line, ending in "…" when long. A worktree with an operation in
     progress is disabled (tooltip "The folder has an operation in progress"). No other
