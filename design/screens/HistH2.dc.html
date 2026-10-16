@@ -45,8 +45,7 @@ button,input,textarea{font-family:inherit}
 </header>
 <div style="flex-grow: 1; display: flex; min-height: 0">
 <aside style="width: 380px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; overflow: hidden">
-<div style="display: flex; align-items: center; gap: 8px; padding: 14px 16px 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)"><span style="flex-grow: 1">{{listLabel}}</span></div>
-<div role="listbox" aria-label="Commits" style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 8px 8px; min-height: 0; overflow: hidden">
+<div role="listbox" aria-label="Commits" style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; padding: 6px 8px 8px; min-height: 0; overflow: hidden">
 <sc-for list="{{items}}" as="it" hint-placeholder-count="8">
 <sc-if value="{{it.isDay}}" hint-placeholder-val="{{false}}">
 <div style="padding: 10px 8px 4px; font-size: 11px; color: var(--text-faint)">{{it.label}}</div>
@@ -187,7 +186,7 @@ class Component extends DCLogic {
 
     var out;
     if (v === 'branch') {
-      out = { subtitle: 'web-app · session-token-refresh · ~/code/wt/token-refresh', refLabel: 'session-token-refresh', listLabel: 'session-token-refresh · 4 ahead of main',
+      out = { subtitle: 'web-app · session-token-refresh · ~/code/wt/token-refresh', refLabel: 'session-token-refresh',
         items: [{ isWip: true, meta: '3 files · 6m' }, day('Today'), commit('e8b2c41', 'Retry refresh once on network error', 'Can Öztürk', '6m', { sel: true }),
           file('M', 'refresh.ts', 'src/auth', '+12', '−1', true), file('M', 'errors.ts', 'src/auth', '+7', '−3'),
           commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m'),
@@ -207,7 +206,7 @@ class Component extends DCLogic {
           line('r', 'add', 44, '    if (!(e instanceof NetworkError)) throw e;'), line('r', 'add', 45, '    return refreshSession(s);'),
           line('r', 'add', 46, '  }'), line('r', 'ctx', 47, '}')] };
     } else {
-      out = { showStashes: true, subtitle: 'web-app · main · ~/code/web-app', refLabel: 'main', listLabel: 'main · 248 commits',
+      out = { showStashes: true, subtitle: 'web-app · main · ~/code/web-app', refLabel: 'main',
         items: [{ isWip: true, meta: '2 files · 4m' }, day('Today'), rotate].concat(rotateFiles, [
           commit('9e44b1d', 'Merge pull request #412 from deniz/rate-limit-headers', 'Deniz Arslan', '5h', { merge: true }),
           commit('3f0a7c8', 'Send RateLimit-* headers on 429', 'Deniz Arslan', '6h'),

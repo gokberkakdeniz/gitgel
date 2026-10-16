@@ -169,19 +169,6 @@ pub async fn get_history(
     .await
 }
 
-/// How many commits a history tip has in all (§16).
-#[tauri::command]
-pub async fn get_commit_count(
-    state: State<'_, AppState>,
-    repo_id: String,
-    tip: String,
-) -> Result<u32, AppError> {
-    blocking(&state, move |state| {
-        history::get_commit_count(state, &repo_id, &tip)
-    })
-    .await
-}
-
 #[tauri::command]
 pub async fn read_file_pair(
     state: State<'_, AppState>,

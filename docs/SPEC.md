@@ -1601,7 +1601,6 @@ export interface HistoryPage {
   tip: string | null;             // null => the rev does not resolve
   commits: HistoryCommit[];       // newest first (`git log`'s order), at most `limit`
   more: boolean;                  // the walk has more commits (or matches) past `limit`
-  total: number | null;           // commits reachable from the tip; null while searching, or until counted (get_commit_count)
   ahead: number | null;           // commits not in the base; null without a base
   fetchedAt: number | null;       // FETCH_HEAD's modification time; null if never fetched
   upstream: Upstream | null;      // when rev is a local branch: where it is pushed to (§15 "Sync")
@@ -2918,15 +2917,12 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   (an unsorted revwalk, which queues parents by committer date as it goes; any libgit2 sort mode,
   `Sort::TIME` too, walks the whole graph before the first commit), returning the first `limit`
   commits. A page further down is the same call with a larger `limit` (the list asks for 200 more
-  when scrolled near its end). `total` counts every commit reachable from the tip; it is cached
-  per (repo, tip). It reads the whole graph, so when the walk has more than the page and no count
-  is cached, `total` is null and the list asks `get_commit_count` for it afterwards; that runs on
-  its own `Repository` (the pooled one stays free, and the commits it read leave libgit2's cache
-  when it closes). With `base` (the entry's base) the commits not reachable from
+  when scrolled near its end). There is no total count: it would read the whole graph (a second
+  on vscode). With `base` (the entry's base) the commits not reachable from
   it are counted (`ahead`) and the rest are `inBase`. `query`: every word (the Branches filter
   rule) must appear in the subject, body, author name or email, the full SHA, or a path the
   commit changed against its first parent (read only when the text did not match); the walk goes
-  on until `limit` commits match; `total` is null then. `fetchedAt`: the modification time of
+  on until `limit` commits match. `fetchedAt`: the modification time of
   `FETCH_HEAD` in the common git dir. Every call logs one line with its timings.
 - **Opening:** "Open history" in a Branches row menu (not the base row's), the base branch row's name and History
   button, a remote branch row while filtering Branches (K2), and in Review's entry bar the branch name and the base in "N commits ahead of <base>". Route `history` with `repoId` and `rev`, pushed like Review
@@ -2956,9 +2952,9 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
 - **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Its right
   border is a drag handle (8px hit area, `col-resize`; a 2px accent line on hover, focus and
   drag); 280–640px, ←/→ by 16px when focused, double-click resets. The width is remembered
-  on this machine (`localStorage`). Label (section
-  label style, padding 14px 16px 6px) `<rev> · N commits` (`total`; `<rev>` alone until counted), while searching `N matching
-  commits` (`N+` while there are more). Rows (padding 0 8px 8px, gap 2):
+  on this machine (`localStorage`). Only while searching a label (section
+  label style, padding 14px 16px 6px) `N matching commits` (`N+` while there are more); otherwise
+  the list starts with its rows (the subtitle names the rev). Rows (padding 6px 8px 8px, gap 2):
   - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with
     uncommitted files; never while searching): first, above the day labels. 1px dashed
     `border.strong`, radius 8, padding 7px 8px; a 24px slot with an 8px `accent.text` dot; 13px/500

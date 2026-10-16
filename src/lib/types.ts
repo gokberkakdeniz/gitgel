@@ -366,7 +366,6 @@ export interface HistoryPage {
   tip: string | null; // null => the rev does not resolve
   commits: HistoryCommit[]; // newest first, at most `limit`
   more: boolean; // more commits (or matches) past `limit`
-  total: number | null; // commits reachable from the tip; null while searching, or until counted (getCommitCount)
   ahead: number | null; // commits not in the base; null without a base
   fetchedAt: number | null; // FETCH_HEAD's modification time; null if never fetched
   upstream: Upstream | null; // when rev is a local branch: where it is pushed to (W4a)

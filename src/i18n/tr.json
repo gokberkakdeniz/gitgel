@@ -404,8 +404,6 @@
   "history.copied": "Kopyalandı",
   "history.copySha": "Tam SHA'yı Kopyala",
   "history.searchLabel": ".input {$one :string} .match $one 1 {{ {$n} eşleşen commit}} * {{ {$n} eşleşen commit}}",
-  "history.revLabel": "{$rev} · {$commits}",
-  "history.commitCount": "{$d} commit",
   "history.readingIndex": "Index okunuyor",
   "history.resolveFirst": "Önce birleştirme çakışmalarını çöz",
   "history.dayToday": "Bugün",

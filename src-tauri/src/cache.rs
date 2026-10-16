@@ -53,9 +53,6 @@ pub struct Cache {
     stashes: HashMap<(String, String), StashChanges>,
     /// The nearest-default pick per (repo, tip, local default tip, remote default tip).
     nearest: HashMap<(String, String, String, String), NearestDefault>,
-    /// Per (repo, tip): how many commits History lists in all (§16). Like commits, a tip's
-    /// history never changes.
-    commit_counts: HashMap<(String, String), u32>,
 }
 
 fn key(repo_id: &str, tip: &str, base: &str) -> Key {
@@ -198,20 +195,6 @@ impl Cache {
         self.workdirs.clear();
     }
 
-    pub fn commit_count(&self, repo_id: &str, tip: &str) -> Option<u32> {
-        self.commit_counts
-            .get(&(repo_id.to_string(), tip.to_string()))
-            .copied()
-    }
-
-    pub fn put_commit_count(&mut self, repo_id: &str, tip: &str, n: u32) {
-        if self.commit_counts.len() > MAX_ENTRIES {
-            self.commit_counts.clear();
-        }
-        self.commit_counts
-            .insert((repo_id.to_string(), tip.to_string()), n);
-    }
-
     /// After a scan of `repo_id`: forgets that repo's entries whose tip no branch has any more.
     pub fn prune(&mut self, repo_id: &str, live_tips: &HashSet<String>) {
         let keep = |k: &Key| k.0 != repo_id || live_tips.contains(&k.1);
@@ -235,7 +218,6 @@ impl Cache {
         self.prune(repo_id, &HashSet::new());
         self.commits.retain(|k, _| k.0 != repo_id);
         self.stashes.retain(|k, _| k.0 != repo_id);
-        self.commit_counts.retain(|k, _| k.0 != repo_id);
         self.worktree_folders.remove(repo_id);
     }
 }

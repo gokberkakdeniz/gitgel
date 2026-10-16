@@ -327,8 +327,6 @@
   "history.copied": "Copied",
   "history.copySha": "Copy Full SHA",
   "history.searchLabel": ".input {$one :string} .match $one 1 {{ {$n} matching commit}} * {{ {$n} matching commits}}",
-  "history.revLabel": "{$rev} · {$commits}",
-  "history.commitCount": ".input {$n :string} .match $n 1 {{1 commit}} * {{ {$d} commits}}",
   "history.readingIndex": "Reading the index",
   "history.resolveFirst": "Resolve the merge conflicts first",
   "history.dayToday": "Today",

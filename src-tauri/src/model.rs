@@ -1044,8 +1044,6 @@ pub struct HistoryPage {
     pub commits: Vec<HistoryCommit>,
     /// More commits (or matches) past `limit`.
     pub more: bool,
-    /// Commits reachable from the tip; `None` while searching.
-    pub total: Option<u32>,
     /// Commits not reachable from the base; `None` without a base.
     pub ahead: Option<u32>,
     /// Modification time of `FETCH_HEAD`, unix seconds; `None` if never fetched.

@@ -420,18 +420,6 @@ pub fn walk(
     })
 }
 
-/// Every commit reachable from `tip`.
-pub fn commit_count(repo: &Repository, tip: &str) -> Result<u32, AppError> {
-    let mut walk = repo.revwalk()?;
-    walk.push(Oid::from_str(tip)?)?;
-    let mut n = 0u32;
-    for oid in walk {
-        oid?;
-        n += 1;
-    }
-    Ok(n)
-}
-
 fn history_commit(commit: &git2::Commit, in_base: bool) -> HistoryCommit {
     let sha = commit.id().to_string();
     let message = String::from_utf8_lossy(commit.message_bytes()).into_owned();
@@ -712,7 +700,6 @@ mod tests {
         let page = walk(&t.repo, &tip, None, &[], 2).unwrap();
         assert_eq!(subjects(&page), ["third", "second"]);
         assert!(page.more);
-        assert_eq!(commit_count(&t.repo, &tip).unwrap(), 3);
     }
 
     #[test]

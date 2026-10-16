@@ -647,6 +647,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Settings › Repositories › "Check Out New Branches In" (Repository folder by default, New worktree, Branch only; `settings.newBranchCheckout`): the row New Branch opens on — 2026-10-15
 - [x] (on request) Checkout Branch… (TR "Dala Geç…") first in the branch menus' Sync group for a branch checked out nowhere, and in a Remote Branches row's menu (as a local branch tracking it): a dialog with New Branch's list (in Settings' order, as New Branch's now: the repository folder, New worktree, the linked worktrees; a worktree's changes brought along or stashed); it runs `git switch` (after `git stash push`) or `git worktree add` as a git action; canvas V4 (`FlowV4.dc.html`) — 2026-10-15
 - [x] (on request) History opens a long branch at once (vscode main 1.7 s → a few ms): the walk is unsorted (`git log`'s order) instead of `Sort::TIME`, which read the whole graph first; the commit count comes after the page, from `get_commit_count` on its own repository handle — 2026-10-16
+- [x] (on request) History's list has no `<rev> · N commits` label any more (the subtitle names the rev; counting read the whole graph); only a search shows `N matching commits` — 2026-10-16
 
 ---
 
