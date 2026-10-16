@@ -633,6 +633,19 @@ pub async fn git_operation(
     .await
 }
 
+/// Undo Commit: `git reset --soft` of the entry's newest commit `sha`, its changes kept staged.
+#[tauri::command]
+pub async fn git_undo_commit(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    sha: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::undo_commit(state, entry, &sha)
+    })
+    .await
+}
+
 /// Cherry-Pick to: `git cherry-pick` of the commit `sha` in one of the repository's worktrees.
 #[tauri::command]
 pub async fn git_cherry_pick(

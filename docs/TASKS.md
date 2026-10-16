@@ -651,6 +651,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) The scan's merged check walks unsorted too, so it stops at its date cutoff instead of reading the whole graph first (rails-sized history: ~470 ms → ~8 ms when the other branches are recent) — 2026-10-16
 - [x] (on request) The window no longer rubber-bands when scrolled over a part that does not scroll (the header stays put) — 2026-10-16
 - [x] (on request) Cherry-pick: History's commit menu gets Cherry-Pick to, a picker of the repo's other checked-out branches; `git cherry-pick` runs in the picked worktree as a git action, conflicts go to flow T — 2026-10-16
+- [x] (on request) Undo Commit: History's commit menu on the newest unpushed commit runs `git reset --soft` to its parent; its changes stay staged and its message refills an empty form — 2026-10-16
 
 ---
 

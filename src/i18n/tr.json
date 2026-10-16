@@ -879,5 +879,9 @@
   "cherry.targetAria": "Tek tek seçilecek dal",
   "cherry.act": "Tek tek seç: {$sha}",
   "cherry.running": "{$sha} seçerek uygulanıyor…",
+  "undo.menu": "Commit’i Geri Al",
+  "undo.act": "Commit’i Geri Al",
+  "undo.running": "Commit geri alınıyor…",
+  "undo.done": "{$sha} commit’i geri alındı",
   "settings.settingsTitle": "Ayarlar"
 }

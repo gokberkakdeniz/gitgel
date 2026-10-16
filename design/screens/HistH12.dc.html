@@ -19,9 +19,9 @@ body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:
 <div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
 <dc-import name="HistH6" theme="{{themeName}}" state="commit" pushed="{{false}}" hint-size="1280px,800px"></dc-import>
 </div>
-<div style="position: absolute; left: 210px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="200" label="e8b2c41 actions" items="{{menu}}" hint-size="200px,124px"></dc-import></div>
+<div style="position: absolute; left: 210px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="200" label="e8b2c41 actions" items="{{menu}}" hint-size="200px,157px"></dc-import></div>
 <sc-if value="{{showPicker}}" hint-placeholder-val="{{true}}">
-<div style="position: absolute; left: 414px; top: 333px; z-index: 6"><dc-import name="Menu" theme="{{themeName}}" width="280" label="Cherry-pick to" items="{{targets}}" hint-size="280px,110px"></dc-import></div>
+<div style="position: absolute; left: 414px; top: 366px; z-index: 6"><dc-import name="Menu" theme="{{themeName}}" width="280" label="Cherry-pick to" items="{{targets}}" hint-size="280px,110px"></dc-import></div>
 </sc-if>
 </div>
 </x-dc>
@@ -42,6 +42,7 @@ class Component extends DCLogic {
       themeClass: 'theme-' + t, themeName: t, showPicker: picker,
       menu: [
         { label: 'Amend Commit…', icon: 'pencil' },
+        { label: 'Undo Commit', icon: 'undo' },
         { label: 'Cherry-Pick to', icon: 'rebase', submenu: true, active: picker },
         { kind: 'sep' },
         { label: 'Copy SHA', icon: 'copy' }

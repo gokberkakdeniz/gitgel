@@ -942,6 +942,83 @@ pub fn cherry_pick(
     )
 }
 
+/// Undo Commit (SPEC §16, Hi10): `git reset --soft <parent>` in the entry's worktree, so the newest
+/// commit goes and its changes stay staged. Refused when HEAD is another commit by then, for a
+/// root or merge commit, one already on the remote, or mid-operation.
+pub fn undo_commit(state: &AppState, entry: EntryRef, sha: &str) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let parent = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        if operation::read(&wt).is_some() || !operation::unmerged(&wt)?.is_empty() {
+            return Err(AppError::Invalid(format!(
+                "{} has an operation in progress.",
+                repo.label(tree)
+            )));
+        }
+        let head = wt
+            .head()
+            .and_then(|h| h.peel_to_commit())
+            .map_err(|_| AppError::Invalid("The branch has no commit.".into()))?;
+        if head.id().to_string() != sha {
+            return Err(AppError::Invalid(
+                "The branch has a new commit; undo again.".into(),
+            ));
+        }
+        if head.parent_count() != 1 {
+            return Err(AppError::Invalid(
+                "Only a commit with one parent can be undone.".into(),
+            ));
+        }
+        if let Some(remote) = entry
+            .branch
+            .as_deref()
+            .and_then(|b| refs::tracking(&wt, b))
+            .and_then(|t| t.tracking)
+            .and_then(|r| wt.revparse_single(&r).ok())
+            .map(|o| o.id())
+        {
+            if remote == head.id() || wt.graph_descendant_of(remote, head.id()).unwrap_or(false) {
+                return Err(AppError::Invalid(
+                    "The commit is on the remote already.".into(),
+                ));
+            }
+        }
+        head.parent_id(0)?.to_string()
+    };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}undo-commit"),
+            name: "Undo Commit".into(),
+            icon: "undo".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                Some(&tree.path.to_string_lossy()),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: UNDO_COMMIT_COMMAND.into(),
+            env: with_git_env(vec![("GITGEL_PARENT".into(), parent)]),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// Undo Commit's command: only fixed text and a quoted variable.
+pub(super) const UNDO_COMMIT_COMMAND: &str = "git reset -q --soft \"$GITGEL_PARENT\"";
+
 /// `git cherry-pick [-m 1] "$GITGEL_COMMIT"`: only fixed text and a quoted variable.
 pub(super) fn cherry_pick_command(merge: bool) -> String {
     let mainline = if merge { " -m 1" } else { "" };
@@ -1747,6 +1824,14 @@ mod tests {
         assert_eq!(
             operation_command("rebase", false, 2),
             r#"git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" "$GITGEL_PATH_2" && git -C "$GITGEL_FOLDER" rebase --continue"#
+        );
+    }
+
+    #[test]
+    fn undo_commit_command_holds_no_values() {
+        assert_eq!(
+            UNDO_COMMIT_COMMAND,
+            r#"git reset -q --soft "$GITGEL_PARENT""#
         );
     }
 

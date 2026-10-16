@@ -26,7 +26,7 @@ import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
 import { t } from '../../i18n';
-import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, openRemoteLink } from '../../lib/ipc';
+import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
@@ -232,6 +232,35 @@ export function History({ repoId, rev, backLabel }: Props) {
     const ask = useData.getState().config?.settings.prompts.amendPushed !== false;
     if (pushed && ask) setAskAmend(c);
     else beginAmend(c);
+  };
+  // Undo Commit (Hi10): only the newest commit, one parent, not on the remote yet.
+  const undoable = (c: HistoryCommit) =>
+    c.sha === tip &&
+    c.parents === 1 &&
+    !!entry?.worktreePath &&
+    !entry.operation &&
+    !committing &&
+    amending?.sha !== c.sha &&
+    !(data?.upstream?.name && data.upstream.ahead === 0);
+  const undoCommit = (c: HistoryCommit) => {
+    if (!entryRef) return;
+    const key = draftKey;
+    void startGitAction(t('undo.act'), t('undo.running'), () => gitUndoCommit(entryRef, c.sha), {
+      done: t('undo.done', { sha: c.shortSha }),
+      onStart: (runId) => {
+        // Its message comes back to an empty form, as in GitHub Desktop.
+        const ended = () => {
+          const r = useRuns.getState().runs[runId];
+          if (!r || r.status === 'running') return false;
+          const now = useUi.getState().commitDrafts[key] ?? EMPTY_COMMIT_DRAFT;
+          if (r.status === 'exited' && r.exitCode === 0 && !now.summary && !now.description && !now.amending)
+            setDraft({ summary: c.subject, description: c.body }, key);
+          return true;
+        };
+        if (ended()) return;
+        const off = useRuns.subscribe(() => ended() && off());
+      },
+    });
   };
   const stopAmend = () => {
     if (!amending) return;
@@ -641,6 +670,18 @@ export function History({ repoId, rev, backLabel }: Props) {
                   {t('amend.menuAmend')}
                 </MenuItem>
               </>
+            )}
+            {undoable(commitMenu.commit) && (
+              <MenuItem
+                icon="undo"
+                onHover={() => setCherrySub(null)}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  undoCommit(commitMenu.commit);
+                }}
+              >
+                {t('undo.menu')}
+              </MenuItem>
             )}
             {cherryTo.length > 0 && (
               <MenuItem
