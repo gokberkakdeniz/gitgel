@@ -713,7 +713,6 @@
   "cherry.targetAria": "Cherry-pick to",
   "cherry.act": "Cherry-Pick {$sha}",
   "cherry.running": "Cherry-picking {$sha}…",
-  "cherry.none": "No other branch is checked out",
   "sync.notOn": "Not on {$remote}",
   "sync.noRemote": "No remote",
   "sync.nothingPull": "Nothing to pull",

@@ -642,16 +642,16 @@ export function History({ repoId, rev, backLabel }: Props) {
                 </MenuItem>
               </>
             )}
-            <MenuItem
-              icon="rebase"
-              submenu
-              disabled={cherryTo.length === 0}
-              title={cherryTo.length === 0 ? t('cherry.none') : undefined}
-              onHover={(el) => setCherrySub({ el })}
-              onSelect={(el) => setCherrySub({ el, focus: true })}
-            >
-              {t('cherry.menu')}
-            </MenuItem>
+            {cherryTo.length > 0 && (
+              <MenuItem
+                icon="rebase"
+                submenu
+                onHover={(el) => setCherrySub({ el })}
+                onSelect={(el) => setCherrySub({ el, focus: true })}
+              >
+                {t('cherry.menu')}
+              </MenuItem>
+            )}
             <MenuDivider />
             <MenuItem
               icon="copy"

@@ -1272,6 +1272,9 @@ works while the diff has focus: the read-only diff is not a text field (`isTextF
 are registered as Monaco commands (its own ⌥↑/⌥↓/⌥⇧↑/⌥⇧↓ line actions are free), and Back /
 Forward are caught before Monaco (which would take ⌘← / ⌘→ for line start / end).
 
+Menus: an item that cannot be used is left out, not shown disabled (a divider then left at
+either end or next to another goes too), unless this file says that item is shown disabled.
+
 | Group | Action | Keys | Where |
 |---|---|---|---|
 | General | New project | ⌘N | everywhere, unless a modal is open |
@@ -2977,7 +2980,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     below the base line: subject `text.muted`, row opacity 0.7. Right-click on it (`HistH11`,
     Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Cherry-Pick to" (`rebase`, a
-    chevron; `HistH12`, Hi11, below) and a divider, then "Copy SHA" (`copy`). The commit being amended carries an accent sm pill "amending" after its subject.
+    chevron; `HistH12`, Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`). The commit being amended carries an accent sm pill "amending" after its subject.
   - **Base line** (`HistH4`): when `ahead` > 0, after the last commit not in the base: a 1px
     `border.strong` rule on both sides of mono 11 muted `base <base>`.
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -3039,10 +3042,9 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **Cherry-Pick to** (`HistH12`, Hi11; `CherryPickMenu`): opens a 280px picker beside the item
     on hover or click (→ from the keyboard, ← back), like Apply to (P5): one item per
     checked-out entry of the repository but the one History shows (scan
-    order): `branch` icon, the branch (short SHA when detached) and under it the folder (`~/…`),
-    nothing else; each on one line, ending in "…" when long. A worktree with an operation in
-    progress is disabled (tooltip "The folder has an operation in progress"). No other
-    checked-out entry: the item is disabled, tooltip "No other branch is checked out". A pick
+    order; one with an operation in progress is left out): `branch` icon, the branch (short SHA
+    when detached) and under it the folder (`~/…`), nothing else; each on one line, ending in
+    "…" when long. A pick
     runs `git cherry-pick "$GITGEL_COMMIT"` (`-m 1` for a merge commit) in that folder as a git
     action (script id `git:cherry-pick`, name "Cherry-Pick <sha>", toast “Cherry-picking
     <sha>…”, then “Cherry-picked <sha> onto <branch>”). Refused before running: another git action

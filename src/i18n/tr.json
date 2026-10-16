@@ -879,6 +879,5 @@
   "cherry.targetAria": "Tek tek seçilecek dal",
   "cherry.act": "Tek tek seç: {$sha}",
   "cherry.running": "{$sha} seçerek uygulanıyor…",
-  "cherry.none": "Kullanıma alınmış başka dal yok",
   "settings.settingsTitle": "Ayarlar"
 }

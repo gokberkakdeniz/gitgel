@@ -6,9 +6,9 @@ import type { EntrySummary, HistoryCommit } from '../../lib/types';
 import { startGitAction } from '../../scripts/runs';
 
 /** Where a commit can be cherry-picked: the repository's checked-out entries but `own` (the
- * History's), in scan order. */
+ * History's) and those with an operation in progress, in scan order. */
 export function cherryTargets(active: EntrySummary[], own: EntrySummary | undefined): EntrySummary[] {
-  return active.filter((e) => e.worktreePath && e.key !== own?.key);
+  return active.filter((e) => e.worktreePath && e.key !== own?.key && !e.operation);
 }
 
 /** `git cherry-pick` of the commit in the target's worktree; a conflict stops it there (flow T). */
@@ -45,8 +45,6 @@ export function CherryPickMenu({
           icon="branch"
           desc={tildifyHome(e.worktreePath ?? '')}
           oneLine
-          disabled={!!e.operation}
-          title={e.operation ? t('branches.checkoutBusy') : undefined}
           onSelect={() => {
             onDone();
             void cherryPick(repoId, commit, e);

@@ -21,7 +21,7 @@ body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:
 </div>
 <div style="position: absolute; left: 210px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="200" label="e8b2c41 actions" items="{{menu}}" hint-size="200px,124px"></dc-import></div>
 <sc-if value="{{showPicker}}" hint-placeholder-val="{{true}}">
-<div style="position: absolute; left: 414px; top: 333px; z-index: 6"><dc-import name="Menu" theme="{{themeName}}" width="280" label="Cherry-pick to" items="{{targets}}" hint-size="280px,160px"></dc-import></div>
+<div style="position: absolute; left: 414px; top: 333px; z-index: 6"><dc-import name="Menu" theme="{{themeName}}" width="280" label="Cherry-pick to" items="{{targets}}" hint-size="280px,110px"></dc-import></div>
 </sc-if>
 </div>
 </x-dc>
@@ -35,7 +35,8 @@ class Component extends DCLogic {
     // ← back), like Apply to (P5). On an older commit the menu is Cherry-Pick to and Copy SHA.
     // Targets, no heading: the repo's other checked-out entries (the rev shown left out; a
     // detached worktree by its short SHA): the branch, under it the folder, nothing else; each one
-    // line, "…" when long. A worktree with an operation in progress is disabled. A pick runs git cherry-pick <sha> there (-m 1 for
+    // line, "…" when long. A worktree with an operation in progress is left out; no target at all:
+    // no Cherry-Pick to item (an item that cannot be used is left out, not shown disabled). A pick runs git cherry-pick <sha> there (-m 1 for
     // a merge commit) as a git action; a conflict stops it and flow T takes over on that row.
     return {
       themeClass: 'theme-' + t, themeName: t, showPicker: picker,
@@ -47,8 +48,7 @@ class Component extends DCLogic {
       ],
       targets: [
         { label: 'main', icon: 'branch', desc: '~/code/web-app', active: true },
-        { label: 'feat/job-queue-retry-with-exponen…', icon: 'branch', desc: '~/code/wt/job-queue-retry-with-ex…' },
-        { label: 'token-rotation-job', icon: 'branch', desc: '~/code/wt/token-rotation', disabled: true, title: 'The folder has an operation in progress' }
+        { label: 'feat/job-queue-retry-with-exponen…', icon: 'branch', desc: '~/code/wt/job-queue-retry-with-ex…' }
       ]
     };
   }
