@@ -1016,6 +1016,71 @@ pub fn undo_commit(state: &AppState, entry: EntryRef, sha: &str) -> Result<Scrip
     )
 }
 
+/// Revert Changes in Commit (SPEC §16): `git revert --no-edit <sha>` (`-m 1` for a merge commit) in
+/// the entry's worktree, a new commit that undoes it. Refused mid-operation or for a commit the
+/// branch does not have; a conflict stops git there, and the revert then shows on the entry (§15).
+pub fn revert(state: &AppState, entry: EntryRef, sha: &str) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let (merge, full) = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        if operation::read(&wt).is_some() || !operation::unmerged(&wt)?.is_empty() {
+            return Err(AppError::Invalid(format!(
+                "{} has an operation in progress.",
+                repo.label(tree)
+            )));
+        }
+        let commit = git2::Oid::from_str(sha)
+            .and_then(|oid| wt.find_commit(oid))
+            .map_err(|_| AppError::NotFound(format!("commit {sha}")))?;
+        let head = wt
+            .head()
+            .and_then(|h| h.peel_to_commit())
+            .map_err(|_| AppError::Invalid("The branch has no commit.".into()))?
+            .id();
+        if head != commit.id() && !wt.graph_descendant_of(head, commit.id()).unwrap_or(false) {
+            return Err(AppError::Invalid(
+                "The branch no longer has this commit.".into(),
+            ));
+        }
+        (commit.parent_count() > 1, commit.id().to_string())
+    };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}revert"),
+            name: format!("Revert {}", &full[..7]),
+            icon: "undo".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                Some(&tree.path.to_string_lossy()),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: revert_command(merge),
+            env: with_git_env(vec![("GITGEL_COMMIT".into(), full)]),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `git revert --no-edit [-m 1] "$GITGEL_COMMIT"`: only fixed text and a quoted variable.
+pub(super) fn revert_command(merge: bool) -> String {
+    let mainline = if merge { " -m 1" } else { "" };
+    format!("git revert --no-edit{mainline} \"$GITGEL_COMMIT\"")
+}
+
 /// Squash (SPEC §16, Hi13): consecutive commits of the entry's branch (`shas`, newest first, each
 /// the first parent of the one before) become one commit with `summary` and `description`, the
 /// oldest one's author and the newest one's tree, on the oldest one's parent (`git commit-tree`).
@@ -1970,6 +2035,18 @@ mod tests {
         assert_eq!(
             UNDO_COMMIT_COMMAND,
             r#"git reset -q --soft "$GITGEL_PARENT""#
+        );
+    }
+
+    #[test]
+    fn revert_commands_hold_no_values() {
+        assert_eq!(
+            revert_command(false),
+            r#"git revert --no-edit "$GITGEL_COMMIT""#
+        );
+        assert_eq!(
+            revert_command(true),
+            r#"git revert --no-edit -m 1 "$GITGEL_COMMIT""#
         );
     }
 

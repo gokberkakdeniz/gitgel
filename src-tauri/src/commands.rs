@@ -667,6 +667,19 @@ pub async fn git_undo_commit(
     .await
 }
 
+/// Revert Changes in Commit: `git revert` of the commit `sha` in the entry's worktree.
+#[tauri::command]
+pub async fn git_revert(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    sha: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::revert(state, entry, &sha)
+    })
+    .await
+}
+
 /// Squash: consecutive commits of the entry's branch (newest first) become one.
 #[tauri::command]
 pub async fn git_squash(
