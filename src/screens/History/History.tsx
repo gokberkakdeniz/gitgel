@@ -26,7 +26,7 @@ import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
 import { t } from '../../i18n';
-import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
+import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, gitSquash, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
 import { isTextField } from '../../lib/shortcuts';
 import { tildifyHome } from '../../lib/paths';
 import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, StashChanges } from '../../lib/types';
@@ -46,6 +46,7 @@ import styles from './History.module.css';
 import { AmendModal } from './AmendModal';
 import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
 import { CommitForm } from './CommitForm';
+import { SquashModal } from './SquashModal';
 import { SwitchBranchDialog } from './SwitchBranch';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
 
@@ -431,8 +432,35 @@ export function History({ repoId, rev, backLabel }: Props) {
   };
   // The Uncommitted row's right-click menu: Discard All Changes, Stash All Changes.
   const [wipMenu, setWipMenu] = useState<DOMRect | null>(null);
-  // A commit row's right-click menu (Hi10): Amend Commit… on the newest one, Copy SHA.
-  const [commitMenu, setCommitMenu] = useState<{ commit: HistoryCommit; at: DOMRect } | null>(null);
+  // A commit row's right-click menu (Hi10): Amend Commit… on the newest one, Copy SHA. On one of
+  // several picked commits (`many`, Hi13): Squash N Commits….
+  const [commitMenu, setCommitMenu] = useState<{ commit: HistoryCommit; at: DOMRect; many: boolean } | null>(null);
+  // Squash (Hi13): consecutive commits of the checked-out branch, none in the base, not the
+  // branch's first commit, no Uncommitted among them.
+  const pickedCommits = isMulti ? selected.flatMap((r) => commits.filter((c) => c.sha === r)) : [];
+  const squashable =
+    isMulti &&
+    consecutive &&
+    !withWip &&
+    !!entry?.worktreePath &&
+    !entry.operation &&
+    !committing &&
+    pickedCommits.every((c) => !c.inBase && c.sha !== amending?.sha) &&
+    (pickedCommits[pickedCommits.length - 1]?.parents ?? 0) > 0;
+  // A commit below the upstream line is on the remote: the branch will need a force push.
+  const squashPushed =
+    !!data?.upstream?.name && commits.indexOf(pickedCommits[pickedCommits.length - 1]) >= data.upstream.ahead;
+  const [askSquash, setAskSquash] = useState<HistoryCommit[] | null>(null);
+  const squash = (list: HistoryCommit[], summary: string, description: string) => {
+    if (!entryRef) return;
+    const n = cnt(list.length);
+    void startGitAction(
+      t('squash.act', n),
+      t('squash.running', n),
+      () => gitSquash(entryRef, list.map((c) => c.sha), summary, description),
+      { done: t('squash.done', { ...n, rev }) },
+    );
+  };
   // Cherry-Pick to's picker, beside its item (Hi11).
   const [cherrySub, setCherrySub] = useState<{ el: HTMLElement; focus?: boolean } | null>(null);
   useEffect(() => setCherrySub(null), [commitMenu]);
@@ -733,7 +761,31 @@ export function History({ repoId, rev, backLabel }: Props) {
           </Menu>
         </Popover>
       )}
-      {commitMenu && (
+      {commitMenu?.many && (
+        <Popover anchorRect={commitMenu.at} width={200} onClose={() => setCommitMenu(null)}>
+          <Menu aria-label={t('history.commitsMenu')}>
+            <MenuItem
+              icon="rebase"
+              onSelect={() => {
+                setCommitMenu(null);
+                setAskSquash(pickedCommits);
+              }}
+            >
+              {t('squash.menu', cnt(pickedCommits.length))}
+            </MenuItem>
+          </Menu>
+        </Popover>
+      )}
+      {askSquash && (
+        <SquashModal
+          commits={askSquash}
+          sub={`${repoName} / ${rev}`}
+          pushed={squashPushed}
+          onClose={() => setAskSquash(null)}
+          onSquash={(summary, description) => squash(askSquash, summary, description)}
+        />
+      )}
+      {commitMenu && !commitMenu.many && (
         <Popover anchorRect={commitMenu.at} width={200} onClose={() => setCommitMenu(null)}>
           <Menu aria-label={t('history.commitMenu', { sha: commitMenu.commit.shortSha })}>
             {commitMenu.commit.sha === tip && entry?.worktreePath && (
@@ -889,7 +941,12 @@ export function History({ repoId, rev, backLabel }: Props) {
                 actions={wipShown ? wipActions : undefined}
                 conflict={current === WIP && !isMulti && entry ? (f) => conflictOf(entry, f) : undefined}
                 onWipMenu={setWipMenu}
-                onCommitMenu={(commit, at) => setCommitMenu({ commit, at })}
+                onCommitMenu={(commit, at) => {
+                  // On one of several picked commits the menu is theirs: Squash, when they can be.
+                  const many = isMulti && selected.includes(commit.sha);
+                  if (many && !squashable) return;
+                  setCommitMenu({ commit, at, many });
+                }}
                 amending={amending?.sha ?? null}
               />
             ))}

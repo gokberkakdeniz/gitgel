@@ -166,6 +166,7 @@ pub fn run() {
             commands::git_rebase_on_base,
             commands::git_operation,
             commands::git_cherry_pick,
+            commands::git_squash,
             commands::git_undo_commit,
             commands::git_delete_branch,
             commands::git_create_branch,

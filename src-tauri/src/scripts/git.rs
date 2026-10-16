@@ -1016,6 +1016,144 @@ pub fn undo_commit(state: &AppState, entry: EntryRef, sha: &str) -> Result<Scrip
     )
 }
 
+/// Squash (SPEC §16, Hi13): consecutive commits of the entry's branch (`shas`, newest first, each
+/// the first parent of the one before) become one commit with `summary` and `description`, the
+/// oldest one's author and the newest one's tree, on the oldest one's parent (`git commit-tree`).
+/// The branch then points at it (`git reset --soft`, so the index and the working tree stay), or,
+/// with newer commits above, those are rebased onto it (`--autostash`, merges kept). Refused
+/// mid-operation, for the branch's first commit, or once the branch no longer holds the commits.
+pub fn squash(
+    state: &AppState,
+    entry: EntryRef,
+    shas: Vec<String>,
+    summary: String,
+    description: String,
+) -> Result<ScriptRun, AppError> {
+    let summary = summary.trim().to_string();
+    let body = description.trim().to_string();
+    if summary.is_empty() {
+        return Err(AppError::Invalid("Write a summary.".into()));
+    }
+    if shas.len() < 2 {
+        return Err(AppError::Invalid("Pick at least two commits.".into()));
+    }
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let (mut env, rebase) = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        if operation::read(&wt).is_some() || !operation::unmerged(&wt)?.is_empty() {
+            return Err(AppError::Invalid(format!(
+                "{} has an operation in progress.",
+                repo.label(tree)
+            )));
+        }
+        let find = |sha: &str| {
+            git2::Oid::from_str(sha)
+                .and_then(|oid| wt.find_commit(oid))
+                .map_err(|_| AppError::NotFound(format!("commit {sha}")))
+        };
+        let newest = find(&shas[0])?;
+        let mut oldest = newest.clone();
+        for sha in &shas[1..] {
+            if oldest.parent_id(0).ok().map(|p| p.to_string()).as_deref() != Some(sha.as_str()) {
+                return Err(AppError::Invalid(
+                    "Only consecutive commits can be squashed.".into(),
+                ));
+            }
+            oldest = find(sha)?;
+        }
+        let parent = oldest.parent_id(0).map_err(|_| {
+            AppError::Invalid("The branch's first commit cannot be squashed.".into())
+        })?;
+        let head = wt
+            .head()
+            .and_then(|h| h.peel_to_commit())
+            .map_err(|_| AppError::Invalid("The branch has no commit.".into()))?
+            .id();
+        if head != newest.id() && !wt.graph_descendant_of(head, newest.id()).unwrap_or(false) {
+            return Err(AppError::Invalid(
+                "The branch no longer has these commits; pick them again.".into(),
+            ));
+        }
+        let author = oldest.author();
+        let when = author.when();
+        let offset = when.offset_minutes();
+        let env = vec![
+            ("GITGEL_TREE".to_string(), newest.tree_id().to_string()),
+            ("GITGEL_PARENT".to_string(), parent.to_string()),
+            ("GITGEL_NEWEST".to_string(), newest.id().to_string()),
+            (
+                "GITGEL_AUTHOR_NAME".to_string(),
+                String::from_utf8_lossy(author.name_bytes()).into_owned(),
+            ),
+            (
+                "GITGEL_AUTHOR_EMAIL".to_string(),
+                String::from_utf8_lossy(author.email_bytes()).into_owned(),
+            ),
+            (
+                "GITGEL_AUTHOR_DATE".to_string(),
+                format!(
+                    "@{} {}{:02}{:02}",
+                    when.seconds(),
+                    if offset < 0 { '-' } else { '+' },
+                    offset.abs() / 60,
+                    offset.abs() % 60
+                ),
+            ),
+        ];
+        (env, head != newest.id())
+    };
+    env.push(("GITGEL_SUMMARY".into(), summary));
+    if !body.is_empty() {
+        env.push(("GITGEL_BODY".into(), body.clone()));
+    }
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}squash"),
+            name: format!("Squash {} Commits", shas.len()),
+            icon: "rebase".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                Some(&tree.path.to_string_lossy()),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: squash_command(!body.is_empty(), rebase),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// Squash's command: the new commit made by `git commit-tree` (with the oldest commit's author)
+/// goes into `git reset --soft`, or into `git rebase --onto` when newer commits sit above the
+/// squashed ones. Only fixed text and quoted variables.
+pub(super) fn squash_command(body: bool, rebase: bool) -> String {
+    let mut make = String::from(
+        "GIT_AUTHOR_NAME=\"$GITGEL_AUTHOR_NAME\" GIT_AUTHOR_EMAIL=\"$GITGEL_AUTHOR_EMAIL\" GIT_AUTHOR_DATE=\"$GITGEL_AUTHOR_DATE\" git commit-tree \"$GITGEL_TREE\" -p \"$GITGEL_PARENT\" -m \"$GITGEL_SUMMARY\"",
+    );
+    if body {
+        make.push_str(" -m \"$GITGEL_BODY\"");
+    }
+    if rebase {
+        format!("git rebase -q --autostash --rebase-merges --onto \"$({make})\" \"$GITGEL_NEWEST\"")
+    } else {
+        format!("git reset -q --soft \"$({make})\"")
+    }
+}
+
 /// Undo Commit's command: only fixed text and a quoted variable.
 pub(super) const UNDO_COMMIT_COMMAND: &str = "git reset -q --soft \"$GITGEL_PARENT\"";
 
@@ -1832,6 +1970,21 @@ mod tests {
         assert_eq!(
             UNDO_COMMIT_COMMAND,
             r#"git reset -q --soft "$GITGEL_PARENT""#
+        );
+    }
+
+    #[test]
+    fn squash_commands_hold_no_values() {
+        let make = r#"GIT_AUTHOR_NAME="$GITGEL_AUTHOR_NAME" GIT_AUTHOR_EMAIL="$GITGEL_AUTHOR_EMAIL" GIT_AUTHOR_DATE="$GITGEL_AUTHOR_DATE" git commit-tree "$GITGEL_TREE" -p "$GITGEL_PARENT" -m "$GITGEL_SUMMARY""#;
+        assert_eq!(
+            squash_command(false, false),
+            format!(r#"git reset -q --soft "$({make})""#)
+        );
+        assert_eq!(
+            squash_command(true, true),
+            format!(
+                r#"git rebase -q --autostash --rebase-merges --onto "$({make} -m "$GITGEL_BODY")" "$GITGEL_NEWEST""#
+            )
         );
     }
 

@@ -166,9 +166,6 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 </section>
 </div>
-<sc-if value="{{showMenu}}" hint-placeholder-val="{{false}}">
-<div style="position: absolute; top: 262px; left: 214px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="300" label="Commit actions" items="{{menuItems}}" hint-size="300px,330px"></dc-import></div>
-</sc-if>
 <sc-if value="{{showToast}}" hint-placeholder-val="{{false}}">
 <div style="position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 5"><dc-import name="Toast" theme="{{themeName}}" status="running" code="" message="Committing…" sub="web-app / session-token-refresh" action-label="" link-label="" href="HistH8.dc.html" hint-size="420px,46px"></dc-import></div>
 </sc-if>
@@ -192,7 +189,7 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","range","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"operation":{"editor":"boolean","default":false},"pushed":{"editor":"boolean","default":false},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","range","squash"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"operation":{"editor":"boolean","default":false},"pushed":{"editor":"boolean","default":false},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -203,11 +200,12 @@ class Component extends DCLogic {
     // hooks run, a running toast that opens the output), failed (W1d: the output dialog, as the
     // Scripts output N4), amend (Hi10: the form in amend mode, filled from the newest commit; its
     // row says "amending"), range (Hi12: Uncommitted and two commits picked with ⌘ / ⇧-click,
-    // tinted, their files under the oldest; the pane shows them taken together),
-    // menu (W2c: a commit's menu). The list shows two lines: the upstream (origin/<branch>,
+    // tinted, their files under the oldest; the pane shows them taken together), squash (Hi13:
+    // e8b2c41 and 5c0d7aa picked, the pane shows them taken together; Hi13 draws their menu).
+    // The list shows two lines: the upstream (origin/<branch>,
     // dashed: above it is not pushed yet) and the base (as Hi3).
-    var many = s === 'range';
-    var wipOpen = !many && s !== 'menu';
+    var many = s === 'range' || s === 'squash';
+    var wipOpen = !many;
     // composer: panel (the form under the list, W1a) or dialog (W5: no form, no checkboxes in the
     // list; Commit… in the Uncommitted row's menu opens the commit dialog).
     // composer index (W5c): no form; the boxes are git's index (checked = staged, "some" = part
@@ -281,13 +279,13 @@ class Component extends DCLogic {
         file('M', 'refresh.ts', 'src/auth', '+2', '−1', false, 'on')];
     }
     var wipMeta = cmode === 'index' || cmode === 'sections' ? '3 files · 2 staged · 6m' : '3 files · 6m';
-    var wip = { isWip: true, sel: wipOpen || many, failed: s === 'failed', meta: wipMeta,
-      rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin-top: 4px; border-radius: 8px; border: 1px dashed var(--border-strong); cursor: pointer; ' + (many ? 'background: rgba(var(--accent-rgb), 0.18)' : wipOpen ? 'background: var(--bg-hover)' : '') };
+    var wip = { isWip: true, sel: wipOpen || s === 'range', failed: s === 'failed', meta: wipMeta,
+      rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin-top: 4px; border-radius: 8px; border: 1px dashed var(--border-strong); cursor: pointer; ' + (s === 'range' ? 'background: rgba(var(--accent-rgb), 0.18)' : wipOpen ? 'background: var(--bg-hover)' : '') };
 
     var c1 = commit('e8b2c41', 'Retry refresh once on network error', 'Can Öztürk', '6m', { sel: many, tag: s === 'amend' ? 'amending' : '' });
-    var c2 = commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m', { sel: many, pick: s === 'menu' });
+    var c2 = commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m', { sel: many });
     // range: the files of all three taken together, under the oldest (5c0d7aa), no boxes.
-    var c2Files = s === 'menu' ? [file('M', 'store.ts', 'src/auth', '+9', '−1', true), file('M', 'refresh.ts', 'src/auth', '+2', '−1')]
+    var c2Files = s === 'squash' ? [file('M', 'refresh.ts', 'src/auth', '+21', '−5', true), file('M', 'store.ts', 'src/auth', '+9', '−1')]
       : many ? [file('M', 'refresh.ts', 'src/auth', '+12', '−3', true), file('M', 'store.ts', 'src/auth', '+9', '−1'), file('M', 'refresh.test.ts', 'test/auth', '+5', ''), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '')] : [];
     var allRow = { isAll: true };
     // pushed (Hi10's dialog): the branch is all on origin, the upstream line sits above the newest commit.
@@ -311,18 +309,13 @@ class Component extends DCLogic {
     var left = wipLeft, right = wipRight;
     var wipPane = { isOne: false, subject: 'Uncommitted changes', hasBody: false, isRange: false, lead: '', files: '3 files', add: '+29', del: '−1',
       path: 'src/auth/refresh.ts', compare: 'HEAD ↔ working tree', nav: 'Change 1 of 2', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
-    if (s === 'menu') {
-      c = { isOne: true, subject: 'Persist refresh id with the session', hasBody: true, isRange: false,
-        body: 'The refresh id is saved next to the session, so a retry can find the token it started from.',
-        author: 'Can Öztürk', initials: 'CÖ', avatarStyle: avatar('Can Öztürk', 18), when: 'today 13:02', sha: '5c0d7aa', parent: 'b41f9e3',
-        lead: '', files: '2 files', add: '+11', del: '−2', path: 'src/auth/store.ts', compare: 'b41f9e3 ↔ 5c0d7aa', nav: 'Change 1 of 1', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
-      left = [line('ctx', 12, 'export async function save(s: Session) {'), line('del', 13, '  await db.put(s.id, s);'), line('pad'), line('ctx', 14, '}')];
-      right = [line('ctx', 12, 'export async function save(s: Session) {'), line('add', 13, '  await db.put(s.id, { ...s, refreshId: s.refreshId });'),
-        line('add', 14, "  await db.index('refresh', s.refreshId, s.id);"), line('ctx', 15, '}')];
-    } else if (many) {
-      // Uncommitted and two commits: b41f9e3 (the oldest one's parent) ↔ working tree. Two
-      // commits alone read "2 commits selected" with the span in the meta: b41f9e3..e8b2c41 ·
-      c = { isOne: false, subject: 'Uncommitted changes and 2 commits', hasBody: false, isRange: true,
+    if (many) {
+      c = s === 'squash' ? { isOne: false, subject: '2 commits selected', hasBody: false, isRange: true,
+        range: [{ sha: 'e8b2c41', subject: 'Retry refresh once on network error' }, { sha: '5c0d7aa', subject: 'Persist refresh id with the session' }],
+        lead: 'b41f9e3..e8b2c41 · ', files: '2 files', add: '+30', del: '−6', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ e8b2c41', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' }
+      // Uncommitted and two commits: b41f9e3 (the oldest one's parent) ↔ working tree, no span
+      // in the meta.
+      : { isOne: false, subject: 'Uncommitted changes and 2 commits', hasBody: false, isRange: true,
         range: [{ sha: '', wip: true, subject: 'Uncommitted changes' }, { sha: 'e8b2c41', subject: 'Retry refresh once on network error' }, { sha: '5c0d7aa', subject: 'Persist refresh id with the session' }],
         lead: '', files: '4 files', add: '+48', del: '−4', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ working tree', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
       left = [line('ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('del', 41, '  return refreshSession(s);'),
@@ -378,19 +371,6 @@ class Component extends DCLogic {
       committing: committing || op,
       c: c, left: left, right: right,
       isSplit: s !== 'lines', isPick: s === 'lines', uni: uni,
-      showMenu: s === 'menu',
-      menuItems: [
-        { kind: 'caption', label: '5c0d7aa · Persist refresh id with the session' },
-        { label: 'Copy SHA', icon: 'copy', kbd: '⌘C' },
-        { kind: 'sep' },
-        { label: 'Reword…', icon: 'pencil' },
-        { label: 'Squash into newer', icon: 'arrow-up', hint: 'e8b2c41', active: true },
-        { label: 'Fixup into older', icon: 'arrow-down', hint: 'b41f9e3', desc: 'b41f9e3 is on origin: the next push needs force' },
-        { label: 'Edit files of this commit', icon: 'edit', disabled: true, title: 'Needs a clean worktree (3 uncommitted files)' },
-        { kind: 'sep' },
-        { label: 'Undo commit', icon: 'undo', disabled: true, title: 'Only the latest commit (e8b2c41)' },
-        { label: 'Revert…', icon: 'back', desc: 'A new commit that reverses this one' }
-      ],
       showToast: s === 'hooks',
       showOutput: s === 'failed',
       outLines: out.map(function (l) { return { text: l[0] || ' ', style: 'white-space: pre-wrap; word-break: break-word; min-height: 20px; ' + l[1] }; }),

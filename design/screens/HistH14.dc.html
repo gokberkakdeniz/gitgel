@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hi13 · Squash commits</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+button{font-family:inherit}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="{{isDialog}}" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="HistH6" theme="{{themeName}}" state="squash" hint-size="1280px,800px"></dc-import>
+</div>
+<sc-if value="{{isMenu}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; left: 230px; top: 330px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="200" label="Commit actions" items="{{menu}}" hint-size="200px,44px"></dc-import></div>
+</sc-if>
+<sc-if value="{{isDialog}}" hint-placeholder-val="{{false}}">
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+<div role="dialog" aria-labelledby="squash-title" style="position: relative; margin-top: 110px; width: 560px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
+<dc-import name="ModalHeader" theme="{{themeName}}" title="Squash Commits" sub="web-app / session-token-refresh" sub-mono="{{true}}" close="{{true}}" title-id="squash-title" hint-size="100%,72px"></dc-import>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 4px 24px 22px">
+<dc-import name="Input" theme="{{themeName}}" value="Persist refresh id with the session" placeholder="Summary (required)" label="Summary" size="36" width="100%" left-icon="none" right-text="" mono="{{false}}" clearable="{{false}}" state="focus" hint-size="100%,36px"></dc-import>
+<textarea aria-label="Description" placeholder="Description" rows="6" value="{{description}}" style="width: 100%; box-sizing: border-box; resize: none; padding: 10px 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; outline: none; color: var(--text-body); font: inherit; font-size: 13px; line-height: 20px"></textarea>
+<sc-if value="{{pushed}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; line-height: 1.5; color: var(--warning)">Some of these commits are on the remote: the branch will need a force push.</span></sc-if>
+</div>
+<dc-import name="ModalFooter" theme="{{themeName}}" note="" buttons="{{buttons}}" hint-size="100%,64px"></dc-import>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"step":{"editor":"enum","options":["menu","dialog"],"default":"menu"},"pushed":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var t = this.props.theme || 'dark';
+    var step = this.props.step || 'menu';
+    // Squash, in History of web-app / session-token-refresh (Hi5): e8b2c41 and 5c0d7aa picked with
+    // ⌘ / ⇧-click (Hi12). step menu: right-click on one of them: the menu is theirs, only
+    // "Squash 2 Commits…" (consecutive commits of the checked-out branch, none in the base, not
+    // the branch's first commit, Uncommitted not picked; otherwise no menu opens).
+    // step dialog: Squash Commits: the oldest one's subject, its body and the newer messages,
+    // oldest first. pushed: a commit is below the upstream line, the note says a force push
+    // follows. Squash: git commit-tree (the newest tree on b41f9e3, the oldest one's author),
+    // then git reset --soft onto it (or git rebase --onto it when newer commits sit above).
+    return {
+      themeClass: 'theme-' + t, themeName: t,
+      isMenu: step === 'menu', isDialog: step === 'dialog', pushed: !!this.props.pushed,
+      menu: [{ label: 'Squash 2 Commits…', icon: 'rebase', active: true }],
+      description: 'The refresh id is saved next to the session, so a retry can find the token it started from.\n\nRetry refresh once on network error\n\nA dropped connection during refresh logged people out. Retry once with the same refresh id.',
+      buttons: [{ label: 'Cancel' }, { label: 'Squash', variant: 'primary', kbd: '⌘↵' }]
+    };
+  }
+}
+</script>
+</body>
+</html>

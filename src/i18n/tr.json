@@ -889,5 +889,13 @@
   "undo.act": "Commit’i Geri Al",
   "undo.running": "Commit geri alınıyor…",
   "undo.done": "{$sha} commit’i geri alındı",
+  "squash.menu": "{$d} Commit’i Birleştir…",
+  "squash.title": "Commitleri Birleştir",
+  "squash.button": "Birleştir",
+  "squash.forcePush": "Bu commitlerin bazıları uzak depoda: dalın zorla gönderilmesi gerekecek.",
+  "squash.act": "{$d} Commit’i Birleştir",
+  "squash.running": "{$d} commit birleştiriliyor…",
+  "squash.done": "{$rev} dalında {$d} commit birleştirildi",
+  "history.commitsMenu": "Commit işlemleri",
   "settings.settingsTitle": "Ayarlar"
 }

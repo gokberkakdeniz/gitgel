@@ -667,6 +667,21 @@ pub async fn git_undo_commit(
     .await
 }
 
+/// Squash: consecutive commits of the entry's branch (newest first) become one.
+#[tauri::command]
+pub async fn git_squash(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    shas: Vec<String>,
+    summary: String,
+    description: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::squash(state, entry, shas, summary, description)
+    })
+    .await
+}
+
 /// Cherry-Pick to: `git cherry-pick` of the commit `sha` in one of the repository's worktrees.
 #[tauri::command]
 pub async fn git_cherry_pick(
