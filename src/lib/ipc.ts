@@ -7,6 +7,7 @@ import type {
   CheckoutProblem,
   CheckoutTarget,
   CommitChanges,
+  RangeChanges,
   CommitFiles,
   CommitProvider,
   Config,
@@ -55,6 +56,10 @@ export const getReview = (target: ReviewTarget) => invoke<ReviewData>('get_revie
 
 export const getCommitChanges = (repoId: string, sha: string) =>
   invoke<CommitChanges>('get_commit_changes', { repoId, sha });
+
+/** History's selection taken together (Hi12): `oldest`'s parent ↔ `newest`, or ↔ the working tree. */
+export const getRangeChanges = (repoId: string, oldest: string, newest: string | null, worktreePath: string | null) =>
+  invoke<RangeChanges>('get_range_changes', { repoId, oldest, newest, worktreePath });
 
 export const getStashChanges = (repoId: string, sha: string) =>
   invoke<StashChanges>('get_stash_changes', { repoId, sha });

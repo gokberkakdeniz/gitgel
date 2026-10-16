@@ -96,6 +96,12 @@
   background: var(--bg-hover);
 }
 
+/* Picked with ⌘ / ⇧-click among several (Hi12): tinted, as Uncommitted's picked files. */
+.rowPicked,
+.rowPicked:hover {
+  background: rgba(var(--accent-rgb), 0.18);
+}
+
 .shared {
   opacity: 0.7;
 }
@@ -299,3 +305,39 @@
   color: var(--text-body);
 }
 
+
+/* Several rows taken together (Hi12): one line each, the list scrolls past a few. */
+.rangeList {
+  max-height: 104px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rangeRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.rangeSha {
+  width: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-text);
+}
+
+.rangeSubject {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

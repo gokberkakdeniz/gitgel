@@ -1297,6 +1297,7 @@ either end or next to another goes too), unless this file says that item is show
 | | Review / History | ⌥H | the same branch's other page (also in the diff) |
 | | Changes only / Whole file | ⌥C | |
 | | Switch branch | ⇧⌘B | History (opens Switch Branch) |
+| | Pick commits | ⌘-click / ⇧-click, ⇧↑ / ⇧↓ | History (Uncommitted too; Esc goes back to one) |
 | Lists and dialogs | Move | ↑ / ↓ | |
 | | Mark row | Space | Add palette |
 | | Run script | ⌘↵ | script run dialog |
@@ -1586,6 +1587,10 @@ export interface CommitChanges {           // one commit against its first paren
   parent: string | null;                   // null => root commit (empty tree)
   files: FileChange[];
 }
+export interface RangeChanges {            // History's picked rows taken together (§16)
+  parent: string | null;                   // the oldest one's first parent; null => empty tree
+  files: FileChange[];
+}
 export interface StashChanges {            // a stash against its first parent; untracked = U
   sha: string;
   base: string;
@@ -1728,6 +1733,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_review` | `target: ReviewTarget` | `ReviewData` |
 | `get_commit_changes` | `repoId, sha` | `CommitChanges` |
 | `get_stash_changes` | `repoId, sha` | `StashChanges` |
+| `get_range_changes` | `repoId, oldest, newest: string\|null, worktreePath: string\|null` | `RangeChanges` (History's picked rows, §16; `newest` null: to the working tree) |
 | `get_history` | `repoId, rev, base: string\|null, query, limit` | `HistoryPage` (§16) |
 | `read_file_pair` | `repoId, worktreePath: string\|null, change: FileChange` | `FilePair` |
 | `create_project` | `name, entries: EntryRef[]` | `ProjectConfig` |
@@ -2044,7 +2050,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 235–238), Repositories 35–59 (repository `List` 38, items 300–304; Default base `List` 44 with rows, actions and add states 239–266 and 305–312; Active threshold 50–53, Check Out New Branches In 54–57), General 61–91 (Language 63–69; Terminal 72–84, options with disabled flag 311; Check for updates 87–89), Appearance: Theme 95–114, tile builder 253; Formatting 116–134 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 135–141 with Tab size, Scripts 143–161 (`List` 121, items 313–318), Prompts 127–134 (data 290), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit; its menu also has Undo Commit and Cherry-Pick to); `HistH12` (Hi11) Cherry-Pick to over `HistH6`: the commit menu and its target picker (`picker`) |
+| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit; its menu also has Undo Commit and Cherry-Pick to); `HistH12` (Hi11) Cherry-Pick to over `HistH6`: the commit menu and its target picker (`picker`); `HistH13` (Hi12) several rows picked over `HistH6` (state `range`: Uncommitted and two commits, the files under the oldest, the pane's range header) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | New branch | `FlowV2.dc.html`, `FlowV3.dc.html` | canvas page "Branch actions": V2, the form under a repo band's "+", interactive (`case` worktree, checkout, branchOnly: the row picked first; `dirty`: the repository folder has changes); V3 mounts it with Repository folder picked; the "+" on the bands of `Main` (`newBranch` shows it open) |
@@ -2923,7 +2929,7 @@ never edits `~/.ssh`:
 A branch's commits, newest first, each one shown on its own against its first parent, like
 GitHub Desktop's History tab. Reads are a revwalk and diffs; the writes are Commit and Discard (§15).
 Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `HistH7`,
-`HistH8`, `HistH9`, `HistH10`, `HistH11`, `HistH12.dc.html` (§11).
+`HistH8`, `HistH9`, `HistH10`, `HistH11`, `HistH12`, `HistH13.dc.html` (§11).
 
 - **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
   branch, a remote-tracking branch or a SHA) and walks from it newest first in `git log`'s order
@@ -3071,6 +3077,19 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     in the repository, an operation in progress there, a commit the repository does not have. On
     conflicts git stops, the toast fails with git's last line, and the entry shows the
     cherry-pick in progress (§15 "Operations in progress": pill, Continue / Abort).
+- **Several rows** (`HistH13`, Hi12; GitHub Desktop's multi-commit diff): ⌘-click adds a row to
+  the picked one or takes it out, ⇧-click takes the range from the last row clicked, ⇧↑ / ⇧↓ in
+  the list move the range's far end; Uncommitted can be one of them, the stashes cannot. The
+  picked rows are tinted (`rgba(accent, 0.18)`, as Hi8's picked files) and the files are listed
+  under the oldest one. A plain click, ↑ / ↓ or Esc goes back to one row. The pane shows them
+  taken together: the oldest one's first parent ↔ the newest one, or ↔ the working tree with
+  Uncommitted (`get_range_changes`, untracked files included). Its header: "N commits selected"
+  ("Uncommitted changes and N commits"), then one line per row (mono 12 `accent.text` short SHA,
+  an 8px `accent.text` dot for Uncommitted; 13px `text.body` subject, ellipsis; the list scrolls
+  past 104px), then the meta `<parent>..<newest> · N files +a −d` (without the span for the
+  working tree); the file bar's compare label `<parent> ↔ <newest>` (`↔ working tree`). Rows with
+  others between them have no single diff: the pane says "Pick consecutive commits to see their
+  diff". No commit form while several rows are picked (an amend keeps it).
 - **Picking:** on opening, Uncommitted when there is one, else the newest commit (its first file). ↑ / ↓ in the list and ⌥⇧↑ / ⌥⇧↓
   anywhere (newer / older; past the loaded end it loads more) step through the rows,
   Uncommitted included. Clicking the picked row again folds its file list, and opens it again;

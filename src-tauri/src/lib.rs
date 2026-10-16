@@ -115,6 +115,7 @@ pub fn run() {
             commands::get_review,
             commands::get_commit_changes,
             commands::get_stash_changes,
+            commands::get_range_changes,
             commands::get_history,
             commands::read_file_pair,
             commands::get_remote_url,

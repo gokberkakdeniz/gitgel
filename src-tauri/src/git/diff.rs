@@ -196,6 +196,37 @@ pub fn commit_changes(repo: &Repository, sha: &str) -> Result<CommitChanges, App
     })
 }
 
+/// Changes of several commits taken together (History's selection, Hi12): from the first parent
+/// of `oldest` (an empty tree for a root commit) to `newest`, or to the working tree when `newest`
+/// is `None` (then `repo` is that worktree's). Renames detected. Returns the parent too.
+pub fn range_changes(
+    repo: &Repository,
+    oldest: &str,
+    newest: Option<&str>,
+) -> Result<(Option<String>, Vec<FileChange>), AppError> {
+    let parent = repo.find_commit(Oid::from_str(oldest)?)?.parent_id(0).ok();
+    let from = match parent {
+        Some(p) => Some(repo.find_commit(p)?.tree()?),
+        None => None,
+    };
+    let (mut diff, side) = match newest {
+        Some(sha) => {
+            let to = repo.find_commit(Oid::from_str(sha)?)?.tree()?;
+            let diff =
+                repo.diff_tree_to_tree(from.as_ref(), Some(&to), Some(&mut diff_options(false)))?;
+            (diff, NewSide::Tree)
+        }
+        None => {
+            repo.index()?.read(false)?;
+            let diff =
+                repo.diff_tree_to_workdir_with_index(from.as_ref(), Some(&mut diff_options(true)))?;
+            (diff, NewSide::Workdir)
+        }
+    };
+    find_renames(&mut diff)?;
+    Ok((parent.map(|p| p.to_string()), changes(&diff, side)?))
+}
+
 /// Files changed from commit `from` to the working tree of `wt_repo`, untracked included.
 pub fn workdir_changes(wt_repo: &Repository, from: &str) -> Result<Vec<FileChange>, AppError> {
     let mut diff = workdir_diff(wt_repo, Oid::from_str(from)?)?;
@@ -450,6 +481,37 @@ mod tests {
         // `*` is not a glob here.
         let diff = tree_diff_paths(&t.repo, a, b, &["*.txt".into()]).unwrap();
         assert_eq!(delta_count(&diff), 0);
+    }
+
+    #[test]
+    fn range_changes_span_the_commits_and_the_working_tree() {
+        let t = TestRepo::new();
+        let root = t.commit_on("main", &[("a.txt", Some(b"1\n"))], "root", 4);
+        let one = t.commit_on("main", &[("a.txt", Some(b"1\n2\n"))], "one", 3);
+        let two = t.commit_on("main", &[("b.txt", Some(b"b\n"))], "two", 2);
+        t.commit_on("main", &[("c.txt", Some(b"c\n"))], "three", 1);
+
+        // one..two: against root, both commits' files, nothing of three.
+        let (parent, files) =
+            range_changes(&t.repo, &one.to_string(), Some(&two.to_string())).unwrap();
+        assert_eq!(parent, Some(root.to_string()));
+        assert_eq!(files.len(), 2, "{files:?}");
+        assert_eq!(find(&files, "a.txt").add, Some(1));
+        assert_eq!(find(&files, "b.txt").kind, FileKind::A);
+
+        // From the root commit: an empty tree on the left.
+        let (parent, files) =
+            range_changes(&t.repo, &root.to_string(), Some(&one.to_string())).unwrap();
+        assert_eq!(parent, None);
+        assert_eq!(find(&files, "a.txt").kind, FileKind::A);
+
+        // To the working tree: the commits and the uncommitted file.
+        t.checkout_main();
+        t.write_file(t.path(), "a.txt", b"1\n2\n3\n");
+        let (_, files) = range_changes(&t.repo, &two.to_string(), None).unwrap();
+        assert_eq!(files.len(), 3, "{files:?}");
+        assert_eq!(find(&files, "a.txt").add, Some(1));
+        assert!(files.iter().all(|f| f.new_oid.is_none()));
     }
 
     #[test]

@@ -1015,6 +1015,16 @@ pub struct CommitChanges {
     pub files: Vec<FileChange>,
 }
 
+/// Several commits taken together (History's selection, Hi12): from the oldest one's first
+/// parent to the newest one, or to the working tree.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RangeChanges {
+    /// `None` for a root commit (compared with an empty tree).
+    pub parent: Option<String>,
+    pub files: Vec<FileChange>,
+}
+
 /// What a stash holds, against the commit it was taken on; untracked files are `U`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

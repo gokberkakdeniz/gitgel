@@ -376,6 +376,11 @@ export interface CommitChanges {
   parent: string | null; // null => root commit, compared with an empty tree
   files: FileChange[];
 }
+/** Several commits taken together (History's selection, Hi12). */
+export interface RangeChanges {
+  parent: string | null; // null => root commit, compared with an empty tree
+  files: FileChange[];
+}
 /** A repository remote's web page (`get_remote_url`): `origin` if there is one. The host
  * decides the URL shape: GitLab (`/-/commit`, `/-/blob`), Bitbucket (`/commits`, `/src`),
  * anything else (Gitea, Forgejo, self-hosted) GitHub-style (`/commit`, `/blob`). */

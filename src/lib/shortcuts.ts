@@ -49,6 +49,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'shortcuts.reviewHistory', keys: ['⌥', 'H'], note: 'shortcuts.sameBranch' },
       { label: 'shortcuts.switchBranch', keys: ['⇧', '⌘', 'B'], note: 'shortcuts.inHistory' },
       { label: 'shortcuts.pickFiles', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.pickNote' },
+      { label: 'shortcuts.pickCommits', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.inHistory' },
     ],
   },
   {

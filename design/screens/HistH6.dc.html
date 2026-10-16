@@ -110,16 +110,6 @@ button,input,textarea{font-family:inherit}
 <dc-import name="Button" theme="{{themeName}}" variant="primary" size="32" width="100%" label="{{commitLabel}}" icon="{{commitIcon}}" disabled="{{committing}}" title="{{commitTitle}}" hint-size="100%,32px"></dc-import>
 </form>
 </sc-if>
-<sc-if value="{{showSelection}}" hint-placeholder-val="{{false}}">
-<div role="region" aria-label="Selected commits" style="flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: var(--bg-sidebar)">
-<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">2 commits selected</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">e8b2c41 … 5c0d7aa</span></div>
-<span style="font-size: 12px; line-height: 1.45; color: var(--text-faint)">⇧-click extends the range. Commits already in main can't be picked.</span>
-<div style="display: flex; gap: 8px">
-<dc-import name="Button" theme="{{themeName}}" variant="primary" size="32" label="Squash 2 commits…" hint-size="150px,32px"></dc-import>
-<dc-import name="Button" theme="{{themeName}}" variant="ghost" size="32" label="Clear" kbd="esc" hint-size="80px,32px"></dc-import>
-</div>
-</div>
-</sc-if>
 </aside>
 <section style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
 <div style="border-bottom: 1px solid var(--border); padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
@@ -129,7 +119,7 @@ button,input,textarea{font-family:inherit}
 <sc-if value="{{c.hasBody}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; line-height: 1.5; color: var(--text-muted); max-width: 720px">{{c.body}}</div></sc-if>
 <sc-if value="{{c.isRange}}" hint-placeholder-val="{{false}}">
 <div style="display: flex; flex-direction: column; gap: 3px">
-<sc-for list="{{c.range}}" as="r" hint-placeholder-count="2"><div style="display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: var(--text-body)"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-text)">{{r.sha}}</span><span>{{r.subject}}</span></div></sc-for>
+<sc-for list="{{c.range}}" as="r" hint-placeholder-count="2"><div style="display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: var(--text-body)"><span style="width: 56px; flex-shrink: 0; align-self: center; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-text)">{{r.sha}}<sc-if value="{{r.wip}}" hint-placeholder-val="{{false}}"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-text)"></span></sc-if></span><span style="min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.subject}}</span></div></sc-for>
 </div>
 </sc-if>
 <div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">
@@ -202,7 +192,7 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","squash","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"operation":{"editor":"boolean","default":false},"pushed":{"editor":"boolean","default":false},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["commit","lines","hooks","failed","amend","range","menu"],"default":"commit"},"composer":{"editor":"enum","options":["panel","dialog","index","sections"],"default":"panel"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"operation":{"editor":"boolean","default":false},"pushed":{"editor":"boolean","default":false},"selected":{"editor":null},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
@@ -212,10 +202,12 @@ class Component extends DCLogic {
     // the list), lines (W1b: lines picked in the diff, the file's box shows "some"), hooks (W1c:
     // hooks run, a running toast that opens the output), failed (W1d: the output dialog, as the
     // Scripts output N4), amend (Hi10: the form in amend mode, filled from the newest commit; its
-    // row says "amending"), squash (W2b: a range of commits picked with ⇧-click),
+    // row says "amending"), range (Hi12: Uncommitted and two commits picked with ⌘ / ⇧-click,
+    // tinted, their files under the oldest; the pane shows them taken together),
     // menu (W2c: a commit's menu). The list shows two lines: the upstream (origin/<branch>,
     // dashed: above it is not pushed yet) and the base (as Hi3).
-    var wipOpen = s !== 'squash' && s !== 'menu';
+    var many = s === 'range';
+    var wipOpen = !many && s !== 'menu';
     // composer: panel (the form under the list, W1a) or dialog (W5: no form, no checkboxes in the
     // list; Commit… in the Uncommitted row's menu opens the commit dialog).
     // composer index (W5c): no form; the boxes are git's index (checked = staged, "some" = part
@@ -234,7 +226,7 @@ class Component extends DCLogic {
         subjectStyle: 'font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: ' + (opt.shared ? 'var(--text-muted)' : 'var(--text-strong)'),
         rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; cursor: pointer; ' +
           (opt.pick ? 'background: var(--bg-hover); ' : '') +
-          (opt.sel ? 'background: rgba(var(--accent-rgb), 0.12); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.5); ' : '') +
+          (opt.sel ? 'background: rgba(var(--accent-rgb), 0.18); ' : '') +
           (opt.shared ? 'opacity: 0.7' : '') };
     };
     var shownStyle = 'box-shadow: inset 0 0 0 1px var(--accent); background: rgba(var(--accent-rgb), 0.10)';
@@ -289,12 +281,14 @@ class Component extends DCLogic {
         file('M', 'refresh.ts', 'src/auth', '+2', '−1', false, 'on')];
     }
     var wipMeta = cmode === 'index' || cmode === 'sections' ? '3 files · 2 staged · 6m' : '3 files · 6m';
-    var wip = { isWip: true, sel: wipOpen, failed: s === 'failed', meta: wipMeta,
-      rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin-top: 4px; border-radius: 8px; border: 1px dashed var(--border-strong); cursor: pointer; ' + (wipOpen ? 'background: var(--bg-hover)' : '') };
+    var wip = { isWip: true, sel: wipOpen || many, failed: s === 'failed', meta: wipMeta,
+      rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin-top: 4px; border-radius: 8px; border: 1px dashed var(--border-strong); cursor: pointer; ' + (many ? 'background: rgba(var(--accent-rgb), 0.18)' : wipOpen ? 'background: var(--bg-hover)' : '') };
 
-    var c1 = commit('e8b2c41', 'Retry refresh once on network error', 'Can Öztürk', '6m', { sel: s === 'squash', tag: s === 'amend' ? 'amending' : '' });
-    var c2 = commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m', { sel: s === 'squash', pick: s === 'menu' });
-    var c2Files = s === 'menu' ? [file('M', 'store.ts', 'src/auth', '+9', '−1', true), file('M', 'refresh.ts', 'src/auth', '+2', '−1')] : [];
+    var c1 = commit('e8b2c41', 'Retry refresh once on network error', 'Can Öztürk', '6m', { sel: many, tag: s === 'amend' ? 'amending' : '' });
+    var c2 = commit('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m', { sel: many, pick: s === 'menu' });
+    // range: the files of all three taken together, under the oldest (5c0d7aa), no boxes.
+    var c2Files = s === 'menu' ? [file('M', 'store.ts', 'src/auth', '+9', '−1', true), file('M', 'refresh.ts', 'src/auth', '+2', '−1')]
+      : many ? [file('M', 'refresh.ts', 'src/auth', '+12', '−3', true), file('M', 'store.ts', 'src/auth', '+9', '−1'), file('M', 'refresh.test.ts', 'test/auth', '+5', ''), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '')] : [];
     var allRow = { isAll: true };
     // pushed (Hi10's dialog): the branch is all on origin, the upstream line sits above the newest commit.
     var pushed = !!this.props.pushed;
@@ -325,10 +319,12 @@ class Component extends DCLogic {
       left = [line('ctx', 12, 'export async function save(s: Session) {'), line('del', 13, '  await db.put(s.id, s);'), line('pad'), line('ctx', 14, '}')];
       right = [line('ctx', 12, 'export async function save(s: Session) {'), line('add', 13, '  await db.put(s.id, { ...s, refreshId: s.refreshId });'),
         line('add', 14, "  await db.index('refresh', s.refreshId, s.id);"), line('ctx', 15, '}')];
-    } else if (s === 'squash') {
-      c = { isOne: false, subject: '2 commits selected', hasBody: false, isRange: true,
-        range: [{ sha: 'e8b2c41', subject: 'Retry refresh once on network error' }, { sha: '5c0d7aa', subject: 'Persist refresh id with the session' }],
-        lead: 'b41f9e3..e8b2c41 · ', files: '3 files', add: '+30', del: '−6', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ e8b2c41', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
+    } else if (many) {
+      // Uncommitted and two commits: b41f9e3 (the oldest one's parent) ↔ working tree. Two
+      // commits alone read "2 commits selected" with the span in the meta: b41f9e3..e8b2c41 ·
+      c = { isOne: false, subject: 'Uncommitted changes and 2 commits', hasBody: false, isRange: true,
+        range: [{ sha: '', wip: true, subject: 'Uncommitted changes' }, { sha: 'e8b2c41', subject: 'Retry refresh once on network error' }, { sha: '5c0d7aa', subject: 'Persist refresh id with the session' }],
+        lead: '', files: '4 files', add: '+48', del: '−4', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ working tree', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
       left = [line('ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('del', 41, '  return refreshSession(s);'),
         line('pad'), line('pad'), line('pad'), line('pad'), line('pad'), line('ctx', 42, '}')];
       right = [line('ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('add', 41, '  try {'),
@@ -370,10 +366,9 @@ class Component extends DCLogic {
     var amend = s === 'amend';
     return {
       themeClass: 'theme-' + t, themeName: t, op: op,
-      multi: s === 'squash',
+      multi: many,
       items: items,
       showComposer: wipOpen && cmode === 'panel',
-      showSelection: s === 'squash',
       summary: amend ? 'Retry refresh once on network error' : 'Rotate tokens on refresh',
       body: amend ? 'A dropped connection during refresh logged people out. Retry once with the same refresh id.' : (s === 'hooks' || s === 'failed') ? 'Delete the old session when a token is rotated.' : '',
       amend: amend,

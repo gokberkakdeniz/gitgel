@@ -6,7 +6,7 @@ import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
 import { Popover } from '../../components/Popover';
 import { ResizeHandle, useStoredWidth } from '../../components/ResizeHandle';
 import { askDiscard, targetOf } from '../../discard/discard';
-import { usePicks } from '../../discard/picks';
+import { range, toggled, usePicks } from '../../discard/picks';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Banner } from '../../components/Banner';
@@ -26,9 +26,10 @@ import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
 import { t } from '../../i18n';
-import { getAiStatus, getCommitChanges, getHistory, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
+import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
+import { isTextField } from '../../lib/shortcuts';
 import { tildifyHome } from '../../lib/paths';
-import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, StashChanges } from '../../lib/types';
+import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useInvoke } from '../../lib/useInvoke';
@@ -337,8 +338,28 @@ export function History({ repoId, rev, backLabel }: Props) {
   useEffect(() => setPicked(null), [search]);
   const listed = (row: string) => order.includes(row) || stashes.some((s) => stashRow(s.sha) === row);
   const current = picked && listed(picked) ? picked : wip ? WIP : (commits[0]?.sha ?? null);
-  const commit = commits.find((c) => c.sha === current);
-  const stash = stashes.find((s) => stashRow(s.sha) === current);
+  // Several rows picked with ⌘ / ⇧-click (Hi12): Uncommitted and commits, shown taken together.
+  // `lead` is the end ⇧↑ / ⇧↓ moves; `anchor` the row a range starts from.
+  const [multi, setMulti] = useState<string[] | null>(null);
+  const [anchor, setAnchor] = useState<string | null>(null);
+  const [lead, setLead] = useState<string | null>(null);
+  useEffect(() => setMulti(null), [repoId, rev, search]);
+  // In list order (newest first); rows that left the list leave it too.
+  const selected = useMemo(() => (multi ? order.filter((r) => multi.includes(r)) : []), [multi, order]);
+  const isMulti = selected.length > 1;
+  // Only rows next to each other have one diff: the oldest one's parent ↔ the newest one.
+  const consecutive = selected.every((r, i) => i === 0 || order.indexOf(r) === order.indexOf(selected[i - 1]) + 1);
+  const withWip = isMulti && selected[0] === WIP;
+  const oldest = isMulti ? selected[selected.length - 1] : null;
+  const newest = isMulti && !withWip ? selected[0] : null;
+  const { data: rangeChanges } = useInvoke<RangeChanges>(
+    () => getRangeChanges(repoId, oldest!, newest, withWip ? (entry?.worktreePath ?? null) : null),
+    [repoId, oldest, newest, withWip, entry?.worktreePath],
+    { repoIds: [repoId], enabled: isMulti && consecutive && !!oldest },
+  );
+  const spanned = isMulti && consecutive ? rangeChanges : undefined;
+  const commit = isMulti ? undefined : commits.find((c) => c.sha === current);
+  const stash = isMulti ? undefined : stashes.find((s) => stashRow(s.sha) === current);
 
   // A commit's files are fetched once (a commit never changes).
   const [changes, setChanges] = useState<Record<string, CommitChanges>>({});
@@ -373,8 +394,17 @@ export function History({ repoId, rev, backLabel }: Props) {
   const stashChanges = stash ? stashData[stash.sha] : undefined;
   const stashBase = stashChanges?.base ?? stash?.base ?? '';
 
-  const files: FileChange[] =
-    current === WIP ? wipFiles : stash ? (stashChanges?.files ?? []) : (commitChanges?.files ?? []);
+  // The single row shown is Uncommitted.
+  const wipShown = current === WIP && !isMulti;
+  const files: FileChange[] = isMulti
+    ? (spanned?.files ?? [])
+    : current === WIP
+      ? wipFiles
+      : stash
+        ? (stashChanges?.files ?? [])
+        : (commitChanges?.files ?? []);
+  // The row the files are listed under: the picked one, or the oldest of several.
+  const filesAt = isMulti ? oldest : current;
 
   // The file shown: the one picked while the row lists it, else its first.
   const [path, setPath] = useState<string | null>(null);
@@ -382,9 +412,9 @@ export function History({ repoId, rev, backLabel }: Props) {
   // Several of Uncommitted's files picked with ⌘ / ⇧-click (Hi8): their right-click menu acts on
   // all of them.
   const picks = usePicks(
-    current === WIP ? wipFiles.map((f) => f.path) : [],
+    wipShown ? wipFiles.map((f) => f.path) : [],
     file?.path ?? null,
-    `${repoId}\u0000${rev}\u0000${current}`,
+    `${repoId}\u0000${rev}\u0000${current}\u0000${isMulti}`,
   );
   const discard = (list: FileChange[], all = false) => {
     if (entry) askDiscard({ targets: [targetOf(entry, list)], all });
@@ -417,11 +447,60 @@ export function History({ repoId, rev, backLabel }: Props) {
   const [filesOpen, setFilesOpen] = useState(true);
   const pick = (row: string) => {
     setPicked(row);
+    setMulti(null);
+    setAnchor(row);
+    setLead(row);
     setPath(null);
     setLand('first');
     setFilesOpen(true);
   };
-  const click = (row: string) => (row === current ? setFilesOpen((o) => !o) : pick(row));
+  const click = (row: string) => (row === current && !isMulti ? setFilesOpen((o) => !o) : pick(row));
+  // Several rows (Hi12): ⌘-click adds or drops one, ⇧-click takes the range from the last one
+  // clicked. Down to one row, that row is picked as usual.
+  const select = (rows: string[], end: string) => {
+    if (rows.length === 0) return;
+    if (rows.length === 1) {
+      pick(rows[0]);
+      return;
+    }
+    setMulti(rows);
+    setLead(end);
+    setPath(null);
+    setLand('first');
+    setFilesOpen(true);
+  };
+  const clickRow = (row: string, e: React.MouseEvent) => {
+    if (e.metaKey) {
+      const from = isMulti ? selected : current && order.includes(current) ? [current] : [];
+      select(toggled(from, row), row);
+      setAnchor(row);
+      return;
+    }
+    if (e.shiftKey) {
+      select(range(order, anchor ?? current ?? row, row), row);
+      return;
+    }
+    click(row);
+  };
+  // ⇧↑ / ⇧↓ in the list move the range's far end.
+  const extend = (dir: 1 | -1) => {
+    const end = lead && order.includes(lead) ? lead : current;
+    if (!end) return;
+    const j = order.indexOf(end) + dir;
+    if (j < 0 || j >= order.length) return;
+    select(range(order, anchor ?? end, order[j]), order[j]);
+  };
+  // Esc goes back to one row.
+  useEffect(() => {
+    if (!isMulti) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || isTextField(e.target) || useUi.getState().modalCount > 0) return;
+      if (document.querySelector('[data-popover]')) return;
+      setMulti(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isMulti]);
 
   // Stepping rows: ↑ / ↓ in the list, ⌥⇧↑ / ⌥⇧↓ anywhere. Past the loaded end it loads more.
   const stepRow = (dir: 1 | -1) => {
@@ -774,7 +853,9 @@ export function History({ repoId, rev, backLabel }: Props) {
             onKeyDown={(e) => {
               if (e.altKey || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
               e.preventDefault();
-              stepRow(e.key === 'ArrowDown' ? 1 : -1);
+              const dir = e.key === 'ArrowDown' ? 1 : -1;
+              if (e.shiftKey) extend(dir);
+              else stepRow(dir);
             }}
           >
             {label && <div className={styles.listLabel}>{label}</div>}
@@ -782,7 +863,9 @@ export function History({ repoId, rev, backLabel }: Props) {
               <ListRow
                 key={rowKey(r)}
                 row={r}
-                current={current}
+                current={isMulti ? null : current}
+                selected={isMulti ? selected : []}
+                filesAt={filesAt}
                 wipCount={entry?.uncommitted ?? 0}
               wipConflicts={entry?.conflicts ?? 0}
                 wipAge={entry?.changedAt ?? null}
@@ -791,20 +874,20 @@ export function History({ repoId, rev, backLabel }: Props) {
                 folder={folder}
                 wipFailed={commitFailed}
                 check={
-                  current === WIP && staged
+                  wipShown && staged
                     ? { on: checked, disabled: committing, onChange: (f, on) => setBoxes((b) => ({ ...b, [f.path]: on })),
                         onAll: (on) => setBoxes(Object.fromEntries(wipFiles.map((f) => [f.path, on]))),
                       }
                     : undefined
                 }
-                onPick={click}
+                onPick={clickRow}
                 onFile={(p) => {
                   setPath(p);
                   setLand('first');
                 }}
-                picks={current === WIP ? picks : undefined}
-                actions={current === WIP ? wipActions : undefined}
-                conflict={current === WIP && entry ? (f) => conflictOf(entry, f) : undefined}
+                picks={wipShown ? picks : undefined}
+                actions={wipShown ? wipActions : undefined}
+                conflict={current === WIP && !isMulti && entry ? (f) => conflictOf(entry, f) : undefined}
                 onWipMenu={setWipMenu}
                 onCommitMenu={(commit, at) => setCommitMenu({ commit, at })}
                 amending={amending?.sha ?? null}
@@ -844,7 +927,7 @@ export function History({ repoId, rev, backLabel }: Props) {
               />
             </div>
           )}
-          {((current === WIP && wip) || amending) && (
+          {((wipShown && wip) || amending) && (
             <CommitForm
               rev={rev}
               summary={summary}
@@ -876,6 +959,13 @@ export function History({ repoId, rev, backLabel }: Props) {
         <section className={parts.main}>
           {error ? (
             <div className={parts.empty}>{error.message}</div>
+          ) : isMulti ? (
+            <RangeHeader
+              rows={selected}
+              commits={commits}
+              changes={spanned}
+              consecutive={consecutive}
+            />
           ) : current === WIP ? (
             <WipHeader files={wipFiles} />
           ) : stash ? (
@@ -883,12 +973,14 @@ export function History({ repoId, rev, backLabel }: Props) {
           ) : commit ? (
             <CommitHeader repoId={repoId} commit={commit} changes={commitChanges} />
           ) : null}
-          {!error && file && (current === WIP || commitChanges || stashChanges) && (
+          {!error && file && (wipShown || commitChanges || stashChanges || spanned) && (
             <>
               <FileBar
                 file={file}
                 label={
-                  current === WIP
+                  isMulti
+                    ? `${spanned?.parent?.slice(0, 7) ?? t('review.emptyTree')} ↔ ${newest ? newest.slice(0, 7) : t('history.workingTree')}`
+                    : current === WIP
                     ? t('review.headToTree')
                     : stash
                       ? `${stashBase.slice(0, 7)} ↔ stash@{${stash.index}}`
@@ -902,13 +994,13 @@ export function History({ repoId, rev, backLabel }: Props) {
               />
               <DiffView
                 repoId={repoId}
-                worktreePath={current === WIP ? (entry?.worktreePath ?? null) : null}
+                worktreePath={wipShown || withWip ? (entry?.worktreePath ?? null) : null}
                 folder={folder}
-                commit={commit?.sha ?? null}
-                parent={commitChanges?.parent ?? null}
+                commit={isMulti ? newest : (commit?.sha ?? null)}
+                parent={isMulti ? (spanned?.parent ?? null) : (commitChanges?.parent ?? null)}
                 change={file}
-                mode={current === WIP ? 'uncommitted' : 'committed'}
-                fileKey={`${current}\u0000${file.path}`}
+                mode={wipShown ? 'uncommitted' : withWip ? 'all' : 'committed'}
+                fileKey={`${isMulti ? selected.join(',') : current}\u0000${file.path}`}
                 land={land}
                 onNav={setNav}
                 onStep={(dir) => stepRef.current(dir)}
@@ -926,9 +1018,10 @@ export function History({ repoId, rev, backLabel }: Props) {
               />
             </>
           )}
-          {!error && (commitChanges || stashChanges) && files.length === 0 && current !== WIP && (
+          {!error && (commitChanges || stashChanges || spanned) && files.length === 0 && !wipShown && (
             <div className={parts.empty}>{t('history.noChanges')}</div>
           )}
+          {!error && isMulti && !consecutive && <div className={parts.empty}>{t('history.notConsecutive')}</div>}
         </section>
       </div>
     </div>
@@ -949,6 +1042,8 @@ function rowKey(r: HistoryRow): string {
 function ListRow({
   row,
   current,
+  selected,
+  filesAt,
   wipCount,
   wipConflicts,
   wipAge,
@@ -968,6 +1063,10 @@ function ListRow({
 }: {
   row: HistoryRow;
   current: string | null;
+  /** Several rows picked with ⌘ / ⇧-click (Hi12), tinted. */
+  selected: string[];
+  /** The row the files are listed under. */
+  filesAt: string | null;
   wipCount: number;
   wipConflicts: number;
   wipAge: number | null;
@@ -986,7 +1085,7 @@ function ListRow({
     /** Check or uncheck every file. */
     onAll: (on: boolean) => void;
   };
-  onPick: (row: string) => void;
+  onPick: (row: string, e: React.MouseEvent) => void;
   onFile: (path: string) => void;
   /** Uncommitted's files picked with ⌘ / ⇧-click (Hi8). */
   picks?: { isPicked: (path: string) => boolean; click: (path: string, e: React.MouseEvent, open: () => void) => void };
@@ -1047,15 +1146,17 @@ function ListRow({
       );
     case 'wip': {
       const on = current === WIP;
+      const many = selected.includes(WIP);
+      const cls = [styles.wip, on && styles.rowOn, many && styles.rowPicked].filter(Boolean).join(' ');
       return (
         <>
           <button
             type="button"
             role="option"
-            aria-selected={on}
+            aria-selected={on || many}
             title={t('history.showWip')}
-            className={on ? `${styles.wip} ${styles.rowOn}` : styles.wip}
-            onClick={() => onPick(WIP)}
+            className={cls}
+            onClick={(e) => onPick(WIP, e)}
             onContextMenu={(e) => {
               e.preventDefault();
               onWipMenu(new DOMRect(e.clientX, e.clientY, 0, 0));
@@ -1080,23 +1181,26 @@ function ListRow({
               </span>
             </span>
           </button>
-          {on && fileRows}
+          {filesAt === WIP && fileRows}
         </>
       );
     }
     case 'commit': {
       const c = row.commit;
       const on = current === c.sha;
-      const cls = [styles.commit, on && styles.rowOn, c.inBase && styles.shared].filter(Boolean).join(' ');
+      const many = selected.includes(c.sha);
+      const cls = [styles.commit, on && styles.rowOn, many && styles.rowPicked, c.inBase && styles.shared]
+        .filter(Boolean)
+        .join(' ');
       return (
         <>
           <button
             type="button"
             role="option"
-            aria-selected={on}
+            aria-selected={on || many}
             title={t('history.showCommit')}
             className={cls}
-            onClick={() => onPick(c.sha)}
+            onClick={(e) => onPick(c.sha, e)}
             onContextMenu={(e) => {
               e.preventDefault();
               onCommitMenu(c, new DOMRect(e.clientX, e.clientY, 0, 0));
@@ -1125,7 +1229,7 @@ function ListRow({
               </span>
             </span>
           </button>
-          {on && fileRows}
+          {filesAt === c.sha && fileRows}
         </>
       );
     }
@@ -1257,6 +1361,62 @@ function CommitHeader({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Above several rows taken together (Hi12): how many, each one's SHA and subject, and the span. */
+function RangeHeader({
+  rows,
+  commits,
+  changes,
+  consecutive,
+}: {
+  rows: string[];
+  commits: HistoryCommit[];
+  changes: RangeChanges | undefined;
+  consecutive: boolean;
+}) {
+  const withWip = rows[0] === WIP;
+  const picked = rows.flatMap((r) => commits.filter((c) => c.sha === r));
+  const n = cnt(picked.length);
+  const stat = changes ? totals(changes.files) : null;
+  const newest = picked[0];
+  return (
+    <div className={styles.head}>
+      <div className={parts.entryLine}>
+        <span className={parts.barTitle}>{withWip ? t('history.selWip', n) : t('history.selCommits', n)}</span>
+      </div>
+      <div className={styles.rangeList}>
+        {withWip && (
+          <div className={styles.rangeRow}>
+            <span className={styles.rangeSha}>
+              <span className={styles.wipDot} />
+            </span>
+            <span className={styles.rangeSubject}>{t('history.wipTitle')}</span>
+          </div>
+        )}
+        {picked.map((c) => (
+          <div key={c.sha} className={styles.rangeRow}>
+            <span className={`${styles.rangeSha} selectable`}>{c.shortSha}</span>
+            <span className={`${styles.rangeSubject} selectable`} title={c.subject}>
+              {c.subject}
+            </span>
+          </div>
+        ))}
+      </div>
+      {consecutive && changes && (
+        <div className={parts.barMeta}>
+          {!withWip && newest && (
+            <>
+              <span className="selectable">{`${changes.parent?.slice(0, 7) ?? t('review.emptyTree')}..${newest.shortSha}`}</span>
+              <span className={parts.dot}>·</span>
+            </>
+          )}
+          <span>{t('branches.fileCount', { ...cnt(changes.files.length) })}</span>
+          <DiffStat add={stat!.add} del={stat!.del} />
+        </div>
+      )}
     </div>
   );
 }

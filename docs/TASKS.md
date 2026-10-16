@@ -657,6 +657,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Apple Foundation Models provider: the on-device model writes commit messages through `fm respond --no-stream` (model only, no effort) — 2026-10-16
 - [x] (on request) Generate while amending: the prompt holds the amended commit's changes plus the checked files, so ✦ works with no file checked; its menu no longer opens while ✦ is disabled — 2026-10-16
 - [x] (on request) Apple Foundation Models gets its own default prompt (one `<type>(<area>): <summary>` line, no examples); a patch over the limit puts code before docs and gives each file a share — 2026-10-16
+- [x] (on request) History: several rows picked with ⌘ / ⇧-click (⇧↑ / ⇧↓), Uncommitted too, show their diff taken together (`get_range_changes`: the oldest one's parent ↔ the newest, or ↔ the working tree); the selection panel under the list is gone; canvas Hi12 (`HistH13.dc.html`), W2b removed from the WIP page — 2026-10-16
 
 ---
 

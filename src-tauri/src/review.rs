@@ -7,8 +7,8 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::{diff, history, refs, stash, worktrees, Repo};
 use crate::model::{
-    CommitChanges, Config, EntryState, EntrySummary, FilesByMode, RepoConfig, ReviewData,
-    ReviewGroup, ReviewTarget, StashChanges,
+    CommitChanges, Config, EntryState, EntrySummary, FilesByMode, RangeChanges, RepoConfig,
+    ReviewData, ReviewGroup, ReviewTarget, StashChanges,
 };
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -157,6 +157,64 @@ pub fn get_commit_changes(
     );
     lock(&state.cache).put_commit(repo_id, changes.clone());
     Ok(changes)
+}
+
+/// Several commits of History's selection taken together (Hi12): `oldest`'s first parent ↔
+/// `newest`, or ↔ the working tree at `worktree_path` (one of the repository's worktrees) when
+/// `newest` is `None`. Not cached: the working tree changes.
+pub fn get_range_changes(
+    state: &AppState,
+    repo_id: &str,
+    oldest: &str,
+    newest: Option<&str>,
+    worktree_path: Option<&str>,
+) -> Result<RangeChanges, AppError> {
+    let config = config::snapshot(state);
+    let repo_cfg = config
+        .repos
+        .iter()
+        .find(|r| r.id == repo_id)
+        .ok_or_else(|| AppError::NotFound(format!("repository {repo_id}")))?;
+    let mut t = Timings::start();
+    // The working tree side reads that worktree, which must be one git lists for the repository.
+    let folder = match (newest, worktree_path) {
+        (Some(_), _) => Path::new(&repo_cfg.path).to_path_buf(),
+        (None, Some(wt)) => {
+            let wt = Path::new(wt)
+                .canonicalize()
+                .map_err(|_| AppError::Forbidden(format!("unknown worktree {wt}")))?;
+            let shared = state.pool.get(Path::new(&repo_cfg.path))?;
+            let repo = lock(&shared);
+            if !worktrees::list_worktrees(&state.pool, &repo)?
+                .iter()
+                .any(|w| w.path == wt)
+            {
+                return Err(AppError::Forbidden(format!(
+                    "{} is not a worktree of this repository",
+                    wt.display()
+                )));
+            }
+            wt
+        }
+        (None, None) => {
+            return Err(AppError::Invalid(
+                "The working tree needs a worktree.".into(),
+            ))
+        }
+    };
+    let (parent, files) = {
+        let shared = state.pool.get(&folder)?;
+        let repo = lock(&shared);
+        t.time("diff", || diff::range_changes(&repo, oldest, newest))?
+    };
+    log::info!(
+        "range {}..{} in {}: {t} · {} files",
+        &oldest[..oldest.len().min(7)],
+        newest.map_or("working tree", |n| &n[..n.len().min(7)]),
+        repo_cfg.path,
+        files.len()
+    );
+    Ok(RangeChanges { parent, files })
 }
 
 /// What a stash holds (flow P2), cached by stash commit.

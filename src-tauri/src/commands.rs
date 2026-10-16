@@ -8,8 +8,8 @@ use crate::git::inspect;
 use crate::model::{
     BaseOptions, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config, EntryRef,
     FileChange, FilePair, FolderCheck, HistoryPage, NewBranchCheckout, NewBranchProblem, OpenApp,
-    ProjectConfig, ProjectView, RemoteInfo, ReviewData, ReviewTarget, ScanResult, ScriptConfig,
-    ScriptRun, Settings, StashChanges, TerminalOption,
+    ProjectConfig, ProjectView, RangeChanges, RemoteInfo, ReviewData, ReviewTarget, ScanResult,
+    ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{
@@ -137,6 +137,27 @@ pub async fn get_commit_changes(
 ) -> Result<CommitChanges, AppError> {
     blocking(&state, move |state| {
         review::get_commit_changes(state, &repo_id, &sha)
+    })
+    .await
+}
+
+/// History's selection taken together (Hi12).
+#[tauri::command]
+pub async fn get_range_changes(
+    state: State<'_, AppState>,
+    repo_id: String,
+    oldest: String,
+    newest: Option<String>,
+    worktree_path: Option<String>,
+) -> Result<RangeChanges, AppError> {
+    blocking(&state, move |state| {
+        review::get_range_changes(
+            state,
+            &repo_id,
+            &oldest,
+            newest.as_deref(),
+            worktree_path.as_deref(),
+        )
     })
     .await
 }
