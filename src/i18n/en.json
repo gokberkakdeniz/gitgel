@@ -712,7 +712,6 @@
   "amend.noteAfter": "to make these changes as a new commit.",
   "amend.button": "Amend Last Commit",
   "cherry.menu": "Cherry-Pick to",
-  "cherry.target": "Cherry-pick {$sha} to",
   "cherry.targetAria": "Cherry-pick to",
   "cherry.act": "Cherry-Pick {$sha}",
   "cherry.running": "Cherry-picking {$sha}…",

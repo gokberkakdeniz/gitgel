@@ -3037,8 +3037,8 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     branch diverged, so the diverged banner offers Force Push. If the branch gets a new commit
     meanwhile, amend mode ends by itself.
   - **Cherry-Pick to** (`HistH12`, Hi11; `CherryPickMenu`): opens a 280px picker beside the item
-    on hover or click (→ from the keyboard, ← back), like Apply to (P5): label "Cherry-pick <sha>
-    to", then one item per checked-out entry of the repository but the one History shows (scan
+    on hover or click (→ from the keyboard, ← back), like Apply to (P5) but with no label: one
+    item per checked-out entry of the repository but the one History shows (scan
     order): `branch` icon, the branch (short SHA when detached) and under it the folder (`~/…`),
     nothing else; each on one line, ending in "…" when long. A worktree with an operation in
     progress is disabled (tooltip "The folder has an operation in progress"). No other

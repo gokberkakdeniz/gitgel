@@ -1,4 +1,4 @@
-import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
+import { Menu, MenuItem } from '../../components/Menu';
 import { t } from '../../i18n';
 import { gitCherryPick } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
@@ -39,7 +39,6 @@ export function CherryPickMenu({
 }) {
   return (
     <Menu aria-label={t('cherry.targetAria')} autoFocus={autoFocus}>
-      <MenuLabel>{t('cherry.target', { sha: commit.shortSha })}</MenuLabel>
       {targets.map((e) => (
         <MenuItem
           key={e.key}

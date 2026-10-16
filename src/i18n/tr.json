@@ -878,7 +878,6 @@
   "amend.noteAfter": "ve değişiklikleri yeni bir commit olarak kaydedin.",
   "amend.button": "Son Commit’i Düzelt",
   "cherry.menu": "Tek Tek Seç",
-  "cherry.target": "Tek tek seç: {$sha}",
   "cherry.targetAria": "Tek tek seçilecek dal",
   "cherry.act": "Tek tek seç: {$sha}",
   "cherry.running": "{$sha} seçerek uygulanıyor…",
