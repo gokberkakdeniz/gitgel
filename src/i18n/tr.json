@@ -163,7 +163,7 @@
   "branches.uncommittedPart": "{$n} commit'lenmemiş",
   "stash.reviewChanges": "Değişiklikleri İncele",
   "stash.applyTo": "Şuraya Uygula…",
-  "stash.popTo": "Şuraya Pop'la…",
+  "stash.popTo": "Şuraya Al…",
   "stash.drop": "Sil",
   "stash.dialogTitle": "Değişiklikleri Geçici Kaydet",
   "stash.inLabel": "İçinde",
