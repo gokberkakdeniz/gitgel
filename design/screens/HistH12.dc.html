@@ -33,9 +33,9 @@ class Component extends DCLogic {
     // History of web-app / session-token-refresh (Hi5), right-click on its newest commit e8b2c41.
     // Cherry-Pick to opens the target picker beside it on hover or click (→ from the keyboard,
     // ← back), like Apply to (P5). On an older commit the menu is Cherry-Pick to and Copy SHA.
-    // Targets: the repo's other checked-out entries (the rev shown left out; a detached worktree
-    // by its short SHA), desc the folder plus "· N uncommitted". A worktree with an operation in
-    // progress is disabled, its desc says which. A pick runs git cherry-pick <sha> there (-m 1 for
+    // Targets: the repo's other checked-out entries (the rev shown left out; a
+    // detached worktree by its short SHA): the branch, under it the folder, nothing else; each one
+    // line, "…" when long. A worktree with an operation in progress is disabled. A pick runs git cherry-pick <sha> there (-m 1 for
     // a merge commit) as a git action; a conflict stops it and flow T takes over on that row.
     return {
       themeClass: 'theme-' + t, themeName: t, showPicker: picker,
@@ -48,8 +48,8 @@ class Component extends DCLogic {
       targets: [
         { kind: 'label', label: 'Cherry-pick e8b2c41 to' },
         { label: 'main', icon: 'branch', desc: '~/code/web-app', active: true },
-        { label: 'feat/job-queue', icon: 'branch', desc: '~/code/wt/job-queue · 3 uncommitted' },
-        { label: 'token-rotation-job', icon: 'branch', desc: '~/code/wt/token-rotation · rebasing', disabled: true, title: 'A rebase is in progress here' }
+        { label: 'feat/job-queue-retry-with-exponen…', icon: 'branch', desc: '~/code/wt/job-queue-retry-with-ex…' },
+        { label: 'token-rotation-job', icon: 'branch', desc: '~/code/wt/token-rotation', disabled: true, title: 'The folder has an operation in progress' }
       ]
     };
   }

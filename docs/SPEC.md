@@ -3039,9 +3039,9 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **Cherry-Pick to** (`HistH12`, Hi11; `CherryPickMenu`): opens a 280px picker beside the item
     on hover or click (→ from the keyboard, ← back), like Apply to (P5): label "Cherry-pick <sha>
     to", then one item per checked-out entry of the repository but the one History shows (scan
-    order): `branch` icon, the branch (short SHA when detached), desc the folder (`~/…`) plus
-    ` · N uncommitted`, or ` · rebasing` (the operation's pill) for a worktree with an operation
-    in progress, which is disabled (tooltip "The folder has an operation in progress"). No other
+    order): `branch` icon, the branch (short SHA when detached) and under it the folder (`~/…`),
+    nothing else; each on one line, ending in "…" when long. A worktree with an operation in
+    progress is disabled (tooltip "The folder has an operation in progress"). No other
     checked-out entry: the item is disabled, tooltip "No other branch is checked out". A pick
     runs `git cherry-pick "$GITGEL_COMMIT"` (`-m 1` for a merge commit) in that folder as a git
     action (script id `git:cherry-pick`, name "Cherry-Pick <sha>", toast “Cherry-picking

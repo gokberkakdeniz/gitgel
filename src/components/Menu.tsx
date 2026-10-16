@@ -54,6 +54,8 @@ interface ItemProps {
   sub?: string;
   /** Second line in the UI font, a short explanation. */
   desc?: string;
+  /** Each line stays on one line and ends in "…" (a long branch name, a folder). */
+  oneLine?: boolean;
   disabled?: boolean;
   /** A line icon by name (14px), or a 16px image node (app icons), on the left. */
   icon?: IconName | ReactNode;
@@ -80,6 +82,7 @@ export function MenuItem({
   kbd,
   sub,
   desc,
+  oneLine,
   disabled,
   icon,
   checked,
@@ -95,9 +98,9 @@ export function MenuItem({
     .filter(Boolean)
     .join(' ');
   const text = second ? (
-    <span className={styles.lines}>
-      <span>{children}</span>
-      <span className={sub ? styles.sub : styles.desc}>{second}</span>
+    <span className={oneLine ? `${styles.lines} ${styles.fit}` : styles.lines}>
+      <span className={oneLine ? styles.oneLine : undefined}>{children}</span>
+      <span className={`${sub ? styles.sub : styles.desc}${oneLine ? ` ${styles.oneLine}` : ''}`}>{second}</span>
     </span>
   ) : (
     <span className={dot ? `${styles.label} ${styles.oneLine}` : styles.label}>{children}</span>

@@ -1,11 +1,9 @@
 import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
 import { t } from '../../i18n';
-import { formatCount } from '../../lib/format';
 import { gitCherryPick } from '../../lib/ipc';
 import { tildifyHome } from '../../lib/paths';
 import type { EntrySummary, HistoryCommit } from '../../lib/types';
 import { startGitAction } from '../../scripts/runs';
-import { operationPill } from '../../sync/operation';
 
 /** Where a commit can be cherry-picked: the repository's checked-out entries but `own` (the
  * History's), in scan order. */
@@ -42,26 +40,22 @@ export function CherryPickMenu({
   return (
     <Menu aria-label={t('cherry.targetAria')} autoFocus={autoFocus}>
       <MenuLabel>{t('cherry.target', { sha: commit.shortSha })}</MenuLabel>
-      {targets.map((e) => {
-        const parts = [tildifyHome(e.worktreePath ?? '')];
-        if (e.operation) parts.push(operationPill(e.operation, true));
-        else if (e.uncommitted) parts.push(t('branches.uncommittedPart', { n: formatCount(e.uncommitted) }));
-        return (
-          <MenuItem
-            key={e.key}
-            icon="branch"
-            desc={parts.join(' · ')}
-            disabled={!!e.operation}
-            title={e.operation ? t('branches.checkoutBusy') : undefined}
-            onSelect={() => {
-              onDone();
-              void cherryPick(repoId, commit, e);
-            }}
-          >
-            {e.branch ?? e.shortSha}
-          </MenuItem>
-        );
-      })}
+      {targets.map((e) => (
+        <MenuItem
+          key={e.key}
+          icon="branch"
+          desc={tildifyHome(e.worktreePath ?? '')}
+          oneLine
+          disabled={!!e.operation}
+          title={e.operation ? t('branches.checkoutBusy') : undefined}
+          onSelect={() => {
+            onDone();
+            void cherryPick(repoId, commit, e);
+          }}
+        >
+          {e.branch ?? e.shortSha}
+        </MenuItem>
+      ))}
     </Menu>
   );
 }

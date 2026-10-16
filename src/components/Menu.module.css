@@ -50,6 +50,12 @@
   gap: 2px;
 }
 
+/* One-line lines (oneLine): they take the room left and shrink. */
+.fit {
+  flex-grow: 1;
+  min-width: 0;
+}
+
 /* 16px slot; with a sub line it centres on the first line (13px text, ~17px tall). */
 .icon {
   width: 16px;
