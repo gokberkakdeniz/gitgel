@@ -262,8 +262,9 @@ pub fn merged_tips(
     }
     if !unresolved.is_empty() {
         let cutoff = unresolved.values().map(|(_, t)| *t).min().unwrap_or(0) - DATE_SLACK;
+        // Unsorted, so the walk can stop early: any sort mode first walks the whole graph (see
+        // `walk`).
         let mut walk = repo.revwalk()?;
-        walk.set_sorting(Sort::TIME)?;
         walk.push(base_oid)?;
         let mut left = unresolved.len();
         for (i, oid) in walk.enumerate() {
