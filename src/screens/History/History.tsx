@@ -282,6 +282,7 @@ export function History({ repoId, rev, backLabel }: Props) {
       entryRef,
       included.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path])),
       active,
+      amending?.sha ?? null,
     )
       .then((run) => {
         genRun.current = run.runId;

@@ -760,9 +760,10 @@ pub async fn generate_message_start(
     entry: EntryRef,
     include: Vec<String>,
     provider: ai::Provider,
+    amend: Option<String>,
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
-        ai::start(state, entry, include, provider)
+        ai::start(state, entry, include, provider, amend)
     })
     .await
 }

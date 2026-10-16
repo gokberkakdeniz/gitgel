@@ -209,10 +209,15 @@ export const checkCheckout = (repoId: string, branch: string, remote: boolean, t
 /** Commit (W1a): the checked files of the entry's worktree, with the message. */
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });
 
-/** Generate message (SPEC §15): an agent CLI writes a commit message for the checked files,
- * as a run; the answer arrives as `generate-finished`. */
-export const generateMessageStart = (entry: EntryRef, include: string[], provider: CommitProvider) =>
-  invoke<ScriptRun>('generate_message_start', { entry, include, provider });
+/** Generate message (SPEC §15): an agent CLI writes a commit message for the checked files
+ * (and `amend`'s changes, the HEAD commit being amended), as a run; the answer arrives as
+ * `generate-finished`. */
+export const generateMessageStart = (
+  entry: EntryRef,
+  include: string[],
+  provider: CommitProvider,
+  amend: string | null,
+) => invoke<ScriptRun>('generate_message_start', { entry, include, provider, amend });
 
 /** Whether each agent CLI is installed (Settings › AI, the commit menu). */
 export const getAiStatus = () => invoke<AiStatus[]>('get_ai_status');

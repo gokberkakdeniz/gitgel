@@ -77,7 +77,7 @@ export function CommitForm({
             ? t('history.amendTo', { sha: amend, rev })
             : t('history.commitTo', { rev })));
   const [menu, setMenu] = useState<DOMRect | null>(null);
-  const canGenerate = files > 0 && !blocked && !committing && !generating;
+  const canGenerate = (files > 0 || amend !== null) && !blocked && !committing && !generating;
   const generateWith = provider ? t('history.genWith', { provider: providerLabel(provider) }) : '';
   return (
     <form
@@ -108,7 +108,7 @@ export function CommitForm({
               onClick={() => onGenerate()}
               onContextMenu={(e) => {
                 e.preventDefault();
-                if (providers.length > 0) setMenu(e.currentTarget.getBoundingClientRect());
+                if (canGenerate && providers.length > 0) setMenu(e.currentTarget.getBoundingClientRect());
               }}
               className={styles.generate}
             >

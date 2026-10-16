@@ -1,6 +1,6 @@
 //! Commit message generation (SPEC §15 "Generate message"): an agent CLI writes a commit
-//! message for the checked files of Uncommitted. The prompt comes from git2 reads only (the
-//! checked files' patch and recent subjects); the CLI runs in the entry's worktree as a run
+//! message for the checked files of Uncommitted (and, while amending, the amended commit's
+//! changes). The prompt comes from git2 reads only (the patch and recent subjects); the CLI runs in the entry's worktree as a run
 //! (`ai:generate`) through the scripts' pty runner, with a running toast and an output panel,
 //! and never writes to the repository.
 
@@ -207,7 +207,8 @@ pub struct ProviderStatus {
     pub installed: bool,
 }
 
-/// Ask the provider's CLI for a commit message for the entry's checked files: a run
+/// Ask the provider's CLI for a commit message for the entry's checked files (with `amend`,
+/// the SHA of the HEAD commit being amended, for that commit's changes too): a run
 /// (`ai:generate`) with a running toast and an output panel; the answer arrives as
 /// `generate-finished`.
 pub fn start(
@@ -215,8 +216,9 @@ pub fn start(
     entry: EntryRef,
     include: Vec<String>,
     provider: Provider,
+    amend: Option<String>,
 ) -> Result<ScriptRun, AppError> {
-    if include.is_empty() {
+    if include.is_empty() && amend.is_none() {
         return Err(AppError::Invalid("Pick at least one file.".into()));
     }
     if include.iter().any(|p| p.is_empty() || p.contains('\0')) {
@@ -277,8 +279,22 @@ pub fn start(
     };
     let head = Oid::from_str(&tree.head)
         .map_err(|_| AppError::Invalid("There is no commit to compare against yet.".into()))?;
-    let (stat, patch) = checked_patch(state, &tree.path, &head, &include)?;
-    let examples = style_examples(state, &repo_path, &head, &include)?;
+    if amend.as_deref().is_some_and(|sha| sha != tree.head) {
+        return Err(AppError::Invalid(
+            "The branch has a new commit; amend again.".into(),
+        ));
+    }
+    let (stat, patch) = checked_patch(state, &tree.path, &head, &include, amend.is_some())?;
+    // While amending, the examples start below the amended commit: its own subject would be
+    // copied back.
+    let examples = if amend.is_some() {
+        parent_of(state, &repo_path, &head)?
+            .map(|parent| style_examples(state, &repo_path, &parent, &include))
+            .transpose()?
+            .unwrap_or_default()
+    } else {
+        style_examples(state, &repo_path, &head, &include)?
+    };
     let branch = tree
         .branch
         .clone()
@@ -465,28 +481,68 @@ fn exit_error(tool: &str, code: Option<i32>, last: &str) -> AppError {
     }
 }
 
-/// The checked files as stat lines and a patch (cut at `MAX_PATCH`).
+/// The commit's first parent (`None` for a root commit).
+fn parent_of(state: &AppState, repo_path: &Path, commit: &Oid) -> Result<Option<Oid>, AppError> {
+    let shared = state.pool.get(repo_path)?;
+    let repo = lock(&shared);
+    let parent = repo.find_commit(*commit)?.parent_id(0).ok();
+    Ok(parent)
+}
+
+/// The checked files as stat lines and a patch (cut at `MAX_PATCH`). With `amend`, against
+/// HEAD's parent: the checked files as they are on disk, and HEAD's other files as committed,
+/// which is what the amended commit will hold.
 fn checked_patch(
     state: &AppState,
     worktree: &Path,
     head: &Oid,
     include: &[String],
+    amend: bool,
 ) -> Result<(Vec<String>, String), AppError> {
     let shared = state.pool.get(worktree)?;
     let wt = lock(&shared);
     wt.index()?.read(false)?;
-    let tree = wt.find_commit(*head)?.tree()?;
+    let head = wt.find_commit(*head)?;
+    let base = if amend {
+        head.parents().next().map(|p| p.tree()).transpose()?
+    } else {
+        Some(head.tree()?)
+    };
     let mut opts = DiffOptions::new();
     opts.context_lines(3)
         .include_untracked(true)
         .recurse_untracked_dirs(true)
         .show_untracked_content(true)
         .ignore_submodules(true);
-    let diff = wt.diff_tree_to_workdir_with_index(Some(&tree), Some(&mut opts))?;
     let wanted: HashSet<&str> = include.iter().map(String::as_str).collect();
-    let filed = diff::changes(&diff, diff::NewSide::Workdir)?;
     let mut stat = Vec::new();
     let mut patch = String::new();
+    let working = wt.diff_tree_to_workdir_with_index(base.as_ref(), Some(&mut opts))?;
+    add_patches(&working, diff::NewSide::Workdir, &mut stat, &mut patch, |old, new| {
+        wanted.contains(old) || wanted.contains(new)
+    })?;
+    if amend {
+        let committed = wt.diff_tree_to_tree(base.as_ref(), Some(&head.tree()?), Some(&mut opts))?;
+        add_patches(&committed, diff::NewSide::Tree, &mut stat, &mut patch, |old, new| {
+            !wanted.contains(old) && !wanted.contains(new)
+        })?;
+    }
+    if patch.chars().count() > MAX_PATCH {
+        let cut: String = patch.chars().take(MAX_PATCH).collect();
+        patch = format!("{cut}\n[… cut]");
+    }
+    Ok((stat, patch))
+}
+
+/// The diff's files that `keep` (old path, new path) takes, as stat lines and patch text.
+fn add_patches(
+    diff: &git2::Diff,
+    side: diff::NewSide,
+    stat: &mut Vec<String>,
+    patch: &mut String,
+    keep: impl Fn(&str, &str) -> bool,
+) -> Result<(), AppError> {
+    let filed = diff::changes(diff, side)?;
     for (i, delta) in diff.deltas().enumerate() {
         let path = |f: git2::DiffFile| {
             f.path()
@@ -494,10 +550,10 @@ fn checked_patch(
                 .unwrap_or_default()
         };
         let (old, new) = (path(delta.old_file()), path(delta.new_file()));
-        if !wanted.contains(old.as_str()) && !wanted.contains(new.as_str()) {
+        if !keep(&old, &new) {
             continue;
         }
-        let mut text = git2::Patch::from_diff(&diff, i)?;
+        let mut text = git2::Patch::from_diff(diff, i)?;
         let kind = filed
             .iter()
             .find(|f| f.path == new || f.old_path.as_deref() == Some(old.as_str()));
@@ -519,11 +575,7 @@ fn checked_patch(
         let buf = text.as_mut().expect("checked").to_buf()?;
         patch.push_str(&String::from_utf8_lossy(&buf));
     }
-    if patch.chars().count() > MAX_PATCH {
-        let cut: String = patch.chars().take(MAX_PATCH).collect();
-        patch = format!("{cut}\n[… cut]");
-    }
-    Ok((stat, patch))
+    Ok(())
 }
 
 /// Up to `MAX_EXAMPLES` recent subjects from the branch, those touching the checked files

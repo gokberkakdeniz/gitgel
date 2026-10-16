@@ -2609,12 +2609,15 @@ the worktree's HEAD is another commit by then.
   (the same commit with `--no-verify`) and "Retry" (primary, ⌘↵), which send the same files and
   message again. Stopping the run does not open it.
 - **Generate message**: `generate_message_start` (`entry`, the checked `include`
-  paths, `provider`: opencode, claude, cursor, antigravity, codex or foundation) asks that agent CLI for a
-  commit message for the checked files, as a run (`ai:generate`, `sparkles` icon) in the entry's
+  paths, `provider`: opencode, claude, cursor, antigravity, codex or foundation, `amend`: the SHA of
+  the HEAD commit being amended, or null) asks that agent CLI for a
+  commit message for the checked files (while amending, for what the amended commit will hold:
+  the commit's changes against its parent, the checked files as they are on disk; no checked
+  file is needed then), as a run (`ai:generate`, `sparkles` icon) in the entry's
   worktree: a running toast ("Generating a commit message with <provider>…") that opens its output
   panel on click, stoppable there. The prompt is built from git2 reads only: the checked
   files' patch (cut at ~12k characters) and up to 15 recent subjects from the branch, those
-  touching the checked files first. The CLI's fixed command carries the prompt in
+  touching the checked files first (while amending, from below the amended commit). The CLI's fixed command carries the prompt in
   `GITGEL_PROMPT`; it never writes to the repository (codex and Antigravity run sandboxed,
   Claude denies anything that would prompt, opencode runs its read-only `plan` agent
   (`--agent plan`), cursor with `--trust` but without `--force`, Apple Foundation Models (`fm respond
@@ -3011,7 +3014,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **Generate message**: a 24px `sparkles` (✦) icon button at the end of the summary field
     (tooltip `Generate commit message with <provider>`, the default: the topmost switched-on
     and installed provider in menu order) that fills the summary and description, which stay
-    editable. Right-click on it opens its menu (the switched-on providers in menu order;
+    editable. It needs a checked file, or an amend. Right-click on it opens its menu (the switched-on providers in menu order;
     switched off or missing ones are not listed at all); picking one generates with it at
     once, leaving the default alone. With no provider to list it is hidden. While it runs
     the ✦ is a spinner, and a running toast opens the generation's output panel on click, so a slow
