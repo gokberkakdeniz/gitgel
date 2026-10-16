@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.24 — 2026-10-16
+
+### New
+- New Branch on each Branches repo.
+- Checkout Branch in branch menus.
+- Delete Branch in branch menus.
+
+### Improved
+- A failed git action opens its output panel.
+- Confirmations and forms have standard titles and buttons.
+
+### Fixed
+- History keeps each branch's commit message.
+- A worktree removed inside its repository folder leaves Branches.
+
 ## 0.1.23 — 2026-10-13
 
 ### Improved
