@@ -142,7 +142,7 @@ class Component extends DCLogic {
     var sep = { kind: 'sep' };
     var point = { label: 'Point to Another Branch…', icon: 'branch' };
     var copy = { label: 'Copy Branch Name', icon: 'copy' };
-    var remove = { label: 'Remove from project', icon: 'remove', danger: true };
+    var remove = { label: 'Remove from Project', icon: 'remove', danger: true };
     var subtitle = variant === 'full' ? '6 entries across 4 repos' : variant === 'one' ? '1 entry · web-app' : 'Empty';
     return {
       deleteContext: [{ icon: 'folder', text: 'Session auth refresh' }],
@@ -170,7 +170,7 @@ class Component extends DCLogic {
         [sep, remove], openCase === 'repoMissing' ? [] : [{ label: 'Delete Branch…', icon: 'trash', danger: true }],
         // One note closes the menu, after a divider.
         openCase === 'notCheckedOut' || openCase === 'repoMissing' ? [sep, { kind: 'note', label: openCase === 'repoMissing' ? 'Repository Not Found' : 'Not checked out' }] : []),
-      deletedMenuItems: [{ label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true }, point, copy, sep].concat(apps(true),
+      deletedMenuItems: [{ label: 'View Last Known State', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true }, point, copy, sep].concat(apps(true),
         [sep, remove, sep, { kind: 'note', label: 'Branch Deleted' }]),
       inboxCount: variant === 'full' ? '7' : '6',
       subtitle: fromSel ? '3 entries across 2 repos · name your project' : fresh ? 'Name Your Project' : conflict ? 'A project named “Rate limiting rollout” already exists' : subtitle,

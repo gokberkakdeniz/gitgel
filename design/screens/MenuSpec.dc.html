@@ -26,11 +26,11 @@
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Open in iTerm2" lead="app" app="terminal" disabled="{{true}}" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">disabled</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Split" lead="check" checked="{{true}}" kbd="⌥V" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">lead check · kbd</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Unified" lead="check" checked="{{false}}" kbd="⌥V" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">check off</span></div>
-<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Ignore whitespace" lead="box" checked="{{true}}" desc="Hide lines where only indentation changed" kbd="⌥W" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">lead box · desc</span></div>
-<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="View last known state" lead="icon" icon="history" sub="tip 3be91a0 · seen 2d ago" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">sub (mono)</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Ignore Whitespace" lead="box" checked="{{true}}" desc="Hide lines where only indentation changed" kbd="⌥W" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">lead box · desc</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="View Last Known State" lead="icon" icon="history" sub="tip 3be91a0 · seen 2d ago" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">sub (mono)</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Session auth refresh" lead="dot" checked="{{true}}" arrow="{{true}}" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">lead dot · arrow</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Rename" lead="none" aside="click the title" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">aside</span></div>
-<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Remove from project" lead="icon" icon="remove" tone="danger" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">tone danger</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Remove from Project" lead="icon" icon="remove" tone="danger" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">tone danger</span></div>
 <div style="display: flex; flex-direction: column; gap: 6px"><div style="width: 260px; box-sizing: border-box; padding: 6px; background: #211f1c; border: 1px solid #302e2a; border-radius: 12px"><dc-import name="MenuItem" label="Add to Another Project…" lead="none" tone="accent" hint-size="248px,33px"></dc-import></div><span style="font-size: 12px; color: #75726b">tone accent</span></div>
 </div>
 </section>
@@ -64,9 +64,9 @@ class Component extends DCLogic {
         { kind: 'sep' }, { kind: 'note', label: 'Not checked out' }
       ],
       entry: [
-        { label: 'View last known state', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true },
+        { label: 'View Last Known State', icon: 'history', sub: 'tip 3be91a0 · seen 2d ago', active: true },
         { label: 'Point to Another Branch…', icon: 'branch' }, { label: 'Copy Branch Name', icon: 'copy' }, { kind: 'sep' },
-        { kind: 'sep' }, { label: 'Remove from project', icon: 'remove', danger: true },
+        { kind: 'sep' }, { label: 'Remove from Project', icon: 'remove', danger: true },
         { kind: 'sep' }, { kind: 'note', label: 'Branch Deleted' }
       ],
       projects: [
@@ -79,11 +79,11 @@ class Component extends DCLogic {
         { kind: 'label', label: 'Layout' },
         { label: 'Split', check: true, active: true, kbd: '⌥V' }, { label: 'Unified', check: false, kbd: '⌥V' },
         { kind: 'sep' }, { kind: 'label', label: 'Context' },
-        { label: 'Changes only', check: true, kbd: '⌥C' },
-        { kind: 'segmented', label: 'Lines around changes', options: [{ label: '3', on: true }, { label: '5' }, { label: '10' }] },
-        { label: 'Whole file', check: false, kbd: '⌥C' },
+        { label: 'Changes Only', check: true, kbd: '⌥C' },
+        { kind: 'segmented', label: 'Lines Around Changes', options: [{ label: '3', on: true }, { label: '5' }, { label: '10' }] },
+        { label: 'Whole File', check: false, kbd: '⌥C' },
         { kind: 'sep' },
-        { label: 'Ignore whitespace', box: true, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W' }
+        { label: 'Ignore Whitespace', box: true, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W' }
       ],
       project: [{ label: 'Rename', hint: 'click the title', active: true }, { kind: 'sep' }, { label: 'Delete Project…', danger: true }]
     };

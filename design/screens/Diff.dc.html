@@ -705,7 +705,7 @@ class Component extends DCLogic {
       title: project ? 'Session auth refresh' : 'Review',
       subtitle: project ? '4 repos · 6 branches' : 'api-server · rate-limit-middleware · ' + G[0].wt,
       backHref: project ? 'Projects.dc.html' : 'Main.dc.html',
-      backLabel: project ? 'Back to project' : 'Back to Branches',
+      backLabel: project ? 'Back to Project' : 'Back to Branches',
       modes: modes, groups: groups, lines: lines,
       navLabel: 'Change ' + (hIdx + 1) + ' of ' + nH,
       prevChange: prevChange, nextChange: nextChange,
@@ -731,13 +731,13 @@ class Component extends DCLogic {
         { label: 'Unified', check: view === 'unified', active: view === 'unified', kbd: '⌥V', onSelect: function () { setView('unified'); } },
         { kind: 'sep' },
         { kind: 'label', label: 'Context' },
-        { label: 'Changes only', check: context === 'changes', active: context === 'changes', kbd: '⌥C', onSelect: function () { self.setState({ context: 'changes' }); } },
-        { kind: 'segmented', label: 'Lines around changes', disabled: context === 'whole', options: [3, 5, 10].map(function (n) {
+        { label: 'Changes Only', check: context === 'changes', active: context === 'changes', kbd: '⌥C', onSelect: function () { self.setState({ context: 'changes' }); } },
+        { kind: 'segmented', label: 'Lines Around Changes', disabled: context === 'whole', options: [3, 5, 10].map(function (n) {
           return { label: String(n), on: ctxLines === n, pick: function () { self.setState({ ctxLines: n, context: 'changes' }); } };
         }) },
-        { label: 'Whole file', check: context === 'whole', active: context === 'whole', kbd: '⌥C', onSelect: function () { self.setState({ context: 'whole', viewMenu: false }); } },
+        { label: 'Whole File', check: context === 'whole', active: context === 'whole', kbd: '⌥C', onSelect: function () { self.setState({ context: 'whole', viewMenu: false }); } },
         { kind: 'sep' },
-        { label: 'Ignore whitespace', box: ignoreWs, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W', onSelect: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); } }
+        { label: 'Ignore Whitespace', box: ignoreWs, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W', onSelect: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); } }
       ],
       viewBtnStyle: 'display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ' + (viewMenuOpen ? 'background: var(--bg-hover); color: var(--text-strong); border: 1px solid var(--accent)' : 'background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)'),
       entry: {

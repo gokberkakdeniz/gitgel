@@ -52,8 +52,9 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   follows the macOS HIG: buttons, menu items and list actions use title case with a verb
   first ("Copy Branch Name", "Review Changes"); an item that needs more input before it can
   finish ends in "…" ("Add Repository…", "Change Base…", "Stash…", "Delete Project…",
-  "Import…", "Export…", "Locate…"); inline actions that finish at once do not ("Rename",
-  "Copy", "Fetch", "Push", "Rebase on <base>"). Progress text keeps its "…" ("Scanning
+  "Import…", "Export…", "Locate…"); inline actions that finish at once, and items that open a
+  submenu, do not ("Rename", "Copy", "Fetch", "Push", "Rebase on <base>", "Apply to"). Turkish
+  menu items use title case too ("Dal Adını Kopyala"). Progress text keeps its "…" ("Scanning
   repositories…"). Descriptions, hints, tooltips and empty-state body copy use sentence
   case. The exception is copy taken word for word from a
   reference app the user names: Discard's menu items and dialog are GitHub Desktop's ("Discard
@@ -547,7 +548,8 @@ inputs and textareas (the diff has its own menu, §5 Review).
   12px count of all active branches on the right).
 - **Projects** label (14px `text.muted`) with two icon buttons:
   - Search turns the label row into a 32px "Search" input (name contains; Esc closes).
-  - Sort/filter opens a menu: "Sort by name" / "Sort by date created" (default: creation order),
+  - Sort/filter opens a menu: "Sort by Name" / "Sort by Date Created", the current one checked on
+    the left (default: creation order),
     remembered in `localStorage` (`gitgel.projectSort`).
 - **Project list:** 40px rows, 7px hollow circle (1.5px border; `#e0ddd6` when active, else
   `#75726b`) + name with ellipsis, no counts. Click opens the project's review (project scope,
@@ -2439,11 +2441,11 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1–P7); boards `FlowP1`
   `N files`, the age. The text filter applies (message, branch, repo name). Clicking a row opens
   the stash review (P3) on it; the ⋮ button ("Stash options") opens a 280px menu: "Review
   changes ↵", "Apply to", "Pop to" (no second line; a chevron on the right), divider,
-  danger "Drop" (`⌫`). Apply to and Pop to open the worktree picker (P5) beside the item on
+  danger "Drop…" (`⌫`). Apply to and Pop to open the worktree picker (P5) beside the item on
   hover or click (→ from the keyboard, ← back), Drop opens the confirmation (P6). Popovers follow
   their anchor when the page scrolls or resizes (scroll listener and `ResizeObserver`).
 - **Page menu** (Review, project and branch scope; History of a checked-out branch too, §16,
-  which also lists the branch's stashes under its commits): "Stash" (`package`) first in
+  which also lists the branch's stashes under its commits): "Stash…" (`package`) first in
   the ⋮ menu; it opens the Stash changes dialog (P4) under the ⋮ button. Left out while no
   checked-out entry has uncommitted changes; disabled, tooltip "Resolve the merge conflicts first;
   git cannot stash them", while every entry with changes has conflicts.

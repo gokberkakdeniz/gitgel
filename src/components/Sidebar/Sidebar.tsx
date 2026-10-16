@@ -252,10 +252,10 @@ function ProjectList({ route, draftName }: { route: Route; draftName?: string })
       {sortMenu && (
         <Popover anchorRect={sortMenu} width={200} onClose={() => setSortMenu(null)}>
           <Menu aria-label={t('sidebar.sortProjects')}>
-            <MenuItem hint={sort === 'name' ? '✓' : undefined} onSelect={() => chooseSort('name')}>
+            <MenuItem checked={sort === 'name'} onSelect={() => chooseSort('name')}>
               {t('sidebar.sortByName')}
             </MenuItem>
-            <MenuItem hint={sort === 'created' ? '✓' : undefined} onSelect={() => chooseSort('created')}>
+            <MenuItem checked={sort === 'created'} onSelect={() => chooseSort('created')}>
               {t('sidebar.sortByDate')}
             </MenuItem>
           </Menu>

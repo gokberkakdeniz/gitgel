@@ -579,7 +579,7 @@ function StashList({
                 askDrop(stash);
               }}
             >
-              {t('stash.drop')}
+              {t('stash.dropMenu')}
             </MenuItem>
           </Menu>
           {sub && (

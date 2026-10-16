@@ -110,9 +110,9 @@ class Component extends DCLogic {
     return { themeClass: 'theme-' + t, themeName: t,
       picker: picker,
       stashMenu: [{ label: 'Review Changes', kbd: '↵', active: !picker },
-        { label: 'Apply to…', submenu: true, active: picker, href: picker ? undefined : 'FlowP5.dc.html' },
-        { label: 'Pop to…', submenu: true },
-        { kind: 'sep' }, { label: 'Drop', kbd: '⌫', danger: true, href: 'FlowP6.dc.html' }],
+        { label: 'Apply to', submenu: true, active: picker, href: picker ? undefined : 'FlowP5.dc.html' },
+        { label: 'Pop to', submenu: true },
+        { kind: 'sep' }, { label: 'Drop…', kbd: '⌫', danger: true, href: 'FlowP6.dc.html' }],
       pickMenu: [
         { label: 'session-token-refresh', icon: 'branch', desc: '~/code/wt/token-refresh', active: true },
         { label: 'session-cookie-cleanup', icon: 'branch', desc: '~/code/wt/cookie-cleanup' },
