@@ -18,3 +18,7 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
 - **A commit menu in Review** (2026-10-16). The canvas had W2d: Review's commit row (right-click or
   ⋯) with Copy SHA and Show in History only, rewriting left to History. Removed from the canvas as
   not needed now; to think about later.
+- **Pick lines in a commit** (2026-10-16). The canvas had W1b: committing only some lines of a
+  file (the diff turns Unified with a box per changed line and "Include hunk" on each hunk, the
+  file's box shows "some", "2 of 3 lines"). Removed from the canvas with its WIP page; to be
+  implemented later.
