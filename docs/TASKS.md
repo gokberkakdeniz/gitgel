@@ -659,7 +659,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Apple Foundation Models gets its own default prompt (one `<type>(<area>): <summary>` line, no examples); a patch over the limit puts code before docs and gives each file a share — 2026-10-16
 - [x] (on request) History: several rows picked with ⌘ / ⇧-click (⇧↑ / ⇧↓), Uncommitted too, show their diff taken together (`get_range_changes`: the oldest one's parent ↔ the newest, or ↔ the working tree); the selection panel under the list is gone; canvas Hi12 (`HistH13.dc.html`), W2b removed from the WIP page — 2026-10-16
 - [x] (on request) Squash: with several consecutive commits picked in History, their right-click menu has "Squash N Commits…"; a dialog takes the message (the oldest one's subject, the rest in the description) and `git commit-tree` + `git reset --soft` (or `git rebase --onto` under newer commits) makes them one; canvas Hi13 (`HistH14.dc.html`), W2c removed from the WIP page — 2026-10-16
-- [x] (on request) Revert Changes in Commit: History's commit menu runs `git revert --no-edit` (`-m 1` for a merge) in the branch's worktree as a git action; conflicts go to flow T; canvas Hi10, Hi11 menus — 2026-10-16
+- [x] (on request) Revert Changes (TR "Değişiklikleri Geri Al"): History's commit menu runs `git revert --no-edit` (`-m 1` for a merge) in the branch's worktree as a git action; conflicts go to flow T; canvas Hi10, Hi11 menus — 2026-10-16
 
 ---
 

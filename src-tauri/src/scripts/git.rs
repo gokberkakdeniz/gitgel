@@ -1016,7 +1016,7 @@ pub fn undo_commit(state: &AppState, entry: EntryRef, sha: &str) -> Result<Scrip
     )
 }
 
-/// Revert Changes in Commit (SPEC §16): `git revert --no-edit <sha>` (`-m 1` for a merge commit) in
+/// Revert Changes (SPEC §16): `git revert --no-edit <sha>` (`-m 1` for a merge commit) in
 /// the entry's worktree, a new commit that undoes it. Refused mid-operation or for a commit the
 /// branch does not have; a conflict stops git there, and the revert then shows on the entry (§15).
 pub fn revert(state: &AppState, entry: EntryRef, sha: &str) -> Result<ScriptRun, AppError> {

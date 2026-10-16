@@ -21,7 +21,7 @@ button{font-family:inherit}
 <dc-import name="HistH6" theme="{{themeName}}" state="{{histState}}" pushed="{{pushed}}" hint-size="1280px,800px"></dc-import>
 </div>
 <sc-if value="{{isMenu}}" hint-placeholder-val="{{false}}">
-<div style="position: absolute; left: 210px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="260" label="e8b2c41 actions" items="{{menu}}" hint-size="260px,189px"></dc-import></div>
+<div style="position: absolute; left: 210px; top: 300px; z-index: 5"><dc-import name="Menu" theme="{{themeName}}" width="220" label="e8b2c41 actions" items="{{menu}}" hint-size="220px,189px"></dc-import></div>
 </sc-if>
 <sc-if value="{{isConfirm}}" hint-placeholder-val="{{false}}">
 <div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
@@ -47,7 +47,7 @@ class Component extends DCLogic {
     var step = this.props.step || 'form';
     // Amend, as GitHub Desktop. step menu: right-click (or ⋯) on the newest commit: Amend Commit…
     // (only on the branch's newest commit, checked out in a worktree), Undo Commit (the newest
-    // commit with one parent, not on the remote), Revert Changes in Commit (git revert, any
+    // commit with one parent, not on the remote), Revert Changes (git revert, any
     // commit of the checked-out branch), Cherry-Pick to (Hi11) and Copy SHA.
     // step confirm: the newest commit is on origin already (the upstream line above it): asks
     // first; "Do not show this message again" turns Settings › Prompts › "Amending pushed
@@ -66,7 +66,7 @@ class Component extends DCLogic {
       menu: [
         { label: 'Amend Commit…', icon: 'pencil', active: true },
         { label: 'Undo Commit', icon: 'undo' },
-        { label: 'Revert Changes in Commit', icon: 'back' },
+        { label: 'Revert Changes', icon: 'back' },
         { label: 'Cherry-Pick to', icon: 'rebase', submenu: true },
         { kind: 'sep' },
         { label: 'Copy SHA', icon: 'copy' }

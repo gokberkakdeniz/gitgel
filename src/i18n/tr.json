@@ -889,7 +889,7 @@
   "undo.act": "Commit’i Geri Al",
   "undo.running": "Commit geri alınıyor…",
   "undo.done": "{$sha} commit’i geri alındı",
-  "revert.menu": "Commit’teki Değişiklikleri Geri Döndür",
+  "revert.menu": "Değişiklikleri Geri Al",
   "revert.act": "{$sha} Geri Döndür",
   "revert.running": "{$sha} geri döndürülüyor…",
   "revert.done": "{$rev} dalında {$sha} geri döndürüldü",

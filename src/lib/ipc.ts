@@ -181,7 +181,7 @@ export const gitRebaseOnBase = (entry: EntryRef) => invoke<ScriptRun>('git_rebas
 export const gitPush = (entry: EntryRef, force = false) => invoke<ScriptRun>('git_push', { entry, force });
 /** Undo Commit: `git reset --soft` of the entry's newest commit `sha`. */
 export const gitUndoCommit = (entry: EntryRef, sha: string) => invoke<ScriptRun>('git_undo_commit', { entry, sha });
-/** Revert Changes in Commit: `git revert <sha>` in the entry's worktree. */
+/** Revert Changes: `git revert <sha>` in the entry's worktree. */
 export const gitRevert = (entry: EntryRef, sha: string) => invoke<ScriptRun>('git_revert', { entry, sha });
 /** Squash: consecutive commits of the entry's branch (newest first) become one with this message. */
 export const gitSquash = (entry: EntryRef, shas: string[], summary: string, description: string) =>

@@ -667,7 +667,7 @@ pub async fn git_undo_commit(
     .await
 }
 
-/// Revert Changes in Commit: `git revert` of the commit `sha` in the entry's worktree.
+/// Revert Changes: `git revert` of the commit `sha` in the entry's worktree.
 #[tauri::command]
 pub async fn git_revert(
     state: State<'_, AppState>,

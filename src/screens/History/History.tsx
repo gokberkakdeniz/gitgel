@@ -264,7 +264,7 @@ export function History({ repoId, rev, backLabel }: Props) {
       },
     });
   };
-  // Revert Changes in Commit: any commit of the checked-out branch, a new commit undoing it.
+  // Revert Changes: any commit of the checked-out branch, a new commit undoing it.
   const revertable = (c: HistoryCommit) =>
     !!entry?.worktreePath && !entry.operation && !committing && amending?.sha !== c.sha;
   const revertCommit = (c: HistoryCommit) => {
@@ -796,7 +796,7 @@ export function History({ repoId, rev, backLabel }: Props) {
         />
       )}
       {commitMenu && !commitMenu.many && (
-        <Popover anchorRect={commitMenu.at} width={260} onClose={() => setCommitMenu(null)}>
+        <Popover anchorRect={commitMenu.at} width={220} onClose={() => setCommitMenu(null)}>
           <Menu aria-label={t('history.commitMenu', { sha: commitMenu.commit.shortSha })}>
             {commitMenu.commit.sha === tip && entry?.worktreePath && (
               <>

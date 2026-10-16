@@ -723,7 +723,7 @@
   "undo.act": "Undo Commit",
   "undo.running": "Undoing commit…",
   "undo.done": "Undid commit {$sha}",
-  "revert.menu": "Revert Changes in Commit",
+  "revert.menu": "Revert Changes",
   "revert.act": "Revert {$sha}",
   "revert.running": "Reverting {$sha}…",
   "revert.done": "Reverted {$sha} on {$rev}",
