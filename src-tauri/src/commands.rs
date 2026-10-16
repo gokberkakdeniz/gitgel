@@ -776,10 +776,10 @@ pub async fn get_ai_status(
     blocking(&state, move |_| Ok(ai::status())).await
 }
 
-/// The prompt sent without one of its own (the edit modal prefills it).
+/// The provider's prompt sent without one of its own (the edit modal prefills it).
 #[tauri::command]
-pub async fn get_default_prompt() -> Result<String, AppError> {
-    Ok(ai::DEFAULT_PROMPT.into())
+pub async fn get_default_prompt(provider: ai::Provider) -> Result<String, AppError> {
+    Ok(provider.default_prompt().into())
 }
 
 /// Discard (Hi8, D12): the files go back to HEAD in each entry's worktree, a copy of each to the

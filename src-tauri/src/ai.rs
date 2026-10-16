@@ -28,8 +28,10 @@ pub const AI_PREFIX: &str = "ai:";
 pub const GENERATE_FINISHED: &str = "generate-finished";
 /// How long a provider may take (agy's own print timeout is 5 minutes).
 const TIMEOUT: Duration = Duration::from_secs(330);
-/// The patch in the prompt is cut here.
+/// The patch in the prompt is cut here; past it, each file gets a share of at least
+/// `MIN_FILE_PATCH`, program files first.
 const MAX_PATCH: usize = 12_000;
+const MIN_FILE_PATCH: usize = 600;
 /// Recent subjects in the prompt; those touching the checked files come first.
 const MAX_EXAMPLES: usize = 15;
 const MAX_FILE_EXAMPLES: usize = 8;
@@ -134,6 +136,15 @@ impl Provider {
             Provider::Antigravity => &ai.antigravity,
             Provider::Codex => &ai.codex,
             Provider::Foundation => &ai.foundation,
+        }
+    }
+
+    /// The prompt sent without one of its own: the on-device model copies example subjects
+    /// back, so it gets a shorter one without them and with the format spelled out.
+    pub fn default_prompt(&self) -> &'static str {
+        match self {
+            Provider::Foundation => FOUNDATION_PROMPT,
+            _ => DEFAULT_PROMPT,
         }
     }
 
@@ -308,7 +319,7 @@ pub fn start(
         return Err(AppError::Invalid("The prompt needs {patch}.".into()));
     }
     let prompt = render(
-        template.unwrap_or(DEFAULT_PROMPT),
+        template.unwrap_or(provider.default_prompt()),
         &branch,
         &repo_name,
         &stat,
@@ -516,30 +527,70 @@ fn checked_patch(
         .ignore_submodules(true);
     let wanted: HashSet<&str> = include.iter().map(String::as_str).collect();
     let mut stat = Vec::new();
-    let mut patch = String::new();
+    let mut patch = Vec::new();
     let working = wt.diff_tree_to_workdir_with_index(base.as_ref(), Some(&mut opts))?;
-    add_patches(&working, diff::NewSide::Workdir, &mut stat, &mut patch, |old, new| {
-        wanted.contains(old) || wanted.contains(new)
-    })?;
+    add_patches(
+        &working,
+        diff::NewSide::Workdir,
+        &mut stat,
+        &mut patch,
+        |old, new| wanted.contains(old) || wanted.contains(new),
+    )?;
     if amend {
-        let committed = wt.diff_tree_to_tree(base.as_ref(), Some(&head.tree()?), Some(&mut opts))?;
-        add_patches(&committed, diff::NewSide::Tree, &mut stat, &mut patch, |old, new| {
-            !wanted.contains(old) && !wanted.contains(new)
-        })?;
+        let committed =
+            wt.diff_tree_to_tree(base.as_ref(), Some(&head.tree()?), Some(&mut opts))?;
+        add_patches(
+            &committed,
+            diff::NewSide::Tree,
+            &mut stat,
+            &mut patch,
+            |old, new| !wanted.contains(old) && !wanted.contains(new),
+        )?;
     }
-    if patch.chars().count() > MAX_PATCH {
-        let cut: String = patch.chars().take(MAX_PATCH).collect();
-        patch = format!("{cut}\n[… cut]");
-    }
-    Ok((stat, patch))
+    Ok((stat, fit_patch(patch)))
 }
 
-/// The diff's files that `keep` (old path, new path) takes, as stat lines and patch text.
+/// The files' patches as one text of at most about `MAX_PATCH` characters. Past it,
+/// documentation and lock files go last and each file is cut to an equal share, so a long
+/// document cannot push the code out.
+fn fit_patch(mut files: Vec<(String, String)>) -> String {
+    let cut = |text: &str, max: usize| match text.char_indices().nth(max) {
+        Some((at, _)) => format!("{}\n[… cut]\n", &text[..at]),
+        None => text.to_string(),
+    };
+    if files.iter().map(|(_, p)| p.chars().count()).sum::<usize>() <= MAX_PATCH {
+        return files.into_iter().map(|(_, p)| p).collect();
+    }
+    files.sort_by_key(|(path, _)| prose(path));
+    let share = (MAX_PATCH / files.len().max(1)).max(MIN_FILE_PATCH);
+    let joined: String = files.iter().map(|(_, p)| cut(p, share)).collect();
+    cut(&joined, MAX_PATCH).trim_end().to_string()
+}
+
+/// Documentation, lock and snapshot files: what a commit message is least about.
+fn prose(path: &str) -> bool {
+    const ENDS: [&str; 10] = [
+        ".md",
+        ".mdx",
+        ".txt",
+        ".rst",
+        ".adoc",
+        ".lock",
+        ".svg",
+        ".snap",
+        "pnpm-lock.yaml",
+        "package-lock.json",
+    ];
+    let lower = path.to_ascii_lowercase();
+    ENDS.iter().any(|e| lower.ends_with(e))
+}
+
+/// The diff's files that `keep` (old path, new path) takes, as stat lines and per-file patches.
 fn add_patches(
     diff: &git2::Diff,
     side: diff::NewSide,
     stat: &mut Vec<String>,
-    patch: &mut String,
+    patch: &mut Vec<(String, String)>,
     keep: impl Fn(&str, &str) -> bool,
 ) -> Result<(), AppError> {
     let filed = diff::changes(diff, side)?;
@@ -573,7 +624,7 @@ fn add_patches(
             continue;
         }
         let buf = text.as_mut().expect("checked").to_buf()?;
-        patch.push_str(&String::from_utf8_lossy(&buf));
+        patch.push((shown.clone(), String::from_utf8_lossy(&buf).into_owned()));
     }
     Ok(())
 }
@@ -640,6 +691,10 @@ fn touches(repo: &Repository, commit: &git2::Commit, include: &[String]) -> Resu
 /// lists the checked files, `{patch}` is their diff, `{examples}` this repository's recent
 /// subjects, newest first.
 pub const DEFAULT_PROMPT: &str = "Write the commit message for the changes below. Match the style of this repository's recent commits:\n{examples}\nRules: do not run any commands or read any files; write the message only from the changes and examples below. The first line at most 72 characters. Then a blank line and a body only if this repository's history uses bodies. Output only the message, no fences, no explanations.\nChanges:\n{stat}\n{patch}";
+
+/// Apple Foundation Models' own default (`Provider::default_prompt`): no examples, which the
+/// on-device model repeats instead of following, and one line in a format spelled out.
+pub const FOUNDATION_PROMPT: &str = "Changed files:\n{stat}\n\nDiff:\n{patch}\n\nWrite the git commit message for this diff. Reply with exactly one line in the form <type>(<area>): <summary>, for example: fix(login): keep the session after a refresh. <type>: feat when the code gains new behaviour, fix when it corrects a bug, refactor when behaviour stays the same, docs when only documentation changed. <area> is one word naming the feature that the program code changes touch; ignore design, documentation and translation files when picking it. <summary> says what a user of the app can now do or what got fixed, in lowercase, under 60 characters. Output only that line.";
 
 /// Fills a prompt template; unknown `{names}` are left alone.
 fn render(
@@ -845,6 +900,23 @@ mod tests {
     }
 
     #[test]
+    fn long_patches_put_code_first_and_share_the_room() {
+        let small = vec![
+            ("b.md".to_string(), "doc\n".to_string()),
+            ("a.rs".to_string(), "code\n".to_string()),
+        ];
+        assert_eq!(fit_patch(small), "doc\ncode\n");
+        let big = vec![
+            ("docs/SPEC.md".to_string(), "d".repeat(20_000)),
+            ("src/a.rs".to_string(), "c".repeat(3_000)),
+        ];
+        let out = fit_patch(big);
+        assert!(out.starts_with(&"c".repeat(3_000)), "code first and whole");
+        assert!(out.chars().count() <= MAX_PATCH + 20);
+        assert!(out.contains(&"d".repeat(MAX_PATCH / 2 - 10)));
+    }
+
+    #[test]
     fn fenced_answers_are_unwrapped() {
         let m = parse("\n```text\nfeat(x): ok\n\nBody.\n```\n");
         assert_eq!(m.summary, "feat(x): ok");
@@ -868,6 +940,11 @@ mod tests {
         for name in ["{stat}", "{patch}", "{examples}"] {
             assert!(DEFAULT_PROMPT.contains(name), "{name}");
         }
+        for name in ["{stat}", "{patch}"] {
+            assert!(FOUNDATION_PROMPT.contains(name), "{name}");
+        }
+        assert_eq!(Provider::Foundation.default_prompt(), FOUNDATION_PROMPT);
+        assert_eq!(Provider::Codex.default_prompt(), DEFAULT_PROMPT);
     }
 
     #[test]

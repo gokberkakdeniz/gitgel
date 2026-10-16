@@ -151,14 +151,14 @@ function ProviderEditor({
   // The built-in default, for the Reset button and the save comparison.
   const [def, setDef] = useState<string | null>(null);
   useEffect(() => {
-    void getDefaultPrompt().then(
+    void getDefaultPrompt(meta.id).then(
       (d) => {
         setDef(d);
         if (settings.prompt == null) setPrompt((p) => (p === '' ? d : p));
       },
       () => setDef(''),
     );
-  }, [settings.prompt]);
+  }, [settings.prompt, meta.id]);
   const ready = settings.prompt != null || def !== null;
   const canReset = def != null && def !== '' && prompt !== def;
   const trimmed = (s: string) => {

@@ -222,8 +222,8 @@ export const generateMessageStart = (
 /** Whether each agent CLI is installed (Settings › AI, the commit menu). */
 export const getAiStatus = () => invoke<AiStatus[]>('get_ai_status');
 
-/** The prompt sent without one of its own (the edit modal prefills it). */
-export const getDefaultPrompt = () => invoke<string>('get_default_prompt');
+/** The provider's prompt sent without one of its own (the edit modal prefills it). */
+export const getDefaultPrompt = (provider: CommitProvider) => invoke<string>('get_default_prompt', { provider });
 
 /** Discard (Hi8, D12): the files go back to HEAD, a copy of each to the Trash first. */
 export const gitDiscard = (entries: DiscardFiles[]) => invoke<ScriptRun>('git_discard', { entries });

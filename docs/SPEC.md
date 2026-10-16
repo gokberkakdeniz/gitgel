@@ -2616,7 +2616,8 @@ the worktree's HEAD is another commit by then.
   file is needed then), as a run (`ai:generate`, `sparkles` icon) in the entry's
   worktree: a running toast ("Generating a commit message with <provider>…") that opens its output
   panel on click, stoppable there. The prompt is built from git2 reads only: the checked
-  files' patch (cut at ~12k characters) and up to 15 recent subjects from the branch, those
+  files' patch (at most ~12k characters: past it, documentation and lock files go last and each
+  file is cut to an equal share of at least 600) and up to 15 recent subjects from the branch, those
   touching the checked files first (while amending, from below the amended commit). The CLI's fixed command carries the prompt in
   `GITGEL_PROMPT`; it never writes to the repository (codex and Antigravity run sandboxed,
   Claude denies anything that would prompt, opencode runs its read-only `plan` agent
@@ -2630,7 +2631,9 @@ the worktree's HEAD is another commit by then.
   `--effort "$GITGEL_EFFORT"` for Claude Code and Antigravity and `-c
   "model_reasoning_effort=\"$GITGEL_EFFORT\""` for Codex when an effort is set (free text;
   for Codex quotes, backslashes and line breaks are refused). The template fills `{branch}`, `{repo}`, `{stat}`,
-  `{patch}` and `{examples}`; without one of its own the built-in default is sent. A
+  `{patch}` and `{examples}`; without one of its own the provider's built-in default is sent
+  (Apple Foundation Models has its own: no examples, which the on-device model copies back,
+  and one `<type>(<area>): <summary>` line spelled out). A
   provider switched off is refused too.
 
 ### Sync (W4a)

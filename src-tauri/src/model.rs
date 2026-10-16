@@ -195,10 +195,17 @@ impl Default for AiSettings {
     fn default() -> Self {
         AiSettings {
             enabled: true,
-            order: ["opencode", "claude", "cursor", "antigravity", "codex", "foundation"]
-                .into_iter()
-                .map(str::to_string)
-                .collect(),
+            order: [
+                "opencode",
+                "claude",
+                "cursor",
+                "antigravity",
+                "codex",
+                "foundation",
+            ]
+            .into_iter()
+            .map(str::to_string)
+            .collect(),
             opencode: AiProviderSettings::default(),
             claude: AiProviderSettings::default(),
             cursor: AiProviderSettings::default(),

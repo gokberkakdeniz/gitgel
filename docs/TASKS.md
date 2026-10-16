@@ -656,6 +656,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Menu items follow the HIG: title case in English and Turkish, "…" only before a dialog (Stash…, Drop…; not on Apply to / Pop to submenus), the sort menu's check on the left, Turkish Continue reads "… İşlemine Devam Et" — 2026-10-16
 - [x] (on request) Apple Foundation Models provider: the on-device model writes commit messages through `fm respond --no-stream` (model only, no effort) — 2026-10-16
 - [x] (on request) Generate while amending: the prompt holds the amended commit's changes plus the checked files, so ✦ works with no file checked; its menu no longer opens while ✦ is disabled — 2026-10-16
+- [x] (on request) Apple Foundation Models gets its own default prompt (one `<type>(<area>): <summary>` line, no examples); a patch over the limit puts code before docs and gives each file a share — 2026-10-16
 
 ---
 
