@@ -1129,7 +1129,7 @@ Layout:
     - "Prefer absolute dates over relative dates": a switch, off by default
       (`settings.preferAbsoluteDates`). On, every relative age shows the absolute date and time
       instead; in absolute mode the History day labels ("Today", "Yesterday") render as full
-      dates too. The tooltip always shows the other form (relative when absolute is shown and
+      dates too, and History's commit rows under them show the time alone (`8:30`). The tooltip always shows the other form (relative when absolute is shown and
       vice versa).
     - Month names (`MMM`/`MMMM`), the `do` ordinal (`19th` in English, `19.` in Turkish) and
       `aaa` (`am`/`pm` in English, `ÖÖ`/`ÖS` in Turkish) follow the app language (T25); the

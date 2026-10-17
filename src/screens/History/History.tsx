@@ -24,7 +24,7 @@ import { StashBar } from '../../stash/StashBar';
 import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
-import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
+import { ageText, ageTitle, cnt, formatCount, rowAgeText } from '../../lib/format';
 import { t } from '../../i18n';
 import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, gitRevert, gitSquash, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
 import { isTextField } from '../../lib/shortcuts';
@@ -1316,7 +1316,7 @@ function ListRow({
                   {pills}
                 </span>
                 <span className={styles.oneLineAge} title={age ? `${c.author} · ${age}` : c.author}>
-                  {ageText(c.committedAt)}
+                  {rowAgeText(c.committedAt)}
                 </span>
               </>
             ) : (
@@ -1329,7 +1329,7 @@ function ListRow({
                   </span>
                   <span className={styles.metaLine}>
                     <span className={styles.metaWho} title={age}>
-                      {c.author} · {ageText(c.committedAt)}
+                      {c.author} · {rowAgeText(c.committedAt)}
                     </span>
                     <span className={styles.sha}>{c.shortSha}</span>
                   </span>

@@ -662,6 +662,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Revert Changes (TR "Değişiklikleri Geri Al"): History's commit menu runs `git revert --no-edit` (`-m 1` for a merge) in the branch's worktree as a git action; conflicts go to flow T; canvas Hi10, Hi11 menus — 2026-10-16
 - [x] (on request) Settings › Appearance › History › "Commit rows" (`settings.commitRows`): History's commit list in two lines (avatar, subject, author · age, SHA) or one line (SHA, subject, age), from the Review + History prototype's tweak — 2026-10-17
 - [x] (on request) Hidden sidebar peek: resting on the header's show-sidebar button shows the sidebar over the page until the pointer leaves it; its toggle pins it — 2026-10-17
+- [x] (on request) With absolute dates on, History's commit rows show the time alone (`8:30`) under their day label — 2026-10-17
 
 ---
 

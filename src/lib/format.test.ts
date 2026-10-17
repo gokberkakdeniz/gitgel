@@ -9,6 +9,7 @@ import {
   formatDate,
   formatDateTime,
   formatSample,
+  rowAgeText,
   validDateFormat,
   validNumberFormat,
   validTabSize,
@@ -112,6 +113,10 @@ describe('ageText and ageTitle', () => {
     expect(ageText(unix, unix + 3600, abs)).toBe(formatDateTime(unix, abs));
     expect(ageTitle(unix, unix + 3600, abs)).toBe('1h ago');
     expect(agoText(unix, unix + 3600, enFmt)).toBe('1h ago');
+  });
+  it('shows the time alone on a History row when absolute is on', () => {
+    expect(rowAgeText(unix, unix + 3600, enFmt)).toBe('1h');
+    expect(rowAgeText(unix, unix + 3600, { ...enFmt, absolute: true })).toBe('12:30');
   });
 });
 
