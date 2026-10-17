@@ -275,9 +275,12 @@ pub enum NumberFormat {
 }
 
 /// The Date Format choices (SPEC §5 "Appearance").
-pub const DATE_FORMATS: [&str; 16] = [
+pub const DATE_FORMATS: [&str; 19] = [
     "MMM d, yyyy",
     "MMMM do, yyyy",
+    "MMMM d, yyyy",
+    "d MMM yyyy",
+    "d MMMM yyyy",
     "MM/dd/yyyy",
     "dd/MM/yyyy",
     "dd-MM-yyyy",
@@ -1266,6 +1269,25 @@ pub struct TerminalOption {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// The quoted choices of `export const <name> = [ … ] as const;` in `src/lib/format.ts`.
+    fn ts_choices(name: &str) -> Vec<String> {
+        let ts = include_str!("../../src/lib/format.ts");
+        let start = ts.find(&format!("export const {name} = [")).expect(name);
+        let end = start + ts[start..].find("] as const").expect(name);
+        ts[start..end]
+            .split('\'')
+            .skip(1)
+            .step_by(2)
+            .map(str::to_string)
+            .collect()
+    }
+
+    #[test]
+    fn format_choices_match_the_frontend() {
+        assert_eq!(ts_choices("DATE_FORMATS"), DATE_FORMATS);
+        assert_eq!(ts_choices("TIME_FORMATS"), TIME_FORMATS);
+    }
 
     #[test]
     fn entry_key_for_branch() {
