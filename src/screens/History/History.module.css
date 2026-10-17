@@ -16,6 +16,8 @@
   min-height: 0;
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border);
+  /* One-line rows drop their SHA below 340px. */
+  container-type: inline-size;
 }
 
 .listPaneColumns {
@@ -239,6 +241,12 @@
   width: 56px;
   flex-shrink: 0;
   font-size: 11px;
+}
+
+@container (max-width: 339px) {
+  .shaCol {
+    display: none;
+  }
 }
 
 .oneLineAge {

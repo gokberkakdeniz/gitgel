@@ -3009,7 +3009,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
     below the base line: subject `text.muted`, row opacity 0.7. With "Commit rows: One line"
     (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11
-    `accent.text`, 56px column), the subject and its pills, and on the right the age (mono 11
+    `accent.text`, 56px column; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
     muted; tooltip author · date); no avatar. Right-click on it (`HistH11`,
     Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
