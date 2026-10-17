@@ -22,3 +22,7 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   file (the diff turns Unified with a box per changed line and "Include hunk" on each hunk, the
   file's box shows "some", "2 of 3 lines"). Removed from the canvas with its WIP page; to be
   implemented later. The design is still in Hi5's `lines` state (`design/screens/HistH6.dc.html`).
+- **Tags** (2026-10-17). Today tags are only read, as base choices in the Base menu. To think
+  about: showing them on History's commit rows, creating one on a commit (lightweight or
+  annotated), deleting one, and pushing it (`git push origin <tag>`; tags are not pushed with the
+  branch). Creating, deleting and pushing are git actions (SPEC §0, §10).
