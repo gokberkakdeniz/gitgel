@@ -2991,9 +2991,11 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with
     uncommitted files; never while searching): first, above the day labels. 1px dashed
     `border.strong`, radius 8, padding 7px 8px; a 24px slot with an 8px `accent.text` dot; 13px/500
-    `accent.text` "Uncommitted changes"; mono 11 muted `N files · <age>` (plus ` · N conflicts`
-    after the files when some are unmerged; the age of the newest
-    uncommitted file, as on Branches; left out when unknown). Picking it lists its files under it
+    `accent.text` "Uncommitted changes"; mono 11 muted `<age>` (the age of the newest uncommitted
+    file, as on Branches; left out when unknown), after `N conflicts · ` when some are unmerged;
+    no file count. With "Commit rows: One line" it is one line too, padding 4px 8px: the dot and
+    the title (and its pill), no age; only `N conflicts` on the right when some are unmerged.
+    Picking it lists its files under it
     and shows HEAD ↔ working tree (untracked files included), as Review's Uncommitted layer. Its
     files have a `Checkbox` before them (the commit form below); after a failed commit the row
     carries a danger sm pill "commit failed" after the title (`HistH8`). Right-click on the row:

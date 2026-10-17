@@ -1010,7 +1010,6 @@ export function History({ repoId, rev, backLabel }: Props) {
                 selected={isMulti ? selected : []}
                 filesAt={filesAt}
                 fileList={!columns && filesOpen ? fileList : null}
-                wipCount={entry?.uncommitted ?? 0}
                 wipConflicts={entry?.conflicts ?? 0}
                 wipAge={entry?.changedAt ?? null}
                 wipFailed={commitFailed}
@@ -1179,7 +1178,6 @@ function ListRow({
   selected,
   filesAt,
   fileList,
-  wipCount,
   wipConflicts,
   wipAge,
   wipFailed,
@@ -1194,7 +1192,6 @@ function ListRow({
   selected: string[];
   /** The row the files are listed under. */
   filesAt: string | null;
-  wipCount: number;
   wipConflicts: number;
   wipAge: number | null;
   /** The picked row's files, listed under it (tree layout); null when folded or in columns. */
@@ -1226,7 +1223,27 @@ function ListRow({
     case 'wip': {
       const on = current === WIP;
       const many = selected.includes(WIP);
-      const cls = [styles.wip, on && styles.rowOn, many && styles.rowPicked].filter(Boolean).join(' ');
+      const cls = [styles.wip, oneLine && styles.wipOneLine, on && styles.rowOn, many && styles.rowPicked]
+        .filter(Boolean)
+        .join(' ');
+      const title = (
+        <span className={styles.subjectLine}>
+          <span className={styles.wipTitle}>{t('history.wipTitle')}</span>
+          {wipFailed && (
+            <Pill tone="danger" size="sm">
+              {t('history.commitFailed')}
+            </Pill>
+          )}
+        </span>
+      );
+      // No file count; one-line rows leave out the age too.
+      const metaText = [
+        wipConflicts > 0 && t('branches.conflictCount', { ...cnt(wipConflicts) }),
+        !oneLine && wipAge && ageText(wipAge),
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      const meta = metaText && <span className={styles.meta}>{metaText}</span>;
       return (
         <>
           <button
@@ -1241,24 +1258,24 @@ function ListRow({
               onWipMenu(new DOMRect(e.clientX, e.clientY, 0, 0));
             }}
           >
-            <span className={styles.wipSlot}>
-              <span className={styles.wipDot} />
-            </span>
-            <span className={styles.rowText}>
-              <span className={styles.subjectLine}>
-                <span className={styles.wipTitle}>{t('history.wipTitle')}</span>
-                {wipFailed && (
-                  <Pill tone="danger" size="sm">
-                    {t('history.commitFailed')}
-                  </Pill>
-                )}
-              </span>
-              <span className={styles.meta}>
-                {t('branches.fileCount', { ...cnt(wipCount) })}
-                {wipConflicts > 0 ? ` · ${t('branches.conflictCount', { ...cnt(wipConflicts) })}` : ''}
-                {wipAge ? ` · ${ageText(wipAge)}` : ''}
-              </span>
-            </span>
+            {oneLine ? (
+              // One line, as the commit rows: dot and title (conflicts, if any, on the right).
+              <>
+                <span className={styles.wipDot} />
+                {title}
+                {meta}
+              </>
+            ) : (
+              <>
+                <span className={styles.wipSlot}>
+                  <span className={styles.wipDot} />
+                </span>
+                <span className={styles.rowText}>
+                  {title}
+                  {meta}
+                </span>
+              </>
+            )}
           </button>
           {filesAt === WIP && fileList}
         </>

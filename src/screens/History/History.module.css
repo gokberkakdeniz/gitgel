@@ -168,8 +168,29 @@
 .wipDot {
   width: 8px;
   height: 8px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--accent-text);
+}
+
+/* One-line commit rows: Uncommitted is one line too, as tall as a commit (4px + the border). */
+.wipOneLine {
+  padding: 4px 8px;
+}
+
+.wipOneLine .subjectLine {
+  flex-grow: 1;
+}
+
+.wipOneLine .wipTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wipOneLine .meta {
+  flex-shrink: 0;
 }
 
 .wipTitle {
