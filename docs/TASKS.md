@@ -670,6 +670,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) With Commit rows: One line, History's Uncommitted row is one line too (dot and title, no age), from the Review + History prototype — 2026-10-17
 - [x] (on request) History's Uncommitted row shows no file count (its files are listed when picked); two-line rows keep the age — 2026-10-17
 - [x] (on request) Squash Commits has the commit form's ✦: an agent CLI writes the message from the picked commits' changes as one — 2026-10-17
+- [x] (on request) Squash N Commits… also shows for commits already pushed or below the base line (e.g. on `main`); the dialog's force-push note covers them — 2026-10-17
 
 ---
 

@@ -429,8 +429,8 @@ export function History({ repoId, rev, backLabel }: Props) {
   // A commit row's right-click menu (Hi10): Amend Commit… on the newest one, Copy SHA. On one of
   // several picked commits (`many`, Hi13): Squash N Commits….
   const [commitMenu, setCommitMenu] = useState<{ commit: HistoryCommit; at: DOMRect; many: boolean } | null>(null);
-  // Squash (Hi13): consecutive commits of the checked-out branch, none in the base, not the
-  // branch's first commit, no Uncommitted among them.
+  // Squash (Hi13): consecutive commits of the checked-out branch (pushed or in the base too), not
+  // the branch's first commit, no Uncommitted among them.
   const pickedCommits = isMulti ? selected.flatMap((r) => commits.filter((c) => c.sha === r)) : [];
   const squashable =
     isMulti &&
@@ -439,7 +439,7 @@ export function History({ repoId, rev, backLabel }: Props) {
     !!entry?.worktreePath &&
     !entry.operation &&
     !committing &&
-    pickedCommits.every((c) => !c.inBase && c.sha !== amending?.sha) &&
+    pickedCommits.every((c) => c.sha !== amending?.sha) &&
     (pickedCommits[pickedCommits.length - 1]?.parents ?? 0) > 0;
   // A commit below the upstream line is on the remote: the branch will need a force push.
   const squashPushed =

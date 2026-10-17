@@ -3116,8 +3116,8 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     conflicts git stops, the toast fails with git's last line, and the entry shows the
     cherry-pick in progress (§15 "Operations in progress": pill, Continue / Abort).
   - **Squash** (`HistH14`, Hi13; `SquashModal`): only for several consecutive commits of a branch
-    checked out in a worktree, none of them in the base, the oldest not the branch's first
-    commit, Uncommitted not picked, no commit or operation in progress. It opens "Squash Commits"
+    checked out in a worktree (pushed ones and ones in the base too), the oldest not the
+    branch's first commit, Uncommitted not picked, no commit or operation in progress. It opens "Squash Commits"
     (560px; sub `<repo> / <branch>` mono): a 36px `Input` "Summary (required)" filled with the
     oldest commit's subject, a 6-row description with its body and the newer commits' messages
     (oldest first, blank lines between), when a commit is below the upstream line a 12px
