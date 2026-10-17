@@ -29,6 +29,9 @@ export interface Fmt {
 export const DATE_FORMATS = [
   'MMM d, yyyy',
   'MMMM do, yyyy',
+  'MMMM d, yyyy',
+  'd MMM yyyy',
+  'd MMMM yyyy',
   'MM/dd/yyyy',
   'dd/MM/yyyy',
   'dd-MM-yyyy',
@@ -176,17 +179,14 @@ function renderTime(pattern: string, d: Date, locale: AppLocale): string {
   });
 }
 
-/** The dropdown samples are rendered for Oct 19, 2017 14:30:45. */
-const SAMPLE_UNIX = new Date(2017, 9, 19, 14, 30, 45).getTime() / 1000;
-
-/** `Oct 19, 2017` for a Date Format option, in the app language. */
-export function dateSample(pattern: string, f: Fmt = getFmt()): string {
-  return renderDate(validDateFormat(pattern), new Date(SAMPLE_UNIX * 1000), f.locale);
+/** Today's date in a Date Format option (`Oct 19, 2017`), in the app language. */
+export function dateSample(pattern: string, f: Fmt = getFmt(), now: Date = new Date()): string {
+  return renderDate(validDateFormat(pattern), now, f.locale);
 }
 
-/** `14:30` for a Time Format option, in the app language. */
-export function timeSample(pattern: string, f: Fmt = getFmt()): string {
-  return renderTime(validTimeFormat(pattern), new Date(SAMPLE_UNIX * 1000), f.locale);
+/** The current time in a Time Format option (`14:30`), in the app language. */
+export function timeSample(pattern: string, f: Fmt = getFmt(), now: Date = new Date()): string {
+  return renderTime(validTimeFormat(pattern), now, f.locale);
 }
 
 /** `Oct 19, 2017, 14:30` from the Appearance patterns. */

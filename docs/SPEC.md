@@ -1115,9 +1115,9 @@ Layout:
     choice (radio semantics). Under the tiles, 12px muted: "System follows the macOS appearance
     and switches with it." A choice applies at once and is saved (`settings.appearance`).
   - "Formatting": three dropdowns (native `<select>`, as Terminal), each option showing a sample
-    for Oct 19, 2017 14:30:45 / 1234567.89 followed by its pattern, then a checkbox:
+    (the current date and time / 1234567.89) followed by its pattern, then a checkbox:
     - "Date Format" (`settings.dateFormat`, default `MMM d, yyyy`): `MMM d, yyyy`, `MMMM do,
-      yyyy`, `MM/dd/yyyy`, `dd/MM/yyyy`, `dd-MM-yyyy`, `dd.MM.yyyy`, `yyyy/MM/dd`, `yyyy-MM-dd`,
+      yyyy`, `MMMM d, yyyy`, `d MMM yyyy`, `d MMMM yyyy`, `MM/dd/yyyy`, `dd/MM/yyyy`, `dd-MM-yyyy`, `dd.MM.yyyy`, `yyyy/MM/dd`, `yyyy-MM-dd`,
       `yyyy.MM.dd`, `MM/dd/yy`, `dd/MM/yy`, `dd-MM-yy`, `dd.MM.yy`, `yy/MM/dd`, `yy-MM-dd`,
       `yy.MM.dd`. Anything else reads as the default.
     - "Time Format" (`settings.timeFormat`, default `HH:mm`): `HH:mm:ss`, `HH.mm.ss`, `HH:mm`,

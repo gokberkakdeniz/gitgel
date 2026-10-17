@@ -59,6 +59,8 @@ describe('formatDateTime', () => {
     expect(formatDate(noon(2017, 10, 3), { ...enFmt, date: 'MMMM do, yyyy' })).toBe('October 3rd, 2017');
     expect(formatDate(noon(2017, 10, 19), { ...enFmt, date: 'MMMM do, yyyy' })).toBe('October 19th, 2017');
     expect(formatDate(noon(2017, 10, 19), { ...enFmt, date: 'MMMM do, yyyy', locale: 'tr' })).toBe('Ekim 19., 2017');
+    expect(formatDate(noon(2023, 10, 19), { ...enFmt, date: 'd MMMM yyyy', locale: 'tr' })).toBe('19 Ekim 2023');
+    expect(formatDate(noon(2023, 10, 19), { ...enFmt, date: 'MMMM d, yyyy' })).toBe('October 19, 2023');
   });
 
   it('12-hour clock and the day period follow the locale', () => {
