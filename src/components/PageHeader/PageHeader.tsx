@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { selectCanBack, selectCanForward, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { setSidebarVisible } from '../../lib/sidebar';
@@ -16,6 +16,8 @@ interface Props {
   backLabel?: string;
 }
 
+const PEEK_DELAY = 120;
+
 /** The 64px page header. With the sidebar hidden it leaves room for the traffic lights and
  * shows the show-sidebar, back and forward buttons. */
 export function PageHeader({ title, subtitle, children, backLabel }: Props) {
@@ -25,12 +27,28 @@ export function PageHeader({ title, subtitle, children, backLabel }: Props) {
   const back = useNav((s) => s.back);
   const forward = useNav((s) => s.forward);
 
+  // Resting on the show-sidebar button shows the sidebar over the page (Sidebar's `peek`); a
+  // short wait so passing over it on the way to the traffic lights does not.
+  const peekTimer = useRef<number | undefined>(undefined);
+  const peekSoon = () => {
+    window.clearTimeout(peekTimer.current);
+    peekTimer.current = window.setTimeout(() => useUi.getState().setSidebarPeek(true), PEEK_DELAY);
+  };
+  const peekCancel = () => window.clearTimeout(peekTimer.current);
+  useEffect(() => peekCancel, []);
+
   return (
     <header className={sidebarVisible ? styles.header : `${styles.header} ${styles.bare}`} data-tauri-drag-region>
       {!sidebarVisible && (
         <div className={styles.chrome} data-tauri-drag-region>
           <div className={styles.lights} data-tauri-drag-region />
-          <IconButton aria-label={t('nav.showSidebar')} onClick={() => setSidebarVisible(true)}>
+          <IconButton
+            aria-label={t('nav.showSidebar')}
+            data-sidebar-peek
+            onClick={() => setSidebarVisible(true)}
+            onPointerEnter={peekSoon}
+            onPointerLeave={peekCancel}
+          >
             <SidebarIcon />
           </IconButton>
           <IconButton

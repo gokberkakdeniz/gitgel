@@ -661,6 +661,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Squash: with several consecutive commits picked in History, their right-click menu has "Squash N Commits…"; a dialog takes the message (the oldest one's subject, the rest in the description) and `git commit-tree` + `git reset --soft` (or `git rebase --onto` under newer commits) makes them one; canvas Hi13 (`HistH14.dc.html`), W2c removed from the WIP page — 2026-10-16
 - [x] (on request) Revert Changes (TR "Değişiklikleri Geri Al"): History's commit menu runs `git revert --no-edit` (`-m 1` for a merge) in the branch's worktree as a git action; conflicts go to flow T; canvas Hi10, Hi11 menus — 2026-10-16
 - [x] (on request) Settings › Appearance › History › "Commit rows" (`settings.commitRows`): History's commit list in two lines (avatar, subject, author · age, SHA) or one line (SHA, subject, age), from the Review + History prototype's tweak — 2026-10-17
+- [x] (on request) Hidden sidebar peek: resting on the header's show-sidebar button shows the sidebar over the page until the pointer leaves it; its toggle pins it — 2026-10-17
 
 ---
 

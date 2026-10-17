@@ -9,6 +9,25 @@
   color: var(--text-code);
 }
 
+/* Shown over the page while the sidebar is hidden (peek); its toggle lands on the header's. */
+.peek {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  display: flex;
+  box-shadow: var(--shadow-pop);
+  animation: peek-in 0.12s ease-out;
+}
+
+@keyframes peek-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
 .top {
   height: 52px;
   flex-shrink: 0;

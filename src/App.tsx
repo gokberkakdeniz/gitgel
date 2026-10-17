@@ -38,6 +38,7 @@ import { useUi } from './state/ui';
 export default function App() {
   const route = useNav(selectRoute);
   const sidebarVisible = useUi((s) => s.sidebarVisible);
+  const sidebarPeek = useUi((s) => s.sidebarPeek);
   const dropping = useFolderDrop();
   useWhatsNewAfterUpdate();
 
@@ -131,7 +132,7 @@ export default function App() {
 
   return (
     <div className={styles.app}>
-      {sidebarVisible && <Sidebar />}
+      {sidebarVisible ? <Sidebar /> : sidebarPeek && <Sidebar peek />}
       <main className={styles.main}>
         <Screen route={route} />
       </main>

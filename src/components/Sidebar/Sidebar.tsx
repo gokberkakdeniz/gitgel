@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { installUpdate } from '../../lib/ipc';
 import { startDraftProject } from '../../lib/draft';
 import { openAddRepos } from '../../lib/addRepos';
@@ -33,7 +33,9 @@ import { askDeleteProject } from '../DeleteProjectModal';
 import { Input } from '../Input';
 import styles from './Sidebar.module.css';
 
-export function Sidebar() {
+/** `peek`: the hidden sidebar shown over the page from the header's show-sidebar button; it
+ * goes when the pointer leaves it (a menu it opened counts as inside), and its toggle pins it. */
+export function Sidebar({ peek = false }: { peek?: boolean }) {
   const route = useNav(selectRoute);
   const canBack = useNav(selectCanBack);
   const canForward = useNav(selectCanForward);
@@ -68,12 +70,36 @@ export function Sidebar() {
     return () => ro.disconnect();
   }, [repoText]);
 
-  return (
+  const peekBox = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!peek) return;
+    const close = () => useUi.getState().setSidebarPeek(false);
+    const over = (e: PointerEvent) => {
+      const el = e.target as Element | null;
+      if (el && (peekBox.current?.contains(el) || el.closest('[data-popover], [data-sidebar-peek]'))) return;
+      close();
+    };
+    // Out of the window: no element gets the pointer next.
+    const out = (e: PointerEvent) => {
+      if (!e.relatedTarget) close();
+    };
+    document.addEventListener('pointerover', over);
+    document.addEventListener('pointerout', out);
+    return () => {
+      document.removeEventListener('pointerover', over);
+      document.removeEventListener('pointerout', out);
+    };
+  }, [peek]);
+
+  const sidebar = (
     <>
     <nav ref={pane} className={styles.sidebar} style={width ? { width } : undefined}>
       <div className={styles.top} data-tauri-drag-region>
         <div className={styles.lights} data-tauri-drag-region />
-        <IconButton aria-label={t('sidebar.toggleSidebar')} onClick={() => setSidebarVisible(false)}>
+        <IconButton
+          aria-label={peek ? t('nav.showSidebar') : t('sidebar.toggleSidebar')}
+          onClick={() => setSidebarVisible(peek)}
+        >
           <SidebarIcon />
         </IconButton>
         <IconButton aria-label={t('sidebar.back')} onClick={back} disabled={!canBack}>
@@ -143,6 +169,13 @@ export function Sidebar() {
     </nav>
     <ResizeHandle pane={pane} min={200} max={400} onResize={setWidth} onReset={() => setWidth(null)} label={t('sidebar.resizeSidebar')} />
     </>
+  );
+  return peek ? (
+    <div ref={peekBox} className={styles.peek}>
+      {sidebar}
+    </div>
+  ) : (
+    sidebar
   );
 }
 

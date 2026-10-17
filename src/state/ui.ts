@@ -51,6 +51,8 @@ export type SettingsSection = 'general' | 'appearance' | 'repositories' | 'scrip
 
 interface UiState {
   sidebarVisible: boolean;
+  /** The hidden sidebar shown over the page while the pointer is on the show-sidebar button or on it. */
+  sidebarPeek: boolean;
   branchesFilter: string;
   selectedKeys: string[];
   draftProject: DraftProject | null;
@@ -63,6 +65,7 @@ interface UiState {
   settingsSection: SettingsSection; // the last one shown; Settings opens on it
   commitDrafts: Record<string, CommitDraft>;
   setSidebarVisible: (visible: boolean) => void;
+  setSidebarPeek: (peek: boolean) => void;
   setBranchesFilter: (filter: string) => void;
   setSelectedKeys: (keys: string[]) => void;
   setDraftProject: (draft: DraftProject | null) => void;
@@ -95,6 +98,7 @@ function cachedSidebarVisible(): boolean {
 
 export const useUi = create<UiState>()((set) => ({
   sidebarVisible: cachedSidebarVisible(),
+  sidebarPeek: false,
   branchesFilter: '',
   selectedKeys: [],
   draftProject: null,
@@ -107,7 +111,8 @@ export const useUi = create<UiState>()((set) => ({
   deletingProjectId: null,
   settingsSection: 'general',
   commitDrafts: {},
-  setSidebarVisible: (sidebarVisible) => set({ sidebarVisible }),
+  setSidebarVisible: (sidebarVisible) => set({ sidebarVisible, sidebarPeek: false }),
+  setSidebarPeek: (sidebarPeek) => set({ sidebarPeek }),
   setBranchesFilter: (branchesFilter) => set({ branchesFilter }),
   setSelectedKeys: (selectedKeys) => set({ selectedKeys }),
   setDraftProject: (draftProject) => set({ draftProject }),

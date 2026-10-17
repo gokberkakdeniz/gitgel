@@ -540,7 +540,10 @@ inputs and textareas (the diff has its own menu, §5 Review).
   (`localStorage`); whether the sidebar is shown is remembered in the config
   (`settings.sidebarVisible`, also cached in `localStorage` so a launch draws it right before
   the config loads). Review and History leave it as it is; with it hidden the header shows a
-  show-sidebar button next to the traffic lights.
+  show-sidebar button next to the traffic lights. Resting the pointer on that button (120ms)
+  shows the sidebar over the page (the page does not move; `shadow.pop`), its toggle on the
+  button's spot: it goes when the pointer leaves it (a menu it opened counts as inside), and a
+  click on the toggle keeps it shown.
 - **Top row** (52px, drag region): traffic-light space, 28px icon buttons: sidebar toggle, Back,
   Forward (disabled colour `#5c5a55` when history does not allow it).
 - **Nav** (40px rows, radius 10, 14px; active `bg.sidebarActive` + `text.strong`):

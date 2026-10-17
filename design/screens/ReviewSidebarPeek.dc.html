@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review with sidebar peek</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>body{margin:0;background:#fbfaf7}</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 800px; overflow: hidden">
+<dc-import name="Diff" theme="{{theme}}" mode="Committed" hint-size="1280px,800px"></dc-import>
+<div style="{{peekStyle}}">
+<dc-import name="Sidebar" theme="{{theme}}" active="Session auth refresh" inbox-count="7" hint-size="260px,800px"></dc-import>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // The hidden sidebar shown over the page while the pointer rests on the header's
+    // show-sidebar button: the page does not move, the sidebar's toggle lands on that button.
+    var theme = this.props.theme || 'light';
+    var shadow = theme === 'dark' ? 'rgba(0, 0, 0, 0.45)' : 'rgba(40, 32, 20, 0.14)';
+    return {
+      theme: theme,
+      peekStyle: 'position: absolute; top: 0; bottom: 0; left: 0; display: flex; box-shadow: 0 16px 40px ' + shadow
+    };
+  }
+}
+</script>
+</body>
+</html>
