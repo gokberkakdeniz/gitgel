@@ -49,13 +49,14 @@ export function SquashModal({
   const ok = msg.summary.trim().length > 0;
   const [generating, setGenerating] = useState(false);
   // An answer that lands after the modal closed is dropped.
+  // (Set again on mount: StrictMode's second mount follows a cleanup.)
   const open = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    open.current = true;
+    return () => {
       open.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
   const generate = (forced?: CommitProvider) => {
     const active = forced ?? provider;
     if (!active || generating) return;
