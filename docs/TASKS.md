@@ -664,6 +664,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Hidden sidebar peek: resting on the header's show-sidebar button shows the sidebar over the page until the pointer leaves it; its toggle pins it — 2026-10-17
 - [x] (on request) With absolute dates on, History's commit rows show the time alone (`8:30`) under their day label — 2026-10-17
 - [x] (on request) Date Format adds `MMMM d, yyyy`, `d MMM yyyy`, `d MMMM yyyy`; the Date and Time Format samples show the current date and time — 2026-10-17
+- [x] (on request) Dev builds add Window › Show Web Inspector (⌥⌘I) and Reload Page (⌥⌘R) — 2026-10-17
 
 ---
 

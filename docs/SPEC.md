@@ -224,7 +224,7 @@ gitgel/
    └─ src/
       ├─ main.rs  lib.rs          # lib.rs: run(), plugins, command registration
       ├─ ai.rs                    # commit message generation (§15 "Generate message")
-      ├─ menu.rs                  # app menu: Settings…, Check for Updates…, View › Font Size, Help items
+      ├─ menu.rs                  # app menu: Settings…, Check for Updates…, View › Font Size, Help items, dev Window items
       ├─ logs.rs                  # Help › Show Logs in Finder
       ├─ appearance.rs            # main window theme and background; shown by the page (`reveal_window`)
       ├─ apps.rs                  # open items: installed editors/terminals, open a folder
@@ -1379,6 +1379,8 @@ and menus that open things are off, only its 52px title strip still drags it.
 - **Help › Discuss on GitHub** (after What's New and a divider; opens https://github.com/gokberkakdeniz/gitgel/discussions),
   **Search or Report an Issue on GitHub** (…/issues), divider, **Show Logs in Finder** (writes all
   logs with the app and libgit2 versions to `~/Downloads/Gitgel-logs-<time>.log` and reveals it).
+- **Window › Show Web Inspector** (⌥⌘I) and **Reload Page** (⌥⌘R), after a divider, in dev builds
+  only (the webview's own context menu is off); they act on the focused window.
 
 ---
 

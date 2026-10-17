@@ -1,8 +1,11 @@
 //! The app menu: the standard macOS menus with Gitgel › About Gitgel (the app's own window),
-//! Settings… (⌘,) and Check for Updates…, View › Font Size and the Help items (What's New first).
+//! Settings… (⌘,) and Check for Updates…, View › Font Size, the Help items (What's New first)
+//! and, in dev builds only, Window › Show Web Inspector and Reload Page.
 //! Items that ask for more before they finish end in "…" (macOS HIG; SPEC §0).
 
-use tauri::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID};
+use tauri::menu::{
+    Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID, WINDOW_SUBMENU_ID,
+};
 use tauri::{App, AppHandle, Emitter, Manager};
 
 use crate::config;
@@ -20,6 +23,8 @@ const FONT_LARGER: &str = "font_larger";
 const FONT_RESET: &str = "font_reset";
 const DISCUSS: &str = "discuss";
 const ISSUES: &str = "issues";
+const DEV_INSPECTOR: &str = "dev_inspector";
+const DEV_RELOAD: &str = "dev_reload";
 
 const DISCUSS_URL: &str = "https://github.com/gokberkakdeniz/gitgel/discussions";
 pub const ISSUES_URL: &str = "https://github.com/gokberkakdeniz/gitgel/issues";
@@ -116,6 +121,32 @@ pub fn install(app: &App) -> tauri::Result<()> {
         ])?;
     }
 
+    // Dev builds only: the webview's context menu is off, so its Inspect and Reload live here.
+    if cfg!(debug_assertions) {
+        if let Some(window) = menu
+            .get(WINDOW_SUBMENU_ID)
+            .and_then(|k| k.as_submenu().cloned())
+        {
+            window.append_items(&[
+                &PredefinedMenuItem::separator(app)?,
+                &MenuItem::with_id(
+                    app,
+                    DEV_INSPECTOR,
+                    "Show Web Inspector",
+                    true,
+                    Some("Alt+CmdOrCtrl+I"),
+                )?,
+                &MenuItem::with_id(
+                    app,
+                    DEV_RELOAD,
+                    "Reload Page",
+                    true,
+                    Some("Alt+CmdOrCtrl+R"),
+                )?,
+            ])?;
+        }
+    }
+
     app.set_menu(menu)?;
     app.on_menu_event(on_event);
     Ok(())
@@ -138,8 +169,29 @@ fn on_event(app: &AppHandle, event: MenuEvent) {
         DISCUSS => open_url(DISCUSS_URL),
         ISSUES => open_url(ISSUES_URL),
         id if id == logs::SHOW_LOGS_ID => logs::show_logs(app),
+        #[cfg(debug_assertions)]
+        DEV_INSPECTOR => {
+            if let Some(w) = focused_window(app) {
+                w.open_devtools();
+            }
+        }
+        DEV_RELOAD => {
+            if let Some(w) = focused_window(app) {
+                if let Err(e) = w.reload() {
+                    log::warn!("cannot reload: {e}");
+                }
+            }
+        }
         _ => {}
     }
+}
+
+/// The window a Window menu item acts on: the focused one, else the main one.
+fn focused_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
+    app.webview_windows()
+        .into_values()
+        .find(|w| w.is_focused().unwrap_or(false))
+        .or_else(|| app.get_webview_window("main"))
 }
 
 pub fn open_url(url: &str) {
