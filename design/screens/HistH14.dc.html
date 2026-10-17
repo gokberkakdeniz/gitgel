@@ -28,7 +28,7 @@ button{font-family:inherit}
 <div role="dialog" aria-labelledby="squash-title" style="position: relative; margin-top: 110px; width: 560px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden">
 <dc-import name="ModalHeader" theme="{{themeName}}" title="Squash Commits" sub="web-app / session-token-refresh" sub-mono="{{true}}" close="{{true}}" title-id="squash-title" hint-size="100%,72px"></dc-import>
 <div style="display: flex; flex-direction: column; gap: 10px; padding: 4px 24px 22px">
-<dc-import name="Input" theme="{{themeName}}" value="Persist refresh id with the session" placeholder="Summary (required)" label="Summary" size="36" width="100%" left-icon="none" right-text="" mono="{{false}}" clearable="{{false}}" state="focus" hint-size="100%,36px"></dc-import>
+<div style="height: 36px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; background: var(--bg-sunken); border: 1px solid var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2); border-radius: 8px"><input aria-label="Summary" placeholder="Summary (required)" value="Persist refresh id with the session" spellcheck="false" style="flex-grow: 1; min-width: 0; height: 100%; padding: 0; background: transparent; border: 0; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none"><button type="button" aria-label="Generate commit message with OpenCode" title="Generate commit message with OpenCode" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-right: -2px; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="sparkles" size="14" hint-size="14px,14px"></dc-import></button></div>
 <textarea aria-label="Description" placeholder="Description" rows="6" value="{{description}}" style="width: 100%; box-sizing: border-box; resize: none; padding: 10px 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; outline: none; color: var(--text-body); font: inherit; font-size: 13px; line-height: 20px"></textarea>
 <sc-if value="{{pushed}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; line-height: 1.5; color: var(--warning)">Some of these commits are on the remote: the branch will need a force push.</span></sc-if>
 </div>
@@ -47,7 +47,8 @@ class Component extends DCLogic {
     // "Squash 2 Commits…" (consecutive commits of the checked-out branch, none in the base, not
     // the branch's first commit, Uncommitted not picked; otherwise no menu opens).
     // step dialog: Squash Commits: the oldest one's subject, its body and the newer messages,
-    // oldest first. pushed: a commit is below the upstream line, the note says a force push
+    // oldest first. The summary's ✦ (as the commit form's, HistH6) asks the default provider
+    // for a message for the commits' changes as one; right-click picks another. pushed: a commit is below the upstream line, the note says a force push
     // follows. Squash: git commit-tree (the newest tree on b41f9e3, the oldest one's author),
     // then git reset --soft onto it (or git rebase --onto it when newer commits sit above).
     return {

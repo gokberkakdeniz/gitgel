@@ -12,8 +12,8 @@ import { Pill } from '../../components/Pill';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
-import { nameRun, startGitAction, showRunToast, useRuns } from '../../scripts/runs';
-import { onGenerateFinished, providerLabel, providerOrder } from '../../lib/ai';
+import { startGitAction, useRuns } from '../../scripts/runs';
+import { providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { conflictOf, useGitActionRunning } from '../../sync/operation';
 import { OperationBanner } from '../../sync/OperationUi';
@@ -29,7 +29,7 @@ import { t } from '../../i18n';
 import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, gitRevert, gitSquash, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
 import { isTextField } from '../../lib/shortcuts';
 import { tildifyHome } from '../../lib/paths';
-import type { AiStatus, AppError, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, StashChanges } from '../../lib/types';
+import type { AiStatus, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useInvoke } from '../../lib/useInvoke';
@@ -46,6 +46,7 @@ import styles from './History.module.css';
 import { AmendModal } from './AmendModal';
 import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
 import { CommitForm } from './CommitForm';
+import { generateMessage } from './generate';
 import { SquashModal } from './SquashModal';
 import { SwitchBranchDialog } from './SwitchBranch';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
@@ -290,40 +291,23 @@ export function History({ repoId, rev, backLabel }: Props) {
       setGenerating(false);
     };
     setGenerating(true);
-    void generateMessageStart(
-      entryRef,
-      included.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path])),
+    generateMessage(
       active,
-      amending?.sha ?? null,
-    )
-      .then((run) => {
-        genRun.current = run.runId;
-        const runs = useRuns.getState();
-        nameRun(
-          run.runId,
-          t('history.genWith', { provider: providerLabel(active) }),
-          t('history.generating', { provider: providerLabel(active) }),
-        );
-        runs.put(run);
-        showRunToast(useRuns.getState().runs[run.runId]);
-        const off = onGenerateFinished(run.runId, (r) => {
-          off();
-          if (genRun.current === run.runId) stop();
-          // Its running toast is done, whatever took its place stays.
-          const ui = useUi.getState();
-          if (ui.toast?.owner === run.runId) ui.dismissToast();
-          if (r.cancelled) return;
-          if (r.error || !r.summary) {
-            ui.showToast({ status: 'failed', message: r.error ?? t('history.noMessage') });
-            return;
-          }
-          setDraft({ summary: r.summary, description: r.description ?? '' }, mine);
-        });
-      })
-      .catch((e: unknown) => {
-        stop();
-        useUi.getState().showToast({ status: 'failed', message: (e as AppError).message });
-      });
+      () =>
+        generateMessageStart(
+          entryRef,
+          included.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path])),
+          active,
+          amending?.sha ?? null,
+        ),
+      {
+        started: (runId) => (genRun.current = runId),
+        ended: (runId) => {
+          if (runId === null || genRun.current === runId) stop();
+        },
+        answer: (summary, description) => setDraft({ summary, description }, mine),
+      },
+    );
   };
 
   // The stashes taken on this branch (§15), under the list; not while searching.
@@ -851,11 +835,15 @@ export function History({ repoId, rev, backLabel }: Props) {
           </Menu>
         </Popover>
       )}
-      {askSquash && (
+      {askSquash && entryRef && (
         <SquashModal
           commits={askSquash}
+          entry={entryRef}
           sub={`${repoName} / ${rev}`}
           pushed={squashPushed}
+          provider={provider}
+          providers={menuProviders}
+          aiEnabled={ai?.enabled ?? true}
           onClose={() => setAskSquash(null)}
           onSquash={(summary, description) => squash(askSquash, summary, description)}
         />

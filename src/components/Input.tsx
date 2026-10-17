@@ -68,8 +68,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <div
       className={cls}
       onMouseDown={(e) => {
-        // A click on the box (icons, padding) focuses the input.
-        if (e.target !== input.current && !(e.target as Element).closest('button')) {
+        // A click on the box (icons, padding) focuses the input; not one in a popover opened
+        // from the box, which reaches it through the portal.
+        const target = e.target as Element;
+        if (target !== input.current && e.currentTarget.contains(target) && !target.closest('button')) {
           e.preventDefault();
           input.current?.focus();
         }

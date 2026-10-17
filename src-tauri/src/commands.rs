@@ -802,7 +802,8 @@ pub async fn git_commit(
 }
 
 /// Generate message (SPEC §15 "Generate message"): an agent CLI writes a commit message for
-/// the entry's checked files, as a run; the answer arrives as `generate-finished`.
+/// the entry's checked files (or Squash's commits), as a run; the answer arrives as
+/// `generate-finished`.
 #[tauri::command]
 pub async fn generate_message_start(
     state: State<'_, AppState>,
@@ -810,9 +811,10 @@ pub async fn generate_message_start(
     include: Vec<String>,
     provider: ai::Provider,
     amend: Option<String>,
+    squash: Option<Vec<String>>,
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
-        ai::start(state, entry, include, provider, amend)
+        ai::start(state, entry, include, provider, amend, squash)
     })
     .await
 }

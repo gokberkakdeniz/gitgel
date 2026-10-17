@@ -1,6 +1,6 @@
 //! Commit message generation (SPEC §15 "Generate message"): an agent CLI writes a commit
 //! message for the checked files of Uncommitted (and, while amending, the amended commit's
-//! changes). The prompt comes from git2 reads only (the patch and recent subjects); the CLI runs in the entry's worktree as a run
+//! changes; for Squash, the picked commits' changes as one). The prompt comes from git2 reads only (the patch and recent subjects); the CLI runs in the entry's worktree as a run
 //! (`ai:generate`) through the scripts' pty runner, with a running toast and an output panel,
 //! and never writes to the repository.
 
@@ -219,8 +219,8 @@ pub struct ProviderStatus {
 }
 
 /// Ask the provider's CLI for a commit message for the entry's checked files (with `amend`,
-/// the SHA of the HEAD commit being amended, for that commit's changes too): a run
-/// (`ai:generate`) with a running toast and an output panel; the answer arrives as
+/// the SHA of the HEAD commit being amended, for that commit's changes too; with `squash`,
+/// consecutive commits newest first, for their changes as one instead): a run (`ai:generate`) with a running toast and an output panel; the answer arrives as
 /// `generate-finished`.
 pub fn start(
     state: &AppState,
@@ -228,8 +228,9 @@ pub fn start(
     include: Vec<String>,
     provider: Provider,
     amend: Option<String>,
+    squash: Option<Vec<String>>,
 ) -> Result<ScriptRun, AppError> {
-    if include.is_empty() && amend.is_none() {
+    if include.is_empty() && amend.is_none() && squash.is_none() {
         return Err(AppError::Invalid("Pick at least one file.".into()));
     }
     if include.iter().any(|p| p.is_empty() || p.contains('\0')) {
@@ -295,16 +296,25 @@ pub fn start(
             "The branch has a new commit; amend again.".into(),
         ));
     }
-    let (stat, patch) = checked_patch(state, &tree.path, &head, &include, amend.is_some())?;
-    // While amending, the examples start below the amended commit: its own subject would be
-    // copied back.
-    let examples = if amend.is_some() {
-        parent_of(state, &repo_path, &head)?
-            .map(|parent| style_examples(state, &repo_path, &parent, &include))
-            .transpose()?
-            .unwrap_or_default()
+    let (stat, patch, examples) = if let Some(shas) = &squash {
+        // The examples start below the oldest picked commit: the squashed subjects would be
+        // copied back.
+        let (stat, patch, parent, paths) = squash_patch(state, &repo_path, shas)?;
+        let examples = style_examples(state, &repo_path, &parent, &paths)?;
+        (stat, patch, examples)
     } else {
-        style_examples(state, &repo_path, &head, &include)?
+        let (stat, patch) = checked_patch(state, &tree.path, &head, &include, amend.is_some())?;
+        // While amending, the examples start below the amended commit: its own subject would
+        // be copied back.
+        let examples = if amend.is_some() {
+            parent_of(state, &repo_path, &head)?
+                .map(|parent| style_examples(state, &repo_path, &parent, &include))
+                .transpose()?
+                .unwrap_or_default()
+        } else {
+            style_examples(state, &repo_path, &head, &include)?
+        };
+        (stat, patch, examples)
     };
     let branch = tree
         .branch
@@ -548,6 +558,60 @@ fn checked_patch(
         )?;
     }
     Ok((stat, fit_patch(patch)))
+}
+
+/// Squash: the consecutive commits (newest first) as one change, the newest one's tree against
+/// the oldest one's parent: stat lines, the patch (cut as `fit_patch` does), that parent and the
+/// changed paths.
+fn squash_patch(
+    state: &AppState,
+    repo_path: &Path,
+    shas: &[String],
+) -> Result<(Vec<String>, String, Oid, Vec<String>), AppError> {
+    if shas.len() < 2 {
+        return Err(AppError::Invalid("Pick at least two commits.".into()));
+    }
+    let shared = state.pool.get(repo_path)?;
+    let repo = lock(&shared);
+    let find = |sha: &str| {
+        Oid::from_str(sha)
+            .and_then(|oid| repo.find_commit(oid))
+            .map_err(|_| AppError::NotFound(format!("commit {sha}")))
+    };
+    let newest = find(&shas[0])?;
+    let mut oldest = newest.clone();
+    for sha in &shas[1..] {
+        if oldest.parent_id(0).ok().map(|p| p.to_string()).as_deref() != Some(sha.as_str()) {
+            return Err(AppError::Invalid(
+                "Only consecutive commits can be squashed.".into(),
+            ));
+        }
+        oldest = find(sha)?;
+    }
+    let parent = oldest.parent(0).map_err(|_| {
+        AppError::Invalid("The branch's first commit cannot be squashed.".into())
+    })?;
+    let mut opts = DiffOptions::new();
+    opts.context_lines(3).ignore_submodules(true);
+    let diff = repo.diff_tree_to_tree(
+        Some(&parent.tree()?),
+        Some(&newest.tree()?),
+        Some(&mut opts),
+    )?;
+    let mut paths = Vec::new();
+    for delta in diff.deltas() {
+        for file in [delta.old_file(), delta.new_file()] {
+            if let Some(path) = file.path().map(|p| p.to_string_lossy().into_owned()) {
+                if !paths.contains(&path) {
+                    paths.push(path);
+                }
+            }
+        }
+    }
+    let mut stat = Vec::new();
+    let mut patch = Vec::new();
+    add_patches(&diff, diff::NewSide::Tree, &mut stat, &mut patch, |_, _| true)?;
+    Ok((stat, fit_patch(patch), parent.id(), paths))
 }
 
 /// The files' patches as one text of at most about `MAX_PATCH` characters. Past it,

@@ -220,14 +220,15 @@ export const checkCheckout = (repoId: string, branch: string, remote: boolean, t
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });
 
 /** Generate message (SPEC §15): an agent CLI writes a commit message for the checked files
- * (and `amend`'s changes, the HEAD commit being amended), as a run; the answer arrives as
- * `generate-finished`. */
+ * (and `amend`'s changes, the HEAD commit being amended; or, with `squash`, those consecutive
+ * commits' changes as one, newest first), as a run; the answer arrives as `generate-finished`. */
 export const generateMessageStart = (
   entry: EntryRef,
   include: string[],
   provider: CommitProvider,
   amend: string | null,
-) => invoke<ScriptRun>('generate_message_start', { entry, include, provider, amend });
+  squash: string[] | null = null,
+) => invoke<ScriptRun>('generate_message_start', { entry, include, provider, amend, squash });
 
 /** Whether each agent CLI is installed (Settings › AI, the commit menu). */
 export const getAiStatus = () => invoke<AiStatus[]>('get_ai_status');

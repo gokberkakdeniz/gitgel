@@ -202,7 +202,8 @@ gitgel/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
 │  │            # Review/parts.tsx (+ parts.module.css): file bar (view menu, change navigation),
 │  │            #   file row, stash section, diff view settings, page layout (shared with History, §16)
-│  │            # History/: the History screen, its list rows, the commit form, Switch Branch, AmendModal, CherryPickMenu and SquashModal (§16)
+│  │            # History/: the History screen, its list rows, the commit form, Switch Branch, AmendModal, CherryPickMenu and SquashModal (§16);
+│  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
@@ -2630,15 +2631,17 @@ the worktree's HEAD is another commit by then.
   message again. Stopping the run does not open it.
 - **Generate message**: `generate_message_start` (`entry`, the checked `include`
   paths, `provider`: opencode, claude, cursor, antigravity, codex or foundation, `amend`: the SHA of
-  the HEAD commit being amended, or null) asks that agent CLI for a
+  the HEAD commit being amended, or null; `squash`: Squash's commits, newest first, or null) asks that agent CLI for a
   commit message for the checked files (while amending, for what the amended commit will hold:
   the commit's changes against its parent, the checked files as they are on disk; no checked
-  file is needed then), as a run (`ai:generate`, `sparkles` icon) in the entry's
+  file is needed then; for Squash, the newest commit's tree against the oldest one's parent, no
+  checked file either), as a run (`ai:generate`, `sparkles` icon) in the entry's
   worktree: a running toast ("Generating a commit message with <provider>…") that opens its output
   panel on click, stoppable there. The prompt is built from git2 reads only: the checked
   files' patch (at most ~12k characters: past it, documentation and lock files go last and each
   file is cut to an equal share of at least 600) and up to 15 recent subjects from the branch, those
-  touching the checked files first (while amending, from below the amended commit). The CLI's fixed command carries the prompt in
+  touching the checked files first (while amending, from below the amended commit; for Squash,
+  from below the oldest commit, those touching its changed files first). The CLI's fixed command carries the prompt in
   `GITGEL_PROMPT`; it never writes to the repository (codex and Antigravity run sandboxed,
   Claude denies anything that would prompt, opencode runs its read-only `plan` agent
   (`--agent plan`), cursor with `--trust` but without `--force`, Apple Foundation Models (`fm respond
@@ -3119,6 +3122,8 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     oldest commit's subject, a 6-row description with its body and the newer commits' messages
     (oldest first, blank lines between), when a commit is below the upstream line a 12px
     `warning` note "Some of these commits are on the remote: the branch will need a force push.";
+    the summary has the commit form's ✦ (Generate message, same provider, menu and toast), which
+    fills both fields from the commits' changes as one;
     Cancel and primary "Squash" (⌘↵; disabled with no summary). Squash runs `git commit-tree`
     with the newest commit's tree on the oldest one's parent (the oldest one's author and date),
     then `git reset -q --soft` onto it, or `git rebase -q --autostash --rebase-merges --onto <it>

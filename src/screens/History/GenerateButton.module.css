@@ -1,0 +1,14 @@
+/* The ✦ inside a summary field: generates the message. */
+.generate {
+  margin-right: -2px;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

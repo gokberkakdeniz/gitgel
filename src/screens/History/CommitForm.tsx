@@ -1,14 +1,9 @@
-import { useState } from 'react';
 import { Button } from '../../components/Button';
-import { IconButton } from '../../components/IconButton';
-import { SparklesIcon, SpinnerIcon } from '../../components/icons';
 import { Input } from '../../components/Input';
-import { Menu, MenuItem, MenuLabel } from '../../components/Menu';
-import { Popover } from '../../components/Popover';
 import { cnt } from '../../lib/format';
 import { t } from '../../i18n';
 import type { CommitProvider } from '../../lib/types';
-import { providerLabel } from '../../lib/ai';
+import { GenerateButton } from './GenerateButton';
 import styles from './CommitForm.module.css';
 
 /** The commit form under History's list while Uncommitted is picked (W1a): summary, description
@@ -76,9 +71,7 @@ export function CommitForm({
           : amend !== null
             ? t('history.amendTo', { sha: amend, rev })
             : t('history.commitTo', { rev })));
-  const [menu, setMenu] = useState<DOMRect | null>(null);
-  const canGenerate = (files > 0 || amend !== null) && !blocked && !committing && !generating;
-  const generateWith = provider ? t('history.genWith', { provider: providerLabel(provider) }) : '';
+  const canGenerate = (files > 0 || amend !== null) && !blocked && !committing;
   return (
     <form
       aria-label={t('history.commitForm')}
@@ -99,21 +92,13 @@ export function CommitForm({
         rightText={
           aiEnabled &&
           provider && (
-            <IconButton
-              size={24}
-              aria-label={generateWith}
-              title={generating ? t('history.askingMsg') : generateWith}
-              active={menu !== null}
+            <GenerateButton
+              provider={provider}
+              providers={providers}
+              generating={generating}
               disabled={!canGenerate}
-              onClick={() => onGenerate()}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                if (canGenerate && providers.length > 0) setMenu(e.currentTarget.getBoundingClientRect());
-              }}
-              className={styles.generate}
-            >
-              {generating ? <SpinnerIcon size={13} className={styles.spin} /> : <SparklesIcon size={14} />}
-            </IconButton>
+              onGenerate={onGenerate}
+            />
           )
         }
       />
@@ -126,24 +111,6 @@ export function CommitForm({
         onChange={(e) => onDescription(e.target.value)}
         onKeyDown={submitOnKey}
       />
-      {menu && (
-        <Popover anchorRect={menu} width={220} alignRight onClose={() => setMenu(null)}>
-          <Menu aria-label={t('history.genWithMenu')}>
-            <MenuLabel>{t('history.genWithMenu')}</MenuLabel>
-            {providers.map((id) => (
-              <MenuItem
-                key={id}
-                onSelect={() => {
-                  onGenerate(id);
-                  setMenu(null);
-                }}
-              >
-                {providerLabel(id)}
-              </MenuItem>
-            ))}
-          </Menu>
-        </Popover>
-      )}
       {amend !== null && (
         <div className={styles.amend} role="note">
           <div className={styles.amendRule}>

@@ -669,6 +669,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) History with Layout: Columns: `N files +a −d` moves from the pane's header to a one-line header on top of the files column — 2026-10-17
 - [x] (on request) With Commit rows: One line, History's Uncommitted row is one line too (dot and title, no age), from the Review + History prototype — 2026-10-17
 - [x] (on request) History's Uncommitted row shows no file count (its files are listed when picked); two-line rows keep the age — 2026-10-17
+- [x] (on request) Squash Commits has the commit form's ✦: an agent CLI writes the message from the picked commits' changes as one — 2026-10-17
 
 ---
 

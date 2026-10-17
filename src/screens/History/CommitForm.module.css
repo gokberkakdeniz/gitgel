@@ -37,24 +37,9 @@
   opacity: 0.6;
 }
 
-/* The ✦ inside the summary field: generates the message. */
-.generate {
-  margin-right: -2px;
-}
-
 .commit {
   width: 100%;
   justify-content: center;
-}
-
-.spin {
-  animation: spin 0.9s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* Amending (Hi10): a rule with an "i" in its middle, then the note, centred. */
