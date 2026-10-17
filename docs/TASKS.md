@@ -666,6 +666,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Date Format adds `MMMM d, yyyy`, `d MMM yyyy`, `d MMMM yyyy`; the Date and Time Format samples show the current date and time — 2026-10-17
 - [x] (on request) Dev builds add Window › Show Web Inspector (⌥⌘I) and Reload Page (⌥⌘R) — 2026-10-17
 - [x] (on request) Settings › Appearance › History › "Layout" (`settings.historyLayout`): History lists the picked row's files under it (Tree) or in a column of their own between the list and the diff, with the commit form under them (Columns), from the Review + History prototype's tweak — 2026-10-17
+- [x] (on request) History with Layout: Columns: `N files +a −d` moves from the pane's header to a one-line header on top of the files column — 2026-10-17
 
 ---
 

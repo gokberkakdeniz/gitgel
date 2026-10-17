@@ -1065,6 +1065,13 @@ export function History({ repoId, rev, backLabel }: Props) {
         {columns && (
           <>
             <div ref={filesPane} className={styles.filesPane} style={filesWidth ? { width: filesWidth } : undefined}>
+              {/* The count and totals, here instead of in the header over the diff. */}
+              {(wipShown || commitChanges || stashChanges || spanned) && (
+                <div className={styles.filesHead}>
+                  <span>{t('branches.fileCount', { ...cnt(files.length) })}</span>
+                  <DiffStat {...totals(files)} />
+                </div>
+              )}
               <div role="group" aria-label={t('history.filesList')} className={styles.filesList}>
                 {fileList}
               </div>
@@ -1090,13 +1097,14 @@ export function History({ repoId, rev, backLabel }: Props) {
               commits={commits}
               changes={spanned}
               consecutive={consecutive}
+              stats={!columns}
             />
           ) : current === WIP ? (
-            <WipHeader files={wipFiles} />
+            <WipHeader files={wipFiles} stats={!columns} />
           ) : stash ? (
             <StashBar stash={stash} base={stashBase} />
           ) : commit ? (
-            <CommitHeader repoId={repoId} commit={commit} changes={commitChanges} />
+            <CommitHeader repoId={repoId} commit={commit} changes={columns ? undefined : commitChanges} />
           ) : null}
           {!error && file && (wipShown || commitChanges || stashChanges || spanned) && (
             <>
@@ -1535,11 +1543,14 @@ function RangeHeader({
   commits,
   changes,
   consecutive,
+  stats,
 }: {
   rows: string[];
   commits: HistoryCommit[];
   changes: RangeChanges | undefined;
   consecutive: boolean;
+  /** The file count and totals (the files column has them instead). */
+  stats: boolean;
 }) {
   const withWip = rows[0] === WIP;
   const picked = rows.flatMap((r) => commits.filter((c) => c.sha === r));
@@ -1569,16 +1580,18 @@ function RangeHeader({
           </div>
         ))}
       </div>
-      {consecutive && changes && (
+      {consecutive && changes && (stats || (!withWip && newest)) && (
         <div className={parts.barMeta}>
           {!withWip && newest && (
+            <span className="selectable">{`${changes.parent?.slice(0, 7) ?? t('review.emptyTree')}..${newest.shortSha}`}</span>
+          )}
+          {stats && (
             <>
-              <span className="selectable">{`${changes.parent?.slice(0, 7) ?? t('review.emptyTree')}..${newest.shortSha}`}</span>
-              <span className={parts.dot}>·</span>
+              {!withWip && newest && <span className={parts.dot}>·</span>}
+              <span>{t('branches.fileCount', { ...cnt(changes.files.length) })}</span>
+              <DiffStat add={stat!.add} del={stat!.del} />
             </>
           )}
-          <span>{t('branches.fileCount', { ...cnt(changes.files.length) })}</span>
-          <DiffStat add={stat!.add} del={stat!.del} />
         </div>
       )}
     </div>
@@ -1586,17 +1599,20 @@ function RangeHeader({
 }
 
 // The worktree path is already in the page subtitle.
-function WipHeader({ files }: { files: FileChange[] }) {
+// `stats`: the file count and totals (the files column has them instead).
+function WipHeader({ files, stats }: { files: FileChange[]; stats: boolean }) {
   const stat = totals(files);
   return (
     <div className={styles.head}>
       <div className={parts.entryLine}>
         <span className={parts.barTitle}>{t('history.wipTitle')}</span>
       </div>
-      <div className={parts.barMeta}>
-        <span>{t('branches.fileCount', { ...cnt(files.length) })}</span>
-        <DiffStat add={stat.add} del={stat.del} />
-      </div>
+      {stats && (
+        <div className={parts.barMeta}>
+          <span>{t('branches.fileCount', { ...cnt(files.length) })}</span>
+          <DiffStat add={stat.add} del={stat.del} />
+        </div>
+      )}
     </div>
   );
 }
