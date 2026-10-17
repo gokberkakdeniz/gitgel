@@ -1069,6 +1069,7 @@ export function History({ repoId, rev, backLabel }: Props) {
               {(wipShown || commitChanges || stashChanges || spanned) && (
                 <div className={styles.filesHead}>
                   <span>{t('branches.fileCount', { ...cnt(files.length) })}</span>
+                  <span className={parts.grow} />
                   <DiffStat {...totals(files)} />
                 </div>
               )}

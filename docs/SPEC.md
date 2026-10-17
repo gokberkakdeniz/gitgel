@@ -3033,7 +3033,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   too, or several rows' taken together) move to a column of their own between it and the diff:
   300px, `bg.main`, right border `border`, rows padding 6px 8px 16px, not indented. On top, once
   the files are in, a 32px header (padding 0 12px, `bg.sidebar`, bottom border `border`, mono 11
-  muted): `N files +a −d`, which the pane's header then leaves out.
+  muted): `N files`, `+a −d` on the right, which the pane's header then leaves out.
   Its right border is a drag handle as the list's (220–560px, remembered apart). Clicking the
   picked row again does not fold its files. The commit form moves to the bottom of this column.
 - **Commit form** (`HistH6`, `HistH7`, `HistH8`; §15 "Commit"): pinned to the bottom of the list
