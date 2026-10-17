@@ -179,6 +179,7 @@ mod tests {
         });
         // Set apart: one more key in the literal passes `json!`'s recursion limit.
         value["settings"]["commitRows"] = json!("one-line");
+        value["settings"]["historyLayout"] = json!("columns");
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(
             config.repos,
@@ -242,6 +243,10 @@ mod tests {
             config.settings.commit_rows,
             crate::model::CommitRows::TwoLine
         );
+        assert_eq!(
+            config.settings.history_layout,
+            crate::model::HistoryLayout::Tree
+        );
         assert_eq!(config.settings.appearance, crate::model::Appearance::System);
         assert!(config.settings.sidebar_visible);
         assert_eq!(
@@ -304,7 +309,7 @@ mod tests {
             "version": 1,
             "settings": {
                 "dateFormat": "yMd", "timeFormat": 12, "numberFormat": "grouped",
-                "diffTabSize": 7, "commitRows": "compact"
+                "diffTabSize": 7, "commitRows": "compact", "historyLayout": "grid"
             }
         }))
         .unwrap();
@@ -318,6 +323,10 @@ mod tests {
         assert_eq!(
             config.settings.commit_rows,
             crate::model::CommitRows::TwoLine
+        );
+        assert_eq!(
+            config.settings.history_layout,
+            crate::model::HistoryLayout::Tree
         );
     }
 

@@ -18,6 +18,29 @@
   border-right: 1px solid var(--border);
 }
 
+.listPaneColumns {
+  width: 300px;
+}
+
+/* Columns layout (Settings › Appearance › History): the picked row's files, between the list and
+   the diff, with the commit form under them. */
+.filesPane {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-main);
+  border-right: 1px solid var(--border);
+}
+
+.filesList {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 8px 16px;
+}
+
 .stashPane {
   flex-shrink: 0;
   max-height: 40%;

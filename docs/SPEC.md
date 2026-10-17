@@ -1139,7 +1139,9 @@ Layout:
     spaces); the output panel is unaffected.
   - "History": "Commit rows" (`settings.commitRows`, default `two-line`): a dropdown with "Two
     lines" / "One line"; anything else reads as two lines. It sets History's commit rows (§16
-    "Commit row").
+    "Commit row"). "Layout" (`settings.historyLayout`, default `tree`): a dropdown with "Tree" /
+    "Columns"; anything else reads as tree. It sets where History lists the picked row's files
+    (§16 "Files column").
 - **Scripts:** see §14 "Settings › Scripts".
 - **AI**: serif 18px heading "AI".
   - "Generate commit message with AI": a `Switch`, on by default (`settings.ai.enabled`). Off
@@ -1439,6 +1441,7 @@ export interface Settings {
   preferAbsoluteDates: boolean;  // Settings › Appearance › Formatting › Prefer absolute dates over relative dates; default false
   diffTabSize: number;           // Settings › Appearance › Diff › Tab size; default 4
   commitRows: 'two-line' | 'one-line'; // Settings › Appearance › History › Commit rows; default two-line
+  historyLayout: 'tree' | 'columns'; // Settings › Appearance › History › Layout; default tree
   sidebarVisible: boolean;       // the main sidebar is shown; remembered; default true
   prompts: Prompts;              // Settings › Prompts; every one true by default
 }
@@ -3015,7 +3018,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **Base line** (`HistH4`): when `ahead` > 0, after the last commit not in the base: a 1px
     `border.strong` rule on both sides of mono 11 muted `base <base>`.
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
-    file shown on `bg.hover`).
+    file shown on `bg.hover`). Not with "Layout: Columns" (below).
   - Empty: "No commits"; while searching "No commits match “<query>”" with "Clear search"; a rev
     that does not resolve: `<rev> not found`.
   - **Stashes** (`HistH2` 86–98; the stashes taken on `rev`, never while searching): Review's
@@ -3025,8 +3028,14 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     Picking one lists its files under it and shows Review's stash pane (P2: message, Apply / Pop /
     Drop, meta line), then the file bar (`<short base> ↔ stash@{n}`) and the diff. ↑ / ↓ do not
     step into it; a dropped or popped stash leaves Uncommitted, else the newest commit, picked.
+- **Files column** (with "Layout: Columns", §5 Settings › Appearance; the Review + History
+  prototype's `columns`): the list is 300px by default and the picked row's files (a stash's
+  too, or several rows' taken together) move to a column of their own between it and the diff:
+  300px, `bg.main`, right border `border`, rows padding 6px 8px 16px, not indented; no header.
+  Its right border is a drag handle as the list's (220–560px, remembered apart). Clicking the
+  picked row again does not fold its files. The commit form moves to the bottom of this column.
 - **Commit form** (`HistH6`, `HistH7`, `HistH8`; §15 "Commit"): pinned to the bottom of the list
-  column, under the stashes, while Uncommitted is picked. Padding 12, gap 8, top border `border`,
+  column (the files column with "Layout: Columns"), under the stashes, while Uncommitted is picked. Padding 12, gap 8, top border `border`,
   `bg.sidebar`: a 32px `Input` "Summary (required)", a 56px description textarea (12px, no resize),
   and a full-width primary 32px button "Commit N files" (tooltip `Commit to <rev>`; disabled with
   no summary, no file checked, or merge conflicts, each saying why in the tooltip). ⌘↵ in either

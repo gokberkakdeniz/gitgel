@@ -140,6 +140,10 @@ button,input{font-family:inherit}
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Commit rows</span></span>
 <dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Commit rows" options="{{commitRows}}" hint-size="230px,36px"></dc-import>
 </div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Layout</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Layout" options="{{historyLayouts}}" hint-size="230px,36px"></dc-import>
+</div>
 </section>
 </sc-if>
 
@@ -369,6 +373,9 @@ class Component extends DCLogic {
         return { value: x, label: x, on: i === 3 };
       }),
       commitRows: ['Two lines', 'One line'].map(function (x, i) {
+        return { value: x, label: x, on: i === 0 };
+      }),
+      historyLayouts: ['Tree', 'Columns'].map(function (x, i) {
         return { value: x, label: x, on: i === 0 };
       }),
       shortcutGroups: shortcutGroups,

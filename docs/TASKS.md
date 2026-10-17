@@ -665,6 +665,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) With absolute dates on, History's commit rows show the time alone (`8:30`) under their day label — 2026-10-17
 - [x] (on request) Date Format adds `MMMM d, yyyy`, `d MMM yyyy`, `d MMMM yyyy`; the Date and Time Format samples show the current date and time — 2026-10-17
 - [x] (on request) Dev builds add Window › Show Web Inspector (⌥⌘I) and Reload Page (⌥⌘R) — 2026-10-17
+- [x] (on request) Settings › Appearance › History › "Layout" (`settings.historyLayout`): History lists the picked row's files under it (Tree) or in a column of their own between the list and the diff, with the commit form under them (Columns), from the Review + History prototype's tweak — 2026-10-17
 
 ---
 

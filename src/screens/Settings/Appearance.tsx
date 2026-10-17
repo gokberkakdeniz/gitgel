@@ -19,7 +19,7 @@ import {
   validTimeFormat,
 } from '../../lib/format';
 import { updateSettings } from '../../lib/ipc';
-import type { Appearance as AppearanceSetting, CommitRows, Config, Settings } from '../../lib/types';
+import type { Appearance as AppearanceSetting, CommitRows, Config, HistoryLayout, Settings } from '../../lib/types';
 import styles from './Settings.module.css';
 
 const ORDER: AppearanceSetting[] = ['system', 'light', 'dark'];
@@ -243,6 +243,7 @@ function DiffGroup({ config }: { config: Config }) {
 
 function HistoryGroup({ config }: { config: Config }) {
   const rows: CommitRows = config.settings.commitRows === 'one-line' ? 'one-line' : 'two-line';
+  const layout: HistoryLayout = config.settings.historyLayout === 'columns' ? 'columns' : 'tree';
   const save = (patch: Partial<Settings>) => void updateSettings({ ...config.settings, ...patch });
   return (
     <section className={styles.section}>
@@ -258,6 +259,20 @@ function HistoryGroup({ config }: { config: Config }) {
           options={[
             { value: 'two-line', label: t('settings.commitRowsTwo') },
             { value: 'one-line', label: t('settings.commitRowsOne') },
+          ]}
+        />
+      </label>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.historyLayout')}</span>
+        </span>
+        <Select
+          aria-label={t('settings.historyLayout')}
+          value={layout}
+          onChange={(v) => save({ historyLayout: v })}
+          options={[
+            { value: 'tree', label: t('settings.historyLayoutTree') },
+            { value: 'columns', label: t('settings.historyLayoutColumns') },
           ]}
         />
       </label>

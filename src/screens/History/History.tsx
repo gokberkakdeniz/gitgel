@@ -481,7 +481,11 @@ export function History({ repoId, rev, backLabel }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tip]);
   const [land, setLand] = useState<'first' | 'last'>('first');
-  // The picked row lists its files under it; clicking it again folds them (and back).
+  // Settings › Appearance › History › Layout: the files under the picked row (tree) or in a
+  // column of their own between the list and the diff (columns).
+  const columns = useData((s) => s.config?.settings.historyLayout === 'columns');
+  // The picked row lists its files under it; clicking it again folds them (and back). Columns
+  // keep them.
   const [filesOpen, setFilesOpen] = useState(true);
   const pick = (row: string) => {
     setPicked(row);
@@ -492,7 +496,10 @@ export function History({ repoId, rev, backLabel }: Props) {
     setLand('first');
     setFilesOpen(true);
   };
-  const click = (row: string) => (row === current && !isMulti ? setFilesOpen((o) => !o) : pick(row));
+  const click = (row: string) => {
+    if (row !== current || isMulti) pick(row);
+    else if (!columns) setFilesOpen((o) => !o);
+  };
   // Several rows (Hi12): ⌘-click adds or drops one, ⇧-click takes the range from the last one
   // clicked. Down to one row, that row is picked as usual.
   const select = (rows: string[], end: string) => {
@@ -616,10 +623,12 @@ export function History({ repoId, rev, backLabel }: Props) {
   useEffect(() => {
     list.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
   }, [current]);
-  // And the picked file under it (next / previous change steps through them).
+  // And the picked file (next / previous change steps through them).
   useEffect(() => {
-    listPane.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
-  }, [current, file?.path]);
+    (columns ? filesPane : listPane).current
+      ?.querySelector('[aria-current="true"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [current, file?.path, columns]);
   const onScroll = (e: React.UIEvent<HTMLElement>) => {
     const el = e.currentTarget;
     const nearEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 400;
@@ -631,6 +640,9 @@ export function History({ repoId, rev, backLabel }: Props) {
   // The list column's width once dragged; until then 380px.
   const listPane = useRef<HTMLDivElement>(null);
   const [listWidth, setListWidth] = useStoredWidth('gitgel.historyListWidth');
+  // The files column's (columns layout) once dragged; until then 300px.
+  const filesPane = useRef<HTMLDivElement>(null);
+  const [filesWidth, setFilesWidth] = useStoredWidth('gitgel.historyFilesWidth');
   const worktree = entry?.worktreePath ? tildifyHome(entry.worktreePath) : null;
   // A local branch syncs with its remote (W4a); `upstream` is set only for one.
   const syncTarget: SyncTarget = {
@@ -665,6 +677,59 @@ export function History({ repoId, rev, backLabel }: Props) {
           one: commits.length === 1 && !data.more ? '1' : '0',
         })
       : '';
+
+  // The picked row's files: under it in the list (tree), or in the files column (columns).
+  const fileList = (
+    <FileList
+      files={files}
+      file={file?.path}
+      folder={folder}
+      flat={columns}
+      check={
+        wipShown && staged
+          ? {
+              on: checked,
+              disabled: committing,
+              onChange: (f, on) => setBoxes((b) => ({ ...b, [f.path]: on })),
+              onAll: (on) => setBoxes(Object.fromEntries(wipFiles.map((f) => [f.path, on]))),
+            }
+          : undefined
+      }
+      onFile={(p) => {
+        setPath(p);
+        setLand('first');
+      }}
+      picks={wipShown ? picks : undefined}
+      actions={wipShown ? wipActions : undefined}
+      conflict={current === WIP && !isMulti && entry ? (f) => conflictOf(entry, f) : undefined}
+    />
+  );
+  const commitForm = ((wipShown && wip) || amending) && (
+    <CommitForm
+      rev={rev}
+      summary={summary}
+      description={description}
+      files={included.length}
+      amend={amending?.short ?? null}
+      committing={committing}
+      blocked={
+        wip && !staged
+          ? t('history.readingIndex')
+          : (entry?.conflicts ?? 0) > 0
+            ? t('history.resolveFirst')
+            : null
+      }
+      provider={provider}
+      providers={menuProviders}
+      generating={generating}
+      aiEnabled={ai?.enabled ?? true}
+      onSummary={(value) => setDraft({ summary: value })}
+      onDescription={(value) => setDraft({ description: value })}
+      onCommit={commitChecked}
+      onStopAmend={stopAmend}
+      onGenerate={generateChecked}
+    />
+  );
 
   return (
     <div className={parts.screen}>
@@ -917,7 +982,11 @@ export function History({ repoId, rev, backLabel }: Props) {
       )}
 
       <div className={parts.body}>
-        <div ref={listPane} className={styles.listPane} style={listWidth ? { width: listWidth } : undefined}>
+        <div
+          ref={listPane}
+          className={columns ? `${styles.listPane} ${styles.listPaneColumns}` : styles.listPane}
+          style={listWidth ? { width: listWidth } : undefined}
+        >
           <aside
             ref={list}
             role="listbox"
@@ -940,28 +1009,12 @@ export function History({ repoId, rev, backLabel }: Props) {
                 current={isMulti ? null : current}
                 selected={isMulti ? selected : []}
                 filesAt={filesAt}
+                fileList={!columns && filesOpen ? fileList : null}
                 wipCount={entry?.uncommitted ?? 0}
-              wipConflicts={entry?.conflicts ?? 0}
+                wipConflicts={entry?.conflicts ?? 0}
                 wipAge={entry?.changedAt ?? null}
-                files={filesOpen ? files : []}
-                file={file?.path}
-                folder={folder}
                 wipFailed={commitFailed}
-                check={
-                  wipShown && staged
-                    ? { on: checked, disabled: committing, onChange: (f, on) => setBoxes((b) => ({ ...b, [f.path]: on })),
-                        onAll: (on) => setBoxes(Object.fromEntries(wipFiles.map((f) => [f.path, on]))),
-                      }
-                    : undefined
-                }
                 onPick={clickRow}
-                onFile={(p) => {
-                  setPath(p);
-                  setLand('first');
-                }}
-                picks={wipShown ? picks : undefined}
-                actions={wipShown ? wipActions : undefined}
-                conflict={current === WIP && !isMulti && entry ? (f) => conflictOf(entry, f) : undefined}
                 onWipMenu={setWipMenu}
                 onCommitMenu={(commit, at) => {
                   // On one of several picked commits the menu is theirs: Squash, when they can be.
@@ -994,7 +1047,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 heading={t('review.stashOfBranch')}
                 stashes={stashes}
                 picked={stash?.sha}
-                changes={filesOpen ? stashChanges : undefined}
+                changes={!columns && filesOpen ? stashChanges : undefined}
                 file={file?.path}
                 divider={false}
                 withRepo={false}
@@ -1006,34 +1059,27 @@ export function History({ repoId, rev, backLabel }: Props) {
               />
             </div>
           )}
-          {((wipShown && wip) || amending) && (
-            <CommitForm
-              rev={rev}
-              summary={summary}
-              description={description}
-              files={included.length}
-              amend={amending?.short ?? null}
-              committing={committing}
-              blocked={
-                wip && !staged
-                  ? t('history.readingIndex')
-                  : (entry?.conflicts ?? 0) > 0
-                    ? t('history.resolveFirst')
-                    : null
-              }
-              provider={provider}
-              providers={menuProviders}
-              generating={generating}
-              aiEnabled={ai?.enabled ?? true}
-              onSummary={(value) => setDraft({ summary: value })}
-              onDescription={(value) => setDraft({ description: value })}
-              onCommit={commitChecked}
-              onStopAmend={stopAmend}
-              onGenerate={generateChecked}
-            />
-          )}
+          {!columns && commitForm}
         </div>
         <ResizeHandle pane={listPane} min={280} max={640} onResize={setListWidth} onReset={() => setListWidth(null)} label={t('history.resizeList')} />
+        {columns && (
+          <>
+            <div ref={filesPane} className={styles.filesPane} style={filesWidth ? { width: filesWidth } : undefined}>
+              <div role="group" aria-label={t('history.filesList')} className={styles.filesList}>
+                {fileList}
+              </div>
+              {commitForm}
+            </div>
+            <ResizeHandle
+              pane={filesPane}
+              min={220}
+              max={560}
+              onResize={setFilesWidth}
+              onReset={() => setFilesWidth(null)}
+              label={t('history.resizeFiles')}
+            />
+          </>
+        )}
 
         <section className={parts.main}>
           {error ? (
@@ -1123,22 +1169,15 @@ function ListRow({
   current,
   selected,
   filesAt,
+  fileList,
   wipCount,
   wipConflicts,
   wipAge,
-  files,
-  file,
-  folder,
   wipFailed,
-  check,
   onPick,
-  onFile,
-  picks,
-  actions,
   onWipMenu,
   onCommitMenu,
   amending,
-  conflict,
 }: {
   row: HistoryRow;
   current: string | null;
@@ -1149,68 +1188,19 @@ function ListRow({
   wipCount: number;
   wipConflicts: number;
   wipAge: number | null;
-  /** The picked row's files, listed under it. */
-  files: FileChange[];
-  file: string | undefined;
-  /** Where the files' right-click menu opens them from. */
-  folder: string | null;
+  /** The picked row's files, listed under it (tree layout); null when folded or in columns. */
+  fileList: React.ReactNode;
   /** Uncommitted: the last commit failed. */
   wipFailed: boolean;
-  /** Uncommitted's boxes (W1a), when it is picked. */
-  check?: {
-    on: (f: FileChange) => boolean;
-    disabled: boolean;
-    onChange: (f: FileChange, on: boolean) => void;
-    /** Check or uncheck every file. */
-    onAll: (on: boolean) => void;
-  };
   onPick: (row: string, e: React.MouseEvent) => void;
-  onFile: (path: string) => void;
-  /** Uncommitted's files picked with ⌘ / ⇧-click (Hi8). */
-  picks?: { isPicked: (path: string) => boolean; click: (path: string, e: React.MouseEvent, open: () => void) => void };
-  /** Uncommitted's file menu. */
-  actions?: (f: FileChange) => FileActions;
   /** A right-click on the Uncommitted row, at the pointer. */
   onWipMenu: (at: DOMRect) => void;
   /** A right-click on a commit row, at the pointer. */
   onCommitMenu: (commit: HistoryCommit, at: DOMRect) => void;
   /** The commit being amended (Hi10): its row says so. */
   amending: string | null;
-  /** Uncommitted's conflicted files of an operation in progress: ⚠ / ✓ (T4). */
-  conflict?: (f: FileChange) => 'unresolved' | 'resolved' | undefined;
 }) {
   const oneLine = useData((s) => s.config?.settings.commitRows === 'one-line');
-  const fileRows = (
-    <div className={parts.fileRows}>
-      {check && files.length > 0 && (
-        <div className={parts.selectAll}>
-          <Checkbox
-            checked={files.every(check.on)}
-            mixed={!files.every(check.on) && files.some(check.on)}
-            disabled={check.disabled}
-            label={files.every(check.on) ? t('history.unselectAll') : t('history.selectAll')}
-            onChange={(e) => check.onAll(e.target.checked)}
-          />
-        </div>
-      )}
-      {files.map((f) => (
-        <FileRow
-          key={f.path}
-          file={f}
-          folder={folder}
-          terms={[]}
-          on={f.path === file}
-          picked={picks?.isPicked(f.path)}
-          onClick={(e) => (picks ? picks.click(f.path, e, () => onFile(f.path)) : onFile(f.path))}
-          actions={actions?.(f)}
-          conflict={conflict?.(f)}
-          check={
-            check && { checked: check.on(f), disabled: check.disabled, onChange: (on) => check.onChange(f, on) }
-          }
-        />
-      ))}
-    </div>
-  );
   switch (row.kind) {
     case 'day':
       return <div className={styles.day}>{row.label}</div>;
@@ -1261,7 +1251,7 @@ function ListRow({
               </span>
             </span>
           </button>
-          {filesAt === WIP && fileRows}
+          {filesAt === WIP && fileList}
         </>
       );
     }
@@ -1337,11 +1327,77 @@ function ListRow({
               </>
             )}
           </button>
-          {filesAt === c.sha && fileRows}
+          {filesAt === c.sha && fileList}
         </>
       );
     }
   }
+}
+
+function FileList({
+  files,
+  file,
+  folder,
+  flat,
+  check,
+  onFile,
+  picks,
+  actions,
+  conflict,
+}: {
+  files: FileChange[];
+  file: string | undefined;
+  /** Where the files' right-click menu opens them from. */
+  folder: string | null;
+  /** In the files column: not indented under a row. */
+  flat: boolean;
+  /** Uncommitted's boxes (W1a), when it is picked. */
+  check?: {
+    on: (f: FileChange) => boolean;
+    disabled: boolean;
+    onChange: (f: FileChange, on: boolean) => void;
+    /** Check or uncheck every file. */
+    onAll: (on: boolean) => void;
+  };
+  onFile: (path: string) => void;
+  /** Uncommitted's files picked with ⌘ / ⇧-click (Hi8). */
+  picks?: { isPicked: (path: string) => boolean; click: (path: string, e: React.MouseEvent, open: () => void) => void };
+  /** Uncommitted's file menu. */
+  actions?: (f: FileChange) => FileActions;
+  /** Uncommitted's conflicted files of an operation in progress: ⚠ / ✓ (T4). */
+  conflict?: (f: FileChange) => 'unresolved' | 'resolved' | undefined;
+}) {
+  return (
+    <div className={flat ? `${parts.fileRows} ${parts.fileRowsFlat}` : parts.fileRows}>
+      {check && files.length > 0 && (
+        <div className={parts.selectAll}>
+          <Checkbox
+            checked={files.every(check.on)}
+            mixed={!files.every(check.on) && files.some(check.on)}
+            disabled={check.disabled}
+            label={files.every(check.on) ? t('history.unselectAll') : t('history.selectAll')}
+            onChange={(e) => check.onAll(e.target.checked)}
+          />
+        </div>
+      )}
+      {files.map((f) => (
+        <FileRow
+          key={f.path}
+          file={f}
+          folder={folder}
+          terms={[]}
+          on={f.path === file}
+          picked={picks?.isPicked(f.path)}
+          onClick={(e) => (picks ? picks.click(f.path, e, () => onFile(f.path)) : onFile(f.path))}
+          actions={actions?.(f)}
+          conflict={conflict?.(f)}
+          check={
+            check && { checked: check.on(f), disabled: check.disabled, onChange: (on) => check.onChange(f, on) }
+          }
+        />
+      ))}
+    </div>
+  );
 }
 
 function Avatar({ author, size }: { author: string; size: 18 | 24 }) {

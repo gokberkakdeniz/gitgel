@@ -28,6 +28,7 @@ export type DiffLayout = 'split' | 'unified';
 export type DiffContext = 'changes' | 'whole';
 export type Appearance = 'system' | 'light' | 'dark';
 export type CommitRows = 'two-line' | 'one-line';
+export type HistoryLayout = 'tree' | 'columns';
 export type Language = 'system' | 'en' | 'tr';
 export type NumberFormat = 'plain-dot' | 'plain-comma' | 'group-comma-dot' | 'group-dot-comma' | 'group-space-dot' | 'group-space-comma';
 export interface Settings {
@@ -46,6 +47,7 @@ export interface Settings {
   preferAbsoluteDates: boolean; // Settings › Appearance › Formatting › Prefer absolute dates
   diffTabSize: number; // Settings › Appearance › Diff › Tab size
   commitRows: CommitRows; // Settings › Appearance › History › Commit rows
+  historyLayout: HistoryLayout; // Settings › Appearance › History › Layout
   appearance: Appearance; // Settings › Appearance
   sidebarVisible: boolean; // the main sidebar is shown; remembered
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"

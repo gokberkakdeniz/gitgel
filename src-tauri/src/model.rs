@@ -97,6 +97,9 @@ pub struct Settings {
     /// Settings › Appearance › History › Commit rows; anything else reads as two lines.
     #[serde(deserialize_with = "commit_rows")]
     pub commit_rows: CommitRows,
+    /// Settings › Appearance › History › Layout; anything else reads as a tree.
+    #[serde(deserialize_with = "history_layout")]
+    pub history_layout: HistoryLayout,
     /// Settings › Appearance; configs from before it load as `system`.
     pub appearance: Appearance,
     /// Whether the main sidebar is shown; remembered, configs from before it load as shown.
@@ -247,6 +250,7 @@ impl Default for Settings {
             prefer_absolute_dates: false,
             diff_tab_size: 4,
             commit_rows: CommitRows::TwoLine,
+            history_layout: HistoryLayout::Tree,
             appearance: Appearance::System,
             sidebar_visible: true,
             terminal: TerminalChoice::Auto,
@@ -401,6 +405,15 @@ fn commit_rows<'de, D: Deserializer<'de>>(d: D) -> Result<CommitRows, D::Error> 
     })
 }
 
+/// Reads `historyLayout` leniently: an unknown value is `tree`.
+fn history_layout<'de, D: Deserializer<'de>>(d: D) -> Result<HistoryLayout, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(match value.as_str() {
+        Some("columns") => HistoryLayout::Columns,
+        _ => HistoryLayout::Tree,
+    })
+}
+
 /// Reads `diffContextLines` leniently: a value that is not 3, 5 or 10 (or not a number) is 3,
 /// so a hand-edited config never gets set aside for it.
 fn context_lines<'de, D: Deserializer<'de>>(d: D) -> Result<u32, D::Error> {
@@ -430,6 +443,16 @@ pub enum CommitRows {
     #[default]
     TwoLine,
     OneLine,
+}
+
+/// Settings › Appearance › History › Layout: the picked row's files listed under it in the
+/// commit list, or in a column of their own beside it.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum HistoryLayout {
+    #[default]
+    Tree,
+    Columns,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
