@@ -134,6 +134,13 @@ button,input{font-family:inherit}
 <dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Tab size" options="{{tabSizes}}" hint-size="230px,36px"></dc-import>
 </div>
 </section>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<span style="color: var(--text-strong)">History</span>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Commit rows</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Commit rows" options="{{commitRows}}" hint-size="230px,36px"></dc-import>
+</div>
+</section>
 </sc-if>
 
 <sc-if value="{{isScripts}}" hint-placeholder-val="{{false}}">
@@ -360,6 +367,9 @@ class Component extends DCLogic {
       }),
       tabSizes: ['1', '2', '3', '4 (default)', '5', '6', '8', '10', '12'].map(function (x, i) {
         return { value: x, label: x, on: i === 3 };
+      }),
+      commitRows: ['Two lines', 'One line'].map(function (x, i) {
+        return { value: x, label: x, on: i === 0 };
       }),
       shortcutGroups: shortcutGroups,
       repos: [

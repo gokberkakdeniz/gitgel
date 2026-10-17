@@ -187,6 +187,29 @@
   color: var(--accent-text);
 }
 
+/* One-line commit rows (Settings › Appearance › History): SHA, subject, age. */
+.commitOneLine {
+  padding: 5px 8px;
+}
+
+.commitOneLine .subjectLine {
+  flex-grow: 1;
+}
+
+.shaCol {
+  width: 56px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.oneLineAge {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 /* The commit header's SHA links to the commit when the repo has a remote; a copy icon beside it. */
 .shaGroup {
   display: inline-flex;

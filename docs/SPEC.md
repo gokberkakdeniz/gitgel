@@ -1134,6 +1134,9 @@ Layout:
   - "Diff": "Tab size" (`settings.diffTabSize`, default 4): a dropdown with 1, 2, 3, 4, 5, 6, 8,
     10, 12; anything else reads as 4. It sets the Monaco diff's tab size (split and unified,
     spaces); the output panel is unaffected.
+  - "History": "Commit rows" (`settings.commitRows`, default `two-line`): a dropdown with "Two
+    lines" / "One line"; anything else reads as two lines. It sets History's commit rows (§16
+    "Commit row").
 - **Scripts:** see §14 "Settings › Scripts".
 - **AI**: serif 18px heading "AI".
   - "Generate commit message with AI": a `Switch`, on by default (`settings.ai.enabled`). Off
@@ -1430,6 +1433,7 @@ export interface Settings {
   numberFormat: NumberFormat;    // Settings › Appearance › Formatting › Number Format; default 'plain-comma'
   preferAbsoluteDates: boolean;  // Settings › Appearance › Formatting › Prefer absolute dates over relative dates; default false
   diffTabSize: number;           // Settings › Appearance › Diff › Tab size; default 4
+  commitRows: 'two-line' | 'one-line'; // Settings › Appearance › History › Commit rows; default two-line
   sidebarVisible: boolean;       // the main sidebar is shown; remembered; default true
   prompts: Prompts;              // Settings › Prompts; every one true by default
 }
@@ -2995,7 +2999,10 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     `[bot]` gets "BOT" in `text.muted` on `bg.band` with a 1px dashed `border.strong`. Then 13px
     `text.strong` subject (ellipsis) with an outline sm pill "merge" for a merge commit; line 2
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
-    below the base line: subject `text.muted`, row opacity 0.7. Right-click on it (`HistH11`,
+    below the base line: subject `text.muted`, row opacity 0.7. With "Commit rows: One line"
+    (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11
+    `accent.text`, 56px column), the subject and its pills, and on the right the age (mono 11
+    muted; tooltip author · date); no avatar. Right-click on it (`HistH11`,
     Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
     "Revert Changes" (`revert`, below), "Cherry-Pick to" (`rebase`, a

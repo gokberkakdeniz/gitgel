@@ -1,4 +1,4 @@
-// Settings › Appearance: Theme tiles (moved from General), Formatting and Diff
+// Settings › Appearance: Theme tiles (moved from General), Formatting, Diff and History
 // (docs/SPEC.md §5). The mini-window previews are plain elements drawn from the palette
 // values below (design/screens/Settings.dc.html `layer()`), not images.
 import { useRef } from 'react';
@@ -19,7 +19,7 @@ import {
   validTimeFormat,
 } from '../../lib/format';
 import { updateSettings } from '../../lib/ipc';
-import type { Appearance as AppearanceSetting, Config, Settings } from '../../lib/types';
+import type { Appearance as AppearanceSetting, CommitRows, Config, Settings } from '../../lib/types';
 import styles from './Settings.module.css';
 
 const ORDER: AppearanceSetting[] = ['system', 'light', 'dark'];
@@ -94,6 +94,7 @@ export function AppearanceSection({ config }: { config: Config }) {
       <ThemeGroup config={config} />
       <FormattingGroup config={config} />
       <DiffGroup config={config} />
+      <HistoryGroup config={config} />
     </>
   );
 }
@@ -234,6 +235,30 @@ function DiffGroup({ config }: { config: Config }) {
             value: String(n),
             label: n === 4 ? `${n} ${t('settings.tabDefault')}` : String(n),
           }))}
+        />
+      </label>
+    </section>
+  );
+}
+
+function HistoryGroup({ config }: { config: Config }) {
+  const rows: CommitRows = config.settings.commitRows === 'one-line' ? 'one-line' : 'two-line';
+  const save = (patch: Partial<Settings>) => void updateSettings({ ...config.settings, ...patch });
+  return (
+    <section className={styles.section}>
+      <span className={styles.settingName}>{t('settings.historyName')}</span>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.commitRows')}</span>
+        </span>
+        <Select
+          aria-label={t('settings.commitRows')}
+          value={rows}
+          onChange={(v) => save({ commitRows: v })}
+          options={[
+            { value: 'two-line', label: t('settings.commitRowsTwo') },
+            { value: 'one-line', label: t('settings.commitRowsOne') },
+          ]}
         />
       </label>
     </section>

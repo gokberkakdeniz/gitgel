@@ -1179,6 +1179,7 @@ function ListRow({
   /** Uncommitted's conflicted files of an operation in progress: ⚠ / ✓ (T4). */
   conflict?: (f: FileChange) => 'unresolved' | 'resolved' | undefined;
 }) {
+  const oneLine = useData((s) => s.config?.settings.commitRows === 'one-line');
   const fileRows = (
     <div className={parts.fileRows}>
       {check && files.length > 0 && (
@@ -1268,9 +1269,30 @@ function ListRow({
       const c = row.commit;
       const on = current === c.sha;
       const many = selected.includes(c.sha);
-      const cls = [styles.commit, on && styles.rowOn, many && styles.rowPicked, c.inBase && styles.shared]
+      const cls = [
+        styles.commit,
+        oneLine && styles.commitOneLine,
+        on && styles.rowOn,
+        many && styles.rowPicked,
+        c.inBase && styles.shared,
+      ]
         .filter(Boolean)
         .join(' ');
+      const pills = (
+        <>
+          {c.parents > 1 && (
+            <Pill tone="outline" size="sm">
+              {t('history.merge')}
+            </Pill>
+          )}
+          {amending === c.sha && (
+            <Pill tone="accent" size="sm">
+              {t('history.amendingPill')}
+            </Pill>
+          )}
+        </>
+      );
+      const age = c.committedAt ? ageTitle(c.committedAt) : undefined;
       return (
         <>
           <button
@@ -1285,28 +1307,35 @@ function ListRow({
               onCommitMenu(c, new DOMRect(e.clientX, e.clientY, 0, 0));
             }}
           >
-            <Avatar author={c.author} size={24} />
-            <span className={styles.rowText}>
-              <span className={styles.subjectLine}>
-                <span className={styles.subject}>{c.subject}</span>
-                {c.parents > 1 && (
-                  <Pill tone="outline" size="sm">
-                    {t('history.merge')}
-                  </Pill>
-                )}
-                {amending === c.sha && (
-                  <Pill tone="accent" size="sm">
-                    {t('history.amendingPill')}
-                  </Pill>
-                )}
-              </span>
-              <span className={styles.metaLine}>
-                <span className={styles.metaWho} title={c.committedAt ? ageTitle(c.committedAt) : undefined}>
-                  {c.author} · {ageText(c.committedAt)}
+            {oneLine ? (
+              // One line (Settings › Appearance › History): SHA, subject, pills, age.
+              <>
+                <span className={`${styles.sha} ${styles.shaCol}`}>{c.shortSha}</span>
+                <span className={styles.subjectLine}>
+                  <span className={styles.subject}>{c.subject}</span>
+                  {pills}
                 </span>
-                <span className={styles.sha}>{c.shortSha}</span>
-              </span>
-            </span>
+                <span className={styles.oneLineAge} title={age ? `${c.author} · ${age}` : c.author}>
+                  {ageText(c.committedAt)}
+                </span>
+              </>
+            ) : (
+              <>
+                <Avatar author={c.author} size={24} />
+                <span className={styles.rowText}>
+                  <span className={styles.subjectLine}>
+                    <span className={styles.subject}>{c.subject}</span>
+                    {pills}
+                  </span>
+                  <span className={styles.metaLine}>
+                    <span className={styles.metaWho} title={age}>
+                      {c.author} · {ageText(c.committedAt)}
+                    </span>
+                    <span className={styles.sha}>{c.shortSha}</span>
+                  </span>
+                </span>
+              </>
+            )}
           </button>
           {filesAt === c.sha && fileRows}
         </>

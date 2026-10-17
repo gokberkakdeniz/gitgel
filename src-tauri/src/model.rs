@@ -94,6 +94,9 @@ pub struct Settings {
     /// Settings › Appearance › Diff › Tab size; anything outside the choices reads as 4.
     #[serde(deserialize_with = "tab_size")]
     pub diff_tab_size: u32,
+    /// Settings › Appearance › History › Commit rows; anything else reads as two lines.
+    #[serde(deserialize_with = "commit_rows")]
+    pub commit_rows: CommitRows,
     /// Settings › Appearance; configs from before it load as `system`.
     pub appearance: Appearance,
     /// Whether the main sidebar is shown; remembered, configs from before it load as shown.
@@ -243,6 +246,7 @@ impl Default for Settings {
             number_format: NumberFormat::PlainComma,
             prefer_absolute_dates: false,
             diff_tab_size: 4,
+            commit_rows: CommitRows::TwoLine,
             appearance: Appearance::System,
             sidebar_visible: true,
             terminal: TerminalChoice::Auto,
@@ -385,6 +389,15 @@ fn language<'de, D: Deserializer<'de>>(d: D) -> Result<Language, D::Error> {
     })
 }
 
+/// Reads `commitRows` leniently: an unknown value is `two-line`.
+fn commit_rows<'de, D: Deserializer<'de>>(d: D) -> Result<CommitRows, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(match value.as_str() {
+        Some("one-line") => CommitRows::OneLine,
+        _ => CommitRows::TwoLine,
+    })
+}
+
 /// Reads `diffContextLines` leniently: a value that is not 3, 5 or 10 (or not a number) is 3,
 /// so a hand-edited config never gets set aside for it.
 fn context_lines<'de, D: Deserializer<'de>>(d: D) -> Result<u32, D::Error> {
@@ -404,6 +417,16 @@ pub enum DiffContext {
     #[default]
     Changes,
     Whole,
+}
+
+/// Settings › Appearance › History › Commit rows: History's commit list as avatar + two lines,
+/// or one line of SHA, subject and age.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CommitRows {
+    #[default]
+    TwoLine,
+    OneLine,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

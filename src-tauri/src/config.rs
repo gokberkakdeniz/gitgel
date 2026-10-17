@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn round_trips_the_handoff_shape() {
-        let value = json!({
+        let mut value = json!({
             "version": 1,
             "repos": [{ "id": "r_1", "path": "/Users/me/code/web-app" }],
             "branchBases": { "r_1:feat/stacked": "feat/parent" },
@@ -177,6 +177,8 @@ mod tests {
             }],
             "pinnedRepos": ["r_1"]
         });
+        // Set apart: one more key in the literal passes `json!`'s recursion limit.
+        value["settings"]["commitRows"] = json!("one-line");
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(
             config.repos,
@@ -236,6 +238,10 @@ mod tests {
         );
         assert!(!config.settings.prefer_absolute_dates);
         assert_eq!(config.settings.diff_tab_size, 4);
+        assert_eq!(
+            config.settings.commit_rows,
+            crate::model::CommitRows::TwoLine
+        );
         assert_eq!(config.settings.appearance, crate::model::Appearance::System);
         assert!(config.settings.sidebar_visible);
         assert_eq!(
@@ -298,7 +304,7 @@ mod tests {
             "version": 1,
             "settings": {
                 "dateFormat": "yMd", "timeFormat": 12, "numberFormat": "grouped",
-                "diffTabSize": 7
+                "diffTabSize": 7, "commitRows": "compact"
             }
         }))
         .unwrap();
@@ -309,6 +315,10 @@ mod tests {
             crate::model::NumberFormat::PlainComma
         );
         assert_eq!(config.settings.diff_tab_size, 4);
+        assert_eq!(
+            config.settings.commit_rows,
+            crate::model::CommitRows::TwoLine
+        );
     }
 
     #[test]
