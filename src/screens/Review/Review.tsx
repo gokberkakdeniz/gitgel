@@ -148,11 +148,10 @@ export function Review({ target, backLabel, focusKey }: Props) {
     setStashSel(null);
     if (m === 'uncommitted') setCommitSel({});
   };
-  // Entries with nothing in this mode are hidden, except the one group of a branch review: its
-  // header holds the menu with "Change Base…", the way out of a base that leaves nothing to show.
-  const visible = viewGroups.filter((g) => g.files[mode].length > 0 || !!shaOf(g) || target.kind === 'branch');
-  const current = resolveSelection(visible, mode, selected);
-  const group = visible.find((g) => g.entry.key === current?.key);
+  // Every entry is listed, also with nothing in this mode: its header holds the menu ("Open
+  // history", "Change base…").
+  const current = resolveSelection(viewGroups, mode, selected);
+  const group = viewGroups.find((g) => g.entry.key === current?.key);
   const change = group?.files[mode].find((f) => f.path === current?.path);
 
   // File filter (flow D8): narrows the list and change navigation, never the selection or counts.
@@ -160,7 +159,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
   const terms = filterTerms(fileQuery);
   const filtering = terms.length > 0;
   const shownOf = (g: ReviewGroup) => (filtering ? g.files[mode].filter((f) => fileMatches(f, terms)) : g.files[mode]);
-  const listed = filtering ? visible.filter((g) => shownOf(g).length > 0) : visible;
+  const listed = filtering ? viewGroups.filter((g) => shownOf(g).length > 0) : viewGroups;
   const filterInput = useRef<HTMLInputElement>(null);
   // ⌘K focuses the filter (inside the diff Monaco handles it). Listed in lib/shortcuts.ts.
   useEffect(() => {
@@ -277,7 +276,7 @@ export function Review({ target, backLabel, focusKey }: Props) {
   // Picking a commit opens its first file once its changes are in.
   const [openFirst, setOpenFirst] = useState<string | null>(null);
   const firstFile = (() => {
-    const g = openFirst ? visible.find((x) => x.entry.key === openFirst) : undefined;
+    const g = openFirst ? viewGroups.find((x) => x.entry.key === openFirst) : undefined;
     return g && commitOf(g) ? { key: g.entry.key, path: g.files[mode][0]?.path ?? null } : null;
   })();
   useEffect(() => {

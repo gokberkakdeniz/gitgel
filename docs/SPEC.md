@@ -759,8 +759,8 @@ Layout:
   picked.
   Switching mode keeps the file on screen if the new mode lists it (else that entry's first file,
   else the first one); between Uncommitted and All (both end at the working tree) the diff also
-  keeps its place in the file. Groups with no files in the
-  mode are hidden, except the one group of a branch review (its menu, with "Change base", stays reachable).
+  keeps its place in the file. Every entry has its group, also with no files in the
+  mode (header only, no totals; its menu with "Open history" and "Change base" stays reachable).
 - **Left file list** (310px, 280px beside the sidebar; `bg.sidebar`, padding 8, scrolls), one
   group per entry (two entries from the same repo are two groups):
   - **Resizing**: its right border is a drag handle (8px hit area, `col-resize`; a 2px accent
@@ -1643,8 +1643,8 @@ export interface FilePair { original: string; modified: string; binary: boolean;
 export interface RemoteInfo { base: string; kind: 'github' | 'gitlab' | 'bitbucket' | 'other' }
 ```
 
-Reviewable states: `ok`, `detached`, `merged`. In project scope a `merged` entry with no files in
-any mode, and every other state, goes to `notInReview`. Layers for an entry checked out in a
+Reviewable states: `ok`, `detached`, `merged`. In project scope every other state goes to
+`notInReview`. Layers for an entry checked out in a
 worktree: `uncommitted` = HEAD ↔ working tree (untracked included), `all` = merge-base ↔ working
 tree; not checked out: `uncommitted = []`, `all = committed`. A base branch without an upstream
 has only its working-tree layers.

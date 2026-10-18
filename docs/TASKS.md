@@ -672,6 +672,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Squash Commits has the commit form's ✦: an agent CLI writes the message from the picked commits' changes as one — 2026-10-17
 - [x] (on request) Squash N Commits… also shows for commits already pushed or below the base line (e.g. on `main`); the dialog's force-push note covers them — 2026-10-17
 - [x] (on request) History's Uncommitted in Staged / Unstaged sections (git's index; replaces the commit boxes): + / − and Stage all / Unstage all stage at once through a queue (150ms batches, one command at a time per repository, Commit off meanwhile, rows put back with a failed toast), a file staged and changed again is in both and its Unstaged diff shows only the changes since; commits take what is staged; discarding an Unstaged row goes back to the staged version (`get_index_changes`, `git_stage`, §15 "Stage") — 2026-10-18
+- [x] (on request) Project review lists every entry, also one with no changes in the mode or a merged one with none: its menu reaches History and Change base — 2026-10-18
 
 ---
 

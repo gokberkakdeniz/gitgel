@@ -99,10 +99,6 @@ pub fn get_review(state: &AppState, target: &ReviewTarget) -> Result<ReviewData,
                     continue;
                 }
                 match group(state, &config, repo_cfg, summary.clone(), &mut t) {
-                    // A merged entry with nothing left to show is not reviewable.
-                    Ok(g) if summary.state == EntryState::Merged && is_empty(&g) => {
-                        data.not_in_review.push(summary)
-                    }
                     Ok(g) => data.groups.push(g),
                     Err(e) => {
                         log::warn!("review of {} failed: {e}", summary.key);
@@ -239,10 +235,6 @@ pub fn get_stash_changes(
     };
     lock(&state.cache).put_stash(repo_id, changes.clone());
     Ok(changes)
-}
-
-fn is_empty(g: &ReviewGroup) -> bool {
-    g.files.committed.is_empty() && g.files.uncommitted.is_empty() && g.files.all.is_empty()
 }
 
 fn reviewable(s: &EntrySummary) -> bool {
