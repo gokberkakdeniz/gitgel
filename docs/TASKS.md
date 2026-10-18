@@ -695,14 +695,10 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Command palette, VS Code style: ⌘P goes to a project entry, project or branch, ⇧⌘P (a `>` query) runs a command of the screen or the app, Recently Used first; SPEC §5 "Command palette" — 2026-10-18
   - note: the old ⌘K shortcuts stay as they are for now (user decision); Stash…, Change Base… and a project-wide Fetch are not in the palette yet.
 - [x] (on request) Release notes get a `### Changed` group, listed first, for breaking changes (something the user relied on works differently, moved or is gone); SPEC §12 "Release notes" — 2026-10-18
+- [x] T27.6 ✋ Checkpoint — phase 27 — 2026-10-18
 
 ---
 
 ## Open
 
-### Phase 27 — Review and History in one screen
-
-#### T27.6 ✋ Checkpoint — phase 27
-- **Depends on:** T27.5
-- **Steps:** run `pnpm tauri dev`; show a project review (switch branches, lines, base menu,
-  commit, stashes), a branch review from Branches, a stash stack, light theme and the sidebar.
+No open tasks.
