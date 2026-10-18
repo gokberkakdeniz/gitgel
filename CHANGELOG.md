@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.2.0 — 2026-10-18
+
+### Changed
+- Review and History are one screen, named Review: a project's Review opens one branch at a time.
+- Review's file groups, modes and file filter are gone.
+
+### New
+- Command palette: ⌘P goes to a project, worktree or branch, ⇧⌘P runs a command.
+- Stage and unstage files in Review's Uncommitted changes.
+- Squash Commits, with an AI-generated message.
+- Pick several commits in Review for one combined diff.
+- Cherry-Pick to another checked-out branch.
+- Undo Commit on the newest unpushed commit.
+- Revert Changes in Commit.
+- Tags on Review's commit rows and headers.
+- Apple Foundation Models for AI commit messages.
+
+### Improved
+- Settings › Appearance › Review: one-line commit rows and a columns layout.
+- Settings › Appearance: more date formats.
+- Hovering the show-sidebar button previews the sidebar.
+- Two or more scripts share a Run Script submenu.
+- Menus leave out items that cannot be used.
+- Faster Review on large repositories.
+- Commit row tooltips show the full message.
+
+### Fixed
+- Project Review lists branches with no changes.
+- Sidebar toggle, Back and Forward stay beside the traffic lights at any font size.
+- Page header and sidebar top row keep their size at any font size.
+- The window no longer bounces when scrolling over fixed parts.
+
 ## 0.1.24 — 2026-10-16
 
 ### New
