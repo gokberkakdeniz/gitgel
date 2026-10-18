@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Hi7 · Commit failed</title>
+<title>Conflicts after a stash Apply</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -12,11 +12,14 @@
 <style>body{margin:0;background:#141311}</style>
 </helmet>
 <div style="width: 1280px; height: 800px; overflow: hidden">
-<dc-import name="HistH6" state="failed" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
+<dc-import name="ReviewFocus" op="conflicts" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
-class Component extends DCLogic { renderVals() { return { theme: this.props.theme || 'dark' }; } }
+class Component extends DCLogic {
+  // A stash Apply left session.ts with conflict markers, no operation in progress: the conflicts banner, "1 conflict" on the head, ⚠ on the file until it is staged.
+  renderVals() { return { theme: this.props.theme || 'dark' }; }
+}
 </script>
 </body>
 </html>

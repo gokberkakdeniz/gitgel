@@ -47,7 +47,7 @@ body{margin:0}
 <dc-import name="Segmented" theme="none" size="sm" label="Show Branches" options="{{scopes}}" hint-size="220px,32px"></dc-import>
 <dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search" label="Search Branches and Worktrees" value="{{search}}" hint-size="200px,32px"></dc-import>
 </sc-if>
-<sc-if value="{{isHistory}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{isReview}}" hint-placeholder-val="{{false}}">
 <dc-import name="Input" theme="none" size="32" width="200px" placeholder="Search Commits" label="Search commit messages, SHAs and paths" right-text="" value="{{search}}" hint-size="200px,32px"></dc-import>
 <div role="group" aria-label="Sync with the remote" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
 <button title="{{fetchTitle}}" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-family: inherit; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-muted)"><dc-import name="Icon" icon="download" size="12" hint-size="12px,12px"></dc-import>Fetch</button>
@@ -55,9 +55,6 @@ body{margin:0}
 <button disabled="{{pullOff}}" title="{{pullTitle}}" style="{{pullStyle}}"><dc-import name="Icon" icon="arrow-down" size="12" hint-size="12px,12px"></dc-import>Pull<sc-if value="{{hasPull}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">{{pull}}</span></sc-if></button>
 <button disabled="{{pushOff}}" title="{{pushTitle}}" style="{{pushStyle}}"><dc-import name="Icon" icon="arrow-up" size="12" hint-size="12px,12px"></dc-import>Push<sc-if value="{{hasPush}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">{{push}}</span></sc-if></button>
 </div>
-</sc-if>
-<sc-if value="{{isReview}}" hint-placeholder-val="{{false}}">
-<dc-import name="Segmented" theme="none" size="md" label="Diff layer" options="{{modes}}" hint-size="300px,34px"></dc-import>
 </sc-if>
 <sc-if value="{{isProject}}" hint-placeholder-val="{{false}}">
 <dc-import name="Button" theme="none" variant="secondary" size="32" icon="refresh" label="" aria-label="Refresh" title="Refresh" hint-size="32px,32px"></dc-import>
@@ -72,7 +69,7 @@ body{margin:0}
 </sc-if>
 </header>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"page":{"editor":"enum","options":["branches","history","review","stashes","project","settings"],"default":"history"},"title":{"editor":"text","default":"History"},"subtitle":{"editor":"text","default":"web-app · session-token-refresh · ~/code/wt/token-refresh"},"chrome":{"editor":"boolean","default":true},"menuOpen":{"editor":"boolean","default":false},"push":{"editor":"text","default":"↑2"},"pull":{"editor":"text","default":""},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"actions":{"editor":null},"backHref":{"editor":null},"backLabel":{"editor":null},"subDanger":{"editor":null},"search":{"editor":null},"scopes":{"editor":null},"modes":{"editor":null},"repo":{"editor":null},"remote":{"editor":null},"fetched":{"editor":null},"upstream":{"editor":null},"editable":{"editor":null},"renaming":{"editor":null},"draftName":{"editor":null},"renameConflict":{"editor":null},"reviewHref":{"editor":null},"reviewOff":{"editor":null},"$preview":{"width":1020,"height":64}}'>
+<script type="text/x-dc" data-dc-script data-props='{"page":{"editor":"enum","options":["branches","review","stashes","project","settings"],"default":"review"},"title":{"editor":"text","default":"Review"},"subtitle":{"editor":"text","default":"web-app · session-token-refresh · ~/code/wt/token-refresh"},"chrome":{"editor":"boolean","default":true},"menuOpen":{"editor":"boolean","default":false},"push":{"editor":"text","default":"↑2"},"pull":{"editor":"text","default":""},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"actions":{"editor":null},"backHref":{"editor":null},"backLabel":{"editor":null},"subDanger":{"editor":null},"search":{"editor":null},"scopes":{"editor":null},"modes":{"editor":null},"repo":{"editor":null},"remote":{"editor":null},"fetched":{"editor":null},"upstream":{"editor":null},"editable":{"editor":null},"renaming":{"editor":null},"draftName":{"editor":null},"renameConflict":{"editor":null},"reviewHref":{"editor":null},"reviewOff":{"editor":null},"$preview":{"width":1020,"height":64}}'>
 class Component extends DCLogic {
   renderVals() {
     // The app's PageHeader (src/components/PageHeader) with each page's actions, so every screen
@@ -80,18 +77,18 @@ class Component extends DCLogic {
     // subtitle, actions 10px apart on the right.
     // chrome: the sidebar is hidden, so the header starts with the traffic lights, show-sidebar,
     // Back (to backHref) and Forward; padding 16px, else 28px on the left.
-    // page: branches (Refresh, All / Not in a project, Search ⌘K) · history (Search Commits, Fetch /
-    // Pull / Push, ⋮) · review (Committed / Uncommitted / All, ⋮) · stashes (⋮) · project
+    // page: branches (Refresh, All / Not in a project, Search ⌘K) · review (Search Commits, Fetch /
+    // Pull / Push for the open branch, ⋮; Review and History are one screen) · stashes (⋮) · project
     // (Refresh, Add Entries…, Review Changes, ⋯) · settings (title only). The less used actions
-    // (Stash, Refresh, Switch Branch, Edit project) are in ⋮; menuOpen draws it (or ⋯) pressed,
-    // the screen places the Menu itself.
-    // History: push / pull are the counts ("↑2", "↓3"), empty = nothing to push / pull (disabled);
+    // (Stash, Change Base, Rebase, Switch Branch, Edit Project) are in ⋮; menuOpen draws it (or ⋯)
+    // pressed, the screen places the Menu itself.
+    // Review: push / pull are the counts ("↑2", "↓3"), empty = nothing to push / pull (disabled);
     // a push count makes Push the primary button.
     // Project (and a project's Review): editable draws the title as the rename box; renaming
     // swaps in the input (renameConflict: danger ring and subtitle).
     var p = this.props;
-    var page = p.page || 'history';
-    var chrome = p.chrome == null ? page === 'history' : !!p.chrome;
+    var page = p.page || 'review';
+    var chrome = p.chrome == null ? page === 'review' : !!p.chrome;
     var editable = !!p.editable || page === 'project';
     var renaming = !!p.renaming;
     var conflict = !!p.renameConflict;
@@ -114,7 +111,7 @@ class Component extends DCLogic {
       backHref: p.backHref || 'Main.dc.html',
       backLabel: p.backLabel || 'Back to Branches',
       titlesStyle: 'display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0' + (chrome ? '; margin-left: 4px' : ''),
-      title: p.title == null ? 'History' : p.title,
+      title: p.title == null ? 'Review' : p.title,
       titleHint: editable ? 'Rename Project' : undefined,
       titleStyle: serif + (editable ? box + 'display: block; width: fit-content; border: 1px solid transparent; cursor: text' : ''),
       notRenaming: !renaming, renaming: renaming,
@@ -123,18 +120,17 @@ class Component extends DCLogic {
       hasSub: !!sub, subtitle: sub,
       subStyle: 'font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ' + (p.subDanger || conflict ? 'var(--danger)' : 'var(--text-muted)'),
       hasActions: page !== 'settings' && p.actions !== false,
-      isBranches: page === 'branches', isHistory: page === 'history', isReview: page === 'review', isProject: page === 'project',
-      hasPageMenu: page === 'history' || page === 'review' || page === 'stashes',
+      isBranches: page === 'branches', isReview: page === 'review', isProject: page === 'project',
+      hasPageMenu: page === 'review' || page === 'stashes',
       menuOpen: !!p.menuOpen,
       search: p.search || '',
       scopes: p.scopes || [{ label: 'All', count: '4', on: true }, { label: 'Not in a project', count: '2' }],
-      modes: p.modes || [{ label: 'Committed', count: '15', on: true }, { label: 'Uncommitted', count: '6' }, { label: 'All', count: '18' }],
       fetchTitle: 'Fetch ' + repo + ' from ' + remote + ' · last fetch ' + (p.fetched || '3h ago'),
       pull: pull, hasPull: !!pull, pullOff: !pull, pullStyle: syncStyle(!!pull, false),
       pullTitle: pull ? 'Pull from ' + upstream : 'Nothing to pull',
       push: push, hasPush: !!push, pushOff: !push, pushStyle: syncStyle(!!push, true),
       pushTitle: push ? 'Push to ' + upstream : 'Nothing to push',
-      reviewHref: p.reviewHref || 'Diff.dc.html',
+      reviewHref: p.reviewHref || 'ReviewFocus.dc.html',
       reviewOff: !!p.reviewOff
     };
   }

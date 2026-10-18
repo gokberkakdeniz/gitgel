@@ -1,0 +1,1841 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review and History, one branch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input,textarea{font-family:inherit}
+input::placeholder,textarea::placeholder{color:var(--text-muted)}
+.theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--bg-avatar:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--bg-avatar:#d5d0c7;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
+.gg-row:hover{background:var(--bg-hover)}
+.gg-more{opacity:0}
+.gg-cnt:hover{background:var(--bg-hover);color:var(--text-strong)!important}
+.gg-wrap:hover .gg-more,.gg-more:focus-visible{opacity:1}
+.gg-wrap:hover .gg-hide{visibility:hidden}
+.gg-hit:focus-visible,.gg-more:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.gg-list:focus{outline:none}
+.gg-list:focus-visible{box-shadow:inset 0 0 0 1px var(--border-strong)}
+.gg-act{opacity:0}
+.gg-row:hover .gg-act,.gg-act:focus-visible{opacity:1}
+.gg-sec:hover .gg-act{opacity:1}
+.gg-acts{display:none}
+.gg-has:hover .gg-acts,.gg-has:focus-within .gg-acts{display:flex}
+.gg-ib:hover{background:var(--bg-pressed)!important;color:var(--text-strong)!important}
+.gg-commits{container-type:inline-size}
+@container (max-width: 339px){.gg-sha{display:none}}
+</style>
+</helmet>
+<div class="gg-root {{themeClass}}" style="width: {{rootW}}px; height: 800px; display: flex; flex-direction: column; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+
+<header style="box-sizing: border-box; width: 100%; height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: {{headPad}}; border-bottom: 1px solid var(--border); background: var(--bg-main)">
+<sc-if value="{{chrome}}" hint-placeholder-val="{{true}}">
+<div aria-hidden="true" style="display: flex; gap: 8px; margin-right: -4px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><dc-import name="Icon" icon="sidebar" hint-size="17px,17px"></dc-import></button>
+<a href="{{backHref}}" aria-label="{{backLabel}}" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px"><dc-import name="Icon" icon="back" hint-size="17px,17px"></dc-import></a>
+<button aria-label="Forward" disabled style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)"><dc-import name="Icon" icon="forward" hint-size="17px,17px"></dc-import></button>
+</sc-if>
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0; margin-left: 4px">
+<h1 title="{{titleHint}}" style="{{titleStyle}}">{{pageTitle}}</h1>
+<div style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted)">{{pageSub}}</div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<sc-if value="{{hasSync}}" hint-placeholder-val="{{true}}"><dc-import name="Input" theme="none" size="32" width="200px" value="{{q}}" on-value="{{setQ}}" placeholder="Search Commits" label="Search commit messages, SHAs and paths" right-text="{{qRight}}" right-kind="kbd" hint-size="200px,32px"></dc-import></sc-if>
+<sc-if value="{{hasSync}}" hint-placeholder-val="{{true}}">
+<div role="group" aria-label="Sync with the remote" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
+<button type="button" onClick="{{sync.fetch}}" title="{{sync.fetchTitle}}" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-family: inherit; font-size: 12px; white-space: nowrap; background: transparent; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="{{sync.fetchIcon}}" size="12" spin="{{sync.fetchBusy}}" hint-size="12px,12px"></dc-import>Fetch</button>
+<span style="width: 1px; height: 16px; background: var(--border)"></span>
+<button type="button" onClick="{{sync.pull}}" disabled="{{sync.pullOff}}" title="{{sync.pullTitle}}" style="{{sync.pullStyle}}"><dc-import name="Icon" icon="{{sync.pullIcon}}" size="12" spin="{{sync.pullBusy}}" hint-size="12px,12px"></dc-import>Pull<sc-if value="{{sync.hasPull}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">{{sync.pullCount}}</span></sc-if></button>
+<button type="button" onClick="{{sync.push}}" disabled="{{sync.pushOff}}" title="{{sync.pushTitle}}" style="{{sync.pushStyle}}"><dc-import name="Icon" icon="{{sync.pushIcon}}" size="12" spin="{{sync.pushBusy}}" hint-size="12px,12px"></dc-import>Push<sc-if value="{{sync.hasPush}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.8">{{sync.pushCount}}</span></sc-if></button>
+</div>
+</sc-if>
+<dc-import name="Button" theme="none" variant="secondary" size="32" icon="more-vertical" label="" aria-label="More actions" title="More actions" active="{{pageMenuOn}}" on-press="{{openPage}}" hint-size="32px,32px"></dc-import>
+</div>
+</header>
+
+<sc-if value="{{opOn}}" hint-placeholder-val="{{false}}">
+<div role="status" style="{{op.style}}">
+<span style="flex-grow: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; overflow: hidden"><span>{{op.lead}}</span><sc-if value="{{op.names}}" hint-placeholder-val="{{true}}"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">{{op.repo}}</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body)">{{op.branch}}</span><span style="min-width: 0; overflow: hidden; text-overflow: ellipsis; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{op.path}}</span></sc-if><span>{{op.progress}}</span></span>
+<sc-if value="{{op.buttons}}" hint-placeholder-val="{{true}}">
+<dc-import name="Button" theme="none" variant="secondary" size="28" label="Abort" on-press="{{op.abort}}" hint-size="60px,28px"></dc-import>
+<dc-import name="Button" theme="none" variant="primary" size="28" label="Continue" disabled="{{op.continueOff}}" title="{{op.continueTitle}}" on-press="{{op.cont}}" hint-size="80px,28px"></dc-import>
+</sc-if>
+</div>
+</sc-if>
+
+<div style="flex-grow: 1; display: flex; min-height: 0">
+
+<aside class="gg-commits" style="{{asideStyle}}">
+<div class="gg-list" tabIndex="0" onKeyDown="{{navKey}}" aria-label="Commits" style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; padding: {{listPad}}; {{listHide}}">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="14">
+<sc-if value="{{it.isHead}}" hint-placeholder-val="{{false}}">
+<div class="gg-head" title="{{it.title}}" style="position: sticky; top: 0; z-index: 3; background: var(--bg-main); border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; margin: 0 -8px 4px; padding: 8px 16px 7px">
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<span style="flex-grow: 1; min-width: 0; font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.repo}}</span>
+<span class="gg-hide" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span>
+<span class="gg-hide" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span>
+
+</div>
+<div style="display: flex; align-items: center; gap: 4px; min-width: 0">
+<span style="flex-shrink: 1; min-width: 0; margin-right: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.branch}}</span>
+<sc-if value="{{it.hasOp}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.opLabel}}" tone="{{it.opTone}}" size="sm" hint-size="64px,16px"></dc-import></sc-if>
+<sc-if value="{{it.hasPull}}" hint-placeholder-val="{{false}}">
+<button type="button" class="gg-cnt" onClick="{{it.pull}}" title="{{it.pullTitle}}" aria-label="{{it.pullTitle}}" style="{{it.pullStyle}}">·<dc-import name="Icon" icon="{{it.pullIcon}}" size="11" spin="{{it.pullBusy}}" hint-size="11px,11px"></dc-import>{{it.pullCount}}</button>
+</sc-if>
+<sc-if value="{{it.hasPush}}" hint-placeholder-val="{{false}}">
+<button type="button" class="gg-cnt" onClick="{{it.push}}" title="{{it.pushTitle}}" aria-label="{{it.pushTitle}}" style="{{it.pushStyle}}">·<dc-import name="Icon" icon="{{it.pushIcon}}" size="11" spin="{{it.pushBusy}}" hint-size="11px,11px"></dc-import>{{it.pushCount}}</button>
+</sc-if>
+<span style="flex-grow: 1"></span>
+<span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.upstream}}</span>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{it.isHint}}" hint-placeholder-val="{{false}}">
+<div style="flex-shrink: 0; margin: 2px 0 6px; padding: 7px 10px; border-radius: 8px; background: rgba(var(--warning-rgb), 0.12); color: var(--warning); font-size: 12px; line-height: 1.4">{{it.text}}</div>
+</sc-if>
+<sc-if value="{{it.isWip}}" hint-placeholder-val="{{false}}">
+<div class="gg-wrap gg-row" style="{{it.wrapStyle}}">
+<button type="button" class="gg-hit" onClick="{{it.pick}}" onContextMenu="{{it.menu}}" aria-pressed="{{it.sel}}" title="HEAD ↔ working tree" style="{{it.hitStyle}}">
+<sc-if value="{{it.two}}" hint-placeholder-val="{{true}}">
+<span style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-text)"></span></span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 13px; font-weight: 500; color: var(--accent-text); white-space: nowrap">Uncommitted changes</span><sc-if value="{{it.failed}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="commit failed" tone="danger" size="sm" hint-size="72px,16px"></dc-import></sc-if></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span>
+</span>
+</sc-if>
+<sc-if value="{{it.one}}" hint-placeholder-val="{{false}}">
+<span style="width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--accent-text)"></span>
+<span style="font-size: 13px; font-weight: 500; color: var(--accent-text); white-space: nowrap">Uncommitted changes</span>
+<sc-if value="{{it.failed}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="commit failed" tone="danger" size="sm" hint-size="72px,16px"></dc-import></sc-if>
+<span style="flex-grow: 1"></span>
+<span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span>
+</sc-if>
+</button>
+<sc-if value="{{it.hasMore}}" hint-placeholder-val="{{false}}">
+<button type="button" class="gg-more" onClick="{{it.more}}" aria-label="Uncommitted Options" title="Uncommitted Options" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-elevated); color: var(--text-body); cursor: pointer"><dc-import name="Icon" icon="more-vertical" size="14" hint-size="14px,14px"></dc-import></button>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{it.isBase}}" hint-placeholder-val="{{false}}">
+<div class="gg-row" style="{{it.wrapStyle}}">
+<button type="button" class="gg-hit" onClick="{{it.pick}}" aria-pressed="{{it.sel}}" title="{{it.title}}" style="{{it.hitStyle}}"><span style="{{it.ruleStyle}}"></span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.label}}</span><span style="{{it.ruleStyle}}"></span></button>
+</div>
+</sc-if>
+<sc-if value="{{it.isCommit}}" hint-placeholder-val="{{true}}">
+<div class="gg-wrap gg-row" style="{{it.wrapStyle}}">
+<button type="button" class="gg-hit" onClick="{{it.pick}}" onContextMenu="{{it.menu}}" aria-pressed="{{it.sel}}" title="{{it.title}}" style="{{it.hitStyle}}">
+<sc-if value="{{it.two}}" hint-placeholder-val="{{true}}">
+<span title="{{it.author}}" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 10px; font-weight: 600; background: var(--bg-avatar); color: var(--text-strong)">{{it.initials}}</span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if></span>
+<span style="display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap"><span style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{it.author}} · {{it.age}}</span><span class="gg-hide" style="color: var(--accent-text)">{{it.sha}}</span></span>
+</span>
+</sc-if>
+<sc-if value="{{it.one}}" hint-placeholder-val="{{false}}">
+<span class="gg-sha" style="width: 56px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-text)">{{it.sha}}</span>
+<span style="{{it.subjectStyle}}">{{it.subject}}</span>
+<sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if>
+<span style="flex-grow: 1"></span>
+<span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.age}}</span>
+</sc-if>
+</button>
+<button type="button" class="gg-more" onClick="{{it.more}}" aria-label="Commit Options" title="Commit Options" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-elevated); color: var(--text-body); cursor: pointer"><dc-import name="Icon" icon="more-vertical" size="14" hint-size="14px,14px"></dc-import></button>
+</div>
+</sc-if>
+<sc-if value="{{it.isLine}}" hint-placeholder-val="{{false}}">
+<div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 7px 8px 5px"><span style="{{it.ruleStyle}}"></span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.label}}</span><span style="{{it.ruleStyle}}"></span></div>
+</sc-if>
+<sc-if value="{{it.isShared}}" hint-placeholder-val="{{false}}">
+<div title="{{it.title}}" style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: {{it.pad}}; min-width: 0">
+<sc-if value="{{it.two}}" hint-placeholder-val="{{true}}">
+<span title="{{it.author}}" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 10px; font-weight: 600; background: var(--bg-avatar); color: var(--text-strong)">{{it.initials}}</span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 13px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{it.subject}}</span>
+<span style="display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap"><span style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{it.author}} · {{it.age}}</span><span style="color: var(--accent-text)">{{it.sha}}</span></span>
+</span>
+</sc-if>
+<sc-if value="{{it.one}}" hint-placeholder-val="{{false}}">
+<span class="gg-sha" style="width: 56px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-text)">{{it.sha}}</span>
+<span style="flex-grow: 1; min-width: 0; font-size: 13px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.subject}}</span>
+<span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.age}}</span>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{it.isNote}}" hint-placeholder-val="{{false}}">
+<div style="{{it.wrapStyle}}">{{it.label}}</div>
+</sc-if>
+<sc-if value="{{it.isSection}}" hint-placeholder-val="{{false}}">
+<div class="gg-sec" style="{{it.wrapStyle}}"><button type="button" onClick="{{it.toggle}}" aria-expanded="{{it.open}}" style="flex-grow: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 6px; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: left"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="{{it.chevStyle}}"><path d="m6 9 6 6 6-6"></path></svg><span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">{{it.label}}</span></button><sc-if value="{{it.hasAct}}" hint-placeholder-val="{{true}}"><button type="button" class="gg-act gg-ib" onClick="{{it.act}}" aria-label="{{it.actLabel}}" title="{{it.actLabel}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="{{it.actPath}}"></path></svg></button></sc-if><span style="min-width: 18px; height: 18px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 5px; border-radius: 9px; background: var(--bg-hover); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)">{{it.count}}</span></div>
+</sc-if>
+<sc-if value="{{it.isFile}}" hint-placeholder-val="{{false}}">
+<div class="gg-row {{it.rowCls}}" style="{{it.rowStyle}}">
+
+<button type="button" class="gg-hit" onClick="{{it.pick}}" onContextMenu="{{it.menu}}" aria-pressed="{{it.on}}" style="flex-grow: 1; min-width: 0; height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 0; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<dc-import name="KindBadge" theme="none" kind="{{it.kind}}" hint-size="18px,18px"></dc-import>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
+</button>
+<sc-if value="{{it.hasAct}}" hint-placeholder-val="{{false}}"><span class="gg-acts" style="flex-shrink: 0; align-items: center; gap: 0; margin-right: -2px"><button type="button" class="gg-ib" onClick="{{it.discard}}" aria-label="{{it.discardTitle}}" title="{{it.discardTitle}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"></path></svg></button><button type="button" class="gg-ib" onClick="{{it.act}}" aria-label="{{it.actTitle}}" title="{{it.actTitle}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="{{it.actPath}}"></path></svg></button></span></sc-if>
+<span class="gg-cnts" onClick="{{it.pick}}" style="display: flex; gap: 8px; flex-shrink: 0; padding: 0 2px 0 0; cursor: pointer"><sc-if value="{{it.cUn}}" hint-placeholder-val="{{false}}"><span title="Has conflicts" style="display: flex; color: var(--danger)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="M12 3 2.5 20h19ZM12 10v4M12 17.2v.1"></path></svg></span></sc-if><sc-if value="{{it.cOk}}" hint-placeholder-val="{{false}}"><span title="Conflicts resolved" style="display: flex; color: var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span></sc-if><sc-if value="{{it.hasAdd}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span></sc-if><sc-if value="{{it.hasDel}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span></sc-if></span>
+</div>
+</sc-if>
+<sc-if value="{{it.isComposer}}" hint-placeholder-val="{{false}}">
+<div role="form" aria-label="Commit" style="{{it.cm.boxStyle}}">
+<div style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px"><input aria-label="Summary" placeholder="Summary (required)" value="{{it.cm.summary}}" onChange="{{it.cm.setSummary}}" onKeyDown="{{it.cm.key}}" style="flex-grow: 1; min-width: 0; height: 100%; padding: 0; background: transparent; border: 0; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none"><button type="button" onClick="{{it.cm.generate}}" aria-label="Generate commit message" title="Generate commit message" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="{{it.cm.aiIcon}}" size="14" spin="{{it.cm.aiBusy}}" hint-size="14px,14px"></dc-import></button></div>
+<textarea aria-label="Description" placeholder="Description" value="{{it.cm.body}}" onChange="{{it.cm.setBody}}" onKeyDown="{{it.cm.key}}" style="{{it.cm.bodyStyle}}"></textarea>
+<div style="display: flex; flex-direction: column">
+<dc-import name="Button" theme="none" variant="primary" size="32" width="{{it.cm.btnWidth}}" label="{{it.cm.label}}" icon="{{it.cm.icon}}" disabled="{{it.cm.disabled}}" title="{{it.cm.title}}" on-press="{{it.cm.commit}}" hint-size="100%,32px"></dc-import>
+</div>
+<sc-if value="{{it.cm.amend}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted)">Your changes will modify your <strong style="font-weight: 600; color: var(--text-strong)">most recent commit</strong>. <button type="button" onClick="{{it.cm.stopAmend}}" style="padding: 0; background: none; border: 0; font: inherit; color: var(--accent-text); text-decoration: underline; cursor: pointer">Stop amending</button> to make these changes as a new commit.</p></sc-if>
+</div>
+</sc-if>
+</sc-for>
+<sc-if value="{{noMatches}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px 8px">
+<span style="font-size: 13px; color: var(--text-body)">Nothing matches “{{q}}”</span>
+<button type="button" onClick="{{clearQ}}" style="padding: 0; border: 0; background: transparent; color: var(--accent-text); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer">Clear Search</button>
+</div>
+</sc-if>
+</div>
+<sc-if value="{{hasStashes}}" hint-placeholder-val="{{true}}">
+<div aria-label="Stashes" style="{{stashBoxStyle}}">
+<button type="button" onClick="{{toggleStashes}}" aria-expanded="{{stashOpen}}" style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 8px 4px; border: 0; background: transparent; font: inherit; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: left; cursor: pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{stashChev}}"><path d="m6 9 6 6 6-6"></path></svg><span style="flex-grow: 1">{{stashHeading}} · {{stashCount}}</span></button>
+<sc-if value="{{stashOpen}}" hint-placeholder-val="{{true}}">
+<sc-for list="{{stashItems}}" as="s" hint-placeholder-count="2">
+<sc-if value="{{s.isStash}}" hint-placeholder-val="{{true}}">
+<button type="button" class="gg-hit gg-row" onClick="{{s.pick}}" onContextMenu="{{s.menu}}" aria-pressed="{{s.sel}}" title="{{s.title}}" style="{{s.style}}">
+<span style="display: flex; align-items: flex-start; gap: 8px; width: 100%"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.iconStyle}}"><path d="M4 7.5 12 4l8 3.5v9L12 20l-8-3.5Z"></path><path d="M4 7.5 12 11l8-3.5M12 11v9"></path></svg><span style="font-size: 13px; line-height: 18px; color: var(--text-strong); flex-grow: 1; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere">{{s.msg}}</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 18px; color: var(--text-muted)">{{s.ref}}</span></span>
+<span style="padding-left: 21px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.meta}}</span>
+</button>
+</sc-if>
+<sc-if value="{{s.isFile}}" hint-placeholder-val="{{false}}">
+<div class="gg-row" style="{{s.rowStyle}}">
+
+<button type="button" class="gg-hit" onClick="{{s.pick}}" onContextMenu="{{s.menu}}" aria-pressed="{{s.on}}" style="flex-grow: 1; min-width: 0; height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 0; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<dc-import name="KindBadge" theme="none" kind="{{s.kind}}" hint-size="18px,18px"></dc-import>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{s.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{s.dir}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{s.add}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{s.del}}</span>
+</button>
+<sc-if value="{{s.hasAct}}" hint-placeholder-val="{{false}}"><button type="button" class="gg-act" onClick="{{s.act}}" aria-label="{{s.actTitle}}" title="{{s.actTitle}}" style="width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-elevated); color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1; cursor: pointer">{{s.actGlyph}}</button></sc-if>
+</div>
+</sc-if>
+</sc-for>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{hasOthers}}" hint-placeholder-val="{{true}}">
+<div aria-label="Other branches" style="position: relative; flex-shrink: 0; display: flex; flex-direction: column; padding: 0 8px 8px; border-top: 1px solid var(--border); background: var(--bg-sidebar)">
+<button type="button" onClick="{{toggleBranches}}" aria-expanded="{{branchesOpen}}" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 8px 4px; border: 0; background: transparent; font: inherit; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: left; cursor: pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{branchChev}}"><path d="m6 9 6 6 6-6"></path></svg><span style="flex-grow: 1">Branches · {{otherCount}}</span></button>
+<sc-if value="{{branchesShown}}" hint-placeholder-val="{{true}}">
+<div style="{{branchListStyle}}">
+<sc-for list="{{others}}" as="o" hint-placeholder-count="3">
+<button type="button" class="gg-row" onClick="{{o.go}}" title="{{o.title}}" style="display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 7px 8px; border: 0; border-radius: 8px; background: transparent; font: inherit; text-align: left; cursor: pointer">
+<span style="display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0">
+<span style="flex-grow: 1; font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap">{{o.repo}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{o.add}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{o.del}}</span>
+</span>
+<span style="display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0">
+<span style="flex-grow: 1; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{o.branch}}</span>
+<sc-if value="{{o.dirty}}" hint-placeholder-val="{{false}}"><span title="Uncommitted changes" style="width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: var(--accent-text)"></span></sc-if>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{o.up}}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{dockTree}}" hint-placeholder-val="{{false}}">
+<div role="form" aria-label="Commit" style="{{dockCm.boxStyle}}">
+<div style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px"><input aria-label="Summary" placeholder="Summary (required)" value="{{dockCm.summary}}" onChange="{{dockCm.setSummary}}" onKeyDown="{{dockCm.key}}" style="flex-grow: 1; min-width: 0; height: 100%; padding: 0; background: transparent; border: 0; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none"><button type="button" onClick="{{dockCm.generate}}" aria-label="Generate commit message" title="Generate commit message" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="{{dockCm.aiIcon}}" size="14" spin="{{dockCm.aiBusy}}" hint-size="14px,14px"></dc-import></button></div>
+<textarea aria-label="Description" placeholder="Description" value="{{dockCm.body}}" onChange="{{dockCm.setBody}}" onKeyDown="{{dockCm.key}}" style="{{dockCm.bodyStyle}}"></textarea>
+<div style="display: flex; flex-direction: column">
+<dc-import name="Button" theme="none" variant="primary" size="32" width="{{dockCm.btnWidth}}" label="{{dockCm.label}}" icon="{{dockCm.icon}}" disabled="{{dockCm.disabled}}" title="{{dockCm.title}}" on-press="{{dockCm.commit}}" hint-size="100%,32px"></dc-import>
+</div>
+<sc-if value="{{dockCm.amend}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted)">Your changes will modify your <strong style="font-weight: 600; color: var(--text-strong)">most recent commit</strong>. <button type="button" onClick="{{dockCm.stopAmend}}" style="padding: 0; background: none; border: 0; font: inherit; color: var(--accent-text); text-decoration: underline; cursor: pointer">Stop amending</button> to make these changes as a new commit.</p></sc-if>
+</div>
+</sc-if>
+</aside>
+
+<sc-if value="{{isCols}}" hint-placeholder-val="{{false}}">
+<aside style="width: 300px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-main); box-sizing: border-box; min-height: 0">
+<sc-if value="{{cx.filesHead}}" hint-placeholder-val="{{true}}"><div style="flex-shrink: 0; height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden"><span>{{cx.files}}</span><span style="flex-grow: 1"></span><span style="color: var(--success)">{{cx.add}}</span><span style="color: var(--danger)">{{cx.del}}</span></div></sc-if>
+<div class="gg-list" tabIndex="0" onKeyDown="{{navKey2}}" aria-label="Files" style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; padding: 6px 8px 16px">
+<sc-for list="{{items2}}" as="it" hint-placeholder-count="5">
+<sc-if value="{{it.isNote}}" hint-placeholder-val="{{false}}">
+<div style="{{it.wrapStyle}}">{{it.label}}</div>
+</sc-if>
+<sc-if value="{{it.isSection}}" hint-placeholder-val="{{false}}">
+<div class="gg-sec" style="{{it.wrapStyle}}"><button type="button" onClick="{{it.toggle}}" aria-expanded="{{it.open}}" style="flex-grow: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 6px; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: left"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="{{it.chevStyle}}"><path d="m6 9 6 6 6-6"></path></svg><span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">{{it.label}}</span></button><sc-if value="{{it.hasAct}}" hint-placeholder-val="{{true}}"><button type="button" class="gg-act gg-ib" onClick="{{it.act}}" aria-label="{{it.actLabel}}" title="{{it.actLabel}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="{{it.actPath}}"></path></svg></button></sc-if><span style="min-width: 18px; height: 18px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 5px; border-radius: 9px; background: var(--bg-hover); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)">{{it.count}}</span></div>
+</sc-if>
+<sc-if value="{{it.isFile}}" hint-placeholder-val="{{true}}">
+<div class="gg-row {{it.rowCls}}" style="{{it.rowStyle}}">
+
+<button type="button" class="gg-hit" onClick="{{it.pick}}" onContextMenu="{{it.menu}}" aria-pressed="{{it.on}}" style="flex-grow: 1; min-width: 0; height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 0; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<dc-import name="KindBadge" theme="none" kind="{{it.kind}}" hint-size="18px,18px"></dc-import>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
+</button>
+<sc-if value="{{it.hasAct}}" hint-placeholder-val="{{false}}"><span class="gg-acts" style="flex-shrink: 0; align-items: center; gap: 0; margin-right: -2px"><button type="button" class="gg-ib" onClick="{{it.discard}}" aria-label="{{it.discardTitle}}" title="{{it.discardTitle}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"></path></svg></button><button type="button" class="gg-ib" onClick="{{it.act}}" aria-label="{{it.actTitle}}" title="{{it.actTitle}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="{{it.actPath}}"></path></svg></button></span></sc-if>
+<span class="gg-cnts" onClick="{{it.pick}}" style="display: flex; gap: 8px; flex-shrink: 0; padding: 0 2px 0 0; cursor: pointer"><sc-if value="{{it.cUn}}" hint-placeholder-val="{{false}}"><span title="Has conflicts" style="display: flex; color: var(--danger)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="M12 3 2.5 20h19ZM12 10v4M12 17.2v.1"></path></svg></span></sc-if><sc-if value="{{it.cOk}}" hint-placeholder-val="{{false}}"><span title="Conflicts resolved" style="display: flex; color: var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span></sc-if><sc-if value="{{it.hasAdd}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span></sc-if><sc-if value="{{it.hasDel}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span></sc-if></span>
+</div>
+</sc-if>
+</sc-for>
+</div>
+<sc-if value="{{dockCols}}" hint-placeholder-val="{{false}}">
+<div role="form" aria-label="Commit" style="{{dockCm.boxStyle}}">
+<div style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px"><input aria-label="Summary" placeholder="Summary (required)" value="{{dockCm.summary}}" onChange="{{dockCm.setSummary}}" onKeyDown="{{dockCm.key}}" style="flex-grow: 1; min-width: 0; height: 100%; padding: 0; background: transparent; border: 0; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none"><button type="button" onClick="{{dockCm.generate}}" aria-label="Generate commit message" title="Generate commit message" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="{{dockCm.aiIcon}}" size="14" spin="{{dockCm.aiBusy}}" hint-size="14px,14px"></dc-import></button></div>
+<textarea aria-label="Description" placeholder="Description" value="{{dockCm.body}}" onChange="{{dockCm.setBody}}" onKeyDown="{{dockCm.key}}" style="{{dockCm.bodyStyle}}"></textarea>
+<div style="display: flex; flex-direction: column">
+<dc-import name="Button" theme="none" variant="primary" size="32" width="{{dockCm.btnWidth}}" label="{{dockCm.label}}" icon="{{dockCm.icon}}" disabled="{{dockCm.disabled}}" title="{{dockCm.title}}" on-press="{{dockCm.commit}}" hint-size="100%,32px"></dc-import>
+</div>
+<sc-if value="{{dockCm.amend}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted)">Your changes will modify your <strong style="font-weight: 600; color: var(--text-strong)">most recent commit</strong>. <button type="button" onClick="{{dockCm.stopAmend}}" style="padding: 0; background: none; border: 0; font: inherit; color: var(--accent-text); text-decoration: underline; cursor: pointer">Stop amending</button> to make these changes as a new commit.</p></sc-if>
+</div>
+</sc-if>
+</aside>
+</sc-if>
+
+<section style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+<sc-if value="{{paneOn}}" hint-placeholder-val="{{false}}">
+<div role="form" aria-label="Commit" style="{{paneCm.boxStyle}}">
+<div style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px"><input aria-label="Summary" placeholder="Summary (required)" value="{{paneCm.summary}}" onChange="{{paneCm.setSummary}}" onKeyDown="{{paneCm.key}}" style="flex-grow: 1; min-width: 0; height: 100%; padding: 0; background: transparent; border: 0; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none"><button type="button" onClick="{{paneCm.generate}}" aria-label="Generate commit message" title="Generate commit message" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="{{paneCm.aiIcon}}" size="14" spin="{{paneCm.aiBusy}}" hint-size="14px,14px"></dc-import></button></div>
+<textarea aria-label="Description" placeholder="Description" value="{{paneCm.body}}" onChange="{{paneCm.setBody}}" onKeyDown="{{paneCm.key}}" style="{{paneCm.bodyStyle}}"></textarea>
+<div style="display: flex; flex-direction: column">
+<dc-import name="Button" theme="none" variant="primary" size="32" width="100%" label="{{paneCm.label}}" icon="{{paneCm.icon}}" disabled="{{paneCm.disabled}}" title="{{paneCm.title}}" on-press="{{paneCm.commit}}" hint-size="100%,32px"></dc-import>
+</div>
+<sc-if value="{{paneCm.amend}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted)">Your changes will modify your <strong style="font-weight: 600; color: var(--text-strong)">most recent commit</strong>. <button type="button" onClick="{{paneCm.stopAmend}}" style="padding: 0; background: none; border: 0; font: inherit; color: var(--accent-text); text-decoration: underline; cursor: pointer">Stop amending</button> to make these changes as a new commit.</p></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ctxOn}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; border-bottom: 1px solid var(--border); padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 28px">
+<span style="flex-grow: 1; min-width: 0; font-size: 15px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{cx.title}}</span>
+<sc-if value="{{cx.isStash}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{cx.canApply}}" hint-placeholder-val="{{true}}">
+<dc-import name="Button" theme="none" variant="secondary" size="28" label="Apply" title="{{cx.applyTitle}}" on-press="{{cx.apply}}" hint-size="62px,28px"></dc-import>
+<dc-import name="Button" theme="none" variant="secondary" size="28" label="Pop" title="{{cx.popTitle}}" on-press="{{cx.pop}}" hint-size="52px,28px"></dc-import>
+</sc-if>
+<button type="button" onClick="{{cx.drop}}" style="box-sizing: border-box; height: 28px; padding: 0 12px; display: inline-flex; align-items: center; flex-shrink: 0; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--danger); font-family: 'Instrument Sans', -apple-system, sans-serif; font-size: 12px; line-height: 1; white-space: nowrap; cursor: pointer">Drop</button>
+</sc-if>
+</div>
+<sc-if value="{{cx.hasBody}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; line-height: 1.5; color: var(--text-muted); max-width: 720px; white-space: pre-line">{{cx.body}}</div></sc-if>
+<sc-if value="{{cx.isMulti}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<sc-for list="{{cx.list}}" as="r" hint-placeholder-count="2"><div style="display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: var(--text-body); min-width: 0"><span style="width: 56px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-text)">{{r.sha}}</span><span style="min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.subject}}</span></div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{cx.hasMeta}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; min-height: 24px">
+<sc-if value="{{cx.isCommit}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px"><span style="width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-family: 'Instrument Sans', sans-serif; font-size: 8px; font-weight: 600; background: var(--bg-avatar); color: var(--text-strong)">{{cx.initials}}</span><span style="color: var(--text-body)">{{cx.author}}</span><span style="color: var(--text-faint)">·</span><span>{{cx.when}}</span><span style="color: var(--text-faint)">·</span><span style="display: inline-flex; align-items: center; gap: 2px"><span style="color: var(--accent-text)">{{cx.sha}}</span><button type="button" aria-label="Copy Full SHA" title="Copy Full SHA" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 6px; border: 0; background: transparent; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="copy" size="12" hint-size="12px,12px"></dc-import></button></span><span style="color: var(--text-faint)">·</span></span></sc-if>
+<sc-if value="{{cx.isStash}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px; min-width: 0"><span style="display: flex; color: var(--accent-text)"><dc-import name="Icon" icon="package" size="12" stroke="1.7" hint-size="12px,12px"></dc-import></span><span style="color: var(--accent-text)">{{cx.sref}}</span><span style="color: var(--text-faint)">·</span><span style="min-width: 0; overflow: hidden; text-overflow: ellipsis">{{cx.swhere}}</span><span style="color: var(--text-faint)">·</span><span>from {{cx.from}}</span><span style="color: var(--text-faint)">·</span><span>{{cx.ago}}</span></span></sc-if><span>{{cx.lead}}</span><sc-if value="{{cx.statHere}}" hint-placeholder-val="{{true}}"><span>{{cx.files}}</span><span style="color: var(--success)">{{cx.add}}</span><span style="color: var(--danger)">{{cx.del}}</span></sc-if>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{hasFile}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; min-height: 36px; box-sizing: border-box; padding: 4px 10px 4px 18px; border-bottom: 1px solid var(--border); background: var(--bg-sunken)">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{filePath}}</span>
+<span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{compare}}</span>
+<sc-if value="{{ignoreWs}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="Whitespace ignored" tone="accent" title="Show whitespace changes (⌥W)" on-press="{{toggleWs}}" hint-size="120px,20px"></dc-import></sc-if>
+<div style="flex-grow: 1"></div>
+<button type="button" onClick="{{openView}}" aria-haspopup="menu" aria-expanded="{{viewOpen}}" title="Diff view" style="{{viewBtnStyle}}"><dc-import name="Icon" icon="{{viewIcon}}" size="14" stroke="1.7" hint-size="14px,14px"></dc-import><span>{{viewLabel}}</span><dc-import name="Icon" icon="chevron-down" size="9" stroke="2.6" hint-size="9px,9px"></dc-import></button>
+<sc-if value="{{hasHunks}}" hint-placeholder-val="{{true}}">
+<span style="width: 1px; height: 16px; background: var(--border); margin: 0 2px"></span>
+<span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{navLabel}}</span>
+<dc-import name="Stepper" theme="none" up-disabled="{{prevDisabled}}" down-disabled="{{nextDisabled}}" up-cross="{{prevCross}}" down-cross="{{nextCross}}" up-title="{{prevTitle}}" down-title="{{nextTitle}}" on-up="{{prevChange}}" on-down="{{nextChange}}" hint-size="60px,30px"></dc-import>
+</sc-if>
+</div>
+</sc-if>
+
+<div style="flex-grow: 1; min-height: 0; overflow: auto; background: var(--bg-main)">
+<sc-if value="{{showSplit}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; padding: 6px 0 32px">
+<div style="border-right: 1px solid var(--border); overflow: hidden">
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="12">
+<sc-if value="{{l.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{l.unfold}}" title="Show unchanged lines" style="{{l.foldStyle}}">{{l.text}}</button></sc-if>
+<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div style="{{l.lStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.ln}}</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)">{{l.lMark}}</span><span style="white-space: pre">{{l.lt}}</span></div></sc-if>
+</sc-for>
+</div>
+<div style="overflow: hidden">
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="12">
+<sc-if value="{{l.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{l.unfold}}" title="Show unchanged lines" style="{{l.foldStyle}}">{{l.text}}</button></sc-if>
+<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div style="{{l.rStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.rn}}</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">{{l.rMark}}</span><span style="white-space: pre">{{l.rt}}</span></div></sc-if>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{showUnified}}" hint-placeholder-val="{{false}}">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; padding: 6px 0 32px">
+<sc-for list="{{uLines}}" as="u" hint-placeholder-count="14">
+<sc-if value="{{u.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{u.unfold}}" title="Show unchanged lines" style="{{u.foldStyle}}">{{u.text}}</button></sc-if>
+<sc-if value="{{u.isLine}}" hint-placeholder-val="{{true}}"><div style="{{u.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 8px; color: var(--text-faint)">{{u.on}}</span><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{u.nn}}</span><span style="{{u.markStyle}}">{{u.mark}}</span><span style="white-space: pre">{{u.t}}</span></div></sc-if>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{noSample}}" hint-placeholder-val="{{false}}">
+<div style="height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 13px">[Diff content for this file is not drawn in the mockup]</div>
+</sc-if>
+<sc-if value="{{noFile}}" hint-placeholder-val="{{false}}">
+<div style="height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 13px">{{emptyText}}</div>
+</sc-if>
+</div>
+</section>
+</div>
+
+<sc-if value="{{menuOn}}" hint-placeholder-val="{{false}}">
+<button type="button" aria-label="Close menu" onClick="{{closeMenu}}" onContextMenu="{{closeMenu}}" style="position: absolute; inset: 0; z-index: 40; padding: 0; border: 0; background: transparent; cursor: default"></button>
+<div style="{{menuStyle}}"><dc-import name="Menu" theme="none" width="{{menuW}}" label="{{menuLabel}}" items="{{menuItems}}" hint-size="260px,200px"></dc-import></div>
+<sc-if value="{{subOn}}" hint-placeholder-val="{{false}}"><div style="{{subStyle}}"><dc-import name="Menu" theme="none" width="{{260}}" label="Cherry-Pick to" items="{{subItems}}" hint-size="260px,100px"></dc-import></div></sc-if>
+</sc-if>
+
+<sc-if value="{{modalOn}}" hint-placeholder-val="{{false}}">
+<div aria-hidden="true" style="position: absolute; inset: 0; z-index: 50; background: var(--scrim)"></div>
+<div role="dialog" aria-label="{{md.title}}" style="{{md.style}}">
+<div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px 0">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; color: var(--text-strong)">{{md.title}}</h2>
+<sc-if value="{{md.hasSub}}" hint-placeholder-val="{{false}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{md.sub}}</span></sc-if>
+</div>
+<sc-if value="{{md.isOutput}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="exit 1 · 0:04" tone="danger" mono="{{true}}" hint-size="96px,22px"></dc-import></sc-if>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 14px 20px 18px; min-height: 0">
+<sc-if value="{{md.hasText}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-body)">{{md.text}}</p></sc-if>
+<sc-if value="{{md.hasList}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px"><sc-for list="{{md.list}}" as="p" hint-placeholder-count="1"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong)">{{p.path}}</span></sc-for></div></sc-if>
+<sc-if value="{{md.isSquash}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<input aria-label="Summary" placeholder="Summary (required)" value="{{md.summary}}" onChange="{{md.setSummary}}" style="height: 36px; box-sizing: border-box; padding: 0 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none">
+<textarea aria-label="Description" placeholder="Description" value="{{md.body}}" onChange="{{md.setBody}}" style="height: 132px; box-sizing: border-box; padding: 9px 12px; resize: none; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-family: inherit; font-size: 12px; line-height: 1.5; outline: none"></textarea>
+</div>
+</sc-if>
+<sc-if value="{{md.isOutput}}" hint-placeholder-val="{{false}}">
+<div role="log" aria-label="Hook output" tabIndex="0" style="height: 300px; overflow: auto; padding: 14px 16px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; color: var(--text-code); outline: none">
+<sc-for list="{{md.out}}" as="o" hint-placeholder-count="8"><div style="{{o.style}}">{{o.text}}</div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{md.hasNote}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--warning)">{{md.note}}</p></sc-if>
+</div>
+<div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border)">
+<sc-for list="{{md.buttons}}" as="b" hint-placeholder-count="2"><dc-import name="Button" theme="none" variant="{{b.variant}}" size="32" label="{{b.label}}" disabled="{{b.disabled}}" on-press="{{b.onPress}}" hint-size="100px,32px"></dc-import></sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60"><dc-import name="Toast" theme="none" status="{{toast.status}}" message="{{toast.message}}" code="" sub="{{toast.sub}}" action-label="{{toast.actionLabel}}" link-label="" on-action="{{toast.onAction}}" hint-size="420px,46px"></dc-import></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;project&quot;,&quot;branch&quot;,&quot;stashes&quot;],&quot;default&quot;:&quot;project&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;web&quot;,&quot;api&quot;],&quot;default&quot;:&quot;web&quot;,&quot;section&quot;:&quot;State&quot;},&quot;op&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;rebase&quot;,&quot;conflicts&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;open&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pageMenu&quot;,&quot;baseMenu&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;embedded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tree&quot;,&quot;columns&quot;],&quot;default&quot;:&quot;tree&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;stageGit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;hooks&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;commitRows&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;two-line&quot;,&quot;one-line&quot;],&quot;default&quot;:&quot;two-line&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;branches&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;collapsed&quot;,&quot;open&quot;],&quot;default&quot;:&quot;collapsed&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;baseCommits&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Layout&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  // Review + History in one screen, one branch open at a time: the open entry lists its
+  // Uncommitted changes, its commits, the base line (the whole review) and the base's log under
+  // it; the project's stashes and the other branches are pinned under the list (a click on a
+  // branch opens it), the commit form under them. Picking a row opens its
+  // files under it (tree) or in a second column (columns), the diff is on the right.
+  // Commit, amend, undo, revert, cherry-pick between entries of a repo, squash, push / pull and
+  // discard all work on the prototype's own state.
+  constructor(p) {
+    super(p);
+    this.timers = [];
+    this.tid = 0;
+    this.state = {
+      E: this.seed(),
+      sel: { e: 'web1', row: 'range', rows: null, anchor: 'range', file: null },
+      open: { web1: 'range' }, collapsed: {}, secShut: {}, q: '', kf: null,
+      active: 'web1', op: null, branchesOpen: !!p && p.branches === 'open', hover: false, stashOpen: true, stashes: this.seedStashes(),
+      drafts: {}, amend: {}, failed: {}, busy: {}, stq: {},
+      menu: null, modal: null, toast: null,
+      view: null, context: null, ctxLines: null, ignoreWs: null, hunk: 0, unfold: {}
+    };
+    // Opens on Uncommitted, or the last commit when there is nothing uncommitted.
+    // Tweaks: focus opens api-server's stacked branch, op starts mid-rebase (or with a stash's
+    // conflicts), open shows a menu, scope stashes opens on the first stash.
+    var P0 = p || {}, a0 = P0.focus === 'api' ? 'api1' : 'web1', W0 = P0.embedded ? 1020 : 1280;
+    this.state.active = a0;
+    this.state.op = null;
+    if (P0.op === 'rebase' || P0.op === 'conflicts') {
+      var oe = this.state.E.filter(function (x) { return x.id === a0; })[0], cf = this.conflictFile(oe), of = {};
+      oe.wip = [cf].concat(oe.wip); of[this.pathOf(cf)] = 'unresolved';
+      this.state.op = { e: a0, kind: P0.op, onto: oe.base, step: 2, total: 4, files: of };
+    }
+    var e0 = this.state.E.filter(function (x) { return x.id === a0; })[0];
+    var r0 = this.firstRow(e0);
+    if (P0.scope === 'stashes') r0 = 'stash:s1';
+    this.state.sel = { e: P0.scope === 'stashes' ? 'web1' : a0, row: r0, rows: null, anchor: r0, file: null };
+    this.state.open = {}; this.state.open[a0] = r0;
+    if (P0.open === 'pageMenu' || P0.open === 'baseMenu') this.state.menu = { kind: P0.open === 'baseMenu' ? 'base' : 'page', e: a0, x: W0 - 16, y: 56, right: true, sub: false };
+  }
+
+  componentWillUnmount() { this.timers.forEach(function (t) { clearTimeout(t); }); }
+  later(ms, fn) { this.timers.push(setTimeout(fn, ms)); }
+  sha() { var h = '0123456789abcdef', s = ''; for (var i = 0; i < 7; i++) s += h[Math.floor(Math.random() * 16)]; return s; }
+  pathOf(f) { return (f.dir ? f.dir.split(' ')[0] + '/' : '') + f.name; }
+  // A file row's id: its path, or '<path>#new' for the part of a staged file changed since.
+  fid(f) { return this.pathOf(f) + (f.part ? '#' + f.part : ''); }
+  // Uncommitted files as listed. Sections: a staged file changed again (nu: the changes since
+  // it was staged) is listed twice, staged (HEAD ↔ index) and unstaged (index ↔ working tree).
+  // Checkboxes: once, with all of its changes.
+  wipList(e) {
+    var out = [];
+    e.wip.forEach(function (f) {
+      if (!f.nu) { out.push(f); return; }
+      out.push(f);
+      out.push({ k: 'M', name: f.name, dir: f.dir, add: f.nu.add, del: f.nu.del, st: false, part: 'new', dk: 'new' });
+    });
+    return out;
+  }
+  // Puts a staged file's later changes into it: the file then has all of its changes in one part.
+  mergeNu(w) { if (!w.nu) return; w.add = w.nu.tot[0]; w.del = w.nu.tot[1]; w.dk = 'all'; delete w.nu; }
+  num(s) { return Math.abs(parseInt(String(s || '0').replace('−', '').replace('+', ''), 10) || 0); }
+  // Opens on Uncommitted, else the last commit; a branch with no worktree (someone else's, a
+  // PR) opens on its base line, the whole branch.
+  // The file git stopped on (T2): unmerged, kind C.
+  conflictFile(e) { return e.repo === 'api-server' ? { k: 'C', name: 'queue.ts', dir: 'src/jobs', add: '+6', del: '−2', st: false } : { k: 'C', name: 'session.ts', dir: 'src/auth', add: '+8', del: '−3', st: false }; }
+  startRebase(id) {
+    var self = this, e = this.entry(id);
+    if (this.state.op || !e.wt) return;
+    this.setState({ menu: null });
+    this.toast({ status: 'running', message: 'Rebasing onto ' + e.base + '…', sub: e.repo + ' / ' + e.branch });
+    this.later(900, function () {
+      var cf = self.conflictFile(e), of = {};
+      of[self.pathOf(cf)] = 'unresolved';
+      var r = self.mapE(id, function (c) { c.wip = [cf].concat(c.wip.filter(function (w) { return self.pathOf(w) !== self.pathOf(cf); })); });
+      self.setState(Object.assign({ E: r.E, toast: null, op: { e: id, kind: 'rebase', onto: e.base, step: 2, total: 4, files: of } }, self.selPart(r.e, 'wip')));
+    });
+  }
+  resolveConflict(path) {
+    var op = this.state.op;
+    if (!op || op.files[path] !== 'unresolved') return;
+    var files = Object.assign({}, op.files); files[path] = 'resolved';
+    this.setState({ op: Object.assign({}, op, { files: files }) });
+  }
+  // Continue / Abort: the conflicted files leave Uncommitted (the replayed commit took them, or
+  // the branch went back to where it was).
+  endOp(aborted) {
+    var self = this, op = this.state.op;
+    if (!op) return;
+    var e = this.entry(op.e);
+    var r = this.mapE(op.e, function (c) { c.wip = c.wip.filter(function (w) { return !op.files[self.pathOf(w)]; }); });
+    var part = this.state.sel.e === op.e ? this.selPart(r.e, this.firstRow(r.e)) : {};
+    this.setState(Object.assign({ E: r.E, op: null, modal: null, menu: null }, part));
+    this.toast({ status: 'success', message: aborted ? 'Aborted the rebase of ' + e.branch : 'Rebased ' + e.branch + ' onto ' + op.onto });
+  }
+  // Change Base… (E2 / E3): the base is saved for the branch; feat/job-queue takes its own
+  // commits below the base line, main brings them back.
+  setBase(id, base) {
+    var self = this, e = this.entry(id);
+    if (!e || e.base === base) { this.setState({ menu: null }); return; }
+    var r = this.mapE(id, function (c) {
+      var fq = c.commits.filter(function (x) { return x.from === base; });
+      if (fq.length) {
+        c.hidden = fq; c.mbMain = c.mb; c.sharedMain = c.shared;
+        c.commits = c.commits.filter(function (x) { return x.from !== base; });
+        c.mb = fq[0].sha;
+        c.shared = fq.map(function (x) { return { sha: x.sha, subject: x.subject, age: x.age, author: x.author }; }).concat(c.shared);
+      } else if (c.hidden) {
+        c.commits = c.commits.concat(c.hidden); c.hidden = null; c.mb = c.mbMain; c.shared = c.sharedMain;
+      }
+      c.base = base;
+    });
+    var part = this.state.sel.e === id ? this.selPart(r.e, this.firstRow(r.e)) : {};
+    this.setState(Object.assign({ E: r.E, menu: null }, part));
+    this.toast({ status: 'success', message: 'Base set to ' + base, sub: e.repo + ' / ' + e.branch });
+  }
+  firstRow(e) { return !e.wt ? 'range' : e.wip.length ? 'wip' : e.commits.length ? e.commits[0].sha : 'range'; }
+  isCommit(r) { return !!r && r !== 'wip' && r !== 'range' && r !== 'origin' && r !== 'multi' && !this.isStash(r); }
+  // Uncommitted (when it has changes) and the commits, newest first: what the lines select.
+  units(e) {
+    var u = e.commits.slice();
+    if (e.wip.length) u.unshift({ sha: 'wip', subject: 'Uncommitted changes', files: e.wip.map(function (f) { return f.nu ? Object.assign({}, f, { add: f.nu.tot[0], del: f.nu.tot[1] }) : f; }) });
+    return u;
+  }
+  unitKeys(e) { return this.units(e).map(function (c) { return c.sha; }); }
+  // The base line: everything (All); the origin line: Uncommitted and what is not pushed yet.
+  lineKeys(e, row) {
+    var k = this.unitKeys(e);
+    if (row === 'origin') return k.slice(0, (e.wip.length ? 1 : 0) + e.unpushed);
+    return k;
+  }
+  isStash(r) { return String(r || '').indexOf('stash:') === 0; }
+  stash(r) { var id = String(r).slice(6), S = this.state.stashes; for (var i = 0; i < S.length; i++) if (S[i].id === id) return S[i]; return null; }
+  // stash@{n}: newest first within its repository.
+  stashRef(x) { var self = this, n = 0; this.state.stashes.some(function (y) { if (y.id === x.id) return true; if (self.entry(y.e).repo === self.entry(x.e).repo) n++; return false; }); return 'stash@{' + n + '}'; }
+  kv(key, id, v) { var o = Object.assign({}, this.state[key]); o[id] = v; return o; }
+  entry(id) { var E = this.state.E; for (var i = 0; i < E.length; i++) if (E[i].id === id) return E[i]; return null; }
+  mapE(id, fn) {
+    var out = null;
+    var E = this.state.E.map(function (e) { if (e.id !== id) return e; var c = JSON.parse(JSON.stringify(e)); fn(c); out = c; return c; });
+    return { E: E, e: out };
+  }
+
+  seedStashes() {
+    return [
+      { id: 's1', e: 'web1', msg: 'debug logging for refresh', age: '20m', files: [{ k: 'M', name: 'refresh.ts', dir: 'src/auth', add: '+2', del: '−1', dk: 'wip' }] },
+      { id: 's3', e: 'web2', msg: 'WIP on logout-flow: tidy cookie names', age: '3d', files: [{ k: 'M', name: 'cookies.ts', dir: 'src/http', add: '+4', del: '−4', dk: 'wip' }] },
+      { id: 's2', e: 'api1', msg: 'WIP on token-rotation-job: e02b7d1 Schedule rotation', age: '1d', files: [{ k: 'M', name: 'rotate-tokens.ts', dir: 'src/jobs', add: '+3', del: '−1', dk: 'wip' }, { k: 'M', name: 'schedule.ts', dir: 'src/config', add: '+4', del: '−1' }] }
+    ];
+  }
+
+  seed() {
+    var F = function (k, name, dir, add, del, st, nu) { var f = { k: k, name: name, dir: dir || '', add: add || '', del: del || '', st: st }; if (nu) f.nu = nu; return f; };
+    var C = function (sha, subject, author, age, files, body) { return { sha: sha, subject: subject, author: author, age: age, files: files, body: body || '' }; };
+    var Q = function (c) { c.from = 'feat/job-queue'; return c; };
+    return [
+      { id: 'web1', repo: 'web-app', branch: 'session-token-refresh', base: 'main', mb: '8c2d5e1', wt: '~/code/wt/token-refresh', unpushed: 2, behind: 0, wipAge: '6m', incoming: [],
+        wip: [F('M', 'refresh.ts', 'src/auth', '+2', '−1', true, { add: '+2', del: '−1', tot: ['+3', '−1'] }), F('M', 'refresh.test.ts', 'test/auth', '+5', '', true), F('U', 'token-debug.ts', 'scripts', '+22', '', false)],
+        commits: [
+          C('e8b2c41', 'Retry refresh once on network error', 'Can Öztürk', '6m', [F('M', 'refresh.ts', 'src/auth', '+12', '−3'), F('M', 'refresh.test.ts', 'test/auth', '+18', '')], 'A dropped connection during refresh logged people out. Retry once with the same refresh id.'),
+          C('5c0d7aa', 'Persist refresh id with the session', 'Can Öztürk', '40m', [F('M', 'store.ts', 'src/auth', '+9', '−1'), F('M', 'session.ts', 'src/auth', '+6', '−2')]),
+          C('b41f9e3', 'Add refresh token rotation flag', 'Can Öztürk', '3h', [F('M', 'client.ts', 'src/api', '+9', '−3'), F('M', 'package.json', '', '+1', '−1')]),
+          C('2e7c1d0', 'Scaffold token refresh service', 'Can Öztürk', '1d', [F('A', 'refresh.ts', 'src/auth', '+64', ''), F('R', 'tokens.ts', 'src/auth ← src/auth/token.ts', '+2', '−2'), F('A', 'refresh.test.ts', 'test/auth', '+48', '')])
+        ],
+        shared: [{ sha: 'd81f03a', subject: 'Split auth middleware into guards', age: '3d', author: 'Melis Kaya' }, { sha: 'e1d4a77', subject: 'Add audit log for admin sign-ins', age: '3d', author: 'Deniz Arslan' }, { sha: '4b7e0c9', subject: 'Update logout copy', age: '4d', author: 'Can Öztürk' }, { sha: '9a1f3d2', subject: 'Bump vite to 5.4.8', age: '5d', author: 'Ece Yılmaz' }, { sha: 'c3e8b71', subject: 'Fix flaky session test', age: '5d', author: 'Melis Kaya' }, { sha: '70d2a4e', subject: 'Add rate limit headers to API client', age: '5d', author: 'Deniz Arslan' }, { sha: '2f9c6b5', subject: 'Move cookie helpers to http/', age: '8d', author: 'Can Öztürk' }, { sha: 'b6d01e8', subject: 'Show session expiry in account menu', age: '8d', author: 'Ece Yılmaz' }, { sha: '1e4a9f0', subject: 'Add CSP report endpoint', age: '8d', author: 'Melis Kaya' }, { sha: '5d3c2a8', subject: 'Drop legacy token parser', age: '8d', author: 'Deniz Arslan' }, { sha: 'a7e19c4', subject: 'Cache user roles per request', age: '9d', author: 'Can Öztürk' }, { sha: '03bf6d1', subject: 'Add admin route group', age: '9d', author: 'Ece Yılmaz' }] },
+      { id: 'web2', repo: 'web-app', branch: 'logout-flow', base: 'main', mb: '8c2d5e1', wt: '~/code/web-app', unpushed: 0, behind: 0, wipAge: '', incoming: [],
+        wip: [],
+        commits: [
+          C('7d3a9c1', 'Clear refresh cookie on logout', 'Melis Kaya', '2h', [F('M', 'logout.ts', 'src/auth', '+4', '−1')]),
+          C('3f81b26', 'Add logout endpoint and menu item', 'Melis Kaya', '1d', [F('A', 'logout.ts', 'src/auth', '+28', ''), F('M', 'UserMenu.tsx', 'src/components', '+7', '−1')])
+        ],
+        shared: [{ sha: 'd81f03a', subject: 'Split auth middleware into guards', age: '3d', author: 'Melis Kaya' }, { sha: 'e1d4a77', subject: 'Add audit log for admin sign-ins', age: '3d', author: 'Deniz Arslan' }, { sha: '4b7e0c9', subject: 'Update logout copy', age: '4d', author: 'Can Öztürk' }, { sha: '9a1f3d2', subject: 'Bump vite to 5.4.8', age: '5d', author: 'Ece Yılmaz' }, { sha: 'c3e8b71', subject: 'Fix flaky session test', age: '5d', author: 'Melis Kaya' }, { sha: '70d2a4e', subject: 'Add rate limit headers to API client', age: '5d', author: 'Deniz Arslan' }, { sha: '2f9c6b5', subject: 'Move cookie helpers to http/', age: '8d', author: 'Can Öztürk' }, { sha: 'b6d01e8', subject: 'Show session expiry in account menu', age: '8d', author: 'Ece Yılmaz' }, { sha: '1e4a9f0', subject: 'Add CSP report endpoint', age: '8d', author: 'Melis Kaya' }, { sha: '5d3c2a8', subject: 'Drop legacy token parser', age: '8d', author: 'Deniz Arslan' }, { sha: 'a7e19c4', subject: 'Cache user roles per request', age: '9d', author: 'Can Öztürk' }, { sha: '03bf6d1', subject: 'Add admin route group', age: '9d', author: 'Ece Yılmaz' }] },
+      { id: 'api1', repo: 'api-server', branch: 'token-rotation-job', base: 'main', mb: '0b9f4a7', wt: '~/code/wt/token-rotation', unpushed: 1, behind: 0, wipAge: '12m', incoming: [],
+        wip: [F('M', 'rotate-tokens.ts', 'src/jobs', '+3', '−1', false)],
+        commits: [
+          C('c7e21f4', 'Schedule token rotation nightly', 'Can Öztürk', '20m', [F('M', 'index.ts', 'src/jobs', '+2', ''), F('M', 'schedule.ts', 'src/config', '+4', '−1')]),
+          C('5f9a3c2', 'Add token rotation job', 'Can Öztürk', '1h', [F('A', 'rotate-tokens.ts', 'src/jobs', '+71', ''), F('A', 'rotate-tokens.test.ts', 'test/jobs', '+39', '')]),
+          // Stacked (E1): branched off feat/job-queue, so against main its commits come along.
+          Q(C('3d81a0e', 'Retry failed jobs with backoff', 'Ece Yılmaz', '1d', [F('M', 'worker.ts', 'src/queue', '+18', '−4')])),
+          Q(C('9e4f7b1', 'Add job queue worker', 'Ece Yılmaz', '2d', [F('A', 'worker.ts', 'src/queue', '+64', ''), F('A', 'worker.test.ts', 'test/queue', '+28', '')])),
+          Q(C('b20c6d4', 'Add jobs table migration', 'Ece Yılmaz', '2d', [F('A', '0007_jobs.sql', 'db/migrations', '+22', '')]))
+        ],
+        shared: [{ sha: '0b9f4a7', subject: 'Add health check endpoint', age: '2d', author: 'Melis Kaya' }, { sha: 'a3c81e0', subject: 'Bump express to 4.19', age: '4d', author: 'Deniz Arslan' }, { sha: '6e2d9b1', subject: 'Log request ids', age: '4d', author: 'Can Öztürk' }, { sha: 'f07a3c5', subject: 'Move config to env schema', age: '6d', author: 'Ece Yılmaz' }, { sha: '18c4e72', subject: 'Add db pool metrics', age: '7d', author: 'Melis Kaya' }, { sha: '9b5f0d3', subject: 'Retry migrations on lock timeout', age: '9d', author: 'Deniz Arslan' }, { sha: 'c2e71a8', subject: 'Split routes by area', age: '10d', author: 'Can Öztürk' }, { sha: '47d0b9e', subject: 'Add graceful shutdown', age: '12d', author: 'Ece Yılmaz' }] },
+      { id: 'api2', repo: 'api-server', branch: 'refresh-endpoint', base: 'main', mb: '0b9f4a7', wt: '', unpushed: 0, behind: 1, wipAge: '', wip: [],
+        incoming: [C('f4c09b2', 'Rate-limit refresh requests', 'Melis Kaya', '25m', [F('M', 'refresh.ts', 'src/routes', '+5', '−1')])],
+        commits: [
+          C('91b0e4d', 'Return 401 with retry hint on expired token', 'Deniz Arslan', '3h', [F('M', 'refresh.ts', 'src/routes', '+6', '−2')]),
+          C('0a6f2d8', 'Add POST /auth/refresh', 'Deniz Arslan', '2d', [F('A', 'refresh.ts', 'src/routes', '+42', ''), F('M', 'index.ts', 'src/routes', '+2', ''), F('A', 'refresh.test.ts', 'test/routes', '+35', '')])
+        ],
+        shared: [{ sha: '0b9f4a7', subject: 'Add health check endpoint', age: '2d', author: 'Melis Kaya' }, { sha: 'a3c81e0', subject: 'Bump express to 4.19', age: '4d', author: 'Deniz Arslan' }, { sha: '6e2d9b1', subject: 'Log request ids', age: '4d', author: 'Can Öztürk' }, { sha: 'f07a3c5', subject: 'Move config to env schema', age: '6d', author: 'Ece Yılmaz' }, { sha: '18c4e72', subject: 'Add db pool metrics', age: '7d', author: 'Melis Kaya' }, { sha: '9b5f0d3', subject: 'Retry migrations on lock timeout', age: '9d', author: 'Deniz Arslan' }, { sha: 'c2e71a8', subject: 'Split routes by area', age: '10d', author: 'Can Öztürk' }, { sha: '47d0b9e', subject: 'Add graceful shutdown', age: '12d', author: 'Ece Yılmaz' }] }
+    ];
+  }
+
+  // Diff rows: [old line, old text, new line, new text, kind]; kind '' | add | del | mod | ws |
+  // fold (6th item: the folded rows). Keys: '<repo>:<path>', with '@<sha>', '@wip' or '@add'.
+  diffs() {
+    var X = function (l, r, t) { return [l, t, r, t, '']; };
+    var Ad = function (r, t) { return ['', '', r, t, 'add']; };
+    var Md = function (l, r, o, n) { return [l, o, r, n, 'mod']; };
+    var Fo = function (rows) { return ['…', '', '…', '', 'fold', rows]; };
+    var New = function (lines) { return lines.map(function (t, i) { return Ad(i + 1, t); }); };
+    return {
+      'web-app:src/auth/session.ts': [
+        X(1, 1, "import { store } from './store';"), Ad(2, "import { refreshSession } from './refresh';"), X(2, 3, "import { readCookie } from '../http';"),
+        Fo([X(3, 4, "import type { Session } from './types';"), X(4, 5, ''), X(5, 6, "const COOKIE = 'sid';"), X(6, 7, 'const MAX_AGE = 60 * 60 * 24;'), X(7, 8, ''), X(8, 9, '/** Session for the request, or null. */'), X(9, 10, '// Cookies are read once per request.')]),
+        X(10, 11, 'export async function getSession(req: Request) {'), X(11, 12, "  const token = readCookie(req, 'sid');"),
+        [12, '    if (!token) return null;', 13, '  if (!token) return null;', 'ws'],
+        X(13, 14, '  const session = await store.get(token);'),
+        Md(14, 15, '  if (!session || session.expiresAt < Date.now()) {', '  if (!session) return null;'), Ad(16, '  if (session.expiresAt < Date.now()) {'),
+        Md(15, 17, '    return null;', '    return refreshSession(session);'), X(16, 18, '  }'), X(17, 19, '  return session;'), X(18, 20, '}')
+      ],
+      'web-app:src/auth/refresh.ts': [
+        X(1, 1, "import { issueToken } from './tokens';"), Ad(2, "import { NetworkError } from '../http';"), X(2, 3, "import { store } from './store';"),
+        Fo([X(3, 4, "import type { Session } from './types';"), X(4, 5, ''), X(5, 6, 'const GRACE_MS = 30_000;'), X(6, 7, ''), X(7, 8, 'export function isExpired(s: Session, now = Date.now()) {'), X(8, 9, '  return s.expiresAt + GRACE_MS < now;'), X(9, 10, '}'), X(10, 11, ''), X(11, 12, 'export async function refreshSession(s: Session) {'), X(12, 13, '  const next = await issueToken(s.userId);'), X(13, 14, '  await store.set(next.id, next);')]),
+        X(14, 15, '  return next;'), X(15, 16, '}'), X(16, 17, ''), X(17, 18, 'export async function refreshWithRetry(s: Session) {'),
+        Md(18, 19, '  return refreshSession(s);', '  try {'), Ad(20, '    return await refreshSession(s);'), Ad(21, '  } catch (e) {'), Ad(22, '    if (!(e instanceof NetworkError)) throw e;'), Ad(23, '    return refreshSession(s);'), Ad(24, '  }'),
+        X(19, 25, '}')
+      ],
+      'web-app:src/auth/refresh.ts@wip': [
+        X(9, 9, '}'), X(10, 10, ''), X(11, 11, 'export async function refreshSession(s: Session) {'),
+        Md(12, 12, '  const next = await issueToken(s.userId);', '  const next = await issueToken(s.userId, { rotate: true });'),
+        X(13, 13, '  await store.set(next.id, next);'), Ad(14, '  await store.delete(s.id);'), X(14, 15, '  return next;'), X(15, 16, '}')
+      ],
+      // Changed again after it was staged: index ↔ working tree, and HEAD ↔ working tree.
+      'web-app:src/auth/refresh.ts@new': [
+        X(11, 11, 'export async function refreshSession(s: Session) {'), X(12, 12, '  const next = await issueToken(s.userId, { rotate: true });'), X(13, 13, '  await store.set(next.id, next);'),
+        Md(14, 14, '  await store.delete(s.id);', '  await store.delete(s.id).catch(() => {});'), Ad(15, "  log.info('session rotated', { userId: s.userId });"),
+        X(15, 16, '  return next;'), X(16, 17, '}')
+      ],
+      'web-app:src/auth/refresh.ts@all': [
+        X(9, 9, '}'), X(10, 10, ''), X(11, 11, 'export async function refreshSession(s: Session) {'),
+        Md(12, 12, '  const next = await issueToken(s.userId);', '  const next = await issueToken(s.userId, { rotate: true });'),
+        X(13, 13, '  await store.set(next.id, next);'), Ad(14, '  await store.delete(s.id).catch(() => {});'), Ad(15, "  log.info('session rotated', { userId: s.userId });"),
+        X(14, 16, '  return next;'), X(15, 17, '}')
+      ],
+      'web-app:src/auth/refresh.ts@add': New(["import { issueToken } from './tokens';", "import { store } from './store';", "import type { Session } from './types';", '', 'const GRACE_MS = 30_000;', '', 'export function isExpired(s: Session, now = Date.now()) {', '  return s.expiresAt + GRACE_MS < now;', '}', '', 'export async function refreshSession(s: Session) {', '  const next = await issueToken(s.userId);', '  await store.set(next.id, next);', '  return next;', '}', '', 'export async function refreshWithRetry(s: Session) {', '  return refreshSession(s);', '}']),
+      'web-app:test/auth/refresh.test.ts': [
+        X(10, 10, "  it('rotates the token', async () => {"), X(11, 11, '    const next = await refreshSession(session);'), X(12, 12, '    expect(next.id).not.toBe(session.id);'), X(13, 13, '  });'),
+        Ad(14, ''), Ad(15, "  it('retries once on a network error', async () => {"), Ad(16, '    vi.mocked(issueToken).mockRejectedValueOnce(new NetworkError());'), Ad(17, '    const next = await refreshWithRetry(session);'), Ad(18, '    expect(issueToken).toHaveBeenCalledTimes(2);'), Ad(19, '    expect(next.userId).toBe(session.userId);'), Ad(20, '  });'),
+        X(14, 21, '});')
+      ],
+      'web-app:test/auth/refresh.test.ts@wip': [
+        X(10, 10, "  it('rotates the token', async () => {"), X(11, 11, '    const next = await refreshSession(session);'), X(12, 12, '    expect(next.id).not.toBe(session.id);'),
+        Ad(13, '    expect(store.delete).toHaveBeenCalledWith(session.id);'), X(13, 14, '  });')
+      ],
+      'web-app:test/auth/refresh.test.ts@add': New(["import { describe, it, expect, vi } from 'vitest';", "import { refreshSession } from '../../src/auth/refresh';", "import { issueToken } from '../../src/auth/tokens';", '', "vi.mock('../../src/auth/tokens');", '', "const session = { id: 's1', userId: 'u1', expiresAt: 0 };", '', "describe('refreshSession', () => {", "  it('rotates the token', async () => {", '    const next = await refreshSession(session);', '    expect(next.id).not.toBe(session.id);', '  });', '});']),
+      'web-app:src/auth/store.ts': [
+        X(1, 1, 'export interface StoredSession {'), X(2, 2, '  id: string;'), X(3, 3, '  userId: string;'), Ad(4, '  refreshId: string;'), X(4, 5, '  expiresAt: number;'), X(5, 6, '}'),
+        Fo([X(6, 7, ''), X(7, 8, 'const sessions = new Map<string, StoredSession>();'), X(8, 9, ''), X(9, 10, 'export const store = {'), X(10, 11, '  get: (id: string) => sessions.get(id),')]),
+        X(11, 12, '  set: (id: string, s: StoredSession) => {'), Md(12, 13, '    sessions.set(id, s);', '    sessions.set(id, { ...s, refreshId: s.refreshId ?? crypto.randomUUID() });'), X(13, 14, '  },'),
+        Ad(15, '  delete: (id: string) => sessions.delete(id),'), X(14, 16, '};')
+      ],
+      'web-app:src/api/client.ts': [
+        X(8, 8, 'export async function api(path: string, init?: RequestInit) {'),
+        Md(9, 9, '  const res = await fetch(BASE + path, withAuth(init));', '  let res = await fetch(BASE + path, withAuth(init));'),
+        Md(10, 10, '  if (res.status === 401) {', '  if (res.status === 401 && flags.refreshTokens) {'),
+        Md(11, 11, "    throw new AuthError('Session expired');", '    await refreshWithRetry(currentSession());'),
+        Ad(12, '    res = await fetch(BASE + path, withAuth(init));'), Ad(13, '  }'), Ad(14, '  if (res.status === 401) {'), Ad(15, "    throw new AuthError('Session expired');"),
+        X(12, 16, '  }'), X(13, 17, '  return res.json();'), X(14, 18, '}')
+      ],
+      'web-app:package.json': [
+        X(1, 1, '{'), X(2, 2, '  "name": "web-app",'), Md(3, 3, '  "version": "0.14.2",', '  "version": "0.15.0",'), X(4, 4, '  "private": true,'),
+        Fo([X(5, 5, '  "type": "module",'), X(6, 6, '  "scripts": {'), X(7, 7, '    "dev": "vite",'), X(8, 8, '    "test": "vitest"'), X(9, 9, '  },'), X(10, 10, '  "dependencies": {')]),
+        X(11, 11, '    "jose": "^5.2.0",'), X(12, 12, '    "react": "^18.3.1"'), X(13, 13, '  }'), X(14, 14, '}')
+      ],
+      'web-app:src/auth/tokens.ts': [
+        X(1, 1, "import { sign } from 'jose';"), X(2, 2, ''),
+        Md(3, 3, 'export async function issueToken(userId: string) {', 'export async function issueToken(userId: string, opts: { rotate?: boolean } = {}) {'),
+        Md(4, 4, '  return sign({ sub: userId });', '  return sign({ sub: userId, rot: !!opts.rotate });'), X(5, 5, '}')
+      ],
+      'web-app:scripts/token-debug.ts@add': New(["import { store } from '../src/auth/store';", '', '// Prints every live session with its expiry.', 'for (const [id, s] of store.entries()) {', '  const left = Math.round((s.expiresAt - Date.now()) / 1000);', '  console.log(id, s.userId, `${left}s`);', '}']),
+      'web-app:src/auth/logout.ts@add': New(["import { store } from './store';", "import { readCookie, clearCookie } from '../http';", '', 'export async function logout(req: Request, res: Response) {', "  const token = readCookie(req, 'sid');", '  if (token) await store.delete(token);', "  clearCookie(res, 'sid');", "  res.redirect('/login');", '}']),
+      'web-app:src/auth/logout.ts': [
+        X(4, 4, 'export async function logout(req: Request, res: Response) {'), X(5, 5, "  const token = readCookie(req, 'sid');"), X(6, 6, '  if (token) await store.delete(token);'), X(7, 7, "  clearCookie(res, 'sid');"),
+        Ad(8, "  clearCookie(res, 'rid');"), Md(8, 9, "  res.redirect('/login');", "  res.redirect('/login?signed-out=1');"), X(9, 10, '}')
+      ],
+      'web-app:src/components/UserMenu.tsx': [
+        X(12, 12, '      <MenuItem href="/settings">Settings</MenuItem>'), X(13, 13, '      <MenuItem href="/help">Help</MenuItem>'),
+        Md(14, 14, '    </Menu>', '      <MenuSeparator />'), Ad(15, '      <form method="post" action="/logout">'), Ad(16, '        <MenuItem as="button" type="submit">'), Ad(17, '          Log Out'), Ad(18, '        </MenuItem>'), Ad(19, '      </form>'), Ad(20, '    </Menu>'),
+        X(15, 21, '  );')
+      ],
+      'api-server:src/jobs/index.ts': [
+        X(1, 1, "import { cleanupSessions } from './cleanup';"), Ad(2, "import { rotateTokens } from './rotate-tokens';"), X(2, 3, ''), X(3, 4, 'export const jobs = ['), X(4, 5, '  cleanupSessions,'), Ad(6, '  rotateTokens,'), X(5, 7, '];')
+      ],
+      'api-server:src/config/schedule.ts': [
+        X(1, 1, 'export const schedule = {'), X(2, 2, "  cleanupSessions: '0 * * * *',"),
+        Md(3, 3, '};', '  // Every night at 03:00, after the backup.'), Ad(4, "  rotateTokens: '0 3 * * *',"), Ad(5, '};'), Ad(6, ''), Ad(7, 'export type JobName = keyof typeof schedule;')
+      ],
+      'api-server:src/jobs/rotate-tokens.ts@add': New(["import { db } from '../db';", "import { issueToken } from '../auth/tokens';", '', 'const BATCH = 500;', '', '/** Re-issues every token older than a day, in batches. */', 'export async function rotateTokens() {', '  let rotated = 0;', '  for await (const batch of db.tokens.olderThan({ days: 1 }, BATCH)) {', '    for (const t of batch) {', '      await issueToken(t.userId, { rotate: true });', '      rotated++;', '    }', '  }', '  return { rotated };', '}']),
+      'api-server:src/jobs/rotate-tokens.ts@wip': [
+        X(7, 7, 'export async function rotateTokens() {'), X(8, 8, '  let rotated = 0;'),
+        Md(9, 9, '  for await (const batch of db.tokens.olderThan({ days: 1 }, BATCH)) {', '  for await (const batch of db.tokens.olderThan({ hours: 20 }, BATCH)) {'),
+        X(10, 10, '    for (const t of batch) {'), X(11, 11, '      await issueToken(t.userId, { rotate: true });'), X(12, 12, '      rotated++;'), X(13, 13, '    }'),
+        Ad(14, "    log.info('rotated batch', { size: batch.length });"), X(14, 15, '  }'), X(15, 16, '  return { rotated };'), X(16, 17, '}')
+      ],
+      'api-server:test/jobs/rotate-tokens.test.ts@add': New(["import { describe, it, expect } from 'vitest';", "import { rotateTokens } from '../../src/jobs/rotate-tokens';", "import { seedTokens } from '../helpers';", '', "describe('rotateTokens', () => {", "  it('rotates tokens older than a day', async () => {", '    await seedTokens({ fresh: 2, stale: 3 });', '    const { rotated } = await rotateTokens();', '    expect(rotated).toBe(3);', '  });', '});']),
+      'api-server:src/routes/refresh.ts@add': New(["import { Router } from 'express';", "import { store } from '../auth/store';", "import { refreshSession } from '../auth/refresh';", '', 'export const refresh = Router();', '', '/** Swaps a refresh id for a new token. */', "refresh.post('/auth/refresh', async (req, res) => {", '  const session = await store.get(req.body.refreshId);', '  if (!session) {', '    return res.status(400).end();', '  }', '  const next = await refreshSession(session);', '  res.json(next);', '});']),
+      'api-server:src/routes/refresh.ts': [
+        X(8, 8, "refresh.post('/auth/refresh', async (req, res) => {"), X(9, 9, '  const session = await store.get(req.body.refreshId);'), X(10, 10, '  if (!session) {'),
+        Md(11, 11, '    return res.status(400).end();', "    return res.status(401).json({ error: 'expired', retry: true });"), X(12, 12, '  }'), X(13, 13, '  const next = await refreshSession(session);'),
+        Md(14, 14, '  res.json(next);', '  res.json({ token: next.id, expiresAt: next.expiresAt });'), X(15, 15, '});')
+      ],
+      'api-server:src/routes/refresh.ts@f4c09b2': [
+        X(1, 1, "import { Router } from 'express';"), Ad(2, "import { rateLimit } from '../middleware/rate-limit';"), X(2, 3, "import { store } from '../auth/store';"),
+        Fo([X(3, 4, "import { refreshSession } from '../auth/refresh';"), X(4, 5, ''), X(5, 6, 'export const refresh = Router();'), X(6, 7, ''), X(7, 8, '/** Swaps a refresh id for a new token. */')]),
+        Md(8, 9, "refresh.post('/auth/refresh', async (req, res) => {", "refresh.post('/auth/refresh', rateLimit({ window: '1m', max: 10 }), async (req, res) => {"),
+        X(9, 10, '  const session = await store.get(req.body.refreshId);')
+      ],
+      'api-server:src/routes/index.ts': [
+        X(1, 1, "import { Router } from 'express';"), X(2, 2, "import { health } from './health';"), Ad(3, "import { refresh } from './refresh';"), X(3, 4, ''), X(4, 5, 'export const routes = Router();'), X(5, 6, 'routes.use(health);'), Ad(7, 'routes.use(refresh);')
+      ],
+      'api-server:test/routes/refresh.test.ts@add': New(["import request from 'supertest';", "import { app } from '../../src/app';", '', "describe('POST /auth/refresh', () => {", "  it('rejects an unknown refresh id', async () => {", "    const res = await request(app).post('/auth/refresh').send({ refreshId: 'nope' });", '    expect(res.status).toBe(401);', '  });', '});'])
+    };
+  }
+
+  invert(rows) {
+    var self = this;
+    return rows.map(function (r) {
+      if (r[4] === 'fold') return ['…', '', '…', '', 'fold', self.invert(r[5] || [])];
+      var k = r[4] === 'add' ? 'del' : r[4] === 'del' ? 'add' : r[4];
+      return [r[2], r[3], r[0], r[1], k];
+    });
+  }
+
+  rowsFor(e, row, f) {
+    var S = this.S || (this.S = this.diffs());
+    var key = e.repo + ':' + this.pathOf(f);
+    var get = function (dk) { return dk ? S[key + '@' + dk] : null; };
+    var addish = f.k === 'A' || f.k === 'U';
+    if (row === 'wip' || this.isStash(row)) return get(f.dk) || get('wip') || (addish ? get('add') : null) || S[key] || null;
+    var c = null;
+    if (this.isCommit(row)) e.commits.forEach(function (x) { if (x.sha === row) c = x; });
+    if (c && c.revertOf) {
+      var o = get(c.revertOf) || get(f.src) || (f.k === 'D' ? get('add') : null) || S[key];
+      return o ? this.invert(o) : null;
+    }
+    return (c ? get(c.dk || c.sha) : null) || get(f.src) || (addish ? get('add') : null) || S[key] || null;
+  }
+
+  combine(commits) {
+    var self = this, map = {}, order = [];
+    commits.forEach(function (c) { c.files.forEach(function (f) { var k = self.pathOf(f); if (order.indexOf(k) < 0) order.push(k); }); });
+    commits.slice().reverse().forEach(function (c) {
+      c.files.forEach(function (f) {
+        var k = self.pathOf(f), m = map[k];
+        if (!m) { map[k] = { k: f.k, name: f.name, dir: f.dir, a: self.num(f.add), d: self.num(f.del), src: f.src }; return; }
+        m.a += self.num(f.add); m.d += self.num(f.del);
+        if (f.k === 'D') m.k = m.k === 'A' ? 'gone' : 'D';
+        else if (m.k === 'D') m.k = 'M';
+        if (f.src) m.src = f.src;
+      });
+    });
+    return order.map(function (k) { return map[k]; }).filter(function (m) { return m.k !== 'gone'; }).map(function (m) {
+      var a = m.a, d = m.d;
+      if (m.k === 'A') { a = Math.max(a - d, 1); d = 0; }
+      return { k: m.k, name: m.name, dir: m.dir, add: a ? '+' + a : '', del: d ? '−' + d : '', src: m.src };
+    });
+  }
+
+  // The picked commits, newest first, when they are consecutive; else null.
+  multiList(e, sel) {
+    if (!sel || !sel.rows || sel.e !== e.id) return null;
+    var u = this.units(e), shas = u.map(function (c) { return c.sha; });
+    var ix = sel.rows.map(function (s) { return shas.indexOf(s); }).filter(function (i) { return i >= 0; }).sort(function (a, b) { return a - b; });
+    if (ix.length < 2 || ix[ix.length - 1] - ix[0] + 1 !== ix.length) return null;
+    return u.slice(ix[0], ix[ix.length - 1] + 1);
+  }
+
+  filesFor(e, row, sel) {
+    if (row === 'wip') return this.wipList(e);
+    if (row === 'range') return this.combine(this.units(e));
+    if (row === 'origin') return this.combine(this.units(e).slice(0, (e.wip.length ? 1 : 0) + e.unpushed));
+    if (this.isStash(row)) { var x = this.stash(row); return x ? x.files : []; }
+    if (row === 'multi') { var m = this.multiList(e, sel || this.state.sel); return m ? this.combine(m) : []; }
+    for (var i = 0; i < e.commits.length; i++) if (e.commits[i].sha === row) return e.commits[i].files;
+    return [];
+  }
+
+  selPart(e, row, extra) {
+    var sel = Object.assign({ e: e.id, row: row, rows: null, anchor: row, file: null }, extra || {});
+    var fs = this.filesFor(e, row, sel);
+    if (!sel.file) sel.file = fs.length ? this.fid(fs[0]) : null;
+    var open = Object.assign({}, this.state.open); open[e.id] = row;
+    return { sel: sel, open: open, hunk: 0, menu: null, kf: e.id + '|' + row + '|' };
+  }
+
+  toast(t) {
+    var self = this, id = ++this.tid;
+    var full = Object.assign({ id: id, status: 'none', message: '', sub: '', actionLabel: '', onAction: null }, t);
+    this.setState({ toast: full });
+    if (full.status !== 'running') this.later(full.keep || 4500, function () { if (self.state.toast && self.state.toast.id === id) self.setState({ toast: null }); });
+  }
+
+  pos(ev, btn) {
+    var t = ev && ev.currentTarget;
+    var root = t && t.closest ? t.closest('.gg-root') : null;
+    if (!root) return { x: 480, y: 240, right: false };
+    var rr = root.getBoundingClientRect();
+    var sc = rr.width / (root.offsetWidth || 1280) || 1;
+    if (btn) { var br = t.getBoundingClientRect(); return { x: (br.right - rr.left) / sc, y: (br.bottom - rr.top) / sc + 4, right: true }; }
+    return { x: (ev.clientX - rr.left) / sc + 2, y: (ev.clientY - rr.top) / sc + 2, right: false };
+  }
+
+  openMenu(desc, ev, btn) {
+    if (ev && ev.preventDefault) ev.preventDefault();
+    var p = this.pos(ev, btn);
+    this.setState({ menu: Object.assign({}, desc, p, { sub: false }) });
+  }
+
+  // Git actions (simulated)
+  startCommit(id) {
+    var self = this, e = this.entry(id), d = this.state.drafts[id] || {}, amend = !!this.state.amend[id];
+    var staged = e.wip.filter(function (f) { return f.st; });
+    if (this.state.busy[id] || this.state.stq[id] || !(d.summary || '').trim() || (!staged.length && !amend)) return;
+    this.setState({ busy: this.kv('busy', id, 'commit'), failed: this.kv('failed', id, false), modal: null });
+    this.toast({ status: 'running', message: amend ? 'Amending…' : 'Committing…', sub: e.repo + ' / ' + e.branch });
+    this.later(1100, function () { if (self.props.hooks === 'fail') self.commitFail(id); else self.commitDone(id); });
+  }
+  commitFail(id) {
+    var self = this, e = this.entry(id);
+    this.setState({ busy: this.kv('busy', id, null), failed: this.kv('failed', id, true) });
+    this.toast({ status: 'failed', message: 'Commit failed', sub: 'pre-commit · ' + e.repo + ' / ' + e.branch, actionLabel: 'Show Output', keep: 9000,
+      onAction: function () { self.setState({ modal: { kind: 'output', e: id }, toast: null }); } });
+  }
+  commitDone(id) {
+    var self = this, s = this.state, d = s.drafts[id] || {}, amend = !!s.amend[id], sha = this.sha(), oldSha = '', n = 0;
+    var sec = true;
+    var r = this.mapE(id, function (c) {
+      if (!sec) c.wip.forEach(function (w) { if (w.st) self.mergeNu(w); });
+      var staged = c.wip.filter(function (f) { return f.st; }); n = staged.length;
+      var files = staged.map(function (f) { return { k: f.k === 'U' ? 'A' : f.k, name: f.name, dir: f.dir, add: f.add, del: f.del, src: f.dk || 'wip' }; });
+      if (amend && c.commits.length) {
+        var c0 = c.commits[0]; oldSha = c0.sha;
+        files.forEach(function (f) {
+          var hit = c0.files.filter(function (x) { return self.pathOf(x) === self.pathOf(f); })[0];
+          if (hit) { hit.add = '+' + (self.num(hit.add) + self.num(f.add)); var dd = self.num(hit.del) + self.num(f.del); hit.del = dd ? '−' + dd : ''; } else c0.files.push(f);
+        });
+        c0.dk = c0.dk || c0.sha; c0.sha = sha; c0.subject = (d.summary || '').trim(); c0.body = (d.body || '').trim(); c0.age = 'now';
+        if (c.unpushed === 0) { c.unpushed = 1; c.force = true; }
+      } else {
+        c.commits.unshift({ sha: sha, subject: (d.summary || '').trim(), body: (d.body || '').trim(), author: 'Can Öztürk', age: 'now', files: files });
+        c.unpushed += 1;
+      }
+      // A staged file changed since keeps those later changes, uncommitted.
+      c.wip = c.wip.filter(function (f) { return !f.st || f.nu; }).map(function (f) {
+        return f.st ? { k: 'M', name: f.name, dir: f.dir, add: f.nu.add, del: f.nu.del, st: false, dk: 'new', back: { add: f.add, del: f.del, dk: f.dk, tot: f.nu.tot } } : f;
+      });
+    });
+    var next = r.e.wip.length ? this.selPart(r.e, 'wip') : this.selPart(r.e, sha);
+    this.setState(Object.assign({ E: r.E, drafts: this.kv('drafts', id, { summary: '', body: '' }), amend: this.kv('amend', id, false), busy: this.kv('busy', id, null), failed: this.kv('failed', id, false), modal: null }, next));
+    this.toast({ status: 'success', message: amend ? 'Amended ' + oldSha : 'Committed ' + n + (n === 1 ? ' file' : ' files') + ' to ' + r.e.branch,
+      actionLabel: amend ? '' : 'Undo', onAction: amend ? null : function () { self.undoCommit(id); } });
+  }
+  undoCommit(id) {
+    var self = this, s = this.state, e = this.entry(id);
+    if (!e.commits.length || e.unpushed < 1) return;
+    var c0 = e.commits[0];
+    var r = this.mapE(id, function (c) {
+      var x = c.commits.shift(); c.unpushed -= 1;
+      x.files.forEach(function (f) {
+        var k = self.pathOf(f), hit = c.wip.filter(function (w) { return self.pathOf(w) === k; })[0];
+        // Undoing a commit stages its changes again; ones made since stay unstaged.
+        if (hit && hit.back) { var b = hit.back; hit.nu = { add: hit.add, del: hit.del, tot: b.tot }; hit.add = b.add; hit.del = b.del; hit.dk = b.dk; hit.st = true; delete hit.back; }
+        else if (hit) hit.st = true; else c.wip.unshift({ k: f.k, name: f.name, dir: f.dir, add: f.add, del: f.del, st: true });
+      });
+      if (!c.wipAge) c.wipAge = 'now';
+    });
+    var d = s.drafts[id];
+    var drafts = d && (d.summary || '').trim() ? s.drafts : this.kv('drafts', id, { summary: c0.subject, body: c0.body || '' });
+    this.setState(Object.assign({ E: r.E, drafts: drafts, menu: null }, this.selPart(r.e, 'wip')));
+    this.toast({ status: 'success', message: 'Undid commit ' + c0.sha });
+  }
+  push(id) {
+    var self = this, e = this.entry(id);
+    if (this.state.busy[id]) return;
+    this.setState({ busy: this.kv('busy', id, 'push'), menu: null });
+    this.toast({ status: 'running', message: e.force ? 'Force pushing…' : 'Pushing…', sub: 'origin/' + e.branch });
+    this.later(1000, function () {
+      var n = self.entry(id).unpushed;
+      var r = self.mapE(id, function (c) { c.unpushed = 0; c.force = false; });
+      self.setState({ E: r.E, busy: self.kv('busy', id, null) });
+      self.toast({ status: 'success', message: 'Pushed ' + n + (n === 1 ? ' commit' : ' commits') + ' to origin/' + r.e.branch });
+    });
+  }
+  pull(id) {
+    var self = this, e = this.entry(id);
+    if (this.state.busy[id]) return;
+    this.setState({ busy: this.kv('busy', id, 'pull'), menu: null });
+    this.toast({ status: 'running', message: 'Pulling…', sub: 'origin/' + e.branch });
+    this.later(900, function () {
+      var n = self.entry(id).incoming.length;
+      var r = self.mapE(id, function (c) { c.commits = c.incoming.concat(c.commits); c.incoming = []; c.behind = 0; });
+      self.setState({ E: r.E, busy: self.kv('busy', id, null) });
+      self.toast({ status: 'success', message: 'Pulled ' + n + (n === 1 ? ' commit' : ' commits') + ' into ' + r.e.branch });
+    });
+  }
+  fetchAll(repo) {
+    var self = this;
+    if (this.state.busy.all) return;
+    this.setState({ busy: this.kv('busy', 'all', 'fetch'), menu: null });
+    this.toast({ status: 'running', message: 'Fetching…', sub: repo || 'web-app, api-server' });
+    this.later(1000, function () {
+      self.setState({ busy: self.kv('busy', 'all', null) });
+      self.toast({ status: 'success', message: repo ? 'Fetched ' + repo : 'Fetched web-app and api-server' });
+    });
+  }
+  revert(id, sha) {
+    var self = this, e = this.entry(id), c = e.commits.filter(function (x) { return x.sha === sha; })[0], ns = this.sha();
+    var inv = { A: 'D', D: 'A' };
+    var r = this.mapE(id, function (x) {
+      x.commits.unshift({ sha: ns, subject: 'Revert "' + c.subject + '"', body: 'This reverts commit ' + c.sha + '.', author: 'Can Öztürk', age: 'now', revertOf: c.dk || c.sha,
+        files: c.files.map(function (f) { return { k: inv[f.k] || f.k, name: f.name, dir: f.dir, add: f.del ? '+' + self.num(f.del) : '', del: f.add ? '−' + self.num(f.add) : '', src: f.src }; }) });
+      x.unpushed += 1;
+    });
+    this.setState(Object.assign({ E: r.E }, this.selPart(r.e, ns)));
+    this.toast({ status: 'success', message: 'Reverted ' + c.sha });
+  }
+  cherry(fromId, sha, toId) {
+    var self = this, from = this.entry(fromId), c = from.commits.filter(function (x) { return x.sha === sha; })[0], ns = this.sha();
+    var r = this.mapE(toId, function (x) { x.commits.unshift(Object.assign(JSON.parse(JSON.stringify(c)), { sha: ns, dk: c.dk || c.sha, age: 'now' })); x.unpushed += 1; });
+    this.setState({ E: r.E, menu: null });
+    this.toast({ status: 'success', message: 'Cherry-picked ' + sha + ' onto ' + r.e.branch, actionLabel: 'Show',
+      onAction: function () { self.setState(Object.assign({ active: toId }, self.selPart(self.entry(toId), ns))); } });
+  }
+  openSquash(id) {
+    var e = this.entry(id), list = this.multiList(e, this.state.sel);
+    if (!list) return;
+    var oldest = list[list.length - 1], newer = list.slice(0, -1).reverse();
+    var shas = e.commits.map(function (c) { return c.sha; });
+    var body = [oldest.body || ''].concat(newer.map(function (c) { return c.subject + (c.body ? '\n\n' + c.body : ''); })).filter(Boolean).join('\n\n');
+    var force = list.some(function (c) { return shas.indexOf(c.sha) >= e.unpushed; });
+    this.setState({ menu: null, modal: { kind: 'squash', e: id, shas: list.map(function (c) { return c.sha; }), summary: oldest.subject, body: body, force: force } });
+  }
+  squash() {
+    var self = this, m = this.state.modal, e = this.entry(m.e), ns = this.sha();
+    var shas = e.commits.map(function (c) { return c.sha; });
+    var ix0 = shas.indexOf(m.shas[0]), n = m.shas.length;
+    var r = this.mapE(m.e, function (x) {
+      var cs = x.commits.slice(ix0, ix0 + n);
+      x.commits.splice(ix0, n, { sha: ns, subject: m.summary.trim(), body: (m.body || '').trim(), author: cs[cs.length - 1].author, age: cs[0].age, files: self.combine(cs) });
+      if (ix0 + n <= x.unpushed) x.unpushed -= n - 1; else { x.unpushed = ix0 + 1; x.force = true; }
+    });
+    this.setState(Object.assign({ E: r.E, modal: null }, this.selPart(r.e, ns)));
+    this.toast({ status: 'success', message: 'Squashed ' + n + ' commits into ' + ns });
+  }
+  discard(id, paths, part) {
+    var self = this, s = this.state;
+    // The part changed since staging: the working copy goes back to the staged version.
+    var r = part === 'new'
+      ? this.mapE(id, function (x) { x.wip.forEach(function (f) { if (paths.indexOf(self.pathOf(f)) >= 0) delete f.nu; }); })
+      : this.mapE(id, function (x) { x.wip = x.wip.filter(function (f) { return paths.indexOf(self.pathOf(f)) < 0; }); });
+    var part = {};
+    if (s.sel.e === id && s.sel.row === 'wip') {
+      if (!r.e.wip.length && !s.amend[id]) part = this.selPart(r.e, this.firstRow(r.e));
+      else if (paths.indexOf(String(s.sel.file).split('#')[0]) >= 0) { var fs = this.wipList(r.e); part = { sel: Object.assign({}, s.sel, { file: fs.length ? this.fid(fs[0]) : null }), hunk: 0 }; }
+    }
+    this.setState(Object.assign({ E: r.E, modal: null, menu: null }, part));
+  }
+  stashAll(id) {
+    var self = this, e = this.entry(id), n = e.wip.length, c0 = e.commits[0];
+    var nst = { id: 'n' + (++this.tid), e: id, age: 'now', msg: 'WIP on ' + e.branch + (c0 ? ': ' + c0.sha + ' ' + c0.subject : ''),
+      files: e.wip.map(function (f) { return { k: f.k, name: f.name, dir: f.dir, add: f.nu ? f.nu.tot[0] : f.add, del: f.nu ? f.nu.tot[1] : f.del, dk: f.dk || 'wip' }; }) };
+    var r = this.mapE(id, function (x) { x.wip = []; });
+    this.setState({ stashes: [nst].concat(this.state.stashes), stashOpen: true });
+    var part = this.state.sel.e === id && this.state.sel.row === 'wip' ? this.selPart(r.e, this.firstRow(r.e)) : {};
+    this.setState(Object.assign({ E: r.E, menu: null }, part));
+    this.toast({ status: 'success', message: 'Stashed ' + n + (n === 1 ? ' change' : ' changes') + ' from ' + e.branch });
+  }
+  applyStash(sid, pop) {
+    var self = this, x = this.stash('stash:' + sid), ref = this.stashRef(x), e = this.entry(x.e);
+    if (!e.wt) return;
+    var r = this.mapE(x.e, function (c) {
+      x.files.forEach(function (f) {
+        var k = self.pathOf(f), hit = c.wip.filter(function (w) { return self.pathOf(w) === k; })[0];
+        if (!hit) c.wip.push({ k: f.k, name: f.name, dir: f.dir, add: f.add, del: f.del, st: false, dk: f.dk });
+      });
+      if (!c.wipAge) c.wipAge = 'now';
+    });
+    var stashes = pop ? this.state.stashes.filter(function (y) { return y.id !== sid; }) : this.state.stashes;
+    this.setState(Object.assign({ E: r.E, stashes: stashes, active: x.e }, this.selPart(r.e, 'wip')));
+    this.toast({ status: 'success', message: (pop ? 'Popped ' : 'Applied ') + ref + ' to ' + e.branch });
+  }
+  dropStash(sid) {
+    var x = this.stash('stash:' + sid), ref = this.stashRef(x), s = this.state;
+    var part = s.sel.row === 'stash:' + sid ? this.selPart(this.entry(s.active), this.firstRow(this.entry(s.active))) : {};
+    this.setState(Object.assign({ stashes: s.stashes.filter(function (y) { return y.id !== sid; }), menu: null }, part));
+    this.toast({ status: 'success', message: 'Dropped ' + ref });
+  }
+  activate(id) {
+    var e = this.entry(id);
+    var row = this.state.open[id] && this.state.open[id] !== 'multi' ? this.state.open[id] : this.firstRow(e);
+    this.setState(Object.assign({ active: id, hover: false, q: '' }, this.selPart(e, row)));
+  }
+  amendStart(id) {
+    var e = this.entry(id);
+    if (e.unpushed === 0) { this.setState({ menu: null, modal: { kind: 'amendPush', e: id } }); return; }
+    this.beginAmend(id);
+  }
+  beginAmend(id) {
+    var e = this.entry(id), c0 = e.commits[0];
+    this.setState(Object.assign({ amend: this.kv('amend', id, true), drafts: this.kv('drafts', id, { summary: c0.subject, body: c0.body || '' }), active: id }, this.selPart(e, 'wip'), { modal: null }));
+  }
+  stopAmend(id) {
+    var e = this.entry(id);
+    var part = !e.wip.length && this.state.sel.e === id ? this.selPart(e, this.firstRow(e)) : {};
+    this.setState(Object.assign({ amend: this.kv('amend', id, false), drafts: this.kv('drafts', id, { summary: '', body: '' }) }, part));
+  }
+  generate(id) {
+    var self = this;
+    if (this.state.busy[id]) return;
+    this.setState({ busy: this.kv('busy', id, 'ai') });
+    this.later(800, function () {
+      var e = self.entry(id);
+      var picks = { web1: ['Rotate tokens on refresh', 'Delete the old session once its token is rotated.'], api1: ['Log each rotated batch', 'Rotate tokens older than 20 hours so a late run never skips one.'] };
+      var p = picks[id] || ['Update ' + (e.wip[0] ? e.wip[0].name : e.branch), ''];
+      self.setState({ busy: self.kv('busy', id, null), drafts: self.kv('drafts', id, { summary: p[0], body: p[1] }) });
+    });
+  }
+  // Sections write the index: a click moves the row at once and queues its git command. Clicks
+  // within 150ms run as one command; a worktree runs one at a time (one index.lock), and its
+  // Commit button is off until the queue is empty. A failed run (one retry when index.lock is
+  // held) puts the rows back and shows a failed toast.
+  queueStage(id, prev, verb, paths) {
+    var self = this;
+    this.stq = this.stq || {};
+    var q = this.stq[id] || (this.stq[id] = { prev: prev, verbs: [], paths: [], timer: null });
+    q.verbs.push(verb);
+    paths.forEach(function (p) { if (q.paths.indexOf(p) < 0) q.paths.push(p); });
+    clearTimeout(q.timer);
+    if (!this.state.stq[id]) this.setState({ stq: this.kv('stq', id, true) });
+    q.timer = setTimeout(function () { self.flushStage(id); }, 150);
+    this.timers.push(q.timer);
+  }
+  flushStage(id) {
+    var self = this;
+    this.stRun = this.stRun || {};
+    if (this.stRun[id]) return; // the running command flushes the queue when it ends
+    var b = this.stq[id];
+    if (!b) return;
+    clearTimeout(b.timer); delete this.stq[id]; this.stRun[id] = true;
+    var fail = this.props.stageGit === 'fail';
+    this.later(fail ? 1200 : 450, function () {
+      self.stRun[id] = false;
+      var more = !!self.stq[id], part = { stq: self.kv('stq', id, more) };
+      if (fail) {
+        var e = self.entry(id), want = e.wip;
+        var r = self.mapE(id, function (x) { x.wip = JSON.parse(JSON.stringify(b.prev.wip)); });
+        var v = b.verbs.every(function (x) { return x === 'unstage'; }) ? 'unstage' : 'stage';
+        var n = b.paths.length, what = n === 1 ? b.paths[0].split('/').pop() : n + ' files';
+        part.E = r.E;
+        self.toast({ status: 'failed', message: "Couldn't " + v + ' ' + what, sub: e.repo + ' / ' + e.branch, actionLabel: 'Show Output', keep: 9000,
+          onAction: function () { self.setState({ modal: { kind: 'stageOutput', e: id, verb: v, paths: b.paths, want: want }, toast: null }); } });
+      }
+      self.setState(part);
+      if (more) self.flushStage(id);
+    });
+  }
+  retryStage(m) {
+    var prev = this.entry(m.e);
+    var r = this.mapE(m.e, function (x) { x.wip = JSON.parse(JSON.stringify(m.want)); });
+    this.setState({ E: r.E, modal: null });
+    this.queueStage(m.e, prev, m.verb, m.paths);
+  }
+  setAll(id, v) {
+    var self = this, prev = this.entry(id);
+    var paths = prev.wip.filter(function (w) { return !!w.st !== v || w.nu; }).map(function (w) { return self.pathOf(w); });
+    var r = this.mapE(id, function (x) { x.wip.forEach(function (w) { self.mergeNu(w); w.st = v; }); });
+    this.setState({ E: r.E });
+    if (paths.length) this.queueStage(id, prev, v ? 'stage' : 'unstage', paths);
+  }
+  // Sections: staging a file's later changes, or unstaging a file that has some, leaves the
+  // whole file in one section.
+  toggleStage(id, path, part) {
+    var self = this, prev = this.entry(id), was = prev.wip.filter(function (w) { return self.pathOf(w) === path; })[0];
+    var verb = part === 'new' || !(was && was.st) ? 'stage' : 'unstage';
+    var r = this.mapE(id, function (x) {
+      x.wip.forEach(function (w) {
+        if (self.pathOf(w) !== path) return;
+        if (part === 'new') { self.mergeNu(w); return; }
+        if (w.nu) self.mergeNu(w);
+        w.st = !w.st;
+      });
+    });
+    var s = this.state, sel = s.sel;
+    var keep = sel.e === id && sel.row === 'wip' && String(sel.file).split('#')[0] === path ? { sel: Object.assign({}, sel, { file: path }) } : {};
+    this.setState(Object.assign({ E: r.E }, keep));
+    this.queueStage(id, prev, verb, [path]);
+  }
+
+  renderVals() {
+    var self = this, st = this.state, P = this.props;
+    var theme = P.theme === 'light' ? 'light' : 'dark';
+    var cols = P.layout === 'columns';
+    var cmode = 'dock';
+    var oneLine = P.commitRows === 'one-line';
+    var showShared = !!P.baseCommits;
+    // scope branch: a branch reviewed on its own (no project): Review's title, only its stashes, no other branches.
+    var branchScope = P.scope === 'branch';
+    // scope stashes: a repository's whole stash stack (P3), opened from Branches; no branch is open.
+    var stashScope = P.scope === 'stashes';
+    var W = P.embedded ? 1020 : 1280;
+    var OP = st.op;
+    var E = st.E;
+    var pathOf = function (f) { return self.pathOf(f); };
+    var num = function (s) { return self.num(s); };
+    var totals = function (files) { var a = 0, d = 0; files.forEach(function (f) { a += num(f.add); d += num(f.del); }); return { add: '+' + a, del: d ? '−' + d : '' }; };
+    var plural = function (n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); };
+    var initials = function (who) { return who.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2); };
+
+    // Search: every word must be in a commit's subject / SHA / author or a file's path.
+    var q = st.q || '';
+    var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+    var has = function (s) { s = String(s || '').toLowerCase(); return terms.every(function (t) { return s.indexOf(t) >= 0; }); };
+    var fileHit = function (f) { return !terms.length || has(pathOf(f)); };
+    var commitHit = function (c) { return !terms.length || has(c.subject + ' ' + c.sha + ' ' + c.author) || c.files.some(fileHit); };
+
+    // The selection, checked against the current state.
+    var sel = st.sel;
+    var selE = this.entry(sel.e) || E[0];
+    var hasWip = function (e) { return e.wip.length > 0 || !!st.amend[e.id]; };
+    var selRow = sel.row;
+    if (selRow === 'wip' && !hasWip(selE)) selRow = self.firstRow(selE);
+    if (self.isCommit(selRow) && !selE.commits.some(function (c) { return c.sha === selRow; })) selRow = self.firstRow(selE);
+    if (selRow === 'multi' && !sel.rows) selRow = self.firstRow(selE);
+    if (selRow === 'origin' && !(selE.unpushed > 0)) selRow = self.firstRow(selE);
+    if (self.isStash(selRow) && !self.stash(selRow)) selRow = self.firstRow(selE);
+    var allSelFiles = this.filesFor(selE, selRow, sel);
+    var selFiles = allSelFiles.filter(fileHit);
+    if (terms.length && !selFiles.length) selFiles = allSelFiles;
+    var selFile = null;
+    var fid = function (f) { return self.fid(f); };
+    selFiles.forEach(function (f) { if (fid(f) === sel.file) selFile = f; });
+    if (!selFile) selFiles.forEach(function (f) { if (!selFile && pathOf(f) === String(sel.file).split('#')[0]) selFile = f; });
+    if (!selFile) selFile = selFiles[0] || null;
+    var selPath = selFile ? fid(selFile) : '';
+    var keyOf = function (e, row, path) { return e.id + '|' + row + '|' + (path || ''); };
+    var curKey = keyOf(selE, selRow, selPath), curRowKey = keyOf(selE, selRow, '');
+
+    // Handlers
+    var pickRow = function (e, row) {
+      return function (ev) {
+        var s = self.state, cur = s.sel;
+        var meta = ev && (ev.metaKey || ev.ctrlKey), shift = ev && ev.shiftKey;
+        var unit = function (r) { return self.isCommit(r) || (r === 'wip' && e.wip.length > 0); };
+        if (unit(row) && cur.e === e.id && (meta || shift)) {
+          var shas = self.unitKeys(e);
+          var base = cur.rows ? cur.rows.slice() : (cur.row === 'range' || cur.row === 'origin') ? self.lineKeys(e, cur.row) : (unit(cur.row) ? [cur.row] : []);
+          var anchor = unit(cur.anchor) ? cur.anchor : (base[0] || row);
+          var next;
+          if (shift) { var a = shas.indexOf(anchor), b = shas.indexOf(row); next = shas.slice(Math.min(a, b), Math.max(a, b) + 1); }
+          else { next = base.slice(); var i = next.indexOf(row); if (i >= 0) next.splice(i, 1); else next.push(row); }
+          if (!next.length) return;
+          if (next.length === 1) { self.setState(self.selPart(e, next[0])); return; }
+          self.setState(self.selPart(e, 'multi', { rows: next, anchor: anchor }));
+          return;
+        }
+        if (cur.e === e.id && cur.row === row && !cur.rows) {
+          self.setState({ open: self.kv('open', e.id, s.open[e.id] === row ? null : row), kf: keyOf(e, row, '') });
+          return;
+        }
+        self.setState(self.selPart(e, row));
+      };
+    };
+    var pickFile = function (e, row, path) {
+      return function () {
+        var s = self.state;
+        self.setState({ sel: { e: e.id, row: row, rows: row === 'multi' ? s.sel.rows : null, anchor: row === 'multi' ? s.sel.anchor : row, file: path }, hunk: 0, menu: null, kf: keyOf(e, row, path) });
+      };
+    };
+    var menuAt = function (desc, btn) { return function (ev) { if (ev && ev.preventDefault) ev.preventDefault(); if (ev && ev.stopPropagation) ev.stopPropagation(); self.openMenu(desc, ev, btn); }; };
+    var commitMenu = function (e, c, btn) {
+      return function (ev) {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        var cur = self.state.sel, p = self.pos(ev, btn);
+        if (cur.rows && cur.e === e.id && cur.rows.indexOf(c.sha) >= 0) {
+          if (!self.multiList(e, cur) || !e.wt || cur.rows.indexOf('wip') >= 0) return;
+          self.setState({ menu: Object.assign({ kind: 'squash', e: e.id, sub: false }, p) });
+          return;
+        }
+        var part = cur.e === e.id && cur.row === c.sha ? {} : self.selPart(e, c.sha);
+        self.setState(Object.assign(part, { menu: Object.assign({ kind: 'commit', e: e.id, sha: c.sha, sub: false }, p) }));
+      };
+    };
+
+    // Left list
+    var shownStyle = 'background: rgba(var(--accent-rgb), 0.10); box-shadow: inset 0 0 0 1px var(--accent); ';
+    var hit = function (pad) { return 'flex-grow: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: ' + pad + '; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer'; };
+    var wrap = function (on, multi, extra) { return 'position: relative; flex-shrink: 0; display: flex; align-items: center; border-radius: 8px; ' + (multi ? 'background: rgba(var(--accent-rgb), 0.18); ' : on ? 'background: var(--bg-hover); ' : '') + (extra || ''); };
+    var rule = function (dashed) { return 'flex-grow: 1; height: 0; border-top: 1px ' + (dashed ? 'dashed' : 'solid') + ' var(--border-strong)'; };
+    var secStyle = function (c2) { return 'flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; gap: 6px; height: 28px; margin-top: 2px; padding: 0 4px 0 8px'; };
+    var noteStyle = function (c2) { return 'flex-shrink: 0; padding: 4px 8px 6px 10px; font-size: 12px; line-height: 1.4; color: var(--text-muted)'; };
+    // Push / pull counts read like the origin line: "session-token-refresh · ↑ 2". Still buttons
+    // (push or pull on click), but plain mono text until hovered.
+    var chip = function () { return 'height: 22px; flex-shrink: 0; display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 5px; border: 0; border-radius: 6px; background: transparent; font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; cursor: pointer'; };
+    var navRow = function (e, row) { return { key: keyOf(e, row, ''), go: function () { self.setState(self.selPart(e, row)); } }; };
+
+    var cmFor = function (e, where) {
+      var d = st.drafts[e.id] || { summary: '', body: '' };
+      var amend = !!st.amend[e.id];
+      var n = e.wip.filter(function (f) { return f.st; }).length;
+      var busy = st.busy[e.id];
+      var noSum = !(d.summary || '').trim();
+      var setD = function (k) { return function (ev) { var v = ev.target.value; var cur = Object.assign({ summary: '', body: '' }, self.state.drafts[e.id]); cur[k] = v; self.setState({ drafts: self.kv('drafts', e.id, cur) }); }; };
+      var pane = where === 'pane';
+      return { summary: d.summary || '', body: d.body || '', amend: amend,
+        setSummary: setD('summary'), setBody: setD('body'),
+        key: function (ev) { if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) { ev.preventDefault(); self.startCommit(e.id); } },
+        generate: function () { self.generate(e.id); }, aiIcon: busy === 'ai' ? 'spinner' : 'sparkles', aiBusy: busy === 'ai',
+        stopAmend: function () { self.stopAmend(e.id); },
+        commit: function () { self.startCommit(e.id); },
+        label: busy === 'commit' ? (amend ? 'Amending…' : 'Committing…') : amend ? 'Amend Last Commit' : n ? 'Commit ' + plural(n, 'file') : 'Commit',
+        icon: busy === 'commit' ? 'spinner' : 'none',
+        disabled: busy === 'commit' || !!st.stq[e.id] || noSum || (!n && !amend),
+        title: st.stq[e.id] ? 'Staging…' : noSum ? 'Summary is required' : (!n && !amend) ? 'No files selected' : amend ? 'Amend ' + (e.commits[0] ? e.commits[0].sha : '') + ' (⌘↵)' : 'Commit to ' + e.branch + ' (⌘↵)',
+        btnWidth: '100%',
+        boxStyle: where === 'inline' ? 'flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; margin: 6px 0 10px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-sunken)'
+          : pane ? 'flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--bg-sunken)'
+          : 'flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: var(--bg-sidebar)',
+        bodyStyle: 'height: ' + (pane ? 48 : 56) + 'px; box-sizing: border-box; width: 100%; padding: 7px 10px; resize: none; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-family: inherit; font-size: 12px; line-height: 1.45; outline: none' };
+    };
+
+    var pushFiles = function (e, row, out, navOut, c2) {
+      var files = self.filesFor(e, row, st.sel);
+      var isWip = row === 'wip';
+      var shown = files.filter(fileHit);
+      if (terms.length && !shown.length) shown = files;
+      var fileRow = function (f, o) {
+        var path = pathOf(f), id = fid(f);
+        var on = e.id === selE.id && row === selRow && id === selPath;
+        navOut.push({ key: keyOf(e, row, id), go: pickFile(e, row, id) });
+        var cf = isWip && OP && OP.e === e.id ? OP.files[path] : null;
+        return { isFile: true, kind: f.k, name: f.name, dir: f.dir, add: f.add, del: f.del, hasAdd: !cf && !!f.add, hasDel: !cf && !!f.del, cUn: cf === 'unresolved', cOk: cf === 'resolved', on: on,
+          pick: pickFile(e, row, id),
+          menu: f.k === 'D' && !isWip ? undefined : menuAt({ kind: 'file', e: e.id, row: row, path: path, part: f.part }),
+          hasAct: !!o, actIcon: o && o.glyph === '−' ? 'remove' : 'plus', actPath: o && o.glyph === '−' ? 'M5 12h14' : 'M12 5v14M5 12h14', actTitle: o ? o.title : '', rowCls: o ? 'gg-has' : '',
+          discardTitle: 'Discard Changes…', discard: function () { self.setState({ menu: null, modal: { kind: 'discard', e: e.id, paths: [path], part: f.part } }); },
+          act: function () { if (cf === 'unresolved') self.resolveConflict(path); self.toggleStage(e.id, path, f.part); },
+          rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 4px 0 8px; border-radius: 8px; ' + (on ? shownStyle : '') };
+      };
+      if (row === 'multi' && !files.length) { out.push({ isNote: true, label: 'Pick consecutive commits to see their diff', wrapStyle: noteStyle(c2) }); return; }
+      if (isWip && e.wip.length) {
+        var stg = shown.filter(function (f) { return f.st; }), uns = shown.filter(function (f) { return !f.st; });
+        // Each section collapses on its header; Stage / Unstage All is its hover icon.
+        var section = function (k, label, list, all, glyph, verb) {
+          var key = e.id + ':' + k, open = !st.secShut[key];
+          out.push({ isSection: true, label: label, count: String(list.length), open: open,
+            toggle: function () { self.setState({ secShut: self.kv('secShut', key, open) }); },
+            chevStyle: 'stroke: var(--text-muted); flex-shrink: 0; transition: transform 0.15s; ' + (open ? '' : 'transform: rotate(-90deg)'),
+            hasAct: list.length > 0, actIcon: glyph === '−' ? 'remove' : 'plus', actPath: glyph === '−' ? 'M5 12h14' : 'M12 5v14M5 12h14', actLabel: verb + ' All', act: function () { self.setAll(e.id, all); }, wrapStyle: secStyle(c2) });
+          if (open) list.forEach(function (f) { out.push(fileRow(f, { glyph: glyph, title: verb + ' ' + f.name })); });
+        };
+        section('s', 'Staged', stg, false, '−', 'Unstage');
+        section('u', 'Unstaged', uns, true, '+', 'Stage');
+      } else {
+        shown.forEach(function (f) { out.push(fileRow(f)); });
+      }
+      if (isWip && !e.wip.length) out.push({ isNote: true, label: 'No changes', wrapStyle: noteStyle(c2) });
+      if (isWip && cmode === 'inline' && !c2) out.push({ isComposer: true, cm: cmFor(e, 'inline') });
+    };
+
+    var entryItem = function (e, collapsed) {
+      var busy = st.busy[e.id];
+      return { isEntry: true, branch: e.branch, title: e.repo + ' · ' + e.wt, open: !collapsed,
+        toggle: function () { self.setState({ collapsed: self.kv('collapsed', e.id, !collapsed) }); },
+        chevStyle: 'stroke: var(--text-muted); flex-shrink: 0; transition: transform 0.15s; ' + (collapsed ? 'transform: rotate(-90deg)' : ''),
+        menu: menuAt({ kind: 'entry', e: e.id }), more: menuAt({ kind: 'entry', e: e.id }, true),
+        hasPush: e.unpushed > 0, pushCount: (e.force ? 'force ' : '') + e.unpushed, pushBusy: busy === 'push', pushIcon: busy === 'push' ? 'spinner' : 'arrow-up',
+        pushTitle: (e.force ? 'Force push to origin/' : 'Push to origin/') + e.branch, push: function () { self.push(e.id); }, pushStyle: chip(true),
+        hasPull: e.behind > 0, pullCount: String(e.behind), pullBusy: busy === 'pull', pullIcon: busy === 'pull' ? 'spinner' : 'arrow-down',
+        pullTitle: 'Pull from origin/' + e.branch, pull: function () { self.pull(e.id); }, pullStyle: chip(false),
+        wrapStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding-right: 4px; border-radius: 8px; margin-top: 2px' };
+    };
+    var wipItem = function (e, multi) {
+      var on = selE.id === e.id && selRow === 'wip', inMulti = !!multi && multi.indexOf('wip') >= 0;
+      // No file count; one-line mode: the Uncommitted row is one line too (dot and title, no
+      // age); the dashed border still sets it apart.
+      return { isWip: true, two: !oneLine, one: oneLine, sel: on, meta: oneLine ? '' : (e.wip.length ? e.wipAge : 'No changes'), failed: !!st.failed[e.id],
+        pick: pickRow(e, 'wip'), menu: e.wip.length ? menuAt({ kind: 'wip', e: e.id }) : undefined, more: menuAt({ kind: 'wip', e: e.id }, true), hasMore: e.wip.length > 0,
+        wrapStyle: wrap(on, inMulti, 'border: 1px dashed var(--border-strong); margin-top: 2px; '), hitStyle: hit(oneLine ? '4px 8px' : '6px 8px') };
+    };
+    // The whole review (merge-base..branch) is the base line under the branch's commits:
+    // "base main · 8c2d5e1". Picking it shows every file the branch changes. The ahead counts
+    // add up above it: origin/<branch> · ↑N (pushed, ahead of base) + ↑M on the branch
+    // (not pushed yet).
+    // Picking a line selects every row above it: the base line is All (Uncommitted and every
+    // commit), the origin line what a push would add plus Uncommitted. ⌘-click Uncommitted
+    // then leaves the commits alone (Committed, or only the unpushed ones).
+    var baseItem = function (e, row) {
+      row = row || 'range';
+      var on = selE.id === e.id && selRow === row, origin = row === 'origin';
+      var fs = self.filesFor(e, row), t = totals(fs);
+      var upTo = e.wip.length ? 'working tree' : e.branch;
+      return { isBase: true, sel: on, base: e.base, mb: e.mb,
+        label: origin ? 'origin/' + e.branch + (e.commits.length > e.unpushed ? ' · ↑ ' + (e.commits.length - e.unpushed) : '') : 'base ' + e.base + ' · ' + e.mb,
+        title: (origin ? 'origin/' + e.branch : e.mb) + ' ↔ ' + upTo + ' · ' + plural(fs.length, 'file') + ' ' + t.add + ' ' + t.del,
+        ruleStyle: rule(origin), pick: pickRow(e, row), wrapStyle: wrap(on, false, 'margin-top: 2px; '),
+        hitStyle: hit('6px 8px').replace('gap: 10px', 'gap: 8px') };
+    };
+    var commitItem = function (e, c, i, multi) {
+      var inMulti = !!multi && multi.indexOf(c.sha) >= 0;
+      var on = !multi && selE.id === e.id && selRow === c.sha;
+      return { isCommit: true, two: !oneLine, one: oneLine, sha: c.sha, subject: c.subject, author: c.author, age: c.age, initials: initials(c.author),
+        hasTag: i === 0 && !!st.amend[e.id], tag: 'amending', sel: on || inMulti, hasFrom: !!c.from, from: c.from || '',
+        pick: pickRow(e, c.sha), menu: commitMenu(e, c, false), more: commitMenu(e, c, true),
+        title: c.subject + ' · ' + c.author + ' · ' + c.sha,
+        wrapStyle: wrap(on, inMulti, ''), hitStyle: hit(oneLine ? '5px 8px' : '7px 8px'),
+        subjectStyle: 'font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: var(--text-strong)' + (on || inMulti ? '; font-weight: 500' : '') };
+    };
+
+    var items = [], nav = [];
+    var act = this.entry(st.active) || E[0];
+    var headItem = function (e) {
+      var it = entryItem(e, false), t = totals(self.combine(e.commits));
+      // No upstream text: the header's Pull / Push carry the counts.
+      var mine = OP && OP.e === e.id, nUn = mine ? Object.keys(OP.files).filter(function (k) { return OP.files[k] === 'unresolved'; }).length : 0;
+      var opPill = !mine ? '' : OP.kind === 'rebase' ? 'rebasing' : nUn ? plural(nUn, 'conflict') : '';
+      return Object.assign(it, { isEntry: false, isHead: true, repo: e.repo, add: t.add, del: t.del, hasPush: false, hasPull: false,
+        hasOp: !!opPill, opLabel: opPill, opTone: OP && OP.kind === 'rebase' ? 'warning' : 'danger',
+        upstream: '', title: [e.repo, e.branch, e.wt].filter(Boolean).join(' · ') });
+    };
+    if (!branchScope && !stashScope) items.push(headItem(act));
+    (function (e) {
+        if (!e) return;
+        var fromN = e.commits.filter(function (c) { return !!c.from; }).length;
+        if (fromN && !terms.length) items.push({ isHint: true, text: fromN + ' of ' + e.commits.length + ' commits come from ' + e.commits.filter(function (c) { return !!c.from; })[0].from + '. A different base may fit better.' });
+        var branchHit = terms.length > 0 && has(e.branch);
+        var cHit = function (c) { return branchHit || commitHit(c); };
+        var openRow = st.open[e.id];
+        var multi = st.sel.e === e.id && st.sel.rows ? st.sel.rows : null;
+        // A line's selection tints the rows it takes in.
+        var lineRows = selE.id === e.id && (selRow === 'range' || selRow === 'origin') ? self.lineKeys(e, selRow) : null;
+        if (hasWip(e) && (!terms.length || branchHit || e.wip.some(fileHit))) {
+          items.push(wipItem(e, multi || lineRows)); nav.push(navRow(e, 'wip'));
+          if (!cols && openRow === 'wip') pushFiles(e, 'wip', items, nav, false);
+        }
+        var shas = e.commits.map(function (c) { return c.sha; });
+        var oldest = -1;
+        if (multi) multi.forEach(function (s) { oldest = Math.max(oldest, shas.indexOf(s)); });
+        e.commits.forEach(function (c, i) {
+          if (cHit(c)) {
+            items.push(commitItem(e, c, i, multi || lineRows)); nav.push(navRow(e, c.sha));
+            if (!cols && !multi && openRow === c.sha) pushFiles(e, c.sha, items, nav, false);
+            if (!cols && multi && openRow === 'multi' && i === oldest) pushFiles(e, 'multi', items, nav, false);
+          }
+          if (!terms.length && e.unpushed > 0 && i === e.unpushed - 1) {
+            items.push(baseItem(e, 'origin')); nav.push(navRow(e, 'origin'));
+            if (!cols && openRow === 'origin') pushFiles(e, 'origin', items, nav, false);
+          }
+        });
+        if (e.commits.length && (!terms.length || branchHit || e.commits.some(commitHit))) {
+          items.push(baseItem(e)); nav.push(navRow(e, 'range'));
+          if (!cols && openRow === 'range') pushFiles(e, 'range', items, nav, false);
+        }
+        if (!terms.length && !e.commits.length) items.push({ isNote: true, label: 'No commits ahead of ' + e.base, wrapStyle: noteStyle(false) });
+        // The base's log goes on under the base line; search looks there too.
+        var sharedHit = e.shared.filter(function (s) { return !terms.length || has(s.subject + ' ' + s.sha); });
+        if ((showShared || terms.length) && sharedHit.length) {
+          if (!e.commits.length || terms.length) items.push({ isLine: true, label: 'base ' + e.base + ' · ' + e.mb, ruleStyle: rule(false) });
+          sharedHit.forEach(function (s) { var who = s.author || 'Melis Kaya'; items.push({ isShared: true, two: !oneLine, one: oneLine, pad: oneLine ? '5px 8px' : '7px 8px', sha: s.sha, subject: s.subject, age: s.age, author: who, initials: initials(who), title: s.subject + ' · ' + who + ' · ' + s.sha }); });
+        }
+    })(stashScope ? null : act);
+
+    // Stashes of the project, newest first; picking one lists its files under it (tree).
+    var stashItems = [];
+    var stashList = st.stashes.filter(function (x) { return stashScope ? self.entry(x.e).repo === 'web-app' : !branchScope || x.e === act.id; });
+    st.stashes.forEach(function (x) {
+      if (stashList.indexOf(x) < 0) return;
+      var e = self.entry(x.e), row = 'stash:' + x.id, on = selE.id === e.id && selRow === row;
+      var n = x.files.length;
+      stashItems.push({ isStash: true, sel: on, msg: x.msg, ref: self.stashRef(x), meta: e.repo + ' / ' + e.branch + ' · ' + plural(n, 'file') + ' · ' + x.age,
+        title: x.msg, pick: pickRow(e, row), menu: menuAt({ kind: 'stash', e: e.id, sid: x.id }),
+        iconStyle: 'flex-shrink: 0; margin-top: 2px; color: ' + (on ? 'var(--accent-text)' : 'var(--text-muted)'),
+        style: 'flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 6px 8px; border: 0; border-radius: 8px; font: inherit; text-align: left; cursor: pointer; color: inherit; ' + (on ? 'background: var(--bg-hover)' : 'background: transparent') });
+      if (!cols && st.open[e.id] === row) pushFiles(e, row, stashItems, nav, false);
+    });
+
+    // The other branches, in project order; a click opens one in place of the open branch.
+    var others = E.filter(function (e) { return !branchScope && !stashScope && e.id !== act.id; }).map(function (e) {
+      var t = totals(self.combine(e.commits));
+      var up = e.unpushed && e.behind ? 'origin ↑' + e.unpushed + ' ↓' + e.behind : e.unpushed ? 'origin ↑' + e.unpushed : e.behind ? 'origin ↓' + e.behind : 'origin';
+      return { repo: e.repo, branch: e.branch, add: t.add, del: t.del, up: up, dirty: e.wip.length > 0, title: [e.repo, e.branch, e.wt].filter(Boolean).join(' · '), go: function () { self.activate(e.id); } };
+    });
+    var bOpen = st.branchesOpen, peek = false;
+
+    var items2 = [], nav2 = [];
+    if (cols) pushFiles(selE, selRow, items2, nav2, true);
+
+    var keyNav = function (list) {
+      return function (ev) {
+        var tg = ev.target && ev.target.tagName;
+        if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+        var s = self.state;
+        if (ev.key === 'Escape' && s.sel.rows) {
+          ev.preventDefault();
+          var e0 = self.entry(s.sel.e);
+          self.setState(self.selPart(e0, self.isCommit(s.sel.anchor) || s.sel.anchor === 'wip' ? s.sel.anchor : s.sel.rows[0]));
+          return;
+        }
+        if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
+        ev.preventDefault();
+        var keys = list.map(function (n) { return n.key; });
+        var i = keys.indexOf(s.kf);
+        if (i < 0) i = keys.indexOf(curKey);
+        if (i < 0) i = keys.indexOf(curRowKey);
+        var j = i < 0 ? 0 : ev.key === 'ArrowDown' ? i + 1 : i - 1;
+        if (j >= 0 && j < list.length) list[j].go();
+      };
+    };
+
+    // Right pane
+    // History's date: "today 14:32", "yesterday 18:05", "Oct 12, 09:41" (now: Oct 18, 15:00).
+    var whenOf = function (age) {
+      var m = /^(\d+)([mhd])$/.exec(age || ''); if (!m) return age;
+      var n = +m[1], d = new Date(2026, 9, 18, 15, 0), two = function (x) { return (x < 10 ? '0' : '') + x; };
+      if (m[2] === 'm') d.setMinutes(d.getMinutes() - n);
+      else if (m[2] === 'h') d.setHours(d.getHours() - n);
+      else { d.setDate(d.getDate() - n); d.setHours(9 + (n * 7) % 9, (n * 17) % 60); }
+      var hm = two(d.getHours()) + ':' + two(d.getMinutes());
+      if (m[2] !== 'd') return 'today ' + hm;
+      if (n === 1) return 'yesterday ' + hm;
+      return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()] + ' ' + d.getDate() + ', ' + hm;
+    };
+    var shasSel = selE.commits.map(function (c) { return c.sha; });
+    var parentOf = function (i) { return selE.commits[i + 1] ? selE.commits[i + 1].sha : selE.mb; };
+    var T = totals(allSelFiles);
+    var cx = { repo: selE.repo, branch: selE.branch, where: '', hasWhere: false, isCommit: false, isMulti: false, hasBody: false, body: '', list: [], lead: '', files: plural(allSelFiles.length, 'file'), add: T.add, del: T.del };
+    var compare = '';
+    if (selRow === 'wip') {
+      cx.title = 'Uncommitted changes'; cx.where = selE.wt; cx.hasWhere = true;
+      compare = !selFile ? 'HEAD ↔ working tree' : selFile.st ? 'HEAD ↔ index' : 'index ↔ working tree';
+    } else if (selRow === 'range' || selRow === 'origin') {
+      var lw = selE.wip.length > 0, nc = selRow === 'origin' ? selE.unpushed : selE.commits.length;
+      var from = selRow === 'origin' ? 'origin/' + selE.branch : selE.mb, to = lw ? 'working tree' : selE.branch;
+      cx.title = selRow === 'origin' ? (lw ? 'Uncommitted changes and ' + plural(nc, 'commit') + ' to push' : plural(nc, 'commit') + ' to push')
+        : (lw ? 'Uncommitted changes and ' + plural(nc, 'commit') : plural(nc, 'commit')) + ' ahead of ' + selE.base;
+      cx.lead = from + ' ↔ ' + to + ' · '; compare = (selRow === 'origin' ? 'origin/' + selE.branch : 'merge-base') + ' ↔ ' + to;
+    } else if (self.isStash(selRow)) {
+      var sx = self.stash(selRow), sref = self.stashRef(sx);
+      // The repository line is gone from this header: a stash of another branch names its own.
+      // StashBar: Apply / Pop / Drop on the title line, its ref, branch, base and age below.
+      var sid = sx.id, swhere = 'to ' + selE.branch + ' (' + selE.wt + ')';
+      cx.title = sx.msg; cx.isStash = true; cx.sref = sref; cx.swhere = selE.repo + ' / ' + selE.branch; cx.from = selE.mb; cx.ago = sx.age === 'now' ? 'just now' : sx.age + ' ago';
+      cx.canApply = !!selE.wt; cx.applyTitle = 'Apply ' + swhere; cx.popTitle = 'Pop ' + swhere;
+      cx.apply = function () { self.applyStash(sid, false); }; cx.pop = function () { self.applyStash(sid, true); }; cx.drop = function () { self.dropStash(sid); };
+      compare = selE.mb + ' ↔ ' + sref;
+    } else if (selRow === 'multi') {
+      var ml = this.multiList(selE, sel);
+      var withWip = sel.rows.indexOf('wip') >= 0;
+      var picked = sel.rows.filter(function (r) { return r !== 'wip'; }).sort(function (a, b) { return shasSel.indexOf(a) - shasSel.indexOf(b); });
+      cx.isMulti = true; cx.title = withWip ? 'Uncommitted changes and ' + plural(picked.length, 'commit') : plural(picked.length, 'commit') + ' selected';
+      cx.list = (withWip ? [{ sha: '', subject: 'Uncommitted changes' }] : []).concat(picked.map(function (s) { var c = selE.commits[shasSel.indexOf(s)]; return { sha: s, subject: c ? c.subject : '' }; }));
+      if (ml) { var lo = shasSel.indexOf(ml[ml.length - 1].sha), top = ml[0].sha === 'wip' ? 'working tree' : ml[0].sha; cx.lead = parentOf(lo) + (top === 'working tree' ? ' ↔ ' : '..') + top + ' · '; compare = parentOf(lo) + ' ↔ ' + top; }
+      else { cx.files = 'Pick consecutive commits to see their diff'; cx.add = ''; cx.del = ''; }
+    } else {
+      var ci = shasSel.indexOf(selRow), cc = selE.commits[ci];
+      cx.isCommit = true; cx.title = cc.subject; cx.hasBody = !!cc.body; cx.body = cc.body; cx.author = cc.author; cx.initials = initials(cc.author); cx.age = cc.age; cx.when = whenOf(cc.age); cx.sha = cc.sha;
+      cx.lead = 'parent ' + parentOf(ci) + ' · '; compare = parentOf(ci) + ' ↔ ' + cc.sha;
+      cx.pos = 'Commit ' + (shasSel.length - ci) + ' of ' + shasSel.length;
+      cx.newerOff = ci <= 0; cx.olderOff = ci >= shasSel.length - 1;
+      cx.newer = function () { if (ci > 0) self.setState(self.selPart(selE, shasSel[ci - 1])); };
+      cx.older = function () { if (ci < shasSel.length - 1) self.setState(self.selPart(selE, shasSel[ci + 1])); };
+    }
+    if (selRow === 'range' && selE.commits.length === 0) { cx.lead = ''; }
+    // Columns: the file count and totals head the files column instead.
+    cx.filesHead = cols && !(selRow === 'multi' && !ml);
+    cx.statHere = !cx.filesHead;
+    if (cx.filesHead) cx.lead = cx.lead.replace(/ · $/, '');
+    if (cx.isStash) cx.statHere = false;
+    cx.hasMeta = cx.isCommit || cx.isStash || !!cx.lead || cx.statHere;
+
+    var paneOn = cmode === 'pane' && selRow === 'wip';
+    var view = st.view || (cols ? 'unified' : 'split');
+    var ignoreWs = !!st.ignoreWs;
+    var context = st.context || 'changes';
+    var ctxLines = st.ctxLines || 3;
+    var fileKey = selE.id + ':' + selRow + ':' + selPath;
+    var raw = selFile ? this.rowsFor(selE, selRow, selFile) : null;
+    var rows = null;
+    if (raw) {
+      rows = [];
+      raw.forEach(function (r, ri) {
+        if (r[4] === 'ws') { rows.push(r.slice(0, 4).concat([ignoreWs ? '' : 'mod'])); return; }
+        if (r[4] !== 'fold') { rows.push(r); return; }
+        var hid = r[5] || [];
+        if (context === 'whole' || st.unfold[fileKey + '#' + ri]) { rows = rows.concat(hid); return; }
+        var keep = Math.max(0, ctxLines - 3);
+        if (keep * 2 >= hid.length) { rows = rows.concat(hid); return; }
+        rows = rows.concat(hid.slice(0, keep));
+        rows.push(['…', '', '…', '', 'fold', null, hid.length - 2 * keep, ri]);
+        rows = rows.concat(hid.slice(hid.length - keep));
+      });
+    }
+    var hunkOf = [], nH = 0, prevCh = false;
+    (rows || []).forEach(function (r, i) { var ch = !!r[4] && r[4] !== 'fold'; if (ch && !prevCh) nH++; hunkOf[i] = ch ? nH - 1 : -1; prevCh = ch; });
+    var hIdx = st.hunk === -1 ? nH - 1 : (st.hunk || 0);
+    if (hIdx >= nH) hIdx = nH - 1;
+    if (hIdx < 0) hIdx = 0;
+    var navPaths = selFiles.map(fid);
+    var fi = navPaths.indexOf(selPath);
+    var nextPath = fi >= 0 && fi < navPaths.length - 1 ? navPaths[fi + 1] : null;
+    var prevPath = fi > 0 ? navPaths[fi - 1] : null;
+    var atLast = nH === 0 || hIdx >= nH - 1, atFirst = hIdx <= 0;
+    var goFile = function (p, h) { self.setState({ sel: Object.assign({}, self.state.sel, { e: selE.id, row: selRow, file: p }), hunk: h, kf: keyOf(selE, selRow, p) }); };
+    var nextChange = function () { if (!atLast) self.setState({ hunk: hIdx + 1 }); else if (nextPath) goFile(nextPath, 0); };
+    var prevChange = function () { if (!atFirst) self.setState({ hunk: hIdx - 1 }); else if (prevPath) goFile(prevPath, -1); };
+
+    var cur = 'box-shadow: inset 3px 0 0 var(--accent-text); ';
+    var base0 = 'display: flex; padding-right: 12px; color: var(--text-code); ';
+    var hatch = 'background: repeating-linear-gradient(135deg, var(--bg-band) 0 4px, var(--bg-main) 4px 8px)';
+    var foldText = function (r) { var n = r[6]; return '⋯ ' + n + ' unchanged line' + (n === 1 ? '' : 's'); };
+    var unfoldFn = function (r) { return function () { self.setState({ unfold: self.kv('unfold', fileKey + '#' + r[7], true) }); }; };
+    var foldStyle = function (pad) { return 'display: flex; width: 100%; padding: 0 0 0 ' + pad + 'px; border: 0; color: var(--text-faint); background: var(--bg-sunken); font-family: inherit; font-size: 11px; line-height: 20px; text-align: left; cursor: pointer'; };
+    var lines = (rows || []).map(function (r, i) {
+      var k = r[4];
+      if (k === 'fold') return { isFold: true, text: foldText(r), unfold: unfoldFn(r), foldStyle: foldStyle(58) };
+      return { isLine: true, ln: r[0], lt: r[1], rn: r[2], rt: r[3],
+        lMark: k === 'mod' || k === 'del' ? '−' : '', rMark: k === 'mod' || k === 'add' ? '+' : '',
+        lStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'add' ? hatch : k ? 'background: rgba(var(--danger-rgb), 0.17)' : ''),
+        rStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'del' ? hatch : k ? 'background: rgba(var(--success-rgb), 0.15)' : '') };
+    });
+    var uLines = [], pend = [];
+    var uRow = function (on, nn, mark, t, kind, isCur) {
+      var bg = kind === 'del' ? 'background: rgba(var(--danger-rgb), 0.17)' : kind === 'add' ? 'background: rgba(var(--success-rgb), 0.15)' : '';
+      uLines.push({ isLine: true, on: on, nn: nn, mark: mark, t: t, style: base0 + (isCur ? cur : '') + bg, markStyle: 'width: 14px; flex-shrink: 0; color: ' + (kind === 'del' ? 'var(--danger)' : 'var(--success)') });
+    };
+    var flush = function () {
+      if (!pend.length) return;
+      var isCur = hunkOf[pend[0]] === hIdx;
+      pend.forEach(function (i) { var r = rows[i]; if (r[4] === 'mod' || r[4] === 'del') uRow(r[0], '', '−', r[1], 'del', isCur); });
+      pend.forEach(function (i) { var r = rows[i]; if (r[4] === 'mod' || r[4] === 'add') uRow('', r[2], '+', r[3], 'add', isCur); });
+      pend = [];
+    };
+    (rows || []).forEach(function (r, i) {
+      if (r[4] === 'fold') { flush(); uLines.push({ isFold: true, text: foldText(r), unfold: unfoldFn(r), foldStyle: foldStyle(102) }); return; }
+      if (r[4]) { pend.push(i); return; }
+      flush(); uRow(r[0], r[2], '', r[3], '', false);
+    });
+    flush();
+
+    var setView = function (v) { self.setState({ view: v, menu: null }); };
+    var viewItems = [
+      { kind: 'label', label: 'Layout' },
+      { label: 'Split', check: view === 'split', kbd: '⌥V', onSelect: function () { setView('split'); } },
+      { label: 'Unified', check: view === 'unified', kbd: '⌥V', onSelect: function () { setView('unified'); } },
+      { kind: 'sep' },
+      { kind: 'label', label: 'Context' },
+      { label: 'Changes Only', check: context === 'changes', kbd: '⌥C', onSelect: function () { self.setState({ context: 'changes' }); } },
+      { kind: 'segmented', label: 'Lines Around Changes', disabled: context === 'whole', options: [3, 5, 10].map(function (n) { return { label: String(n), on: ctxLines === n, pick: function () { self.setState({ ctxLines: n, context: 'changes' }); } }; }) },
+      { label: 'Whole File', check: context === 'whole', kbd: '⌥C', onSelect: function () { self.setState({ context: 'whole', menu: null }); } },
+      { kind: 'sep' },
+      { label: 'Ignore Whitespace', box: ignoreWs, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W', onSelect: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); } }
+    ];
+
+    // Menus
+    var M = st.menu, menuItems = [], subItems = [], menuW = 260, subOn = false, menuStyle = '', subStyle = '', menuLabel = 'Menu';
+    if (M) {
+      var me = this.entry(M.e);
+      var close = function () { self.setState({ menu: null }); };
+      if (M.kind === 'view') { menuW = 300; menuItems = viewItems; menuLabel = 'Diff view'; }
+      else if (M.kind === 'page') {
+        // One menu for the page: Project (a project's review), then the open branch.
+        menuLabel = 'More actions';
+        var open3 = [{ label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }, { label: 'Open in Terminal', app: 'terminal', onSelect: close }];
+        var branchItems = [];
+        var meOp = OP && OP.e === me.id && OP.kind === 'rebase';
+        var meUn = meOp && Object.keys(OP.files).some(function (k) { return OP.files[k] === 'unresolved'; });
+        if (branchScope) branchItems.push({ label: 'Switch Branch…', icon: 'branch', kbd: '⇧⌘B', onSelect: close });
+        if (me && me.wip.length && me.wt && !meOp) branchItems.push({ label: 'Stash…', icon: 'package', onSelect: function () { self.stashAll(me.id); } });
+        branchItems.push({ label: 'Change Base…', icon: 'branch', sub: 'base: ' + me.base, onSelect: function () { self.setState({ menu: Object.assign({}, self.state.menu, { kind: 'base' }) }); } });
+        if (meOp) {
+          if (!meUn) branchItems.push({ label: 'Continue Rebase', icon: 'arrow-right', onSelect: function () { self.endOp(false); } });
+          branchItems.push({ label: 'Abort Rebase', icon: 'close', onSelect: function () { self.setState({ menu: null, modal: { kind: 'abortOp', e: me.id } }); } });
+        } else if (me.wt && !OP) branchItems.push({ label: 'Rebase on ' + me.base, icon: 'rebase', onSelect: function () { self.startRebase(me.id); } });
+        if (branchScope) branchItems.push({ label: 'Refresh', icon: 'refresh', onSelect: close });
+        branchItems.push({ label: 'Copy Branch Name', icon: 'copy', onSelect: close }, { kind: 'sep' });
+        if (stashScope) menuItems = [{ label: 'Refresh', icon: 'refresh', onSelect: close }];
+        else if (branchScope) menuItems = branchItems.concat(open3);
+        else menuItems = [{ kind: 'label', label: 'Project' }, { label: 'Refresh', icon: 'refresh', onSelect: close }, { label: 'Edit Project', icon: 'pencil', onSelect: close }, { kind: 'sep' },
+          { kind: 'label', label: 'Branch' }].concat(branchItems, open3);
+      }
+      else if (M.kind === 'base') {
+        // Base menu (E2): the suggestion when commits come from another branch, the default, the
+        // repo's other branches, then remote ones; the current base is checked.
+        menuLabel = 'Choose base for ' + me.branch; menuW = 280;
+        var setB = function (b) { return function () { self.setBase(me.id, b); }; };
+        var fromC = me.commits.filter(function (c) { return !!c.from; });
+        if (fromC.length) menuItems.push({ kind: 'label', label: 'Suggested' }, { label: fromC[0].from, icon: 'branch', sub: 'Contains ' + fromC.length + ' of the ' + me.commits.length + ' commits shown', onSelect: setB(fromC[0].from) });
+        menuItems.push({ kind: 'label', label: 'Default' }, { label: 'main', icon: 'branch', sub: 'from origin/HEAD', check: me.base === 'main', onSelect: setB('main') });
+        var otherB = E.filter(function (x) { return x.repo === me.repo && x.id !== me.id; }).map(function (x) { return x.branch; });
+        if (me.hidden && me.hidden[0]) otherB.unshift(me.hidden[0].from);
+        if (otherB.length) { menuItems.push({ kind: 'label', label: 'Other Branches' }); otherB.forEach(function (b) { menuItems.push({ label: b, icon: 'branch', check: me.base === b, onSelect: setB(b) }); }); }
+        menuItems.push({ kind: 'label', label: 'Remote Branches' }, { label: 'origin/main', icon: 'branch', check: me.base === 'origin/main', onSelect: setB('origin/main') });
+      }
+      else if (M.kind === 'entry') {
+        menuLabel = 'Branch Options';
+        menuItems = [{ label: 'Fetch', icon: 'download', onSelect: function () { self.fetchAll(me.repo); } }, { kind: 'sep' }, { label: 'Copy Branch Name', icon: 'copy', onSelect: close }, { kind: 'sep' },
+          { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }, { label: 'Open in Terminal', app: 'terminal', onSelect: close }];
+      } else if (M.kind === 'wip') {
+        menuLabel = 'Uncommitted Options';
+        if (me.wip.length) menuItems = [{ label: 'Discard All Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discardAll', e: M.e } }); } },
+          { label: 'Stash All Changes…', icon: 'package', onSelect: function () { self.stashAll(M.e); } }];
+      } else if (M.kind === 'file') {
+        menuLabel = 'File Options';
+        if (M.row === 'wip') menuItems = [{ label: 'Discard Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discard', e: M.e, paths: [M.path], part: M.part } }); } }, { kind: 'sep' },
+          { label: 'Copy File Path', icon: 'copy', onSelect: close }, { label: 'Copy Relative File Path', icon: 'copy', onSelect: close }, { kind: 'sep' },
+          { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }];
+        else menuItems = [{ label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }];
+      } else if (M.kind === 'stash') {
+        menuLabel = 'Stash Options';
+        if (me.wt) menuItems = [{ label: 'Apply', icon: 'download', onSelect: function () { self.setState({ menu: null }); self.applyStash(M.sid, false); } }, { label: 'Pop', icon: 'undo', onSelect: function () { self.setState({ menu: null }); self.applyStash(M.sid, true); } }, { kind: 'sep' }];
+        menuItems.push({ label: 'Drop', icon: 'trash', danger: true, onSelect: function () { self.dropStash(M.sid); } });
+      } else if (M.kind === 'squash') {
+        var nsq = st.sel.rows ? st.sel.rows.length : 2;
+        menuLabel = 'Commit Options';
+        menuItems = [{ label: 'Squash ' + nsq + ' Commits…', icon: 'rebase', onSelect: function () { self.openSquash(M.e); } }];
+      } else if (M.kind === 'commit') {
+        menuLabel = 'Commit Options';
+        var mshas = me.commits.map(function (c) { return c.sha; }), mi = mshas.indexOf(M.sha);
+        if (mi >= 0) {
+          if (mi === 0 && me.wt) menuItems.push({ label: 'Amend Commit…', icon: 'edit', onSelect: function () { self.amendStart(M.e); } });
+          if (mi === 0 && me.unpushed > 0 && me.wt) menuItems.push({ label: 'Undo Commit', icon: 'undo', onSelect: function () { self.undoCommit(M.e); } });
+          if (me.wt) menuItems.push({ label: 'Revert Changes', icon: 'revert', onSelect: function () { self.setState({ menu: null }); self.revert(M.e, M.sha); } });
+          var targets = E.filter(function (x) { return x.repo === me.repo && x.id !== me.id && x.wt; });
+          if (targets.length) {
+            menuItems.push({ kind: 'sep' });
+            menuItems.push({ label: 'Cherry-Pick to', icon: 'branch', submenu: true, active: !!M.sub, onSelect: function () { self.setState({ menu: Object.assign({}, self.state.menu, { sub: !self.state.menu.sub }) }); } });
+            subItems = targets.map(function (t) { return { label: t.branch, sub: t.wt, onSelect: function () { self.cherry(M.e, M.sha, t.id); } }; });
+            subOn = !!M.sub;
+          }
+          menuItems.push({ kind: 'sep' });
+          menuItems.push({ label: 'Copy SHA', icon: 'copy', onSelect: close });
+        }
+      }
+      var h = 14;
+      menuItems.forEach(function (it) { h += it.kind === 'sep' ? 9 : it.kind === 'label' ? 25 : it.kind === 'segmented' ? 32 : (it.sub || it.desc) ? 52 : 33; });
+      var x0 = M.right ? M.x - menuW : M.x, y0 = M.y;
+      if (x0 + menuW > W - 8) x0 = W - 8 - menuW;
+      if (x0 < 8) x0 = 8;
+      if (y0 + h > 792) y0 = Math.max(8, (M.right ? M.y - 34 : M.y) - h);
+      menuStyle = 'position: absolute; left: ' + Math.round(x0) + 'px; top: ' + Math.round(y0) + 'px; z-index: 41';
+      if (subOn) {
+        var off = 6;
+        for (var j = 0; j < menuItems.length; j++) { if (menuItems[j].submenu) break; off += menuItems[j].kind === 'sep' ? 9 : 33; }
+        var sx = x0 + menuW - 6;
+        if (sx + 260 > W - 8) sx = x0 - 260 + 6;
+        subStyle = 'position: absolute; left: ' + Math.round(sx) + 'px; top: ' + Math.round(y0 + off - 6) + 'px; z-index: 42';
+      }
+    }
+
+    // Dialogs
+    var MD = st.modal, md = {};
+    if (MD) {
+      var mE = this.entry(MD.e);
+      var closeM = function () { self.setState({ modal: null }); };
+      md = { title: '', hasSub: false, sub: '', hasText: false, text: '', hasList: false, list: [], isSquash: false, isOutput: false, hasNote: false, note: '', buttons: [], width: 460 };
+      if (MD.kind === 'discard') {
+        md.title = 'Confirm Discard Changes'; md.hasText = true; md.text = 'Are you sure you want to discard all changes to:';
+        md.hasList = true; md.list = MD.paths.map(function (p) { return { path: p }; });
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Discard Changes', variant: 'danger', onPress: function () { self.discard(MD.e, MD.paths, MD.part); } }];
+      } else if (MD.kind === 'discardAll') {
+        md.title = 'Confirm Discard All Changes'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch; md.hasText = true;
+        md.text = 'Are you sure you want to discard all ' + plural(mE.wip.length, 'change') + '?';
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Discard All Changes', variant: 'danger', onPress: function () { self.discard(MD.e, mE.wip.map(pathOf)); } }];
+      } else if (MD.kind === 'abortOp') {
+        var aop = st.op || { onto: mE.base, step: 2, total: 4 };
+        md.title = 'Confirm Abort Rebase'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch; md.hasText = true;
+        md.text = 'Rebasing ' + mE.branch + ' onto ' + aop.onto + ' (' + aop.step + '/' + aop.total + '). Aborting puts the branch back where it was before the rebase.';
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Abort Rebase', variant: 'danger', onPress: function () { self.endOp(true); } }];
+      } else if (MD.kind === 'amendPush') {
+        md.title = 'Amend Will Require Force Push'; md.hasText = true;
+        md.text = 'This commit is already on origin/' + mE.branch + '. After amending it you will have to force push.';
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Begin Amend', variant: 'primary', onPress: function () { self.beginAmend(MD.e); } }];
+      } else if (MD.kind === 'squash') {
+        md.title = 'Squash ' + MD.shas.length + ' Commits'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch; md.isSquash = true; md.width = 540;
+        md.summary = MD.summary; md.body = MD.body;
+        md.setSummary = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { summary: ev.target.value }) }); };
+        md.setBody = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { body: ev.target.value }) }); };
+        md.hasNote = !!MD.force; md.note = 'Some of these commits are on origin. Squashing them will require a force push.';
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Squash ' + MD.shas.length + ' Commits', variant: 'primary', disabled: !(MD.summary || '').trim(), onPress: function () { self.squash(); } }];
+      } else if (MD.kind === 'output') {
+        md.title = 'Commit'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch + ' · ' + mE.wt; md.isOutput = true; md.width = 760;
+        var Cc = 'color: var(--text-code);', Mu = 'color: var(--text-muted);', Su = 'color: var(--success);', Da = 'color: var(--danger);', Ac = 'color: var(--accent-text);';
+        md.out = [['$ .husky/pre-commit', Ac], ['> lint-staged', Mu], ['✓ Preparing lint-staged…', Su], ['✗ Running tasks for staged files…', Da], ['  ✗ *.ts — 2 files', Da], ['    ✗ eslint --fix', Da], ['', Cc],
+          [mE.id === 'api1' ? 'src/jobs/rotate-tokens.ts' : 'src/auth/refresh.ts', Cc], ["  14:5  error  'log' is not defined  no-undef", Da], ['', Cc], ['✗ 1 problem (1 error, 0 warnings)', Da], ['husky - pre-commit script failed (code 1)', Mu]]
+          .map(function (l) { return { text: l[0] || ' ', style: 'white-space: pre-wrap; word-break: break-word; min-height: 20px; ' + l[1] }; });
+        md.buttons = [{ label: 'Close', variant: 'secondary', onPress: closeM },
+          { label: 'Commit Without Hooks', variant: 'secondary', onPress: function () { self.setState({ modal: null, busy: self.kv('busy', MD.e, 'commit') }); self.toast({ status: 'running', message: 'Committing…', sub: mE.repo + ' / ' + mE.branch }); self.later(700, function () { self.commitDone(MD.e); }); } },
+          { label: 'Retry', variant: 'primary', onPress: function () { self.startCommit(MD.e); } }];
+      } else if (MD.kind === 'stageOutput') {
+        md.title = MD.verb === 'unstage' ? 'Unstage' : 'Stage'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch + ' · ' + mE.wt; md.isOutput = true; md.width = 760;
+        var Cc2 = 'color: var(--text-code);', Mu2 = 'color: var(--text-muted);', Da2 = 'color: var(--danger);', Ac2 = 'color: var(--accent-text);';
+        var lock = mE.wt.indexOf('/wt/') >= 0 ? '/.git/worktrees/' + mE.wt.split('/').pop() + '/index.lock' : '/.git/index.lock';
+        md.out = [['$ git ' + (MD.verb === 'unstage' ? 'restore --staged' : 'add') + ' -- ' + MD.paths.join(' '), Ac2],
+          ["fatal: Unable to create '~/code/" + mE.repo + lock + "': File exists.", Da2], ['', Cc2],
+          ['Another git process seems to be running in this repository, e.g.', Mu2], ["an editor opened by 'git commit'. Please make sure all processes", Mu2],
+          ['are terminated then try again. If it still fails, a git process', Mu2], ['may have crashed in this repository earlier:', Mu2], ['remove the file manually to continue.', Mu2]]
+          .map(function (l) { return { text: l[0] || ' ', style: 'white-space: pre-wrap; word-break: break-word; min-height: 20px; ' + l[1] }; });
+        md.buttons = [{ label: 'Close', variant: 'secondary', onPress: closeM }, { label: 'Retry', variant: 'primary', onPress: function () { self.retryStage(MD); } }];
+      }
+      md.style = 'position: absolute; left: 50%; top: ' + (md.isOutput ? 80 : 150) + 'px; transform: translateX(-50%); width: ' + md.width + 'px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden; z-index: 51';
+    }
+
+    var TS = st.toast;
+    var toast = TS ? Object.assign({}, TS, { onAction: TS.onAction ? function () { self.setState({ toast: null }); TS.onAction(); } : undefined }) : {};
+    var viewOpen = !!(M && M.kind === 'view');
+    var dockCm = cmFor(selE, 'dock');
+
+    return {
+      themeClass: 'theme-' + theme,
+      // PageHeader: a project's Review (title renames it) or a branch's ("Review", repo · branch · worktree).
+      pageTitle: stashScope ? 'Stashes' : branchScope ? 'Review' : 'Session auth refresh',
+      pageSub: stashScope ? 'web-app · ' + plural(stashList.length, 'stash').replace('stashs', 'stashes') : branchScope ? [act.repo, act.branch, act.wt].filter(Boolean).join(' · ') : '2 repos · 4 branches',
+      titleHint: branchScope || stashScope ? undefined : 'Rename Project',
+      titleStyle: "margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.3px; color: var(--text-strong); white-space: nowrap; " + (branchScope || stashScope ? '' : 'box-sizing: border-box; height: 30px; line-height: 28px; margin-left: -7px; padding: 0 6px; border-radius: 8px; display: block; width: fit-content; border: 1px solid transparent; cursor: text'),
+      backHref: branchScope || stashScope ? 'Main.dc.html' : 'Projects.dc.html', backLabel: branchScope || stashScope ? 'Back to Branches' : 'Back to Project',
+      branchScope: branchScope,
+      rootW: W, chrome: !P.embedded, headPad: P.embedded ? '0 16px 0 28px' : '0 16px', hasSync: !stashScope,
+      listHide: stashScope ? 'display: none' : '',
+      stashBoxStyle: stashScope ? 'flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; padding: 0 8px 8px'
+        : 'flex-shrink: 0; max-height: 34%; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; padding: 0 8px 8px; border-top: 1px solid var(--bg-hover)',
+      // Operation in progress (T2 / T4): the rebase banner (names in a project, where the branch is
+      // one of several), or the conflicts a stash Apply left (P7).
+      opOn: !!OP && (OP.kind === 'rebase' || Object.keys(OP.files).some(function (k) { return OP.files[k] === 'unresolved'; })),
+      op: (function () {
+        if (!OP) return {};
+        var oe = self.entry(OP.e), un = Object.keys(OP.files).filter(function (k) { return OP.files[k] === 'unresolved'; }).length;
+        var tone = un ? 'color: var(--danger); background: rgba(var(--danger-rgb), 0.12); ' : 'color: var(--warning); background: rgba(var(--warning-rgb), 0.12); ';
+        var base = 'flex-shrink: 0; display: flex; align-items: center; gap: 12px; min-height: 40px; box-sizing: border-box; padding: 6px 12px 6px 20px; font-size: 12px; border-bottom: 1px solid var(--border); ';
+        if (OP.kind === 'conflicts') return { style: base + tone, lead: un === 1 ? '1 file has merge conflicts. Resolve it in your editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.' : un + ' files have merge conflicts. Resolve them in your editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.', names: false, progress: '', buttons: false };
+        return { style: base + tone, lead: un ? 'Resolve conflicts to continue rebasing' : 'Continue rebasing', names: !branchScope, repo: oe.repo, branch: oe.branch, path: oe.wt, progress: '(' + OP.step + '/' + OP.total + ')',
+          buttons: true, continueOff: un > 0, continueTitle: un ? 'Resolve the conflicts first' : 'git rebase --continue',
+          abort: function () { self.setState({ modal: { kind: 'abortOp', e: OP.e } }); }, cont: function () { self.endOp(false); } };
+      })(),
+      // The sticky head sits flush at the top; without it (branch scope) the rows get the top gap.
+      listPad: branchScope ? '8px 8px 16px' : '0 8px 16px',
+      // History's Fetch / Pull / Push, for the open branch; a push count makes Push the primary button.
+      sync: (function (e) {
+        var b = st.busy[e.id], fb = !!st.busy.all;
+        var base = 'height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 6px; font-family: inherit; font-size: 12px; white-space: nowrap; ';
+        var look = function (on, primary) { return base + (on && primary ? 'background: var(--accent); color: var(--on-accent); font-weight: 600; cursor: pointer' : 'background: transparent; color: var(--text-body); font-weight: 500' + (on ? '; cursor: pointer' : '; opacity: 0.5')); };
+        // Fetch is per repository: a project fetches all of its own.
+        return { fetch: function () { self.fetchAll(branchScope ? e.repo : undefined); }, fetchTitle: 'Fetch ' + (branchScope ? e.repo : 'web-app and api-server') + ' from origin · last fetch 3h ago', fetchIcon: fb ? 'spinner' : 'download', fetchBusy: fb,
+          pull: function () { if (e.behind > 0) self.pull(e.id); }, pullOff: !(e.behind > 0), hasPull: e.behind > 0, pullCount: '↓' + e.behind, pullStyle: look(e.behind > 0, false),
+          pullTitle: e.behind > 0 ? 'Pull from origin/' + e.branch : 'Nothing to pull', pullIcon: b === 'pull' ? 'spinner' : 'arrow-down', pullBusy: b === 'pull',
+          push: function () { if (e.unpushed > 0) self.push(e.id); }, pushOff: !(e.unpushed > 0), hasPush: e.unpushed > 0, pushCount: '↑' + e.unpushed, pushStyle: look(e.unpushed > 0, true),
+          pushTitle: e.unpushed > 0 ? 'Push to origin/' + e.branch : 'Nothing to push', pushIcon: b === 'push' ? 'spinner' : 'arrow-up', pushBusy: b === 'push' };
+      })(act),
+      pageMenuOn: !!(M && M.kind === 'page'),
+      openPage: function (ev) { self.openMenu({ kind: 'page', e: self.state.active }, ev, true); },
+      qRight: q ? '' : '⌘K',
+      asideStyle: 'width: 360px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; min-height: 0',
+      q: q, setQ: function (v) { self.setState({ q: v }); }, clearQ: function () { self.setState({ q: '' }); },
+      noMatches: terms.length > 0 && items.length <= 1,
+      hasStashes: stashList.length > 0, stashCount: String(stashList.length), stashHeading: stashScope ? 'Stashes in web-app' : branchScope ? 'Stashes of this branch' : 'Stashes of this project', stashOpen: st.stashOpen, stashItems: stashItems,
+      stashChev: 'flex-shrink: 0; ' + (st.stashOpen ? '' : 'transform: rotate(-90deg)'),
+      toggleStashes: function () { self.setState({ stashOpen: !self.state.stashOpen }); },
+      hasOthers: others.length > 0, others: others, otherCount: String(others.length),
+      branchesOpen: bOpen, branchesShown: bOpen || peek,
+      branchChev: 'flex-shrink: 0; ' + (bOpen ? '' : 'transform: rotate(-90deg)'),
+      toggleBranches: function () { self.setState({ branchesOpen: !self.state.branchesOpen, hover: false }); },
+      hoverIn: function () { if (!self.state.hover) self.setState({ hover: true }); },
+      hoverOut: function () { if (self.state.hover) self.setState({ hover: false }); },
+      branchListStyle: peek
+        ? 'position: absolute; left: 8px; right: 8px; bottom: calc(100% - 1px); z-index: 10; display: flex; flex-direction: column; gap: 1px; padding: 4px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px var(--shadow)'
+        : 'display: flex; flex-direction: column; gap: 1px',
+      items: items, navKey: keyNav(nav),
+      isCols: cols, items2: items2, navKey2: keyNav(nav2),
+      dockTree: !cols && cmode === 'dock' && selRow === 'wip', dockCols: cols && cmode === 'dock' && selRow === 'wip', dockCm: dockCm,
+      paneOn: paneOn, paneCm: cmFor(selE, 'pane'),
+      ctxOn: !paneOn, cx: cx,
+      hasFile: !!selFile, filePath: selFile ? pathOf(selFile) : '', compare: compare,
+      ignoreWs: ignoreWs, toggleWs: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); },
+      openView: menuAt({ kind: 'view' }, true), viewOpen: viewOpen,
+      viewIcon: view === 'split' ? 'split' : 'unified', viewLabel: view === 'split' ? 'Split' : 'Unified',
+      viewBtnStyle: 'display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; ' + (viewOpen ? 'background: var(--bg-hover); color: var(--text-strong); border: 1px solid var(--accent)' : 'background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)'),
+      hasHunks: nH > 0,
+      navLabel: 'Change ' + (hIdx + 1) + ' of ' + nH,
+      prevChange: prevChange, nextChange: nextChange,
+      prevDisabled: atFirst && !prevPath, nextDisabled: atLast && !nextPath,
+      prevCross: atFirst && !!prevPath, nextCross: atLast && !!nextPath,
+      prevTitle: atFirst ? (prevPath ? 'Previous file (⌥↑)' : 'First change') : 'Previous change (⌥↑)',
+      nextTitle: atLast ? (nextPath ? 'Next file (⌥↓)' : 'Last change') : 'Next change (⌥↓)',
+      showSplit: !!rows && view === 'split', showUnified: !!rows && view === 'unified', lines: lines, uLines: uLines,
+      noSample: !!selFile && !rows, noFile: !selFile,
+      emptyText: selRow === 'wip' ? 'No changes' : selRow === 'multi' ? 'Pick consecutive commits to see their diff' : 'No files',
+      menuOn: !!M && menuItems.length > 0, menuItems: menuItems, menuW: menuW, menuLabel: menuLabel, menuStyle: menuStyle,
+      subOn: subOn, subItems: subItems, subStyle: subStyle,
+      closeMenu: function (ev) { if (ev && ev.preventDefault) ev.preventDefault(); self.setState({ menu: null }); },
+      modalOn: !!MD, md: md,
+      toastOn: !!TS, toast: toast
+    };
+  }
+}
+</script>
+</body>
+</html>

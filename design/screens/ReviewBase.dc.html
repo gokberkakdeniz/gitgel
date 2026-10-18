@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Hi3 · History of a feature branch</title>
+<title>Stacked branch, base menu</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -12,12 +12,12 @@
 <style>body{margin:0;background:#141311}</style>
 </helmet>
 <div style="width: 1280px; height: 800px; overflow: hidden">
-<dc-import name="HistH2" variant="branch" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
+<dc-import name="ReviewFocus" focus="api" open="baseMenu" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  // Hi2 (HistH2) for a feature branch: the base line, Push with its count.
+  // token-rotation-job branched off feat/job-queue: 3 of its 5 commits come from there (hint, warning pills). ⋮ › Change Base… lists the suggestion first; picking it moves those commits under the base line.
   renderVals() { return { theme: this.props.theme || 'dark' }; }
 }
 </script>

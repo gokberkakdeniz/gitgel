@@ -29,7 +29,7 @@ button{font-family:inherit}
 <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
 <div style="{{r.rowStyle}}">
 <span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; color: #faf9f5">{{r.repo}}</span>
-<a href="Diff.dc.html" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #faf9f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.branch}}</a>
+<a href="ReviewFocus.dc.html" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #faf9f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.branch}}</a>
 <button style="justify-self: start; max-width: 100%; min-width: 0; display: flex; align-items: center; gap: 4px; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc; background: #211f1c; border: 1px solid #302e2a; border-radius: 8px; padding: 4px 10px"><span style="min-width: 0; overflow: hidden; text-overflow: ellipsis">{{r.base}}</span><svg style="flex-shrink: 0" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{r.ahead}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #d8d4cc">{{r.files}}</span>

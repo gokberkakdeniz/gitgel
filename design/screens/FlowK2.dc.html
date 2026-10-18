@@ -66,14 +66,14 @@ class Component extends DCLogic {
     // Searching "queue": each band lists its matching rows, then the matching remote-tracking
     // branches (the shared List, heading "Remote Branches"). Only remotes with no local twin: not a
     // local branch's upstream, not origin/<a local name>. Nothing of this shows without a search.
-    // A remote row (or ⋮ › Open history) opens its History; ⋮ also has Copy branch name.
+    // A remote row (or ⋮ › Open Review) opens its Review (a branch with no project); ⋮ also has Copy branch name.
     // The subtitle and band counts leave the remotes out. Row 1 has its menu open.
     var remote = function (name, age, open) {
       return { lead: 'icon', icon: 'branch', title: name, titleMono: true, active: open, sub: [{ text: age }],
         actions: [{ icon: 'more-vertical', ariaLabel: 'Remote Branch Options', active: open }] };
     };
     return { themeClass: 'theme-' + t, themeName: t, scopes: [{ label: 'All', count: '2', on: true }, { label: 'Not in a project', count: '1' }],
-      remoteMenu: [{ label: 'Open History', icon: 'history', kbd: '↵', active: true, href: 'HistH4.dc.html' },
+      remoteMenu: [{ label: 'Open Review', icon: 'split', kbd: '↵', active: true, href: 'ReviewBranch.dc.html' },
         { label: 'Copy Branch Name', icon: 'copy' }],
       remotesApi: [remote('origin/ayse/queue-dashboard', '2d', true), remote('origin/queue-priority-spike', '3w', false)],
       remotesWeb: [remote('origin/feat/queue-badge', '5d', false)] };

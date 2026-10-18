@@ -104,12 +104,12 @@ class Component extends DCLogic {
     return { themeClass: 'theme-' + t, themeName: t, scopes: [{ label: 'All', count: '4', on: true }, { label: 'Not in a project', count: '3' }],
       menu: [
         { label: 'Copy Branch Name', icon: 'copy' },
-        { label: 'Open History', icon: 'history' },
+        { label: 'Open Review', icon: 'split', href: 'ReviewBranch.dc.html' },
         { kind: 'sep' },
         { label: 'Open in Finder', app: 'finder' }, { label: 'Open in Cursor', app: 'cursor' }, { label: 'Open in Terminal', app: 'terminal' },
         { kind: 'sep' },
         { label: 'Continue Rebase', icon: 'arrow-right', disabled: true, title: 'Fix the conflicts first' },
-        { label: 'Abort Rebase', icon: 'undo', danger: true, active: true, href: 'FlowT3.dc.html' }
+        { label: 'Abort Rebase', icon: 'undo', danger: true, active: true, href: 'ReviewRebase.dc.html' }
       ] };
   }
 }

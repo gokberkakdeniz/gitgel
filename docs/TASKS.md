@@ -678,4 +678,88 @@ rather than as a task is listed the same way, marked "(on request)".
 
 ## Open
 
-No open tasks.
+### Phase 27 — Review and History in one screen
+
+#### T27.1 Branch scope is History
+- **Depends on:** —
+- **Why:** user request 2026-10-18: one screen for Review and History, one branch open at a time
+  (canvas page "Review").
+- **Spec:** SPEC §5 "Review" (Scopes: Branch; Header; List column: origin and base lines,
+  Picking on open), §5 Branches "Base branch row", "Open review", "Remote branches", §5
+  Settings › Appearance "Review", §7 shortcuts, §16 opening paragraph.
+- **Reference:** `ReviewBranch.dc.html` (mounts `ReviewFocus.dc.html` with `scope="branch"`);
+  `ReviewFocus.dc.html` header 37–75, lines 113–117 and `baseItem` / `lineKeys` in its logic.
+- **Files:** `state/nav.ts`, `App.tsx`, `lib/types.ts` (`ReviewTarget` branch gets `rev`),
+  `screens/History/*` (becomes Review's body; move to `screens/Review/` when convenient),
+  `screens/History/rows.ts`, `screens/Branches/Branches.tsx`, `screens/Settings/*`, i18n.
+- **Steps:**
+  1. A branch-scope `review` route renders the History screen (title "Review", its subtitle,
+     Back label as the route says); the `history` route goes (stored routes with it map to
+     `review`). `openHistory` callers open Review instead; "Open history" items become "Open
+     review" (split icon), the base row's History button "Review".
+  2. Page menu: Branch-scope order of SPEC §5 (no "Open review" / ⌥H; "Change Base…" opens the
+     Base menu; "Rebase on <base>" from `SyncItems rebaseOnly`).
+  3. List: no day labels; the origin line; base line `base <base> · <mb>`; both lines pick
+     their rows through the several-rows selection (`select`), highlighted while the selection
+     equals their rows. A branch with no worktree opens on the base line.
+  4. Settings › Appearance section "History" → "Review" (both languages).
+- **Acceptance:** every former History entry point opens Review on the same rev; lines select
+  as specified; `pnpm test` and `pnpm lint` pass.
+
+#### T27.2 Uncommitted sections, VS Code style
+- **Depends on:** T27.1
+- **Why:** user feedback 2026-10-18 (VS Code's Changes list).
+- **Spec:** SPEC §5 "Review" "Uncommitted sections".
+- **Reference:** `ReviewFocus.dc.html` section and file row markup (`gg-sec`, `gg-acts`,
+  `gg-cnts`), CSS lines 27–33.
+- **Files:** `screens/Review/parts.tsx` (`FileRow` stage prop), the section header in the list.
+- **Steps:**
+  1. Section header: chevron button folding the section (per branch, kept in `useUi` while the
+     app runs), hover icon for Stage / Unstage All, count pill.
+  2. File row: hover / focus icons (Discard Changes…, Stage / Unstage) left of the counts; counts
+     last; a 0 count left out; rows start at 8px.
+- **Acceptance:** as the reference; keyboard focus shows the icons too.
+
+#### T27.3 Project scope: one open branch
+- **Depends on:** T27.2
+- **Why:** as T27.1.
+- **Spec:** SPEC §5 "Review" (Scopes: Project; Header; Banners; List column: Branch head,
+  Stacked warning, Stashes, Branches; Base menu).
+- **Reference:** `ReviewFocus.dc.html` (`scope="project"`), `ReviewBase.dc.html`,
+  `ReviewRebase.dc.html`, `ReviewConflicts.dc.html`.
+- **Files:** `screens/Review/Review.tsx` (project scope now mounts the History body with the
+  open entry), `sync/SyncButtons.tsx` (Fetch of several repositories), `components/BaseMenu`.
+- **Steps:**
+  1. The open entry (route `focusKey`, else the first); Branches section switching it; each
+     entry keeps its picked row while the screen is open.
+  2. Sticky branch head; stacked warning and the commits' branch pills; banners for every
+     entry; title rename; not-reviewable line.
+  3. Header: sync of the open entry, Fetch of every repository; ⋮ with Project and Branch parts.
+  4. Stashes of the whole project.
+- **Acceptance:** R1, R3, R4, R5 behave as the prototype.
+
+#### T27.4 Stash scope on the new screen
+- **Depends on:** T27.3
+- **Why:** as T27.1.
+- **Spec:** SPEC §5 "Review" (Scopes: Stashes).
+- **Reference:** `ReviewStashes.dc.html`.
+- **Steps:** the stash scope shows the stash section as the list column (opens on the first
+  stash), StashBar and diff on the right; no search, sync or Branches.
+- **Acceptance:** Branches › a stash opens it as R6.
+
+#### T27.5 Remove the old Review
+- **Depends on:** T27.4
+- **Why:** as T27.1.
+- **Spec:** —
+- **Steps:**
+  1. Delete the old Review body (file groups, Committed / Uncommitted / All, entry bar, commit
+     chip, file filter, ⌥H, `useSwitchTo`), the code and i18n keys only it used, and the backend
+     calls nobody makes any more.
+  2. Replace the remaining "History" mentions in SPEC (§1, §3, §4, §11, §15) and code comments;
+     rename `settings.historyLayout` only if it is free to (keep the config key otherwise).
+- **Acceptance:** `pnpm test`, `pnpm lint`, `cargo test` pass; no reference to removed files.
+
+#### T27.6 ✋ Checkpoint — phase 27
+- **Depends on:** T27.5
+- **Steps:** run `pnpm tauri dev`; show a project review (switch branches, lines, base menu,
+  commit, stashes), a branch review from Branches, a stash stack, light theme and the sidebar.

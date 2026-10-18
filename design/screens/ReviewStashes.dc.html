@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>T4 · Rebase in History</title>
+<title>Stash stack of a repository</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -12,13 +12,12 @@
 <style>body{margin:0;background:#141311}</style>
 </helmet>
 <div style="width: 1280px; height: 800px; overflow: hidden">
-<dc-import name="HistH6" operation="{{true}}" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
+<dc-import name="ReviewFocus" scope="stashes" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  // History (HistH6 with operation) of a branch whose rebase stopped on conflicts: Review's banner
-  // without the names, under the header; Uncommitted's conflicted files marked ⚠ / ✓.
+  // Branches › a repo band's stashes: the repo's whole stack, no branch open. Title "Stashes", web-app · 2 stashes; Apply / Pop / Drop on the stash header.
   renderVals() { return { theme: this.props.theme || 'dark' }; }
 }
 </script>

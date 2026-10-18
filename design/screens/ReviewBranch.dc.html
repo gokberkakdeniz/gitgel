@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Hi6 · Hooks running</title>
+<title>Review of a branch, no project</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -12,11 +12,14 @@
 <style>body{margin:0;background:#141311}</style>
 </helmet>
 <div style="width: 1280px; height: 800px; overflow: hidden">
-<dc-import name="HistH6" state="hooks" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
+<dc-import name="ReviewFocus" scope="branch" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
-class Component extends DCLogic { renderVals() { return { theme: this.props.theme || 'dark' }; } }
+class Component extends DCLogic {
+  // A branch opened from Branches (no project): the old History. Title "Review", repo · branch · worktree under it; no sticky head, no Branches section; ⋮ has Switch Branch….
+  renderVals() { return { theme: this.props.theme || 'dark' }; }
+}
 </script>
 </body>
 </html>

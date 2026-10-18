@@ -680,26 +680,27 @@ Every active branch, whether or not it is in a project, and each repo's base bra
   It differs from other rows:
   - Same background as other rows (the pill and History button set it apart); no checkbox (the
     column is left empty). It cannot be selected.
-  - After the name, a compact `outline` pill "base". The name opens History (§16) on it, tooltip
-    `Show history of <name>`.
+  - After the name, a compact `outline` pill "base". The name opens Review (§5, branch scope) on
+    it (planned, T27.1; was History), tooltip `Review <name>`.
   - Line 2 as other rows, against its upstream: `base origin/main · ↑0 ↓3 / 0 / 2 · 4m` (↓ as of
     the last fetch); without a usable upstream the base part is left out and ahead / files are
     "—". Never the "merged" pill.
-  - Projects cell: a 26px "History" button (12px history icon, 12px `accent.text`, `bg.elevated`,
-    1px `border`, radius 8; tooltip `Commit history of <name>`) that opens History.
+  - Projects cell: a 26px "Review" button (12px split icon, 12px `accent.text`, `bg.elevated`,
+    1px `border`, radius 8; tooltip `Review <name>`) that opens Review (planned, T27.1; was
+    "History").
   - The row menu is the same as other rows', except that "Open review" (split icon) takes the
     place of "Open history" (its name already opens History): Review of the branch against its
     upstream.
-- **Open history**: every other row menu has "Open history" (history icon) right
-  under "Copy branch name" (first for a detached HEAD, which opens the history of its SHA). It
-  opens History (§16) on the row's branch.
+- **Open review**: every other row menu has "Open review" (split icon) right under "Copy branch
+  name" too (first for a detached HEAD, which opens its SHA), in place of "Open history"
+  (planned, T27.1). It opens Review (§5, branch scope) on the row's branch.
 - **Stashes** of the repo under its rows (flow P1, §15).
 - **Remote branches** (K2), only while filtering: under the band's rows (and stashes), a `List`
   with the heading "Remote branches" and the repo's remote-tracking branches that match the
   filter (their name or the repo name), newest first. Only those with no local twin: not the
   upstream of a local branch and not `<remote>/<local name>`; never `*/HEAD`. Row: `branch` icon,
-  mono name, sub line the tip's age; the row opens History (§16) on it (tooltip `Show history of
-  <name>`), its ⋮ menu has "Open history" (↵), "Copy branch name", a divider and "Checkout
+  mono name, sub line the tip's age; the row opens Review (§5, branch scope) on it (tooltip
+  `Review <name>`), its ⋮ menu has "Open review" (↵; planned, T27.1), "Copy branch name", a divider and "Checkout
   Branch…" (§15 "Checkout branch"). A repo with only remote
   matches still gets its band. The subtitle counts its repo but not the remote branches; the band
   count leaves them out too.
@@ -724,139 +725,107 @@ Every active branch, whether or not it is in a project, and each repo's base bra
   "Undo" (28px, `#383631`; removes the entries, and deletes the project if the add created it)
   and "Open project →". Disappears after 6 s.
 
-### Review (`Diff.dc.html`)
+### Review (`ReviewFocus.dc.html`)
 
-One screen for both scopes:
+Review and History are one screen (user decision 2026-10-18; planned, T27.1–T27.5): one branch
+is open at a time, with its whole log, and the screen is reached for a project, a branch or a
+repository's stash stack. Canvas page "Review": R1 the prototype (`ReviewFocus.dc.html`, Play
+works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`,
+`baseCommits`, `hooks`, `stageGit`, `theme`), R2–R6 its states (`ReviewBranch`, `ReviewBase`,
+`ReviewRebase`, `ReviewConflicts`, `ReviewStashes.dc.html`, each mounting the prototype).
 
-- **Project scope** (a sidebar project with entries, Project → "Review changes" or ⌘R, or a
-  project row's branch link): title =
-  project name, subtitle `N repos · M branches` (its entries, as on Branches).
-- **Branch scope** (a Branches row): title "Review", subtitle as History's: `<repo> · <branch>`
-  (short SHA if detached), plus ` · <~worktree>` when checked out, or ` · last known state` when
-  opened on a deleted branch's last tip. One group.
-
-Layout:
-
-- Review leaves the sidebar as it is (shown or hidden, `settings.sidebarVisible`).
-  When the user shows it (the
-  header's show-sidebar button or the sidebar toggle), Review sits next to it
-  (`ReviewSidebar.dc.html`, board L2): the header drops the traffic-light space and the
-  show-sidebar button and Back / Forward (all live in the sidebar's top row) and starts with the
-  title at 28px, as the other page headers; the file list narrows to 280px; nothing else
-  changes. **Header** (a page header, `bg.main`, drag region): with the sidebar hidden,
-  traffic-light space, show-sidebar button, Back (aria-label "Back to Branches" / "Back to
-  project" / "Back") and Forward at 16px padding; the title + subtitle (project scope: the title
-  renames the project in place like the Project page's); right, as History's (the page's own
-  controls, then the ⋮ menu last): segmented **Committed / Uncommitted / All**, each with its
-  file count summed over all groups, then the **page menu** (⋮, `PageMenu`): "Stash"
-  (§15; not in the stash scope), in branch scope "Open history" (`history`, ⌥H; the branch's
-  History, or going back to it when Review was opened from there; not for a last known state),
-  "Refresh" (full rescan), and in project scope "Edit project"
-  (`pencil`), which opens the project page (going back to it when Review was opened from
-  there).
-- Default mode Committed; Uncommitted if there are no committed changes but some uncommitted, or
-  an entry has merge conflicts (§15 "Operations in progress"); then the first conflicted file is
-  picked.
-  Switching mode keeps the file on screen if the new mode lists it (else that entry's first file,
-  else the first one); between Uncommitted and All (both end at the working tree) the diff also
-  keeps its place in the file. Every entry has its group, also with no files in the
-  mode (header only, no totals; its menu with "Open history" and "Change base" stays reachable).
-- **Left file list** (310px, 280px beside the sidebar; `bg.sidebar`, padding 8, scrolls), one
-  group per entry (two entries from the same repo are two groups):
-  - **Resizing**: its right border is a drag handle (8px hit area, `col-resize`; a 2px accent
-    line on hover, focus and drag); 220–640px, ←/→ by 16px when focused, double-click resets.
-    The width is remembered on this machine (`localStorage`) and used with or without the sidebar.
-  - **File filter** (flow D8): a clearable mono `Input` at the top of the list, above the
-    groups (margin-bottom 6, sticky): search icon, placeholder "Search", and on the right `Kbd`
-    "⌘K" while empty, or `N files` (`aria-live`) plus the ✕ while it has text. ⌘K focuses it (Review only; the Branches ⌘K is unchanged).
-    - Matching: the text is split on spaces; a file matches when every term appears in its
-      path (`dir/name`, case-insensitive; a rename's old path counts). It filters the files of
-      the current mode (and of the picked commit, when an entry is scoped to one).
-    - Each visible file row highlights the first matching term in the name and in the folder
-      (`rgba(accent, 0.24)` background, radius 3, `text.strong`). Groups with no match are
-      hidden; collapsed groups open while filtering. Line 2 of a group shows 11px muted
-      `n of m` before its +/− (which stay the whole group's totals). The "not reviewable" line
-      is hidden while filtering. The Committed / Uncommitted / All counts do not change.
-    - No match: under the field, 13px `No files match “<text>”`, 12px muted
-      `Searched paths in <mode> files of every entry.` and a "Clear filter" text button.
-    - Keys in the field: ↵ opens the first match (at its first change); Esc clears the text
-      (a second Esc leaves the field).
-    - The selected file does not change while typing; if it is filtered out, the diff keeps
-      showing it. Change navigation (⌥↓ / ⌥↑, "next file") moves through the visible files only;
-      from a filtered-out file it goes to the first / last visible one.
-    - The text survives mode switches, commit picks and refreshes; leaving Review clears it.
-  - Line 1: collapse chevron + 14px/600 repo name (ellipsis), then right-aligned mono 11 green
-    `+add` and red `−del` (del hidden when 0). A small spinner shows while that group recomputes
-    after a base change. While the header is hovered or keyboard-focused, or its menu is open,
-    the totals give way to a 22×20 "⋮" button (`aria-label` "Branch options"; `bg.pressed` while
-    open).
-  - Line 2 (indent 20): mono 12 branch (ellipsis), the operation pill (`rebasing`, without the
-    progress; §15 "Operations in progress"), the conflicts pill, and on the right mono 11
-    muted upstream state (§15 "Sync": `origin ↑2 ↓1`, `origin` when level, `not on origin · ↑3`;
-    tooltip with the counts; hidden while an operation is in progress), replaced by `n of m`
-    while filtering.
-  - **Entry menu** (260px, right-aligned under "⋮"; right-clicking the header opens it at the
-    pointer): "Change base" (sub `base <ref>`) opens the Base menu at the same anchor; then the Branches row menu without "Open
-    review": "Copy branch name", "Open history" (back label "Back to Review"), the open items,
-    the Sync group (§15 "Sync"), then the Scripts group as the Branches menu (the Project menu in a project review),
-    then "Delete Branch…" (§15 "Delete branch"). The
-    header has no base control: the entry bar shows the base in use.
-  - Commit chip (when the entry is scoped to one commit, see below).
-  - Stacked warning (margin 0 8px 6px 28px, padding 7px 10px, radius 8, warning tone):
-    `N of M commits come from <branch>. A different base may fit better.`
-  - File rows (30px, indent 28, radius 8, selected `bg.hover`): kind badge, mono 12 file name,
-    mono 11 dimmed folder (ellipsis; renames `dir ← old/path`, untracked `dir · untracked`),
-    `+N` / `−N` (a conflicted file of an operation in progress: ⚠ or ✓, §15). **Right-click** (not a deleted file; it does not select the row, which shows
-    `bg.hover` while its menu is open): a 220px menu of "Open in Finder" (the file
-    selected) and "Open in <App>" for each installed editor, as in §5 "Open items" but without
-    the terminal. The file is read from the entry's worktree, else its repository folder (a
-    stash's: the repository); History's file rows the same. A file that is not on disk there
-    does nothing (`log::warn!`).
-    When the row is the file the diff shows, an editor opens it at the diff's cursor: line and
-    column of its modified side (`src/monaco/position.ts`; "Change n of m" and a click move
-    it), else at the top. Finder just shows the file. In the Uncommitted layer the files can be
-    picked with ⌘ / ⇧-click and the menu discards and copies them too (§15 "Discard", D12).
-  - Project scope, if some entries cannot be reviewed: one line under a top border, 12px muted
-    `N entries not reviewable ·` + link "Open project".
-  - Opening from a project row focuses that entry: its first file is selected and the other
-    groups are collapsed.
-- **Entry bar** (padding 12px 18px, bottom border): 14px/600 repo name (link: goes to Branches,
-  scrolls to that repo's band and highlights it briefly), mono 12 branch (link: opens its History,
-  §16; tooltip `Show history of <branch>`; a long one ends in an ellipsis before the right side), a mono 11 muted range only when it adds something
-  (`working tree <~path>` in Uncommitted, `<parent>..<sha>` with a commit picked), and on the
-  right 12px muted `N commits ahead of <base>`, the base a link to its History, then
-  ` · <upstream state>` (Uncommitted:
-  `HEAD ↔ working tree`). Links take `accent.hover` on hover.
-- **Commit list** (max ≈132px, scrolls; hidden in Uncommitted): rows with mono 12
-  `accent.text` short SHA, subject, and mono 11 muted age. When some listed commits are not on the
-  remote, a dashed **upstream line** (18px, mono 10 muted `above: not pushed`
-  between two 1px dashed `border.strong` rules; the upstream is named only in its `aria-label`) sits above the newest commit the remote has (the
-  upstream's `mergeBase`); none when every listed commit is pushed or none is. Commits that belong to another branch
-  (stacked) are at 60% opacity with a mono 11 warning pill naming the branch.
-- **One commit at a time** (flow D7): every commit row is a button (`role="option"`, tooltip
-  "Show only this commit"). Clicking one scopes **that entry** to the commit's own changes,
-  diffed against its first parent (merge commits too; a root commit against an empty tree).
-  - The row gets `#2a2825` and `inset 2px 0 0 #7fb3c4`, subject 500; stacked rows can be picked
-    too (85% opacity when picked).
-  - Entry bar: range `parent..sha`, "Commit n of N" (oldest = 1), a ↑ ↓ pair for newer / older
-    commit (disabled at the ends; ⌥⇧↑ / ⌥⇧↓) and a 28px "Show all commits" button (accent text,
-    `#302e2a` border).
-  - Left list: under the branch line a chip (`rgba(79,143,163,0.14)`, radius 7): mono 11 short
-    SHA in `#a3cad6`, 12px subject with ellipsis, ✕ ("Show all commits"). The group's files and
-    `+/−` are the commit's; while they load the previous list stays, dimmed (no spinner).
-  - The compare label reads `parent ↔ sha`.
-  - Picking a commit opens its first file at its first change. Clicking the picked row again,
-    the chip's ✕ or "Show all commits" returns to the whole branch, keeping the current file if
-    the branch lists it.
-  - Other entries are not affected; the segmented counts stay whole-branch totals. Switching to
-    Uncommitted clears every commit scope; in All the commit alone is shown. The selection is
-    per visit (not saved). If the branch tip moves and the commit is no longer listed (rebase,
-    amend), the scope is dropped silently.
-  - Change navigation, Split / Unified and Ignore whitespace work the same inside a commit.
-- **File bar** (padding 5px 10px 5px 18px, `bg.sunken`): mono 12 path, 12px muted compare
-  label (`merge-base ↔ <branch>`, `HEAD ↔ working tree`, `merge-base ↔ working tree` in All for a
-  checked-out entry, `parent ↔ sha` for a commit), the whitespace chip, then on the right the
-  view button, a divider and change navigation.
+- **Scopes** (route `review`; there is no `history` route any more, planned T27.1):
+  - **Project** (a sidebar project, Project → "Review changes" or ⌘R, a project row's branch
+    link): title = project name (renames it in place, as the Project page's), subtitle
+    `N repos · M branches`, Back "Back to Project". One entry is **open**: the one a project row
+    asked for, else the first; the others wait in the Branches section (planned, T27.3).
+  - **Branch** (a Branches row and its "Open review", the base row's name and button, a remote
+    branch while filtering, a deleted branch's last known state): title "Review", subtitle
+    `<repo> · <rev>` (short SHA if detached), plus ` · <~worktree>` when checked out, or
+    ` · last known state`. `rev` is a local branch, a remote-tracking branch or a SHA, as
+    History's was.
+  - **Stashes** (a Branches band's stash list): title "Stashes", subtitle
+    `<repo> · N stashes`; no branch is open: the list column is the stash section, no search, no
+    Fetch / Pull / Push (planned, T27.4).
+- **Layout** as before: Review leaves the sidebar as it is; beside it (`ReviewSidebar.dc.html`,
+  L2) the header drops the traffic lights, show-sidebar, Back and Forward and starts at 28px.
+- **Header** right side, gap 10 (the old History header's; `PageHeader` page `review`):
+  - Search field: `Input` 32px, 200px, placeholder "Search commits", label "Search commit
+    messages, SHAs and paths", `Kbd` "⌘K" while empty; ⌘K focuses it. Typing searches the open
+    branch's log (§16 "Reading", debounced 200 ms); Esc clears it. Not in the stash scope.
+  - Fetch | Pull | Push (§15 "Sync") of the open branch (only when it is a local branch with a
+    remote); in project scope Fetch fetches every repository of the project. Not in the stash
+    scope. A push count makes Push primary.
+  - The page menu (⋮, `PageMenu`):
+    - Project scope, in two labelled parts (`MenuLabel`): **Project**: "Refresh" (full rescan),
+      "Edit Project" (`pencil`; the project page, going back to it when Review came from
+      there); divider; **Branch** (the open entry): "Stash…" (§15; checked out, with
+      uncommitted files, no operation in progress), "Change Base…" (`branch`, sub `base <ref>`;
+      opens the Base menu at the ⋮), "Rebase on <base>" (§15 "Sync"; mid-operation "Continue
+      <op>" (when no file has markers) and "Abort <op>…" in its place, §15 "Operations in
+      progress"), "Copy Branch Name", divider, the open items, the Scripts group (menu
+      `project`), "Delete Branch…", the closing note.
+    - Branch scope, no labels: "Switch Branch…" (⇧⌘B, §16), then the Branch part as above with
+      "Refresh" after "Rebase on <base>" (Scripts group menu `branches`).
+    - Stash scope: "Refresh".
+    - No "Open history" / "Open review", no ⌥H.
+- **Banners** under the header, in this order: operations in progress (one per entry with one;
+  names only in project scope, §15), conflicts without an operation (a stash apply, P7), the
+  open branch's diverged banner (§15 "Sync"), `Base set to <base>` (neutral; goes away when
+  leaving).
+- **List column** (360px; 280px beside the sidebar; `bg.sidebar`; right border a drag handle,
+  280–640px, remembered on this machine; with "Layout: Columns" 300px and the files column
+  beside it, §16). Top to bottom:
+  - **Branch head** (project scope only; sticky at the top of the scrolling list, full width,
+    `bg.main`, bottom border `border`, padding 8px 16px 7px, gap 4): line 1 14px/600 repo
+    (ellipsis), right mono 11 `+add` / `−del` (the branch against its base, as the old group
+    totals); line 2 mono 12 branch (short SHA if detached), the operation pill (`rebasing`) and
+    the conflicts pill. No menu and no upstream text (the header's Pull / Push carry the counts);
+    tooltip `<repo> · <branch> · <~worktree>`. A spinner after the repo while the entry
+    recomputes after a base change.
+  - **Stacked warning** (margin 2px 0 6px, padding 7px 10px, radius 8, warning tone) when commits
+    come from another branch: `N of M commits come from <branch>. A different base may fit
+    better.`; those commits carry a warning sm mono pill with the branch's name.
+  - The rows of the open branch, as §16 describes (Uncommitted, commits, base log), without
+    day labels, and two lines among them (planned, T27.1):
+    - **Origin line**, when some commits of the branch are not on its upstream yet: above the
+      newest commit the remote has, a dashed `border.strong` rule on both sides of mono 11
+      muted `origin/<branch>`, plus ` · ↑N` (the branch's commits on the remote) when there are
+      some.
+    - **Base line** after the branch's own commits: a solid rule on both sides of
+      `base <base> · <merge-base short SHA>`; the base's log goes on under it.
+    - Both are buttons (padding 6px 8px, radius 8; `bg.hover` while their selection is the
+      picked one). The origin line picks Uncommitted (when there is one) and the commits not on
+      the remote; the base line picks Uncommitted and every commit of the branch: the whole
+      review (All). They are §16's "Several rows": tinted rows, files under the oldest, the
+      pane's range header. ⌘-click Uncommitted then takes it out (Committed, or only the
+      unpushed commits). A line with nothing above it is not a button.
+  - **Picking on open**: Uncommitted when there is one, else the newest commit; a branch that is
+    not checked out opens on its base line (the whole branch). Each open branch keeps its picked
+    row while the screen is open.
+  - **Stashes** (pinned under the list, as §16's): project scope "Stashes of this project"
+    (every entry's), branch scope "Stashes of this branch"; the header is a button that folds
+    the section.
+  - **Branches** (project scope; planned, T27.3): pinned under the stashes, top border
+    `border`, padding 0 8px 8px. Header button "Branches · N" (section label style, chevron;
+    folded by default, remembered while the app runs). Rows (padding 7px 8px, radius 8, hover
+    `bg.hover`): line 1 14px/600 repo, right `+add −del`; line 2 mono 12 branch, a 6px
+    `accent.text` dot when it has uncommitted files, right mono 11 muted upstream state
+    (`origin ↑2 ↓1`, `origin`). A click opens that entry (its head, rows, form and stashes
+    take over; the one open before joins the list).
+  - "N entries not reviewable · Open project" (project scope, under a top border), as before.
+  - The **commit form** at the bottom while Uncommitted is picked (§16 "Commit form").
+- **Pane**: §16's headers (commit, Uncommitted, several rows, a stash's StashBar), the file bar
+  and the diff below.
+- **Uncommitted sections** (planned, T27.2; VS Code's Changes list): each section's header row
+  (28px, margin-top 2, padding 0 4px 0 8px) is a chevron button with the uppercase label that
+  folds the section (per branch while the app runs); on its hover a 20×22 icon button (`plus`
+  "Stage All" / a plain minus "Unstage All"), then the count in a pill (min 18px, height 18,
+  radius 9, `bg.hover`, mono 11 `text.body`). File rows start at 8px like the commit rows.
+  On a file row's hover or focus two 20×22 icon buttons (gap 0, radius 5, `text.muted`; hover
+  `bg.pressed` and `text.strong`) open to the left of its counts, which stay last: `undo`
+  "Discard Changes…" (§15 "Discard", this file) and `plus` "Stage <file>" / minus "Unstage
+  <file>". A count that is 0 is left out, so `+N` alone sits at the right edge too.
 - **Diff:** Monaco diff editor, read-only, **Split** (side by side, default) or **Unified**
   (removed lines shown as view zones above the added ones; line-number columns may differ from
   the reference, accepted). Unchanged regions fold according to the view menu's **Context**
@@ -904,16 +873,7 @@ Layout:
   the first change in view. Picking a file lands on its first change. A file with no line
   changes (binary, too large, rename only) shows "No line changes" ("Only whitespace changed"
   when whitespace is ignored), and ↑ ↓ go straight to the neighbouring file.
-- **Uncommitted mode:** the commit list is hidden.
-- **Operations in progress** (T2): in every mode (not while a stash is shown), one one-line
-  banner per entry with an operation in progress, above the others; §15 "Operations in progress".
-- **Conflicts:** in every mode (not while a stash is shown), when an entry's working tree has
-  unmerged files and no operation in progress (a stash apply), a danger banner above that one: `1 file has merge conflicts. Resolve it in your
-  editor or terminal; Gitgel shows the conflict markers in the Uncommitted layer.` (`N files have
-  merge conflicts in M entries. Resolve them …` for several); the group's line 2 has the same
-  danger sm `N conflicts` pill as its Branches row (P7). The files are `C` in the
-  Uncommitted and All lists; their diff is HEAD ↔ the working tree file with its markers.
-- **Base menu** (340px popover, from a Review group's "Change base", the Project table's Base button or a
+- **Base menu** (340px popover, from Review's ⋮ › "Change Base…" (planned, T27.3), the Project table's Base button or a
   "base missing" pill): "Search" input; **Suggested** (mono 13 name +
   `Contains N of the M commits shown`); **Default** (see "Default and remote rows" below);
   **Other branches**; **Remote branches**; **Tags** when the filter
@@ -949,12 +909,10 @@ Layout:
   - The entry menu's "Change base" and the entry bar always show the ref in use
     (`base origin/master`, `ahead of origin/master`); the Base menu's "custom" still means
     "stored custom base" only.
-- Empty states: "No committed changes" / "No uncommitted changes" / "No changes". Branch scope
-  on an entry that cannot be reviewed: "This branch no longer exists", "Repository not found",
-  "Base missing: …".
-- The review refreshes in place when a related repo changes (the open file stays selected if it
-  is still listed).
-- **Stashes** under the file list, and the stash scope opened from Branches (flows P2–P3, §15).
+- Empty states: "No commits"; a branch that cannot be reviewed: "This branch no longer exists",
+  "Repository not found", "Base missing: …"; the stash scope with no stashes: "No stashes".
+- The review refreshes in place when a related repo changes (the picked row and file stay when
+  they are still listed).
 
 ### Project (`Projects.dc.html`)
 
@@ -1139,7 +1097,7 @@ Layout:
   - "Diff": "Tab size" (`settings.diffTabSize`, default 4): a dropdown with 1, 2, 3, 4, 5, 6, 8,
     10, 12; anything else reads as 4. It sets the Monaco diff's tab size (split and unified,
     spaces); the output panel is unaffected.
-  - "History": "Commit rows" (`settings.commitRows`, default `two-line`): a dropdown with "Two
+  - "Review" (was "History"; planned, T27.1): "Commit rows" (`settings.commitRows`, default `two-line`): a dropdown with "Two
     lines" / "One line"; anything else reads as two lines. It sets History's commit rows (§16
     "Commit row"). "Layout" (`settings.historyLayout`, default `tree`): a dropdown with "Tree" /
     "Columns"; anything else reads as tree. It sets where History lists the picked row's files
@@ -1304,10 +1262,9 @@ either end or next to another goes too), unless this file says that item is show
 | | Newer / older commit | ⌥⇧↑ / ⌥⇧↓ | with no commit picked, ⌥⇧↓ picks the newest |
 | | Split / Unified | ⌥V | |
 | | Ignore whitespace | ⌥W | |
-| | Review / History | ⌥H | the same branch's other page (also in the diff) |
 | | Changes only / Whole file | ⌥C | |
-| | Switch branch | ⇧⌘B | History (opens Switch Branch) |
-| | Pick commits | ⌘-click / ⇧-click, ⇧↑ / ⇧↓ | History (Uncommitted too; Esc goes back to one) |
+| | Switch branch | ⇧⌘B | Review of a branch (opens Switch Branch) |
+| | Pick commits | ⌘-click / ⇧-click, ⇧↑ / ⇧↓ | Review's list (Uncommitted too; Esc goes back to one) |
 | Lists and dialogs | Move | ↑ / ↓ | |
 | | Mark row | Space | Add palette |
 | | Run script | ⌘↵ | script run dialog |
@@ -2062,12 +2019,11 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
-| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 801–805, file list 56–122 and 410–453 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 100–106), entry bar and commits 125–151 (commit stepping 133–140, list 141–150), file bar 153–213 (whitespace chip 156–158, view button and menu 160–202 with Context 181–192, change navigation 203–212), split body 215–228, unified body 229–235, base menu 242–262 (sections, Default pair, pills, disabled rows, hint), base menu data per case 659–701 (`baseCase`: stacked / behind / unrelated / remote; effective base 279–280), commit selection 376–389, filter logic 391–401, 412–415, 446 and 575–576, segmented 454–461, context and fold logic 552–565 (sample hidden lines 466–474), view values 722–739 (context 729–738), commit values 741–751, theme and `embedded` values 706–707, filter values 754–765 |
+| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (sticky branch head, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set (planned, T27.1–T27.4) |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 235–238), Repositories 35–59 (repository `List` 38, items 300–304; Default base `List` 44 with rows, actions and add states 239–266 and 305–312; Active threshold 50–53, Check Out New Branches In 54–57), General 61–91 (Language 63–69; Terminal 72–84, options with disabled flag 311; Check for updates 87–89), Appearance: Theme 95–114, tile builder 253; Formatting 116–134 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 135–141 with Tab size, Scripts 143–161 (`List` 121, items 313–318), Prompts 127–134 (data 290), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| History | `HistH1`, `HistH2`, `HistH4.dc.html` | canvas page "Review & History" (Hi1–Hi3; the canvas's Hi3 is `HistH4`): Hi1 Branches with the base branch rows (base row 43–55, data 90–99) and a row menu with "Open history" (100–105; the base row has "Open review" there, 76–78); Hi2 History of a checked-out `main` (header 21–41: search, sync group, ⋮; list 44–99: day label 48–50, base line 51–56, Uncommitted row 57–65, commit row 66–74, file row 75–84, stash section 86–98; commit header 101–110; file bar 111–123; split diff 123+; avatar and row styles 149–171); `HistH4` (Hi3) mounts `HistH2` with `variant` branch: the base line and Push (data 191–210), `HistH5` (Hi4) the same with `pageMenu`, the ⋮ menu open (data 228–240); `HistH10` (Hi9) Switch Branch over Hi3 (dialog 24–49, rows 36–45, data 53–79); `HistH11` (Hi10) Amend over `HistH6` (`step`: menu / confirm / form; the form is `HistH6` with state `amend`, notice 107–110; `pushed` puts the upstream line above the newest commit; its menu also has Undo Commit, Revert Changes and Cherry-Pick to); `HistH12` (Hi11) Cherry-Pick to over `HistH6`: the commit menu and its target picker (`picker`); `HistH13` (Hi12) several rows picked over `HistH6` (state `range`: Uncommitted and two commits, the files under the oldest, the pane's range header); `HistH14` (Hi13) Squash over `HistH6` (state `squash`: two commits picked; `step` menu / dialog) |
 | Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
 | Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
 | New branch | `FlowV2.dc.html`, `FlowV3.dc.html` | canvas page "Branch actions": V2, the form under a repo band's "+", interactive (`case` worktree, checkout, branchOnly: the row picked first; `dirty`: the repository folder has changes); V3 mounts it with Repository folder picked; the "+" on the bands of `Main` (`newBranch` shows it open) |
@@ -2970,6 +2926,11 @@ never edits `~/.ssh`:
 ---
 
 ## 16. History
+
+History is no longer a screen of its own (planned, T27.1): its list, pane, commit form and
+commit actions are Review's (§5 "Review"), and "History" below means that part of Review. What
+changes: the title is Review's, the page menu is Review's, the list has no day labels and gets
+the origin and base lines as buttons, and opening goes through Review's scopes.
 
 A branch's commits, newest first, each one shown on its own against its first parent, like
 GitHub Desktop's History tab. Reads are a revwalk and diffs; the writes are Commit and Discard (§15).
