@@ -227,6 +227,12 @@
   gap: 6px;
 }
 
+.tag {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .meta,
 .metaLine {
   font-family: var(--font-mono);

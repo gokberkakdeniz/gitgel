@@ -139,7 +139,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <sc-if value="{{it.two}}" hint-placeholder-val="{{true}}">
 <span title="{{it.author}}" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 10px; font-weight: 600; background: var(--bg-avatar); color: var(--text-strong)">{{it.initials}}</span>
 <span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if><span style="margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 6px"><sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for></span></span>
+<span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if><span style="margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 6px"><sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for><sc-if value="{{it.hasTagRest}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tagRest}}" tone="neutral" size="sm" mono="{{true}}" title="{{it.tagRestTitle}}" hint-size="24px,16px"></dc-import></sc-if></span></span>
 <span style="display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap"><span style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{it.author}} · {{it.age}}</span><span class="gg-hide" style="color: var(--accent-text)">{{it.sha}}</span></span>
 </span>
 </sc-if>
@@ -148,7 +148,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <span style="{{it.subjectStyle}}">{{it.subject}}</span>
 <sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if>
 <span style="flex-grow: 1"></span>
-<sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for>
+<sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for><sc-if value="{{it.hasTagRest}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tagRest}}" tone="neutral" size="sm" mono="{{true}}" title="{{it.tagRestTitle}}" hint-size="24px,16px"></dc-import></sc-if>
 <span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.age}}</span>
 </sc-if>
 </button>
@@ -1349,7 +1349,9 @@ class Component extends DCLogic {
       var on = !multi && selE.id === e.id && selRow === c.sha;
       return { isCommit: true, two: !oneLine, one: oneLine, sha: c.sha, subject: c.subject, author: c.author, age: c.age, initials: initials(c.author),
         hasTag: i === 0 && !!st.amend[e.id], tag: 'amending', sel: on || inMulti, hasFrom: !!c.from, from: c.from || '',
-        tags: (c.tags || []).map(function (n) { return { name: n }; }),
+        // The first tag and +N for the rest (their names in its tooltip).
+        tags: (c.tags || []).slice(0, 1).map(function (n) { return { name: n }; }),
+        hasTagRest: (c.tags || []).length > 1, tagRest: '+' + ((c.tags || []).length - 1), tagRestTitle: (c.tags || []).slice(1).join('\n'),
         pick: pickRow(e, c.sha), menu: commitMenu(e, c, false), more: commitMenu(e, c, true),
         title: c.body ? c.subject + '\n\n' + c.body : c.subject,
         wrapStyle: wrap(on, inMulti, ''), hitStyle: hit(oneLine ? '5px 8px' : '7px 8px'),

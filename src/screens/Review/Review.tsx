@@ -1810,7 +1810,7 @@ function ListRow({
               {fromBranch[c.sha]}
             </Pill>
           )}
-          <TagPills tags={c.tags} />
+          <TagPills tags={c.tags} first />
         </>
       );
       const age = c.committedAt ? ageTitle(c.committedAt) : undefined;
@@ -2024,16 +2024,24 @@ function ShaLink({ repoId, sha, short }: { repoId: string; sha: string; short: s
   );
 }
 
-/** A commit's tags (§16), as neutral mono pills on the right of its line. */
-function TagPills({ tags }: { tags: string[] }) {
+/** A commit's tags (§16), as neutral mono pills on the right of its line. `first`: only the
+ * first one and `+N` for the rest (a list row). */
+function TagPills({ tags, first }: { tags: string[]; first?: boolean }) {
   if (!tags.length) return null;
+  const shown = first ? tags.slice(0, 1) : tags;
+  const rest = tags.length - shown.length;
   return (
     <span className={styles.tags}>
-      {tags.map((tag) => (
-        <Pill key={tag} tone="neutral" size="sm" mono title={tag}>
+      {shown.map((tag) => (
+        <Pill key={tag} tone="neutral" size="sm" mono title={tag} className={styles.tag}>
           {tag}
         </Pill>
       ))}
+      {rest > 0 && (
+        <Pill tone="neutral" size="sm" mono title={tags.slice(1).join('\n')}>
+          +{formatCount(rest)}
+        </Pill>
+      )}
     </span>
   );
 }

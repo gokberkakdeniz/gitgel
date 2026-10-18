@@ -2978,7 +2978,8 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     words, upper case), 10px/600 `text.strong` on `bg.avatar`; an author whose name contains
     `[bot]` gets "BOT" in `text.muted` on `bg.band` with a 1px dashed `border.strong`. Then 13px
     `text.strong` subject (ellipsis) with an outline sm pill "merge" for a merge commit and a
-    neutral mono sm pill per tag on it (annotated tags peeled, sorted) on the right of the line; line 2
+    neutral mono sm pill for the first tag on it (annotated tags peeled, sorted; at most 120px,
+    ellipsis) and `+N` for the others (tooltip: their names) on the right of the line; line 2
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
     below the base line: subject `text.muted`, row opacity 0.7. With "Commit rows: One line"
     (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11
@@ -3127,7 +3128,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
   commit stays when it is still listed, else Uncommitted or the newest is picked. Search picks the
   first match.
 - **Pane** : a commit header (padding 14px 18px, bottom border `border`, gap 8):
-  15px/600 `text.strong` subject (selectable) with the tag pills of its row on the right; the body (13px, line-height 1.5, `text.muted`, `white-space:
+  15px/600 `text.strong` subject (selectable) with a pill per tag on the right (at most 120px each, ellipsis); the body (13px, line-height 1.5, `text.muted`, `white-space:
   pre-wrap`, max-width 720px; left out when empty; selectable); mono 11 muted meta (selectable): an 18px avatar, the author
   (`text.body`), `·` the committer time (`today 11:42`, `yesterday 11:42`, `Oct 2, 11:42`, `Oct 2,
   2025`), `·` the short SHA (`accent.text`, selectable; a click opens the commit on the remote when the repo
