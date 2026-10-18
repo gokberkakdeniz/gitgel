@@ -465,7 +465,8 @@
 /* Project scope (SPEC §5): the open branch's head, sticky over its rows, full width. */
 .branchHead {
   position: sticky;
-  top: 0;
+  /* Sticky insets by the list's top padding; cancel it so rows don't show above. */
+  top: -6px;
   z-index: 2;
   display: flex;
   flex-direction: column;
