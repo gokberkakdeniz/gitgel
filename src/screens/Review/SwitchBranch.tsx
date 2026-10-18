@@ -94,7 +94,7 @@ function searchItems(items: Item[], query: string): Item[] {
   ];
 }
 
-/** Switch Branch (⇧⌘B, History's page menu): opens History on another branch of the same repo,
+/** Switch Branch (⇧⌘B, Review's page menu): opens Review on another branch of the same repo,
  * in place of this one (Back still leads where it did). */
 export function SwitchBranchDialog({ scan, rev, onClose }: { scan: RepoScan; rev: string; onClose: () => void }) {
   const items = useMemo(() => switchItems(scan), [scan]);

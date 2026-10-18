@@ -29,8 +29,7 @@ import { Branches } from './screens/Branches/Branches';
 import { Palette } from './screens/Palette/Palette';
 import { Settings } from './screens/Settings/Settings';
 import { Project } from './screens/Project/Project';
-import { BranchReview, ProjectReview, StashReview } from './screens/History/History';
-import { Review } from './screens/Review/Review';
+import { BranchReview, ProjectReview, StashReview } from './screens/Review/Review';
 import { selectRoute, useNav, type Route } from './state/nav';
 import { useData } from './state/data';
 import { useUi } from './state/ui';
@@ -168,35 +167,30 @@ function Screen({ route }: { route: Route }) {
     case 'project':
       return <Project key={route.projectId} projectId={route.projectId} />;
     case 'review':
-      // A branch's Review is the former History screen (SPEC §5); project and stash scopes stay.
-      if (route.target.kind === 'branch')
-        return <BranchReview key={JSON.stringify(route.target)} target={route.target} backLabel={route.backLabel} />;
-      if (route.target.kind === 'stashes')
-        return (
-          <StashReview
-            key={route.target.repoId + (route.focusKey ?? '')}
-            repoId={route.target.repoId}
-            backLabel={route.backLabel}
-            focusKey={route.focusKey}
-          />
-        );
-      if (route.target.kind === 'project')
-        return (
-          <ProjectReview
-            key={route.target.projectId + (route.focusKey ?? '')}
-            projectId={route.target.projectId}
-            backLabel={route.backLabel}
-            focusKey={route.focusKey}
-          />
-        );
-      return (
-        <Review
-          key={JSON.stringify(route.target) + (route.focusKey ?? '')}
-          target={route.target}
-          backLabel={route.backLabel}
-          focusKey={route.focusKey}
-        />
-      );
+      // One screen for a branch, a project (one entry open at a time) and a repo's stashes (SPEC §5).
+      switch (route.target.kind) {
+        case 'branch':
+          return <BranchReview key={JSON.stringify(route.target)} target={route.target} backLabel={route.backLabel} />;
+        case 'stashes':
+          return (
+            <StashReview
+              key={route.target.repoId + (route.focusKey ?? '')}
+              repoId={route.target.repoId}
+              backLabel={route.backLabel}
+              focusKey={route.focusKey}
+            />
+          );
+        case 'project':
+          return (
+            <ProjectReview
+              key={route.target.projectId + (route.focusKey ?? '')}
+              projectId={route.target.projectId}
+              backLabel={route.backLabel}
+              focusKey={route.focusKey}
+            />
+          );
+      }
+      break;
     case 'settings':
       return <Settings />;
   }

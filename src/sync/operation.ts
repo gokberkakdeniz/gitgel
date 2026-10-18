@@ -75,7 +75,7 @@ export function entryLabel(e: EntrySummary): string {
 }
 
 /** Review's one-line banner (T2) as a single sentence: `Resolve conflicts to continue
- * rebasing` + the entry's names + `(2/4)`; History's (T4) has no names, so a merge ends at
+ * rebasing` + the entry's names + `(2/4)`; a branch's Review (T4) has no names, so a merge ends at
  * what it merges (`… merging main`). One sentence (not word parts), so agglutinative
  * languages can order it freely; the ref keeps no special styling. */
 export function operationBanner(

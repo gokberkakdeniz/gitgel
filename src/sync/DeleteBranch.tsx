@@ -82,7 +82,7 @@ function deleteBranch(e: EntrySummary, remote: boolean, stash: boolean): Promise
     () => gitDeleteBranch(e.repoId, branch, e.headSha ?? '', remote, stash),
     {
       done: t('branches.deleted', { branch }),
-      // Once it is gone, its Review or History leaves (to Branches, or back into the project).
+      // Once it is gone, its Review leaves (to Branches, or back into the project).
       onStart: (runId) => {
         const ended = () => {
           const r = useRuns.getState().runs[runId];

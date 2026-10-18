@@ -12,7 +12,7 @@ interface Props {
   subtitle?: ReactNode;
   /** Right-hand actions. */
   children?: ReactNode;
-  /** A page opened from another (Review, History) names where Back goes and draws it stronger. */
+  /** A page opened from another (Review) names where Back goes and draws it stronger. */
   backLabel?: string;
 }
 

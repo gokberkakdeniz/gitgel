@@ -1,4 +1,4 @@
-/* The diff pane shared by Review and History (parts.tsx): the page layout, the bar above a
+/* Review's diff pane (parts.tsx): the page layout, the bar above a
    diff, the file bar, file rows and the stash section. */
 
 .screen {
@@ -209,12 +209,12 @@
   background: var(--bg-hover);
 }
 
-/* History's files column: rows not indented under a commit. */
+/* Rows not indented under a commit (Review's list starts them at 8px, SPEC §5). */
 .fileRowsFlat > .fileRow {
   padding-left: 8px;
 }
 
-/* A file row of History's sections (Hi5): its + / − after the counts, outside the button; the
+/* A file row of Uncommitted's sections (Hi5): its + / − after the counts, outside the button; the
  * row takes the highlight. */
 .stagedRow {
   flex-shrink: 0;
@@ -416,12 +416,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.hit {
-  background: rgba(var(--accent-rgb), 0.24);
-  color: var(--text-strong);
-  border-radius: 3px;
 }
 
 /* Stashes under the files (flows P2–P3). */

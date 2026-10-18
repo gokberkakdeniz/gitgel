@@ -136,7 +136,7 @@ export function SyncItems({
 }: {
   entry: EntrySummary;
   onDone: () => void;
-  /** Only "Rebase on <base>": History's header has Fetch, Pull and Push already. */
+  /** Only "Rebase on <base>": Review's header has Fetch, Pull and Push already. */
   rebaseOnly?: boolean;
 }) {
   const running = useRunningSync(entry.repoId);

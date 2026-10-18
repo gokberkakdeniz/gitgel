@@ -1,4 +1,4 @@
-// Stage / Unstage (SPEC §15 "Stage", Hi5): History's Staged and Unstaged sections are git's
+// Stage / Unstage (SPEC §15 "Stage", Hi5): Review's Staged and Unstaged sections are git's
 // index. A click moves the row at once; its git command waits 150ms for more clicks and runs
 // with them as one, one at a time per repository (git's index.lock, and one git action per
 // repository). While a repository's queue is not empty its Commit button is off. A failed run
@@ -36,7 +36,7 @@ interface StageState {
   over: Record<string, Record<string, StageTo>>;
   /** Per repository: clicks waiting or a command running. */
   busy: Record<string, boolean>;
-  /** Per entry: commands ended; History reads the index again on each, so the read that drops
+  /** Per entry: commands ended; Review reads the index again on each, so the read that drops
    * the moves comes after the command. */
   done: Record<string, number>;
   /** Drops an entry's moves once its index was read again with nothing in flight. */

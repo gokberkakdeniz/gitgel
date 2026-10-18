@@ -1,4 +1,4 @@
-/* Squash Commits (HistH14): the message of the new commit, as the commit form's fields. */
+/* Squash Commits (SPEC §16 "Squash"): the message of the new commit, as the commit form's fields. */
 .body {
   display: flex;
   flex-direction: column;

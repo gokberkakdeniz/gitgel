@@ -1,4 +1,4 @@
-// Settings › Appearance: Theme tiles (moved from General), Formatting, Diff and History
+// Settings › Appearance: Theme tiles (moved from General), Formatting, Diff and Review
 // (docs/SPEC.md §5). The mini-window previews are plain elements drawn from the palette
 // values below (design/screens/Settings.dc.html `layer()`), not images.
 import { useRef } from 'react';
@@ -94,7 +94,7 @@ export function AppearanceSection({ config }: { config: Config }) {
       <ThemeGroup config={config} />
       <FormattingGroup config={config} />
       <DiffGroup config={config} />
-      <HistoryGroup config={config} />
+      <ReviewListGroup config={config} />
     </>
   );
 }
@@ -241,7 +241,7 @@ function DiffGroup({ config }: { config: Config }) {
   );
 }
 
-function HistoryGroup({ config }: { config: Config }) {
+function ReviewListGroup({ config }: { config: Config }) {
   const rows: CommitRows = config.settings.commitRows === 'one-line' ? 'one-line' : 'two-line';
   const layout: HistoryLayout = config.settings.historyLayout === 'columns' ? 'columns' : 'tree';
   const save = (patch: Partial<Settings>) => void updateSettings({ ...config.settings, ...patch });

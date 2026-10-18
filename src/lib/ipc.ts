@@ -59,7 +59,7 @@ export const getReview = (target: ReviewTarget) => invoke<ReviewData>('get_revie
 export const getCommitChanges = (repoId: string, sha: string) =>
   invoke<CommitChanges>('get_commit_changes', { repoId, sha });
 
-/** History's selection taken together (Hi12): `oldest`'s parent ↔ `newest`, or ↔ the working tree. */
+/** Review's picked rows taken together (Hi12): `oldest`'s parent ↔ `newest`, or ↔ the working tree. */
 export const getRangeChanges = (repoId: string, oldest: string, newest: string | null, worktreePath: string | null) =>
   invoke<RangeChanges>('get_range_changes', { repoId, oldest, newest, worktreePath });
 
@@ -241,10 +241,10 @@ export const getDefaultPrompt = (provider: CommitProvider) => invoke<string>('ge
 /** Discard (Hi8, D12): the files go back to HEAD, a copy of each to the Trash first. */
 export const gitDiscard = (entries: DiscardFiles[]) => invoke<ScriptRun>('git_discard', { entries });
 
-/** The entry's uncommitted changes as git's index splits them: History's Staged and Unstaged. */
+/** The entry's uncommitted changes as git's index splits them: Review's Staged and Unstaged. */
 export const getIndexChanges = (entry: EntryRef) => invoke<IndexChanges>('get_index_changes', { entry });
 
-/** Stage / Unstage (History's sections): whole files into the index or out of it. */
+/** Stage / Unstage (Review's sections): whole files into the index or out of it. */
 export const gitStage = (entry: EntryRef, files: StageFiles) => invoke<ScriptRun>('git_stage', { entry, files });
 
 /** Typed text for a running script. */

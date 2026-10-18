@@ -5,7 +5,7 @@ import { MoreVerticalIcon } from './icons';
 import { Menu } from './Menu';
 import { Popover } from './Popover';
 
-/** The ⋮ button that closes a page header (Review, History): the page's less used actions
+/** The ⋮ button that closes a page header (Review): the page's less used actions
  * (Stash, Refresh, Edit project). `children` gets a `close` that also hands back the
  * button's rect, for a dialog that opens from it. */
 export function PageMenu({ children }: { children: (close: () => void, anchor: DOMRect) => ReactNode }) {

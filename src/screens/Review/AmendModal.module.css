@@ -1,4 +1,4 @@
-/* Amend Will Require Force Push (HistH11): a warning icon beside the text, as Confirm Discard Changes. */
+/* Amend Will Require Force Push (SPEC §16 "Amend"): a warning icon beside the text, as Confirm Discard Changes. */
 .body {
   display: flex;
   gap: 16px;

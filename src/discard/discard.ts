@@ -1,5 +1,5 @@
 // Discard (SPEC §15 "Discard"; Hi8, D12): Uncommitted files go back to HEAD (an Unstaged row of
-// History: to what is staged), after Confirm
+// Review's Unstaged rows: to what is staged), after Confirm
 // Discard Changes unless Settings › Prompts says not to ask.
 import { create } from 'zustand';
 import { t } from '../i18n';
@@ -18,7 +18,7 @@ export interface DiscardTarget {
   /** The branch, or the short SHA when detached. */
   branch: string;
   files: FileChange[];
-  /** Of `files`, the paths whose unstaged part alone goes (History's Unstaged rows): back to what
+  /** Of `files`, the paths whose unstaged part alone goes (Review's Unstaged rows): back to what
    * is staged, not to HEAD. */
   keepIndex?: string[];
 }

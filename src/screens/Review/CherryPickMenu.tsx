@@ -6,7 +6,7 @@ import type { EntrySummary, HistoryCommit } from '../../lib/types';
 import { startGitAction } from '../../scripts/runs';
 
 /** Where a commit can be cherry-picked: the repository's checked-out entries but `own` (the
- * History's) and those with an operation in progress, in scan order. */
+ * the one Review shows) and those with an operation in progress, in scan order. */
 export function cherryTargets(active: EntrySummary[], own: EntrySummary | undefined): EntrySummary[] {
   return active.filter((e) => e.worktreePath && e.key !== own?.key && !e.operation);
 }

@@ -57,7 +57,7 @@ export function stashPayload(rows: Row[], picks: Record<string, string[]>): Stas
   });
 }
 
-/** Stash Changes (flow P4), under the ⋮ menu's Stash in Review and History, or at the pointer
+/** Stash Changes (flow P4), under the ⋮ menu's Stash in Review, or at the pointer
  * from Uncommitted's right-click menu (`atPointer`: it opens to the right of it, as the menu did).
  * Each entry lists its files under it (open when there is one entry); its box picks them all or
  * none. */

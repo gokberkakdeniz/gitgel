@@ -1,4 +1,4 @@
-/* Confirm Discard Changes (HistH9 / FlowD12): a warning icon beside the text. */
+/* Confirm Discard Changes (SPEC §15 "Discard"): a warning icon beside the text. */
 .body {
   display: flex;
   gap: 16px;

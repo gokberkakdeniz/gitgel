@@ -46,7 +46,7 @@ export interface Settings {
   numberFormat: NumberFormat; // Settings › Appearance › Formatting › Number Format
   preferAbsoluteDates: boolean; // Settings › Appearance › Formatting › Prefer absolute dates
   diffTabSize: number; // Settings › Appearance › Diff › Tab size
-  commitRows: CommitRows; // Settings › Appearance › History › Commit rows
+  commitRows: CommitRows; // Settings › Appearance › Review › Commit rows
   historyLayout: HistoryLayout; // Settings › Appearance › History › Layout
   appearance: Appearance; // Settings › Appearance
   sidebarVisible: boolean; // the main sidebar is shown; remembered
@@ -249,7 +249,7 @@ export interface DiscardFiles extends EntryRef {
   paths: string[]; // relative to the worktree (a rename's old path too)
   keepIndex: string[]; // of `paths`, the ones whose unstaged part alone goes (back to the index)
 }
-/** A worktree's uncommitted changes as git's index splits them (History's sections, `get_index_changes`). */
+/** A worktree's uncommitted changes as git's index splits them (Review's sections, `get_index_changes`). */
 export interface IndexChanges {
   staged: FileChange[]; // HEAD ↔ index
   unstaged: FileChange[]; // index ↔ working tree, untracked included
@@ -390,7 +390,7 @@ export interface CommitChanges {
   parent: string | null; // null => root commit, compared with an empty tree
   files: FileChange[];
 }
-/** Several commits taken together (History's selection, Hi12). */
+/** Several commits taken together (Review's picked rows, Hi12). */
 export interface RangeChanges {
   parent: string | null; // null => root commit, compared with an empty tree
   files: FileChange[];

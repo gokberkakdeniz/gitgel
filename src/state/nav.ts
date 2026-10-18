@@ -86,7 +86,7 @@ export function openSettings(section?: SettingsSection) {
 // change here reloads the page instead.
 import.meta.hot?.accept(() => window.location.reload());
 
-/** After a branch is deleted (SPEC §15 "Delete branch"), when its Review or History is shown:
+/** After a branch is deleted (SPEC §15 "Delete branch"), when its Review is shown:
  * every page about it leaves the stack (forward ones too), and Branches shows, unless the pages
  * under it are in a project (then the project page or review it was opened from). */
 export function leaveDeletedBranch(repoId: string, branch: string) {

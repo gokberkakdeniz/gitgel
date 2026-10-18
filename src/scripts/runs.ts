@@ -241,7 +241,7 @@ export function showRunToast(run: ScriptRun): void {
   // Its output panel is open: the panel's pill says it all.
   if (useRuns.getState().shownRunId === run.runId) return;
   if ((run.scriptId ?? '').startsWith('ai:') && run.status !== 'running') return;
-  // Stage / Unstage has no toasts of its own: History's queue says when one fails.
+  // Stage / Unstage has no toasts of its own: Review's queue says when one fails.
   if (run.scriptId === 'git:stage') return;
   const output = { owner: run.runId, onClick: () => useRuns.getState().showOutput(run.runId) };
   if (run.status === 'running') {

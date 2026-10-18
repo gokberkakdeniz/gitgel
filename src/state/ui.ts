@@ -30,8 +30,8 @@ export interface Toast {
   owner?: string;
 }
 
-/** History's commit form for one branch (`commitDraftKey`), kept while the app runs so leaving
- * History and coming back finds it as it was. */
+/** Review's commit form for one branch (`commitDraftKey`), kept while the app runs so leaving
+ * Review and coming back finds it as it was. */
 export interface CommitDraft {
   summary: string;
   description: string;

@@ -1,4 +1,4 @@
-// Parts of the diff pane shared by Review and History (SPEC §16): the file bar with its view menu
+// Parts of Review's diff pane (SPEC §5, §16): the file bar with its view menu
 // and change navigation, file rows, the stash section, and the remembered diff view settings with
 // their ⌥ keys.
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -19,7 +19,6 @@ import type { NavInfo } from '../../monaco/DiffView';
 import { diffPosition } from '../../monaco/position';
 import { useData } from '../../state/data';
 import { useUi } from '../../state/ui';
-import { firstHit } from './fileFilter';
 import styles from './parts.module.css';
 import { dirLabel } from './selection';
 import { stashMeta, type ReviewStash } from './stashes';
@@ -264,14 +263,13 @@ export interface FileActions {
    * with its worktree: a project review's picks can span repositories with the same paths. */
   files: { file: FileChange; folder: string | null }[];
   onDiscard: () => void;
-  /** History's sections, with several files: Stage / Unstage Selected Files, whichever the
+  /** Uncommitted's sections, with several files: Stage / Unstage Selected Files, whichever the
    * picked rows allow. */
   onStage?: { stage?: () => void; unstage?: () => void };
 }
 
 export function FileRow({
   file: f,
-  terms,
   on,
   picked,
   onClick,
@@ -281,7 +279,6 @@ export function FileRow({
   conflict,
 }: {
   file: FileChange;
-  terms: string[];
   on: boolean;
   /** Picked with ⌘ / ⇧-click: tinted. */
   picked?: boolean;
@@ -331,12 +328,8 @@ export function FileRow({
         title={f.path}
       >
         <KindBadge kind={f.kind} />
-        <span className={styles.fileName}>
-          <Highlighted text={basename(f.path)} terms={terms} />
-        </span>
-        <span className={styles.fileDir}>
-          <Highlighted text={dirLabel(f)} terms={terms} />
-        </span>
+        <span className={styles.fileName}>{basename(f.path)}</span>
+        <span className={styles.fileDir}>{dirLabel(f)}</span>
         {!stage && counts}
       </button>
   );
@@ -401,7 +394,7 @@ export function FileRow({
   );
 }
 
-/** Uncommitted's file menu (Hi8, D12; GitHub Desktop's texts): Discard, Include / Exclude (History,
+/** Uncommitted's file menu (Hi8, D12; GitHub Desktop's texts): Discard, Include / Exclude (Review,
  * several files), the paths, then the open items for the files still on disk. */
 function UncommittedItems({
   actions,
@@ -545,7 +538,6 @@ export function StashSection({
                     key={f.path}
                     file={f}
                     folder={repos?.find((r) => r.id === st.repoId)?.path ?? null}
-                    terms={[]}
                     on={f.path === file}
                     onClick={() => onFile(f.path)}
                   />
@@ -556,18 +548,5 @@ export function StashSection({
         );
       })}
     </section>
-  );
-}
-
-/** The first matching term in `text`, tinted. */
-function Highlighted({ text, terms }: { text: string; terms: string[] }) {
-  const hit = terms.length > 0 ? firstHit(text, terms) : null;
-  if (!hit) return <>{text}</>;
-  return (
-    <>
-      {hit[0]}
-      <mark className={styles.hit}>{hit[1]}</mark>
-      {hit[2]}
-    </>
   );
 }

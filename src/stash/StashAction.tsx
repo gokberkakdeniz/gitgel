@@ -4,7 +4,7 @@ import { t } from '../i18n';
 import type { ReviewGroup } from '../lib/types';
 import { StashDialog, stashRows } from './StashDialog';
 
-/** "Stash" (flow P4) for a page's ⋮ menu (Review, History): left out while no
+/** "Stash" (flow P4) for a page's ⋮ menu (Review): left out while no
  * checked-out entry has uncommitted changes, disabled while they all have merge conflicts. The
  * dialog opens under the ⋮ button. */
 export function useStashAction(groups: ReviewGroup[]) {
@@ -28,7 +28,7 @@ export function useStashAction(groups: ReviewGroup[]) {
   const dialog = at && (
     <StashDialog groups={groups} anchorRect={at.rect} atPointer={at.pointer} onClose={() => setAt(null)} />
   );
-  /** Opens the dialog at the pointer (Stash All Changes in History's Uncommitted right-click
+  /** Opens the dialog at the pointer (Stash All Changes in Review's Uncommitted right-click
    * menu); null when nothing can be stashed (no changes, or merge conflicts everywhere). */
   const open = rows.length > 0 && any ? (pointer: DOMRect) => setAt({ rect: pointer, pointer: true }) : null;
   return { item, dialog, open };

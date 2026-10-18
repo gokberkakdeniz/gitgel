@@ -6,7 +6,7 @@ import type { CommitProvider } from '../../lib/types';
 import { GenerateButton } from './GenerateButton';
 import styles from './CommitForm.module.css';
 
-/** The commit form under History's list while Uncommitted is picked (W1a): summary, description
+/** The commit form under Review's list while Uncommitted is picked (W1a): summary, description
  * and the button; ⌘↵ in either field commits. Locked while the commit (and its hooks) runs.
  * Amending (Hi10) it stays whatever row is picked, says so above the button and needs no files.
  * The ✦ at the summary's end asks the default provider's CLI for a message for the checked

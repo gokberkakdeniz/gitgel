@@ -564,7 +564,7 @@
   color: var(--text-muted);
 }
 
-/* The base branch row (SPEC §5 "Base branch row", HistH1.dc.html): always listed, first. */
+/* The base branch row (SPEC §5 "Base branch row"): always listed, first. */
 .nameLine {
   max-width: 100%;
   min-width: 0;

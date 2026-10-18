@@ -230,11 +230,6 @@ export function ageText(unix: number, now: number = Date.now() / 1000, f: Fmt = 
   return f.absolute ? formatDateTime(unix, f) : formatAge(unix, now);
 }
 
-/** A commit row's age under a History day label: relative, or the time alone with the setting on. */
-export function rowAgeText(unix: number, now: number = Date.now() / 1000, f: Fmt = getFmt()): string {
-  return f.absolute ? renderTime(f.time, new Date(unix * 1000), f.locale) : formatAge(unix, now);
-}
-
 /** The tooltip beside it: the other form. */
 export function ageTitle(unix: number, now: number = Date.now() / 1000, f: Fmt = getFmt()): string {
   return f.absolute ? t('time.ago', { age: formatAge(unix, now) }) : formatDateTime(unix, f);

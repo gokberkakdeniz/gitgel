@@ -43,7 +43,7 @@ export function OperationBanner({
 }: {
   entry: EntrySummary;
   op: Operation;
-  /** History (T4): no names, its header has them. */
+  /** A branch's Review (T4): no names, its header has them. */
   names?: boolean;
 }) {
   const running = useGitActionRunning(entry.repoId);

@@ -699,7 +699,7 @@ function Row({
   onPopover,
 }: {
   entry: EntrySummary;
-  /** The repo's base branch: always listed, opens History instead of Review (T20.3). */
+  /** The repo's base branch: always listed (T20.3); its name and button open its Review. */
   isBase: boolean;
   projectNames: string[];
   selected: boolean;
@@ -842,8 +842,7 @@ function Row({
   );
 }
 
-/** The row's ⋯ menu: Copy Branch Name and Open History (Open Review on the base row, whose name
- * already opens History), the always-listed open items, the Scripts group, Delete Branch…, then
+/** The row's ⋯ menu: Copy Branch Name and Open Review, the always-listed open items, the Scripts group, Delete Branch…, then
  * the closing note. */
 function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void }) {
   return (

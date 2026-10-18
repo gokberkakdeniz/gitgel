@@ -131,9 +131,9 @@ are Developer ID signed and notarized, no sandbox.
   the first row of its repo. Without a usable upstream (none, or one with no
   common ancestor, e.g. after a force-push) only its working tree is shown; that is not "base
   missing".
-- **History:** a branch's commits, newest first, each one reviewable on its own (§16).
+- **Review's log:** a branch's commits, newest first, each one reviewable on its own (§5, §16).
 
-**Screens:** Branches (including the first-run empty state), Project, Review, History (§16), Add palette (⌘K), Settings.
+**Screens:** Branches (including the first-run empty state), Project, Review (with a branch's log, §16), Add palette (⌘K), Settings.
 
 **Out of scope:** writing to repositories beyond the git actions (§15; a user's script may do
 anything), review comments, GitHub/PR integration, fetching on its own (only the Fetch button fetches), launching agents, multiple
@@ -198,11 +198,13 @@ gitgel/
 │  │                              # KindBadge, Banner, ResizeHandle (+ useStoredWidth), ReleaseNotes, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
 │  │                              # ConfirmModal, Stepper, IconTile,
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
-│  ├─ screens/  Branches/  Project/  Review/  History/  Settings/  Palette/  AddRepos/
+│  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
 │  │            # Review/parts.tsx (+ parts.module.css): file bar (view menu, change navigation),
-│  │            #   file row, stash section, diff view settings, page layout (shared with History, §16)
-│  │            # History/: the History screen, its list rows, the commit form, Switch Branch, AmendModal, CherryPickMenu and SquashModal (§16);
+│  │            #   file row, stash section, diff view settings, page layout
+│  │            # Review/Review.tsx: the screen (BranchReview, ProjectReview, StashReview around BranchView),
+│  │            #   header.tsx (title, rename), banners.ts, rows.ts (its list rows), the commit form,
+│  │            #   Switch Branch, AmendModal, CherryPickMenu and SquashModal (§5, §16);
 │  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
 │  │            #   stage.ts: Stage / Unstage's queue and the rows moved before git confirms (§15 "Stage")
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
@@ -210,7 +212,7 @@ gitgel/
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
 │  │            # Discard Changes), picks.ts (⌘ / ⇧-click picking of Uncommitted's files)
 │  ├─ sync/     # §15 sync (W4a): sync.ts (what Fetch / Pull / Push can do, labels), SyncButtons
-│  │            # (History header buttons, SyncItems: the branch menus' group); operation.ts +
+│  │            # (Review header buttons, SyncItems: the branch menus' group); operation.ts +
 │  │            # OperationUi (operations in progress: pill, banner, Continue / Abort, T3 dialog);
 │  │            # DeleteBranch (the branch menus' Delete Branch… and its confirmation);
 │  │            # CheckoutBranch (the Sync group's Checkout Branch… and its dialog, flow V4);
@@ -282,7 +284,7 @@ each file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(
 | `bg.hover` | `#2a2825` | Hovered / selected rows in popovers and lists |
 | `bg.sidebarActive` | `#24221f` | Active sidebar item |
 | `bg.pressed` | `#383631` | Active segmented button, open menu trigger |
-| `bg.avatar` | `#383631` | Author avatars (History) |
+| `bg.avatar` | `#383631` | Author avatars (Review's log) |
 | `border` | `#302e2a` | Default 1px borders |
 | `border.row` | `#262420` | Row dividers |
 | `border.strong` | `#383631` | Band top edge, elevated button borders |
@@ -420,12 +422,12 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   `kbd` hint on the right in mono 11px. Also 28px (Locate), `chevron` for a dropdown trigger and
   `active` for its open state (`bg.pressed`, `border.strong`); a modal's Cancel is a plain
   `secondary`. Icon-only buttons are `IconButton` (28 plain, 24 in compact list rows, 32 boxed).
-  A copy button (the output panel's Copy, the History header's copy SHA) says it worked: for 1.5 s its icon becomes `check` and
+  A copy button (the output panel's Copy, Review's commit header's copy SHA) says it worked: for 1.5 s its icon becomes `check` and
   it turns `success.text`, a labelled one reading "Copied" (`useCopy`, `src/lib/useCopy.ts`). Rendered
   texts (a commit's subject, body, short SHAs) are selectable and copy through the system menu or
   shortcut; the webview menu is left alone on them (`App.tsx`).
 - `PageMenu`: the ⋮ (`more-vertical`) 32px boxed `IconButton` (`aria-label` "More actions") that
-  ends the Review and History headers; a 240px `Menu`, right-aligned under it, with the page's
+  ends Review's header; a 240px `Menu`, right-aligned under it, with the page's
   less used actions.
 - `Pill`: `success | warning | danger | neutral`, 11px/500, padding 3px 10px. Neutral: `#d8d4cc`
   on `#302e2a`. Also `accent` (`accent.text` on `rgba(accent,0.14)`), `size="sm"` (16px tall,
@@ -507,7 +509,7 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   Cancel is focused when the action is danger. The aria-label is the title.
 - `Stepper`: ↑ ↓ in one framed group (`bg.elevated`, 1px border, radius 8, padding 2, gap 2;
   buttons 26×24, radius 6, 14px chevrons; `Stepper.dc.html`, `StepperSpec.dc.html`): Review's and
-  History's change navigation and Review's commit stepping. A button that cannot step is
+  Review's change navigation. A button that cannot step is
   `icon.disabled`; one that leaves the file for the next is tinted (`rgba(accent,0.18)`,
   `accent.hover`).
 - `Toast`: bottom centre, `#2a2825` on `#383631` border, radius 12; one at a time. Optional
@@ -541,7 +543,7 @@ inputs and textareas (the diff has its own menu, §5 Review).
   16px when focused, double-click resets. The width is remembered on this machine
   (`localStorage`); whether the sidebar is shown is remembered in the config
   (`settings.sidebarVisible`, also cached in `localStorage` so a launch draws it right before
-  the config loads). Review and History leave it as it is; with it hidden the header shows a
+  the config loads). Review leaves it as it is; with it hidden the header shows a
   show-sidebar button next to the traffic lights. Resting the pointer on that button (120ms)
   shows the sidebar over the page (the page does not move; `shadow.pop`), its toggle on the
   button's spot: it goes when the pointer leaves it (a menu it opened counts as inside), and a
@@ -675,10 +677,10 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     group (§14, flow N1–N2); then "Delete Branch…" (§15 "Delete branch"). ↑/↓/↵/Esc
     work.
   - Hover `bg.sunken`; selected `rgba(79,143,163,0.10)`.
-- **Base branch row** (`HistH1.dc.html`): the repo's base branch (§1) is always
+- **Base branch row**: the repo's base branch (§1) is always
   the first row of its band, whatever its age or work, so every repo that can be read has a band.
   It differs from other rows:
-  - Same background as other rows (the pill and History button set it apart); no checkbox (the
+  - Same background as other rows (the pill and Review button set it apart); no checkbox (the
     column is left empty). It cannot be selected.
   - After the name, a compact `outline` pill "base". The name opens Review (§5, branch scope) on
     it, tooltip `Review <name>`.
@@ -687,8 +689,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     "—". Never the "merged" pill.
   - Projects cell: a 26px "Review" button (12px split icon, 12px `accent.text`, `bg.elevated`,
     1px `border`, radius 8; tooltip `Review <name>`) that opens Review.
-  - The row menu is the same as other rows', except that "Open review" (split icon) takes the
-    place of "Open history" (its name already opens History): Review of the branch against its
+  - The row menu is the same as other rows': "Open review" is Review of the branch against its
     upstream.
 - **Open review**: every other row menu has "Open review" (split icon) right under "Copy branch
   name" too (first for a detached HEAD, which opens its SHA), in place of "Open history"
@@ -726,7 +727,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 
 ### Review (`ReviewFocus.dc.html`)
 
-Review and History are one screen (user decision 2026-10-18; planned, T27.5): one branch
+Review and History are one screen (user decision 2026-10-18): one branch
 is open at a time, with its whole log, and the screen is reached for a project, a branch or a
 repository's stash stack. Canvas page "Review": R1 the prototype (`ReviewFocus.dc.html`, Play
 works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`,
@@ -1086,8 +1087,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
       counts only, never to SHAs, versions, years or ports.
     - "Prefer absolute dates over relative dates": a switch, off by default
       (`settings.preferAbsoluteDates`). On, every relative age shows the absolute date and time
-      instead; in absolute mode the History day labels ("Today", "Yesterday") render as full
-      dates too, and History's commit rows under them show the time alone (`8:30`). The tooltip always shows the other form (relative when absolute is shown and
+      instead; Review's commit rows show it as well. The tooltip always shows the other form (relative when absolute is shown and
       vice versa).
     - Month names (`MMM`/`MMMM`), the `do` ordinal (`19th` in English, `19.` in Turkish) and
       `aaa` (`am`/`pm` in English, `ÖÖ`/`ÖS` in Turkish) follow the app language (T25); the
@@ -1096,9 +1096,9 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
     10, 12; anything else reads as 4. It sets the Monaco diff's tab size (split and unified,
     spaces); the output panel is unaffected.
   - "Review" (was "History"): "Commit rows" (`settings.commitRows`, default `two-line`): a dropdown with "Two
-    lines" / "One line"; anything else reads as two lines. It sets History's commit rows (§16
+    lines" / "One line"; anything else reads as two lines. It sets Review's commit rows (§16
     "Commit row"). "Layout" (`settings.historyLayout`, default `tree`): a dropdown with "Tree" /
-    "Columns"; anything else reads as tree. It sets where History lists the picked row's files
+    "Columns"; anything else reads as tree. It sets where Review lists the picked row's files
     (§16 "Files column").
 - **Scripts:** see §14 "Settings › Scripts".
 - **AI**: serif 18px heading "AI".
@@ -1397,8 +1397,8 @@ export interface Settings {
   numberFormat: NumberFormat;    // Settings › Appearance › Formatting › Number Format; default 'plain-comma'
   preferAbsoluteDates: boolean;  // Settings › Appearance › Formatting › Prefer absolute dates over relative dates; default false
   diffTabSize: number;           // Settings › Appearance › Diff › Tab size; default 4
-  commitRows: 'two-line' | 'one-line'; // Settings › Appearance › History › Commit rows; default two-line
-  historyLayout: 'tree' | 'columns'; // Settings › Appearance › History › Layout; default tree
+  commitRows: 'two-line' | 'one-line'; // Settings › Appearance › Review › Commit rows; default two-line
+  historyLayout: 'tree' | 'columns'; // Settings › Appearance › Review › Layout; default tree
   sidebarVisible: boolean;       // the main sidebar is shown; remembered; default true
   prompts: Prompts;              // Settings › Prompts; every one true by default
 }
@@ -1556,7 +1556,7 @@ export interface CommitChanges {           // one commit against its first paren
   parent: string | null;                   // null => root commit (empty tree)
   files: FileChange[];
 }
-export interface RangeChanges {            // History's picked rows taken together (§16)
+export interface RangeChanges {            // Review's picked rows taken together (§16)
   parent: string | null;                   // the oldest one's first parent; null => empty tree
   files: FileChange[];
 }
@@ -1702,7 +1702,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_review` | `target: ReviewTarget` | `ReviewData` |
 | `get_commit_changes` | `repoId, sha` | `CommitChanges` |
 | `get_stash_changes` | `repoId, sha` | `StashChanges` |
-| `get_range_changes` | `repoId, oldest, newest: string\|null, worktreePath: string\|null` | `RangeChanges` (History's picked rows, §16; `newest` null: to the working tree) |
+| `get_range_changes` | `repoId, oldest, newest: string\|null, worktreePath: string\|null` | `RangeChanges` (Review's picked rows, §16; `newest` null: to the working tree) |
 | `get_history` | `repoId, rev, base: string\|null, query, limit` | `HistoryPage` (§16) |
 | `read_file_pair` | `repoId, worktreePath: string\|null, change: FileChange` | `FilePair` |
 | `create_project` | `name, entries: EntryRef[]` | `ProjectConfig` |
@@ -2022,22 +2022,22 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 235–238), Repositories 35–59 (repository `List` 38, items 300–304; Default base `List` 44 with rows, actions and add states 239–266 and 305–312; Active threshold 50–53, Check Out New Branches In 54–57), General 61–91 (Language 63–69; Terminal 72–84, options with disabled flag 311; Check for updates 87–89), Appearance: Theme 95–114, tile builder 253; Formatting 116–134 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 135–141 with Tab size, Scripts 143–161 (`List` 121, items 313–318), Prompts 127–134 (data 290), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
-| Stashes | `FlowP1`–`FlowP7.dc.html` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P2 project review with the stash section and a picked stash, P3 stash review from Branches, P4 Stash dialog (entries with their files to pick), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`), P6 Drop confirmation, P7 a merge conflict after Apply (C file, pill, banner) |
-| Sync | `HistH4`, `FlowR1.dc.html` | `HistH4` (Hi3): History header with Fetch / Pull / Push; canvas page "Branch actions": R1 (`FlowR1` mounts `FlowD11` with `menu` sync) Review with the branch menu's Sync group (menu 184, data in `FlowD11` 211–226), group line 2 `origin ↑2 ↓1`, entry bar and upstream line |
+| Stashes | `FlowP1`, `FlowP5.dc.html`, `ReviewStashes`, `ReviewConflicts` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`); Review's stash section, the stash stack (R6) and a merge conflict after Apply (R5) on the Review page |
+| Sync | `ReviewFocus.dc.html` | Review's header group Fetch / Pull / Push (the `sync` values in its logic), the origin line; the Branches menus' Sync group in `Main` |
 | New branch | `FlowV2.dc.html`, `FlowV3.dc.html` | canvas page "Branch actions": V2, the form under a repo band's "+", interactive (`case` worktree, checkout, branchOnly: the row picked first; `dirty`: the repository folder has changes); V3 mounts it with Repository folder picked; the "+" on the bands of `Main` (`newBranch` shows it open) |
 | Checkout branch | `FlowV4.dc.html` | canvas page "Branch actions": V4, the dialog over Branches, interactive (`case` repository, worktree, new: the row picked first; `remote`: from a Remote Branches row) |
-| Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `FlowD11` (`menu` sync), `HistH2` (page menu) |
-| Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
-| File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
-| Discard | `HistH9`, `FlowD12.dc.html` | canvas page "Review & History": Hi8 (`HistH9` mounts `HistH6` with `selected`) History's Uncommitted with files picked, their menu (23–25, data 88–111; `count` two / one / all: the Uncommitted row's menu) and Confirm Discard Changes (26–49, data 112–116); D12 (`FlowD12` mounts `Diff` with `selected`) the same in a project review, the dialog's files under their entry (data 87–96) |
-| Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
-| Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings (Appearance). Projects and Palette still use hex; theme them with the same mapping |
+| Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `ReviewFocus` (page menu) |
+| Operations in progress | `FlowT1.dc.html`, `ReviewRebase.dc.html` | canvas page "Branch actions", T1: Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase); canvas page "Review", R4: the operation banner (names, (2/4), Abort / Continue), the head's `rebasing` pill, ⚠ / ✓ file marks and the Abort confirmation |
+| File menu | `ReviewFocus.dc.html` | the file row's right-click menu (its `file` menu in the logic): Discard / copy paths for Uncommitted, Open in Finder / Cursor |
+| Discard | `ReviewFocus.dc.html` | the Uncommitted row's and file rows' menus, the hover ↶ and Confirm Discard Changes (`discard` / `discardAll` modals in its logic) |
+| Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `ReviewFocus` with `embedded` (width 1020, no traffic lights / show-sidebar) |
+| Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `ReviewFocus.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings (Appearance). Projects and Palette still use hex; theme them with the same mapping |
 
 Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27`; back / forward
 `:30`, `:33`; plus `:40` (small, footer `:87`); branch `:45` (large `Main.dc.html:81`); search
 `:54`; sort/filter `:57`; folder `:83` (folder-plus `Main.dc.html:149`); gear `:90`; refresh
 `Main.dc.html:32`; chevron down `Main.dc.html:136`; close `Main.dc.html:140`; more
-`Projects.dc.html:39`. Split / unified / check icons come from `Diff.dc.html`'s view menu.
+`Projects.dc.html:39`. Split / unified / check icons come from `ReviewFocus.dc.html`'s view menu.
 
 ---
 
@@ -2401,7 +2401,7 @@ export interface ScriptRun {
 ## 15. Stashes
 
 The stash stack is listed and reviewed with git2; stashing, applying, popping and dropping are git
-actions (§0, "Writing stashes" below). Canvas flow P (P1–P7); boards `FlowP1`–`FlowP7.dc.html`.
+actions (§0, "Writing stashes" below). Canvas flow P (P1, P5) and the Review page (R1, R5, R6).
 
 - **Reading** (§10): the `refs/stash` reflog, newest first. The message `On <branch>: <text>`
   shows `<text>`; `WIP on <branch>: <sha> <subject>` shows whole. `<branch>` is the branch it was
@@ -2421,8 +2421,7 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1–P7); boards `FlowP1`
   danger "Drop…" (`⌫`). Apply to and Pop to open the worktree picker (P5) beside the item on
   hover or click (→ from the keyboard, ← back), Drop opens the confirmation (P6). Popovers follow
   their anchor when the page scrolls or resizes (scroll listener and `ResizeObserver`).
-- **Page menu** (Review, project and branch scope; History of a checked-out branch too, §16,
-  which also lists the branch's stashes under its commits): "Stash…" (`package`) first in
+- **Page menu** (Review, project and branch scope): "Stash…" (`package`) first in
   the ⋮ menu; it opens the Stash changes dialog (P4) under the ⋮ button. Left out while no
   checked-out entry has uncommitted changes; disabled, tooltip "Resolve the merge conflicts first;
   git cannot stash them", while every entry with changes has conflicts.
@@ -2466,7 +2465,7 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
   else "The stash list changed. Pick the stash again." (and the repo is rescanned); one git
   action at a time per repository, else "Another git action is running in <repo>." A refused
   action shows a failed toast `“<name>” could not start` with that text.
-- **Stash changes** (P4, "Stash" in the page menu of Review and History): a 420px popover under the
+- **Stash changes** (P4, "Stash" in Review's page menu): a 420px popover under the
   button, padding 16, gap 12: serif 18px "Stash changes"; "In" (12px/500) and one group per entry
   of the review that is checked out, in review order. The entry row (26px): a `Checkbox` (on when
   every file is picked, mixed with a dash when some are, off with none; a click picks all or
@@ -2515,10 +2514,10 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
 ### Discard
 
 Uncommitted files go back to HEAD, as GitHub Desktop's Discard Changes; its texts are used word
-for word (§0). A file picked only from History's Unstaged section goes back to what is staged
-instead: only its changes since then go. Canvas boards `HistH9` (Hi8, History) and `FlowD12` (D12, Review).
+for word (§0). A file picked only from Review's Unstaged section goes back to what is staged
+instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
 
-- **Picking files** (Review's Uncommitted layer, branch or project, and History's Uncommitted):
+- **Picking files** (Review's Uncommitted):
   ⌘-click adds a file to the picked ones or takes it out (the first one starts from the file
   shown), ⇧-click picks the range from the last one clicked, in list order (across entries in a
   project review). Picked rows are tinted `rgba(accent, 0.18)` over every other state. A plain
@@ -2527,7 +2526,7 @@ instead: only its changes since then go. Canvas boards `HistH9` (Hi8, History) a
   (discarded, committed) leave them too. Listed in Settings › Shortcuts ("Pick files").
 - **File menu** (right-click an Uncommitted file; deleted files too): on a picked file it acts on
   every picked one, on any other file on that file alone. A 230px menu: danger "Discard
-  Changes…" (several: "Discard N Selected Changes…"); in History with several files, a divider
+  Changes…" (several: "Discard N Selected Changes…"); with several files, a divider
   and "Stage Selected Files" (`plus`, when some are in Unstaged) / "Unstage Selected Files"
   (`remove`, when some are in Staged), left out while a commit or a stage runs (§15 "Stage"); a
   divider, "Copy File Path" (the absolute path; several: "Copy
@@ -2535,7 +2534,7 @@ instead: only its changes since then go. Canvas boards `HistH9` (Hi8, History) a
   then a divider and the open items of §5 Review "File rows" for the files on disk (several open
   one after another). Each file is read from its own entry's worktree, so picks across repos
   with the same paths copy and open the right files. A commit's or a stash's files keep the open items alone.
-- **Uncommitted row menu** (History, right-click the "Uncommitted changes" row): danger "Discard
+- **Uncommitted row menu** (Review, right-click the "Uncommitted changes" row): danger "Discard
   All Changes…" and "Stash All Changes…" (`package`; opens Stash (P4) at the pointer, to its right as the menu, disabled
   when nothing can be stashed).
 - **Confirm Discard Changes** (`Modal` 480px, 160px from the top): `ModalHeader` "Confirm Discard
@@ -2563,7 +2562,7 @@ instead: only its changes since then go. Canvas boards `HistH9` (Hi8, History) a
   nothing was discarded. …". Then, in each entry's worktree one after another: `git -C
   "$GITGEL_FOLDER_n" restore --source=HEAD --staged --worktree -- <paths git knows>` (in the
   index or HEAD; staged and unstaged changes alike, a staged new file removed) `&& git … restore
-  --worktree -- <keepIndex paths in the index>` (History's Unstaged rows: back to the staged
+  --worktree -- <keepIndex paths in the index>` (Review's Unstaged rows: back to the staged
   version, `worktrees::in_index` decides) `&& git … clean -f -q -- <untracked paths>`
   (`worktrees::tracked` decides), with `GIT_LITERAL_PATHSPECS=1`; a
   rename sends its old path too. Only the working copy goes to the Trash: a staged version that
@@ -2571,7 +2570,7 @@ instead: only its changes since then go. Canvas boards `HistH9` (Hi8, History) a
 
 ### Stage
 
-History's Uncommitted sections (Hi5, §16) are git's index: "+" on an Unstaged row (or Stage all,
+Review's Uncommitted sections (Hi5, §16) are git's index: "+" on an Unstaged row (or Stage all,
 Stage Selected Files) stages the file whole, "−" on a Staged row unstages it whole. Staging a
 file after reviewing it marks it as reviewed: when it changes again (an agent keeps editing) it
 is in Unstaged too, and that row's diff shows only the changes since. A git action (`git_stage`,
@@ -2583,7 +2582,7 @@ second when it fails, as another git process may hold `index.lock`. Refused befo
 path, a path outside the worktree, an entry that is not checked out, another git action in the
 repository.
 
-- **Queue** (`screens/History/stage.ts`): a click moves the row to its section at once (the file
+- **Queue** (`screens/Review/stage.ts`): a click moves the row to its section at once (the file
   whole: against HEAD, a new file untracked again when unstaged); its command waits 150ms for
   more clicks and runs with them as one, one at a time per repository; moving a file back where
   it was before the command ran sends nothing for it. While the repository's queue has clicks
@@ -2595,7 +2594,7 @@ repository.
 
 ### Commit
 
-Commit (W1a, in History, §16) is a git action too: name "Commit", `package` icon, script id
+Commit (W1a, in Review, §16) is a git action too: name "Commit", `package` icon, script id
 `git:commit`, run in the entry's worktree, so the user's hooks (husky, lefthook,
 `core.hooksPath`) see it as they would in a terminal. The command is built in `commit_command`:
 `git commit [--no-verify] -m <summary> [-m <description>]`, the message in `GITGEL_*` variables:
@@ -2605,9 +2604,9 @@ another git action in the repository. An Amend (§16, Hi10) is the same run with
 `commit` (name "Amend"; nothing staged changes only the message) and the newest commit's SHA: it
 is refused when the worktree's HEAD is another commit by then.
 
-- **Running** (`HistH7`): the run toast “Committing…” (sub `repo / branch`); a click opens the
+- **Running**: the run toast “Committing…” (sub `repo / branch`); a click opens the
   output panel with the hooks' output.
-- **Failed** (`HistH8`): the output panel opens by itself. Its footer, besides Close and Copy, has
+- **Failed**: the output panel opens by itself. Its footer, besides Close and Copy, has
   the buttons "Commit without hooks"
   (the same commit with `--no-verify`) and "Retry" (primary, ⌘↵), which send the same message
   again. Stopping the run does not open it.
@@ -2643,7 +2642,7 @@ is refused when the worktree's HEAD is another commit by then.
 
 ### Sync (W4a)
 
-Fetch, Pull and Push of one branch: buttons in the History header, and a group in the branch
+Fetch, Pull and Push of one branch: buttons in Review's header, and a group in the branch
 menus (Branches row, Project entry, Review entry); Fetch also on each Branches repo band. Review's header has none: it only shows where
 each branch stands. Each is a git action as above (`upload` icon; toast sub line `repo / branch`,
 `repo` for Fetch). Gitgel never fetches on its own, force-pushes only when asked ("Force push",
@@ -2662,7 +2661,7 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   first" / "Nothing to push"). A branch that is ahead and behind is **diverged**. While an
   operation is in progress in its worktree, both are disabled with "Rebase in progress" (Merge,
   Cherry-Pick, Revert).
-- **History header** (`HistH4`), after the search field: one 32px group (`bg.elevated`, 1px `border`,
+- **Review header**, after the search field: one 32px group (`bg.elevated`, 1px `border`,
   radius 8, padding 2, gap 2) of 26px buttons (12px, 12px icon, radius 6): "Fetch" (`download`,
   `text.muted`, tooltip `Fetch <repo> from origin · last fetch <age> ago`), a 1px divider, "Pull" (`arrow-down`, mono 11
   `↓N` when behind), "Push" (`arrow-up`, `↑N` when ahead; accent fill when it can push). Disabled
@@ -2671,14 +2670,14 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   behind origin by 1 commit, so it cannot be pushed. Pull it first.`, with a 24px "Pull (rebase)"
   button when checked out and a 24px "Force push" button; both are disabled ("A git action is
   running") while any git action runs in the repository, the force push itself included.
-- **Branch menus** (`FlowR1`): after the open items, a divider, then "Checkout Branch…" (§15
+- **Branch menus**: after the open items, a divider, then "Checkout Branch…" (§15
   "Checkout branch"; only for a branch checked out nowhere, so also without a remote), "Fetch"
   (`download`), "Pull" (`arrow-down`, hint `↓N`), "Pull (rebase)" (`rebase`; only when diverged
   and checked out), "Rebase on `<base>`" (`rebase`; a checked-out branch whose base, custom or
   the repo's default, is not itself or its own remote branch: the base branch's base is its
   upstream), "Push" (`arrow-up`, hint `↑N`), "Force push" (`arrow-up`; only when diverged). Disabled items carry the reason as tooltip ("A sync is running"
   while one runs; Push of a branch the remote lacks: `Not on origin yet`). No sync items for a detached HEAD, a branch without a remote, a deleted branch or a
-  missing repository. History's page menu, whose header has Fetch / Pull / Push, keeps only
+  missing repository. Review's page menu, whose header has Fetch / Pull / Push, keeps only
   Checkout Branch… and Rebase on `<base>` of the group. While an operation is in progress the group is its Continue / Abort
   instead (§15 "Operations in progress"; also for a detached HEAD).
 - **Fetch**: `git fetch --all --prune` in the repository folder. Success toast `Fetched <repo>`.
@@ -2799,7 +2798,7 @@ action runs in the repository ("A git action is running").
 ### Delete branch
 
 "Delete Branch…" (`trash`, danger) at the end of the branch menus (Branches row, Review entry,
-History page menu, after the Scripts group and a divider; Project entry, under "Remove from
+Review page menu, after the Scripts group and a divider; Project entry, under "Remove from
 project"), before the closing note. Only for a local branch that is there, is not its repo's base
 branch and has no operation in progress (left out otherwise, not disabled); disabled while a git
 action runs in the repository ("A git action is running").
@@ -2830,7 +2829,7 @@ action runs in the repository ("A git action is running").
   Refused for the base branch, an operation in progress, or a tip that is no longer the one the
   menu showed (the repo is rescanned). Success toast `Deleted <branch>`; a failure opens the
   output panel. A project entry on it becomes "branch deleted".
-- **After** (`leaveDeletedBranch`, `state/nav.ts`): when the branch's own Review or History is
+- **After** (`leaveDeletedBranch`, `state/nav.ts`): when the branch's own Review is
   showing, every page about the branch leaves the navigation stack (forward ones too) and
   Branches shows; inside a project (a project page or project review under it), the project page
   it was opened from shows instead. Elsewhere nothing moves.
@@ -2863,17 +2862,17 @@ when one starts, moves on or ends (§10 "Change watching").
   still has a line starting `<<<<<<< ` or `>>>>>>> ` (`unresolved`; Continue disabled, "Fix the
   conflicts first"); warning once none has, starting `Continue rebasing`. While a git action runs
   in the repository both buttons are disabled ("A git action is running").
-- **History banner** (T4), for its `rev` when that is the entry in progress: the same banner
+- **A branch's Review** (T4), for its `rev` when that is the entry in progress: the same banner
   without the names (the header has them), under the header: `Resolve conflicts to continue
   rebasing (2/4)`, `Continue merging main` (no `into` / `onto` / `on`).
 - **Conflicted files** (T2, T4): Review opens on Uncommitted while an entry has merge conflicts,
-  and with nothing picked the first conflicted file is shown. In Review's and History's file rows
+  and with nothing picked the first conflicted file is shown. In Review's file rows
   a conflicted file of an operation shows, in place of `+N` / `−N`, a 14px `warning` (danger,
   title "Has conflicts") while it has markers, else a `check` (success, "Conflicts resolved").
   Picking it shows HEAD ↔ the working tree file with its markers.
 - **Menus** (T1): the branch menus' Sync group becomes "Continue Rebase" (`arrow-right`,
   disabled as Continue) and "Abort Rebase" (`undo`, danger) — Merge, Cherry-Pick, Revert alike.
-  History's Pull and Push are disabled with "Rebase in progress".
+  Review's Pull and Push are disabled with "Rebase in progress".
 - **Continue** (`git_operation`, `abort: false`; script id `git:continue`, `rebase` icon, run name
   "Continue Rebase"): in the worktree, `git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" … &&
   git -C "$GITGEL_FOLDER" rebase --continue` (`merge`, `cherry-pick`, `revert`), the conflicted
@@ -2932,8 +2931,7 @@ the origin and base lines as buttons, and opening goes through Review's scopes.
 
 A branch's commits, newest first, each one shown on its own against its first parent, like
 GitHub Desktop's History tab. Reads are a revwalk and diffs; the writes are Commit and Discard (§15).
-Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `HistH7`,
-`HistH8`, `HistH9`, `HistH10`, `HistH11`, `HistH12`, `HistH13`, `HistH14.dc.html` (§11).
+Canvas page "Review", `ReviewFocus.dc.html` (§11).
 
 - **Reading** (§10, `git/history.rs`): `get_history` resolves `rev` (a local
   branch, a remote-tracking branch or a SHA) and walks from it newest first in `git log`'s order
@@ -2947,39 +2945,23 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   commit changed against its first parent (read only when the text did not match); the walk goes
   on until `limit` commits match. `fetchedAt`: the modification time of
   `FETCH_HEAD` in the common git dir. Every call logs one line with its timings.
-- **Opening:** "Open history" in a Branches row menu (not the base row's), the base branch row's name and History
-  button, a remote branch row while filtering Branches (K2), and in Review's entry bar the branch name and the base in "N commits ahead of <base>". Route `history` with `repoId` and `rev`, pushed like Review
-  (back and forward work). History leaves the sidebar as it is, like Review.
-- **Header** (`HistH2` 21–41), as Review's: title "History"; subtitle `<repo> · <rev>`, plus
-  ` · <~worktree>` when `rev` is a branch checked out in a worktree. On the right, gap 10:
-  - Search field: `Input` 32px, 200px, placeholder "Search commits", label "Search commit
-    messages, SHAs and paths", no keycap; ⌘K focuses it (also listed in Shortcuts). Typing
-    searches (debounced 200 ms); Esc clears it.
-  - Fetch / Pull / Push (§15 "Sync"), only when `rev` is a local branch with a remote; the last
-    fetch's age (`fetchedAt`) is in Fetch's tooltip.
-  - The page menu (⋮, as Review's): "Switch Branch…" (`branch`, ⇧⌘B; below), "Stash" (§15, with this one entry; only when `rev`
-    is checked out in a worktree with uncommitted changes), "Open review" (`split`, ⌥H; only
-    when `rev` is an active entry: its branch Review, or going back to it), "Refresh".
-    When `rev` is an active entry, a divider and then the branch menu's items (§5 "Entry menu"):
-    "Copy branch name" (not for a detached SHA) and a divider, the open items, "Rebase on <base>" (not
-    Fetch / Pull / Push: the header has them), the Scripts group (menu `branches`), "Delete Branch…", the closing note; not "Open history" or "Change base"
-    (`HistH5.dc.html`, Hi4).
-- **Switch Branch** (⇧⌘B, or the page menu; `History/SwitchBranch.tsx`, `HistH10.dc.html`): the Add
+- **Opening, header and page menu:** Review's (§5 "Review": Scopes, Header).
+- **Switch Branch** (⇧⌘B, or the page menu of a branch's Review; `Review/SwitchBranch.tsx`): the Add
   palette's dialog (620px, top 96px; Esc or a click outside closes it) for this repo only, with
   the repo name in the hint and no checkboxes or footer. Groups: Worktrees, Active branches,
   Older · found by search, Remote Branches (the last two only while searching, at most 50 each).
   Meta: `<~worktree> · ↑N · N files · ● N uncommitted`, or the age; merged ones carry the
   "Merged" pill. `rev` itself is dimmed with a neutral pill "Current". A click, or ↵ on the row
-  reached with ↑ / ↓, opens History on that branch in place of this one (`replace`: Back still
+  reached with ↑ / ↓, opens Review on that branch in place of this one (`replace`: Back still
   leads where it did).
-- **List** (`HistH2` 44–99): 380px, `bg.sidebar`, right border `border`, scrolls. Its right
+- **List** (§5 "List column"): 360px, `bg.sidebar`, right border `border`, scrolls. Its right
   border is a drag handle (8px hit area, `col-resize`; a 2px accent line on hover, focus and
   drag); 280–640px, ←/→ by 16px when focused, double-click resets. The width is remembered
   on this machine (`localStorage`). Only while searching a label (section
   label style, padding 14px 16px 6px) `N matching commits` (`N+` while there are more); otherwise
   the list starts with its rows (the subtitle names the rev). Rows (padding 6px 8px 8px, gap 2):
   - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with
-    uncommitted files; never while searching): first, above the day labels. 1px dashed
+    uncommitted files; never while searching): first. 1px dashed
     `border.strong`, radius 8, padding 7px 8px; a 24px slot with an 8px `accent.text` dot; 13px/500
     `accent.text` "Uncommitted changes"; mono 11 muted `<age>` (the age of the newest uncommitted
     file, as on Branches; left out when unknown), after `N conflicts · ` when some are unmerged;
@@ -2987,11 +2969,9 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     the title (and its pill), no age; only `N conflicts` on the right when some are unmerged.
     Picking it lists its files under it in two sections, Staged and Unstaged (the commit form
     below; "Sections" under "Commit form"); after a failed commit the row
-    carries a danger sm pill "commit failed" after the title (`HistH8`). Right-click on the row:
+    carries a danger sm pill "commit failed" after the title. Right-click on the row:
     Discard All Changes… / Stash All Changes…; its files can be picked with ⌘ / ⇧-click and
-    discarded, staged or copied from their right-click menu (§15 "Discard", `HistH9`, Hi8).
-  - **Day labels**: 11px `text.faint`, padding 10px 8px 4px: "Today", "Yesterday", else `Oct 2`
-    (this year) or `Oct 2, 2025`, by committer time.
+    discarded, staged or copied from their right-click menu (§15 "Discard", Hi8).
   - **Commit row** (`role="option"`, tooltip "Show this commit"): padding 7px 8px, radius 8, gap
     10; picked: `bg.hover`. A 24px avatar: the author's initials (first letters of the first two
     words, upper case), 10px/600 `text.strong` on `bg.avatar`; an author whose name contains
@@ -3001,18 +2981,16 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     below the base line: subject `text.muted`, row opacity 0.7. With "Commit rows: One line"
     (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11
     `accent.text`, 56px column; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
-    muted; tooltip author · date); no avatar. Right-click on it (`HistH11`,
-    Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
+    muted; tooltip author · date); no avatar. Right-click on it (Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
     "Revert Changes" (`revert`, below), "Cherry-Pick to" (`rebase`, a
-    chevron; `HistH12`, Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; `HistH14`, Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
-  - **Base line** (`HistH4`): when `ahead` > 0, after the last commit not in the base: a 1px
-    `border.strong` rule on both sides of mono 11 muted `base <base>`.
+    chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
+  - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
     file shown on `bg.hover`). Not with "Layout: Columns" (below).
   - Empty: "No commits"; while searching "No commits match “<query>”" with "Clear search"; a rev
     that does not resolve: `<rev> not found`.
-  - **Stashes** (`HistH2` 86–98; the stashes taken on `rev`, never while searching): Review's
+  - **Stashes** (the stashes taken on `rev`, never while searching): Review's
     stash section (§15, "Stashes of this branch · N", rows without the repo), under the commits
     but pinned to the bottom of the list column (top border `bg.hover`, padding 2px 8px 8px, at
     most 40% of its height, scrolls on its own), since the commits keep loading as they scroll.
@@ -3027,7 +3005,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   muted): `N files`, `+a −d` on the right, which the pane's header then leaves out.
   Its right border is a drag handle as the list's (220–560px, remembered apart). Clicking the
   picked row again does not fold its files. The commit form moves to the bottom of this column.
-- **Commit form** (`HistH6`, `HistH7`, `HistH8`; §15 "Commit"): pinned to the bottom of the list
+- **Commit form** (§15 "Commit"): pinned to the bottom of the list
   column (the files column with "Layout: Columns"), under the stashes, while Uncommitted is picked. Padding 12, gap 8, top border `border`,
   `bg.sidebar`: a 32px `Input` "Summary (required)", a 56px description textarea (12px, no resize),
   and a full-width primary 32px button "Commit N files" (tooltip `Commit to <rev>`; disabled with
@@ -3045,7 +3023,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     the ✦ is a spinner, and a running toast opens the generation's output panel on click, so a slow
     provider can be watched (and stopped); a failure shows a failed toast and leaves the form
     alone.
-  - **Sections** (`HistH6`, Hi5; §15 "Stage"): the files in two sections, as git's index has
+  - **Sections** (Hi5; §15 "Stage"): the files in two sections, as git's index has
     them: "Staged" (HEAD ↔ index) and "Unstaged" (index ↔ working tree, untracked included). A
     file staged and changed again is in both; a conflicted one is in Unstaged only, against HEAD.
     Each section starts with a 26px row (padding-top 6, left as the file rows): 11px/500
@@ -3060,7 +3038,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **After it ends:** success empties the form and shows the toast “Committed to <rev>”. A failure
     (a hook exited non-zero, or git refused) keeps the message and the index, opens the output
     panel, and puts the pill on the Uncommitted row, until the next commit starts.
-  - **Amend** (`HistH11`, Hi10; GitHub Desktop's flow and texts): "Amend Commit…" on the newest
+  - **Amend** (Hi10; GitHub Desktop's flow and texts): "Amend Commit…" on the newest
     commit. When that commit is on the remote already (the upstream has no commits to push), it
     first asks "Confirm Amend" (`AmendModal`, 560px, as Confirm Discard Changes:
     the warning icon, "Amend will require force push. Are you sure you want to amend?", "At the end of the amend flow, Gitgel
@@ -3079,7 +3057,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     amend mode (toast “Amended the last commit of <rev>”); a commit on the remote leaves the
     branch diverged, so the diverged banner offers Force Push. If the branch gets a new commit
     meanwhile, amend mode ends by itself.
-  - **Undo Commit** (`HistH11`, Hi10; GitHub Desktop's Undo): only on the branch's newest commit
+  - **Undo Commit** (Hi10; GitHub Desktop's Undo): only on the branch's newest commit
     when it is checked out in a worktree, has one parent and is not on the remote yet (the
     upstream has commits to push, or there is none), and no commit, amend of it or operation is
     in progress; left out otherwise. Runs `git reset -q --soft "$GITGEL_PARENT"` in the worktree
@@ -3088,7 +3066,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     Uncommitted lists them under Staged. When the form is empty, the commit's summary and description
     come back into it. Refused before running: HEAD is another commit by then, a root or merge
     commit, a commit on the remote, an operation in progress, another git action in the repository.
-  - **Revert Changes** (`HistH11`, `HistH12`; GitHub Desktop's Revert Changes in Commit, shortened): on any commit
+  - **Revert Changes** (GitHub Desktop's Revert Changes in Commit, shortened): on any commit
     when `rev` is checked out in a worktree and no commit, amend of it or operation is in
     progress; left out otherwise. Runs `git revert --no-edit "$GITGEL_COMMIT"` (`-m 1` for a merge
     commit) in the worktree as a git action (script id `git:revert`, name "Revert <sha>", `undo`
@@ -3096,7 +3074,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     Refused before running: the branch no longer has the commit, an operation in progress,
     another git action in the repository. On conflicts git stops, the toast fails with git's last
     line, and the entry shows the revert in progress (§15 "Operations in progress").
-  - **Cherry-Pick to** (`HistH12`, Hi11; `CherryPickMenu`): opens a 280px picker beside the item
+  - **Cherry-Pick to** (Hi11; `CherryPickMenu`): opens a 280px picker beside the item
     on hover or click (→ from the keyboard, ← back), like Apply to (P5): one item per
     checked-out entry of the repository but the one History shows (scan
     order; one with an operation in progress is left out): `branch` icon, the branch (short SHA
@@ -3108,7 +3086,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     in the repository, an operation in progress there, a commit the repository does not have. On
     conflicts git stops, the toast fails with git's last line, and the entry shows the
     cherry-pick in progress (§15 "Operations in progress": pill, Continue / Abort).
-  - **Squash** (`HistH14`, Hi13; `SquashModal`): only for several consecutive commits of a branch
+  - **Squash** (Hi13; `SquashModal`): only for several consecutive commits of a branch
     checked out in a worktree (pushed ones and ones in the base too), the oldest not the
     branch's first commit, Uncommitted not picked, no commit or operation in progress. It opens "Squash Commits"
     (560px; sub `<repo> / <branch>` mono): a 36px `Input` "Summary (required)" filled with the
@@ -3126,7 +3104,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     first parent of the one before, the branch no longer has them, an operation in progress,
     another git action in the repository. Pushed commits leave the branch diverged, so the
     diverged banner offers Force Push.
-- **Several rows** (`HistH13`, Hi12; GitHub Desktop's multi-commit diff): ⌘-click adds a row to
+- **Several rows** (Hi12; GitHub Desktop's multi-commit diff): ⌘-click adds a row to
   the picked one or takes it out, ⇧-click takes the range from the last row clicked, ⇧↑ / ⇧↓ in
   the list move the range's far end; Uncommitted can be one of them, the stashes cannot. The
   picked rows are tinted (`rgba(accent, 0.18)`, as Hi8's picked files) and the files are listed
@@ -3146,7 +3124,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   folding) keeps 8px, the list's side padding, above or below it. After a refresh the picked
   commit stays when it is still listed, else Uncommitted or the newest is picked. Search picks the
   first match.
-- **Pane** (`HistH2` 101–123): a commit header (padding 14px 18px, bottom border `border`, gap 8):
+- **Pane** : a commit header (padding 14px 18px, bottom border `border`, gap 8):
   15px/600 `text.strong` subject (selectable); the body (13px, line-height 1.5, `text.muted`, `white-space:
   pre-wrap`, max-width 720px; left out when empty; selectable); mono 11 muted meta (selectable): an 18px avatar, the author
   (`text.body`), `·` the committer time (`today 11:42`, `yesterday 11:42`, `Oct 2, 11:42`, `Oct 2,

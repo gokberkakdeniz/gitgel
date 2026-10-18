@@ -1,262 +1,506 @@
-/* File list */
+/* Review's list column and pane headers (SPEC §5, §16; ReviewFocus.dc.html). The file bar and diff
+   come from parts.module.css. */
 
-.files {
-  width: 310px;
+.search {
+  width: 200px;
+}
+
+/* List */
+
+/* The commit list, and under it the branch's stashes (as in Review, but pinned: the list keeps
+   loading as it scrolls). */
+.listPane {
+  width: 360px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-  overflow-y: auto;
+  min-height: 0;
   background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  /* One-line rows drop their SHA below 340px. */
+  container-type: inline-size;
+}
+
+.listPaneColumns {
+  width: 300px;
+}
+
+/* Columns layout (Settings › Appearance › Review): the picked row's files, between the list and
+   the diff, with the commit form under them. */
+.filesPane {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-main);
   border-right: 1px solid var(--border);
 }
 
-/* With the sidebar shown next to Review the file list narrows (ReviewSidebar.dc.html). */
-.filesNarrow {
-  width: 280px;
-}
-
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.groupHead {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px 8px 6px;
-}
-
-.groupLine {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.groupToggle {
-  flex-grow: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  text-align: left;
-  cursor: pointer;
-}
-
-.chevron {
+.filesHead {
   flex-shrink: 0;
-  color: var(--text-muted);
-  transition: transform 0.15s;
-}
-
-.closed {
-  transform: rotate(-90deg);
-}
-
-.repoName {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-strong);
-  white-space: nowrap;
-}
-
-.groupToggle .repoName {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.groupLine2 {
+  height: 32px;
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
-  padding-left: 20px;
-}
-
-.branch {
-  flex-grow: 1;
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.entryNames {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  min-width: 0;
-}
-
-.entryNames .repoName {
-  flex-shrink: 0;
-}
-
-/* A long branch ends in an ellipsis before the counts on the right (its tooltip names it). */
-.entryBranch {
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.entryRange {
-  min-width: 0;
+  padding: 0 12px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.commits {
-  max-height: 132px;
+.filesList {
+  flex-grow: 1;
+  min-height: 0;
   overflow-y: auto;
+  padding: 6px 8px 16px;
+}
+
+.stashPane {
+  flex-shrink: 0;
+  max-height: 40%;
+  overflow-y: auto;
+  padding: 2px 8px 8px;
+  border-top: 1px solid var(--bg-hover);
+}
+
+.list {
+  flex-grow: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  margin: 0 -8px;
+  gap: 2px;
+  padding: 6px 8px 8px;
+  overflow-y: auto;
 }
 
-/* One commit at a time (flow D7): every row picks its commit. */
-.commit {
-  width: 100%;
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 3px 8px;
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.commit:hover {
-  background: var(--bg-elevated);
-}
-
-.commitOn,
-.commitOn:hover {
-  background: var(--bg-hover);
-  box-shadow: inset 2px 0 0 var(--accent-text);
-}
-
-.commitOn .subject {
-  font-weight: 500;
-}
-
-.commitOn.foreign {
-  opacity: 0.85;
-}
-
-.showAll {
-  height: 28px;
+/* The list scrolls; its rows keep their height (the label's overflow: hidden would let it shrink). */
+.list > * {
   flex-shrink: 0;
-  padding: 0 10px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  color: var(--accent-text);
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
 }
 
-.showAll:hover {
-  background: var(--bg-elevated);
-}
-
-.commitChip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  margin: 2px 0 0 20px;
-  padding: 3px 3px 3px 8px;
-  background: rgba(var(--accent-rgb), 0.14);
-  border-radius: 7px;
-}
-
-.chipSha {
-  flex-shrink: 0;
-  font-family: var(--font-mono);
+.listLabel {
+  padding: 8px 8px 6px;
   font-size: 11px;
-  color: var(--accent-hover);
-}
-
-.chipSubject {
-  flex-grow: 1;
-  min-width: 0;
-  font-size: 12px;
-  color: var(--text-body);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.chipClose {
-  width: 20px;
-  height: 20px;
+.listEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.commit,
+.wip {
+  width: 100%;
+  flex-shrink: 0;
+  /* A row scrolled into view keeps the list's side padding (8px) above and below it. */
+  scroll-margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  text-align: left;
+  cursor: pointer;
+}
+
+.commit:hover,
+.wip:hover {
+  background: var(--bg-sunken);
+}
+
+.rowOn,
+.rowOn:hover {
+  background: var(--bg-hover);
+}
+
+/* Picked with ⌘ / ⇧-click among several (Hi12): tinted, as Uncommitted's picked files. */
+.rowPicked,
+.rowPicked:hover {
+  background: rgba(var(--accent-rgb), 0.18);
+}
+
+.shared {
+  opacity: 0.7;
+}
+
+.shared .subject {
+  color: var(--text-muted);
+}
+
+.wip {
+  margin-top: 4px;
+  border: 1px dashed var(--border-strong);
+}
+
+.wipSlot {
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: 5px;
-  color: var(--accent-hover);
-  cursor: pointer;
 }
 
-.chipClose:hover {
-  background: rgba(var(--accent-rgb), 0.2);
+.wipDot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-text);
 }
 
-.stale {
-  opacity: 0.5;
+/* One-line commit rows: Uncommitted is one line too, as tall as a commit (4px + the border). */
+.wipOneLine {
+  padding: 4px 8px;
 }
 
-.sha {
-  font-family: var(--font-mono);
-  font-size: 12px;
+.wipOneLine .subjectLine {
+  flex-grow: 1;
+}
+
+.wipOneLine .wipTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wipOneLine .meta {
+  flex-shrink: 0;
+}
+
+.wipTitle {
+  font-size: 13px;
+  font-weight: 500;
   color: var(--accent-text);
 }
 
-.subject {
+.rowText {
   flex-grow: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.subjectLine {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subject {
+  min-width: 0;
+  font-size: 13px;
   color: var(--text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.age {
+.meta,
+.metaLine {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
-/* Project scope: entries with nothing to diff, as one line (docs/SPEC.md §5 Review). */
+.metaLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metaWho {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sha {
+  font-family: var(--font-mono);
+  color: var(--accent-text);
+}
+
+/* One-line commit rows (Settings › Appearance › Review): SHA, subject, age. */
+.commitOneLine {
+  padding: 5px 8px;
+}
+
+.commitOneLine .subjectLine {
+  flex-grow: 1;
+}
+
+.shaCol {
+  width: 56px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+@container (max-width: 339px) {
+  .shaCol {
+    display: none;
+  }
+}
+
+.oneLineAge {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* The commit header's SHA links to the commit when the repo has a remote; a copy icon beside it. */
+.shaGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.shaLink:global(.selectable) {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.shaLink:global(.selectable):hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.copied {
+  color: var(--success-text);
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-avatar);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-strong);
+  /* Initials stay out of hand selections (the meta row is selectable). */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.avatarSmall {
+  width: 18px;
+  height: 18px;
+  font-size: 8px;
+}
+
+.avatarBot {
+  background: var(--bg-band);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-muted);
+  font-size: 8px;
+}
+
+.avatarSmall.avatarBot {
+  font-size: 6px;
+}
+
+/* The origin and base lines (SPEC §5): buttons that pick the rows above them. */
+
+.line {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.line:hover {
+  background: var(--bg-sunken);
+}
+
+.line:disabled {
+  cursor: default;
+  background: transparent;
+}
+
+.lineOn,
+.lineOn:hover {
+  background: var(--bg-hover);
+}
+
+.lineRule {
+  flex-grow: 1;
+  height: 0;
+  border-top: 1px solid var(--border-strong);
+}
+
+.lineDashed {
+  border-top-style: dashed;
+}
+
+.lineLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Commit header */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Commit header: subject, body and meta are selectable. */
+.head :global(.selectable) {
+  cursor: text;
+}
+
+.body {
+  max-width: 720px;
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+
+.metaAuthor {
+  color: var(--text-body);
+}
+
+
+/* Several rows taken together (Hi12): one line each, the list scrolls past a few. */
+.rangeList {
+  max-height: 104px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rangeRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.rangeSha {
+  width: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-text);
+}
+
+.rangeSubject {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Project scope (SPEC §5): the open branch's head, sticky over its rows, full width. */
+.branchHead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: -6px -8px 4px;
+  padding: 8px 16px 7px;
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border);
+}
+
+.branchHeadLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.branchHeadRepo {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.branchHeadName {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stackHint {
+  margin: 2px 0 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(var(--warning-rgb), 0.12);
+  color: var(--warning);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .notInReview {
   margin-top: 10px;
   padding: 12px 8px 0;
@@ -265,174 +509,80 @@
   color: var(--text-muted);
 }
 
-/* Stacked branch (flow E) */
-.stackHint {
-  margin: 0 8px 6px 28px;
-  padding: 7px 10px;
-  border-radius: var(--radius-control);
-  background: rgba(var(--warning-rgb), 0.12);
-  color: var(--warning-text);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.foreign {
-  opacity: 0.6;
-}
-
-.pending {
+/* The project's other branches, pinned under the stashes. */
+.branchesPane {
   flex-shrink: 0;
-  color: var(--text-muted);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.repoLink {
-  padding: 0;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.repoLink:hover {
-  color: var(--accent-hover);
-}
-
-/* File filter (flow D8): an Input, sticky above the groups. A shadow strip covers the list's top
-   padding while the list scrolls under it; it is listed after the focus ring so the ring stays
-   whole on every side. */
-.filter {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  margin: 0 0 6px;
-  box-shadow: 0 -8px 0 var(--bg-sidebar);
-}
-
-.filter.filter:focus-within,
-.filter.filter:has(input:not(:placeholder-shown)) {
-  box-shadow:
-    0 0 0 2px rgba(var(--accent-rgb), 0.2),
-    0 -8px 0 var(--bg-sidebar);
-}
-
-.upstream {
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-/* Where the remote-tracking branch is (W4a): a dashed rule with its name. */
-.upstreamLine {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 18px;
-  padding: 0 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.upstreamLine::before,
-.upstreamLine::after {
-  content: '';
-  flex-grow: 1;
-  border-top: 1px dashed var(--border-strong);
-}
-
-.matchLabel {
-  flex-shrink: 0;
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.noMatch {
+  max-height: 40%;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 16px 8px;
+  padding: 0 8px 8px;
+  border-top: 1px solid var(--border);
 }
 
-.noMatchTitle {
-  font-size: 13px;
-  color: var(--text-body);
-}
-
-.noMatchHint {
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
-/* The base in the entry bar's "ahead of" label, a link to its History. */
-.baseLink {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-}
-
-/* The entry's totals and its ⋯ button share one cell; the button shows on hover (flow D). */
-.groupEnd {
+.branchesHeading {
   flex-shrink: 0;
-  display: grid;
-  align-items: center;
-  justify-items: end;
-}
-
-.groupEnd > * {
-  grid-area: 1 / 1;
-}
-
-.totals {
-  display: flex;
-  gap: 8px;
-}
-
-.groupMenu {
-  width: 22px;
-  height: 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: -2px 0;
-  padding: 0;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 8px 4px;
   background: transparent;
   border: 0;
-  border-radius: var(--radius-control);
-  color: var(--text-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
   cursor: pointer;
-  opacity: 0;
 }
 
-.groupHead:hover .groupMenu,
-.groupHead:has(:focus-visible) .groupMenu,
-.groupEndOpen .groupMenu {
-  opacity: 1;
+.branchesList {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
-.groupHead:hover .totals,
-.groupHead:has(:focus-visible) .totals,
-.groupEndOpen .totals {
-  visibility: hidden;
+.otherBranch {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.groupMenu:hover {
+.otherBranch:hover {
   background: var(--bg-hover);
 }
 
-.groupEndOpen .groupMenu,
-.groupEndOpen .groupMenu:hover {
-  background: var(--bg-pressed);
+.dirtyDot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-text);
 }
 
+.otherUpstream {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Stash scope (SPEC §5): the stash section is the list column. */
+.stashStack {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 8px 8px;
+}

@@ -685,24 +685,17 @@ rather than as a task is listed the same way, marked "(on request)".
     entry); the data for the head, the Branches rows and the stacked hint still come from
     `get_review`. No spinner on the head after a base change.
 - [x] T27.4 Stash scope on the new screen — 2026-10-18
+- [x] T27.5 Remove the old Review — 2026-10-18
+  - note: `screens/History/` moved into `screens/Review/` (`Review.tsx` holds BranchReview,
+    ProjectReview, StashReview around BranchView); the file filter and the Committed /
+    Uncommitted / All modes are gone with it. Rows show the full date in absolute mode now that
+    there are no day labels. `settings.historyLayout` keeps its config key.
 
 ---
 
 ## Open
 
 ### Phase 27 — Review and History in one screen
-
-#### T27.5 Remove the old Review
-- **Depends on:** T27.4
-- **Why:** as T27.1.
-- **Spec:** —
-- **Steps:**
-  1. Delete the old Review body (file groups, Committed / Uncommitted / All, entry bar, commit
-     chip, file filter, ⌥H, `useSwitchTo`), the code and i18n keys only it used, and the backend
-     calls nobody makes any more.
-  2. Replace the remaining "History" mentions in SPEC (§1, §3, §4, §11, §15) and code comments;
-     rename `settings.historyLayout` only if it is free to (keep the config key otherwise).
-- **Acceptance:** `pnpm test`, `pnpm build`, `cargo test` pass; no reference to removed files.
 
 #### T27.6 ✋ Checkpoint — phase 27
 - **Depends on:** T27.5
