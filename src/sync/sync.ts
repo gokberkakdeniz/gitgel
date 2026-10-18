@@ -72,6 +72,14 @@ export function divergedBanner(t: SyncTarget): string | null {
   return translate('sync.diverged', { n: String(u.behind), d: formatCount(u.behind), branch: t.branch ?? '', remote: u.remote });
 }
 
+/** What "Rebase on <base>" rebases on: the base of a checked-out branch, unless that is the branch
+ * itself or its own remote branch (the base branch's base is its upstream: that is Pull (rebase)). */
+export function rebaseBase(e: SyncTarget & { base: string | null }): string | null {
+  const u = e.upstream;
+  if (!e.branch || !u || !e.worktreePath || !e.base) return null;
+  return e.base !== e.branch && e.base !== u.name ? e.base : null;
+}
+
 function refOf(t: SyncTarget): EntryRef {
   return { repoId: t.repoId, branch: t.branch, worktreePath: t.branch === null ? t.worktreePath : null };
 }

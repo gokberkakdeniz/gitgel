@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { entryGoItem } from '../../commands/global';
+import { useCommandSource } from '../../commands/registry';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
 import { BranchIcon, ChevronDownIcon, HistoryIcon, MoreIcon, RemoveIcon } from '../../components/icons';
@@ -100,6 +102,24 @@ function SavedProject({ id }: { id: string }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [id, hasEntries]);
 
+  // ⌘P lists the entries (each opens in the project's review); ⇧⌘P the page's commands.
+  useCommandSource(() => {
+    const group = t('cmd.groupProject');
+    const entries = data?.project.id === id ? data.entries : [];
+    const openEntry = (key?: string) =>
+      nav.push({ name: 'review', target: { kind: 'project', projectId: id }, focusKey: key, backLabel: t('project.backToProject') });
+    return {
+      go: entries.map((e) => entryGoItem(e, project?.name ?? '', () => openEntry(e.key))),
+      commands: [
+        ...(hasEntries
+          ? [{ id: 'project:review', title: t('project.reviewChanges'), group, keys: '⌘R', run: () => openEntry() }]
+          : []),
+        { id: 'project:add', title: t('shortcuts.addBranches'), group, keys: '⌘K', run: openPalette },
+        { id: 'project:rename', title: t('project.renameProject'), group, keys: 'F2', run: () => setRenaming(true) },
+      ],
+    };
+  });
+
   if (!project) return null;
   // Rows come from the view; while it loads, keep the table shape from the config.
   const rows = data?.project.id === id ? data.entries : [];
@@ -174,6 +194,9 @@ function SavedProject({ id }: { id: string }) {
 /** Flows C and H2: a project that exists only until it is named. */
 function DraftProject() {
   usePaletteShortcut();
+  useCommandSource(() => ({
+    commands: [{ id: 'project:add', title: t('shortcuts.addBranches'), group: t('cmd.groupProject'), keys: '⌘K', run: openPalette }],
+  }));
   const draft = useUi((s) => s.draftProject);
   const scan = useData((s) => s.scan);
   const nav = useNav();

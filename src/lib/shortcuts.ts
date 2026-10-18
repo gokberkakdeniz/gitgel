@@ -18,6 +18,8 @@ export const SHORTCUTS: ShortcutGroup[] = [
     title: 'shortcuts.general',
     items: [
       { label: 'shortcuts.newProject', keys: ['⌘', 'N'] },
+      { label: 'shortcuts.goTo', keys: ['⌘', 'P'] },
+      { label: 'shortcuts.commands', keys: ['⇧', '⌘', 'P'] },
       { label: 'shortcuts.toggleSidebar', keys: ['⌘', 'B'] },
       { label: 'shortcuts.back', keys: ['⌘', '['], note: 'shortcuts.backNote' },
       { label: 'shortcuts.forward', keys: ['⌘', ']'], note: 'shortcuts.forwardNote' },

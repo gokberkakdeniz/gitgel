@@ -57,6 +57,8 @@ interface UiState {
   selectedKeys: string[];
   draftProject: DraftProject | null;
   paletteOpen: boolean;
+  /** The command palette (⌘P places, ⇧⌘P commands), or null while it is closed. */
+  commandPalette: 'go' | 'commands' | null;
   toast: Toast | null;
   addReposSheet: string[] | null; // picked folder paths while the sheet is open
   modalCount: number; // open modals; folder drops are ignored while any is open
@@ -75,6 +77,7 @@ interface UiState {
   setSelectedKeys: (keys: string[]) => void;
   setDraftProject: (draft: DraftProject | null) => void;
   setPaletteOpen: (open: boolean) => void;
+  setCommandPalette: (mode: 'go' | 'commands' | null) => void;
   showToast: (toast: Omit<Toast, 'id'>) => void;
   dismissToast: () => void;
   setAddReposSheet: (paths: string[] | null) => void;
@@ -111,6 +114,7 @@ export const useUi = create<UiState>()((set) => ({
   selectedKeys: [],
   draftProject: null,
   paletteOpen: false,
+  commandPalette: null,
   toast: null,
   addReposSheet: null,
   modalCount: 0,
@@ -128,6 +132,7 @@ export const useUi = create<UiState>()((set) => ({
   setSelectedKeys: (selectedKeys) => set({ selectedKeys }),
   setDraftProject: (draftProject) => set({ draftProject }),
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
+  setCommandPalette: (commandPalette) => set({ commandPalette }),
   showToast: (toast) => set({ toast: { ...toast, id: ++toastId } }),
   dismissToast: () => set({ toast: null }),
   setAddReposSheet: (addReposSheet) => set({ addReposSheet }),

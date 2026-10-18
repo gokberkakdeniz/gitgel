@@ -1,7 +1,8 @@
 // Parts of Review's diff pane (SPEC §5, §16): the file bar with its view menu
 // and change navigation, file rows, the stash section, and the remembered diff view settings with
-// their ⌥ keys.
+// their ⌥ keys and palette commands.
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { useCommandSource } from '../../commands/registry';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDownIcon, Icon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
@@ -55,6 +56,17 @@ export function useDiffView() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+  // The same three in the command palette.
+  useCommandSource(() => {
+    const group = t('cmd.groupReview');
+    return {
+      commands: [
+        { id: 'view:layout', title: t(layout === 'split' ? 'cmd.viewUnified' : 'cmd.viewSplit'), group, keys: '⌥V', run: toggleLayout },
+        { id: 'view:context', title: t(context === 'changes' ? 'review.wholeFile' : 'review.changesOnly'), group, keys: '⌥C', run: toggleContext },
+        { id: 'view:ws', title: t(ignoreWs ? 'cmd.showWs' : 'review.ignoreWs'), group, keys: '⌥W', run: toggleWs },
+      ],
+    };
+  });
   return { layout, ignoreWs, context, contextLines, tabSize, saveView, toggleWs, viewRef };
 }
 

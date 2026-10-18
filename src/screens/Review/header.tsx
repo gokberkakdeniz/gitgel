@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useCommandSource } from '../../commands/registry';
 import editable from '../../components/EditableTitle.module.css';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { ProjectNameInput } from '../../components/ProjectNameInput';
@@ -38,6 +39,11 @@ export function ReviewHeader({
   // The title box's width when rename started, so the input keeps it.
   const titleWidth = useRef<number | undefined>(undefined);
   const project = target.kind === 'project' ? config?.projects.find((p) => p.id === target.projectId) : undefined;
+  useCommandSource(() => ({
+    commands: project
+      ? [{ id: 'project:rename', title: t('project.renameProject'), group: t('cmd.groupProject'), run: () => setRenaming(true) }]
+      : [],
+  }));
 
   let title = '';
   let subtitle = '';

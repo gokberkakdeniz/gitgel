@@ -193,6 +193,8 @@ gitgel/
 │  ├─ windows/  # §7 the small windows: AuxApp (entry, theme, sizing), AboutWindow,
 │  │            # UpdateWindow, WhatsNewWindow
 │  ├─ state/    nav.ts  ui.ts  data.ts
+│  ├─ commands/ # §5 command palette: registry.ts (useCommandSource), global.ts, branch.ts,
+│  │            # search.ts (fuse, Recently Used), CommandPalette.tsx
 │  ├─ components/                 # Button, IconButton, Pill, Checkbox, Switch, Input, Kbd,
 │  │                              # Popover, Menu, Modal, Toast, Segmented, Select, SettingsNav,
 │  │                              # KindBadge, Banner, ResizeHandle (+ useStoredWidth), ReleaseNotes, List (+ List.story.tsx: dev-only /#list), icons.tsx (Icon by name),
@@ -1004,6 +1006,68 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   row reached with the arrow keys (a row under the mouse is not added). The "Add ↵" button adds
   only marked rows and is disabled when none are. Esc or a click outside closes the palette.
 
+### Command palette (`CommandPalette.dc.html`)
+
+VS Code's model: one palette, two modes. ⌘P goes to a place, ⇧⌘P runs a command; the query
+decides the mode (a leading `>` is commands), so deleting the `>` goes back to places and ⌘P /
+⇧⌘P while it is open switch it. Opens from anywhere unless another modal is open; Esc, a click
+outside or leaving the page closes it (`src/commands/`).
+
+- Same box as the Add palette: 620px, top 96px, radius 16, over the scrim. Search row 56px:
+  search icon, 16px input (focused), placeholder "Go to a branch or project". List max 470px,
+  padding 6. No footer.
+- Rows: 36px min, padding 7px 12px, radius `control`, the active one `bg.hover` (↑/↓ move it and
+  wrap, the pointer moves it too); ↵ or a click runs it and closes the palette.
+  - Place: one line after a 14px muted kind icon (its name as the tooltip): a project (`project` icon:
+    stacked layers) and its name (13px); a worktree (`worktree` icon) or a branch
+    checked out nowhere (`branch` icon) is mono 13 `<repo>/<branch>` with `<repo>/` muted (a
+    detached worktree: its short SHA). No meta line, and no group titles except the project on
+    show's name above its entries, with a 1px `border` line (margin 6px 12px) after them. The one
+    on show has a 14px `accent.text` check on the right.
+  - Command: 13px title, the shortcut that does the same as a `Kbd` on the right, under group
+    titles as the Add palette's (11px uppercase muted).
+- Search: fuse.js (threshold 0.35, `ignoreLocation`), places on name (weight 2), repo and
+  worktree path; commands on title (weight 2) and group. While searching, groups stay together,
+  the group of the best match first (the project on show's entries always first). "No Matches"
+  when nothing is left.
+- **Prefixes** (the query's first character; the rest is searched as usual): `>` commands, `#`
+  projects, `~` worktrees, `/` branches (worktrees too, older ones included). With `#`, `~` or
+  `/` only places of that kind are listed, all of them even without more text (older branches at
+  most 50), in one flat list: no project heading, no line. `?` lists the prefixes instead (mono
+  13 `accent.text` prefix in a 14px slot, then its name: Commands, Projects, Worktrees,
+  Branches); picking one puts it in the search box and the palette stays. Git refuses `~` and
+  `?` in a branch name and `/` at its start (`parseQuery`, `src/commands/search.ts`).
+- **Places (⌘P).**
+  - In a project (its page or its review): its entries first, under its name, the open one
+    checked. Picking one opens it in the project's review (in place when there). Then, after the
+    line, the list below without that project and its entries.
+  - Projects (sidebar order; open as the sidebar opens them), then the Add palette's worktrees
+    and active branches, and older branches found by search (at most 50). A branch opens its
+    review (branch scope, Back "Back").
+- **Commands (⇧⌘P).** Only commands that can run now are listed (as menus leave out what cannot
+  be used, §7); a git action running in the repository hides the open branch's git actions.
+  Without a query, **Recently Used** first (the last 5 run, on this machine:
+  `localStorage` `gitgel.recentCommands`), then by group in this order:
+  - **Review** (Review): Switch Branch… ⇧⌘B (branch scope), Search Commits ⌘K, Next / Previous
+    Change ⌥↓ / ⌥↑, Newer / Older Commit ⌥⇧↑ / ⌥⇧↓, and the view: Split View or Unified View ⌥V,
+    Whole File or Changes Only ⌥C, Ignore Whitespace or Show Whitespace ⌥W (each names the other
+    state; the view ones in a stash stack too).
+  - **Branch** (Review's open branch, as its ⋮ menu has them): Continue <op> / Abort <op> while
+    one is stopped, else Checkout Branch…, Fetch, Pull, Pull (Rebase), Push, Force Push, Rebase on
+    <base>, each when its menu item would be usable; Copy Branch Name, Open in <App>, the scripts
+    of that menu, Delete Branch….
+  - **Project**: Review Changes ⌘R, Add Branches… ⌘K, Rename Project F2 (project page; the draft
+    only Add Branches…), Edit Project, Rename Project (project review), Delete Project… (both).
+  - **General**: New Project… ⌘N, Go to Branches, Go Back ⌘[, Go Forward ⌘], Show / Hide Sidebar
+    ⌘B, Refresh, Add Repository…, Check for Updates…, What's New, About Gitgel, Report an Issue.
+  - **Settings**: Open Settings ⌘,, Settings: <section> for each section, Theme: <name> for the
+    two themes not chosen, Commit Rows: <name> and Layout: <name> for the Appearance choice not
+    made (One Line / Two Lines, Columns / Tree).
+- Screens add their rows with `useCommandSource` (`src/commands/registry.ts`), read when the
+  palette opens; the app's own are in `global.ts`, the branch's in `branch.ts`, which reuse the
+  menus' rules (`syncState`, `rebaseBase`, `canCheckout`, `canDeleteBranch`, `branchScripts`).
+  Not in the palette yet: Stash…, Change Base… and Fetch of a whole project.
+
 ### Settings (`Settings.dc.html`)
 
 - A page header, serif 22px "Settings". Under it, like VS Code's settings, a 200px section list
@@ -1247,6 +1311,8 @@ either end or next to another goes too), unless this file says that item is show
 | Group | Action | Keys | Where |
 |---|---|---|---|
 | General | New project | ⌘N | everywhere, unless a modal is open |
+| | Go to branch or project | ⌘P | everywhere, unless a modal is open (command palette) |
+| | Command palette | ⇧⌘P | everywhere, unless a modal is open |
 | | Show / hide sidebar | ⌘B | everywhere, unless a modal is open |
 | | Back / Forward | ⌘[ / ⌘] (physical keys; ⌘ğ / ⌘ü on a Turkish Q layout), also ⌘← / ⌘→ outside text fields (the diff is not one) | everywhere |
 | | Settings | ⌘, | app menu |
@@ -2021,6 +2087,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (branch head above the scrolling list, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
+| Command palette | `CommandPalette.dc.html` | dialog 26–68 (search row 27–31, the line and titles 36–37, place rows with kind icons 40–51, `?` prefix rows 52–56, command rows 57–62), data per `mode` (go, search, commands, help) 73–140; `CommandPaletteSearch` / `CommandPaletteCommands` / `CommandPaletteHelp` mount it with `mode` |
 | Settings | `Settings.dc.html` | section list 30 (data 235–238), Repositories 35–59 (repository `List` 38, items 300–304; Default base `List` 44 with rows, actions and add states 239–266 and 305–312; Active threshold 50–53, Check Out New Branches In 54–57), General 61–91 (Language 63–69; Terminal 72–84, options with disabled flag 311; Check for updates 87–89), Appearance: Theme 95–114, tile builder 253; Formatting 116–134 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 135–141 with Tab size, Scripts 143–161 (`List` 121, items 313–318), Prompts 127–134 (data 290), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | Stashes | `FlowP1`, `FlowP5.dc.html`, `ReviewStashes`, `ReviewConflicts` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`); Review's stash section, the stash stack (R6) and a merge conflict after Apply (R5) on the Review page |

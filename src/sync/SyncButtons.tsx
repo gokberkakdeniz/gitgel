@@ -8,7 +8,7 @@ import { useRuns } from '../scripts/runs';
 import { canCheckout, CheckoutBranchItem } from './CheckoutBranch';
 import { OperationItems } from './OperationUi';
 import styles from './SyncButtons.module.css';
-import { fetchRepo, forcePushBranch, pullBranch, pushBranch, rebaseOnBase, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
+import { fetchRepo, forcePushBranch, pullBranch, pushBranch, rebaseBase, rebaseOnBase, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
 
 /** The sync action running in the repository, if any (one git action at a time per repository). */
 function useRunningSync(repoId: string): string | null {
@@ -158,10 +158,7 @@ export function SyncItems({
     void action();
   };
   const busy = running ? t('sync.busy') : null;
-  // Rebase on the base: a checked-out branch that has a base other than itself or its own remote
-  // branch (the base branch's base is its upstream: that is Pull (rebase)).
-  const base =
-    entry.worktreePath && entry.base && entry.base !== entry.branch && entry.base !== u.name ? entry.base : null;
+  const base = rebaseBase(entry);
   if (rebaseOnly) {
     if (!base && !checkout) return null;
     return (

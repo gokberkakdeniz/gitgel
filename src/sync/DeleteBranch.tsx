@@ -29,8 +29,27 @@ function checkout(entry: EntrySummary, repoPath: string | undefined): 'none' | '
   return repoPath && trimSlash(entry.worktreePath) === trimSlash(repoPath) ? 'main' : 'linked';
 }
 
-/** "Delete Branch…" at the end of a branch menu: a local branch that is there, is not its repo's
- * base and has no operation in progress. Disabled while a git action runs. */
+/** A local branch that is there, is not its repo's base and has no operation in progress; the
+ * repository folder needs a base branch to switch to. */
+export function canDeleteBranch(entry: EntrySummary, base: string | null, repoPath: string | undefined): boolean {
+  return !(
+    !entry.branch ||
+    !entry.headSha ||
+    entry.branch === base ||
+    entry.operation ||
+    entry.state === 'repo_missing' ||
+    entry.state === 'branch_deleted' ||
+    (checkout(entry, repoPath) === 'main' && !base)
+  );
+}
+
+/** Opens the confirmation for `entry`. */
+export function askDeleteBranch(entry: EntrySummary): void {
+  useDeleteBranch.setState({ entry });
+}
+
+/** "Delete Branch…" at the end of a branch menu, for a branch `canDeleteBranch` takes. Disabled
+ * while a git action runs. */
 export function DeleteBranchItem({
   entry,
   onDone,
@@ -44,17 +63,7 @@ export function DeleteBranchItem({
   const base = useData((s) => s.scan[entry.repoId]?.baseBranch ?? null);
   const repoPath = useData((s) => s.config?.repos.find((r) => r.id === entry.repoId)?.path);
   const running = useGitActionRunning(entry.repoId);
-  if (
-    !entry.branch ||
-    !entry.headSha ||
-    entry.branch === base ||
-    entry.operation ||
-    entry.state === 'repo_missing' ||
-    entry.state === 'branch_deleted' ||
-    // The repository folder needs a base branch to switch to.
-    (checkout(entry, repoPath) === 'main' && !base)
-  )
-    return null;
+  if (!canDeleteBranch(entry, base, repoPath)) return null;
   return (
     <>
       {divider && <MenuDivider />}
@@ -65,7 +74,7 @@ export function DeleteBranchItem({
         title={running ? t('sync.gitBusy') : undefined}
         onSelect={() => {
           onDone();
-          useDeleteBranch.setState({ entry });
+          askDeleteBranch(entry);
         }}
       >
         {t('branches.deleteMenu')}

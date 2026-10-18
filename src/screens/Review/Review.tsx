@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { branchCommands } from '../../commands/branch';
+import { entryGoItem } from '../../commands/global';
+import { useCommandSource, type Command } from '../../commands/registry';
 import { BranchIcon, CheckIcon, ChevronDownIcon, CopyIcon, Icon } from '../../components/icons';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { IconButton } from '../../components/IconButton';
@@ -130,6 +133,10 @@ export function ProjectReview({ projectId, backLabel, focusKey }: { projectId: s
         : null,
     [open, projectId, project?.name, groups, data],
   );
+  // ⌘P lists the project's entries; picking one opens it here.
+  useCommandSource(() => ({
+    go: groups.map((g) => entryGoItem(g.entry, project?.name ?? '', () => setOpenKey(g.entry.key), g === open)),
+  }));
   const rev = open ? (open.entry.branch ?? open.entry.headSha) : null;
   if (!open || !scope || !rev)
     return (
@@ -917,6 +924,34 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // The command palette's Review, Project and Branch groups (SPEC §5 "Command palette").
+  useCommandSource(() => {
+    const review = t('cmd.groupReview');
+    const commands: Command[] = [];
+    if (!project && repoScan)
+      commands.push({ id: 'review:switch', title: t('history.switchBranch'), group: review, keys: '⇧⌘B', run: () => setSwitching(true) });
+    commands.push({ id: 'review:search', title: t('history.searchCommits'), group: review, keys: '⌘K', run: focusSearch });
+    if (fileIds.length > 0)
+      commands.push(
+        { id: 'review:nextChange', title: t('cmd.nextChange'), group: review, keys: '⌥↓', run: () => stepRef.current(1) },
+        { id: 'review:prevChange', title: t('cmd.prevChange'), group: review, keys: '⌥↑', run: () => stepRef.current(-1) },
+      );
+    if (current && order.length > 1)
+      commands.push(
+        { id: 'review:newer', title: t('cmd.newerCommit'), group: review, keys: '⌥⇧↑', run: () => stepRowRef.current(-1) },
+        { id: 'review:older', title: t('cmd.olderCommit'), group: review, keys: '⌥⇧↓', run: () => stepRowRef.current(1) },
+      );
+    if (project)
+      commands.push({
+        id: 'project:edit',
+        title: t('review.editProject'),
+        group: t('cmd.groupProject'),
+        run: () => editProject(project.projectId),
+      });
+    if (entry) commands.push(...branchCommands(entry, project ? 'project' : 'branches', project?.projectName));
+    return { commands };
+  });
 
   // Keep the picked row in view when it changes from outside the list.
   const list = useRef<HTMLElement>(null);

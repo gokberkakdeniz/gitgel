@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import styles from './App.module.css';
+import { CommandPalette } from './commands/CommandPalette';
 import { AuxBlocker } from './components/AuxBlocker';
 import { FolderPlusIcon } from './components/icons';
 import { Sidebar } from './components/Sidebar/Sidebar';
@@ -81,7 +82,7 @@ export default function App() {
 
   // ⌘N: new project (flow C), from anywhere unless a modal is open. ⌘R never reloads the
   // webview; on the Project screen it opens the review. ⌘← / ⌘→ (and ⌘[ / ⌘]): back / forward.
-  // ⌘B shows or hides the sidebar.
+  // ⌘B shows or hides the sidebar. ⌘P / ⇧⌘P open the command palette (or switch it, when open).
   // ⌘, (Settings) is the app menu's. Listed in lib/shortcuts.ts. Caught before the diff: Monaco
   // takes ⌘← / ⌘→ (line start / end) and stops them there.
   useEffect(() => {
@@ -104,6 +105,13 @@ export default function App() {
         e.preventDefault();
         setSidebarVisible(!useUi.getState().sidebarVisible);
       }
+      if (e.metaKey && !e.altKey && !e.ctrlKey && e.code === 'KeyP') {
+        const ui = useUi.getState();
+        if (ui.modalCount > 0 && !ui.commandPalette) return;
+        e.preventDefault();
+        e.stopPropagation();
+        ui.setCommandPalette(e.shiftKey ? 'commands' : 'go');
+      }
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
@@ -122,12 +130,15 @@ export default function App() {
     return () => window.removeEventListener('contextmenu', onMenu);
   }, []);
 
-  // Leaving the draft project page discards the draft; leaving any page closes the palette.
+  // Leaving the draft project page discards the draft; leaving any page closes the palettes.
   const onDraft = route.name === 'project' && route.projectId === 'draft';
   useEffect(() => {
     if (!onDraft) useUi.getState().setDraftProject(null);
   }, [onDraft]);
-  useEffect(() => useUi.getState().setPaletteOpen(false), [route]);
+  useEffect(() => {
+    useUi.getState().setPaletteOpen(false);
+    useUi.getState().setCommandPalette(null);
+  }, [route]);
 
   return (
     <div className={styles.app}>
@@ -138,6 +149,7 @@ export default function App() {
       <AddReposSheet />
       <DeleteProjectModal />
       <Palette />
+      <CommandPalette />
       <RunDialogHost />
       <OutputPanelHost />
       <DropStashModal />

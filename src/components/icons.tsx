@@ -504,6 +504,15 @@ export function LinkIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   );
 }
 
+/** A project: stacked layers, branches of several repos reviewed together. */
+export function ProjectIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
+      <path d="M12 3.5 3.5 8l8.5 4.5L20.5 8ZM3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5" />
+    </Svg>
+  );
+}
+
 export function PackageIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   return (
     <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
@@ -590,6 +599,7 @@ minus: MinusIcon,
   'folder-plus': FolderPlusIcon,
   branch: BranchIcon,
   worktree: WorktreeIcon,
+  project: ProjectIcon,
   terminal: TerminalIcon,
   prompt: PromptIcon,
   code: CodeIcon,
