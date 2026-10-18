@@ -1,11 +1,16 @@
 // View › Font Size zooms the whole main window, but the native traffic lights do not move or
-// grow: the room left for them is divided by the zoom (`--zoom`), so the buttons beside them stay
-// put. Cached for the next launch (the window shows before the config arrives).
+// grow. The strip beside them (the page header, the sidebar's top row) is zoomed back by the
+// inverse (`--unzoom`), so it keeps its size and stays lined up with them. Cached for the next
+// launch (the window shows before the config arrives).
 const KEY = 'gitgel.zoom';
 
-/** Sets `--zoom` from the config's percent and remembers it. */
+function setUnzoom(percent: number): void {
+  document.documentElement.style.setProperty('--unzoom', String(100 / percent));
+}
+
+/** Sets `--unzoom` from the config's percent and remembers it. */
 export function applyZoom(percent: number): void {
-  document.documentElement.style.setProperty('--zoom', String(percent / 100));
+  setUnzoom(percent);
   try {
     localStorage.setItem(KEY, String(percent));
   } catch {
@@ -17,7 +22,7 @@ export function applyZoom(percent: number): void {
 export function applyCachedZoom(): void {
   try {
     const percent = Number(localStorage.getItem(KEY));
-    if (percent > 0) document.documentElement.style.setProperty('--zoom', String(percent / 100));
+    if (percent > 0) setUnzoom(percent);
   } catch {
     // Nothing cached.
   }

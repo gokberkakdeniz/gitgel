@@ -1,4 +1,7 @@
+/* View › Font Size leaves the header as it is, like the native traffic lights beside it
+ * (lib/zoom.ts): it is zoomed back by the inverse. */
 .header {
+  zoom: var(--unzoom, 1);
   height: 64px;
   flex-shrink: 0;
   display: flex;
@@ -10,19 +13,17 @@
 }
 
 .bare {
-  padding-left: calc(16px / var(--zoom, 1));
+  padding-left: 16px;
 }
 
-/* Same geometry as the sidebar's top row, so the buttons don't move when the sidebar toggles:
- * the 28px buttons centred 26px down, on the native traffic lights, which the zoom does not move
- * (lib/zoom.ts). Kept inside the header at small zooms. */
+/* Same geometry as the sidebar's top row, so the buttons don't move when the sidebar toggles. */
 .chrome {
-  align-self: stretch;
+  height: 52px;
+  align-self: flex-start;
   flex-shrink: 0;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 2px;
-  padding-top: clamp(0px, calc(26px / var(--zoom, 1) - 14px), 36px);
 }
 
 /* Back to the page this one was opened from. */
@@ -32,7 +33,7 @@
 
 /* Room for the native traffic lights. */
 .lights {
-  width: calc(64px / var(--zoom, 1));
+  width: 64px;
   align-self: stretch;
   flex-shrink: 0;
 }

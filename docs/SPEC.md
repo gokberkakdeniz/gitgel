@@ -1402,9 +1402,10 @@ and menus that open things are off, only its 52px title strip still drags it.
 - **View › Font Size**: Decrease (⌘-), Increase (⌘.), Reset (⌘0). Zooms the whole window in steps
   50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200 %; saved as `settings.zoom` and applied at
   startup. ⌘- and ⌘. need no Shift on Turkish and US layouts. The native traffic lights do not
-  zoom, so the room left for them (the sidebar's top row, the header's show-sidebar / Back /
-  Forward group) is divided by the zoom (`--zoom`, `src/lib/zoom.ts`, cached in `localStorage`
-  for the next launch) and those buttons stay beside them.
+  zoom, and neither does the strip beside them: the page header (64px, title, subtitle and its
+  controls) and the sidebar's top row are zoomed back by the inverse (CSS `zoom: var(--unzoom)`,
+  `src/lib/zoom.ts`, cached in `localStorage` for the next launch). Menus they open take the
+  page's size.
 - **Help › Discuss on GitHub** (after What's New and a divider; opens https://github.com/gokberkakdeniz/gitgel/discussions),
   **Search or Report an Issue on GitHub** (…/issues), divider, **Show Logs in Finder** (writes all
   logs with the app and libgit2 versions to `~/Downloads/Gitgel-logs-<time>.log` and reveals it).

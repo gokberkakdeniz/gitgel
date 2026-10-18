@@ -28,19 +28,21 @@
   }
 }
 
-/* Lined up with the native traffic lights, which the zoom does not scale (lib/zoom.ts). */
+/* Beside the native traffic lights: View › Font Size leaves it as it is, like the page header
+ * (lib/zoom.ts). */
 .top {
-  height: calc(52px / var(--zoom, 1));
+  zoom: var(--unzoom, 1);
+  height: 52px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 0 12px 0 calc(16px / var(--zoom, 1));
+  padding: 0 12px 0 16px;
 }
 
 /* Room for the native traffic lights. */
 .lights {
-  width: calc(64px / var(--zoom, 1));
+  width: 64px;
   align-self: stretch;
   flex-shrink: 0;
 }
