@@ -2185,8 +2185,9 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   missing, and before uploading unless `codesign --verify --deep --strict`, `stapler validate`
   and `spctl --assess` pass.
 - **Release notes:** `CHANGELOG.md` holds one `## <version> — YYYY-MM-DD`
-  section per release, newest first, with `### New`, `### Improved` and `### Fixed` groups of
-  `- ` lines in the user's terms (empty groups left out). New is a feature the user did not have;
+  section per release, newest first, with `### Changed`, `### New`, `### Improved` and `### Fixed`
+  groups of `- ` lines in the user's terms (empty groups left out). Changed is a breaking change:
+  something the user relied on works differently, moved or is gone; New is a feature the user did not have;
   Improved is something that existed doing or showing more (a new detail, option or control
   in an existing panel or setting); Fixed is a bug from an earlier release. A feature new in the
   release gets one line: its own fixes and tweaks are left out, and its parts join that line only

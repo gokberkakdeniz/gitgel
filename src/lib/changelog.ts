@@ -3,7 +3,7 @@
 import raw from '../../CHANGELOG.md?raw';
 
 export interface ReleaseGroup {
-  title: string; // New, Improved, Fixed
+  title: string; // Changed, New, Improved, Fixed
   items: string[]; // Markdown lines; only `code` spans mean anything
 }
 export interface Release {

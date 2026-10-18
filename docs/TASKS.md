@@ -694,6 +694,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) A commit row's tooltip is the commit's full message instead of "Show this commit" — 2026-10-18
 - [x] (on request) Command palette, VS Code style: ⌘P goes to a project entry, project or branch, ⇧⌘P (a `>` query) runs a command of the screen or the app, Recently Used first; SPEC §5 "Command palette" — 2026-10-18
   - note: the old ⌘K shortcuts stay as they are for now (user decision); Stash…, Change Base… and a project-wide Fetch are not in the palette yet.
+- [x] (on request) Release notes get a `### Changed` group, listed first, for breaking changes (something the user relied on works differently, moved or is gone); SPEC §12 "Release notes" — 2026-10-18
 
 ---
 
