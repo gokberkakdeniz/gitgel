@@ -10,17 +10,19 @@
 }
 
 .bare {
-  padding-left: 16px;
+  padding-left: calc(16px / var(--zoom, 1));
 }
 
-/* Same geometry as the sidebar's top row, so the buttons don't move when the sidebar toggles. */
+/* Same geometry as the sidebar's top row, so the buttons don't move when the sidebar toggles:
+ * the 28px buttons centred 26px down, on the native traffic lights, which the zoom does not move
+ * (lib/zoom.ts). Kept inside the header at small zooms. */
 .chrome {
-  height: 52px;
-  align-self: flex-start;
+  align-self: stretch;
   flex-shrink: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 2px;
+  padding-top: clamp(0px, calc(26px / var(--zoom, 1) - 14px), 36px);
 }
 
 /* Back to the page this one was opened from. */
@@ -30,7 +32,7 @@
 
 /* Room for the native traffic lights. */
 .lights {
-  width: 64px;
+  width: calc(64px / var(--zoom, 1));
   align-self: stretch;
   flex-shrink: 0;
 }

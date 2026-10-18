@@ -185,7 +185,7 @@ gitgel/
 │  ├─ App.tsx                     # layout, route switch, global shortcuts, drop overlay
 │  ├─ styles/   tokens.css  tokens.ts  global.css
 │  ├─ lib/      types.ts  ipc.ts  events.ts  useInvoke.ts  format.ts  paths.ts  entryKey.ts
-│  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts
+│  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts  zoom.ts
 │  │            useCopy.ts  changelog.ts (CHANGELOG.md parsed, version compare)  whatsNew.ts
 │  │            prompts.ts (Settings › Prompts: "Do not show this message again")
 │  │            ai.ts (generate-finished hub, provider list; §15 "Generate message")
@@ -1401,7 +1401,10 @@ and menus that open things are off, only its 52px title strip still drags it.
   is open or Settings is already showing.
 - **View › Font Size**: Decrease (⌘-), Increase (⌘.), Reset (⌘0). Zooms the whole window in steps
   50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200 %; saved as `settings.zoom` and applied at
-  startup. ⌘- and ⌘. need no Shift on Turkish and US layouts.
+  startup. ⌘- and ⌘. need no Shift on Turkish and US layouts. The native traffic lights do not
+  zoom, so the room left for them (the sidebar's top row, the header's show-sidebar / Back /
+  Forward group) is divided by the zoom (`--zoom`, `src/lib/zoom.ts`, cached in `localStorage`
+  for the next launch) and those buttons stay beside them.
 - **Help › Discuss on GitHub** (after What's New and a divider; opens https://github.com/gokberkakdeniz/gitgel/discussions),
   **Search or Report an Issue on GitHub** (…/issues), divider, **Show Logs in Finder** (writes all
   logs with the app and libgit2 versions to `~/Downloads/Gitgel-logs-<time>.log` and reveals it).

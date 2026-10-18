@@ -25,6 +25,7 @@ import { setSidebarVisible } from './lib/sidebar';
 import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from './lib/theme';
 import { useFolderDrop } from './lib/useFolderDrop';
 import { useWhatsNewAfterUpdate } from './lib/whatsNew';
+import { applyZoom } from './lib/zoom';
 import { AddReposSheet } from './screens/AddRepos/AddReposSheet';
 import { Branches } from './screens/Branches/Branches';
 import { Palette } from './screens/Palette/Palette';
@@ -71,6 +72,7 @@ export default function App() {
       changed = true;
     }
     if (settings) {
+      applyZoom(settings.zoom);
       const fmt = fmtFromSettings(settings);
       if (JSON.stringify(fmt) !== JSON.stringify(getFmt())) {
         setFmt(fmt);
