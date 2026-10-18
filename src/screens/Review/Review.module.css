@@ -268,10 +268,13 @@
   flex-grow: 1;
 }
 
+/* As wide as a 7-character short SHA in its own font (mono, so every row lines up); a longer one
+ * widens its row's column instead of running into the subject. */
 .shaCol {
-  width: 56px;
+  min-width: 7ch;
   flex-shrink: 0;
   font-size: 11px;
+  white-space: nowrap;
 }
 
 @container (max-width: 339px) {
