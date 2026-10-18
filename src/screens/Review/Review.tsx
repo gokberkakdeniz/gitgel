@@ -1369,6 +1369,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           className={columns ? `${styles.listPane} ${styles.listPaneColumns}` : styles.listPane}
           style={listWidth ? { width: listWidth } : undefined}
         >
+          {project && entry && <BranchHead entry={entry} group={group} />}
           <aside
             ref={list}
             role="listbox"
@@ -1383,7 +1384,6 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
               else stepRow(dir);
             }}
           >
-            {project && entry && <BranchHead entry={entry} group={group} />}
             {group?.stackHint && !search && (
               <div className={styles.stackHint}>
                 {t('review.stackHint', {
@@ -1568,7 +1568,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   );
 }
 
-/** A project review's open branch, sticky over its rows (SPEC §5 "Branch head"): repo and the
+/** A project review's open branch, fixed above its rows (SPEC §5 "Branch head"): repo and the
  * branch's totals against its base, then the branch and its operation / conflicts pills. */
 function BranchHead({ entry: e, group }: { entry: EntrySummary; group: ReviewGroup | undefined }) {
   const files = group?.files.committed ?? [];

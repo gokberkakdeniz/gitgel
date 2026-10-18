@@ -462,16 +462,12 @@
   white-space: nowrap;
 }
 
-/* Project scope (SPEC §5): the open branch's head, sticky over its rows, full width. */
+/* Project scope (SPEC §5): the open branch's head, fixed above the scrolling list, full width. */
 .branchHead {
-  position: sticky;
-  /* Sticky insets by the list's top padding; cancel it so rows don't show above. */
-  top: -6px;
-  z-index: 2;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: -6px -8px 4px;
   padding: 8px 16px 7px;
   background: var(--bg-main);
   border-bottom: 1px solid var(--border);
