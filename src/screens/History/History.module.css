@@ -9,7 +9,7 @@
 /* The commit list, and under it the branch's stashes (as in Review, but pinned: the list keeps
    loading as it scrolls). */
 .listPane {
-  width: 380px;
+  width: 360px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -576,4 +576,12 @@
   font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+/* Stash scope (SPEC §5): the stash section is the list column. */
+.stashStack {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 8px 8px;
 }

@@ -684,21 +684,13 @@ rather than as a task is listed the same way, marked "(on request)".
   - note: built on the former History screen (`ProjectReview` around `History` with the open
     entry); the data for the head, the Branches rows and the stacked hint still come from
     `get_review`. No spinner on the head after a base change.
+- [x] T27.4 Stash scope on the new screen — 2026-10-18
 
 ---
 
 ## Open
 
 ### Phase 27 — Review and History in one screen
-
-#### T27.4 Stash scope on the new screen
-- **Depends on:** T27.3
-- **Why:** as T27.1.
-- **Spec:** SPEC §5 "Review" (Scopes: Stashes).
-- **Reference:** `ReviewStashes.dc.html`.
-- **Steps:** the stash scope shows the stash section as the list column (opens on the first
-  stash), StashBar and diff on the right; no search, sync or Branches.
-- **Acceptance:** Branches › a stash opens it as R6.
 
 #### T27.5 Remove the old Review
 - **Depends on:** T27.4

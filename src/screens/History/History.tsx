@@ -141,6 +141,148 @@ export function ProjectReview({ projectId, backLabel, focusKey }: { projectId: s
   return <History key={open.entry.key} repoId={open.entry.repoId} rev={rev} backLabel={backLabel} project={scope} />;
 }
 
+/** A repository's stash stack (SPEC §5, stash scope), opened from Branches: the stashes are the
+ * list column, the picked one (the one asked for, else the newest) on the right. */
+export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; backLabel: string; focusKey?: string }) {
+  const projects = useData((s) => s.config?.projects);
+  const scans = useData((s) => s.scan);
+  const repos = useData((s) => s.config?.repos);
+  const stashes = useMemo(() => reviewStashes({ kind: 'stashes', repoId }, projects, scans), [repoId, projects, scans]);
+  const [picked, setPicked] = useState<string | null>(focusKey ?? null);
+  const stash = stashes.find((x) => x.sha === picked) ?? stashes[0];
+  const [data, setData] = useState<Record<string, StashChanges>>({});
+  const requested = useRef(new Set<string>());
+  useEffect(() => {
+    if (!stash || requested.current.has(stash.sha)) return;
+    requested.current.add(stash.sha);
+    getStashChanges(stash.repoId, stash.sha).then(
+      (c) => setData((d) => ({ ...d, [c.sha]: c })),
+      (e) => {
+        console.error('stash changes failed', e);
+        requested.current.delete(stash.sha);
+      },
+    );
+  }, [stash]);
+  const changes = stash ? data[stash.sha] : undefined;
+  const base = changes?.base ?? stash?.base ?? '';
+  const files = changes?.files ?? [];
+  const [path, setPath] = useState<string | null>(null);
+  const fileIndex = Math.max(0, files.findIndex((f) => f.path === path));
+  const file = files[fileIndex];
+  const [land, setLand] = useState<'first' | 'last'>('first');
+  const [nav, setNav] = useState<NavInfo>({ index: null, count: 0 });
+  const diffNav = useRef<DiffNav | null>(null);
+  const ids = files.map((f) => f.path);
+  const step = (dir: 1 | -1) => {
+    const r = (dir > 0 ? next : prev)({ index: nav.index, count: nav.count, files: ids, fileIndex });
+    if (r?.kind === 'hunk') diffNav.current?.goTo(r.index);
+    if (r?.kind === 'file') {
+      setPath(r.key);
+      setLand(r.land);
+    }
+  };
+  const stepRef = useRef(step);
+  stepRef.current = step;
+  const view = useDiffView();
+  const listPane = useRef<HTMLDivElement>(null);
+  const [listWidth, setListWidth] = useStoredWidth('gitgel.historyListWidth');
+  const pick = (sha: string) => {
+    setPicked(sha);
+    setPath(null);
+    setLand('first');
+  };
+  return (
+    <div className={parts.screen}>
+      <ReviewHeader entry={undefined} target={{ kind: 'stashes', repoId }} backLabel={backLabel} stashes={stashes}>
+        <PageMenu>
+          {(close) => (
+            <MenuItem
+              icon="refresh"
+              onSelect={() => {
+                close();
+                void rescanAll(true);
+              }}
+            >
+              {t('review.refresh')}
+            </MenuItem>
+          )}
+        </PageMenu>
+      </ReviewHeader>
+      <div className={parts.body}>
+        <div ref={listPane} className={styles.listPane} style={listWidth ? { width: listWidth } : undefined}>
+          <div className={styles.stashStack}>
+            {stashes.length > 0 && (
+              <StashSection
+                heading={t('review.stashInRepo', { repo: stashes[0].repoName })}
+                stashes={stashes}
+                picked={stash?.sha}
+                changes={changes}
+                file={file?.path}
+                divider={false}
+                withRepo={false}
+                onPick={pick}
+                onFile={(p) => {
+                  setPath(p);
+                  setLand('first');
+                }}
+              />
+            )}
+          </div>
+        </div>
+        <ResizeHandle pane={listPane} min={280} max={640} onResize={setListWidth} onReset={() => setListWidth(null)} label={t('history.resizeList')} />
+        <section className={parts.main}>
+          {!stash ? (
+            <div className={parts.empty}>{t('review.noStashes')}</div>
+          ) : (
+            <>
+              <StashBar stash={stash} base={base} />
+              {file ? (
+                <>
+                  <FileBar
+                    file={file}
+                    label={`${base.slice(0, 7)} ↔ stash@{${stash.index}}`}
+                    view={view}
+                    nav={nav}
+                    prevFile={fileIndex > 0 ? `\u0000${ids[fileIndex - 1]}` : undefined}
+                    nextFile={fileIndex < ids.length - 1 ? `\u0000${ids[fileIndex + 1]}` : undefined}
+                    onStep={step}
+                  />
+                  <DiffView
+                    repoId={stash.repoId}
+                    worktreePath={null}
+                    folder={repos?.find((r) => r.id === stash.repoId)?.path ?? null}
+                    commit={null}
+                    parent={null}
+                    change={file}
+                    mode="committed"
+                    fileKey={`${stash.sha}\u0000${file.path}`}
+                    land={land}
+                    onNav={setNav}
+                    onStep={(dir) => stepRef.current(dir)}
+                    navRef={diffNav}
+                    layout={view.layout}
+                    ignoreWhitespace={view.ignoreWs}
+                    tabSize={view.tabSize}
+                    onToggleLayout={() => view.viewRef.current.toggleLayout()}
+                    onToggleWhitespace={() => view.viewRef.current.toggleWs()}
+                    context={view.context}
+                    contextLines={view.contextLines}
+                    onToggleContext={() => view.viewRef.current.toggleContext()}
+                    onCommitStep={() => {}}
+                    onFocusFilter={() => {}}
+                  />
+                </>
+              ) : (
+                changes && <div className={parts.empty}>{t('review.noChanges')}</div>
+              )}
+            </>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
 /** A branch's commits, each shown on its own against its first parent (SPEC §16). */
 export function History({ repoId, rev, backLabel, lastKnown, project }: Props) {
   const repoScan = useData((s) => s.scan[repoId]);
