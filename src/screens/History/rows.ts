@@ -1,40 +1,55 @@
-// The History list (SPEC §16): Uncommitted, day labels, commits and the base line, in order.
+// Review's list of one branch (SPEC §5, §16): Uncommitted, the commits, the origin line and the
+// base line, in order.
 import { getLocale, t } from '../../i18n';
 import { formatDate, formatDateTime, getFmt } from '../../lib/format';
-import type { HistoryCommit } from '../../lib/types';
+import type { HistoryCommit, Upstream } from '../../lib/types';
 
 export type HistoryRow =
   | { kind: 'wip' }
-  | { kind: 'day'; label: string }
-  | { kind: 'base'; base: string }
+  /** Above the newest commit the remote has, when newer ones are not pushed: `remote` names the
+   * remote-tracking branch, `pushed` counts the branch's own commits it has. */
+  | { kind: 'origin'; remote: string; pushed: number }
+  /** After the branch's own commits; `mergeBase` is the newest commit already in the base. */
+  | { kind: 'base'; base: string; mergeBase: string }
   | { kind: 'commit'; commit: HistoryCommit };
 
 /**
- * Rows for a page: the Uncommitted row first (when there is one), a day label whenever the day
- * changes, and the base line before the first commit already in the base (only when the branch
- * has commits of its own).
+ * Rows for a page: the Uncommitted row first (when there is one), the commits, the origin line
+ * above the newest commit the upstream has (only when some above it are not pushed) and the base
+ * line before the first commit already in the base (only when the branch has commits of its own).
  */
 export function historyRows(
   commits: HistoryCommit[],
-  opts: { wip: boolean; base: string | null; ahead: number | null; now?: Date },
+  opts: { wip: boolean; base: string | null; ahead: number | null; upstream?: Upstream | null },
 ): HistoryRow[] {
-  const now = opts.now ?? new Date();
   const rows: HistoryRow[] = opts.wip ? [{ kind: 'wip' }] : [];
-  let day = '';
+  const up = opts.upstream;
+  const pushedAt = up?.name && up.mergeBase ? commits.findIndex((c) => c.sha === up.mergeBase) : -1;
   let baseShown = !opts.base || !opts.ahead;
-  for (const c of commits) {
+  commits.forEach((c, i) => {
+    if (i === pushedAt && i > 0) {
+      const pushed = commits.slice(i).findIndex((x) => x.inBase);
+      rows.push({ kind: 'origin', remote: up!.name!, pushed: pushed < 0 ? commits.length - i : pushed });
+    }
     if (!baseShown && c.inBase) {
-      rows.push({ kind: 'base', base: opts.base! });
+      rows.push({ kind: 'base', base: opts.base!, mergeBase: c.shortSha });
       baseShown = true;
     }
-    const label = dayLabel(c.committedAt, now);
-    if (label !== day) {
-      rows.push({ kind: 'day', label });
-      day = label;
-    }
     rows.push({ kind: 'commit', commit: c });
-  }
+  });
   return rows;
+}
+
+/** The rows a line picks (SPEC §5 "List column"): the origin line Uncommitted and what is not
+ * pushed, the base line Uncommitted and every commit of the branch. */
+export function lineRows(rows: HistoryRow[], line: 'origin' | 'base'): string[] {
+  const out: string[] = [];
+  for (const r of rows) {
+    if (r.kind === line) return out;
+    if (r.kind === 'wip') out.push('wip');
+    if (r.kind === 'commit') out.push(r.commit.sha);
+  }
+  return [];
 }
 
 const DAY_MS = 86_400_000;

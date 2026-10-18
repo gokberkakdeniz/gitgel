@@ -681,26 +681,25 @@ Every active branch, whether or not it is in a project, and each repo's base bra
   - Same background as other rows (the pill and History button set it apart); no checkbox (the
     column is left empty). It cannot be selected.
   - After the name, a compact `outline` pill "base". The name opens Review (§5, branch scope) on
-    it (planned, T27.1; was History), tooltip `Review <name>`.
+    it, tooltip `Review <name>`.
   - Line 2 as other rows, against its upstream: `base origin/main · ↑0 ↓3 / 0 / 2 · 4m` (↓ as of
     the last fetch); without a usable upstream the base part is left out and ahead / files are
     "—". Never the "merged" pill.
   - Projects cell: a 26px "Review" button (12px split icon, 12px `accent.text`, `bg.elevated`,
-    1px `border`, radius 8; tooltip `Review <name>`) that opens Review (planned, T27.1; was
-    "History").
+    1px `border`, radius 8; tooltip `Review <name>`) that opens Review.
   - The row menu is the same as other rows', except that "Open review" (split icon) takes the
     place of "Open history" (its name already opens History): Review of the branch against its
     upstream.
 - **Open review**: every other row menu has "Open review" (split icon) right under "Copy branch
   name" too (first for a detached HEAD, which opens its SHA), in place of "Open history"
-  (planned, T27.1). It opens Review (§5, branch scope) on the row's branch.
+  It opens Review (§5, branch scope) on the row's branch.
 - **Stashes** of the repo under its rows (flow P1, §15).
 - **Remote branches** (K2), only while filtering: under the band's rows (and stashes), a `List`
   with the heading "Remote branches" and the repo's remote-tracking branches that match the
   filter (their name or the repo name), newest first. Only those with no local twin: not the
   upstream of a local branch and not `<remote>/<local name>`; never `*/HEAD`. Row: `branch` icon,
   mono name, sub line the tip's age; the row opens Review (§5, branch scope) on it (tooltip
-  `Review <name>`), its ⋮ menu has "Open review" (↵; planned, T27.1), "Copy branch name", a divider and "Checkout
+  `Review <name>`), its ⋮ menu has "Open review" (↵), "Copy branch name", a divider and "Checkout
   Branch…" (§15 "Checkout branch"). A repo with only remote
   matches still gets its band. The subtitle counts its repo but not the remote branches; the band
   count leaves them out too.
@@ -727,14 +726,14 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 
 ### Review (`ReviewFocus.dc.html`)
 
-Review and History are one screen (user decision 2026-10-18; planned, T27.1–T27.5): one branch
+Review and History are one screen (user decision 2026-10-18; planned, T27.2–T27.5): one branch
 is open at a time, with its whole log, and the screen is reached for a project, a branch or a
 repository's stash stack. Canvas page "Review": R1 the prototype (`ReviewFocus.dc.html`, Play
 works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`,
 `baseCommits`, `hooks`, `stageGit`, `theme`), R2–R6 its states (`ReviewBranch`, `ReviewBase`,
 `ReviewRebase`, `ReviewConflicts`, `ReviewStashes.dc.html`, each mounting the prototype).
 
-- **Scopes** (route `review`; there is no `history` route any more, planned T27.1):
+- **Scopes** (route `review`; there is no `history` route any more):
   - **Project** (a sidebar project, Project → "Review changes" or ⌘R, a project row's branch
     link): title = project name (renames it in place, as the Project page's), subtitle
     `N repos · M branches`, Back "Back to Project". One entry is **open**: the one a project row
@@ -787,7 +786,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
     come from another branch: `N of M commits come from <branch>. A different base may fit
     better.`; those commits carry a warning sm mono pill with the branch's name.
   - The rows of the open branch, as §16 describes (Uncommitted, commits, base log), without
-    day labels, and two lines among them (planned, T27.1):
+    day labels, and two lines among them:
     - **Origin line**, when some commits of the branch are not on its upstream yet: above the
       newest commit the remote has, a dashed `border.strong` rule on both sides of mono 11
       muted `origin/<branch>`, plus ` · ↑N` (the branch's commits on the remote) when there are
@@ -1097,7 +1096,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   - "Diff": "Tab size" (`settings.diffTabSize`, default 4): a dropdown with 1, 2, 3, 4, 5, 6, 8,
     10, 12; anything else reads as 4. It sets the Monaco diff's tab size (split and unified,
     spaces); the output panel is unaffected.
-  - "Review" (was "History"; planned, T27.1): "Commit rows" (`settings.commitRows`, default `two-line`): a dropdown with "Two
+  - "Review" (was "History"): "Commit rows" (`settings.commitRows`, default `two-line`): a dropdown with "Two
     lines" / "One line"; anything else reads as two lines. It sets History's commit rows (§16
     "Commit row"). "Layout" (`settings.historyLayout`, default `tree`): a dropdown with "Tree" /
     "Columns"; anything else reads as tree. It sets where History lists the picked row's files
@@ -2019,7 +2018,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
-| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (sticky branch head, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set (planned, T27.1–T27.4) |
+| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (sticky branch head, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set (planned, T27.2–T27.4) |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 235–238), Repositories 35–59 (repository `List` 38, items 300–304; Default base `List` 44 with rows, actions and add states 239–266 and 305–312; Active threshold 50–53, Check Out New Branches In 54–57), General 61–91 (Language 63–69; Terminal 72–84, options with disabled flag 311; Check for updates 87–89), Appearance: Theme 95–114, tile builder 253; Formatting 116–134 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 135–141 with Tab size, Scripts 143–161 (`List` 121, items 313–318), Prompts 127–134 (data 290), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
@@ -2927,7 +2926,7 @@ never edits `~/.ssh`:
 
 ## 16. History
 
-History is no longer a screen of its own (planned, T27.1): its list, pane, commit form and
+History is no longer a screen of its own: its list, pane, commit form and
 commit actions are Review's (§5 "Review"), and "History" below means that part of Review. What
 changes: the title is Review's, the page menu is Review's, the list has no day labels and gets
 the origin and base lines as buttons, and opening goes through Review's scopes.

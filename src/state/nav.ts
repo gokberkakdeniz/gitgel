@@ -7,8 +7,6 @@ export type Route =
   | { name: 'branches'; focusRepoId?: string } // focus: scroll to that repo's band
   | { name: 'project'; projectId: string } // 'draft' = unsaved draft project (T5.6)
   | { name: 'review'; target: ReviewTarget; focusKey?: string; backLabel: string }
-  // rev: a local or remote-tracking branch, or a SHA (SPEC §16)
-  | { name: 'history'; repoId: string; rev: string; backLabel: string }
   | { name: 'settings' };
 
 interface NavState {
@@ -33,12 +31,23 @@ function loadRoute(): { stack: Route[]; index: number } | null {
     const names = ['branches', 'project', 'review', 'history', 'settings'];
     const stack = parsed.stack
       .filter((r) => r && names.includes(r.name))
-      .map((r) => (r.name === 'project' && r.projectId === 'draft' ? { name: 'branches' as const } : r));
+      .map((r) => (r.name === 'project' && r.projectId === 'draft' ? { name: 'branches' as const } : fromHistory(r)));
     if (stack.length === 0) return null;
     return { stack, index: Math.min(Math.max(0, parsed.index), stack.length - 1) };
   } catch {
     return null;
   }
+}
+
+/** A stored `history` route (before Review and History were one screen) opens Review on its rev. */
+function fromHistory(r: Route | { name: 'history'; repoId: string; rev: string; backLabel: string }): Route {
+  if (r.name !== 'history') return r;
+  return { name: 'review', target: revTarget(r.repoId, r.rev), backLabel: r.backLabel };
+}
+
+/** Review of a rev (SPEC §5, branch scope): a local or remote-tracking branch, or a SHA. */
+export function revTarget(repoId: string, rev: string): ReviewTarget {
+  return { kind: 'branch', repoId, branch: null, worktreePath: null, tipOverride: null, rev };
 }
 
 const saved = loadRoute();
@@ -82,8 +91,10 @@ import.meta.hot?.accept(() => window.location.reload());
  * under it are in a project (then the project page or review it was opened from). */
 export function leaveDeletedBranch(repoId: string, branch: string) {
   const about = (r: Route) =>
-    (r.name === 'review' && r.target.kind === 'branch' && r.target.repoId === repoId && r.target.branch === branch) ||
-    (r.name === 'history' && r.repoId === repoId && r.rev === branch);
+    r.name === 'review' &&
+    r.target.kind === 'branch' &&
+    r.target.repoId === repoId &&
+    (r.target.branch === branch || r.target.rev === branch);
   useNav.setState((s) => {
     if (!about(s.stack[s.index])) return s;
     const stack = s.stack.slice(0, s.index + 1).filter((r) => !about(r));
@@ -93,7 +104,8 @@ export function leaveDeletedBranch(repoId: string, branch: string) {
   });
 }
 
-/** A branch's History (SPEC §16); Back is named after the page it is opened from. */
-export function openHistory(repoId: string, rev: string | null | undefined, backLabel: string) {
-  if (rev) useNav.getState().push({ name: 'history', repoId, rev, backLabel });
+/** Review of a rev (SPEC §5, branch scope; what History was); Back is named after the page it is
+ * opened from. */
+export function openRevReview(repoId: string, rev: string | null | undefined, backLabel: string) {
+  if (rev) useNav.getState().push({ name: 'review', target: revTarget(repoId, rev), backLabel });
 }

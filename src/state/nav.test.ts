@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { leaveDeletedBranch, useNav, type Route } from './nav';
+import { leaveDeletedBranch, revTarget, useNav, type Route } from './nav';
 
 const review = (branch: string): Route => ({
   name: 'review',
   target: { kind: 'branch', repoId: 'r1', branch, worktreePath: null, tipOverride: null },
   backLabel: '',
 });
-const history = (rev: string): Route => ({ name: 'history', repoId: 'r1', rev, backLabel: '' });
+// Review of a rev (what History was).
+const history = (rev: string): Route => ({ name: 'review', target: revTarget('r1', rev), backLabel: '' });
 
 function after(stack: Route[]): Route[] {
   useNav.setState({ stack, index: stack.length - 1 });
@@ -17,7 +18,7 @@ function after(stack: Route[]): Route[] {
 }
 
 describe('leaving a deleted branch', () => {
-  it('goes to Branches from its Review or History', () => {
+  it('goes to Branches from its Review, by branch or by rev', () => {
     expect(after([{ name: 'branches' }, review('feat'), history('feat')])).toEqual([{ name: 'branches' }]);
     expect(after([{ name: 'settings' }, history('feat')])).toEqual([{ name: 'settings' }, { name: 'branches' }]);
   });

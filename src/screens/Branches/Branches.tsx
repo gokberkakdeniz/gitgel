@@ -11,7 +11,6 @@ import {
   CloseIcon,
   CopyIcon,
   FolderIcon,
-  HistoryIcon,
   MoreVerticalIcon,
   PinIcon,
   SplitIcon,
@@ -44,7 +43,7 @@ import { readProjectSort, sortProjects } from '../../lib/projectSort';
 import { refOf } from '../../lib/projects';
 import type { Config, EntrySummary, RemoteBranch, StashInfo } from '../../lib/types';
 import { selectRepoScans, useData } from '../../state/data';
-import { openHistory, openSettings, selectRoute, useNav } from '../../state/nav';
+import { openRevReview, openSettings, selectRoute, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import styles from './Branches.module.css';
 import { REPOS_KEY, STASHES_KEY, toggled, useCollapsed } from './collapsed';
@@ -342,7 +341,6 @@ function BranchList() {
         <Popover anchorRect={popover.rect} width={260} alignRight={!popover.atPointer} onClose={() => setPopover(null)}>
           <RowMenu
             entry={popoverEntry}
-            isBase={scans.some((s) => s.repo.id === popoverEntry.repoId && isBaseRow(s, popoverEntry))}
             onClose={() => setPopover(null)}
           />
         </Popover>
@@ -614,11 +612,11 @@ function StashList({
   );
 }
 
-/** Remote Branches matching the filter, under the band's rows; a row opens its History. */
+/** Remote Branches matching the filter, under the band's rows; a row opens its Review. */
 function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch[] }) {
   const [menu, setMenu] = useState<{ name: string; rect: DOMRect } | null>(null);
   const running = useGitActionRunning(repoId);
-  const open = (rev: string) => openHistory(repoId, rev, t('branches.backToBranches'));
+  const open = (rev: string) => openRevReview(repoId, rev, t('branches.backToBranches'));
   return (
     <div className={styles.remotes}>
       <List
@@ -648,8 +646,8 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
       {menu && (
         <Popover anchorRect={menu.rect} width={240} alignRight onClose={() => setMenu(null)}>
           <Menu aria-label={t('branches.remoteActions')}>
-            <MenuItem icon={<HistoryIcon />} kbd="↵" onSelect={() => open(menu.name)}>
-              {t('branches.openHistory')}
+            <MenuItem icon={<SplitIcon />} kbd="↵" onSelect={() => open(menu.name)}>
+              {t('branches.openReview')}
             </MenuItem>
             <MenuItem
               icon={<CopyIcon />}
@@ -749,7 +747,7 @@ function Row({
       <div className={styles.branchCell}>
         {isBase ? (
           <span className={styles.nameLine}>
-            <button type="button" className={styles.branchName} onClick={() => openEntryHistory(e)} title={t('branches.showHistoryOf', { name })}>
+            <button type="button" className={styles.branchName} onClick={() => openReview(e)} title={t('branches.showHistoryOf', { name })}>
               <span className={styles.nameHead}>{name}</span>
             </button>
             <Pill tone="outline" size="sm">
@@ -806,8 +804,8 @@ function Row({
         )}
       </div>
       {isBase ? (
-        <button type="button" className={styles.historyButton} title={t('branches.baseHistoryOf', { name })} onClick={() => openEntryHistory(e)}>
-          <HistoryIcon size={12} />
+        <button type="button" className={styles.historyButton} title={t('branches.baseHistoryOf', { name })} onClick={() => openReview(e)}>
+          <SplitIcon size={12} />
           {t('branches.historyBtn')}
         </button>
       ) : (
@@ -847,33 +845,20 @@ function Row({
 /** The row's ⋯ menu: Copy Branch Name and Open History (Open Review on the base row, whose name
  * already opens History), the always-listed open items, the Scripts group, Delete Branch…, then
  * the closing note. */
-function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: boolean; onClose: () => void }) {
+function RowMenu({ entry, onClose }: { entry: EntrySummary; onClose: () => void }) {
   return (
     <Menu aria-label={t('branches.branchOptions')} autoFocus>
       <CopyBranchItem entry={entry} onDone={onClose} />
-      {isBase ? (
-        <MenuItem
-          icon={<SplitIcon />}
-          onSelect={() => {
-            onClose();
-            openReview(entry);
-          }}
-        >
-          {t('branches.openReview')}
-        </MenuItem>
-      ) : (
-        (entry.branch ?? entry.headSha) && (
-          <MenuItem
-            icon={<HistoryIcon />}
-            onSelect={() => {
-              onClose();
-              openEntryHistory(entry);
-            }}
-          >
-            {t('branches.openHistory')}
-          </MenuItem>
-        )
-      )}
+      {/* Review of the row's branch (its SHA for a detached HEAD), the base row's too. */}
+      <MenuItem
+        icon={<SplitIcon />}
+        onSelect={() => {
+          onClose();
+          openReview(entry);
+        }}
+      >
+        {t('branches.openReview')}
+      </MenuItem>
       <MenuDivider />
       <OpenItems entry={entry} onDone={onClose} />
       <SyncItems entry={entry} onDone={onClose} />
@@ -884,18 +869,14 @@ function RowMenu({ entry, isBase, onClose }: { entry: EntrySummary; isBase: bool
   );
 }
 
-/** Review (SPEC §5) of a row: the branch against its base, or the base branch against its upstream. */
+/** Review (SPEC §5, branch scope) of a row: the branch against its base, the base branch against its
+ * upstream, a detached HEAD's SHA. */
 function openReview(e: EntrySummary) {
   useNav.getState().push({
     name: 'review',
     target: { kind: 'branch', repoId: e.repoId, branch: e.branch, worktreePath: e.worktreePath, tipOverride: null },
     backLabel: t('branches.backToBranches'),
   });
-}
-
-/** History (SPEC §16) of a row's branch, or of its SHA for a detached HEAD. */
-function openEntryHistory(e: EntrySummary) {
-  openHistory(e.repoId, e.branch ?? e.headSha, t('branches.backToBranches'));
 }
 
 /** Flow I: the projects a branch is in, and adding it to another one. */

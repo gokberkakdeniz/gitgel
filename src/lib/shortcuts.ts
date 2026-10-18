@@ -41,15 +41,14 @@ export const SHORTCUTS: ShortcutGroup[] = [
     items: [
       { label: 'shortcuts.nextChange', keys: ['⌥', '↓'], note: 'shortcuts.nextNote' },
       { label: 'shortcuts.prevChange', keys: ['⌥', '↑'] },
-      { label: 'shortcuts.newerCommit', keys: ['⌥', '⇧', '↑'], note: 'shortcuts.newerNote' },
+      { label: 'shortcuts.newerCommit', keys: ['⌥', '⇧', '↑'] },
       { label: 'shortcuts.olderCommit', keys: ['⌥', '⇧', '↓'] },
       { label: 'shortcuts.splitUnified', keys: ['⌥', 'V'] },
       { label: 'shortcuts.contextWhole', keys: ['⌥', 'C'] },
       { label: 'shortcuts.ignoreWs', keys: ['⌥', 'W'] },
-      { label: 'shortcuts.reviewHistory', keys: ['⌥', 'H'], note: 'shortcuts.sameBranch' },
       { label: 'shortcuts.switchBranch', keys: ['⇧', '⌘', 'B'], note: 'shortcuts.inHistory' },
       { label: 'shortcuts.pickFiles', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.pickNote' },
-      { label: 'shortcuts.pickCommits', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.inHistory' },
+      { label: 'shortcuts.pickCommits', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.pickCommitsNote' },
     ],
   },
   {

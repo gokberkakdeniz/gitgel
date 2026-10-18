@@ -104,12 +104,6 @@
   color: var(--text-muted);
 }
 
-.day {
-  padding: 10px 8px 4px;
-  font-size: 11px;
-  color: var(--text-faint);
-}
-
 .commit,
 .wip {
   width: 100%;
@@ -339,28 +333,47 @@
   font-size: 6px;
 }
 
-/* Base line */
+/* The origin and base lines (SPEC §5): buttons that pick the rows above them. */
 
-.baseLine {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 8px 6px;
-}
-
-.baseRow {
+.line {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 2px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
 }
 
-.baseRule {
+.line:hover {
+  background: var(--bg-sunken);
+}
+
+.line:disabled {
+  cursor: default;
+  background: transparent;
+}
+
+.lineOn,
+.lineOn:hover {
+  background: var(--bg-hover);
+}
+
+.lineRule {
   flex-grow: 1;
-  height: 1px;
-  background: var(--border-strong);
+  height: 0;
+  border-top: 1px solid var(--border-strong);
 }
 
-.baseLabel {
+.lineDashed {
+  border-top-style: dashed;
+}
+
+.lineLabel {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);

@@ -2,7 +2,7 @@
 // and change navigation, file rows, the stash section, and the remembered diff view settings with
 // their ⌥ keys.
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDownIcon, Icon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
 import { Menu, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
@@ -14,12 +14,10 @@ import { formatCount, validTabSize } from '../../lib/format';
 import { t } from '../../i18n';
 import { updateSettings } from '../../lib/ipc';
 import { basename } from '../../lib/paths';
-import { isTextField } from '../../lib/shortcuts';
 import type { DiffContext, DiffLayout, FileChange, Settings, StashChanges } from '../../lib/types';
 import type { NavInfo } from '../../monaco/DiffView';
 import { diffPosition } from '../../monaco/position';
 import { useData } from '../../state/data';
-import { useNav, type Route } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { firstHit } from './fileFilter';
 import styles from './parts.module.css';
@@ -258,48 +256,6 @@ function ChangeNav({
       />
     </>
   );
-}
-
-/** Review ⇄ History of one branch: the page menu item and ⌥H (in the diff too). Goes back when
- * the other page is the one just before, so switching to and fro does not grow the history.
- * Listed in lib/shortcuts.ts. */
-export function useSwitchTo(route: Route | null): (() => void) | null {
-  const key = route ? JSON.stringify(route) : null;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const go = useMemo(() => (route ? () => switchTo(route) : null), [key]);
-  useEffect(() => {
-    if (!go) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (!e.altKey || e.metaKey || e.ctrlKey || e.shiftKey || e.code !== 'KeyH') return;
-      if (isTextField(e.target)) return;
-      if (useUi.getState().modalCount > 0) return;
-      e.preventDefault();
-      go();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [go]);
-  return go;
-}
-
-function switchTo(route: Route) {
-  const nav = useNav.getState();
-  const before = nav.stack[nav.index - 1];
-  if (before && samePage(before, route)) nav.back();
-  else nav.push(route);
-}
-
-function samePage(a: Route, b: Route): boolean {
-  if (a.name === 'history' && b.name === 'history') return a.repoId === b.repoId && a.rev === b.rev;
-  if (a.name === 'review' && b.name === 'review' && a.target.kind === 'branch' && b.target.kind === 'branch') {
-    return (
-      a.target.repoId === b.target.repoId &&
-      a.target.branch === b.target.branch &&
-      a.target.worktreePath === b.target.worktreePath &&
-      a.target.tipOverride === null
-    );
-  }
-  return false;
 }
 
 /** What Uncommitted's right-click menu does (Hi8, D12). */

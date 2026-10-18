@@ -29,7 +29,7 @@ import { Branches } from './screens/Branches/Branches';
 import { Palette } from './screens/Palette/Palette';
 import { Settings } from './screens/Settings/Settings';
 import { Project } from './screens/Project/Project';
-import { History } from './screens/History/History';
+import { BranchReview } from './screens/History/History';
 import { Review } from './screens/Review/Review';
 import { selectRoute, useNav, type Route } from './state/nav';
 import { useData } from './state/data';
@@ -168,6 +168,9 @@ function Screen({ route }: { route: Route }) {
     case 'project':
       return <Project key={route.projectId} projectId={route.projectId} />;
     case 'review':
+      // A branch's Review is the former History screen (SPEC §5); project and stash scopes stay.
+      if (route.target.kind === 'branch')
+        return <BranchReview key={JSON.stringify(route.target)} target={route.target} backLabel={route.backLabel} />;
       return (
         <Review
           key={JSON.stringify(route.target) + (route.focusKey ?? '')}
@@ -176,8 +179,6 @@ function Screen({ route }: { route: Route }) {
           focusKey={route.focusKey}
         />
       );
-    case 'history':
-      return <History key={`${route.repoId}:${route.rev}`} repoId={route.repoId} rev={route.rev} backLabel={route.backLabel} />;
     case 'settings':
       return <Settings />;
   }

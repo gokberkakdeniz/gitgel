@@ -7,7 +7,7 @@ import { t } from '../../i18n';
 import { agoText, cnt, formatCount } from '../../lib/format';
 import { tildifyHome } from '../../lib/paths';
 import type { RepoScan } from '../../lib/types';
-import { selectRoute, useNav } from '../../state/nav';
+import { revTarget, selectRoute, useNav } from '../../state/nav';
 import styles from '../Palette/Palette.module.css';
 
 type Group = 'worktrees' | 'active' | 'older' | 'remote';
@@ -118,7 +118,8 @@ export function SwitchBranchDialog({ scan, rev, onClose }: { scan: RepoScan; rev
     onClose();
     const nav = useNav.getState();
     const route = selectRoute(nav);
-    if (route.name === 'history') nav.replace({ ...route, rev: item.rev });
+    if (route.name === 'review' && route.target.kind === 'branch')
+      nav.replace({ ...route, target: revTarget(route.target.repoId, item.rev) });
   };
 
   // ↑ ↓ and ↵. Listed in lib/shortcuts.ts.

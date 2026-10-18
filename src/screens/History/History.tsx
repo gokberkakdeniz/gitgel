@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckIcon, CopyIcon } from '../../components/icons';
+import { BranchIcon, CheckIcon, CopyIcon } from '../../components/icons';
+import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
@@ -28,7 +29,7 @@ import { t } from '../../i18n';
 import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getIndexChanges, getRemoteUrl, getReview, getStashChanges, generateMessageStart, gitCommit, gitRevert, gitSquash, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
 import { isTextField } from '../../lib/shortcuts';
 import { basename, tildifyHome } from '../../lib/paths';
-import type { AiStatus, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, StashChanges } from '../../lib/types';
+import type { AiStatus, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, ReviewTarget, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useInvoke } from '../../lib/useInvoke';
@@ -38,7 +39,7 @@ import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { CopyBranchItem, EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
 import { type CommitDraft, commitDraftKey, EMPTY_COMMIT_DRAFT, useUi } from '../../state/ui';
-import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSwitchTo, type FileActions } from '../Review/parts';
+import { DiffStat, FileBar, FileRow, StashSection, useDiffView, type FileActions } from '../Review/parts';
 import parts from '../Review/parts.module.css';
 import type { ReviewStash } from '../Review/stashes';
 import styles from './History.module.css';
@@ -49,7 +50,7 @@ import { generateMessage } from './generate';
 import { SquashModal } from './SquashModal';
 import { requestStage, useStage, withMoves, type StageOp, type StageTo } from './stage';
 import { SwitchBranchDialog } from './SwitchBranch';
-import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
+import { historyRows, initials, isBot, lineRows, whenLabel, type HistoryRow } from './rows';
 
 /** Commits asked for at a time; scrolling near the end asks for this many more. */
 const PAGE = 200;
@@ -61,10 +62,30 @@ interface Props {
   repoId: string;
   rev: string;
   backLabel: string;
+  /** A deleted branch's last tip (`rev` is its SHA): the subtitle names the branch and says so. */
+  lastKnown?: { branch: string | null };
+}
+
+/** Review of one branch (SPEC §5, branch scope): the rev the target names, else its branch, else
+ * the SHA a detached worktree is on. */
+export function BranchReview({ target, backLabel }: { target: Extract<ReviewTarget, { kind: 'branch' }>; backLabel: string }) {
+  const headSha = useData((s) =>
+    target.worktreePath ? s.scan[target.repoId]?.active.find((e) => e.worktreePath === target.worktreePath)?.headSha : undefined,
+  );
+  const rev = target.rev ?? target.tipOverride ?? target.branch ?? headSha ?? null;
+  if (!rev) return null;
+  return (
+    <History
+      repoId={target.repoId}
+      rev={rev}
+      backLabel={backLabel}
+      lastKnown={target.tipOverride ? { branch: target.branch } : undefined}
+    />
+  );
 }
 
 /** A branch's commits, each shown on its own against its first parent (SPEC §16). */
-export function History({ repoId, rev, backLabel }: Props) {
+export function History({ repoId, rev, backLabel, lastKnown }: Props) {
   const repoScan = useData((s) => s.scan[repoId]);
   const repoName = repoScan?.name ?? '';
   // The entry for this rev, when it is an active branch (or a detached worktree's SHA): its base
@@ -343,8 +364,8 @@ export function History({ repoId, rev, backLabel }: Props) {
   );
 
   const rows = useMemo(
-    () => historyRows(commits, { wip, base, ahead: data?.ahead ?? null }),
-    [commits, wip, base, data],
+    () => historyRows(commits, { wip, base, ahead: data?.ahead ?? null, upstream: search ? null : data?.upstream }),
+    [commits, wip, base, data, search],
   );
   // The rows ↑ / ↓ step through, top to bottom: Uncommitted, then the commits. The stashes, in
   // their own section under the list (as in Review), are picked by click.
@@ -562,6 +583,27 @@ export function History({ repoId, rev, backLabel }: Props) {
     }
     click(row);
   };
+  // The origin and base lines (SPEC §5) pick the rows above them, as several rows.
+  const pickLine = (line: 'origin' | 'base') => {
+    const list = lineRows(rows, line);
+    if (list.length > 0) select(list, list[list.length - 1]);
+    setAnchor(list[0] ?? null);
+  };
+  const lineOn = (line: 'origin' | 'base') => {
+    const list = lineRows(rows, line);
+    const now = isMulti ? selected : current ? [current] : [];
+    return list.length > 0 && list.length === now.length && list.every((r, i) => r === now[i]);
+  };
+  // Not checked out: the branch opens on its base line, the whole review (once per rev).
+  const openedOn = useRef<string | null>(null);
+  useEffect(() => {
+    if (openedOn.current === rev || !data?.tip || search) return;
+    openedOn.current = rev;
+    if (entry?.worktreePath || picked || multi) return;
+    const list = lineRows(rows, 'base');
+    if (list.length > 1) select(list, list[list.length - 1]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, rev, search]);
   // ⇧↑ / ⇧↓ in the list move the range's far end.
   const extend = (dir: 1 | -1) => {
     const end = lead && order.includes(lead) ? lead : current;
@@ -690,17 +732,12 @@ export function History({ repoId, rev, backLabel }: Props) {
   // Its buttons wait while a git action runs in the repository (one at a time).
   const gitBusy = useGitActionRunning(repoId);
   const stashAction = useStashAction(wipReview?.groups ?? []);
-  // Only an active branch (or a detached worktree's SHA) has a Review.
-  const toReview = useSwitchTo(
-    entry
-      ? {
-          name: 'review',
-          target: { kind: 'branch', repoId, branch: entry.branch, worktreePath: entry.worktreePath, tipOverride: null },
-          backLabel: t('history.backToHistory'),
-        }
-      : null,
-  );
-  const subtitle = [repoName, rev, worktree].filter(Boolean).join(' · ');
+  // Change Base… (⋮) opens the Base menu where the ⋮ was.
+  const [baseMenu, setBaseMenu] = useState<DOMRect | null>(null);
+  const [baseSaved, setBaseSaved] = useState<string | null>(null);
+  const subtitle = lastKnown
+    ? [repoName, lastKnown.branch ?? rev.slice(0, 7), t('review.lastKnownState')].join(' · ')
+    : [repoName, rev, worktree].filter(Boolean).join(' · ');
 
   // Only a search has a label: the subtitle names the rev.
   const label =
@@ -768,7 +805,7 @@ export function History({ repoId, rev, backLabel }: Props) {
 
   return (
     <div className={parts.screen}>
-      <PageHeader title={t('history.title')} subtitle={subtitle} backLabel={backLabel}>
+      <PageHeader title={t('review.title')} subtitle={subtitle} backLabel={backLabel}>
         <Input
           ref={searchInput}
           size={32}
@@ -803,19 +840,20 @@ export function History({ repoId, rev, backLabel }: Props) {
               >
                 {t('history.switchBranch')}
               </MenuItem>
-              {entry?.worktreePath && stashAction.item(close, anchor)}
-              {toReview && (
+              {entry?.worktreePath && !entry.operation && stashAction.item(close, anchor)}
+              {entry && (
                 <MenuItem
-                  icon="split"
-                  kbd="⌥H"
+                  icon={<BranchIcon size={14} />}
+                  sub={t('review.baseSub', { base: entry.base ?? t('review.baseNone') })}
                   onSelect={() => {
                     close();
-                    toReview();
+                    setBaseMenu(anchor);
                   }}
                 >
-                  {t('branches.openReview')}
+                  {t('review.changeBase')}
                 </MenuItem>
               )}
+              {entry && <SyncItems entry={entry} onDone={close} rebaseOnly />}
               <MenuItem
                 icon="refresh"
                 onSelect={() => {
@@ -827,11 +865,9 @@ export function History({ repoId, rev, backLabel }: Props) {
               </MenuItem>
               {entry && (
                 <>
-                  <MenuDivider />
                   <CopyBranchItem entry={entry} onDone={close} />
                   <MenuDivider />
                   <OpenItems entry={entry} onDone={close} />
-                  <SyncItems entry={entry} onDone={close} rebaseOnly />
                   <ScriptsMenu entry={entry} menu="branches" onDone={close} />
                   <DeleteBranchItem entry={entry} onDone={close} />
                   <EntryMenuNote entry={entry} />
@@ -841,6 +877,17 @@ export function History({ repoId, rev, backLabel }: Props) {
           )}
         </PageMenu>
         {stashAction.dialog}
+        {baseMenu && entry && (
+          <BaseMenu
+            repoId={repoId}
+            entryKey={entry.key}
+            branchName={entry.branch ?? entry.shortSha ?? ''}
+            anchorRect={baseMenu}
+            alignRight
+            onClose={() => setBaseMenu(null)}
+            onChosen={(b) => setBaseSaved(t('review.baseSaved', { base: b }))}
+          />
+        )}
         {switching && repoScan && (
           <SwitchBranchDialog scan={repoScan} rev={rev} onClose={() => setSwitching(false)} />
         )}
@@ -998,6 +1045,7 @@ export function History({ repoId, rev, backLabel }: Props) {
         <AmendModal onClose={() => setAskAmend(null)} onBegin={() => beginAmend(askAmend)} />
       )}
       {entry?.operation && <OperationBanner entry={entry} op={entry.operation} names={false} />}
+      {baseSaved && <Banner tone="neutral">{baseSaved}</Banner>}
       {/* Mid-rebase the branch only looks diverged. */}
       {diverged && !entry?.operation && (
         <Banner tone="warning">
@@ -1056,6 +1104,8 @@ export function History({ repoId, rev, backLabel }: Props) {
                 wipAge={entry?.changedAt ?? null}
                 wipFailed={commitFailed}
                 onPick={clickRow}
+                onLine={pickLine}
+                lineOn={lineOn}
                 onWipMenu={setWipMenu}
                 onCommitMenu={(commit, at) => {
                   // On one of several picked commits the menu is theirs: Squash, when they can be.
@@ -1206,14 +1256,7 @@ export function History({ repoId, rev, backLabel }: Props) {
 }
 
 function rowKey(r: HistoryRow): string {
-  switch (r.kind) {
-    case 'commit':
-      return r.commit.sha;
-    case 'day':
-      return `day:${r.label}`;
-    default:
-      return r.kind;
-  }
+  return r.kind === 'commit' ? r.commit.sha : r.kind;
 }
 
 function ListRow({
@@ -1226,6 +1269,8 @@ function ListRow({
   wipAge,
   wipFailed,
   onPick,
+  onLine,
+  lineOn,
   onWipMenu,
   onCommitMenu,
   amending,
@@ -1243,6 +1288,10 @@ function ListRow({
   /** Uncommitted: the last commit failed. */
   wipFailed: boolean;
   onPick: (row: string, e: React.MouseEvent) => void;
+  /** The origin or base line clicked: picks the rows above it. */
+  onLine: (line: 'origin' | 'base') => void;
+  /** Whether the picked rows are exactly that line's. */
+  lineOn: (line: 'origin' | 'base') => boolean;
   /** A right-click on the Uncommitted row, at the pointer. */
   onWipMenu: (at: DOMRect) => void;
   /** A right-click on a commit row, at the pointer. */
@@ -1252,18 +1301,30 @@ function ListRow({
 }) {
   const oneLine = useData((s) => s.config?.settings.commitRows === 'one-line');
   switch (row.kind) {
-    case 'day':
-      return <div className={styles.day}>{row.label}</div>;
-    case 'base':
+    case 'origin':
+    case 'base': {
+      const origin = row.kind === 'origin';
+      const on = lineOn(row.kind);
+      const label = origin
+        ? row.pushed > 0
+          ? t('review.originLinePushed', { remote: row.remote, n: formatCount(row.pushed) })
+          : row.remote
+        : t('review.baseLine', { base: row.base, sha: row.mergeBase });
+      const rule = origin ? `${styles.lineRule} ${styles.lineDashed}` : styles.lineRule;
       return (
-        <div className={styles.baseLine}>
-          <div className={styles.baseRow}>
-            <span className={styles.baseRule} />
-            <span className={styles.baseLabel}>{t('branches.baseName', { base: row.base })}</span>
-            <span className={styles.baseRule} />
-          </div>
-        </div>
+        <button
+          type="button"
+          className={on ? `${styles.line} ${styles.lineOn}` : styles.line}
+          aria-pressed={on}
+          title={origin ? t('review.originLineHint') : t('review.baseLineHint')}
+          onClick={() => onLine(row.kind)}
+        >
+          <span className={rule} />
+          <span className={styles.lineLabel}>{label}</span>
+          <span className={rule} />
+        </button>
       );
+    }
     case 'wip': {
       const on = current === WIP;
       const many = selected.includes(WIP);

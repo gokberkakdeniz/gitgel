@@ -674,37 +674,17 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) History's Uncommitted in Staged / Unstaged sections (git's index; replaces the commit boxes): + / − and Stage all / Unstage all stage at once through a queue (150ms batches, one command at a time per repository, Commit off meanwhile, rows put back with a failed toast), a file staged and changed again is in both and its Unstaged diff shows only the changes since; commits take what is staged; discarding an Unstaged row goes back to the staged version (`get_index_changes`, `git_stage`, §15 "Stage") — 2026-10-18
 - [x] (on request) Project review lists every entry, also one with no changes in the mode or a merged one with none: its menu reaches History and Change base — 2026-10-18
 
+### Phase 27 — Review and History in one screen
+- [x] T27.1 Branch scope is History — 2026-10-18
+  - note: a branch's Review (any rev: local, remote-tracking, SHA, last known state) is the
+    former History screen; stored `history` routes open it. The old Review still serves the
+    project and stash scopes until T27.3 / T27.4.
+
 ---
 
 ## Open
 
 ### Phase 27 — Review and History in one screen
-
-#### T27.1 Branch scope is History
-- **Depends on:** —
-- **Why:** user request 2026-10-18: one screen for Review and History, one branch open at a time
-  (canvas page "Review").
-- **Spec:** SPEC §5 "Review" (Scopes: Branch; Header; List column: origin and base lines,
-  Picking on open), §5 Branches "Base branch row", "Open review", "Remote branches", §5
-  Settings › Appearance "Review", §7 shortcuts, §16 opening paragraph.
-- **Reference:** `ReviewBranch.dc.html` (mounts `ReviewFocus.dc.html` with `scope="branch"`);
-  `ReviewFocus.dc.html` header 37–75, lines 113–117 and `baseItem` / `lineKeys` in its logic.
-- **Files:** `state/nav.ts`, `App.tsx`, `lib/types.ts` (`ReviewTarget` branch gets `rev`),
-  `screens/History/*` (becomes Review's body; move to `screens/Review/` when convenient),
-  `screens/History/rows.ts`, `screens/Branches/Branches.tsx`, `screens/Settings/*`, i18n.
-- **Steps:**
-  1. A branch-scope `review` route renders the History screen (title "Review", its subtitle,
-     Back label as the route says); the `history` route goes (stored routes with it map to
-     `review`). `openHistory` callers open Review instead; "Open history" items become "Open
-     review" (split icon), the base row's History button "Review".
-  2. Page menu: Branch-scope order of SPEC §5 (no "Open review" / ⌥H; "Change Base…" opens the
-     Base menu; "Rebase on <base>" from `SyncItems rebaseOnly`).
-  3. List: no day labels; the origin line; base line `base <base> · <mb>`; both lines pick
-     their rows through the several-rows selection (`select`), highlighted while the selection
-     equals their rows. A branch with no worktree opens on the base line.
-  4. Settings › Appearance section "History" → "Review" (both languages).
-- **Acceptance:** every former History entry point opens Review on the same rev; lines select
-  as specified; `pnpm test` and `pnpm lint` pass.
 
 #### T27.2 Uncommitted sections, VS Code style
 - **Depends on:** T27.1
@@ -757,7 +737,7 @@ rather than as a task is listed the same way, marked "(on request)".
      calls nobody makes any more.
   2. Replace the remaining "History" mentions in SPEC (§1, §3, §4, §11, §15) and code comments;
      rename `settings.historyLayout` only if it is free to (keep the config key otherwise).
-- **Acceptance:** `pnpm test`, `pnpm lint`, `cargo test` pass; no reference to removed files.
+- **Acceptance:** `pnpm test`, `pnpm build`, `cargo test` pass; no reference to removed files.
 
 #### T27.6 ✋ Checkpoint — phase 27
 - **Depends on:** T27.5

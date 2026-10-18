@@ -415,6 +415,9 @@ export type ReviewTarget =
       branch: string | null;
       worktreePath: string | null;
       tipOverride: string | null;
+      /** A rev that is not one of the repo's active branches: a remote-tracking branch or a SHA
+       * (what History opened before it became Review's, SPEC §5). */
+      rev?: string | null;
     }
   | { kind: 'stashes'; repoId: string }; // a repo's stash stack (flow P3)
 export interface FilePair {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { HistoryCommit } from '../../lib/types';
-import { dayLabel, historyRows, initials, whenLabel } from './rows';
+import { dayLabel, historyRows, initials, lineRows, whenLabel } from './rows';
 
 const now = new Date(2026, 9, 4, 15, 0); // Oct 4, 2026, 15:00 local
 const at = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m, d, h, min).getTime() / 1000;
@@ -46,27 +46,20 @@ describe('initials', () => {
 });
 
 describe('historyRows', () => {
-  it('puts Uncommitted first and a label before each day', () => {
+  it('puts Uncommitted first, with no day labels', () => {
     const rows = historyRows(
       [commit('a', at(2026, 9, 4, 11)), commit('b', at(2026, 9, 4, 9)), commit('c', at(2026, 9, 3))],
-      { wip: true, base: null, ahead: null, now },
+      { wip: true, base: null, ahead: null },
     );
-    expect(rows.map((r) => (r.kind === 'commit' ? r.commit.subject : r.kind === 'day' ? r.label : r.kind))).toEqual([
-      'wip',
-      'Today',
-      'a',
-      'b',
-      'Yesterday',
-      'c',
-    ]);
+    expect(rows.map((r) => (r.kind === 'commit' ? r.commit.subject : r.kind))).toEqual(['wip', 'a', 'b', 'c']);
   });
 
   it('draws the base line before the first commit already in the base', () => {
     const rows = historyRows(
       [commit('mine', at(2026, 9, 4, 11)), commit('shared', at(2026, 9, 4, 9), true)],
-      { wip: false, base: 'main', ahead: 1, now },
+      { wip: false, base: 'main', ahead: 1 },
     );
-    expect(rows.map((r) => r.kind)).toEqual(['day', 'commit', 'base', 'commit']);
+    expect(rows.map((r) => r.kind)).toEqual(['commit', 'base', 'commit']);
   });
 
   it('has no base line when the branch adds nothing', () => {
@@ -74,8 +67,23 @@ describe('historyRows', () => {
       wip: false,
       base: 'origin/main',
       ahead: 0,
-      now,
     });
     expect(rows.some((r) => r.kind === 'base')).toBe(false);
+  });
+
+  it('draws the origin line over the newest pushed commit and picks the rows above each line', () => {
+    const list = [commit('new', at(2026, 9, 4, 12)), commit('pushed', at(2026, 9, 4, 11)), commit('shared', at(2026, 9, 4, 9), true)];
+    const upstream = { remote: 'origin', name: 'origin/feat', ahead: 1, behind: 0, mergeBase: list[1].sha };
+    const rows = historyRows(list, { wip: true, base: 'main', ahead: 2, upstream });
+    expect(rows.map((r) => r.kind)).toEqual(['wip', 'commit', 'origin', 'commit', 'base', 'commit']);
+    expect(rows.find((r) => r.kind === 'origin')).toMatchObject({ remote: 'origin/feat', pushed: 1 });
+    expect(lineRows(rows, 'origin')).toEqual(['wip', list[0].sha]);
+    expect(lineRows(rows, 'base')).toEqual(['wip', list[0].sha, list[1].sha]);
+  });
+
+  it('has no origin line when everything is pushed', () => {
+    const list = [commit('pushed', at(2026, 9, 4, 11)), commit('shared', at(2026, 9, 4, 9), true)];
+    const upstream = { remote: 'origin', name: 'origin/feat', ahead: 0, behind: 0, mergeBase: list[0].sha };
+    expect(historyRows(list, { wip: false, base: 'main', ahead: 1, upstream }).some((r) => r.kind === 'origin')).toBe(false);
   });
 });

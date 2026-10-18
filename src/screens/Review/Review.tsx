@@ -5,7 +5,7 @@ import {
   BranchIcon,
   ChevronDownIcon,
   CloseIcon,
-  HistoryIcon,
+  SplitIcon,
   MoreVerticalIcon,
   RefreshIcon,
 } from '../../components/icons';
@@ -48,10 +48,10 @@ import { upstreamLabel, upstreamTitle } from '../../sync/sync';
 import { next, prev } from '../../monaco/changeNav';
 import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
 import { useData } from '../../state/data';
-import { openHistory, useNav } from '../../state/nav';
+import { openRevReview, useNav } from '../../state/nav';
 import { useUi } from '../../state/ui';
 import { fileMatches, filterTerms } from './fileFilter';
-import { DiffStat, FileBar, FileRow, StashSection, useDiffView, useSwitchTo, type FileActions } from './parts';
+import { DiffStat, FileBar, FileRow, StashSection, useDiffView, type FileActions } from './parts';
 import { askDiscard, targetOf } from '../../discard/discard';
 import { usePicks } from '../../discard/picks';
 import parts from './parts.module.css';
@@ -425,14 +425,6 @@ export function Review({ target, backLabel, focusKey }: Props) {
   );
 
   const stashAction = useStashAction(data?.groups ?? []);
-  // A branch (or a detached worktree's SHA) has a History; a project or the stash stack does not.
-  const historyRev = target.kind === 'branch' && !target.tipOverride ? (target.branch ?? entry?.headSha ?? null) : null;
-  const toHistory = useSwitchTo(
-    target.kind === 'branch' && historyRev
-      ? { name: 'history', repoId: target.repoId, rev: historyRev, backLabel: t('review.backToReview') }
-      : null,
-  );
-
   return (
     <div className={parts.screen}>
       <ReviewHeader entry={entry} target={target} backLabel={backLabel} stashes={stashes}>
@@ -452,18 +444,6 @@ export function Review({ target, backLabel, focusKey }: Props) {
           {(close, anchor) => (
             <>
               {target.kind !== 'stashes' && stashAction.item(close, anchor)}
-              {toHistory && (
-                <MenuItem
-                  icon="history"
-                  kbd="⌥H"
-                  onSelect={() => {
-                    close();
-                    toHistory();
-                  }}
-                >
-                  {t('branches.openHistory')}
-                </MenuItem>
-              )}
               <MenuItem
                 icon="refresh"
                 onSelect={() => {
@@ -802,13 +782,13 @@ function EntryMenu({
       <CopyBranchItem entry={entry} onDone={onClose} />
       {rev && (
         <MenuItem
-          icon={<HistoryIcon />}
+          icon={<SplitIcon />}
           onSelect={() => {
             onClose();
-            openHistory(entry.repoId, rev, t('review.backToReview'));
+            openRevReview(entry.repoId, rev, t('review.backToReview'));
           }}
         >
-          {t('branches.openHistory')}
+          {t('branches.openReview')}
         </MenuItem>
       )}
       <MenuDivider />
@@ -1072,7 +1052,7 @@ function EntryBar({
             type="button"
             className={`${styles.entryBranch} ${styles.repoLink}`}
             title={t('branches.showHistoryOf', { name })}
-            onClick={() => openHistory(e.repoId, e.branch ?? e.headSha, t('review.backToReview'))}
+            onClick={() => openRevReview(e.repoId, e.branch ?? e.headSha, t('review.backToReview'))}
           >
             {name}
           </button>
@@ -1100,7 +1080,7 @@ function EntryBar({
                     type="button"
                     className={`${styles.baseLink} ${styles.repoLink}`}
                     title={t('branches.showHistoryOf', { name: e.base ?? '' })}
-                    onClick={() => openHistory(e.repoId, e.base, t('review.backToReview'))}
+                    onClick={() => openRevReview(e.repoId, e.base, t('review.backToReview'))}
                   >
                     {e.base}
                   </button>
