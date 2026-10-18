@@ -489,6 +489,7 @@ export function StashSection({
   withRepo = divider,
   onPick,
   onFile,
+  fold,
 }: {
   heading: string;
   stashes: ReviewStash[];
@@ -503,14 +504,23 @@ export function StashSection({
   withRepo?: boolean;
   onPick: (sha: string) => void;
   onFile: (path: string) => void;
+  /** The heading folds the section (Review's list column, SPEC §5). */
+  fold?: { open: boolean; onToggle: () => void };
 }) {
   const repos = useData((s) => s.config?.repos);
   return (
     <section aria-label={t('branches.stashes')} className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
-      <div className={styles.stashHeading}>
-        {heading} · {formatCount(stashes.length)}
-      </div>
-      {stashes.map((st) => {
+      {fold ? (
+        <button type="button" className={`${styles.stashHeading} ${styles.stashFold}`} aria-expanded={fold.open} onClick={fold.onToggle}>
+          <ChevronDownIcon size={12} className={fold.open ? styles.sectionChevron : `${styles.sectionChevron} ${styles.sectionShut}`} />
+          {heading} · {formatCount(stashes.length)}
+        </button>
+      ) : (
+        <div className={styles.stashHeading}>
+          {heading} · {formatCount(stashes.length)}
+        </div>
+      )}
+      {(!fold || fold.open) && stashes.map((st) => {
         const on = st.sha === picked;
         return (
           <div key={`${st.repoId}:${st.sha}`} className={styles.stash}>

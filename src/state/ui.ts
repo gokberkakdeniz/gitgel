@@ -66,6 +66,9 @@ interface UiState {
   commitDrafts: Record<string, CommitDraft>;
   /** Uncommitted's folded sections, by `<repo>\u0000<rev>\u0000s|u`, while the app runs. */
   shutSections: Record<string, true>;
+  /** Review's Branches section is open (folded by default) and its Stashes folded, while the app runs. */
+  reviewBranchesOpen: boolean;
+  reviewStashesShut: boolean;
   setSidebarVisible: (visible: boolean) => void;
   setSidebarPeek: (peek: boolean) => void;
   setBranchesFilter: (filter: string) => void;
@@ -83,6 +86,8 @@ interface UiState {
   /** Changes a branch's commit form; an empty one is dropped. */
   setCommitDraft: (key: string, patch: Partial<CommitDraft>) => void;
   toggleSection: (key: string) => void;
+  toggleReviewBranches: () => void;
+  toggleReviewStashes: () => void;
 }
 
 let toastId = 0;
@@ -115,6 +120,8 @@ export const useUi = create<UiState>()((set) => ({
   settingsSection: 'general',
   commitDrafts: {},
   shutSections: {},
+  reviewBranchesOpen: false,
+  reviewStashesShut: false,
   setSidebarVisible: (sidebarVisible) => set({ sidebarVisible, sidebarPeek: false }),
   setSidebarPeek: (sidebarPeek) => set({ sidebarPeek }),
   setBranchesFilter: (branchesFilter) => set({ branchesFilter }),
@@ -140,6 +147,8 @@ export const useUi = create<UiState>()((set) => ({
       const { [key]: shut, ...rest } = s.shutSections;
       return { shutSections: shut ? rest : { ...rest, [key]: true } };
     }),
+  toggleReviewBranches: () => set((s) => ({ reviewBranchesOpen: !s.reviewBranchesOpen })),
+  toggleReviewStashes: () => set((s) => ({ reviewStashesShut: !s.reviewStashesShut })),
 }));
 
 // Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a

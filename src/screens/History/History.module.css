@@ -445,3 +445,135 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Project scope (SPEC §5): the open branch's head, sticky over its rows, full width. */
+.branchHead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: -6px -8px 4px;
+  padding: 8px 16px 7px;
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border);
+}
+
+.branchHeadLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.branchHeadRepo {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.branchHeadName {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stackHint {
+  margin: 2px 0 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(var(--warning-rgb), 0.12);
+  color: var(--warning);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.notInReview {
+  margin-top: 10px;
+  padding: 12px 8px 0;
+  border-top: 1px solid var(--bg-hover);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* The project's other branches, pinned under the stashes. */
+.branchesPane {
+  flex-shrink: 0;
+  max-height: 40%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px 8px;
+  border-top: 1px solid var(--border);
+}
+
+.branchesHeading {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 8px 4px;
+  background: transparent;
+  border: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.branchesList {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.otherBranch {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.otherBranch:hover {
+  background: var(--bg-hover);
+}
+
+.dirtyDot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-text);
+}
+
+.otherUpstream {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

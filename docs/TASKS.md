@@ -680,30 +680,16 @@ rather than as a task is listed the same way, marked "(on request)".
     former History screen; stored `history` routes open it. The old Review still serves the
     project and stash scopes until T27.3 / T27.4.
 - [x] T27.2 Uncommitted sections, VS Code style — 2026-10-18
+- [x] T27.3 Project scope: one open branch — 2026-10-18
+  - note: built on the former History screen (`ProjectReview` around `History` with the open
+    entry); the data for the head, the Branches rows and the stacked hint still come from
+    `get_review`. No spinner on the head after a base change.
 
 ---
 
 ## Open
 
 ### Phase 27 — Review and History in one screen
-
-#### T27.3 Project scope: one open branch
-- **Depends on:** T27.2
-- **Why:** as T27.1.
-- **Spec:** SPEC §5 "Review" (Scopes: Project; Header; Banners; List column: Branch head,
-  Stacked warning, Stashes, Branches; Base menu).
-- **Reference:** `ReviewFocus.dc.html` (`scope="project"`), `ReviewBase.dc.html`,
-  `ReviewRebase.dc.html`, `ReviewConflicts.dc.html`.
-- **Files:** `screens/Review/Review.tsx` (project scope now mounts the History body with the
-  open entry), `sync/SyncButtons.tsx` (Fetch of several repositories), `components/BaseMenu`.
-- **Steps:**
-  1. The open entry (route `focusKey`, else the first); Branches section switching it; each
-     entry keeps its picked row while the screen is open.
-  2. Sticky branch head; stacked warning and the commits' branch pills; banners for every
-     entry; title rename; not-reviewable line.
-  3. Header: sync of the open entry, Fetch of every repository; ⋮ with Project and Branch parts.
-  4. Stashes of the whole project.
-- **Acceptance:** R1, R3, R4, R5 behave as the prototype.
 
 #### T27.4 Stash scope on the new screen
 - **Depends on:** T27.3

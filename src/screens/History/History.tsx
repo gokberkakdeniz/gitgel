@@ -3,7 +3,7 @@ import { BranchIcon, CheckIcon, ChevronDownIcon, CopyIcon, Icon } from '../../co
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
-import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
+import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
 import { Popover } from '../../components/Popover';
 import { ResizeHandle, useStoredWidth } from '../../components/ResizeHandle';
 import { askDiscard, targetOf } from '../../discard/discard';
@@ -15,11 +15,11 @@ import { Button } from '../../components/Button';
 import { startGitAction, useRuns } from '../../scripts/runs';
 import { providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
-import { conflictOf, useGitActionRunning } from '../../sync/operation';
-import { OperationBanner } from '../../sync/OperationUi';
+import { conflictOf, conflictsTooltip, useGitActionRunning } from '../../sync/operation';
+import { OperationBanner, OperationPill } from '../../sync/OperationUi';
 import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
 import { DeleteBranchItem } from '../../sync/DeleteBranch';
-import { divergedBanner, forcePushBranch, pullBranch, syncState, type SyncTarget } from '../../sync/sync';
+import { divergedBanner, forcePushBranch, pullBranch, syncState, upstreamLabel, upstreamTitle, type SyncTarget } from '../../sync/sync';
 import { StashBar } from '../../stash/StashBar';
 import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
@@ -29,7 +29,7 @@ import { t } from '../../i18n';
 import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getIndexChanges, getRemoteUrl, getReview, getStashChanges, generateMessageStart, gitCommit, gitRevert, gitSquash, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
 import { isTextField } from '../../lib/shortcuts';
 import { basename, tildifyHome } from '../../lib/paths';
-import type { AiStatus, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, ReviewTarget, StashChanges } from '../../lib/types';
+import type { AiStatus, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, ReviewGroup, ReviewTarget, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useInvoke } from '../../lib/useInvoke';
@@ -41,7 +41,9 @@ import { useData } from '../../state/data';
 import { type CommitDraft, commitDraftKey, EMPTY_COMMIT_DRAFT, useUi } from '../../state/ui';
 import { DiffStat, FileBar, FileRow, StashSection, useDiffView, type FileActions } from '../Review/parts';
 import parts from '../Review/parts.module.css';
-import type { ReviewStash } from '../Review/stashes';
+import { reviewStashes, type ReviewStash } from '../Review/stashes';
+import { editProject, ReviewHeader } from '../Review/header';
+import { conflictsBanner } from '../Review/Review';
 import styles from './History.module.css';
 import { AmendModal } from './AmendModal';
 import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
@@ -64,6 +66,20 @@ interface Props {
   backLabel: string;
   /** A deleted branch's last tip (`rev` is its SHA): the subtitle names the branch and says so. */
   lastKnown?: { branch: string | null };
+  /** Project scope (SPEC §5): this branch is the project's open entry. */
+  project?: ProjectScope;
+}
+
+/** A project's review around its open entry (SPEC §5, project scope). */
+export interface ProjectScope {
+  projectId: string;
+  projectName: string;
+  /** Every reviewable entry, in project order (the open one too). */
+  groups: ReviewGroup[];
+  notInReview: number;
+  onOpen: (key: string) => void;
+  /** The row picked when this entry was open before, while the screen is open. */
+  pick: { get: () => string | null; set: (row: string | null) => void };
 }
 
 /** Review of one branch (SPEC §5, branch scope): the rev the target names, else its branch, else
@@ -84,8 +100,49 @@ export function BranchReview({ target, backLabel }: { target: Extract<ReviewTarg
   );
 }
 
+/** A project's review (SPEC §5, project scope): one entry open at a time, the one a project row
+ * asked for, else the first; each keeps its picked row while the screen is open. */
+export function ProjectReview({ projectId, backLabel, focusKey }: { projectId: string; backLabel: string; focusKey?: string }) {
+  const projects = useData((s) => s.config?.projects);
+  const project = projects?.find((p) => p.id === projectId);
+  const repoIds = useMemo(() => [...new Set(project?.entries.map((e) => e.repoId) ?? [])], [project]);
+  const { data, error } = useInvoke(() => getReview({ kind: 'project', projectId }), [projectId], { repoIds, onConfig: true });
+  const groups = useMemo(() => data?.groups ?? [], [data]);
+  const [openKey, setOpenKey] = useState<string | null>(focusKey ?? null);
+  const picks = useRef(new Map<string, string | null>());
+  const open = groups.find((g) => g.entry.key === openKey) ?? groups[0];
+  const scope = useMemo<ProjectScope | null>(
+    () =>
+      open
+        ? {
+            projectId,
+            projectName: project?.name ?? '',
+            groups,
+            notInReview: data?.notInReview.length ?? 0,
+            onOpen: setOpenKey,
+            pick: {
+              get: () => picks.current.get(open.entry.key) ?? null,
+              set: (row) => picks.current.set(open.entry.key, row),
+            },
+          }
+        : null,
+    [open, projectId, project?.name, groups, data],
+  );
+  const rev = open ? (open.entry.branch ?? open.entry.headSha) : null;
+  if (!open || !scope || !rev)
+    return (
+      <div className={parts.screen}>
+        <ReviewHeader entry={undefined} target={{ kind: 'project', projectId }} backLabel={backLabel} stashes={[]}>
+          {null}
+        </ReviewHeader>
+        {(data || error) && <div className={parts.empty}>{error?.message ?? t('review.nothingToReview')}</div>}
+      </div>
+    );
+  return <History key={open.entry.key} repoId={open.entry.repoId} rev={rev} backLabel={backLabel} project={scope} />;
+}
+
 /** A branch's commits, each shown on its own against its first parent (SPEC §16). */
-export function History({ repoId, rev, backLabel, lastKnown }: Props) {
+export function History({ repoId, rev, backLabel, lastKnown, project }: Props) {
   const repoScan = useData((s) => s.scan[repoId]);
   const repoName = repoScan?.name ?? '';
   // The entry for this rev, when it is an active branch (or a detached worktree's SHA): its base
@@ -353,14 +410,28 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
     );
   };
 
-  // The stashes taken on this branch (§15), under the list; not while searching.
+  // The stashes taken on this branch (§15), or on any branch of the project, under the list; not
+  // while searching.
   const allStashes = repoScan?.stashes;
+  const projects = useData((s) => s.config?.projects);
+  const scans = useData((s) => s.scan);
+  const projectId = project?.projectId;
   const stashes: ReviewStash[] = useMemo(
     () =>
-      search || !allStashes
+      search
         ? []
-        : allStashes.filter((s) => s.branch === rev).map((s) => ({ ...s, repoId, repoName })),
-    [search, allStashes, rev, repoId, repoName],
+        : projectId
+          ? reviewStashes({ kind: 'project', projectId }, projects, scans)
+          : (allStashes ?? []).filter((s) => s.branch === rev).map((s) => ({ ...s, repoId, repoName })),
+    [search, allStashes, rev, repoId, repoName, projectId, projects, scans],
+  );
+  const repos = useData((s) => s.config?.repos);
+  // The open entry's group in a project review: its totals, stacked hint and commits' branches.
+  const group = project?.groups.find((g) => g.entry.key === entry?.key);
+  const stashesShut = useUi((s) => s.reviewStashesShut);
+  const fromBranch = useMemo(
+    () => Object.fromEntries((group?.commits ?? []).filter((c) => c.fromBranch).map((c) => [c.sha, c.fromBranch!])),
+    [group],
   );
 
   const rows = useMemo(
@@ -372,8 +443,15 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
   const order = useMemo(() => [...(wip ? [WIP] : []), ...commits.map((c) => c.sha)], [wip, commits]);
 
   // The picked row: the one asked for while it is listed, else Uncommitted, else the newest commit.
-  const [picked, setPicked] = useState<string | null>(null);
-  useEffect(() => setPicked(null), [search]);
+  const [picked, setPicked] = useState<string | null>(() => project?.pick.get() ?? null);
+  // A new search starts from its first match; the remembered row is the project's.
+  const searched = useRef(search);
+  useEffect(() => {
+    if (searched.current === search) return;
+    searched.current = search;
+    setPicked(null);
+  }, [search]);
+  useEffect(() => project?.pick.set(picked), [picked, project]);
   const listed = (row: string) => order.includes(row) || stashes.some((s) => stashRow(s.sha) === row);
   const current = picked && listed(picked) ? picked : wip ? WIP : (commits[0]?.sha ?? null);
   // Several rows picked with ⌘ / ⇧-click (Hi12): Uncommitted and commits, shown taken together.
@@ -421,14 +499,14 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
   useEffect(() => {
     if (!stash || stashRequested.current.has(stash.sha)) return;
     stashRequested.current.add(stash.sha);
-    getStashChanges(repoId, stash.sha).then(
+    getStashChanges(stash.repoId, stash.sha).then(
       (c) => setStashData((d) => ({ ...d, [c.sha]: c })),
       (e) => {
         console.error('stash changes failed', e);
         stashRequested.current.delete(stash.sha);
       },
     );
-  }, [stash, repoId]);
+  }, [stash]);
   const stashChanges = stash ? stashData[stash.sha] : undefined;
   const stashBase = stashChanges?.base ?? stash?.base ?? '';
 
@@ -735,6 +813,13 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
   // Change Base… (⋮) opens the Base menu where the ⋮ was.
   const [baseMenu, setBaseMenu] = useState<DOMRect | null>(null);
   const [baseSaved, setBaseSaved] = useState<string | null>(null);
+  // A project's repositories, for Fetch; the conflicts a stash apply left (no operation).
+  const projectRepos = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const g of project?.groups ?? []) seen.set(g.entry.repoId, g.entry.repoName);
+    return [...seen].map(([id, name]) => ({ repoId: id, repoName: name }));
+  }, [project]);
+  const conflicts = conflictsBanner(project ? project.groups : entry ? [{ entry } as ReviewGroup] : []);
   const subtitle = lastKnown
     ? [repoName, lastKnown.branch ?? rev.slice(0, 7), t('review.lastKnownState')].join(' · ')
     : [repoName, rev, worktree].filter(Boolean).join(' · ');
@@ -804,9 +889,8 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
     />
   );
 
-  return (
-    <div className={parts.screen}>
-      <PageHeader title={t('review.title')} subtitle={subtitle} backLabel={backLabel}>
+  const headerRight = (
+    <>
         <Input
           ref={searchInput}
           size={32}
@@ -826,56 +910,98 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
             }
           }}
         />
-        <SyncButtons target={syncTarget} fetchedAt={data?.fetchedAt ?? null} />
+        <SyncButtons
+          target={syncTarget}
+          fetchedAt={data?.fetchedAt ?? null}
+          repos={project ? projectRepos : undefined}
+        />
         <PageMenu>
-          {(close, anchor) => (
-            <>
-              <MenuItem
-                icon="branch"
-                kbd="⇧⌘B"
-                disabled={!repoScan}
-                onSelect={() => {
-                  close();
-                  setSwitching(true);
-                }}
-              >
-                {t('history.switchBranch')}
-              </MenuItem>
-              {entry?.worktreePath && !entry.operation && stashAction.item(close, anchor)}
-              {entry && (
+          {(close, anchor) => {
+            // The open entry's part: Branch in a project review, the whole menu for a branch.
+            const branchItems = (
+              <>
+                {!project && (
+                  <MenuItem
+                    icon="branch"
+                    kbd="⇧⌘B"
+                    disabled={!repoScan}
+                    onSelect={() => {
+                      close();
+                      setSwitching(true);
+                    }}
+                  >
+                    {t('history.switchBranch')}
+                  </MenuItem>
+                )}
+                {entry?.worktreePath && !entry.operation && stashAction.item(close, anchor)}
+                {entry && (
+                  <MenuItem
+                    icon={<BranchIcon size={14} />}
+                    sub={t('review.baseSub', { base: entry.base ?? t('review.baseNone') })}
+                    onSelect={() => {
+                      close();
+                      setBaseMenu(anchor);
+                    }}
+                  >
+                    {t('review.changeBase')}
+                  </MenuItem>
+                )}
+                {entry && <SyncItems entry={entry} onDone={close} rebaseOnly />}
+                {!project && (
+                  <MenuItem
+                    icon="refresh"
+                    onSelect={() => {
+                      close();
+                      void rescanAll(true);
+                    }}
+                  >
+                    {t('review.refresh')}
+                  </MenuItem>
+                )}
+                {entry && (
+                  <>
+                    <CopyBranchItem entry={entry} onDone={close} />
+                    <MenuDivider />
+                    <OpenItems entry={entry} onDone={close} />
+                    {project ? (
+                      <ScriptsMenu entry={entry} menu="project" project={project.projectName} onDone={close} />
+                    ) : (
+                      <ScriptsMenu entry={entry} menu="branches" onDone={close} />
+                    )}
+                    <DeleteBranchItem entry={entry} onDone={close} />
+                    <EntryMenuNote entry={entry} />
+                  </>
+                )}
+              </>
+            );
+            if (!project) return branchItems;
+            return (
+              <>
+                <MenuLabel>{t('review.menuProject')}</MenuLabel>
                 <MenuItem
-                  icon={<BranchIcon size={14} />}
-                  sub={t('review.baseSub', { base: entry.base ?? t('review.baseNone') })}
+                  icon="refresh"
                   onSelect={() => {
                     close();
-                    setBaseMenu(anchor);
+                    void rescanAll(true);
                   }}
                 >
-                  {t('review.changeBase')}
+                  {t('review.refresh')}
                 </MenuItem>
-              )}
-              {entry && <SyncItems entry={entry} onDone={close} rebaseOnly />}
-              <MenuItem
-                icon="refresh"
-                onSelect={() => {
-                  close();
-                  void rescanAll(true);
-                }}
-              >
-                {t('review.refresh')}
-              </MenuItem>
-              {entry && (
-                <>
-                  <CopyBranchItem entry={entry} onDone={close} />
-                  <MenuDivider />
-                  <OpenItems entry={entry} onDone={close} />
-                  <ScriptsMenu entry={entry} menu="branches" onDone={close} />
-                  <DeleteBranchItem entry={entry} onDone={close} />
-                  <EntryMenuNote entry={entry} />
-                </>
-              )}
-            </>
-          )}
+                <MenuItem
+                  icon="pencil"
+                  onSelect={() => {
+                    close();
+                    editProject(project.projectId);
+                  }}
+                >
+                  {t('review.editProject')}
+                </MenuItem>
+                <MenuDivider />
+                <MenuLabel>{t('review.menuBranch')}</MenuLabel>
+                {branchItems}
+              </>
+            );
+          }}
         </PageMenu>
         {stashAction.dialog}
         {baseMenu && entry && (
@@ -892,7 +1018,20 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
         {switching && repoScan && (
           <SwitchBranchDialog scan={repoScan} rev={rev} onClose={() => setSwitching(false)} />
         )}
-      </PageHeader>
+    </>
+  );
+
+  return (
+    <div className={parts.screen}>
+      {project ? (
+        <ReviewHeader entry={entry} target={{ kind: 'project', projectId: project.projectId }} backLabel={backLabel} stashes={stashes}>
+          {headerRight}
+        </ReviewHeader>
+      ) : (
+        <PageHeader title={t('review.title')} subtitle={subtitle} backLabel={backLabel}>
+          {headerRight}
+        </PageHeader>
+      )}
       {wipMenu && (
         <Popover anchorRect={wipMenu} width={230} onClose={() => setWipMenu(null)}>
           <Menu aria-label={t('history.wipActions')}>
@@ -1045,7 +1184,12 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
       {askAmend && (
         <AmendModal onClose={() => setAskAmend(null)} onBegin={() => beginAmend(askAmend)} />
       )}
-      {entry?.operation && <OperationBanner entry={entry} op={entry.operation} names={false} />}
+      {project
+        ? project.groups.map(
+            (g) => g.entry.operation && <OperationBanner key={g.entry.key} entry={g.entry} op={g.entry.operation} />,
+          )
+        : entry?.operation && <OperationBanner entry={entry} op={entry.operation} names={false} />}
+      {conflicts && <Banner tone="danger">{conflicts}</Banner>}
       {baseSaved && <Banner tone="neutral">{baseSaved}</Banner>}
       {/* Mid-rebase the branch only looks diverged. */}
       {diverged && !entry?.operation && (
@@ -1092,6 +1236,16 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
               else stepRow(dir);
             }}
           >
+            {project && entry && <BranchHead entry={entry} group={group} />}
+            {group?.stackHint && !search && (
+              <div className={styles.stackHint}>
+                {t('review.stackHint', {
+                  contains: formatCount(group.stackHint.contains),
+                  total: formatCount(group.stackHint.total),
+                  branch: group.stackHint.branch,
+                })}
+              </div>
+            )}
             {label && <div className={styles.listLabel}>{label}</div>}
             {rows.map((r) => (
               <ListRow
@@ -1115,9 +1269,18 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
                   setCommitMenu({ commit, at, many });
                 }}
                 amending={amending?.sha ?? null}
+                fromBranch={fromBranch}
               />
             ))}
             {data && !data.tip && <div className={styles.listEmpty}>{t('history.revNotFound', { rev })}</div>}
+            {project && project.notInReview > 0 && !search && (
+              <div className={styles.notInReview}>
+                {t('review.notReviewable', { ...cnt(project.notInReview) })} ·{' '}
+                <button type="button" className={parts.linkButton} onClick={() => editProject(project.projectId)}>
+                  {t('review.openProject')}
+                </button>
+              </div>
+            )}
             {data?.tip && commits.length === 0 && !wip && (
               <div className={styles.listEmpty}>
                 {search ? (
@@ -1136,21 +1299,23 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
           {stashes.length > 0 && (
             <div className={styles.stashPane}>
               <StashSection
-                heading={t('review.stashOfBranch')}
+                heading={t(project ? 'review.stashOfProject' : 'review.stashOfBranch')}
                 stashes={stashes}
                 picked={stash?.sha}
                 changes={!columns && filesOpen ? stashChanges : undefined}
                 file={file?.path}
                 divider={false}
-                withRepo={false}
+                withRepo={!!project}
                 onPick={(sha) => click(stashRow(sha))}
                 onFile={(p) => {
                   setPath(p);
                   setLand('first');
                 }}
+                fold={{ open: !stashesShut, onToggle: () => useUi.getState().toggleReviewStashes() }}
               />
             </div>
           )}
+          {project && project.groups.length > 1 && entry && <OtherBranches project={project} open={entry.key} />}
           {!columns && commitForm}
         </div>
         <ResizeHandle pane={listPane} min={280} max={640} onResize={setListWidth} onReset={() => setListWidth(null)} label={t('history.resizeList')} />
@@ -1221,9 +1386,9 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
                 onStep={step}
               />
               <DiffView
-                repoId={repoId}
+                repoId={stash ? stash.repoId : repoId}
                 worktreePath={wipShown || withWip ? (entry?.worktreePath ?? null) : null}
-                folder={folder}
+                folder={stash ? (repos?.find((r) => r.id === stash.repoId)?.path ?? null) : folder}
                 commit={isMulti ? newest : (commit?.sha ?? null)}
                 parent={isMulti ? (spanned?.parent ?? null) : (commitChanges?.parent ?? null)}
                 change={file}
@@ -1256,6 +1421,84 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
   );
 }
 
+/** A project review's open branch, sticky over its rows (SPEC §5 "Branch head"): repo and the
+ * branch's totals against its base, then the branch and its operation / conflicts pills. */
+function BranchHead({ entry: e, group }: { entry: EntrySummary; group: ReviewGroup | undefined }) {
+  const files = group?.files.committed ?? [];
+  const add = files.reduce((n, f) => n + (f.add ?? 0), 0);
+  const del = files.reduce((n, f) => n + (f.del ?? 0), 0);
+  const where = e.worktreePath ? tildifyHome(e.worktreePath) : null;
+  return (
+    <div className={styles.branchHead} title={[e.repoName, e.branch ?? e.shortSha, where].filter(Boolean).join(' · ')}>
+      <div className={styles.branchHeadLine}>
+        <span className={styles.branchHeadRepo}>{e.repoName}</span>
+        <DiffStat add={files.length > 0 ? add : undefined} del={del > 0 ? del : undefined} />
+      </div>
+      <div className={styles.branchHeadLine}>
+        <span className={styles.branchHeadName}>{e.branch ?? e.shortSha}</span>
+        {e.operation && <OperationPill op={e.operation} short />}
+        {e.conflicts > 0 && (
+          <Pill tone="danger" size="sm" title={conflictsTooltip(e)}>
+            {t('branches.conflictCount', { ...cnt(e.conflicts) })}
+          </Pill>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** The project's other entries (SPEC §5 "Branches"), pinned under the stashes; a click opens one. */
+function OtherBranches({ project, open: openKey }: { project: ProjectScope; open: string }) {
+  const shown = useUi((s) => s.reviewBranchesOpen);
+  const others = project.groups.filter((g) => g.entry.key !== openKey);
+  return (
+    <div className={styles.branchesPane}>
+      <button
+        type="button"
+        className={styles.branchesHeading}
+        aria-expanded={shown}
+        onClick={() => useUi.getState().toggleReviewBranches()}
+      >
+        <ChevronDownIcon size={12} className={shown ? parts.sectionChevron : `${parts.sectionChevron} ${parts.sectionShut}`} />
+        {t('review.branchesSection')} · {formatCount(others.length)}
+      </button>
+      {shown && (
+        <div className={styles.branchesList}>
+          {others.map((g) => {
+            const e = g.entry;
+            const files = g.files.committed;
+            const add = files.reduce((n, f) => n + (f.add ?? 0), 0);
+            const del = files.reduce((n, f) => n + (f.del ?? 0), 0);
+            return (
+              <button
+                key={e.key}
+                type="button"
+                className={styles.otherBranch}
+                title={[e.repoName, e.branch ?? e.shortSha, e.worktreePath ? tildifyHome(e.worktreePath) : null].filter(Boolean).join(' · ')}
+                onClick={() => project.onOpen(e.key)}
+              >
+                <span className={styles.branchHeadLine}>
+                  <span className={styles.branchHeadRepo}>{e.repoName}</span>
+                  <DiffStat add={files.length > 0 ? add : undefined} del={del > 0 ? del : undefined} />
+                </span>
+                <span className={styles.branchHeadLine}>
+                  <span className={styles.branchHeadName}>{e.branch ?? e.shortSha}</span>
+                  {(e.uncommitted ?? 0) > 0 && <span className={styles.dirtyDot} title={t('history.wipTitle')} />}
+                  {e.upstream && (
+                    <span className={styles.otherUpstream} title={upstreamTitle(e.upstream)}>
+                      {upstreamLabel(e.upstream)}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function rowKey(r: HistoryRow): string {
   return r.kind === 'commit' ? r.commit.sha : r.kind;
 }
@@ -1275,6 +1518,7 @@ function ListRow({
   onWipMenu,
   onCommitMenu,
   amending,
+  fromBranch,
 }: {
   row: HistoryRow;
   current: string | null;
@@ -1299,6 +1543,8 @@ function ListRow({
   onCommitMenu: (commit: HistoryCommit, at: DOMRect) => void;
   /** The commit being amended (Hi10): its row says so. */
   amending: string | null;
+  /** Commits that come from another branch (stacked), by SHA: a warning pill names it. */
+  fromBranch: Record<string, string>;
 }) {
   const oneLine = useData((s) => s.config?.settings.commitRows === 'one-line');
   switch (row.kind) {
@@ -1410,6 +1656,11 @@ function ListRow({
           {amending === c.sha && (
             <Pill tone="accent" size="sm">
               {t('history.amendingPill')}
+            </Pill>
+          )}
+          {fromBranch[c.sha] && (
+            <Pill tone="warning" size="sm" mono>
+              {fromBranch[c.sha]}
             </Pill>
           )}
         </>

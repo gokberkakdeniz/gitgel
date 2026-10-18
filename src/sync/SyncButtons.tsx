@@ -20,9 +20,17 @@ function useRunningSync(repoId: string): string | null {
   );
 }
 
-/** Fetch, Pull and Push in the History header (W4a), for its branch; the last fetch's age is in
- * Fetch's tooltip. */
-export function SyncButtons({ target, fetchedAt }: { target: SyncTarget; fetchedAt: number | null }) {
+/** Fetch, Pull and Push in Review's header (W4a), for its open branch; the last fetch's age is in
+ * Fetch's tooltip. With `repos` (a project) Fetch fetches each of them. */
+export function SyncButtons({
+  target,
+  fetchedAt,
+  repos,
+}: {
+  target: SyncTarget;
+  fetchedAt: number | null;
+  repos?: { repoId: string; repoName: string }[];
+}) {
   const running = useRunningSync(target.repoId);
   const u = target.upstream;
   if (!target.branch || !u) return null;
@@ -35,12 +43,16 @@ export function SyncButtons({ target, fetchedAt }: { target: SyncTarget; fetched
         busy={busy('fetch')}
         disabled={!!running}
         title={t('sync.fetchTitle', {
-          repo: target.repoName,
+          repo: repos ? repos.map((r) => r.repoName).join(', ') : target.repoName,
           remote: u.remote,
           fetch: fetchedAt != null ? ` · ${t('sync.lastFetch', { age: agoText(fetchedAt) })}` : '',
         })}
         className={styles.fetch}
-        onClick={() => void fetchRepo(target)}
+        onClick={() =>
+          repos
+            ? repos.forEach((r) => void fetchRepo({ ...r, branch: null, worktreePath: null, upstream: null }))
+            : void fetchRepo(target)
+        }
       >
         {t('sync.fetchBtn')}
       </SyncButton>

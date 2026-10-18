@@ -9,7 +9,6 @@ import {
   MoreVerticalIcon,
   RefreshIcon,
 } from '../../components/icons';
-import { ProjectNameInput } from '../../components/ProjectNameInput';
 import { ResizeHandle, useStoredWidth } from '../../components/ResizeHandle';
 import { Input } from '../../components/Input';
 import { Kbd } from '../../components/Kbd';
@@ -21,7 +20,7 @@ import { Segmented } from '../../components/Segmented';
 import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
 import { t } from '../../i18n';
 import { getCommitChanges, getReview, getStashChanges } from '../../lib/ipc';
-import { basename, tildifyHome } from '../../lib/paths';
+import { tildifyHome } from '../../lib/paths';
 import type {
   CommitChanges,
   CommitInfo,
@@ -35,7 +34,7 @@ import type {
 import { useInvoke } from '../../lib/useInvoke';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
 import { useStashAction } from '../../stash/StashAction';
-import { PageHeader } from '../../components/PageHeader/PageHeader';
+import { editProject, ReviewHeader } from './header';
 import { PageMenu } from '../../components/PageMenu';
 import { Stepper } from '../../components/Stepper';
 import { rescanAll } from '../../lib/events';
@@ -55,8 +54,7 @@ import { DiffStat, FileBar, FileRow, StashSection, useDiffView, type FileActions
 import { askDiscard, targetOf } from '../../discard/discard';
 import { usePicks } from '../../discard/picks';
 import parts from './parts.module.css';
-import { reviewStashes, stashHeading, type ReviewStash } from './stashes';
-import editable from '../../components/EditableTitle.module.css';
+import { reviewStashes, stashHeading } from './stashes';
 import styles from './Review.module.css';
 import {
   compareLabel,
@@ -667,91 +665,6 @@ function commitParent(g: ReviewGroup, sha: string | undefined, c: CommitChanges 
   if (c) return c.parent ? c.parent.slice(0, 7) : 'empty tree';
   const i = g.commits.findIndex((x) => x.sha === sha);
   return (g.commits[i + 1]?.sha ?? g.mergeBase ?? '').slice(0, 7);
-}
-
-/** Opens the project page: back to it when Review was opened from there, else a new step. */
-/** Back to the project page when Review was opened from it, else to it. */
-function editProject(projectId: string) {
-  const nav = useNav.getState();
-  const prev = nav.stack[nav.index - 1];
-  if (prev?.name === 'project' && prev.projectId === projectId) nav.back();
-  else nav.push({ name: 'project', projectId });
-}
-
-function ReviewHeader({
-  entry,
-  target,
-  backLabel,
-  stashes,
-  children,
-}: {
-  entry: EntrySummary | undefined;
-  target: ReviewTarget;
-  backLabel: string;
-  stashes: ReviewStash[];
-  children: React.ReactNode;
-}) {
-  const config = useData((s) => s.config);
-  const [renaming, setRenaming] = useState(false);
-  // The title box's width when rename started, so the input keeps it.
-  const titleWidth = useRef<number | undefined>(undefined);
-  const project = target.kind === 'project' ? config?.projects.find((p) => p.id === target.projectId) : undefined;
-
-  let title = '';
-  let subtitle = '';
-  if (target.kind === 'branch') {
-    title = t('review.title');
-    const rev = target.branch ?? entry?.shortSha;
-    const where = target.tipOverride
-      ? t('review.lastKnownState')
-      : entry?.worktreePath
-        ? tildifyHome(entry.worktreePath)
-        : null;
-    subtitle = [entry?.repoName, rev, where].filter(Boolean).join(' · ');
-  } else if (target.kind === 'stashes') {
-    title = t('review.stashesTitle');
-    const repo = config?.repos.find((r) => r.id === target.repoId);
-    subtitle = `${repo ? basename(repo.path) : ''} · ${t('branches.subStashes', { ...cnt(stashes.length) })}`;
-  } else {
-    title = project?.name ?? '';
-    if (project) {
-      const repos = new Set(project.entries.map((e) => e.repoId)).size;
-      subtitle = `${t('branches.subRepos', { ...cnt(repos) })} · ${t('branches.subBranches', { ...cnt(project.entries.length) })}`;
-    }
-  }
-
-  return (
-    <PageHeader
-      backLabel={backLabel}
-      title={
-        renaming && project ? (
-          <ProjectNameInput
-            project={project}
-            className={editable.input}
-            width={titleWidth.current}
-            onDone={() => setRenaming(false)}
-          />
-        ) : project ? (
-          <span
-            className={editable.title}
-            data-editable-title
-            title={t('project.renameProject')}
-            onClick={(e) => {
-              titleWidth.current = e.currentTarget.offsetWidth;
-              setRenaming(true);
-            }}
-          >
-            {title}
-          </span>
-        ) : (
-          title
-        )
-      }
-      subtitle={subtitle}
-    >
-      {children}
-    </PageHeader>
-  );
 }
 
 /** An entry's ⋯ menu: "Change Base…", then Branches' row menu without "Open Review", since this is it. */

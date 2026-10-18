@@ -726,7 +726,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 
 ### Review (`ReviewFocus.dc.html`)
 
-Review and History are one screen (user decision 2026-10-18; planned, T27.3–T27.5): one branch
+Review and History are one screen (user decision 2026-10-18; planned, T27.4–T27.5): one branch
 is open at a time, with its whole log, and the screen is reached for a project, a branch or a
 repository's stash stack. Canvas page "Review": R1 the prototype (`ReviewFocus.dc.html`, Play
 works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`,
@@ -737,7 +737,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   - **Project** (a sidebar project, Project → "Review changes" or ⌘R, a project row's branch
     link): title = project name (renames it in place, as the Project page's), subtitle
     `N repos · M branches`, Back "Back to Project". One entry is **open**: the one a project row
-    asked for, else the first; the others wait in the Branches section (planned, T27.3).
+    asked for, else the first; the others wait in the Branches section.
   - **Branch** (a Branches row and its "Open review", the base row's name and button, a remote
     branch while filtering, a deleted branch's last known state): title "Review", subtitle
     `<repo> · <rev>` (short SHA if detached), plus ` · <~worktree>` when checked out, or
@@ -780,8 +780,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
     (ellipsis), right mono 11 `+add` / `−del` (the branch against its base, as the old group
     totals); line 2 mono 12 branch (short SHA if detached), the operation pill (`rebasing`) and
     the conflicts pill. No menu and no upstream text (the header's Pull / Push carry the counts);
-    tooltip `<repo> · <branch> · <~worktree>`. A spinner after the repo while the entry
-    recomputes after a base change.
+    tooltip `<repo> · <branch> · <~worktree>`.
   - **Stacked warning** (margin 2px 0 6px, padding 7px 10px, radius 8, warning tone) when commits
     come from another branch: `N of M commits come from <branch>. A different base may fit
     better.`; those commits carry a warning sm mono pill with the branch's name.
@@ -805,7 +804,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   - **Stashes** (pinned under the list, as §16's): project scope "Stashes of this project"
     (every entry's), branch scope "Stashes of this branch"; the header is a button that folds
     the section.
-  - **Branches** (project scope; planned, T27.3): pinned under the stashes, top border
+  - **Branches** (project scope): pinned under the stashes, top border
     `border`, padding 0 8px 8px. Header button "Branches · N" (section label style, chevron;
     folded by default, remembered while the app runs). Rows (padding 7px 8px, radius 8, hover
     `bg.hover`): line 1 14px/600 repo, right `+add −del`; line 2 mono 12 branch, a 6px
@@ -872,7 +871,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   the first change in view. Picking a file lands on its first change. A file with no line
   changes (binary, too large, rename only) shows "No line changes" ("Only whitespace changed"
   when whitespace is ignored), and ↑ ↓ go straight to the neighbouring file.
-- **Base menu** (340px popover, from Review's ⋮ › "Change Base…" (planned, T27.3), the Project table's Base button or a
+- **Base menu** (340px popover, from Review's ⋮ › "Change Base…", the Project table's Base button or a
   "base missing" pill): "Search" input; **Suggested** (mono 13 name +
   `Contains N of the M commits shown`); **Default** (see "Default and remote rows" below);
   **Other branches**; **Remote branches**; **Tags** when the filter
@@ -2018,7 +2017,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
-| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (sticky branch head, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set (planned, T27.3–T27.4) |
+| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (sticky branch head, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set (planned, T27.4: R6) |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 235–238), Repositories 35–59 (repository `List` 38, items 300–304; Default base `List` 44 with rows, actions and add states 239–266 and 305–312; Active threshold 50–53, Check Out New Branches In 54–57), General 61–91 (Language 63–69; Terminal 72–84, options with disabled flag 311; Check for updates 87–89), Appearance: Theme 95–114, tile builder 253; Formatting 116–134 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 135–141 with Tab size, Scripts 143–161 (`List` 121, items 313–318), Prompts 127–134 (data 290), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |

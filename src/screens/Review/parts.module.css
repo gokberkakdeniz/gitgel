@@ -446,6 +446,17 @@
   color: var(--text-muted);
 }
 
+.stashFold {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
 .stash {
   display: flex;
   flex-direction: column;

@@ -29,7 +29,7 @@ import { Branches } from './screens/Branches/Branches';
 import { Palette } from './screens/Palette/Palette';
 import { Settings } from './screens/Settings/Settings';
 import { Project } from './screens/Project/Project';
-import { BranchReview } from './screens/History/History';
+import { BranchReview, ProjectReview } from './screens/History/History';
 import { Review } from './screens/Review/Review';
 import { selectRoute, useNav, type Route } from './state/nav';
 import { useData } from './state/data';
@@ -171,6 +171,15 @@ function Screen({ route }: { route: Route }) {
       // A branch's Review is the former History screen (SPEC §5); project and stash scopes stay.
       if (route.target.kind === 'branch')
         return <BranchReview key={JSON.stringify(route.target)} target={route.target} backLabel={route.backLabel} />;
+      if (route.target.kind === 'project')
+        return (
+          <ProjectReview
+            key={route.target.projectId + (route.focusKey ?? '')}
+            projectId={route.target.projectId}
+            backLabel={route.backLabel}
+            focusKey={route.focusKey}
+          />
+        );
       return (
         <Review
           key={JSON.stringify(route.target) + (route.focusKey ?? '')}
