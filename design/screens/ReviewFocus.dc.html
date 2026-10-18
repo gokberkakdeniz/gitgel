@@ -75,30 +75,30 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <div style="flex-grow: 1; display: flex; min-height: 0">
 
 <aside class="gg-commits" style="{{asideStyle}}">
-<div class="gg-list" tabIndex="0" onKeyDown="{{navKey}}" aria-label="Commits" style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; padding: {{listPad}}; {{listHide}}">
-<sc-for list="{{items}}" as="it" hint-placeholder-count="14">
-<sc-if value="{{it.isHead}}" hint-placeholder-val="{{false}}">
-<div class="gg-head" title="{{it.title}}" style="position: sticky; top: 0; z-index: 3; background: var(--bg-main); border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; margin: 0 -8px 4px; padding: 8px 16px 7px">
+<sc-if value="{{hasHead}}" hint-placeholder-val="{{false}}">
+<div class="gg-head" title="{{head.title}}" style="background: var(--bg-main); border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; padding: 8px 16px 7px">
 <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
-<span style="flex-grow: 1; min-width: 0; font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.repo}}</span>
-<span class="gg-hide" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span>
-<span class="gg-hide" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span>
+<span style="flex-grow: 1; min-width: 0; font-size: 14px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{head.repo}}</span>
+<span class="gg-hide" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{head.add}}</span>
+<span class="gg-hide" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{head.del}}</span>
 
 </div>
 <div style="display: flex; align-items: center; gap: 4px; min-width: 0">
-<span style="flex-shrink: 1; min-width: 0; margin-right: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.branch}}</span>
-<sc-if value="{{it.hasOp}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.opLabel}}" tone="{{it.opTone}}" size="sm" hint-size="64px,16px"></dc-import></sc-if>
-<sc-if value="{{it.hasPull}}" hint-placeholder-val="{{false}}">
-<button type="button" class="gg-cnt" onClick="{{it.pull}}" title="{{it.pullTitle}}" aria-label="{{it.pullTitle}}" style="{{it.pullStyle}}">·<dc-import name="Icon" icon="{{it.pullIcon}}" size="11" spin="{{it.pullBusy}}" hint-size="11px,11px"></dc-import>{{it.pullCount}}</button>
+<span style="flex-shrink: 1; min-width: 0; margin-right: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{head.branch}}</span>
+<sc-if value="{{head.hasOp}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{head.opLabel}}" tone="{{head.opTone}}" size="sm" hint-size="64px,16px"></dc-import></sc-if>
+<sc-if value="{{head.hasPull}}" hint-placeholder-val="{{false}}">
+<button type="button" class="gg-cnt" onClick="{{head.pull}}" title="{{head.pullTitle}}" aria-label="{{head.pullTitle}}" style="{{head.pullStyle}}">·<dc-import name="Icon" icon="{{head.pullIcon}}" size="11" spin="{{head.pullBusy}}" hint-size="11px,11px"></dc-import>{{head.pullCount}}</button>
 </sc-if>
-<sc-if value="{{it.hasPush}}" hint-placeholder-val="{{false}}">
-<button type="button" class="gg-cnt" onClick="{{it.push}}" title="{{it.pushTitle}}" aria-label="{{it.pushTitle}}" style="{{it.pushStyle}}">·<dc-import name="Icon" icon="{{it.pushIcon}}" size="11" spin="{{it.pushBusy}}" hint-size="11px,11px"></dc-import>{{it.pushCount}}</button>
+<sc-if value="{{head.hasPush}}" hint-placeholder-val="{{false}}">
+<button type="button" class="gg-cnt" onClick="{{head.push}}" title="{{head.pushTitle}}" aria-label="{{head.pushTitle}}" style="{{head.pushStyle}}">·<dc-import name="Icon" icon="{{head.pushIcon}}" size="11" spin="{{head.pushBusy}}" hint-size="11px,11px"></dc-import>{{head.pushCount}}</button>
 </sc-if>
 <span style="flex-grow: 1"></span>
-<span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.upstream}}</span>
+<span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{head.upstream}}</span>
 </div>
 </div>
 </sc-if>
+<div class="gg-list" tabIndex="0" onKeyDown="{{navKey}}" aria-label="Commits" style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; padding: {{listPad}}; {{listHide}}">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="14">
 <sc-if value="{{it.isHint}}" hint-placeholder-val="{{false}}">
 <div style="flex-shrink: 0; margin: 2px 0 6px; padding: 7px 10px; border-radius: 8px; background: rgba(var(--warning-rgb), 0.12); color: var(--warning); font-size: 12px; line-height: 1.4">{{it.text}}</div>
 </sc-if>
@@ -1362,7 +1362,7 @@ class Component extends DCLogic {
         hasOp: !!opPill, opLabel: opPill, opTone: OP && OP.kind === 'rebase' ? 'warning' : 'danger',
         upstream: '', title: [e.repo, e.branch, e.wt].filter(Boolean).join(' · ') });
     };
-    if (!branchScope && !stashScope) items.push(headItem(act));
+    var head = !branchScope && !stashScope ? headItem(act) : null;
     (function (e) {
         if (!e) return;
         var fromN = e.commits.filter(function (c) { return !!c.from; }).length;
@@ -1775,8 +1775,9 @@ class Component extends DCLogic {
           buttons: true, continueOff: un > 0, continueTitle: un ? 'Resolve the conflicts first' : 'git rebase --continue',
           abort: function () { self.setState({ modal: { kind: 'abortOp', e: OP.e } }); }, cont: function () { self.endOp(false); } };
       })(),
-      // The sticky head sits flush at the top; without it (branch scope) the rows get the top gap.
-      listPad: branchScope ? '8px 8px 16px' : '0 8px 16px',
+      listPad: '8px 8px 16px',
+      // Project scope: the open branch's head, fixed above the scrolling list.
+      head: head || {}, hasHead: !!head,
       // History's Fetch / Pull / Push, for the open branch; a push count makes Push the primary button.
       sync: (function (e) {
         var b = st.busy[e.id], fb = !!st.busy.all;
