@@ -69,7 +69,8 @@ BREW_NOTE=$'<hr>\n\nInstall with Homebrew:\n```bash\nbrew install --cask gokberk
 FEED_NOTES="$(awk '/^## / { n++ } n >= 1 && n <= 10' "$CHANGELOG")"
 
 [[ -f "$UPDATER_KEY" ]] || die "no updater key at $UPDATER_KEY; restore it or set GITGEL_UPDATER_KEY"
-SIGNING_IDENTITY="$(security find-identity -v -p codesigning | sed -nE 's/.*"(Developer ID Application: .*)"$/\1/p' | head -1)"
+# By the certificate's SHA-1: codesign no longer finds a name with non-ASCII letters (the "ö").
+SIGNING_IDENTITY="$(security find-identity -v -p codesigning | sed -nE 's/^ *[0-9]+\) ([0-9A-F]{40}) "Developer ID Application: .*"$/\1/p' | head -1)"
 [[ -n "$SIGNING_IDENTITY" ]] || die "no Developer ID Application certificate in the keychain"
 NOTARY_KEY="${GITGEL_NOTARY_KEY:-$(ls "$HOME"/.private_keys/AuthKey_*.p8 2>/dev/null | head -1)}"
 [[ -f "$NOTARY_KEY" ]] || die "no App Store Connect API key; put AuthKey_<key id>.p8 in ~/.private_keys or set GITGEL_NOTARY_KEY"
