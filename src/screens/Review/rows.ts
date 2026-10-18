@@ -29,7 +29,10 @@ export function historyRows(
   commits.forEach((c, i) => {
     if (i === pushedAt && i > 0) {
       const pushed = commits.slice(i).findIndex((x) => x.inBase);
-      rows.push({ kind: 'origin', remote: up!.name!, pushed: pushed < 0 ? commits.length - i : pushed });
+      // None of the branch's own commits are on the remote: the line would sit on the base line
+      // (a branch based on its own upstream, `master` on `origin/master`), which says it already.
+      const onBase = pushed === 0 && !baseShown;
+      if (!onBase) rows.push({ kind: 'origin', remote: up!.name!, pushed: pushed < 0 ? commits.length - i : pushed });
     }
     if (!baseShown && c.inBase) {
       rows.push({ kind: 'base', base: opts.base!, mergeBase: c.shortSha });

@@ -790,7 +790,8 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
     - **Origin line**, when some commits of the branch are not on its upstream yet: above the
       newest commit the remote has, a dashed `border.strong` rule on both sides of mono 11
       muted `origin/<branch>`, plus ` · ↑N` (the branch's commits on the remote) when there are
-      some.
+      some. Not when it would sit on the base line (none of the branch's commits on the remote,
+      e.g. `master` based on `origin/master`): the base line says it.
     - **Base line** after the branch's own commits: a solid rule on both sides of
       `base <base> · <merge-base short SHA>`; the base's log goes on under it.
     - Both are buttons (padding 6px 8px, radius 8; `bg.hover` while their selection is the

@@ -81,6 +81,13 @@ describe('historyRows', () => {
     expect(lineRows(rows, 'base')).toEqual(['wip', list[0].sha, list[1].sha]);
   });
 
+  it('leaves the origin line out where the base line is (a branch based on its upstream)', () => {
+    const list = [commit('mine', at(2026, 9, 4, 12)), commit('shared', at(2026, 9, 4, 9), true)];
+    const upstream = { remote: 'origin', name: 'origin/master', ahead: 1, behind: 0, mergeBase: list[1].sha };
+    const rows = historyRows(list, { wip: false, base: 'origin/master', ahead: 1, upstream });
+    expect(rows.map((r) => r.kind)).toEqual(['commit', 'base', 'commit']);
+  });
+
   it('has no origin line when everything is pushed', () => {
     const list = [commit('pushed', at(2026, 9, 4, 11)), commit('shared', at(2026, 9, 4, 9), true)];
     const upstream = { remote: 'origin', name: 'origin/feat', ahead: 0, behind: 0, mergeBase: list[0].sha };
