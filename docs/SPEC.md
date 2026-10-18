@@ -2973,7 +2973,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     carries a danger sm pill "commit failed" after the title. Right-click on the row:
     Discard All Changes… / Stash All Changes…; its files can be picked with ⌘ / ⇧-click and
     discarded, staged or copied from their right-click menu (§15 "Discard", Hi8).
-  - **Commit row** (`role="option"`, tooltip "Show this commit"): padding 7px 8px, radius 8, gap
+  - **Commit row** (`role="option"`, tooltip: the full message, subject and body): padding 7px 8px, radius 8, gap
     10; picked: `bg.hover`. A 24px avatar: the author's initials (first letters of the first two
     words, upper case), 10px/600 `text.strong` on `bg.avatar`; an author whose name contains
     `[bot]` gets "BOT" in `text.muted` on `bg.band` with a 1px dashed `border.strong`. Then 13px

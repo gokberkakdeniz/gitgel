@@ -311,7 +311,6 @@
   "history.showWip": "Show uncommitted changes (HEAD ↔ working tree)",
   "history.wipTitle": "Uncommitted changes",
   "history.commitFailed": "commit failed",
-  "history.showCommit": "Show this commit",
   "history.merge": "merge",
   "history.openRemote": "Open remote",
   "history.copied": "Copied",

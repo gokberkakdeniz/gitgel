@@ -385,7 +385,6 @@
   "history.showWip": "Commitlenmemiş değişiklikleri göster (HEAD ↔ çalışma ağacı)",
   "history.wipTitle": "Commitlenmemiş değişiklikler",
   "history.commitFailed": "commit başarısız",
-  "history.showCommit": "Bu commit'i göster",
   "history.merge": "birleştirme",
   "history.openRemote": "Uzak depoda aç",
   "history.copied": "Kopyalandı",

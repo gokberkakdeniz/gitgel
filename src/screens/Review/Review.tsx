@@ -1820,7 +1820,7 @@ function ListRow({
             type="button"
             role="option"
             aria-selected={on || many}
-            title={t('history.showCommit')}
+            title={c.body ? `${c.subject}\n\n${c.body}` : c.subject}
             className={cls}
             onClick={(e) => onPick(c.sha, e)}
             onContextMenu={(e) => {

@@ -1350,7 +1350,7 @@ class Component extends DCLogic {
         hasTag: i === 0 && !!st.amend[e.id], tag: 'amending', sel: on || inMulti, hasFrom: !!c.from, from: c.from || '',
         tags: (c.tags || []).map(function (n) { return { name: n }; }),
         pick: pickRow(e, c.sha), menu: commitMenu(e, c, false), more: commitMenu(e, c, true),
-        title: c.subject + ' · ' + c.author + ' · ' + c.sha,
+        title: c.body ? c.subject + '\n\n' + c.body : c.subject,
         wrapStyle: wrap(on, inMulti, ''), hitStyle: hit(oneLine ? '5px 8px' : '7px 8px'),
         subjectStyle: 'font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: var(--text-strong)' + (on || inMulti ? '; font-weight: 500' : '') };
     };

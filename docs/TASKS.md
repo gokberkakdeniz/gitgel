@@ -691,6 +691,7 @@ rather than as a task is listed the same way, marked "(on request)".
     Uncommitted / All modes are gone with it. Rows show the full date in absolute mode now that
     there are no day labels. `settings.historyLayout` keeps its config key.
 - [x] (on request) Review's commit rows and commit header show the commit's tags as neutral mono pills (read only; `HistoryCommit.tags`) — 2026-10-18
+- [x] (on request) A commit row's tooltip is the commit's full message instead of "Show this commit" — 2026-10-18
 
 ---
 
