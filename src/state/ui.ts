@@ -64,6 +64,8 @@ interface UiState {
   deletingProjectId: string | null; // the delete confirmation is open for this project
   settingsSection: SettingsSection; // the last one shown; Settings opens on it
   commitDrafts: Record<string, CommitDraft>;
+  /** Uncommitted's folded sections, by `<repo>\u0000<rev>\u0000s|u`, while the app runs. */
+  shutSections: Record<string, true>;
   setSidebarVisible: (visible: boolean) => void;
   setSidebarPeek: (peek: boolean) => void;
   setBranchesFilter: (filter: string) => void;
@@ -80,6 +82,7 @@ interface UiState {
   setSettingsSection: (section: SettingsSection) => void;
   /** Changes a branch's commit form; an empty one is dropped. */
   setCommitDraft: (key: string, patch: Partial<CommitDraft>) => void;
+  toggleSection: (key: string) => void;
 }
 
 let toastId = 0;
@@ -111,6 +114,7 @@ export const useUi = create<UiState>()((set) => ({
   deletingProjectId: null,
   settingsSection: 'general',
   commitDrafts: {},
+  shutSections: {},
   setSidebarVisible: (sidebarVisible) => set({ sidebarVisible, sidebarPeek: false }),
   setSidebarPeek: (sidebarPeek) => set({ sidebarPeek }),
   setBranchesFilter: (branchesFilter) => set({ branchesFilter }),
@@ -130,6 +134,11 @@ export const useUi = create<UiState>()((set) => ({
       const { [key]: _, ...rest } = s.commitDrafts;
       const empty = draft.summary === '' && draft.description === '' && draft.amending === null;
       return { commitDrafts: empty ? rest : { ...rest, [key]: draft } };
+    }),
+  toggleSection: (key) =>
+    set((s) => {
+      const { [key]: shut, ...rest } = s.shutSections;
+      return { shutSections: shut ? rest : { ...rest, [key]: true } };
     }),
 }));
 

@@ -67,6 +67,15 @@ export function PlusIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   );
 }
 
+/** Unstage (the + 's pair in Uncommitted's sections). */
+export function MinusIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 2} className={className}>
+      <path d="M5 12h14" />
+    </Svg>
+  );
+}
+
 export function BranchIcon({ size = 18, className, strokeWidth: sw }: IconProps) {
   return (
     <Svg size={size} strokeWidth={sw ?? 1.6} className={className}>
@@ -558,6 +567,7 @@ const ICONS = {
   'arrow-down': ArrowDownIcon,
   'arrow-right': ArrowRightIcon,
   plus: PlusIcon,
+minus: MinusIcon,
   close: CloseIcon,
   check: CheckIcon,
   search: SearchIcon,

@@ -288,8 +288,9 @@ export function FileRow({
   onClick: (e: React.MouseEvent) => void;
   /** The folder the file is opened from by the right-click menu; none, no open items. */
   folder: string | null;
-  /** History's sections (Hi5): + stages the file, − unstages it, at the row's end. */
-  stage?: { glyph: '+' | '−'; label: string; disabled: boolean; onClick: () => void };
+  /** Uncommitted's sections (SPEC §5 "Uncommitted sections"): on hover, Discard and + (stage) or
+   * − (unstage) open left of the counts, which stay last. */
+  stage?: { glyph: '+' | '−'; label: string; disabled: boolean; onClick: () => void; discard?: { label: string; onClick: () => void } };
   /** Uncommitted's files: the menu discards and copies too, deleted files included. */
   actions?: FileActions;
   /** A conflicted file of an operation in progress (T2): ⚠ while it has git's markers, ✓ once
@@ -297,6 +298,18 @@ export function FileRow({
   conflict?: 'unresolved' | 'resolved';
 }) {
   const [menu, setMenu] = useState<DOMRect | null>(null);
+  const counts =
+    conflict === 'unresolved' ? (
+      <span className={styles.conflictMark} title={t('review.hasConflicts')} role="img" aria-label={t('review.hasConflicts')}>
+        <Icon name="warning" size={14} />
+      </span>
+    ) : conflict === 'resolved' ? (
+      <span className={styles.resolvedMark} title={t('review.conflictsResolved')} role="img" aria-label={t('review.conflictsResolved')}>
+        <Icon name="check" size={14} />
+      </span>
+    ) : (
+      <DiffStat add={f.add || undefined} del={f.del || undefined} />
+    );
   // A deleted file is not on disk.
   const menuFolder = f.kind === 'D' ? null : folder;
   const hasMenu = !!actions || !!menuFolder;
@@ -324,17 +337,7 @@ export function FileRow({
         <span className={styles.fileDir}>
           <Highlighted text={dirLabel(f)} terms={terms} />
         </span>
-        {conflict === 'unresolved' ? (
-          <span className={styles.conflictMark} title={t('review.hasConflicts')} role="img" aria-label={t('review.hasConflicts')}>
-            <Icon name="warning" size={14} />
-          </span>
-        ) : conflict === 'resolved' ? (
-          <span className={styles.resolvedMark} title={t('review.conflictsResolved')} role="img" aria-label={t('review.conflictsResolved')}>
-            <Icon name="check" size={14} />
-          </span>
-        ) : (
-          <DiffStat add={f.add || undefined} del={f.del || undefined} />
-        )}
+        {!stage && counts}
       </button>
   );
   return (
@@ -342,16 +345,33 @@ export function FileRow({
       {stage ? (
         <div className={`${styles.stagedRow} ${state}`}>
           {button}
-          <button
-            type="button"
-            className={styles.stageButton}
-            aria-label={stage.label}
-            title={stage.label}
-            disabled={stage.disabled}
-            onClick={stage.onClick}
-          >
-            {stage.glyph}
-          </button>
+          <span className={styles.rowActs}>
+            {stage.discard && (
+              <button
+                type="button"
+                className={styles.rowAct}
+                aria-label={stage.discard.label}
+                title={stage.discard.label}
+                onClick={stage.discard.onClick}
+              >
+                <Icon name="undo" size={14} />
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.rowAct}
+              aria-label={stage.label}
+              title={stage.label}
+              disabled={stage.disabled}
+              onClick={stage.onClick}
+            >
+              <Icon name={stage.glyph === '+' ? 'plus' : 'minus'} size={14} />
+            </button>
+          </span>
+          {/* The counts stay last, like VS Code's status letter; a click picks the row too. */}
+          <span className={styles.rowCounts} onClick={onClick}>
+            {counts}
+          </span>
         </div>
       ) : (
         button

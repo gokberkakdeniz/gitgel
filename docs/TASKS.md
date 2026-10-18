@@ -679,26 +679,13 @@ rather than as a task is listed the same way, marked "(on request)".
   - note: a branch's Review (any rev: local, remote-tracking, SHA, last known state) is the
     former History screen; stored `history` routes open it. The old Review still serves the
     project and stash scopes until T27.3 / T27.4.
+- [x] T27.2 Uncommitted sections, VS Code style — 2026-10-18
 
 ---
 
 ## Open
 
 ### Phase 27 — Review and History in one screen
-
-#### T27.2 Uncommitted sections, VS Code style
-- **Depends on:** T27.1
-- **Why:** user feedback 2026-10-18 (VS Code's Changes list).
-- **Spec:** SPEC §5 "Review" "Uncommitted sections".
-- **Reference:** `ReviewFocus.dc.html` section and file row markup (`gg-sec`, `gg-acts`,
-  `gg-cnts`), CSS lines 27–33.
-- **Files:** `screens/Review/parts.tsx` (`FileRow` stage prop), the section header in the list.
-- **Steps:**
-  1. Section header: chevron button folding the section (per branch, kept in `useUi` while the
-     app runs), hover icon for Stage / Unstage All, count pill.
-  2. File row: hover / focus icons (Discard Changes…, Stage / Unstage) left of the counts; counts
-     last; a 0 count left out; rows start at 8px.
-- **Acceptance:** as the reference; keyboard focus shows the icons too.
 
 #### T27.3 Project scope: one open branch
 - **Depends on:** T27.2

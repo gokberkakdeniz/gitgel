@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BranchIcon, CheckIcon, CopyIcon } from '../../components/icons';
+import { BranchIcon, CheckIcon, ChevronDownIcon, CopyIcon, Icon } from '../../components/icons';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
@@ -754,7 +754,6 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
       rows={wipShown ? wipRows : files.map((f) => ({ id: f.path, file: f }))}
       file={fileId ?? undefined}
       folder={folder}
-      flat={columns}
       stage={
         wipShown && index
           ? {
@@ -762,6 +761,8 @@ export function History({ repoId, rev, backLabel, lastKnown }: Props) {
               counts: { s: staged.length, u: unstaged.length },
               onRow: (r) => stageFiles([r.file], r.sec === 's' ? 'unstaged' : 'staged'),
               onAll: (sec) => (sec === 's' ? stageFiles(staged, 'unstaged') : stageFiles(unstaged, 'staged')),
+              onDiscard: (r) => discard([r]),
+              foldKey: draftKey,
             }
           : undefined
       }
@@ -1477,7 +1478,6 @@ function FileList({
   rows,
   file,
   folder,
-  flat,
   stage,
   onFile,
   picks,
@@ -1489,14 +1489,15 @@ function FileList({
   file: string | undefined;
   /** Where the files' right-click menu opens them from. */
   folder: string | null;
-  /** In the files column: not indented under a row. */
-  flat: boolean;
   /** Uncommitted's sections (Hi5), when it is picked: Staged and Unstaged, + / − per row. */
   stage?: {
     disabled: boolean;
     counts: { s: number; u: number };
     onRow: (row: WipRow) => void;
     onAll: (sec: 's' | 'u') => void;
+    onDiscard: (row: WipRow) => void;
+    /** Where the folded sections are kept: the branch. */
+    foldKey: string;
   };
   onFile: (id: string) => void;
   /** Uncommitted's files picked with ⌘ / ⇧-click (Hi8). */
@@ -1506,25 +1507,41 @@ function FileList({
   /** Uncommitted's conflicted files of an operation in progress: ⚠ / ✓ (T4). */
   conflict?: (f: FileChange) => 'unresolved' | 'resolved' | undefined;
 }) {
-  const section = (sec: 's' | 'u') =>
-    stage && (
+  // Staged / Unstaged (SPEC §5 "Uncommitted sections"): the header folds its section (per branch,
+  // while the app runs); Stage / Unstage All on its hover; the count in a pill.
+  const shut = useUi((s) => s.shutSections);
+  const isShut = (sec: 's' | 'u') => !!stage && !!shut[`${stage.foldKey}\u0000${sec}`];
+  const section = (sec: 's' | 'u') => {
+    if (!stage) return null;
+    const open = !isShut(sec);
+    const all = t(sec === 's' ? 'history.unstageAll' : 'history.stageAll');
+    return (
       <div key={sec} className={parts.section}>
-        <span className={parts.sectionLabel}>
-          {t(sec === 's' ? 'history.staged' : 'history.unstaged')}
-          <span className={parts.sectionCount}>{formatCount(stage.counts[sec])}</span>
-        </span>
+        <button
+          type="button"
+          className={parts.sectionToggle}
+          aria-expanded={open}
+          onClick={() => useUi.getState().toggleSection(`${stage.foldKey}\u0000${sec}`)}
+        >
+          <ChevronDownIcon size={12} className={open ? parts.sectionChevron : `${parts.sectionChevron} ${parts.sectionShut}`} />
+          <span className={parts.sectionLabel}>{t(sec === 's' ? 'history.staged' : 'history.unstaged')}</span>
+        </button>
         {stage.counts[sec] > 0 && (
           <button
             type="button"
-            className={parts.linkButton}
+            className={parts.sectionAct}
+            aria-label={all}
+            title={all}
             disabled={stage.disabled}
             onClick={() => stage.onAll(sec)}
           >
-            {t(sec === 's' ? 'history.unstageAll' : 'history.stageAll')}
+            <Icon name={sec === 's' ? 'minus' : 'plus'} size={14} />
           </button>
         )}
+        <span className={parts.sectionPill}>{formatCount(stage.counts[sec])}</span>
       </div>
     );
+  };
   const row = (r: ListedFile) => (
     <FileRow
       key={r.id}
@@ -1543,19 +1560,21 @@ function FileList({
               label: t(r.sec === 's' ? 'history.unstageFile' : 'history.stageFile', { file: basename(r.file.path) }),
               disabled: stage.disabled,
               onClick: () => stage.onRow(r as WipRow),
+              discard: { label: t('review.discardOne'), onClick: () => stage.onDiscard(r as WipRow) },
             }
           : undefined
       }
     />
   );
   return (
-    <div className={flat ? `${parts.fileRows} ${parts.fileRowsFlat}` : parts.fileRows}>
+    // Rows start at 8px, like the commit rows (SPEC §5).
+    <div className={`${parts.fileRows} ${parts.fileRowsFlat}`}>
       {stage ? (
         <>
           {section('s')}
-          {rows.filter((r) => r.sec === 's').map(row)}
+          {!isShut('s') && rows.filter((r) => r.sec === 's').map(row)}
           {section('u')}
-          {rows.filter((r) => r.sec === 'u').map(row)}
+          {!isShut('u') && rows.filter((r) => r.sec === 'u').map(row)}
         </>
       ) : (
         rows.map(row)
