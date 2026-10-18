@@ -1110,6 +1110,8 @@ pub struct HistoryCommit {
     pub parents: u32,
     /// Reachable from the base asked for (listed below the base line).
     pub in_base: bool,
+    /// Tags pointing at it, sorted.
+    pub tags: Vec<String>,
 }
 
 /// A branch's history, newest first (§16).

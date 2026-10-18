@@ -16,6 +16,7 @@ function commit(subject: string, committedAt: number, inBase = false): HistoryCo
     committedAt,
     parents: 1,
     inBase,
+    tags: [],
   };
 }
 

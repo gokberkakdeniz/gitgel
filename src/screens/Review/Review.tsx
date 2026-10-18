@@ -1810,6 +1810,7 @@ function ListRow({
               {fromBranch[c.sha]}
             </Pill>
           )}
+          <TagPills tags={c.tags} />
         </>
       );
       const age = c.committedAt ? ageTitle(c.committedAt) : undefined;
@@ -2023,7 +2024,16 @@ function ShaLink({ repoId, sha, short }: { repoId: string; sha: string; short: s
   );
 }
 
-/** Above a commit's diff: its subject, message and who / when / which. */
+/** A commit's tags (§16), as neutral mono pills. */
+function TagPills({ tags }: { tags: string[] }) {
+  return tags.map((tag) => (
+    <Pill key={tag} tone="neutral" size="sm" mono title={tag}>
+      {tag}
+    </Pill>
+  ));
+}
+
+/** Above a commit's diff: its subject, message, tags and who / when / which. */
 function CommitHeader({
   repoId,
   commit: c,
@@ -2071,6 +2081,7 @@ function CommitHeader({
         <span className={`${parts.barTitle} selectable`} title={c.subject}>
           {c.subject}
         </span>
+        <TagPills tags={c.tags} />
       </div>
       {c.body && (
         <div ref={bodyRef} className={`${styles.body} selectable`}>

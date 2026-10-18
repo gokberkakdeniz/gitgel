@@ -375,6 +375,7 @@ export interface HistoryCommit {
   committedAt: number; // committer time, unix seconds
   parents: number; // > 1: a merge commit
   inBase: boolean; // reachable from the base asked for (below the base line)
+  tags: string[]; // tags pointing at it, sorted
 }
 export interface HistoryPage {
   rev: string;

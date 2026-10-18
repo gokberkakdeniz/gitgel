@@ -139,14 +139,14 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <sc-if value="{{it.two}}" hint-placeholder-val="{{true}}">
 <span title="{{it.author}}" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 10px; font-weight: 600; background: var(--bg-avatar); color: var(--text-strong)">{{it.initials}}</span>
 <span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if></span>
+<span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if><sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for></span>
 <span style="display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap"><span style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{it.author}} · {{it.age}}</span><span class="gg-hide" style="color: var(--accent-text)">{{it.sha}}</span></span>
 </span>
 </sc-if>
 <sc-if value="{{it.one}}" hint-placeholder-val="{{false}}">
 <span class="gg-sha" style="width: 56px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-text)">{{it.sha}}</span>
 <span style="{{it.subjectStyle}}">{{it.subject}}</span>
-<sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if>
+<sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if><sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for>
 <span style="flex-grow: 1"></span>
 <span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.age}}</span>
 </sc-if>
@@ -325,7 +325,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <sc-if value="{{ctxOn}}" hint-placeholder-val="{{true}}">
 <div style="flex-shrink: 0; border-bottom: 1px solid var(--border); padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
 <div style="display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 28px">
-<span style="flex-grow: 1; min-width: 0; font-size: 15px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{cx.title}}</span>
+<span style="flex-grow: 1; min-width: 0; display: flex; align-items: center; gap: 10px"><span style="min-width: 0; font-size: 15px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{cx.title}}</span><sc-for list="{{cx.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for></span>
 <sc-if value="{{cx.isStash}}" hint-placeholder-val="{{false}}">
 <sc-if value="{{cx.canApply}}" hint-placeholder-val="{{true}}">
 <dc-import name="Button" theme="none" variant="secondary" size="28" label="Apply" title="{{cx.applyTitle}}" on-press="{{cx.apply}}" hint-size="62px,28px"></dc-import>
@@ -595,7 +595,9 @@ class Component extends DCLogic {
 
   seed() {
     var F = function (k, name, dir, add, del, st, nu) { var f = { k: k, name: name, dir: dir || '', add: add || '', del: del || '', st: st }; if (nu) f.nu = nu; return f; };
-    var C = function (sha, subject, author, age, files, body) { return { sha: sha, subject: subject, author: author, age: age, files: files, body: body || '' }; };
+    var C = function (sha, subject, author, age, files, body) { return { sha: sha, subject: subject, author: author, age: age, files: files, body: body || '', tags: [] }; };
+    // Tags on a commit (§16): neutral mono pills on its row and in its header.
+    var TG = function (c, tags) { c.tags = tags; return c; };
     var Q = function (c) { c.from = 'feat/job-queue'; return c; };
     return [
       { id: 'web1', repo: 'web-app', branch: 'session-token-refresh', base: 'main', mb: '8c2d5e1', wt: '~/code/wt/token-refresh', unpushed: 2, behind: 0, wipAge: '6m', incoming: [],
@@ -610,7 +612,7 @@ class Component extends DCLogic {
       { id: 'web2', repo: 'web-app', branch: 'logout-flow', base: 'main', mb: '8c2d5e1', wt: '~/code/web-app', unpushed: 0, behind: 0, wipAge: '', incoming: [],
         wip: [],
         commits: [
-          C('7d3a9c1', 'Clear refresh cookie on logout', 'Melis Kaya', '2h', [F('M', 'logout.ts', 'src/auth', '+4', '−1')]),
+          TG(C('7d3a9c1', 'Clear refresh cookie on logout', 'Melis Kaya', '2h', [F('M', 'logout.ts', 'src/auth', '+4', '−1')]), ['v2.4.0']),
           C('3f81b26', 'Add logout endpoint and menu item', 'Melis Kaya', '1d', [F('A', 'logout.ts', 'src/auth', '+28', ''), F('M', 'UserMenu.tsx', 'src/components', '+7', '−1')])
         ],
         shared: [{ sha: 'd81f03a', subject: 'Split auth middleware into guards', age: '3d', author: 'Melis Kaya' }, { sha: 'e1d4a77', subject: 'Add audit log for admin sign-ins', age: '3d', author: 'Deniz Arslan' }, { sha: '4b7e0c9', subject: 'Update logout copy', age: '4d', author: 'Can Öztürk' }, { sha: '9a1f3d2', subject: 'Bump vite to 5.4.8', age: '5d', author: 'Ece Yılmaz' }, { sha: 'c3e8b71', subject: 'Fix flaky session test', age: '5d', author: 'Melis Kaya' }, { sha: '70d2a4e', subject: 'Add rate limit headers to API client', age: '5d', author: 'Deniz Arslan' }, { sha: '2f9c6b5', subject: 'Move cookie helpers to http/', age: '8d', author: 'Can Öztürk' }, { sha: 'b6d01e8', subject: 'Show session expiry in account menu', age: '8d', author: 'Ece Yılmaz' }, { sha: '1e4a9f0', subject: 'Add CSP report endpoint', age: '8d', author: 'Melis Kaya' }, { sha: '5d3c2a8', subject: 'Drop legacy token parser', age: '8d', author: 'Deniz Arslan' }, { sha: 'a7e19c4', subject: 'Cache user roles per request', age: '9d', author: 'Can Öztürk' }, { sha: '03bf6d1', subject: 'Add admin route group', age: '9d', author: 'Ece Yılmaz' }] },
@@ -629,7 +631,7 @@ class Component extends DCLogic {
         incoming: [C('f4c09b2', 'Rate-limit refresh requests', 'Melis Kaya', '25m', [F('M', 'refresh.ts', 'src/routes', '+5', '−1')])],
         commits: [
           C('91b0e4d', 'Return 401 with retry hint on expired token', 'Deniz Arslan', '3h', [F('M', 'refresh.ts', 'src/routes', '+6', '−2')]),
-          C('0a6f2d8', 'Add POST /auth/refresh', 'Deniz Arslan', '2d', [F('A', 'refresh.ts', 'src/routes', '+42', ''), F('M', 'index.ts', 'src/routes', '+2', ''), F('A', 'refresh.test.ts', 'test/routes', '+35', '')])
+          TG(C('0a6f2d8', 'Add POST /auth/refresh', 'Deniz Arslan', '2d', [F('A', 'refresh.ts', 'src/routes', '+42', ''), F('M', 'index.ts', 'src/routes', '+2', ''), F('A', 'refresh.test.ts', 'test/routes', '+35', '')]), ['v1.8.0', 'v1.8.0-rc.1'])
         ],
         shared: [{ sha: '0b9f4a7', subject: 'Add health check endpoint', age: '2d', author: 'Melis Kaya' }, { sha: 'a3c81e0', subject: 'Bump express to 4.19', age: '4d', author: 'Deniz Arslan' }, { sha: '6e2d9b1', subject: 'Log request ids', age: '4d', author: 'Can Öztürk' }, { sha: 'f07a3c5', subject: 'Move config to env schema', age: '6d', author: 'Ece Yılmaz' }, { sha: '18c4e72', subject: 'Add db pool metrics', age: '7d', author: 'Melis Kaya' }, { sha: '9b5f0d3', subject: 'Retry migrations on lock timeout', age: '9d', author: 'Deniz Arslan' }, { sha: 'c2e71a8', subject: 'Split routes by area', age: '10d', author: 'Can Öztürk' }, { sha: '47d0b9e', subject: 'Add graceful shutdown', age: '12d', author: 'Ece Yılmaz' }] }
     ];
@@ -1346,6 +1348,7 @@ class Component extends DCLogic {
       var on = !multi && selE.id === e.id && selRow === c.sha;
       return { isCommit: true, two: !oneLine, one: oneLine, sha: c.sha, subject: c.subject, author: c.author, age: c.age, initials: initials(c.author),
         hasTag: i === 0 && !!st.amend[e.id], tag: 'amending', sel: on || inMulti, hasFrom: !!c.from, from: c.from || '',
+        tags: (c.tags || []).map(function (n) { return { name: n }; }),
         pick: pickRow(e, c.sha), menu: commitMenu(e, c, false), more: commitMenu(e, c, true),
         title: c.subject + ' · ' + c.author + ' · ' + c.sha,
         wrapStyle: wrap(on, inMulti, ''), hitStyle: hit(oneLine ? '5px 8px' : '7px 8px'),
@@ -1468,7 +1471,7 @@ class Component extends DCLogic {
     var shasSel = selE.commits.map(function (c) { return c.sha; });
     var parentOf = function (i) { return selE.commits[i + 1] ? selE.commits[i + 1].sha : selE.mb; };
     var T = totals(allSelFiles);
-    var cx = { repo: selE.repo, branch: selE.branch, where: '', hasWhere: false, isCommit: false, isMulti: false, hasBody: false, body: '', list: [], lead: '', files: plural(allSelFiles.length, 'file'), add: T.add, del: T.del };
+    var cx = { repo: selE.repo, branch: selE.branch, where: '', hasWhere: false, isCommit: false, isMulti: false, hasBody: false, body: '', tags: [], list: [], lead: '', files: plural(allSelFiles.length, 'file'), add: T.add, del: T.del };
     var compare = '';
     if (selRow === 'wip') {
       cx.title = 'Uncommitted changes'; cx.where = selE.wt; cx.hasWhere = true;
@@ -1498,7 +1501,7 @@ class Component extends DCLogic {
       else { cx.files = 'Pick consecutive commits to see their diff'; cx.add = ''; cx.del = ''; }
     } else {
       var ci = shasSel.indexOf(selRow), cc = selE.commits[ci];
-      cx.isCommit = true; cx.title = cc.subject; cx.hasBody = !!cc.body; cx.body = cc.body; cx.author = cc.author; cx.initials = initials(cc.author); cx.age = cc.age; cx.when = whenOf(cc.age); cx.sha = cc.sha;
+      cx.isCommit = true; cx.title = cc.subject; cx.tags = (cc.tags || []).map(function (n) { return { name: n }; }); cx.hasBody = !!cc.body; cx.body = cc.body; cx.author = cc.author; cx.initials = initials(cc.author); cx.age = cc.age; cx.when = whenOf(cc.age); cx.sha = cc.sha;
       cx.lead = 'parent ' + parentOf(ci) + ' · '; compare = parentOf(ci) + ' ↔ ' + cc.sha;
       cx.pos = 'Commit ' + (shasSel.length - ci) + ' of ' + shasSel.length;
       cx.newerOff = ci <= 0; cx.olderOff = ci >= shasSel.length - 1;

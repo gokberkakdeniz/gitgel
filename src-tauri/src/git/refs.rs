@@ -1,5 +1,7 @@
 //! Local branches, default base, ref verification, tags.
 
+use std::collections::HashMap;
+
 use git2::{BranchType, Oid, Repository};
 
 use crate::error::AppError;
@@ -175,6 +177,23 @@ pub fn tags(repo: &Repository) -> Result<Vec<String>, AppError> {
         .collect();
     tags.sort();
     Ok(tags)
+}
+
+/// Tag names by the commit they point to (annotated tags peeled), each list sorted. Tags on
+/// anything other than a commit are left out.
+pub fn tags_by_commit(repo: &Repository) -> Result<HashMap<Oid, Vec<String>>, AppError> {
+    let mut out: HashMap<Oid, Vec<String>> = HashMap::new();
+    for r in repo.references_glob("refs/tags/*")? {
+        let r = r?;
+        let (Ok(name), Ok(commit)) = (r.shorthand(), r.peel_to_commit()) else {
+            continue;
+        };
+        out.entry(commit.id()).or_default().push(name.to_string());
+    }
+    for names in out.values_mut() {
+        names.sort();
+    }
+    Ok(out)
 }
 
 pub fn commit_time(repo: &Repository, sha: &str) -> Result<i64, AppError> {

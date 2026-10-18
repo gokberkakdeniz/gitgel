@@ -6,6 +6,7 @@ use git2::{BranchType, ErrorCode, Oid, Repository, Sort};
 
 use crate::error::AppError;
 use crate::git::diff::{self, NewSide};
+use crate::git::refs;
 use crate::model::{CommitInfo, HistoryCommit, StackHint};
 
 /// Commits reachable from `tip` but not from `base`, newest first (topological), at most `limit`.
@@ -399,6 +400,7 @@ pub fn walk(
     // on vscode, before the first commit comes out.
     let mut walk = repo.revwalk()?;
     walk.push(Oid::from_str(tip)?)?;
+    let mut tags = refs::tags_by_commit(repo)?;
     let mut commits = Vec::new();
     for oid in walk {
         let oid = oid?;
@@ -413,7 +415,8 @@ pub fn walk(
             });
         }
         let in_base = ahead.is_some_and(|a| !a.contains(&oid));
-        commits.push(history_commit(&commit, in_base));
+        let tags = tags.remove(&oid).unwrap_or_default();
+        commits.push(history_commit(&commit, in_base, tags));
     }
     Ok(Walked {
         commits,
@@ -421,7 +424,7 @@ pub fn walk(
     })
 }
 
-fn history_commit(commit: &git2::Commit, in_base: bool) -> HistoryCommit {
+fn history_commit(commit: &git2::Commit, in_base: bool, tags: Vec<String>) -> HistoryCommit {
     let sha = commit.id().to_string();
     let message = String::from_utf8_lossy(commit.message_bytes()).into_owned();
     let (subject, body) = split_message(&message);
@@ -436,6 +439,7 @@ fn history_commit(commit: &git2::Commit, in_base: bool) -> HistoryCommit {
         committed_at: commit.time().seconds(),
         parents: commit.parent_count() as u32,
         in_base,
+        tags,
     }
 }
 
@@ -701,6 +705,30 @@ mod tests {
         let page = walk(&t.repo, &tip, None, &[], 2).unwrap();
         assert_eq!(subjects(&page), ["third", "second"]);
         assert!(page.more);
+    }
+
+    #[test]
+    fn history_lists_each_commits_tags() {
+        let t = TestRepo::new();
+        let root = t.commit_on("main", &[("a", Some(b"a"))], "init", 3);
+        let tip = t.commit_on("main", &[("b", Some(b"b"))], "second", 1);
+        let root_obj = t.repo.find_object(root, None).unwrap();
+        let tip_obj = t.repo.find_object(tip, None).unwrap();
+        t.repo.tag_lightweight("v1.1", &tip_obj, false).unwrap();
+        let sig = git2::Signature::now("Test", "test@example.com").unwrap();
+        t.repo
+            .tag("v1.0", &tip_obj, &sig, "annotated", false)
+            .unwrap();
+        t.repo.tag_lightweight("first", &root_obj, false).unwrap();
+        // A tag on a tree is no commit's.
+        let tree = t.repo.find_commit(tip).unwrap().tree().unwrap();
+        t.repo
+            .tag_lightweight("tree", tree.as_object(), false)
+            .unwrap();
+
+        let w = walk(&t.repo, &tip.to_string(), None, &[], 200).unwrap();
+        let tags: Vec<_> = w.commits.iter().map(|c| c.tags.clone()).collect();
+        assert_eq!(tags, [vec!["v1.0", "v1.1"], vec!["first"]]);
     }
 
     #[test]
