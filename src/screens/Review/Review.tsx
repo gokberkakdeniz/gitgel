@@ -2024,13 +2024,18 @@ function ShaLink({ repoId, sha, short }: { repoId: string; sha: string; short: s
   );
 }
 
-/** A commit's tags (§16), as neutral mono pills. */
+/** A commit's tags (§16), as neutral mono pills on the right of its line. */
 function TagPills({ tags }: { tags: string[] }) {
-  return tags.map((tag) => (
-    <Pill key={tag} tone="neutral" size="sm" mono title={tag}>
-      {tag}
-    </Pill>
-  ));
+  if (!tags.length) return null;
+  return (
+    <span className={styles.tags}>
+      {tags.map((tag) => (
+        <Pill key={tag} tone="neutral" size="sm" mono title={tag}>
+          {tag}
+        </Pill>
+      ))}
+    </span>
+  );
 }
 
 /** Above a commit's diff: its subject, message, tags and who / when / which. */
