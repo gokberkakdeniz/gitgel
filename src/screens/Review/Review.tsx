@@ -122,7 +122,9 @@ export function ProjectReview({ projectId, backLabel, focusKey }: { projectId: s
             onOpen: setOpenKey,
             pick: {
               get: () => picks.current.get(open.entry.key) ?? null,
-              set: (row) => picks.current.set(open.entry.key, row),
+              set: (row) => {
+                picks.current.set(open.entry.key, row);
+              },
             },
           }
         : null,
@@ -594,7 +596,9 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     searched.current = search;
     setPicked(null);
   }, [search]);
-  useEffect(() => project?.pick.set(picked), [picked, project]);
+  useEffect(() => {
+    project?.pick.set(picked);
+  }, [picked, project]);
   const listed = (row: string) => order.includes(row) || stashes.some((s) => stashRow(s.sha) === row);
   const current = picked && listed(picked) ? picked : wip ? WIP : (commits[0]?.sha ?? null);
   // Several rows picked with ⌘ / ⇧-click (Hi12): Uncommitted and commits, shown taken together.
