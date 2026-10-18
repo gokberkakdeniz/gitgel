@@ -136,6 +136,13 @@ impl TestRepo {
         self.repo.branch(name, &commit, false).unwrap();
     }
 
+    /// Points a lightweight tag at `oid`, moving it if it exists.
+    pub fn tag(&self, name: &str, oid: Oid) {
+        self.repo
+            .reference(&format!("refs/tags/{name}"), oid, true, "test")
+            .unwrap();
+    }
+
     /// Moves a branch to `oid` (simulates a fast-forward merge).
     pub fn set_branch(&self, name: &str, oid: Oid) {
         self.repo

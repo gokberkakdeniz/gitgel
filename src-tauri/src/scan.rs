@@ -113,6 +113,7 @@ pub fn scan_repo(
         others: Vec::new(),
         remotes: Vec::new(),
         stashes: Vec::new(),
+        tags: 0,
     };
     let path = Path::new(&repo_cfg.path);
     if !path.exists() {
@@ -208,6 +209,7 @@ fn fill(
         ctx.timings.borrow_mut().add("branches", started.elapsed());
         branches
     };
+    scan.tags = refs::tags_fingerprint(repo)?;
     let branch_names: HashSet<String> = branches.iter().map(|b| b.name.clone()).collect();
     scan.remotes = ctx
         .timings
@@ -1150,6 +1152,7 @@ fn failed_scan(repo_cfg: &RepoConfig, error: &str) -> RepoScan {
         others: Vec::new(),
         remotes: Vec::new(),
         stashes: Vec::new(),
+        tags: 0,
     }
 }
 

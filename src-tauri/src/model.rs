@@ -928,6 +928,10 @@ pub struct RepoScan {
     pub remotes: Vec<RemoteBranch>,
     /// The repository's stash stack, newest first (one stack for all its worktrees).
     pub stashes: Vec<StashInfo>,
+    /// The tags and what they point to, as a fingerprint: a tag added, moved or deleted changes
+    /// the scan, so `repo-updated` refreshes the History's tags. Not sent to the frontend.
+    #[serde(skip)]
+    pub tags: u64,
 }
 
 /// One `stash@{n}` (flow P).

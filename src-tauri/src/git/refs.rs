@@ -1,6 +1,7 @@
 //! Local branches, default base, ref verification, tags.
 
 use std::collections::HashMap;
+use std::hash::{DefaultHasher, Hash, Hasher};
 
 use git2::{BranchType, Oid, Repository};
 
@@ -194,6 +195,23 @@ pub fn tags_by_commit(repo: &Repository) -> Result<HashMap<Oid, Vec<String>>, Ap
         names.sort();
     }
     Ok(out)
+}
+
+/// A fingerprint of every tag's name and target: it changes when a tag is added, moved or
+/// deleted.
+pub fn tags_fingerprint(repo: &Repository) -> Result<u64, AppError> {
+    let mut tags: Vec<(String, Option<Oid>)> = Vec::new();
+    for r in repo.references_glob("refs/tags/*")? {
+        let r = r?;
+        tags.push((
+            String::from_utf8_lossy(r.name_bytes()).into_owned(),
+            r.target(),
+        ));
+    }
+    tags.sort();
+    let mut hasher = DefaultHasher::new();
+    tags.hash(&mut hasher);
+    Ok(hasher.finish())
 }
 
 pub fn commit_time(repo: &Repository, sha: &str) -> Result<i64, AppError> {
@@ -510,5 +528,21 @@ mod tests {
             resolve_default_base(&t.repo, &order(&["nope", "main~0"])),
             Some(("main~0".into(), "main~0".into()))
         );
+    }
+
+    #[test]
+    fn tags_fingerprint_changes_when_a_tag_is_added_or_moved() {
+        let t = TestRepo::new();
+        let a = t.commit_on("main", &[("a", Some(b"a"))], "a", 2);
+        let b = t.commit_on("main", &[("b", Some(b"b"))], "b", 1);
+        let fp = || tags_fingerprint(&t.repo).unwrap();
+        let none = fp();
+        t.tag("v1", a);
+        let added = fp();
+        assert_ne!(added, none);
+        assert_eq!(fp(), added);
+        t.tag("v1", b);
+        assert_ne!(fp(), added);
+        assert_ne!(fp(), none);
     }
 }

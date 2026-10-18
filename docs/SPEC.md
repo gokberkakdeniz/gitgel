@@ -1871,7 +1871,7 @@ Notes:
 | Event | Payload | When |
 |---|---|---|
 | `config-changed` | `Config` | every `config::update` (user actions, `lastKnownTip` refresh, font size) |
-| `repo-updated` | `RepoUpdated` | after the watcher handles a change, and after a command or scan rescans a repo whose result changed |
+| `repo-updated` | `RepoUpdated` | after the watcher handles a change, and after a command or scan rescans a repo whose result changed (its tags count: a tag added, moved or deleted is a change) |
 | `open-settings` | – | Gitgel › Settings… (⌘,) |
 | `script-output` | `{ runId, data, end }` | output from a running script (`end`: bytes so far) |
 | `script-exited` | `ScriptRun` | a script ended (exit code or signal) or could not start |
