@@ -58,16 +58,11 @@ button,input,textarea{font-family:inherit}
 </div>
 </div>
 </sc-if>
-<sc-if value="{{it.isAll}}" hint-placeholder-val="{{false}}">
-<div style="flex-shrink: 0; display: flex; align-items: center; gap: 0; height: 28px; padding: 0 8px"><span style="width: 26px; flex-shrink: 0; display: flex; align-items: center"><button type="button" role="checkbox" aria-checked="mixed" aria-label="Select all" style="width: 16px; height: 16px; flex-shrink: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: var(--accent); cursor: pointer"><span style="width: 8px; height: 2px; border-radius: 1px; background: var(--on-accent)"></span></button></span><span style="font-size: 12px; color: var(--text-muted)">Select all</span></div>
-</sc-if>
 <sc-if value="{{it.isSection}}" hint-placeholder-val="{{false}}">
 <div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; height: 26px; padding: 6px 8px 0 12px"><span style="flex-grow: 1; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted)">{{it.label}}<span style="margin-left: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0; color: var(--text-faint)">{{it.count}}</span></span><dc-import name="Button" theme="none" variant="link" size="28" label="{{it.action}}" title="{{it.actionTitle}}" hint-size="70px,16px"></dc-import></div>
 </sc-if>
 <sc-if value="{{it.isFile}}" hint-placeholder-val="{{false}}">
 <div style="{{it.rowStyle}}">
-<sc-if value="{{it.boxed}}" hint-placeholder-val="{{false}}"><span style="width: 26px; flex-shrink: 0; display: flex; align-items: center"><sc-if value="{{it.hasCheck}}" hint-placeholder-val="{{false}}"><dc-import name="Checkbox" theme="{{themeName}}" checked="{{it.on}}" label="" aria-label="{{it.checkLabel}}" hint-size="16px,16px"></dc-import></sc-if>
-<sc-if value="{{it.part}}" hint-placeholder-val="{{false}}"><button type="button" role="checkbox" aria-checked="mixed" aria-label="{{it.checkLabel}}" title="Some lines are included" style="width: 16px; height: 16px; flex-shrink: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: var(--accent); cursor: pointer"><span style="width: 8px; height: 2px; border-radius: 1px; background: var(--on-accent)"></span></button></sc-if></span></sc-if>
 <dc-import name="KindBadge" theme="none" kind="{{it.kind}}" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
@@ -112,13 +107,11 @@ button,input,textarea{font-family:inherit}
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{c.path}}</span>
 <span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{c.compare}}</span>
 <div style="flex-grow: 1"></div>
-<sc-if value="{{c.hasHint}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; color: var(--text-faint); white-space: nowrap">{{c.hint}}</span></sc-if>
 <button aria-haspopup="menu" title="Diff view" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)"><dc-import name="Icon" icon="{{c.viewIcon}}" size="14" stroke="1.7" hint-size="14px,14px"></dc-import><span>{{c.viewLabel}}</span><dc-import name="Icon" icon="chevron-down" size="9" stroke="2.6" hint-size="9px,9px"></dc-import></button>
 <span style="width: 1px; height: 16px; background: var(--border); margin: 0 2px"></span>
 <span aria-live="polite" style="font-size: 12px; color: var(--text-body); white-space: nowrap; font-variant-numeric: tabular-nums">{{c.nav}}</span>
 <dc-import name="Stepper" theme="none" up-disabled="{{true}}" hint-size="60px,30px"></dc-import>
 </div>
-<sc-if value="{{isSplit}}" hint-placeholder-val="{{true}}">
 <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; background: var(--bg-main); min-height: 0">
 <div style="border-right: 1px solid var(--border); padding-top: 6px; overflow: hidden">
 <sc-for list="{{left}}" as="l" hint-placeholder-count="6">
@@ -131,20 +124,6 @@ button,input,textarea{font-family:inherit}
 </sc-for>
 </div>
 </div>
-</sc-if>
-<sc-if value="{{isPick}}" hint-placeholder-val="{{false}}">
-<div style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 22px; background: var(--bg-main); min-height: 0; overflow: hidden">
-<div style="display: flex; align-items: center; gap: 10px; height: 36px; box-sizing: border-box; padding: 0 10px 0 7px; margin: 6px 0 2px; background: var(--bg-band); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border)">
-<button type="button" role="checkbox" aria-checked="mixed" aria-label="Include the whole hunk" style="width: 16px; height: 16px; flex-shrink: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: var(--accent); cursor: pointer"><span style="width: 8px; height: 2px; border-radius: 1px; background: var(--on-accent)"></span></button>
-<span style="color: var(--text-muted); flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">@@ -18,7 +18,8 @@ export async function refreshSession</span>
-<span style="font-family: 'Instrument Sans', sans-serif; font-size: 12px; color: var(--text-muted); white-space: nowrap">2 of 3 changed lines included</span>
-<dc-import name="Button" theme="{{themeName}}" variant="secondary" size="28" label="Include hunk" hint-size="100px,28px"></dc-import>
-</div>
-<sc-for list="{{uni}}" as="u" hint-placeholder-count="8">
-<div style="{{u.style}}"><span style="width: 30px; flex-shrink: 0; display: flex; justify-content: center"><sc-if value="{{u.pick}}" hint-placeholder-val="{{false}}"><dc-import name="Checkbox" theme="{{themeName}}" checked="{{u.on}}" label="" aria-label="Include line" hint-size="16px,16px"></dc-import></sc-if></span><span style="width: 40px; flex-shrink: 0; text-align: right; padding-right: 8px; color: var(--text-faint)">{{u.o}}</span><span style="width: 40px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{u.n}}</span><span style="{{u.markStyle}}">{{u.mark}}</span><span style="white-space: pre">{{u.t}}</span></div>
-</sc-for>
-</div>
-</sc-if>
 </section>
 </div>
 <sc-if value="{{showToast}}" hint-placeholder-val="{{false}}">
@@ -170,30 +149,27 @@ button,input,textarea{font-family:inherit}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;commit&quot;,&quot;lines&quot;,&quot;hooks&quot;,&quot;failed&quot;,&quot;amend&quot;,&quot;range&quot;,&quot;squash&quot;],&quot;default&quot;:&quot;lines&quot;},&quot;composer&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;panel&quot;,&quot;dialog&quot;,&quot;index&quot;,&quot;sections&quot;],&quot;default&quot;:&quot;panel&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;operation&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;pushed&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;selected&quot;:{&quot;editor&quot;:null},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;commit&quot;,&quot;hooks&quot;,&quot;failed&quot;,&quot;amend&quot;,&quot;range&quot;,&quot;squash&quot;],&quot;default&quot;:&quot;commit&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;operation&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;pushed&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;selected&quot;:{&quot;editor&quot;:null},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
     var t = this.props.theme || 'dark';
     var s = this.props.state || 'commit';
     // WIP git actions, all in History (one branch, so there is always exactly one target).
-    // state: commit (W1a: Uncommitted picked, its files have checkboxes, the commit form under
-    // the list), lines (W1b: lines picked in the diff, the file's box shows "some"), hooks (W1c:
-    // hooks run, a running toast that opens the output), failed (W1d: the output dialog, as the
-    // Scripts output N4), amend (Hi10: the form in amend mode, filled from the newest commit; its
-    // row says "amending"), range (Hi12: Uncommitted and two commits picked with ⌘ / ⇧-click,
-    // tinted, their files under the oldest; the pane shows them taken together), squash (Hi13:
-    // e8b2c41 and 5c0d7aa picked, the pane shows them taken together; Hi13 draws their menu).
+    // state: commit (W1a: Uncommitted picked, its files in Staged and Unstaged sections, the
+    // commit form under the list), hooks (W1c: hooks run, a running toast that opens the output),
+    // failed (W1d: the output dialog, as the Scripts output N4), amend (Hi10: the form in amend
+    // mode, filled from the newest commit; its row says "amending"), range (Hi12: Uncommitted and
+    // two commits picked with ⌘ / ⇧-click, tinted, their files under the oldest; the pane shows
+    // them taken together), squash (Hi13: e8b2c41 and 5c0d7aa picked, the pane shows them taken
+    // together; Hi13 draws their menu).
     // The list shows two lines: the upstream (origin/<branch>,
     // dashed: above it is not pushed yet) and the base (as Hi3).
     var many = s === 'range' || s === 'squash';
     var wipOpen = !many;
-    // composer: panel (the form under the list, W1a) or dialog (W5: no form, no checkboxes in the
-    // list; Commit… in the Uncommitted row's menu opens the commit dialog).
-    // composer index (W5c): no form; the boxes are git's index (checked = staged, "some" = part
-    // of the file staged); clicking one stages / unstages at once. composer sections (W5d): no
-    // boxes; Staged and Unstaged groups with + / − per file and Stage all / Unstage all.
-    var cmode = this.props.composer || 'panel';
-    var inDialog = cmode === 'dialog' || cmode === 'sections';
+    // Sections are git's index: Staged (HEAD ↔ index) and Unstaged (index ↔ working tree), + / −
+    // per file and Stage all / Unstage all, each a git action at once. A staged file changed
+    // again is in both (refresh.ts here): its Unstaged row shows only what changed since.
+    // The commit takes what is staged.
     var avatar = function (who, size) {
       return 'width: ' + size + 'px; height: ' + size + 'px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-family: \'Instrument Sans\', sans-serif; font-size: ' + (size > 20 ? 10 : 9) + 'px; font-weight: 600; background: var(--bg-avatar); color: var(--text-strong)';
     };
@@ -209,16 +185,13 @@ class Component extends DCLogic {
           (opt.shared ? 'opacity: 0.7' : '') };
     };
     var shownStyle = 'box-shadow: inset 0 0 0 1px var(--accent); background: rgba(var(--accent-rgb), 0.10)';
-    // check: 'on' | 'off' | 'part' (a file of Uncommitted) or undefined (a file of a commit)
-    // selected: names of Uncommitted's files picked with ⌘ / ⇧-click (Hi8), tinted.
+    // sec: 's' | 'u' (an Uncommitted file in Staged / Unstaged) or undefined (a file of a commit).
+    // selected: Uncommitted's files picked with ⌘ / ⇧-click (Hi8) as '<sec>:<name>', tinted.
     var selected = this.props.selected || [];
-    var file = function (kind, name, dir, add, del, shown, check) {
-      if (inDialog) check = undefined;
-      var picked = check !== undefined && selected.indexOf(name) >= 0;
-      var boxed = check !== undefined;
-      return { isFile: true, boxed: boxed, kind: kind, name: name, dir: dir, add: add, del: del, counts: true,
-        hasCheck: check === 'on' || check === 'off', part: check === 'part', on: check === 'on', checkLabel: 'Include ' + name,
-        rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 ' + (boxed ? 8 : 42) + 'px; border-radius: 8px; ' + (shown ? shownStyle : '') + (picked ? '; background: rgba(var(--accent-rgb), 0.18)' : '') };
+    var file = function (kind, name, dir, add, del, shown, sec) {
+      var picked = !!sec && selected.indexOf(sec + ':' + name) >= 0;
+      return { isFile: true, kind: kind, name: name, dir: dir, add: add, del: del, counts: true,
+        rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 4px 0 ' + (sec ? 12 : 42) + 'px; border-radius: 8px; ' + (shown ? shownStyle : '') + (picked ? '; background: rgba(var(--accent-rgb), 0.18)' : '') };
     };
     var day = function (label) { return { isDay: true, label: label }; };
     var rule = function (dashed) { return 'flex-grow: 1; height: 0; border-top: 1px ' + (dashed ? 'dashed' : 'solid') + ' var(--border-strong)'; };
@@ -230,37 +203,30 @@ class Component extends DCLogic {
       return { n: n || '', t: text || '', mark: kind === 'del' ? '−' : kind === 'add' ? '+' : '', style: 'display: flex; padding-right: 12px; color: var(--text-code); ' + bg };
     };
 
-    var wipFiles = s === 'lines'
-      ? [file('M', 'refresh.ts', 'src/auth · 2 of 3 lines', '+2', '−1', true, 'part'), file('M', 'refresh.test.ts', 'test/auth', '+5', '', false, 'on'), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '', false, 'off')]
-      : [file('M', 'refresh.ts', 'src/auth', '+2', '−1', true, 'on'), file('M', 'refresh.test.ts', 'test/auth', '+5', '', false, 'on'), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '', false, 'off')];
     var act = function (f, glyph, title, show) {
       f.hasAct = true; f.actGlyph = glyph; f.actTitle = title;
       f.actStyle = 'width: 20px; height: 20px; flex-shrink: 0; margin-left: 2px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-elevated); color: var(--text-strong); font-family: \'JetBrains Mono\', monospace; font-size: 12px; line-height: 1; cursor: pointer; ' + (show ? '' : 'visibility: hidden');
       return f;
     };
     var section = function (label, count, action, title) { return { isSection: true, label: label, count: String(count), action: action, actionTitle: title }; };
-    if (cmode === 'index') {
-      wipFiles = [file('M', 'refresh.ts', 'src/auth · 2 of 3 lines staged', '+2', '−1', true, 'part'), file('M', 'refresh.test.ts', 'test/auth', '+5', '', false, 'on'), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '', false, 'off')];
-    } else if (cmode === 'sections') {
-      wipFiles = [section('Staged', 2, 'Unstage all', 'git restore --staged on every file'),
-        act(file('M', 'refresh.test.ts', 'test/auth', '+5', ''), '−', 'Unstage refresh.test.ts', false),
-        act(file('M', 'refresh.ts', 'src/auth · 2 of 3 lines', '+2', '−1'), '−', 'Unstage refresh.ts', false),
-        section('Unstaged', 2, 'Stage all', 'git add on every file'),
-        act(file('M', 'refresh.ts', 'src/auth · 1 line', '+1', '', true), '+', 'Stage refresh.ts', true),
-        act(file('U', 'token-debug.ts', 'scripts · untracked', '+22', ''), '+', 'Stage token-debug.ts', false)];
-    }
+    var wipFiles = [section('Staged', 2, 'Unstage all', 'Unstage all files'),
+      act(file('M', 'refresh.test.ts', 'test/auth', '+5', '', false, 's'), '−', 'Unstage refresh.test.ts', false),
+      act(file('M', 'refresh.ts', 'src/auth', '+1', '−1', false, 's'), '−', 'Unstage refresh.ts', false),
+      section('Unstaged', 2, 'Stage all', 'Stage all files'),
+      act(file('M', 'refresh.ts', 'src/auth', '+1', '', true, 'u'), '+', 'Stage refresh.ts', true),
+      act(file('U', 'token-debug.ts', 'scripts', '+22', '', false, 'u'), '+', 'Stage token-debug.ts', false)];
     // operation (T4, FlowT4): a rebase stopped on conflicts in this branch's worktree. The banner
     // under the header, without the names (the header has them); Uncommitted's conflicted files
     // show ⚠ while they have markers, ✓ once they are gone, in place of the counts.
     var op = !!this.props.operation;
     var mark = function (f, warn) { f.counts = false; f.warn = warn; f.ok = !warn; return f; };
     if (op) {
-      wipFiles = [mark(file('C', 'session.ts', 'src/auth · conflict', '', '', true, 'on'), true),
-        mark(file('C', 'config.ts', 'src/auth · conflict', '', '', false, 'on'), false),
-        file('M', 'refresh.ts', 'src/auth', '+2', '−1', false, 'on')];
+      wipFiles = [section('Unstaged', 3, 'Stage all', 'Stage all files'),
+        mark(file('C', 'session.ts', 'src/auth · conflict', '', '', true, 'u'), true),
+        mark(file('C', 'config.ts', 'src/auth · conflict', '', '', false, 'u'), false),
+        act(file('M', 'refresh.ts', 'src/auth', '+2', '−1', false, 'u'), '+', 'Stage refresh.ts', false)];
     }
-    var wipMeta = cmode === 'index' || cmode === 'sections' ? '3 files · 2 staged · 6m' : '3 files · 6m';
-    var wip = { isWip: true, sel: wipOpen || s === 'range', failed: s === 'failed', meta: wipMeta,
+    var wip = { isWip: true, sel: wipOpen || s === 'range', failed: s === 'failed', meta: '3 files · 6m',
       rowStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin-top: 4px; border-radius: 8px; border: 1px dashed var(--border-strong); cursor: pointer; ' + (s === 'range' ? 'background: rgba(var(--accent-rgb), 0.18)' : wipOpen ? 'background: var(--bg-hover)' : '') };
 
     var c1 = commit('e8b2c41', 'Retry refresh once on network error', 'Can Öztürk', '6m', { sel: many, tag: s === 'amend' ? 'amending' : '' });
@@ -268,37 +234,37 @@ class Component extends DCLogic {
     // range: the files of all three taken together, under the oldest (5c0d7aa), no boxes.
     var c2Files = s === 'squash' ? [file('M', 'refresh.ts', 'src/auth', '+21', '−5', true), file('M', 'store.ts', 'src/auth', '+9', '−1')]
       : many ? [file('M', 'refresh.ts', 'src/auth', '+12', '−3', true), file('M', 'store.ts', 'src/auth', '+9', '−1'), file('M', 'refresh.test.ts', 'test/auth', '+5', ''), file('U', 'token-debug.ts', 'scripts · untracked', '+22', '')] : [];
-    var allRow = { isAll: true };
     // pushed (Hi10's dialog): the branch is all on origin, the upstream line sits above the newest commit.
     var pushed = !!this.props.pushed;
     if (pushed) upstream = { isLine: true, label: 'origin/session-token-refresh · e8b2c41', sub: '', ruleStyle: rule(true) };
-    var items = [wip].concat(wipOpen ? (cmode === 'panel' ? [allRow].concat(wipFiles) : wipFiles) : [], pushed ? [day('Today'), upstream, c1, c2] : [day('Today'), c1, c2], c2Files, pushed ? [] : [upstream], [
+    var items = [wip].concat(wipOpen ? wipFiles : [], pushed ? [day('Today'), upstream, c1, c2] : [day('Today'), c1, c2], c2Files, pushed ? [] : [upstream], [
       commit('b41f9e3', 'Add refresh token rotation flag', 'Can Öztürk', '3h'),
       day('Yesterday'), commit('2e7c1d0', 'Scaffold token refresh service', 'Can Öztürk', '1d'),
       base,
       commit('d81f03a', 'Split auth middleware into guards', 'Melis Kaya', '3d', { shared: true }),
       commit('e1d4a77', 'Add audit log for admin sign-ins', 'Deniz Arslan', '3d', { shared: true })]);
 
-    // The right pane: Uncommitted (HEAD ↔ working tree), one commit, or a range of commits.
+    // The right pane: an Uncommitted file (Unstaged refresh.ts: index ↔ working tree, only what
+    // changed since it was staged), one commit, or a range of commits.
     var wipLeft = [line('ctx', 18, "import { issueToken } from './tokens';"), line('ctx', 19, ''), line('ctx', 20, 'export async function refreshSession(s: Session) {'),
-      line('del', 21, '  const next = await issueToken(s.userId);'), line('ctx', 22, '  await store.set(next.id, next);'), line('pad'),
+      line('ctx', 21, '  const next = await issueToken(s.userId, { rotate: true });'), line('ctx', 22, '  await store.set(next.id, next);'), line('pad'),
       line('ctx', 23, '  return next;'), line('ctx', 24, '}')];
     var wipRight = [line('ctx', 18, "import { issueToken } from './tokens';"), line('ctx', 19, ''), line('ctx', 20, 'export async function refreshSession(s: Session) {'),
-      line('add', 21, '  const next = await issueToken(s.userId, { rotate: true });'), line('ctx', 22, '  await store.set(next.id, next);'),
+      line('ctx', 21, '  const next = await issueToken(s.userId, { rotate: true });'), line('ctx', 22, '  await store.set(next.id, next);'),
       line('add', 23, '  await store.delete(s.id);'), line('ctx', 24, '  return next;'), line('ctx', 25, '}')];
     var c;
     var left = wipLeft, right = wipRight;
     var wipPane = { isOne: false, subject: 'Uncommitted changes', hasBody: false, isRange: false, lead: '', files: '3 files', add: '+29', del: '−1',
-      path: 'src/auth/refresh.ts', compare: 'HEAD ↔ working tree', nav: 'Change 1 of 2', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
+      path: 'src/auth/refresh.ts', compare: 'index ↔ working tree', nav: 'Change 1 of 1', viewIcon: 'split', viewLabel: 'Split' };
     if (many) {
       c = s === 'squash' ? { isOne: false, subject: '2 commits selected', hasBody: false, isRange: true,
         range: [{ sha: 'e8b2c41', subject: 'Retry refresh once on network error' }, { sha: '5c0d7aa', subject: 'Persist refresh id with the session' }],
-        lead: 'b41f9e3..e8b2c41 · ', files: '2 files', add: '+30', del: '−6', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ e8b2c41', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' }
+        lead: 'b41f9e3..e8b2c41 · ', files: '2 files', add: '+30', del: '−6', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ e8b2c41', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split' }
       // Uncommitted and two commits: b41f9e3 (the oldest one's parent) ↔ working tree, no span
       // in the meta.
       : { isOne: false, subject: 'Uncommitted changes and 2 commits', hasBody: false, isRange: true,
         range: [{ sha: '', wip: true, subject: 'Uncommitted changes' }, { sha: 'e8b2c41', subject: 'Retry refresh once on network error' }, { sha: '5c0d7aa', subject: 'Persist refresh id with the session' }],
-        lead: '', files: '4 files', add: '+48', del: '−4', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ working tree', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split', hasHint: false, hint: '' };
+        lead: '', files: '4 files', add: '+48', del: '−4', path: 'src/auth/refresh.ts', compare: 'b41f9e3 ↔ working tree', nav: 'Change 1 of 3', viewIcon: 'split', viewLabel: 'Split' };
       left = [line('ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('del', 41, '  return refreshSession(s);'),
         line('pad'), line('pad'), line('pad'), line('pad'), line('pad'), line('ctx', 42, '}')];
       right = [line('ctx', 40, 'export async function refreshWithRetry(s: Session) {'), line('add', 41, '  try {'),
@@ -312,23 +278,7 @@ class Component extends DCLogic {
         line('add', 5, '  return refresh();'), line('add', 6, '>>>>>>> 4b7e2c9 (Refresh the session on read)'), line('ctx', 7, '}')];
     } else {
       c = wipPane;
-      if (s === 'lines') { c = Object.assign({}, wipPane, { viewIcon: 'unified', viewLabel: 'Unified', hasHint: true, hint: 'Click a line to include it, drag for a range' }); }
     }
-
-    // W1b: the unified diff with a box per changed line.
-    var uline = function (kind, o, n, text, on) {
-      var bg = kind === 'del' ? 'background: rgba(var(--danger-rgb), 0.15); ' : kind === 'add' ? 'background: rgba(var(--success-rgb), 0.15); ' : '';
-      return { pick: kind !== 'ctx', on: !!on, o: o || '', n: n || '', t: text, mark: kind === 'del' ? '−' : kind === 'add' ? '+' : '',
-        markStyle: 'width: 14px; flex-shrink: 0; color: var(--' + (kind === 'del' ? 'danger' : 'success') + ')',
-        style: 'display: flex; align-items: center; padding-right: 12px; color: var(--text-code); ' + bg + (on ? 'box-shadow: inset 3px 0 0 var(--accent-text)' : '') };
-    };
-    var uni = [uline('ctx', 18, 18, "import { issueToken } from './tokens';"), uline('ctx', 19, 19, ''),
-      uline('ctx', 20, 20, 'export async function refreshSession(s: Session) {'),
-      uline('del', 21, '', '  const next = await issueToken(s.userId);', true),
-      uline('add', '', 21, '  const next = await issueToken(s.userId, { rotate: true });', true),
-      uline('ctx', 22, 22, '  await store.set(next.id, next);'),
-      uline('add', '', 23, '  await store.delete(s.id);', false),
-      uline('ctx', 23, 24, '  return next;'), uline('ctx', 24, 25, '}')];
 
     var C = 'color: var(--text-code);', M = 'color: var(--text-muted);', S = 'color: var(--success);', D = 'color: var(--danger);', A = 'color: var(--accent-text);';
     var out = [['$ .husky/pre-commit', A], ['> lint-staged', M], ['✓ Preparing lint-staged…', S], ['✗ Running tasks for staged files…', D],
@@ -342,16 +292,15 @@ class Component extends DCLogic {
       themeClass: 'theme-' + t, themeName: t, push: pushed ? '' : '↑2', op: op,
       multi: many,
       items: items,
-      showComposer: wipOpen && cmode === 'panel',
+      showComposer: wipOpen,
       summary: amend ? 'Retry refresh once on network error' : 'Rotate tokens on refresh',
       body: amend ? 'A dropped connection during refresh logged people out. Retry once with the same refresh id.' : (s === 'hooks' || s === 'failed') ? 'Delete the old session when a token is rotated.' : '',
       amend: amend,
-      commitLabel: committing ? 'Committing…' : amend ? 'Amend Last Commit' : 'Commit 2 files',
+      commitLabel: committing ? 'Committing…' : amend ? 'Amend Last Commit' : op ? 'Commit' : 'Commit 2 files',
       commitIcon: committing ? 'spinner' : 'none',
       commitTitle: op ? 'Resolve the merge conflicts first' : committing ? 'Hooks are running' : amend ? 'Amend e8b2c41 on session-token-refresh' : 'Commit to session-token-refresh',
       committing: committing || op,
       c: c, left: left, right: right,
-      isSplit: s !== 'lines', isPick: s === 'lines', uni: uni,
       showToast: s === 'hooks',
       showOutput: s === 'failed',
       outLines: out.map(function (l) { return { text: l[0] || ' ', style: 'white-space: pre-wrap; word-break: break-word; min-height: 20px; ' + l[1] }; }),

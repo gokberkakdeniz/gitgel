@@ -13,8 +13,8 @@ use crate::config::new_id;
 use crate::error::AppError;
 use crate::git::{diff, operation, refs, stash, worktrees};
 use crate::model::{
-    entry_key, BranchLoss, CheckoutProblem, CheckoutTarget, EntryRef, NewBranchCheckout,
-    NewBranchProblem, OperationKind, ScriptRun, UpdateReason,
+    entry_key, BranchLoss, CheckoutProblem, CheckoutTarget, EntryRef, IndexChanges,
+    NewBranchCheckout, NewBranchProblem, OperationKind, ScriptRun, UpdateReason,
 };
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -333,19 +333,17 @@ pub fn stash_drop(
     )
 }
 
-/// What a Commit (W1a) holds: the checked files of Uncommitted and the message.
+/// What a Commit (W1a) holds besides the index: the message.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommitFiles {
-    /// Paths relative to the worktree (a rename's old path too): what goes into the commit.
-    pub include: Vec<String>,
     pub summary: String,
     pub description: String,
     /// `--no-verify`: the commit hooks are skipped (the failed output panel's "Commit without
     /// hooks").
     pub no_verify: bool,
     /// Amend (Hi10): the SHA of the newest commit, which `--amend` replaces; refused when HEAD
-    /// moved since. The files may then be none (only the message changes).
+    /// moved since. Nothing may be staged then (only the message changes).
     #[serde(default)]
     pub amend: Option<String>,
 }
@@ -353,25 +351,112 @@ pub struct CommitFiles {
 /// How the one command of a Commit is built.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct CommitShape {
-    /// Paths to stage (`$GITGEL_PATH_<n>`).
-    pub paths: usize,
-    /// Staged paths that are not checked (`$GITGEL_UNSTAGE_<n>`), taken out of the index first.
-    pub unstage: usize,
     pub body: bool,
     pub no_verify: bool,
     pub amend: bool,
 }
 
-/// Paths whose staged state differs from HEAD in the entry's worktree: the boxes of Uncommitted
-/// start checked for them (W1a), as git's index has them. Read only.
-pub fn staged_paths(state: &AppState, entry: &EntryRef) -> Result<Vec<String>, AppError> {
+/// The entry's uncommitted changes as git's index splits them: History's Staged and Unstaged
+/// sections (W1a). Read only.
+pub fn index_changes(state: &AppState, entry: &EntryRef) -> Result<IndexChanges, AppError> {
     let repo = open_repo(state, &entry.repo_id)?;
     let tree = repo
         .tree_of(entry)
         .ok_or_else(|| AppError::Invalid(format!("{} is not checked out.", repo.name)))?;
     let shared = state.pool.get(&tree.path)?;
     let wt = lock(&shared);
-    Ok(worktrees::staged(&wt)?.0)
+    diff::index_changes(&wt)
+}
+
+/// What a Stage (History's sections) changes in git's index: whole files.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StageFiles {
+    /// Relative to the worktree (a rename's old path too): `git add -A`.
+    pub stage: Vec<String>,
+    /// `git restore --staged` (`git rm --cached` before the first commit).
+    pub unstage: Vec<String>,
+}
+
+/// How the one command of a Stage is built.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct StageShape {
+    /// `$GITGEL_STAGE_<n>`.
+    pub stage: usize,
+    /// `$GITGEL_UNSTAGE_<n>`.
+    pub unstage: usize,
+    /// No commit yet: nothing to restore from.
+    pub unborn: bool,
+}
+
+/// Stage / Unstage (History's sections, SPEC §15 "Stage"): files go into git's index or out of
+/// it, whole. A git action without toasts of its own; the History queue batches clicks into one.
+pub fn stage(state: &AppState, entry: EntryRef, files: StageFiles) -> Result<ScriptRun, AppError> {
+    if files.stage.is_empty() && files.unstage.is_empty() {
+        return Err(AppError::Invalid("Nothing to stage.".into()));
+    }
+    if files
+        .stage
+        .iter()
+        .chain(&files.unstage)
+        .any(|p| !valid_relative(p))
+    {
+        return Err(AppError::Invalid("A picked file has no valid path.".into()));
+    }
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let unborn = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        let born = wt.head().and_then(|h| h.peel_to_commit()).is_ok();
+        !born
+    };
+    let mut env = vec![
+        (
+            "GITGEL_FOLDER".to_string(),
+            tree.path.to_string_lossy().into_owned(),
+        ),
+        // Picked paths are file names, never pathspec magic (`:(glob)`, `*`).
+        ("GIT_LITERAL_PATHSPECS".to_string(), "1".to_string()),
+    ];
+    for (i, p) in files.stage.iter().enumerate() {
+        env.push((format!("GITGEL_STAGE_{}", i + 1), p.clone()));
+    }
+    for (i, p) in files.unstage.iter().enumerate() {
+        env.push((format!("GITGEL_UNSTAGE_{}", i + 1), p.clone()));
+    }
+    let shape = StageShape {
+        stage: files.stage.len(),
+        unstage: files.unstage.len(),
+        unborn,
+    };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}stage"),
+            name: if shape.stage > 0 { "Stage" } else { "Unstage" }.into(),
+            icon: "plus".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: stage_command(shape),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
 }
 
 /// What deleting `branch` loses (Delete Branch's note). Read only.
@@ -382,10 +467,8 @@ pub fn branch_loss(state: &AppState, repo_id: &str, branch: &str) -> Result<Bran
     refs::branch_loss(&git, branch)
 }
 
-/// Commit (W1a): the checked files of the entry's worktree become one commit. The index is made
-/// to match the boxes (checked files staged whole, staged files left unchecked taken out), then
-/// `git commit` runs with the user's hooks (husky, lefthook, `core.hooksPath`); `--amend` for an
-/// Amend (Hi10).
+/// Commit (W1a): what is staged in the entry's worktree becomes one commit: `git commit` runs
+/// with the user's hooks (husky, lefthook, `core.hooksPath`); `--amend` for an Amend (Hi10).
 pub fn commit(
     state: &AppState,
     entry: EntryRef,
@@ -395,16 +478,6 @@ pub fn commit(
     let body = files.description.trim().to_string();
     if summary.is_empty() {
         return Err(AppError::Invalid("Write a summary.".into()));
-    }
-    if files.include.is_empty() && files.amend.is_none() {
-        return Err(AppError::Invalid("Pick at least one file.".into()));
-    }
-    if files
-        .include
-        .iter()
-        .any(|p| p.is_empty() || p.contains('\0'))
-    {
-        return Err(AppError::Invalid("A picked file has no valid path.".into()));
     }
     let repo = open_repo(state, &entry.repo_id)?;
     repo.not_busy(state)?;
@@ -428,31 +501,20 @@ pub fn commit(
         }
         worktrees::staged(&wt)?.0
     };
-    let unstage: Vec<&String> = staged
-        .iter()
-        .filter(|p| !files.include.contains(p))
-        .collect();
+    if staged.is_empty() && files.amend.is_none() {
+        return Err(AppError::Invalid("Nothing is staged.".into()));
+    }
     let mut env = vec![
         (
             "GITGEL_FOLDER".to_string(),
             tree.path.to_string_lossy().into_owned(),
         ),
         ("GITGEL_SUMMARY".to_string(), summary),
-        // Picked paths are file names, never pathspec magic (`:(glob)`, `*`).
-        ("GIT_LITERAL_PATHSPECS".to_string(), "1".to_string()),
     ];
     if !body.is_empty() {
         env.push(("GITGEL_BODY".into(), body.clone()));
     }
-    for (i, p) in files.include.iter().enumerate() {
-        env.push((format!("GITGEL_PATH_{}", i + 1), p.clone()));
-    }
-    for (i, p) in unstage.iter().enumerate() {
-        env.push((format!("GITGEL_UNSTAGE_{}", i + 1), (*p).clone()));
-    }
     let shape = CommitShape {
-        paths: files.include.len(),
-        unstage: unstage.len(),
         body: !body.is_empty(),
         no_verify: files.no_verify,
         amend: files.amend.is_some(),
@@ -487,6 +549,10 @@ pub struct DiscardFiles {
     pub entry: EntryRef,
     /// Relative to the worktree (a rename's old path too).
     pub paths: Vec<String>,
+    /// Those of `paths` whose unstaged part alone goes (History's Unstaged rows): back to the
+    /// index, not to HEAD.
+    #[serde(default)]
+    pub keep_index: Vec<String>,
 }
 
 /// How one entry's step of a Discard is built.
@@ -494,12 +560,15 @@ pub struct DiscardFiles {
 pub(super) struct DiscardStep {
     /// Paths git knows (`$GITGEL_PATH_<step>_<n>`): `git restore` from HEAD.
     pub restore: usize,
+    /// Paths in the index whose staged version stays (`$GITGEL_KEEP_<step>_<n>`): `git restore
+    /// --worktree` from the index.
+    pub keep: usize,
     /// Untracked paths (`$GITGEL_CLEAN_<step>_<n>`): `git clean`.
     pub clean: usize,
 }
 
-/// Discard (SPEC §15 "Discard"): each entry's files go back to HEAD, staged and unstaged alike;
-/// untracked ones are removed. A copy of every file still on disk goes to the Trash first; if one
+/// Discard (SPEC §15 "Discard"): each entry's files go back to HEAD, staged and unstaged alike,
+/// or (`keep_index`) back to what is staged; untracked ones are removed. A copy of every file still on disk goes to the Trash first; if one
 /// cannot, nothing is discarded.
 pub fn discard(state: &AppState, discards: Vec<DiscardFiles>) -> Result<ScriptRun, AppError> {
     if discards.is_empty() || discards.iter().any(|d| d.paths.is_empty()) {
@@ -532,14 +601,20 @@ pub fn discard(state: &AppState, discards: Vec<DiscardFiles>) -> Result<ScriptRu
                 entry.branch.as_deref().unwrap_or("detached HEAD")
             ))
         })?;
-        let known = {
+        let (known, staged) = {
             let shared = state.pool.get(&tree.path)?;
             let wt = lock(&shared);
-            worktrees::tracked(&wt, &d.paths)?
+            (
+                worktrees::tracked(&wt, &d.paths)?,
+                worktrees::in_index(&wt, &d.paths)?,
+            )
         };
-        let (mut restore, mut clean) = (0, 0);
-        for (path, known) in d.paths.iter().zip(known) {
-            let (name, n) = if known {
+        let (mut restore, mut keep, mut clean) = (0, 0, 0);
+        for ((path, known), staged) in d.paths.iter().zip(known).zip(staged) {
+            let (name, n) = if d.keep_index.contains(path) && staged {
+                keep += 1;
+                ("KEEP", keep)
+            } else if known && !d.keep_index.contains(path) {
                 restore += 1;
                 ("PATH", restore)
             } else {
@@ -556,7 +631,11 @@ pub fn discard(state: &AppState, discards: Vec<DiscardFiles>) -> Result<ScriptRu
                 path.clone(),
             ));
         }
-        shape.push(DiscardStep { restore, clean });
+        shape.push(DiscardStep {
+            restore,
+            keep,
+            clean,
+        });
         steps.push((
             tree.path.clone(),
             repo.label(tree),
@@ -1896,29 +1975,10 @@ pub(super) fn push_command(steps: &[PushStep], message: bool) -> String {
         .join(" && ")
 }
 
-/// `git -C "$GITGEL_FOLDER" reset -q -- "$GITGEL_UNSTAGE_1" … && git … add -A -- "$GITGEL_PATH_1" …
-/// && git … commit [--no-verify] -m "$GITGEL_SUMMARY" [-m "$GITGEL_BODY"]`: only fixed text and
-/// quoted variables.
+/// `git -C "$GITGEL_FOLDER" commit [--amend] [--no-verify] -m "$GITGEL_SUMMARY" [-m
+/// "$GITGEL_BODY"]`: what is staged; only fixed text and quoted variables.
 pub(super) fn commit_command(shape: CommitShape) -> String {
     let git = "git -C \"$GITGEL_FOLDER\"";
-    let list = |name: &str, count: usize| {
-        (1..=count)
-            .map(|j| format!(" \"${name}_{j}\""))
-            .collect::<String>()
-    };
-    let mut steps = Vec::new();
-    if shape.unstage > 0 {
-        steps.push(format!(
-            "{git} reset -q --{}",
-            list("GITGEL_UNSTAGE", shape.unstage)
-        ));
-    }
-    if shape.paths > 0 {
-        steps.push(format!(
-            "{git} add -A --{}",
-            list("GITGEL_PATH", shape.paths)
-        ));
-    }
     let mut commit = format!("{git} commit");
     if shape.amend {
         commit.push_str(" --amend");
@@ -1930,8 +1990,40 @@ pub(super) fn commit_command(shape: CommitShape) -> String {
     if shape.body {
         commit.push_str(" -m \"$GITGEL_BODY\"");
     }
-    steps.push(commit);
-    steps.join(" && ")
+    commit
+}
+
+/// `git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_STAGE_1" … && git … restore --staged --
+/// "$GITGEL_UNSTAGE_1" …` (`rm --cached -q --` before the first commit), run once more after a
+/// short wait if it fails (another git process held `index.lock`): only fixed text and quoted
+/// variables.
+pub(super) fn stage_command(shape: StageShape) -> String {
+    let git = "git -C \"$GITGEL_FOLDER\"";
+    let list = |name: &str, count: usize| {
+        (1..=count)
+            .map(|j| format!(" \"${name}_{j}\""))
+            .collect::<String>()
+    };
+    let mut steps = Vec::new();
+    if shape.stage > 0 {
+        steps.push(format!(
+            "{git} add -A --{}",
+            list("GITGEL_STAGE", shape.stage)
+        ));
+    }
+    if shape.unstage > 0 {
+        let out = if shape.unborn {
+            "rm --cached -q"
+        } else {
+            "restore --staged"
+        };
+        steps.push(format!(
+            "{git} {out} --{}",
+            list("GITGEL_UNSTAGE", shape.unstage)
+        ));
+    }
+    let once = steps.join(" && ");
+    format!("{{ {once}; }} || {{ sleep 0.5 && {once}; }}")
 }
 
 /// `git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" … && git -C "$GITGEL_FOLDER" rebase
@@ -1953,7 +2045,7 @@ pub(super) fn operation_command(verb: &str, abort: bool, paths: usize) -> String
 }
 
 /// `git -C "$GITGEL_FOLDER_1" restore --source=HEAD --staged --worktree -- "$GITGEL_PATH_1_1" … &&
-/// git -C "$GITGEL_FOLDER_1" clean -f -q -- "$GITGEL_CLEAN_1_1" … && git -C "$GITGEL_FOLDER_2" …`:
+/// git -C "$GITGEL_FOLDER_1" restore --worktree -- "$GITGEL_KEEP_1_1" … && git -C "$GITGEL_FOLDER_1" clean -f -q -- "$GITGEL_CLEAN_1_1" … && git -C "$GITGEL_FOLDER_2" …`:
 /// only fixed text and quoted variables.
 pub(super) fn discard_command(steps: &[DiscardStep]) -> String {
     steps
@@ -1972,6 +2064,12 @@ pub(super) fn discard_command(steps: &[DiscardStep]) -> String {
                 parts.push(format!(
                     "{git} restore --source=HEAD --staged --worktree --{}",
                     list("GITGEL_PATH", step.restore)
+                ));
+            }
+            if step.keep > 0 {
+                parts.push(format!(
+                    "{git} restore --worktree --{}",
+                    list("GITGEL_KEEP", step.keep)
                 ));
             }
             if step.clean > 0 {
@@ -2262,15 +2360,17 @@ mod tests {
     fn discard_commands_hold_no_values() {
         let both = DiscardStep {
             restore: 2,
+            keep: 1,
             clean: 1,
         };
         let untracked = DiscardStep {
             restore: 0,
+            keep: 0,
             clean: 1,
         };
         assert_eq!(
             discard_command(&[both, untracked]),
-            r#"git -C "$GITGEL_FOLDER_1" restore --source=HEAD --staged --worktree -- "$GITGEL_PATH_1_1" "$GITGEL_PATH_1_2" && git -C "$GITGEL_FOLDER_1" clean -f -q -- "$GITGEL_CLEAN_1_1" && git -C "$GITGEL_FOLDER_2" clean -f -q -- "$GITGEL_CLEAN_2_1""#
+            r#"git -C "$GITGEL_FOLDER_1" restore --source=HEAD --staged --worktree -- "$GITGEL_PATH_1_1" "$GITGEL_PATH_1_2" && git -C "$GITGEL_FOLDER_1" restore --worktree -- "$GITGEL_KEEP_1_1" && git -C "$GITGEL_FOLDER_1" clean -f -q -- "$GITGEL_CLEAN_1_1" && git -C "$GITGEL_FOLDER_2" clean -f -q -- "$GITGEL_CLEAN_2_1""#
         );
     }
 
@@ -2288,38 +2388,46 @@ mod tests {
     #[test]
     fn commit_commands_hold_no_values() {
         let plain = CommitShape {
-            paths: 2,
-            unstage: 0,
             body: false,
             no_verify: false,
             amend: false,
         };
         assert_eq!(
             commit_command(plain),
-            r#"git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" "$GITGEL_PATH_2" && git -C "$GITGEL_FOLDER" commit -m "$GITGEL_SUMMARY""#
+            r#"git -C "$GITGEL_FOLDER" commit -m "$GITGEL_SUMMARY""#
         );
         let full = CommitShape {
-            paths: 1,
-            unstage: 1,
             body: true,
             no_verify: true,
-            amend: false,
-        };
-        assert_eq!(
-            commit_command(full),
-            r#"git -C "$GITGEL_FOLDER" reset -q -- "$GITGEL_UNSTAGE_1" && git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" && git -C "$GITGEL_FOLDER" commit --no-verify -m "$GITGEL_SUMMARY" -m "$GITGEL_BODY""#
-        );
-        // Amend with no files: only the message changes.
-        let amend = CommitShape {
-            paths: 0,
-            unstage: 1,
-            body: false,
-            no_verify: false,
             amend: true,
         };
         assert_eq!(
-            commit_command(amend),
-            r#"git -C "$GITGEL_FOLDER" reset -q -- "$GITGEL_UNSTAGE_1" && git -C "$GITGEL_FOLDER" commit --amend -m "$GITGEL_SUMMARY""#
+            commit_command(full),
+            r#"git -C "$GITGEL_FOLDER" commit --amend --no-verify -m "$GITGEL_SUMMARY" -m "$GITGEL_BODY""#
+        );
+    }
+
+    #[test]
+    fn stage_commands_hold_no_values() {
+        let both = StageShape {
+            stage: 2,
+            unstage: 1,
+            unborn: false,
+        };
+        let once = r#"git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_STAGE_1" "$GITGEL_STAGE_2" && git -C "$GITGEL_FOLDER" restore --staged -- "$GITGEL_UNSTAGE_1""#;
+        assert_eq!(
+            stage_command(both),
+            format!("{{ {once}; }} || {{ sleep 0.5 && {once}; }}")
+        );
+        let unborn = StageShape {
+            stage: 0,
+            unstage: 1,
+            unborn: true,
+        };
+        let once = r#"git -C "$GITGEL_FOLDER" rm --cached -q -- "$GITGEL_UNSTAGE_1""#;
+        assert_eq!(
+            stage_command(unborn),
+            format!("{{ {once}; }} || {{ sleep 0.5 && {once}; }}")
         );
     }
 }

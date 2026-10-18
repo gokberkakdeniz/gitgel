@@ -17,6 +17,7 @@ import type {
   FilePair,
   FolderCheck,
   HistoryPage,
+  IndexChanges,
   NewBranchCheckout,
   NewBranchProblem,
   OpenApp,
@@ -31,6 +32,7 @@ import type {
   ScriptRun,
   StashPush,
   StashChanges,
+  StageFiles,
   Settings,
   TerminalOption,
   UpdateCheck,
@@ -239,8 +241,11 @@ export const getDefaultPrompt = (provider: CommitProvider) => invoke<string>('ge
 /** Discard (Hi8, D12): the files go back to HEAD, a copy of each to the Trash first. */
 export const gitDiscard = (entries: DiscardFiles[]) => invoke<ScriptRun>('git_discard', { entries });
 
-/** What git's index has staged in the entry's worktree: Uncommitted's boxes start checked for it. */
-export const getStagedPaths = (entry: EntryRef) => invoke<string[]>('get_staged_paths', { entry });
+/** The entry's uncommitted changes as git's index splits them: History's Staged and Unstaged. */
+export const getIndexChanges = (entry: EntryRef) => invoke<IndexChanges>('get_index_changes', { entry });
+
+/** Stage / Unstage (History's sections): whole files into the index or out of it. */
+export const gitStage = (entry: EntryRef, files: StageFiles) => invoke<ScriptRun>('git_stage', { entry, files });
 
 /** Typed text for a running script. */
 export const writeScriptInput = (runId: string, data: string) => invoke<null>('write_script_input', { runId, data });

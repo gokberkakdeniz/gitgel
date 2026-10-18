@@ -247,10 +247,20 @@ export interface StashPush extends EntryRef {
 /** One entry of a Discard (Hi8, D12, `git_discard`). */
 export interface DiscardFiles extends EntryRef {
   paths: string[]; // relative to the worktree (a rename's old path too)
+  keepIndex: string[]; // of `paths`, the ones whose unstaged part alone goes (back to the index)
+}
+/** A worktree's uncommitted changes as git's index splits them (History's sections, `get_index_changes`). */
+export interface IndexChanges {
+  staged: FileChange[]; // HEAD ↔ index
+  unstaged: FileChange[]; // index ↔ working tree, untracked included
+}
+/** What a Stage changes in the index (`git_stage`): whole files, relative to the worktree. */
+export interface StageFiles {
+  stage: string[];
+  unstage: string[];
 }
 /** What a Commit holds (W1a, `git_commit`). */
 export interface CommitFiles {
-  include: string[]; // the checked files, relative to the worktree (a rename's old path too)
   summary: string;
   description: string;
   noVerify: boolean; // skip the commit hooks (Commit Without Hooks)

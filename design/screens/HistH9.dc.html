@@ -59,7 +59,8 @@ class Component extends DCLogic {
     // History, Uncommitted picked (Hi5). ⌘-click / ⇧-click picks several of its files (tinted; the
     // diff keeps the file it shows); a plain click picks just that one again, esc clears.
     // Right-click on a picked file acts on all picked ones; on any other file, on that file alone
-    // (count one). The menu: Include / Exclude (the boxes, git's index), copy paths, the open items
+    // (count one). The menu: Stage / Unstage Selected Files (whichever the picked files' sections
+    // allow; both when they are in both), copy paths, the open items
     // (D11); Discard first. Texts as GitHub Desktop's. Only Uncommitted's files; a commit's or a stash's keep D11's menu.
     // Discard asks first (a Modal with a ✕, Cancel focused; esc cancels). As GitHub Desktop: a copy
     // of each file's working copy goes to the Trash first, named "<file name> <HH-mm-ss-SSS><ext>"
@@ -73,16 +74,16 @@ class Component extends DCLogic {
     var files = all
       ? [{ name: 'refresh.ts', path: 'src/auth/refresh.ts' }, { name: 'refresh.test.ts', path: 'test/auth/refresh.test.ts' }, { name: 'token-debug.ts', path: 'scripts/token-debug.ts', untracked: true }]
       : two
-      ? [{ name: 'refresh.ts', path: 'src/auth/refresh.ts', stat: '+2 −1' }, { name: 'token-debug.ts', path: 'scripts/token-debug.ts', stat: '+22', untracked: true }]
+      ? [{ name: 'refresh.ts', path: 'src/auth/refresh.ts', stat: '+1', sec: 'u' }, { name: 'token-debug.ts', path: 'scripts/token-debug.ts', stat: '+22', untracked: true, sec: 'u' }]
       : [{ name: 'refresh.test.ts', path: 'test/auth/refresh.test.ts', stat: '+5' }];
     var n = files.length;
     var many = function (one, more) { return n === 1 ? one : more.replace('#', n); };
     var untracked = files.filter(function (f) { return f.untracked; });
     return {
       themeClass: 'theme-' + t, themeName: t,
-      selected: two ? files.map(function (f) { return f.name; }) : [],
+      selected: two ? files.map(function (f) { return f.sec + ':' + f.name; }) : [],
       isMenu: step === 'menu', isConfirm: step === 'confirm',
-      menuPos: 'position: absolute; left: 196px; top: ' + (all ? 130 : two ? 260 : 230) + 'px; z-index: 5',
+      menuPos: 'position: absolute; left: 196px; top: ' + (all ? 130 : two ? 298 : 196) + 'px; z-index: 5',
       menuLabel: all ? 'Uncommitted Changes Actions' : many(files[0].name + ' actions', '# files actions'),
       fileMenu: all ? [
         { label: 'Discard All Changes…', danger: true, active: true },
@@ -99,8 +100,7 @@ class Component extends DCLogic {
       ] : [
         { label: 'Discard ' + n + ' Selected Changes…', danger: true, active: true },
         { kind: 'sep' },
-        { label: 'Include Selected Files', icon: 'check' },
-        { label: 'Exclude Selected Files', icon: 'close' },
+        { label: 'Stage Selected Files', icon: 'plus' },
         { kind: 'sep' },
         { label: 'Copy Paths', icon: 'copy' },
         { label: 'Copy Relative Paths', icon: 'copy' },

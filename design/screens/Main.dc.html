@@ -18,7 +18,7 @@ button,input{font-family:inherit}
 </style>
 </helmet>
 <div class="{{themeClass}}" style="width: 1280px; height: 800px; display: flex; position: relative; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
-<dc-import name="Sidebar" theme="{{themeName}}" active="inbox" inbox-count="{{inboxCount}}" projects="{{sidebarProjects}}" draft="{{draft}}" draft-name="Session auth refresh" repo-hover="{{repoHover}}" hint-size="260px,800px"></dc-import>
+<dc-import name="Sidebar" theme="{{themeName}}" active="inbox" inbox-count="{{inboxCount}}" projects="{{sidebarProjects}}" repo-hover="{{repoHover}}" hint-size="260px,800px"></dc-import>
 
 <main style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
 <dc-import name="PageHeader" subtitle="{{subtitle}}" actions="{{hasRepos}}" scopes="{{scopes}}" page="branches" theme="none" chrome="{{false}}" title="Branches" hint-size="100%,64px"></dc-import>
@@ -185,7 +185,7 @@ Drop folders to add repositories
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;draft&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;newBranch&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;rowMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;worktree&quot;,&quot;notCheckedOut&quot;,&quot;terminalMissing&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scripts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;scriptRun&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;running&quot;,&quot;success&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;newBranch&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;rowMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;worktree&quot;,&quot;notCheckedOut&quot;,&quot;terminalMissing&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scripts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;scriptRun&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;running&quot;,&quot;success&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
     var popover = this.props.popover ?? 'none';
@@ -313,8 +313,7 @@ class Component extends DCLogic {
         { branch: 'button-tokens', base: 'main', wt: null, ahead: 0, files: 0, dirty: 0, age: '5d', state: 'merged into main' }
       ]}
     ];
-    var draft = !!this.props.draft;
-    var sidebarProjects = (popover !== 'none' || draft)
+    var sidebarProjects = popover !== 'none'
       ? [{ name: 'Rate limiting rollout', count: '2' }]
       : added
         ? [{ name: 'Rate limiting rollout', count: '2' }, { name: 'Session auth refresh', count: '1' }]
@@ -346,7 +345,6 @@ class Component extends DCLogic {
     var ico = 'width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: 600; ';
     return {
       themeClass: 'theme-' + (this.props.theme || 'dark'), themeName: this.props.theme || 'dark',
-      draft: draft,
       hasRepos: !empty,
       isEmpty: empty,
       showSheet: !!this.props.sheet,

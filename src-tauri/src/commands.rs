@@ -7,9 +7,9 @@ use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
     BaseOptions, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config, EntryRef,
-    FileChange, FilePair, FolderCheck, HistoryPage, NewBranchCheckout, NewBranchProblem, OpenApp,
-    ProjectConfig, ProjectView, RangeChanges, RemoteInfo, ReviewData, ReviewTarget, ScanResult,
-    ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
+    FileChange, FilePair, FolderCheck, HistoryPage, IndexChanges, NewBranchCheckout,
+    NewBranchProblem, OpenApp, ProjectConfig, ProjectView, RangeChanges, RemoteInfo, ReviewData,
+    ReviewTarget, ScanResult, ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{
@@ -788,7 +788,7 @@ pub async fn check_checkout(
     .await
 }
 
-/// Commit (W1a): the checked files of the entry's worktree, with the message.
+/// Commit (W1a): what is staged in the entry's worktree, with the message.
 #[tauri::command]
 pub async fn git_commit(
     state: State<'_, AppState>,
@@ -856,14 +856,27 @@ pub async fn get_branch_loss(
     .await
 }
 
-/// The paths git's index has staged in the entry's worktree (Uncommitted's boxes start checked).
+/// The entry's uncommitted changes as git's index splits them (History's Staged and Unstaged).
 #[tauri::command]
-pub async fn get_staged_paths(
+pub async fn get_index_changes(
     state: State<'_, AppState>,
     entry: EntryRef,
-) -> Result<Vec<String>, AppError> {
+) -> Result<IndexChanges, AppError> {
     blocking(&state, move |state| {
-        scripts::git::staged_paths(state, &entry)
+        scripts::git::index_changes(state, &entry)
+    })
+    .await
+}
+
+/// Stage / Unstage (History's sections): whole files into git's index or out of it.
+#[tauri::command]
+pub async fn git_stage(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    files: scripts::git::StageFiles,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::stage(state, entry, files)
     })
     .await
 }

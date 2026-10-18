@@ -204,6 +204,7 @@ gitgel/
 │  │            #   file row, stash section, diff view settings, page layout (shared with History, §16)
 │  │            # History/: the History screen, its list rows, the commit form, Switch Branch, AmendModal, CherryPickMenu and SquashModal (§16);
 │  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
+│  │            #   stage.ts: Stage / Unstage's queue and the rows moved before git confirms (§15 "Stage")
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
@@ -1784,9 +1785,10 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `stash_push` | `entries: StashPush[]` (an `EntryRef` with `paths: string[] \| null`, `untracked`), `message: string` | `ScriptRun` (one git action for all entries, §15) |
 | `stash_apply` | `repoId, index, sha, worktreePath, pop: boolean` | `ScriptRun` |
 | `stash_drop` | `repoId, index, sha` | `ScriptRun` |
-| `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`include: string[]`, `summary`, `description`, `noVerify`, `amend`: the newest commit's SHA or null) | `ScriptRun` (§15 "Commit") |
-| `get_staged_paths` | `entry: EntryRef` | `string[]` (paths staged in the entry's worktree) |
-| `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`) | `ScriptRun` (§15 "Discard") |
+| `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`summary`, `description`, `noVerify`, `amend`: the newest commit's SHA or null) | `ScriptRun` (§15 "Commit"; commits what is staged) |
+| `get_index_changes` | `entry: EntryRef` | `IndexChanges` (`staged`: HEAD ↔ index, `unstaged`: index ↔ working tree, untracked included; `FileChange[]` each) |
+| `git_stage` | `entry: EntryRef`, `files: StageFiles` (`stage: string[]`, `unstage: string[]`) | `ScriptRun` (§15 "Stage") |
+| `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`, `keepIndex: string[]`: those of `paths` that go back to the index) | `ScriptRun` (§15 "Discard") |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
 | `git_push` | `entry: EntryRef, force: boolean` | `ScriptRun` |
@@ -2060,7 +2062,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
-| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 818–822, file list 56–133 and 421–464 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 111–117), entry bar and commits 136–162 (commit stepping 144–151, list 152–161), file bar 164–224 (whitespace chip 167–169, view button and menu 171–213 with Context 192–203, change navigation 214–223), split body 226–239, unified body 240–246, base menu 253–273 (sections, Default pair, pills, disabled rows, hint), base menu data per case 670–712 (`baseCase`: stacked / behind / unrelated / remote; effective base 290–291), commit selection 387–400, filter logic 402–412, 423–426, 457 and 586–587, segmented 465–472, context and fold logic 563–576 (sample hidden lines 477–485), view values 733–756 (context 740–755), commit values 758–768, theme and `embedded` values 717–718, filter values 771–782 |
+| Review | `Diff.dc.html` | header 22–49 (traffic lights and show-sidebar hidden when `embedded` 23–32), banners 51–53 and 801–805, file list 56–122 and 410–453 (file filter 57–68, match label 81, commit chip 85–92, highlighted name and folder 101–102, no-match state 100–106), entry bar and commits 125–151 (commit stepping 133–140, list 141–150), file bar 153–213 (whitespace chip 156–158, view button and menu 160–202 with Context 181–192, change navigation 203–212), split body 215–228, unified body 229–235, base menu 242–262 (sections, Default pair, pills, disabled rows, hint), base menu data per case 659–701 (`baseCase`: stacked / behind / unrelated / remote; effective base 279–280), commit selection 376–389, filter logic 391–401, 412–415, 446 and 575–576, segmented 454–461, context and fold logic 552–565 (sample hidden lines 466–474), view values 722–739 (context 729–738), commit values 741–751, theme and `embedded` values 706–707, filter values 754–765 |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Settings | `Settings.dc.html` | section list 30 (data 235–238), Repositories 35–59 (repository `List` 38, items 300–304; Default base `List` 44 with rows, actions and add states 239–266 and 305–312; Active threshold 50–53, Check Out New Branches In 54–57), General 61–91 (Language 63–69; Terminal 72–84, options with disabled flag 311; Check for updates 87–89), Appearance: Theme 95–114, tile builder 253; Formatting 116–134 with Date/Time/Number Format selects and the absolute-dates checkbox; Diff 135–141 with Tab size, Scripts 143–161 (`List` 121, items 313–318), Prompts 127–134 (data 290), Shortcuts after it, shortcut data and keycap style after the section data. Flow M (canvas): M1–M3 one per section (General, Repositories, Shortcuts), M4 default base hover + adding, M5 rejected name, M6 Prompts (`FlowM6` mounts `Settings` with `section` prompts), M7 Appearance, M8 AI (`FlowM7`, `FlowM8`, the same way) |
@@ -2073,7 +2075,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `FlowD11` (`menu` sync), `HistH2` (page menu) |
 | Operations in progress | `FlowT1`–`FlowT4.dc.html` | canvas page "Branch actions", row T: T1 Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase), T2 Review with two one-line operation banners (danger with conflicts, warning once resolved; Abort / Continue), the group pills in place of the upstream state and the ⚠ / ✓ file marks, T3 the Abort confirmation (`FlowT3` mounts `FlowT2`), T4 History's banner without the names (`FlowT4` mounts `HistH6` with `operation`: the banner, ⚠ / ✓ on Uncommitted's files, the markers in the diff) |
 | File menu | `FlowD11.dc.html` | canvas page "Review & History", D11: Review with a file row right-clicked (hovered row 71–77, menus 184–186, data 196–209; `menu` file / diff / sync): Open in Finder / Cursor / VS Code at the pointer |
-| Discard | `HistH9`, `FlowD12.dc.html` | canvas page "Review & History": Hi8 (`HistH9` mounts `HistH6` with `selected`) History's Uncommitted with files picked, their menu (23–25, data 87–111; `count` two / one / all: the Uncommitted row's menu) and Confirm Discard Changes (26–49, data 112–116); D12 (`FlowD12` mounts `Diff` with `selected`) the same in a project review, the dialog's files under their entry (data 87–96) |
+| Discard | `HistH9`, `FlowD12.dc.html` | canvas page "Review & History": Hi8 (`HistH9` mounts `HistH6` with `selected`) History's Uncommitted with files picked, their menu (23–25, data 88–111; `count` two / one / all: the Uncommitted row's menu) and Confirm Discard Changes (26–49, data 112–116); D12 (`FlowD12` mounts `Diff` with `selected`) the same in a project review, the dialog's files under their entry (data 87–96) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `Diff` with `embedded` (width 1020, file list 280, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `Diff.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings (Appearance). Projects and Palette still use hex; theme them with the same mapping |
 
@@ -2559,7 +2561,8 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
 ### Discard
 
 Uncommitted files go back to HEAD, as GitHub Desktop's Discard Changes; its texts are used word
-for word (§0). Canvas boards `HistH9` (Hi8, History) and `FlowD12` (D12, Review).
+for word (§0). A file picked only from History's Unstaged section goes back to what is staged
+instead: only its changes since then go. Canvas boards `HistH9` (Hi8, History) and `FlowD12` (D12, Review).
 
 - **Picking files** (Review's Uncommitted layer, branch or project, and History's Uncommitted):
   ⌘-click adds a file to the picked ones or takes it out (the first one starts from the file
@@ -2571,8 +2574,9 @@ for word (§0). Canvas boards `HistH9` (Hi8, History) and `FlowD12` (D12, Review
 - **File menu** (right-click an Uncommitted file; deleted files too): on a picked file it acts on
   every picked one, on any other file on that file alone. A 230px menu: danger "Discard
   Changes…" (several: "Discard N Selected Changes…"); in History with several files, a divider
-  and "Include Selected Files" (`check`) / "Exclude Selected Files" (`close`), which check or
-  uncheck their commit boxes; a divider, "Copy File Path" (the absolute path; several: "Copy
+  and "Stage Selected Files" (`plus`, when some are in Unstaged) / "Unstage Selected Files"
+  (`remove`, when some are in Staged), left out while a commit or a stage runs (§15 "Stage"); a
+  divider, "Copy File Path" (the absolute path; several: "Copy
   Paths", one per line) and "Copy Relative File Path" ("Copy Relative Paths"), `copy` icons;
   then a divider and the open items of §5 Review "File rows" for the files on disk (several open
   one after another). Each file is read from its own entry's worktree, so picks across repos
@@ -2604,43 +2608,67 @@ for word (§0). Canvas boards `HistH9` (Hi8, History) and `FlowD12` (D12, Review
   `“Discard changes” could not start` with "Could not put a copy of <name> in the Trash, so
   nothing was discarded. …". Then, in each entry's worktree one after another: `git -C
   "$GITGEL_FOLDER_n" restore --source=HEAD --staged --worktree -- <paths git knows>` (in the
-  index or HEAD; staged and unstaged changes alike, a staged new file removed) `&& git … clean -f
-  -q -- <untracked paths>` (`worktrees::tracked` decides), with `GIT_LITERAL_PATHSPECS=1`; a
+  index or HEAD; staged and unstaged changes alike, a staged new file removed) `&& git … restore
+  --worktree -- <keepIndex paths in the index>` (History's Unstaged rows: back to the staged
+  version, `worktrees::in_index` decides) `&& git … clean -f -q -- <untracked paths>`
+  (`worktrees::tracked` decides), with `GIT_LITERAL_PATHSPECS=1`; a
   rename sends its old path too. Only the working copy goes to the Trash: a staged version that
   differs from it is not kept.
+
+### Stage
+
+History's Uncommitted sections (Hi5, §16) are git's index: "+" on an Unstaged row (or Stage all,
+Stage Selected Files) stages the file whole, "−" on a Staged row unstages it whole. Staging a
+file after reviewing it marks it as reviewed: when it changes again (an agent keeps editing) it
+is in Unstaged too, and that row's diff shows only the changes since. A git action (`git_stage`,
+script id `git:stage`, name "Stage" / "Unstage", no toasts of its own): `{ git -C "$GITGEL_FOLDER"
+add -A -- <stage paths> && git … restore --staged -- <unstage paths>; } || { sleep 0.5 && …; }`
+(`rm --cached -q --` before the first commit; a rename's old path too), the paths in
+`GITGEL_STAGE_n` / `GITGEL_UNSTAGE_n` with `GIT_LITERAL_PATHSPECS=1`; run once more after half a
+second when it fails, as another git process may hold `index.lock`. Refused before running: no
+path, a path outside the worktree, an entry that is not checked out, another git action in the
+repository.
+
+- **Queue** (`screens/History/stage.ts`): a click moves the row to its section at once (the file
+  whole: against HEAD, a new file untracked again when unstaged); its command waits 150ms for
+  more clicks and runs with them as one, one at a time per repository; moving a file back where
+  it was before the command ran sends nothing for it. While the repository's queue has clicks
+  waiting or a command running, the Commit button is off (tooltip "Staging…"). Once the commands
+  ended the index is read again (`get_index_changes`) and shown as git has it.
+- **Failed**: the rows go back and a failed toast says “Couldn't stage <file>” (“Couldn't stage
+  N files”, “Couldn't unstage …”) with the last output line and "Show Output", which opens the
+  run's output panel.
 
 ### Commit
 
 Commit (W1a, in History, §16) is a git action too: name "Commit", `package` icon, script id
 `git:commit`, run in the entry's worktree, so the user's hooks (husky, lefthook,
 `core.hooksPath`) see it as they would in a terminal. The command is built in `commit_command`:
-`git reset -q -- <staged but unchecked> && git add -A -- <checked> && git commit [--no-verify] -m
-<summary> [-m <description>]`, the paths and message in `GITGEL_*` variables with
-`GIT_LITERAL_PATHSPECS=1`. So the index ends up as the boxes say: checked files go in whole (new,
-changed, deleted; a rename's old path too), staged files left unchecked are unstaged and stay
-changed. Refused before running: an empty summary, no file, an entry that is not checked out, another
-git action in the repository. An Amend (§16, Hi10) is the same run with `--amend` after `commit`
-(name "Amend", no `add` when no file is checked) and the newest commit's SHA: it is refused when
-the worktree's HEAD is another commit by then.
+`git commit [--no-verify] -m <summary> [-m <description>]`, the message in `GITGEL_*` variables:
+it commits what is staged (§15 "Stage"), so changes made after a file was staged stay out.
+Refused before running: an empty summary, nothing staged, an entry that is not checked out,
+another git action in the repository. An Amend (§16, Hi10) is the same run with `--amend` after
+`commit` (name "Amend"; nothing staged changes only the message) and the newest commit's SHA: it
+is refused when the worktree's HEAD is another commit by then.
 
 - **Running** (`HistH7`): the run toast “Committing…” (sub `repo / branch`); a click opens the
   output panel with the hooks' output.
 - **Failed** (`HistH8`): the output panel opens by itself. Its footer, besides Close and Copy, has
   the buttons "Commit without hooks"
-  (the same commit with `--no-verify`) and "Retry" (primary, ⌘↵), which send the same files and
-  message again. Stopping the run does not open it.
-- **Generate message**: `generate_message_start` (`entry`, the checked `include`
+  (the same commit with `--no-verify`) and "Retry" (primary, ⌘↵), which send the same message
+  again. Stopping the run does not open it.
+- **Generate message**: `generate_message_start` (`entry`, the staged `include`
   paths, `provider`: opencode, claude, cursor, antigravity, codex or foundation, `amend`: the SHA of
   the HEAD commit being amended, or null; `squash`: Squash's commits, newest first, or null) asks that agent CLI for a
-  commit message for the checked files (while amending, for what the amended commit will hold:
-  the commit's changes against its parent, the checked files as they are on disk; no checked
-  file is needed then; for Squash, the newest commit's tree against the oldest one's parent, no
-  checked file either), as a run (`ai:generate`, `sparkles` icon) in the entry's
+  commit message for the staged files (HEAD ↔ index; while amending, for what the amended commit
+  will hold: the commit's changes against its parent, the staged files as staged; nothing staged
+  is needed then; for Squash, the newest commit's tree against the oldest one's parent, nothing
+  staged either), as a run (`ai:generate`, `sparkles` icon) in the entry's
   worktree: a running toast ("Generating a commit message with <provider>…") that opens its output
-  panel on click, stoppable there. The prompt is built from git2 reads only: the checked
+  panel on click, stoppable there. The prompt is built from git2 reads only: the staged
   files' patch (at most ~12k characters: past it, documentation and lock files go last and each
   file is cut to an equal share of at least 600) and up to 15 recent subjects from the branch, those
-  touching the checked files first (while amending, from below the amended commit; for Squash,
+  touching the staged files first (while amending, from below the amended commit; for Squash,
   from below the oldest commit, those touching its changed files first). The CLI's fixed command carries the prompt in
   `GITGEL_PROMPT`; it never writes to the repository (codex and Antigravity run sandboxed,
   Claude denies anything that would prompt, opencode runs its read-only `plan` agent
@@ -2998,12 +3026,11 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     file, as on Branches; left out when unknown), after `N conflicts · ` when some are unmerged;
     no file count. With "Commit rows: One line" it is one line too, padding 4px 8px: the dot and
     the title (and its pill), no age; only `N conflicts` on the right when some are unmerged.
-    Picking it lists its files under it
-    and shows HEAD ↔ working tree (untracked files included), as Review's Uncommitted layer. Its
-    files have a `Checkbox` before them (the commit form below); after a failed commit the row
+    Picking it lists its files under it in two sections, Staged and Unstaged (the commit form
+    below; "Sections" under "Commit form"); after a failed commit the row
     carries a danger sm pill "commit failed" after the title (`HistH8`). Right-click on the row:
     Discard All Changes… / Stash All Changes…; its files can be picked with ⌘ / ⇧-click and
-    discarded, included or copied from their right-click menu (§15 "Discard", `HistH9`, Hi8).
+    discarded, staged or copied from their right-click menu (§15 "Discard", `HistH9`, Hi8).
   - **Day labels**: 11px `text.faint`, padding 10px 8px 4px: "Today", "Yesterday", else `Oct 2`
     (this year) or `Oct 2, 2025`, by committer time.
   - **Commit row** (`role="option"`, tooltip "Show this commit"): padding 7px 8px, radius 8, gap
@@ -3045,7 +3072,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   column (the files column with "Layout: Columns"), under the stashes, while Uncommitted is picked. Padding 12, gap 8, top border `border`,
   `bg.sidebar`: a 32px `Input` "Summary (required)", a 56px description textarea (12px, no resize),
   and a full-width primary 32px button "Commit N files" (tooltip `Commit to <rev>`; disabled with
-  no summary, no file checked, or merge conflicts, each saying why in the tooltip). ⌘↵ in either
+  no summary, nothing staged, merge conflicts, or a stage running, each saying why in the tooltip). ⌘↵ in either
   field commits. While the commit runs (hooks included) the form is locked and the button reads
   "Committing…" with a spinner. Each branch keeps its form (summary, description, amending)
   while the app runs: leaving History or picking another branch and coming back finds it as it
@@ -3053,19 +3080,26 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
   - **Generate message**: a 24px `sparkles` (✦) icon button at the end of the summary field
     (tooltip `Generate commit message with <provider>`, the default: the topmost switched-on
     and installed provider in menu order) that fills the summary and description, which stay
-    editable. It needs a checked file, or an amend. Right-click on it opens its menu (the switched-on providers in menu order;
+    editable. It needs a staged file, or an amend. Right-click on it opens its menu (the switched-on providers in menu order;
     switched off or missing ones are not listed at all); picking one generates with it at
     once, leaving the default alone. With no provider to list it is hidden. While it runs
     the ✦ is a spinner, and a running toast opens the generation's output panel on click, so a slow
     provider can be watched (and stopped); a failure shows a failed toast and leaves the form
     alone.
-  - **Boxes:** a file row's `Checkbox` includes it. Above the files a 28px row has a `Checkbox` (mixed
-    when some are checked) labelled "Select all", or "Unselect all" when every file is checked. They start as git's index has them (files staged
-    outside Gitgel are checked, `get_staged_paths`); with nothing staged every tracked file is
-    checked and untracked ones are not. A click is kept until the commit lands or the branch
-    changes. A file partly staged outside counts as one box and is staged whole.
+  - **Sections** (`HistH6`, Hi5; §15 "Stage"): the files in two sections, as git's index has
+    them: "Staged" (HEAD ↔ index) and "Unstaged" (index ↔ working tree, untracked included). A
+    file staged and changed again is in both; a conflicted one is in Unstaged only, against HEAD.
+    Each section starts with a 26px row (padding-top 6, left as the file rows): 11px/500
+    uppercase muted label with letter-spacing 0.06em, its mono `text.faint` count, and on the
+    right a link button "Unstage all" / "Stage all" (when it has files). A file row ends in a
+    20px button (1px `border.strong`, radius 6, `bg.elevated`, mono 12): "−" in Staged (tooltip
+    `Unstage <file>`), "+" in Unstaged (`Stage <file>`), shown on the row's hover, on the row
+    shown in the diff and on keyboard focus; off while a commit runs. The diff of a Staged row is
+    HEAD ↔ index (file bar `HEAD ↔ index`), of an Unstaged one index ↔ working tree (`index ↔
+    working tree`): a file staged and changed again shows only what changed since. A file shown
+    that moves to the other section stays shown there.
   - **After it ends:** success empties the form and shows the toast “Committed to <rev>”. A failure
-    (a hook exited non-zero, or git refused) keeps the message and the boxes, opens the output
+    (a hook exited non-zero, or git refused) keeps the message and the index, opens the output
     panel, and puts the pill on the Uncommitted row, until the next commit starts.
   - **Amend** (`HistH11`, Hi10; GitHub Desktop's flow and texts): "Amend Commit…" on the newest
     commit. When that commit is on the remote already (the upstream has no commits to push), it
@@ -3081,8 +3115,8 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     "Your changes will modify your **most recent commit**. <u>Stop amending</u> to make these
     changes as a new commit." (bold `text.strong`; the link `accent.text`, underlined). Stop
     amending puts the earlier text back. The button reads "Amend Last Commit" (tooltip `Amend
-    <sha> on <rev>`; "Amending…" while it runs) and needs a summary but no file: the checked
-    files go into the commit, none changes only the message. Success empties the form and ends
+    <sha> on <rev>`; "Amending…" while it runs) and needs a summary but nothing staged: what is
+    staged goes into the commit, nothing staged changes only the message. Success empties the form and ends
     amend mode (toast “Amended the last commit of <rev>”); a commit on the remote leaves the
     branch diverged, so the diverged banner offers Force Push. If the branch gets a new commit
     meanwhile, amend mode ends by itself.
@@ -3092,7 +3126,7 @@ Canvas page "Review & History", boards `HistH1`, `HistH2`, `HistH4`, `HistH6`, `
     in progress; left out otherwise. Runs `git reset -q --soft "$GITGEL_PARENT"` in the worktree
     as a git action (script id `git:undo-commit`, name "Undo Commit", `undo` icon, toast
     “Undoing commit…”, then “Undid commit <sha>”): the commit goes, its changes stay staged, so
-    Uncommitted lists them checked. When the form is empty, the commit's summary and description
+    Uncommitted lists them under Staged. When the form is empty, the commit's summary and description
     come back into it. Refused before running: HEAD is another commit by then, a root or merge
     commit, a commit on the remote, an operation in progress, another git action in the repository.
   - **Revert Changes** (`HistH11`, `HistH12`; GitHub Desktop's Revert Changes in Commit, shortened): on any commit

@@ -11,7 +11,6 @@ import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
-import { Checkbox } from '../../components/Checkbox';
 import { startGitAction, useRuns } from '../../scripts/runs';
 import { providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
@@ -26,9 +25,9 @@ import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { ageText, ageTitle, cnt, formatCount, rowAgeText } from '../../lib/format';
 import { t } from '../../i18n';
-import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getRemoteUrl, getReview, getStagedPaths, getStashChanges, generateMessageStart, gitCommit, gitRevert, gitSquash, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
+import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getIndexChanges, getRemoteUrl, getReview, getStashChanges, generateMessageStart, gitCommit, gitRevert, gitSquash, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
 import { isTextField } from '../../lib/shortcuts';
-import { tildifyHome } from '../../lib/paths';
+import { basename, tildifyHome } from '../../lib/paths';
 import type { AiStatus, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, StashChanges } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -48,6 +47,7 @@ import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
 import { CommitForm } from './CommitForm';
 import { generateMessage } from './generate';
 import { SquashModal } from './SquashModal';
+import { requestStage, useStage, withMoves, type StageOp, type StageTo } from './stage';
 import { SwitchBranchDialog } from './SwitchBranch';
 import { historyRows, initials, isBot, whenLabel, type HistoryRow } from './rows';
 
@@ -112,21 +112,47 @@ export function History({ repoId, rev, backLabel }: Props) {
   );
   const wipFiles = wipReview?.groups[0]?.files.uncommitted ?? [];
 
-  // Commit (W1a): Uncommitted's files have boxes; the checked ones go into the commit. They start
-  // as git's index has them (staged files checked), else every tracked file.
+  // Commit (W1a): Uncommitted's files in Staged (HEAD ↔ index) and Unstaged (index ↔ working
+  // tree), git's index as it is; + / − stage and unstage at once (stage.ts), and the commit takes
+  // what is staged.
   const entryRef: EntryRef | null = entry
     ? { repoId, branch: entry.branch, worktreePath: entry.branch === null ? entry.worktreePath : null }
     : null;
-  const { data: staged } = useInvoke(() => getStagedPaths(entryRef!), [repoId, entry?.key], {
+  const entryKey = entry?.key ?? '';
+  const stageDone = useStage((s) => s.done[entryKey] ?? 0);
+  const { data: indexRead } = useInvoke(() => getIndexChanges(entryRef!), [repoId, entry?.key, stageDone], {
     repoIds: [repoId],
     enabled: wip && !!entryRef,
   });
-  const [boxes, setBoxes] = useState<Record<string, boolean>>({});
-  useEffect(() => setBoxes({}), [repoId, rev]);
-  const checked = (f: FileChange): boolean => {
-    if (f.path in boxes) return boxes[f.path];
-    if (staged && staged.length > 0) return staged.includes(f.path) || (!!f.oldPath && staged.includes(f.oldPath));
-    return f.kind !== 'U';
+  const moves = useStage((s) => s.over[entryKey]);
+  const staging = useStage((s) => !!s.busy[repoId]);
+  // The index read again with nothing in flight: the moves are in it now.
+  useEffect(() => {
+    if (indexRead && !useStage.getState().busy[repoId]) useStage.getState().settle(entryKey);
+  }, [indexRead, repoId, entryKey]);
+  const index = useMemo(
+    () => (indexRead ? withMoves(indexRead, wipFiles, moves) : null),
+    [indexRead, wipFiles, moves],
+  );
+  const staged = index?.staged ?? [];
+  const unstaged = index?.unstaged ?? [];
+  const stagePaths = (f: FileChange) => (f.oldPath ? [f.path, f.oldPath] : [f.path]);
+  /** Moves files into Staged or out of it, whole. */
+  const stageFiles = (list: FileChange[], to: StageTo) => {
+    if (!entry || !entryRef) return;
+    const where = (path: string): StageOp['from'] => {
+      const s = staged.some((f) => f.path === path);
+      const u = unstaged.some((f) => f.path === path);
+      return s && u ? 'both' : s ? 'staged' : 'unstaged';
+    };
+    const seen = new Set<string>();
+    const ops: StageOp[] = list
+      .filter((f) => !seen.has(f.path) && !!seen.add(f.path))
+      .map((f) => ({ path: f.path, paths: stagePaths(f), to, from: where(f.path) }));
+    requestStage(
+      { entry: entryRef, entryKey: entry.key, repoId, label: `${repoName} / ${entry.branch ?? entry.shortSha ?? ''}` },
+      ops,
+    );
   };
   // The form is kept per branch in the store, so leaving History and coming back keeps it.
   const draftKey = commitDraftKey(repoId, rev);
@@ -181,7 +207,7 @@ export function History({ repoId, rev, backLabel }: Props) {
   );
   const commitFailed =
     !!lastCommit && lastCommit.status === 'exited' && lastCommit.exitCode !== 0 && !lastCommit.stopped;
-  const included = wip ? wipFiles.filter(checked) : [];
+  const included = wip ? staged : [];
   const commitNow = (files: CommitFiles) => {
     if (!entryRef) return;
     // Retry and Commit Without Hooks send the same files and message again.
@@ -197,10 +223,7 @@ export function History({ repoId, rev, backLabel }: Props) {
         const ended = () => {
           const r = useRuns.getState().runs[runId];
           if (!r || r.status === 'running') return false;
-          if (r.status === 'exited' && r.exitCode === 0) {
-            setDraft(EMPTY_COMMIT_DRAFT, key);
-            setBoxes({});
-          }
+          if (r.status === 'exited' && r.exitCode === 0) setDraft(EMPTY_COMMIT_DRAFT, key);
           return true;
         };
         if (ended()) return;
@@ -214,7 +237,6 @@ export function History({ repoId, rev, backLabel }: Props) {
   };
   const commitChecked = () =>
     commitNow({
-      include: included.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path])),
       summary,
       description,
       noVerify: false,
@@ -296,7 +318,7 @@ export function History({ repoId, rev, backLabel }: Props) {
       () =>
         generateMessageStart(
           entryRef,
-          included.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path])),
+          included.flatMap(stagePaths),
           active,
           amending?.sha ?? null,
         ),
@@ -391,37 +413,66 @@ export function History({ repoId, rev, backLabel }: Props) {
 
   // The single row shown is Uncommitted.
   const wipShown = current === WIP && !isMulti;
+  // Uncommitted's rows: Staged then Unstaged; a file staged and changed again is in both, so a
+  // row's id is `s:` / `u:` and its path.
+  const wipRows: WipRow[] = wipShown
+    ? [
+        ...staged.map((f) => ({ id: `s:${f.path}`, file: f, sec: 's' as const })),
+        ...unstaged.map((f) => ({ id: `u:${f.path}`, file: f, sec: 'u' as const })),
+      ]
+    : [];
   const files: FileChange[] = isMulti
     ? (spanned?.files ?? [])
     : current === WIP
-      ? wipFiles
+      ? wipRows.map((r) => r.file)
       : stash
         ? (stashChanges?.files ?? [])
         : (commitChanges?.files ?? []);
+  const fileIds = wipShown ? wipRows.map((r) => r.id) : files.map((f) => f.path);
   // The row the files are listed under: the picked one, or the oldest of several.
   const filesAt = isMulti ? oldest : current;
 
-  // The file shown: the one picked while the row lists it, else its first.
+  // The file shown (a row id in Uncommitted, else its path): the one picked while the row lists
+  // it, else the same file in the other section (it moved there), else the first.
   const [path, setPath] = useState<string | null>(null);
-  const file = files.find((f) => f.path === path) ?? files[0];
+  const moved = path && wipShown ? fileIds.indexOf(`${path.startsWith('s:') ? 'u' : 's'}:${path.slice(2)}`) : -1;
+  const fileIndex = path && fileIds.includes(path) ? fileIds.indexOf(path) : moved >= 0 ? moved : files.length > 0 ? 0 : -1;
+  const file = fileIndex >= 0 ? files[fileIndex] : undefined;
+  const fileId = fileIndex >= 0 ? fileIds[fileIndex] : null;
+  const wipRow = wipShown && fileIndex >= 0 ? wipRows[fileIndex] : undefined;
   // Several of Uncommitted's files picked with ⌘ / ⇧-click (Hi8): their right-click menu acts on
   // all of them.
   const picks = usePicks(
-    wipShown ? wipFiles.map((f) => f.path) : [],
-    file?.path ?? null,
+    wipShown ? fileIds : [],
+    fileId,
     `${repoId}\u0000${rev}\u0000${current}\u0000${isMulti}`,
   );
-  const discard = (list: FileChange[], all = false) => {
-    if (entry) askDiscard({ targets: [targetOf(entry, list)], all });
+  /** Discards rows: a Staged row's file goes back to HEAD, an Unstaged row's to what is staged. */
+  const discard = (rows: WipRow[], all = false) => {
+    if (!entry) return;
+    const head = new Set(rows.filter((r) => r.sec === 's').map((r) => r.file.path));
+    const seen = new Set<string>();
+    const list = rows.map((r) => r.file).filter((f) => !seen.has(f.path) && !!seen.add(f.path));
+    const keep = list.filter((f) => !head.has(f.path) && staged.some((x) => x.path === f.path)).map((f) => f.path);
+    askDiscard({ targets: [targetOf(entry, list, keep)], all });
   };
-  const wipActions = (f: FileChange): FileActions => {
-    const list = wipFiles.filter((x) => picks.targets(f.path).includes(x.path));
+  const wipActions = (row: WipRow): FileActions => {
+    const ids = picks.targets(row.id);
+    const rows = wipRows.filter((x) => ids.includes(x.id));
+    const seen = new Set<string>();
+    const shown = rows.filter((r) => !seen.has(r.file.path) && !!seen.add(r.file.path));
+    const toStage = rows.filter((r) => r.sec === 'u').map((r) => r.file);
+    const toUnstage = rows.filter((r) => r.sec === 's').map((r) => r.file);
+    const off = committing || staging;
     return {
-      files: list.map((x) => ({ file: x, folder })),
-      onDiscard: () => discard(list),
-      onInclude: staged
-        ? (on) => setBoxes((b) => ({ ...b, ...Object.fromEntries(list.map((x) => [x.path, on])) }))
-        : undefined,
+      files: shown.map((x) => ({ file: x.file, folder })),
+      onDiscard: () => discard(rows),
+      onStage: off
+        ? undefined
+        : {
+            stage: toStage.length > 0 ? () => stageFiles(toStage, 'staged') : undefined,
+            unstage: toUnstage.length > 0 ? () => stageFiles(toUnstage, 'unstaged') : undefined,
+          },
     };
   };
   // The Uncommitted row's right-click menu: Discard All Changes, Stash All Changes.
@@ -543,8 +594,6 @@ export function History({ repoId, rev, backLabel }: Props) {
   stepRowRef.current = stepRow;
 
   // Changes inside the row's files (Review's change navigation).
-  const fileIds = files.map((f) => f.path);
-  const fileIndex = file ? fileIds.indexOf(file.path) : -1;
   const [nav, setNav] = useState<NavInfo>({ index: null, count: 0 });
   const diffNav = useRef<DiffNav | null>(null);
   const step = (dir: 1 | -1) => {
@@ -665,27 +714,27 @@ export function History({ repoId, rev, backLabel }: Props) {
   // The picked row's files: under it in the list (tree), or in the files column (columns).
   const fileList = (
     <FileList
-      files={files}
-      file={file?.path}
+      rows={wipShown ? wipRows : files.map((f) => ({ id: f.path, file: f }))}
+      file={fileId ?? undefined}
       folder={folder}
       flat={columns}
-      check={
-        wipShown && staged
+      stage={
+        wipShown && index
           ? {
-              on: checked,
               disabled: committing,
-              onChange: (f, on) => setBoxes((b) => ({ ...b, [f.path]: on })),
-              onAll: (on) => setBoxes(Object.fromEntries(wipFiles.map((f) => [f.path, on]))),
+              counts: { s: staged.length, u: unstaged.length },
+              onRow: (r) => stageFiles([r.file], r.sec === 's' ? 'unstaged' : 'staged'),
+              onAll: (sec) => (sec === 's' ? stageFiles(staged, 'unstaged') : stageFiles(unstaged, 'staged')),
             }
           : undefined
       }
-      onFile={(p) => {
-        setPath(p);
+      onFile={(id) => {
+        setPath(id);
         setLand('first');
       }}
       picks={wipShown ? picks : undefined}
-      actions={wipShown ? wipActions : undefined}
-      conflict={current === WIP && !isMulti && entry ? (f) => conflictOf(entry, f) : undefined}
+      actions={wipShown ? (r) => wipActions(r as WipRow) : undefined}
+      conflict={wipShown && entry ? (f) => conflictOf(entry, f) : undefined}
     />
   );
   const commitForm = ((wipShown && wip) || amending) && (
@@ -697,11 +746,13 @@ export function History({ repoId, rev, backLabel }: Props) {
       amend={amending?.short ?? null}
       committing={committing}
       blocked={
-        wip && !staged
+        wip && !index
           ? t('history.readingIndex')
           : (entry?.conflicts ?? 0) > 0
             ? t('history.resolveFirst')
-            : null
+            : staging
+              ? t('history.staging')
+              : null
       }
       provider={provider}
       providers={menuProviders}
@@ -802,7 +853,10 @@ export function History({ repoId, rev, backLabel }: Props) {
               disabled={wipFiles.length === 0}
               onSelect={() => {
                 setWipMenu(null);
-                discard(wipFiles, true);
+                discard(
+                  wipFiles.map((f) => ({ id: f.path, file: f, sec: 's' })),
+                  true,
+                );
               }}
             >
               {t('history.discardAll')}
@@ -1055,9 +1109,9 @@ export function History({ repoId, rev, backLabel }: Props) {
               {/* The count and totals, here instead of in the header over the diff. */}
               {(wipShown || commitChanges || stashChanges || spanned) && (
                 <div className={styles.filesHead}>
-                  <span>{t('branches.fileCount', { ...cnt(files.length) })}</span>
+                  <span>{t('branches.fileCount', { ...cnt((wipShown ? wipFiles : files).length) })}</span>
                   <span className={parts.grow} />
-                  <DiffStat {...totals(files)} />
+                  <DiffStat {...totals(wipShown ? wipFiles : files)} />
                 </div>
               )}
               <div role="group" aria-label={t('history.filesList')} className={styles.filesList}>
@@ -1102,7 +1156,9 @@ export function History({ repoId, rev, backLabel }: Props) {
                   isMulti
                     ? `${spanned?.parent?.slice(0, 7) ?? t('review.emptyTree')} ↔ ${newest ? newest.slice(0, 7) : t('history.workingTree')}`
                     : current === WIP
-                    ? t('review.headToTree')
+                    ? wipRow?.sec === 's'
+                      ? t('history.headToIndex')
+                      : t('history.indexToTree')
                     : stash
                       ? `${stashBase.slice(0, 7)} ↔ stash@{${stash.index}}`
                       : `${commitChanges?.parent?.slice(0, 7) ?? t('review.emptyTree')} ↔ ${commit?.shortSha}`
@@ -1121,7 +1177,7 @@ export function History({ repoId, rev, backLabel }: Props) {
                 parent={isMulti ? (spanned?.parent ?? null) : (commitChanges?.parent ?? null)}
                 change={file}
                 mode={wipShown ? 'uncommitted' : withWip ? 'all' : 'committed'}
-                fileKey={`${isMulti ? selected.join(',') : current}\u0000${file.path}`}
+                fileKey={`${isMulti ? selected.join(',') : current}\u0000${fileId}`}
                 land={land}
                 onNav={setNav}
                 onStep={(dir) => stepRef.current(dir)}
@@ -1348,68 +1404,101 @@ function ListRow({
   }
 }
 
+/** A row of the files list: a file (Uncommitted's with its section, `s` / `u`). */
+interface ListedFile {
+  id: string;
+  file: FileChange;
+  sec?: 's' | 'u';
+}
+type WipRow = Required<ListedFile>;
+
 function FileList({
-  files,
+  rows,
   file,
   folder,
   flat,
-  check,
+  stage,
   onFile,
   picks,
   actions,
   conflict,
 }: {
-  files: FileChange[];
+  rows: ListedFile[];
+  /** The id of the row shown. */
   file: string | undefined;
   /** Where the files' right-click menu opens them from. */
   folder: string | null;
   /** In the files column: not indented under a row. */
   flat: boolean;
-  /** Uncommitted's boxes (W1a), when it is picked. */
-  check?: {
-    on: (f: FileChange) => boolean;
+  /** Uncommitted's sections (Hi5), when it is picked: Staged and Unstaged, + / − per row. */
+  stage?: {
     disabled: boolean;
-    onChange: (f: FileChange, on: boolean) => void;
-    /** Check or uncheck every file. */
-    onAll: (on: boolean) => void;
+    counts: { s: number; u: number };
+    onRow: (row: WipRow) => void;
+    onAll: (sec: 's' | 'u') => void;
   };
-  onFile: (path: string) => void;
+  onFile: (id: string) => void;
   /** Uncommitted's files picked with ⌘ / ⇧-click (Hi8). */
-  picks?: { isPicked: (path: string) => boolean; click: (path: string, e: React.MouseEvent, open: () => void) => void };
+  picks?: { isPicked: (id: string) => boolean; click: (id: string, e: React.MouseEvent, open: () => void) => void };
   /** Uncommitted's file menu. */
-  actions?: (f: FileChange) => FileActions;
+  actions?: (row: ListedFile) => FileActions;
   /** Uncommitted's conflicted files of an operation in progress: ⚠ / ✓ (T4). */
   conflict?: (f: FileChange) => 'unresolved' | 'resolved' | undefined;
 }) {
+  const section = (sec: 's' | 'u') =>
+    stage && (
+      <div key={sec} className={parts.section}>
+        <span className={parts.sectionLabel}>
+          {t(sec === 's' ? 'history.staged' : 'history.unstaged')}
+          <span className={parts.sectionCount}>{formatCount(stage.counts[sec])}</span>
+        </span>
+        {stage.counts[sec] > 0 && (
+          <button
+            type="button"
+            className={parts.linkButton}
+            disabled={stage.disabled}
+            onClick={() => stage.onAll(sec)}
+          >
+            {t(sec === 's' ? 'history.unstageAll' : 'history.stageAll')}
+          </button>
+        )}
+      </div>
+    );
+  const row = (r: ListedFile) => (
+    <FileRow
+      key={r.id}
+      file={r.file}
+      folder={folder}
+      terms={[]}
+      on={r.id === file}
+      picked={picks?.isPicked(r.id)}
+      onClick={(e) => (picks ? picks.click(r.id, e, () => onFile(r.id)) : onFile(r.id))}
+      actions={actions?.(r)}
+      conflict={conflict?.(r.file)}
+      stage={
+        stage && r.sec
+          ? {
+              glyph: r.sec === 's' ? '−' : '+',
+              label: t(r.sec === 's' ? 'history.unstageFile' : 'history.stageFile', { file: basename(r.file.path) }),
+              disabled: stage.disabled,
+              onClick: () => stage.onRow(r as WipRow),
+            }
+          : undefined
+      }
+    />
+  );
   return (
     <div className={flat ? `${parts.fileRows} ${parts.fileRowsFlat}` : parts.fileRows}>
-      {check && files.length > 0 && (
-        <div className={parts.selectAll}>
-          <Checkbox
-            checked={files.every(check.on)}
-            mixed={!files.every(check.on) && files.some(check.on)}
-            disabled={check.disabled}
-            label={files.every(check.on) ? t('history.unselectAll') : t('history.selectAll')}
-            onChange={(e) => check.onAll(e.target.checked)}
-          />
-        </div>
+      {stage ? (
+        <>
+          {section('s')}
+          {rows.filter((r) => r.sec === 's').map(row)}
+          {section('u')}
+          {rows.filter((r) => r.sec === 'u').map(row)}
+        </>
+      ) : (
+        rows.map(row)
       )}
-      {files.map((f) => (
-        <FileRow
-          key={f.path}
-          file={f}
-          folder={folder}
-          terms={[]}
-          on={f.path === file}
-          picked={picks?.isPicked(f.path)}
-          onClick={(e) => (picks ? picks.click(f.path, e, () => onFile(f.path)) : onFile(f.path))}
-          actions={actions?.(f)}
-          conflict={conflict?.(f)}
-          check={
-            check && { checked: check.on(f), disabled: check.disabled, onChange: (on) => check.onChange(f, on) }
-          }
-        />
-      ))}
     </div>
   );
 }

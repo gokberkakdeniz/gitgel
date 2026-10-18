@@ -180,7 +180,8 @@ pub fn run() {
             commands::get_ai_status,
             commands::get_default_prompt,
             commands::git_discard,
-            commands::get_staged_paths,
+            commands::get_index_changes,
+            commands::git_stage,
             commands::git_push,
         ])
         .build(tauri::generate_context!())

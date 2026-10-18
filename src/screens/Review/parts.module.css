@@ -209,32 +209,24 @@
   background: var(--bg-hover);
 }
 
-/* A file row with a box before it (History's Uncommitted): the box sits outside the button, and
- * the row takes the highlight. */
-.boxedRow {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-left: 8px;
-  border-radius: var(--radius-control);
-}
-
 /* History's files column: rows not indented under a commit. */
 .fileRowsFlat > .fileRow {
   padding-left: 8px;
 }
 
-.selectAll {
+/* A file row of History's sections (Hi5): its + / − after the counts, outside the button; the
+ * row takes the highlight. */
+.stagedRow {
   flex-shrink: 0;
-  height: 28px;
   display: flex;
   align-items: center;
-  padding-left: 8px;
+  gap: 2px;
+  padding-right: 4px;
+  border-radius: var(--radius-control);
 }
 
-.selectAll label {
-  font-size: 12px;
+.stagedRow:hover {
+  background: var(--bg-sunken);
 }
 
 .fileRowBare {
@@ -242,30 +234,96 @@
   flex: 1;
   width: auto;
   min-width: 0;
-  padding-left: 0;
+  padding-right: 4px;
 }
 
-.boxedRow:hover {
-  background: var(--bg-sunken);
+.fileRowsFlat .fileRowBare {
+  padding-left: 8px;
 }
 
-.boxedRow .fileRowBare,
-.boxedRow .fileRowBare:hover {
+.stagedRow .fileRowBare,
+.stagedRow .fileRowBare:hover {
   background: transparent;
 }
 
-.boxedRow.selected,
-.boxedRow.selected:hover,
-.boxedRow.menuOpen,
-.boxedRow.menuOpen:hover {
+.stagedRow.selected,
+.stagedRow.selected:hover,
+.stagedRow.menuOpen,
+.stagedRow.menuOpen:hover {
   background: var(--bg-hover);
+}
+
+/* Shown on the row's hover and on the row shown in the diff; reachable by Tab. */
+.stageButton {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.stagedRow:hover .stageButton,
+.stagedRow.selected .stageButton,
+.stageButton:focus-visible {
+  opacity: 1;
+}
+
+.stageButton:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+/* Staged / Unstaged (Hi5): 11px uppercase label and count, Stage all / Unstage all on the right. */
+.section {
+  flex-shrink: 0;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 0 28px;
+}
+
+.fileRowsFlat > .section {
+  padding-left: 8px;
+}
+
+.sectionLabel {
+  flex-grow: 1;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sectionCount {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+  color: var(--text-faint);
+}
+
+.linkButton:disabled {
+  color: var(--text-disabled);
+  cursor: default;
 }
 
 /* Picked with ⌘ / ⇧-click (Hi8, D12): tinted, over the other states. */
 .picked,
 .picked:hover,
-.boxedRow.picked,
-.boxedRow.picked:hover {
+.stagedRow.picked,
+.stagedRow.picked:hover {
   background: rgba(var(--accent-rgb), 0.18);
 }
 

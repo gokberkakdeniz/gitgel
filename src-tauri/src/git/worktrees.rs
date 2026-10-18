@@ -177,6 +177,17 @@ fn canonical(path: &Path) -> PathBuf {
     path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
 }
 
+/// For each path (relative to the worktree): whether the index has it. A discard of an unstaged
+/// part puts these back from the index with `git restore --worktree`. Read only, as `staged`.
+pub fn in_index(wt_repo: &Repository, paths: &[String]) -> Result<Vec<bool>, AppError> {
+    let mut index = wt_repo.index()?;
+    index.read(false)?;
+    Ok(paths
+        .iter()
+        .map(|p| (0..=3).any(|stage| index.get_path(Path::new(p), stage).is_some()))
+        .collect())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

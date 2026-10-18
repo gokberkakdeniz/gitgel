@@ -236,11 +236,13 @@ export async function startGitAction(
 
 /** The toast for a run: running (stays), then finished or failed; a click opens its output.
  * One toast at a time. A generation run (`ai:…`) toasts only while running; its
- * `generate-finished` event says how it went. */
+ * `generate-finished` event says how it went. A Stage (`git:stage`) never toasts here. */
 export function showRunToast(run: ScriptRun): void {
   // Its output panel is open: the panel's pill says it all.
   if (useRuns.getState().shownRunId === run.runId) return;
   if ((run.scriptId ?? '').startsWith('ai:') && run.status !== 'running') return;
+  // Stage / Unstage has no toasts of its own: History's queue says when one fails.
+  if (run.scriptId === 'git:stage') return;
   const output = { owner: run.runId, onClick: () => useRuns.getState().showOutput(run.runId) };
   if (run.status === 'running') {
     useUi.getState().showToast({

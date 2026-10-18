@@ -1,4 +1,5 @@
-// Discard (SPEC §15 "Discard"; Hi8, D12): Uncommitted files go back to HEAD, after Confirm
+// Discard (SPEC §15 "Discard"; Hi8, D12): Uncommitted files go back to HEAD (an Unstaged row of
+// History: to what is staged), after Confirm
 // Discard Changes unless Settings › Prompts says not to ask.
 import { create } from 'zustand';
 import { t } from '../i18n';
@@ -17,15 +18,19 @@ export interface DiscardTarget {
   /** The branch, or the short SHA when detached. */
   branch: string;
   files: FileChange[];
+  /** Of `files`, the paths whose unstaged part alone goes (History's Unstaged rows): back to what
+   * is staged, not to HEAD. */
+  keepIndex?: string[];
 }
 
 /** An entry's files as a discard target. */
-export function targetOf(e: EntrySummary, files: FileChange[]): DiscardTarget {
+export function targetOf(e: EntrySummary, files: FileChange[], keepIndex?: string[]): DiscardTarget {
   return {
     entry: { repoId: e.repoId, branch: e.branch, worktreePath: e.branch === null ? e.worktreePath : null },
     repoName: e.repoName,
     branch: e.branch ?? e.shortSha ?? '',
     files,
+    keepIndex,
   };
 }
 
@@ -62,6 +67,6 @@ export const discardPaths = (files: FileChange[]) => files.flatMap((f) => (f.old
 
 export function discardNow(req: DiscardRequest): Promise<void> {
   return startGitAction(t('discard.btnOne'), t('discard.discarding'), () =>
-    gitDiscard(req.targets.map((g) => ({ ...g.entry, paths: discardPaths(g.files) }))),
+    gitDiscard(req.targets.map((g) => ({ ...g.entry, paths: discardPaths(g.files), keepIndex: g.keepIndex ?? [] }))),
   );
 }

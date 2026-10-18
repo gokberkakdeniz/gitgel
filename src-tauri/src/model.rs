@@ -1016,6 +1016,16 @@ pub struct FileChange {
     pub new_oid: Option<String>,
 }
 
+/// A worktree's uncommitted changes as git's index splits them (History's sections).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IndexChanges {
+    /// HEAD ↔ index.
+    pub staged: Vec<FileChange>,
+    /// Index ↔ working tree, untracked included.
+    pub unstaged: Vec<FileChange>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommitInfo {

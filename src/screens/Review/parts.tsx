@@ -3,7 +3,6 @@
 // their ⌥ keys.
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox } from '../../components/Checkbox';
 import { ChevronDownIcon, Icon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
 import { Menu, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
@@ -309,8 +308,9 @@ export interface FileActions {
    * with its worktree: a project review's picks can span repositories with the same paths. */
   files: { file: FileChange; folder: string | null }[];
   onDiscard: () => void;
-  /** History's boxes: Include / Exclude Selected Files, with several files. */
-  onInclude?: (on: boolean) => void;
+  /** History's sections, with several files: Stage / Unstage Selected Files, whichever the
+   * picked rows allow. */
+  onStage?: { stage?: () => void; unstage?: () => void };
 }
 
 export function FileRow({
@@ -320,7 +320,7 @@ export function FileRow({
   picked,
   onClick,
   folder,
-  check,
+  stage,
   actions,
   conflict,
 }: {
@@ -332,8 +332,8 @@ export function FileRow({
   onClick: (e: React.MouseEvent) => void;
   /** The folder the file is opened from by the right-click menu; none, no open items. */
   folder: string | null;
-  /** A box before the row: the file goes into the commit (History's Uncommitted, W1a). */
-  check?: { checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void };
+  /** History's sections (Hi5): + stages the file, − unstages it, at the row's end. */
+  stage?: { glyph: '+' | '−'; label: string; disabled: boolean; onClick: () => void };
   /** Uncommitted's files: the menu discards and copies too, deleted files included. */
   actions?: FileActions;
   /** A conflicted file of an operation in progress (T2): ⚠ while it has git's markers, ✓ once
@@ -348,7 +348,7 @@ export function FileRow({
   const button = (
       <button
         type="button"
-        className={check ? styles.fileRowBare : `${styles.fileRow} ${state}`}
+        className={stage ? styles.fileRowBare : `${styles.fileRow} ${state}`}
         aria-current={on || undefined}
         onClick={onClick}
         onContextMenu={
@@ -383,15 +383,19 @@ export function FileRow({
   );
   return (
     <>
-      {check ? (
-        <div className={`${styles.boxedRow} ${state}`}>
-          <Checkbox
-            checked={check.checked}
-            disabled={check.disabled}
-            aria-label={t('review.includeFile', { file: basename(f.path) })}
-            onChange={(e) => check.onChange(e.target.checked)}
-          />
+      {stage ? (
+        <div className={`${styles.stagedRow} ${state}`}>
           {button}
+          <button
+            type="button"
+            className={styles.stageButton}
+            aria-label={stage.label}
+            title={stage.label}
+            disabled={stage.disabled}
+            onClick={stage.onClick}
+          >
+            {stage.glyph}
+          </button>
         </div>
       ) : (
         button
@@ -432,7 +436,7 @@ function UncommittedItems({
   at: () => { line: number; column: number } | null;
   onDone: () => void;
 }) {
-  const { files, onDiscard, onInclude } = actions;
+  const { files, onDiscard, onStage } = actions;
   const one = files.length === 1;
   const relative = files.map((x) => x.file.path);
   const absolute = files.every((x) => x.folder) ? files.map((x) => `${x.folder}/${x.file.path}`) : null;
@@ -452,27 +456,31 @@ function UncommittedItems({
       >
         {one ? t('review.discardOne') : t('review.discardN', { n: String(files.length) })}
       </MenuItem>
-      {!one && onInclude && (
+      {!one && (onStage?.stage || onStage?.unstage) && (
         <>
           <MenuDivider />
-          <MenuItem
-            icon="check"
-            onSelect={() => {
-              onDone();
-              onInclude(true);
-            }}
-          >
-            {t('review.includeSel')}
-          </MenuItem>
-          <MenuItem
-            icon="close"
-            onSelect={() => {
-              onDone();
-              onInclude(false);
-            }}
-          >
-            {t('review.excludeSel')}
-          </MenuItem>
+          {onStage.stage && (
+            <MenuItem
+              icon="plus"
+              onSelect={() => {
+                onDone();
+                onStage.stage?.();
+              }}
+            >
+              {t('review.stageSel')}
+            </MenuItem>
+          )}
+          {onStage.unstage && (
+            <MenuItem
+              icon="remove"
+              onSelect={() => {
+                onDone();
+                onStage.unstage?.();
+              }}
+            >
+              {t('review.unstageSel')}
+            </MenuItem>
+          )}
         </>
       )}
       <MenuDivider />

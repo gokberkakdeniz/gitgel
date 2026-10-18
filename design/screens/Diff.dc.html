@@ -92,18 +92,7 @@ button,input{font-family:inherit}
 </sc-if>
 
 <sc-if value="{{showAttention}}" hint-placeholder-val="{{false}}">
-<div style="display: flex; flex-direction: column; gap: 2px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--bg-hover)">
-<div style="padding: 0 8px 6px; font-size: 12px; color: var(--text-muted)">Not in review · 4</div>
-<sc-for list="{{attention}}" as="a" hint-placeholder-count="4">
-<a href="Projects.dc.html" style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; color: var(--text-body); min-width: 0">
-<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0; flex-grow: 1">
-<span style="font-size: 12px; font-weight: 500; color: var(--text-body)">{{a.repo}}</span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{a.branch}}</span>
-</span>
-<dc-import name="Pill" theme="{{themeName}}" label="{{a.tag}}" tone="{{a.tagTone}}" hint-size="80px,20px"></dc-import>
-</a>
-</sc-for>
-</div>
+<div style="margin-top: 10px; padding: 12px 8px 0; border-top: 1px solid var(--bg-hover); font-size: 12px; color: var(--text-muted)">3 entries not reviewable · <a href="Projects.dc.html">Open project</a></div>
 </sc-if>
 </aside>
 <sc-if value="{{resizing}}" hint-placeholder-val="{{false}}">
@@ -739,12 +728,6 @@ class Component extends DCLogic {
         if (e.key === 'Escape') { e.preventDefault(); self.setState({ q: '' }); }
         else if (e.key === 'Enter' && navKeys.length) { e.preventDefault(); self.setState({ file: navKeys[0], hunk: 0 }); }
       },
-      attention: [
-        { repo: 'api-server', branch: 'refresh-endpoint', tag: 'Merged', tagTone: 'success' },
-        { repo: 'mobile', branch: 'feat/token-store', tag: 'Base Missing', tagTone: 'warning' },
-        { repo: 'web-app', branch: 'logout-flow', tag: 'deleted', tagTone: 'danger' },
-        { repo: 'admin-panel', branch: 'session-ui', tag: 'repo missing', tagTone: 'danger' }
-      ],
       showBaseMenu: menu && project, bm: bm,
       showBanner: baseChanged,
       banner: 'Base set to feat/job-queue',

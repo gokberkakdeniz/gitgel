@@ -510,9 +510,9 @@ fn parent_of(state: &AppState, repo_path: &Path, commit: &Oid) -> Result<Option<
     Ok(parent)
 }
 
-/// The checked files as stat lines and a patch (cut at `MAX_PATCH`). With `amend`, against
-/// HEAD's parent: the checked files as they are on disk, and HEAD's other files as committed,
-/// which is what the amended commit will hold.
+/// The staged files as stat lines and a patch (cut at `MAX_PATCH`): HEAD (with `amend`, HEAD's
+/// parent) ↔ index, plus with `amend` HEAD's other files as committed, which is what the
+/// amended commit will hold.
 fn checked_patch(
     state: &AppState,
     worktree: &Path,
@@ -522,7 +522,9 @@ fn checked_patch(
 ) -> Result<(Vec<String>, String), AppError> {
     let shared = state.pool.get(worktree)?;
     let wt = lock(&shared);
-    wt.index()?.read(false)?;
+    // libgit2 does not notice on its own that the index changed on disk; this only re-reads it.
+    let mut index = wt.index()?;
+    index.read(false)?;
     let head = wt.find_commit(*head)?;
     let base = if amend {
         head.parents().next().map(|p| p.tree()).transpose()?
@@ -530,18 +532,14 @@ fn checked_patch(
         Some(head.tree()?)
     };
     let mut opts = DiffOptions::new();
-    opts.context_lines(3)
-        .include_untracked(true)
-        .recurse_untracked_dirs(true)
-        .show_untracked_content(true)
-        .ignore_submodules(true);
+    opts.context_lines(3).ignore_submodules(true);
     let wanted: HashSet<&str> = include.iter().map(String::as_str).collect();
     let mut stat = Vec::new();
     let mut patch = Vec::new();
-    let working = wt.diff_tree_to_workdir_with_index(base.as_ref(), Some(&mut opts))?;
+    let staged = wt.diff_tree_to_index(base.as_ref(), Some(&index), Some(&mut opts))?;
     add_patches(
-        &working,
-        diff::NewSide::Workdir,
+        &staged,
+        diff::NewSide::Tree,
         &mut stat,
         &mut patch,
         |old, new| wanted.contains(old) || wanted.contains(new),

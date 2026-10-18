@@ -3,7 +3,7 @@
 use git2::{Delta, Diff, DiffFindOptions, DiffOptions, Oid, Patch, Repository};
 
 use crate::error::AppError;
-use crate::model::{CommitChanges, FileChange, FileKind};
+use crate::model::{CommitChanges, FileChange, FileKind, IndexChanges};
 
 /// Where the right-hand side of a diff comes from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -277,6 +277,38 @@ pub fn uncommitted(wt_repo: &Repository) -> Result<Vec<FileChange>, AppError> {
     changes(&head_diff(wt_repo)?, NewSide::Workdir)
 }
 
+/// Uncommitted changes split by git's index (History's Staged and Unstaged sections): HEAD ↔
+/// index (`new_oid` the staged blob) and index ↔ working tree (`old_oid` the staged blob, the
+/// right side from disk; untracked included). A file staged and then changed again is in both.
+/// A conflicted file is unstaged only, against HEAD as in `uncommitted`. Read only: the index is
+/// reread from disk, never written.
+pub fn index_changes(wt_repo: &Repository) -> Result<IndexChanges, AppError> {
+    let mut index = wt_repo.index()?;
+    index.read(false)?;
+    let head = match wt_repo.head() {
+        Ok(h) => Some(h.peel_to_tree()?),
+        Err(_) => None,
+    };
+    let mut to_index =
+        wt_repo.diff_tree_to_index(head.as_ref(), Some(&index), Some(&mut diff_options(false)))?;
+    find_renames(&mut to_index)?;
+    let staged = changes(&to_index, NewSide::Tree)?
+        .into_iter()
+        .filter(|c| c.kind != FileKind::C)
+        .collect();
+    let to_workdir = wt_repo.diff_index_to_workdir(Some(&index), Some(&mut diff_options(true)))?;
+    let mut unstaged = changes(&to_workdir, NewSide::Workdir)?;
+    if unstaged.iter().any(|c| c.kind == FileKind::C) {
+        let from_head = uncommitted(wt_repo)?;
+        for c in unstaged.iter_mut().filter(|c| c.kind == FileKind::C) {
+            if let Some(h) = from_head.iter().find(|h| h.path == c.path) {
+                *c = h.clone();
+            }
+        }
+    }
+    Ok(IndexChanges { staged, unstaged })
+}
+
 /// Same set as `uncommitted`, only counted.
 pub fn uncommitted_count(wt_repo: &Repository) -> Result<usize, AppError> {
     Ok(delta_count(&head_diff(wt_repo)?))
@@ -324,6 +356,47 @@ mod tests {
         t.write_file(t.path(), "b", b"b");
         t.write_file(t.path(), "c", b"mine");
         assert!(block(other));
+    }
+
+    #[test]
+    fn index_changes_split_staged_and_unstaged() {
+        let t = TestRepo::new();
+        t.commit_on(
+            "main",
+            &[("a", Some(b"1\n2\n")), ("c", Some(b"c\n"))],
+            "init",
+            1,
+        );
+        t.checkout_main();
+        // Staged, then changed again: in both.
+        t.write_file(t.path(), "a", b"1\n2 staged\n");
+        t.stage(t.path(), "a");
+        t.write_file(t.path(), "a", b"1\n2 staged\n3 later\n");
+        t.write_file(t.path(), "n", b"new\n");
+        t.stage(t.path(), "n");
+        t.write_file(t.path(), "c", b"c unstaged\n");
+        t.write_file(t.path(), "u", b"untracked\n");
+        let IndexChanges { staged, unstaged } = index_changes(&t.repo).unwrap();
+        let mut s: Vec<_> = staged.iter().map(|c| c.path.as_str()).collect();
+        s.sort();
+        assert_eq!(s, ["a", "n"]);
+        let mut u: Vec<_> = unstaged.iter().map(|c| c.path.as_str()).collect();
+        u.sort();
+        assert_eq!(u, ["a", "c", "u"]);
+        let staged_a = find(&staged, "a");
+        assert_eq!(
+            (staged_a.kind, staged_a.add, staged_a.del),
+            (FileKind::M, Some(1), Some(1))
+        );
+        assert_eq!(find(&staged, "n").kind, FileKind::A);
+        // The unstaged part starts from the staged blob and shows only the later line.
+        let later = find(&unstaged, "a");
+        assert_eq!(later.old_oid, staged_a.new_oid);
+        assert_eq!(
+            (later.add, later.del, later.new_oid.as_deref()),
+            (Some(1), Some(0), None)
+        );
+        assert_eq!(find(&unstaged, "u").kind, FileKind::U);
     }
 
     fn find<'a>(changes: &'a [FileChange], path: &str) -> &'a FileChange {

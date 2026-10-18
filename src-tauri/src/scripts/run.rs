@@ -1083,6 +1083,7 @@ mod tests {
         let folder = t.path().to_string_lossy().into_owned();
         let step = super::super::git::DiscardStep {
             restore: 2,
+            keep: 0,
             clean: 1,
         };
         let (out, ended) = pty(
@@ -1125,6 +1126,83 @@ mod tests {
         let list = crate::git::diff::uncommitted(&t.repo).unwrap();
         let kinds: Vec<_> = list.iter().map(|f| (f.path.as_str(), f.kind)).collect();
         assert_eq!(kinds, [("a.txt", crate::model::FileKind::C)]);
+        // History's sections: unstaged only, against HEAD.
+        let split = crate::git::diff::index_changes(&t.repo).unwrap();
+        assert!(split.staged.is_empty(), "{:?}", split.staged);
+        assert_eq!(split.unstaged, list);
+    }
+
+    /// Stage / Unstage (History's sections): whole files into the index and out of it.
+    #[test]
+    fn git_action_stages_and_unstages_whole_files() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on(
+            "main",
+            &[("a.txt", Some(b"a\n")), ("b*.txt", Some(b"b\n"))],
+            "base",
+            1,
+        );
+        t.checkout_main();
+        t.write_file(t.path(), "a.txt", b"a2\n");
+        t.write_file(t.path(), "b*.txt", b"b2\n");
+        t.stage(t.path(), "b*.txt");
+        t.write_file(t.path(), "new.txt", b"new\n");
+        let folder = t.path().to_string_lossy().into_owned();
+        let shape = super::super::git::StageShape {
+            stage: 2,
+            unstage: 1,
+            unborn: false,
+        };
+        let (out, ended) = pty(
+            &super::super::git::stage_command(shape),
+            &[
+                ("GITGEL_FOLDER", &folder),
+                ("GITGEL_STAGE_1", "a.txt"),
+                ("GITGEL_STAGE_2", "new.txt"),
+                ("GITGEL_UNSTAGE_1", "b*.txt"),
+                ("GIT_LITERAL_PATHSPECS", "1"),
+            ],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        let split = crate::git::diff::index_changes(&t.repo).unwrap();
+        let paths = |l: &[crate::model::FileChange]| {
+            let mut p: Vec<String> = l.iter().map(|f| f.path.clone()).collect();
+            p.sort();
+            p
+        };
+        assert_eq!(paths(&split.staged), ["a.txt", "new.txt"]);
+        assert_eq!(paths(&split.unstaged), ["b*.txt"]);
+    }
+
+    /// Discard of an Unstaged row (SPEC §15): the file goes back to what is staged, not to HEAD.
+    #[test]
+    fn git_action_discards_back_to_the_index() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a.txt", Some(b"a\n"))], "base", 1);
+        t.checkout_main();
+        t.write_file(t.path(), "a.txt", b"staged\n");
+        t.stage(t.path(), "a.txt");
+        t.write_file(t.path(), "a.txt", b"staged and later\n");
+        let folder = t.path().to_string_lossy().into_owned();
+        let step = super::super::git::DiscardStep {
+            restore: 0,
+            keep: 1,
+            clean: 0,
+        };
+        let (out, ended) = pty(
+            &super::super::git::discard_command(&[step]),
+            &[
+                ("GITGEL_FOLDER_1", &folder),
+                ("GITGEL_KEEP_1_1", "a.txt"),
+                ("GIT_LITERAL_PATHSPECS", "1"),
+            ],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        assert_eq!(std::fs::read(t.path().join("a.txt")).unwrap(), b"staged\n");
+        let (staged, _) = crate::git::worktrees::staged(&t.repo).unwrap();
+        assert_eq!(staged, ["a.txt"]);
     }
 
     /// Picked files while other files are staged: the stash holds the picked ones only, and the
