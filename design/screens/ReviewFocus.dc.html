@@ -17,11 +17,8 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 .theme-dark{--bg-sidebar:#0e0d0c;--bg-main:#141311;--bg-sunken:#1a1917;--bg-band:#1c1b18;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-sidebar-active:#24221f;--bg-pressed:#383631;--bg-avatar:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--text-disabled:#5c5a55;--icon-disabled:#4a4843;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--success:#8fcf9c;--warning:#e8c071;--danger:#ee9a90;--danger-fill:#c64545;--kind-r:#93b8ee;--kind-u:#c5b2f2;--accent-rgb:79,143,163;--success-rgb:93,184,114;--warning-rgb:212,160,23;--danger-rgb:198,69,69;--kind-r-rgb:90,140,220;--kind-u-rgb:160,130,230;--shadow:rgba(0,0,0,0.45);--scrim:rgba(0,0,0,0.5)}
 .theme-light{--bg-sidebar:#f1efea;--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-band:#eeebe5;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-sidebar-active:#e4e0d8;--bg-pressed:#ffffff;--bg-avatar:#d5d0c7;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--text-disabled:#b7b2a9;--icon-disabled:#cbc6bd;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--success:#2e7a45;--warning:#8a6212;--danger:#b3463b;--danger-fill:#c64545;--kind-r:#2f63a8;--kind-u:#6a4fb5;--accent-rgb:58,123,143;--success-rgb:46,140,78;--warning-rgb:196,146,20;--danger-rgb:200,72,60;--kind-r-rgb:60,110,200;--kind-u-rgb:140,100,220;--shadow:rgba(40,32,20,0.14);--scrim:rgba(30,26,20,0.28)}
 .gg-row:hover{background:var(--bg-hover)}
-.gg-more{opacity:0}
 .gg-cnt:hover{background:var(--bg-hover);color:var(--text-strong)!important}
-.gg-wrap:hover .gg-more,.gg-more:focus-visible{opacity:1}
-.gg-wrap:hover .gg-hide{visibility:hidden}
-.gg-hit:focus-visible,.gg-more:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.gg-hit:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .gg-list:focus{outline:none}
 .gg-list:focus-visible{box-shadow:inset 0 0 0 1px var(--border-strong)}
 .gg-act{opacity:0}
@@ -123,9 +120,6 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span>
 </sc-if>
 </button>
-<sc-if value="{{it.hasMore}}" hint-placeholder-val="{{false}}">
-<button type="button" class="gg-more" onClick="{{it.more}}" aria-label="Uncommitted Options" title="Uncommitted Options" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-elevated); color: var(--text-body); cursor: pointer"><dc-import name="Icon" icon="more-vertical" size="14" hint-size="14px,14px"></dc-import></button>
-</sc-if>
 </div>
 </sc-if>
 <sc-if value="{{it.isBase}}" hint-placeholder-val="{{false}}">
@@ -152,7 +146,6 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.age}}</span>
 </sc-if>
 </button>
-<button type="button" class="gg-more" onClick="{{it.more}}" aria-label="Commit Options" title="Commit Options" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-elevated); color: var(--text-body); cursor: pointer"><dc-import name="Icon" icon="more-vertical" size="14" hint-size="14px,14px"></dc-import></button>
 </div>
 </sc-if>
 <sc-if value="{{it.isLine}}" hint-placeholder-val="{{false}}">
@@ -1323,7 +1316,7 @@ class Component extends DCLogic {
       // No file count; one-line mode: the Uncommitted row is one line too (dot and title, no
       // age); the dashed border still sets it apart.
       return { isWip: true, two: !oneLine, one: oneLine, sel: on, meta: oneLine ? '' : (e.wip.length ? e.wipAge : 'No changes'), failed: !!st.failed[e.id],
-        pick: pickRow(e, 'wip'), menu: e.wip.length ? menuAt({ kind: 'wip', e: e.id }) : undefined, more: menuAt({ kind: 'wip', e: e.id }, true), hasMore: e.wip.length > 0,
+        pick: pickRow(e, 'wip'), menu: e.wip.length ? menuAt({ kind: 'wip', e: e.id }) : undefined,
         wrapStyle: wrap(on, inMulti, 'border: 1px dashed var(--border-strong); margin-top: 2px; '), hitStyle: hit(oneLine ? '4px 8px' : '6px 8px') };
     };
     // The whole review (merge-base..branch) is the base line under the branch's commits:
@@ -1352,7 +1345,7 @@ class Component extends DCLogic {
         // The first tag and +N for the rest (their names in its tooltip).
         tags: (c.tags || []).slice(0, 1).map(function (n) { return { name: n }; }),
         hasTagRest: (c.tags || []).length > 1, tagRest: '+' + ((c.tags || []).length - 1), tagRestTitle: (c.tags || []).slice(1).join('\n'),
-        pick: pickRow(e, c.sha), menu: commitMenu(e, c, false), more: commitMenu(e, c, true),
+        pick: pickRow(e, c.sha), menu: commitMenu(e, c, false),
         title: c.body ? c.subject + '\n\n' + c.body : c.subject,
         wrapStyle: wrap(on, inMulti, ''), hitStyle: hit(oneLine ? '5px 8px' : '7px 8px'),
         subjectStyle: 'font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: var(--text-strong)' + (on || inMulti ? '; font-weight: 500' : '') };
