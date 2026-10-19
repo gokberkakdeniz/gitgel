@@ -131,11 +131,7 @@ fn resolve_editor(
                 command: None,
             });
         }
-        let first = first_word(command);
-        let (name, app_path) = match find(first) {
-            Some(path) => (app_stem(&path), Some(path)),
-            None => (first.to_string(), None),
-        };
+        let (name, app_path) = command_app(command, find);
         return Some(ResolvedEditor {
             id: OTHER_EDITOR,
             name,
@@ -500,11 +496,7 @@ fn resolve_other(
             action: Some(TerminalAction::OpenApp(path)),
         };
     }
-    let first = first_word(command);
-    let (name, app_path) = match find(first) {
-        Some(path) => (app_stem(&path), Some(path)),
-        None => (first.to_string(), None),
-    };
+    let (name, app_path) = command_app(command, find);
     ResolvedTerminal {
         name,
         app_path,
@@ -519,8 +511,53 @@ fn app_stem(path: &str) -> String {
         .unwrap_or_else(|| path.into())
 }
 
-fn first_word(command: &str) -> &str {
-    command.split_whitespace().next().unwrap_or(command)
+/// The name (and app, for the icon) an Other command shows under: the first of its words that
+/// resolves to an app (`open -a TextEdit %` is TextEdit), else its first word. Flags and words
+/// with a `%` are skipped.
+fn command_app(command: &str, find: impl Fn(&str) -> Option<String>) -> (String, Option<String>) {
+    let words = shell_words(command);
+    words
+        .iter()
+        .filter(|w| !w.starts_with('-') && !w.contains('%'))
+        .find_map(|w| find(w))
+        .map(|path| (app_stem(&path), Some(path)))
+        .unwrap_or_else(|| {
+            let first = words.into_iter().next().unwrap_or_else(|| command.into());
+            (first, None)
+        })
+}
+
+/// The command's words, split on whitespace outside `'…'` and `"…"` (the quotes dropped), so
+/// `open -a "Sublime Text"` has the word `Sublime Text`.
+fn shell_words(command: &str) -> Vec<String> {
+    let mut words = Vec::new();
+    let mut word = String::new();
+    let mut quote = None;
+    let mut started = false;
+    for c in command.chars() {
+        match quote {
+            Some(q) if c == q => quote = None,
+            Some(_) => word.push(c),
+            None if c == '\'' || c == '"' => {
+                quote = Some(c);
+                started = true;
+            }
+            None if c.is_whitespace() => {
+                if started {
+                    words.push(std::mem::take(&mut word));
+                    started = false;
+                }
+            }
+            None => {
+                word.push(c);
+                started = true;
+            }
+        }
+    }
+    if started {
+        words.push(word);
+    }
+    words
 }
 
 /// Every `%` in the command becomes the folder (or file), single-quoted for the shell.
@@ -768,6 +805,23 @@ mod tests {
         assert_eq!(resolved.name, "idea");
         assert!(resolved.app_path.is_none());
         assert_eq!(resolved.command.as_deref(), Some("idea %"));
+
+        // A command is named after the first word that names an app.
+        let open = with_editor(EditorChoice::Other, "open -a Nova %");
+        let resolved = resolve_editor(&open, zed, nova).unwrap();
+        assert_eq!(resolved.name, "Nova");
+        assert_eq!(resolved.app_path.as_deref(), Some("/Applications/Nova.app"));
+        assert_eq!(resolved.command.as_deref(), Some("open -a Nova %"));
+    }
+
+    #[test]
+    fn command_words_keep_quoted_spaces() {
+        assert_eq!(
+            shell_words(r#"open -a "Sublime Text"  '%' x"#),
+            ["open", "-a", "Sublime Text", "%", "x"]
+        );
+        assert_eq!(shell_words("a ''"), ["a", ""]);
+        assert!(shell_words("  ").is_empty());
     }
 
     #[test]

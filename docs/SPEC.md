@@ -1132,7 +1132,7 @@ outside or leaving the page closes it (`src/commands/`).
     its folder); no line. When the chosen editor is gone while the app runs, a right-aligned
     12px `warning` line: "<Name> is not installed". Saved at once (`settings.editor`,
     `settings.editorCommand`). The open items list only this editor (Other: its app's or the
-    command's first word's name, id `editor`).
+    command's name as the Other terminal's, id `editor`).
   - "Terminal": a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
@@ -1894,8 +1894,9 @@ Notes:
     `.app`; an existing `.app` path; a bundle id) opens with `open_path`; anything else is a
     command: every `%` is replaced with the folder, single-quoted for the shell, and it runs as
     `$SHELL -l -c <command>` (`/bin/zsh` without `$SHELL`) with the folder as working directory,
-    stdin/stdout/stderr null, not waited for (a thread reaps it). Its name is the app its first
-    word names if one is found (icon too), else the first word.
+    stdin/stdout/stderr null, not waited for (a thread reaps it). Its name is the first of its
+    words (split on spaces outside quotes; flags and words with `%` skipped) that names an app
+    (icon too; `open -a TextEdit %` is TextEdit), else the first word.
 
 | Event | Payload | When |
 |---|---|---|
