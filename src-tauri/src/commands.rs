@@ -6,8 +6,8 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
-    BaseOptions, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config, EntryRef,
-    FileChange, FilePair, FolderCheck, HistoryPage, IndexChanges, NewBranchCheckout,
+    BaseOptions, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config, EditorOption,
+    EntryRef, FileChange, FilePair, FolderCheck, HistoryPage, IndexChanges, NewBranchCheckout,
     NewBranchProblem, OpenApp, ProjectConfig, ProjectView, RangeChanges, RemoteInfo, ReviewData,
     ReviewTarget, ScanResult, ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
 };
@@ -346,6 +346,12 @@ pub async fn get_open_apps(state: State<'_, AppState>) -> Result<Vec<OpenApp>, A
         Ok(apps::installed(&config::snapshot(state).settings))
     })
     .await
+}
+
+/// The known editors with their install state, for the Settings dropdown.
+#[tauri::command]
+pub async fn get_editor_options(state: State<'_, AppState>) -> Result<Vec<EditorOption>, AppError> {
+    blocking(&state, |_| Ok(apps::editor_options())).await
 }
 
 /// Terminal, iTerm2 and WezTerm with their install state, for the Settings dropdown.

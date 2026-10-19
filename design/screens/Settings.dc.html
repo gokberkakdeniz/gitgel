@@ -63,6 +63,10 @@ button,input{font-family:inherit}
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Language</span></span>
 <dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Language" options="{{languages}}" hint-size="230px,36px"></dc-import>
 </div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Editor</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Editor" options="{{editors}}" hint-size="230px,36px"></dc-import>
+</div>
 <div style="display: flex; flex-direction: column; gap: 10px">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Terminal</span></span>
@@ -324,6 +328,10 @@ class Component extends DCLogic {
       invalid: ['Not a valid branch name', 'font-size: 12px; color: var(--danger)', 'release candidate', 'invalid']
     };
     var bn = baseNotes[baseAdd] || baseNotes.typing;
+    // The one editor the open items list. Not installed (here Windsurf, Zed, Sublime Text): cannot be picked.
+    var editors = [['auto', 'Automatic (Cursor)'], ['cursor', 'Cursor'], ['vscode', 'VS Code'], ['windsurf', 'Windsurf'], ['zed', 'Zed'], ['sublime', 'Sublime Text']].map(function (x) {
+      return { value: x[0], label: x[1], on: x[0] === 'auto', disabled: x[0] === 'windsurf' || x[0] === 'zed' || x[0] === 'sublime' };
+    });
     var term = this.props.terminal ?? 'auto';
     var termKind = term === 'missing' ? 'iterm' : term;
     var terminals = [['auto', 'Automatic (WezTerm)'], ['terminal', 'Terminal'], ['iterm', 'iTerm2'], ['wezterm', 'WezTerm'], ['other', 'Other']].map(function (x) {
@@ -349,6 +357,7 @@ class Component extends DCLogic {
           switchTitle: off ? 'Off: in no menu. Switch on to show it' : 'On: shown in its menus. Switch off to hide it',
           toggle: function () { var m = Object.assign({}, offMap); m[x[0]] = !off; self.setState({ scriptsOff: m }); } };
       }),
+      editors: editors,
       terminals: terminals,
       terminalOther: termKind === 'other',
       terminalMissing: term === 'missing',

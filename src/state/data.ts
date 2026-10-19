@@ -1,6 +1,6 @@
 // Data the backend pushes: config and scan results, kept current by backend events.
 import { create } from 'zustand';
-import type { Config, OpenApp, RepoScan, RepoUpdated, ScanResult, TerminalOption, UpdateInfo } from '../lib/types';
+import type { Config, EditorOption, OpenApp, RepoScan, RepoUpdated, ScanResult, TerminalOption, UpdateInfo } from '../lib/types';
 
 interface DataState {
   config: Config | null;
@@ -10,6 +10,7 @@ interface DataState {
   configVersion: number; // bumped on every config change
   refreshing: boolean; // a full rescan is running
   openApps: OpenApp[]; // installed apps for the entry menus' open items
+  editorOptions: EditorOption[]; // install state of the known editors, for Settings
   terminalOptions: TerminalOption[]; // install state of Terminal/iTerm2/WezTerm, for Settings
   update: UpdateInfo | null; // a newer version, from the update check
   updateProgress: number | 'unknown' | null; // download percent while installing; null otherwise
@@ -18,6 +19,7 @@ interface DataState {
   applyRepoUpdated: (event: RepoUpdated) => void;
   setRefreshing: (refreshing: boolean) => void;
   setOpenApps: (apps: OpenApp[]) => void;
+  setEditorOptions: (options: EditorOption[]) => void;
   setTerminalOptions: (options: TerminalOption[]) => void;
   setUpdate: (update: UpdateInfo | null) => void;
   setUpdateProgress: (progress: number | 'unknown' | null) => void;
@@ -31,6 +33,7 @@ export const useData = create<DataState>()((set) => ({
   configVersion: 0,
   refreshing: false,
   openApps: [],
+  editorOptions: [],
   terminalOptions: [],
   update: null,
   updateProgress: null,
@@ -52,6 +55,7 @@ export const useData = create<DataState>()((set) => ({
     })),
   setRefreshing: (refreshing) => set({ refreshing }),
   setOpenApps: (openApps) => set({ openApps }),
+  setEditorOptions: (editorOptions) => set({ editorOptions }),
   setTerminalOptions: (terminalOptions) => set({ terminalOptions }),
   setUpdate: (update) => set({ update }),
   setUpdateProgress: (updateProgress) => set({ updateProgress }),

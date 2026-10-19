@@ -514,6 +514,8 @@
   "settings.activeHint": "Çalışma ağacı olmayan dallar şu sürede commit edildiyse listelenir",
   "settings.newBranchName": "Yeni Dalları Şurada Aç",
   "settings.daysUnit": "gün",
+  "settings.editorName": "Editör",
+  "settings.editorMissing": "{$name} kurulu değil",
   "settings.terminalName": "Terminal",
   "settings.terminalAuto": "Otomatik ({$name})",
   "settings.terminalAutoPlain": "Otomatik",

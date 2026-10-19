@@ -1,4 +1,4 @@
-//! The entry menus' open items: a worktree folder opened in Finder, an installed editor or the
+//! The entry menus' open items: a worktree folder opened in Finder, or in the editor or the
 //! terminal chosen in Settings (docs/SPEC.md §9 "Open items"). Nothing here touches git.
 
 use std::collections::HashMap;
@@ -7,16 +7,39 @@ use std::process::Stdio;
 use std::sync::{Mutex, OnceLock};
 
 use crate::error::AppError;
-use crate::model::{OpenApp, Settings, TerminalChoice, TerminalOption};
+use crate::model::{EditorChoice, EditorOption, OpenApp, Settings, TerminalChoice, TerminalOption};
 
-/// `(id, name, bundle id)`, in menu order; the terminal comes after them.
-const APPS: &[(&str, &str, &str)] = &[
-    ("finder", "Finder", "com.apple.finder"),
-    ("cursor", "Cursor", "com.todesktop.230313mzl4w4u92"),
-    ("vscode", "VS Code", "com.microsoft.VSCode"),
-    ("windsurf", "Windsurf", "com.exafunction.windsurf"),
-    ("zed", "Zed", "dev.zed.Zed"),
-    ("sublime", "Sublime Text", "com.sublimetext.4"),
+/// Finder's `(id, name, bundle id)`; it comes first in the open items.
+const FINDER: (&str, &str, &str) = ("finder", "Finder", "com.apple.finder");
+
+/// The known editors: choice, id, display name, bundle id. Automatic tries them in this order:
+/// the first installed wins.
+const EDITORS: &[(EditorChoice, &str, &str, &str)] = &[
+    (
+        EditorChoice::Cursor,
+        "cursor",
+        "Cursor",
+        "com.todesktop.230313mzl4w4u92",
+    ),
+    (
+        EditorChoice::Vscode,
+        "vscode",
+        "VS Code",
+        "com.microsoft.VSCode",
+    ),
+    (
+        EditorChoice::Windsurf,
+        "windsurf",
+        "Windsurf",
+        "com.exafunction.windsurf",
+    ),
+    (EditorChoice::Zed, "zed", "Zed", "dev.zed.Zed"),
+    (
+        EditorChoice::Sublime,
+        "sublime",
+        "Sublime Text",
+        "com.sublimetext.4",
+    ),
 ];
 
 /// The known terminals: choice, display name, bundle id. Automatic tries them in this order:
@@ -38,17 +61,22 @@ const APP_DIRS: &[&str] = &[
     "/System/Applications/Utilities",
 ];
 
-/// The listed apps that are installed, in menu order, then the chosen terminal, which is always
-/// listed (`found` is false when it is not installed).
+/// Finder, the editor chosen in Settings, then the chosen terminal. An explicit editor and the
+/// terminal are listed even when not installed (`found` is false); Automatic with no editor
+/// installed lists none.
 pub fn installed(settings: &Settings) -> Vec<OpenApp> {
-    let editors = APPS.iter().filter_map(|(id, name, bundle)| {
-        let path = app_path(bundle)?;
-        Some(OpenApp {
-            id: (*id).into(),
-            name: (*name).into(),
-            icon: icon(&path),
-            found: true,
-        })
+    let (id, name, bundle) = FINDER;
+    let finder = app_path(bundle).map(|path| OpenApp {
+        id: id.into(),
+        name: name.into(),
+        icon: icon(&path),
+        found: true,
+    });
+    let editor = resolve_editor(settings.editor, app_path).map(|e| OpenApp {
+        id: e.id.into(),
+        name: e.name.into(),
+        icon: e.app_path.as_deref().and_then(icon),
+        found: e.app_path.is_some(),
     });
     let term = resolve_terminal(settings);
     let terminal = OpenApp {
@@ -57,7 +85,47 @@ pub fn installed(settings: &Settings) -> Vec<OpenApp> {
         icon: term.app_path.as_deref().and_then(icon),
         found: term.action.is_some(),
     };
-    editors.chain(std::iter::once(terminal)).collect()
+    finder
+        .into_iter()
+        .chain(editor)
+        .chain(std::iter::once(terminal))
+        .collect()
+}
+
+/// The editor Settings resolves to; `app_path` is `None` when it is not installed.
+struct ResolvedEditor {
+    id: &'static str,
+    name: &'static str,
+    app_path: Option<String>,
+}
+
+/// Automatic: the first installed editor, or none. An explicit choice is kept even when it is
+/// not installed.
+fn resolve_editor(
+    choice: EditorChoice,
+    bundle: impl Fn(&str) -> Option<String>,
+) -> Option<ResolvedEditor> {
+    EDITORS.iter().find_map(|(c, id, name, b)| {
+        let app_path = bundle(b);
+        let picked = if choice == EditorChoice::Auto {
+            app_path.is_some()
+        } else {
+            *c == choice
+        };
+        picked.then_some(ResolvedEditor { id, name, app_path })
+    })
+}
+
+/// The known editors with their install state, for the Settings dropdown.
+pub fn editor_options() -> Vec<EditorOption> {
+    EDITORS
+        .iter()
+        .map(|(choice, _, name, bundle)| EditorOption {
+            choice: *choice,
+            name: (*name).into(),
+            found: app_path(bundle).is_some(),
+        })
+        .collect()
 }
 
 /// Opens `path` (a folder) in the app `app` (an id from `installed`).
@@ -216,10 +284,29 @@ pub fn terminal_options() -> Vec<TerminalOption> {
         .collect()
 }
 
-/// At launch an explicit terminal that is no longer installed falls back to Automatic (an Other
-/// command cannot be checked, so it is left alone). True when the settings changed.
-pub fn reset_missing_terminal(settings: &mut Settings) -> bool {
-    reset_missing_terminal_with(settings, app_path)
+/// At launch an explicit editor or terminal that is no longer installed falls back to Automatic
+/// (an Other terminal command cannot be checked, so it is left alone). True when the settings
+/// changed.
+pub fn reset_missing_apps(settings: &mut Settings) -> bool {
+    let editor = reset_missing_editor_with(settings, app_path);
+    reset_missing_terminal_with(settings, app_path) || editor
+}
+
+fn reset_missing_editor_with(
+    settings: &mut Settings,
+    bundle: impl Fn(&str) -> Option<String>,
+) -> bool {
+    let missing = EDITORS
+        .iter()
+        .any(|(choice, _, _, id)| *choice == settings.editor && bundle(id).is_none());
+    if missing {
+        log::info!(
+            "editor {:?} is not installed; falling back to Automatic",
+            settings.editor
+        );
+        settings.editor = EditorChoice::Auto;
+    }
+    missing
 }
 
 fn reset_missing_terminal_with(
@@ -442,7 +529,13 @@ fn is_app(path: &Path) -> bool {
 }
 
 fn bundle_id(id: &str) -> Option<&'static str> {
-    APPS.iter().find(|(i, _, _)| *i == id).map(|(_, _, b)| *b)
+    if id == FINDER.0 {
+        return Some(FINDER.2);
+    }
+    EDITORS
+        .iter()
+        .find(|(_, i, _, _)| *i == id)
+        .map(|(_, _, _, b)| *b)
 }
 
 fn check_folder(path: &Path) -> Result<(), AppError> {
@@ -542,12 +635,49 @@ mod tests {
 
     #[test]
     fn ids_are_unique_and_known() {
-        for (i, (id, _, bundle)) in APPS.iter().enumerate() {
-            assert!(APPS[..i].iter().all(|(other, _, _)| other != id), "{id}");
+        for (i, (_, id, _, bundle)) in EDITORS.iter().enumerate() {
+            assert!(
+                EDITORS[..i].iter().all(|(_, other, _, _)| other != id),
+                "{id}"
+            );
             assert_ne!(*id, TERMINAL);
+            assert_ne!(*id, FINDER.0);
             assert_eq!(bundle_id(id), Some(*bundle));
         }
+        assert_eq!(bundle_id("finder"), Some(FINDER.2));
         assert_eq!(bundle_id("notepad"), None);
+    }
+
+    #[test]
+    fn automatic_editor_takes_the_first_installed() {
+        let zed = |id: &str| (id == "dev.zed.Zed").then(|| "/Zed.app".into());
+        let resolved = resolve_editor(EditorChoice::Auto, zed).expect("zed");
+        assert_eq!(resolved.id, "zed");
+        assert_eq!(resolved.app_path.as_deref(), Some("/Zed.app"));
+        // Nothing installed: no editor item.
+        assert!(resolve_editor(EditorChoice::Auto, no_bundle).is_none());
+        // An explicit choice stays, without an app.
+        let cursor = resolve_editor(EditorChoice::Cursor, zed).expect("cursor");
+        assert_eq!(cursor.name, "Cursor");
+        assert!(cursor.app_path.is_none());
+    }
+
+    #[test]
+    fn launch_resets_a_missing_explicit_editor_to_automatic() {
+        let zed = |id: &str| (id == "dev.zed.Zed").then(|| "/Zed.app".into());
+        let mut settings = Settings {
+            editor: EditorChoice::Vscode,
+            ..Settings::default()
+        };
+        assert!(reset_missing_editor_with(&mut settings, zed));
+        assert_eq!(settings.editor, EditorChoice::Auto);
+        let mut settings = Settings {
+            editor: EditorChoice::Zed,
+            ..Settings::default()
+        };
+        assert!(!reset_missing_editor_with(&mut settings, zed));
+        let mut settings = Settings::default();
+        assert!(!reset_missing_editor_with(&mut settings, no_bundle));
     }
 
     #[test]

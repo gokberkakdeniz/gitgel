@@ -15,7 +15,7 @@ import { t } from '../../i18n';
 import { locateRepo, removeRepo, updateSettings } from '../../lib/ipc';
 import { stopAsking } from '../../lib/prompts';
 import { basename, tildifyHome } from '../../lib/paths';
-import type { AppError, Config, Language, RepoConfig, TerminalChoice } from '../../lib/types';
+import type { AppError, Config, EditorChoice, Language, RepoConfig, TerminalChoice } from '../../lib/types';
 import { useData } from '../../state/data';
 import { useUi, type SettingsSection } from '../../state/ui';
 import styles from './Settings.module.css';
@@ -319,6 +319,7 @@ function General({ config }: { config: Config }) {
       <h2 className={styles.heading}>{t('settings.generalHeading')}</h2>
       <section className={styles.section}>
         <LanguageSetting config={config} />
+        <EditorSetting config={config} />
         <TerminalSetting config={config} />
         <label className={styles.setting}>
           <span className={styles.settingText}>
@@ -382,6 +383,43 @@ function LanguageSetting({ config }: { config: Config }) {
         </ConfirmModal>
       )}
     </>
+  );
+}
+
+/** The app behind "Open in <editor>" in the entry and file menus. */
+function EditorSetting({ config }: { config: Config }) {
+  const { editor } = config.settings;
+  const openApps = useData((s) => s.openApps);
+  const editorApp = openApps.find((a) => a.id !== 'finder' && a.id !== 'terminal');
+  const loaded = openApps.length > 0;
+  // Editors that are not installed cannot be picked.
+  const editorOptions = useData((s) => s.editorOptions);
+  const missing = (choice: EditorChoice) => editorOptions.some((o) => o.choice === choice && !o.found);
+  const auto = editorOptions.find((o) => o.found);
+  return (
+    <div className={styles.terminal}>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span className={styles.settingName}>{t('settings.editorName')}</span>
+        </span>
+        <Select<EditorChoice>
+          aria-label={t('settings.editorName')}
+          value={editor}
+          onChange={(ed) => void updateSettings({ ...config.settings, editor: ed })}
+          options={[
+            { value: 'auto', label: auto ? t('settings.terminalAuto', { name: auto.name }) : t('settings.terminalAutoPlain') },
+            { value: 'cursor', label: 'Cursor', disabled: missing('cursor') },
+            { value: 'vscode', label: 'VS Code', disabled: missing('vscode') },
+            { value: 'windsurf', label: 'Windsurf', disabled: missing('windsurf') },
+            { value: 'zed', label: 'Zed', disabled: missing('zed') },
+            { value: 'sublime', label: 'Sublime Text', disabled: missing('sublime') },
+          ]}
+        />
+      </label>
+      {loaded && editorApp && !editorApp.found && (
+        <span className={styles.terminalMissing}>{t('settings.editorMissing', { name: editorApp.name })}</span>
+      )}
+    </div>
   );
 }
 

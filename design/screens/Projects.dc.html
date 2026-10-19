@@ -117,7 +117,7 @@ class Component extends DCLogic {
     // Real app icons (from macOS), drawn grayscale; the Menu's app placeholders stand in for them.
     // Nothing to open (missing repo, deleted branch): the open items are left out.
     var apps = function (off) {
-      return off ? [] : [['Open in Finder', 'finder'], ['Open in Cursor', 'cursor'], ['Open in VS Code', 'vscode'], ['Open in Terminal', 'terminal']].map(function (a, i) {
+      return off ? [] : [['Open in Finder', 'finder'], ['Open in Cursor', 'cursor'], ['Open in Terminal', 'terminal']].map(function (a, i) {
         return { label: a[0], app: a[1], active: i === 0 };
       });
     };

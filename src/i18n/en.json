@@ -484,6 +484,8 @@
   "settings.activeHint": "Branches without a worktree are listed if committed within",
   "settings.newBranchName": "Check Out New Branches In",
   "settings.daysUnit": "days",
+  "settings.editorName": "Editor",
+  "settings.editorMissing": "{$name} is not installed",
   "settings.terminalName": "Terminal",
   "settings.terminalAuto": "Automatic ({$name})",
   "settings.terminalAutoPlain": "Automatic",

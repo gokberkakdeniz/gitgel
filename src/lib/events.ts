@@ -29,9 +29,14 @@ async function start() {
     const before = useData.getState().config?.settings;
     data.setConfig(e.payload);
     syncSidebarVisible(e.payload);
-    // The terminal item follows Settings › Behaviour › Terminal.
+    // The editor and terminal items follow Settings › General › Editor and Terminal.
     const after = e.payload.settings;
-    if (before && (before.terminal !== after.terminal || before.terminalCommand !== after.terminalCommand)) {
+    if (
+      before &&
+      (before.editor !== after.editor ||
+        before.terminal !== after.terminal ||
+        before.terminalCommand !== after.terminalCommand)
+    ) {
       void loadOpenApps();
     }
   });
@@ -60,12 +65,12 @@ async function start() {
   await getCurrentWindow().onFocusChanged(({ payload: focused }) => {
     if (!focused) return;
     void loadOpenApps();
-    void loadTerminalOptions();
+    void loadAppOptions();
     if (useData.getState().scannedOnce) void rescanAll();
   });
 
   void loadOpenApps();
-  void loadTerminalOptions();
+  void loadAppOptions();
   // A check that finished before the listener was added.
   void ipc.getUpdate().then((u) => u && data.setUpdate(u));
   const [config] = await Promise.all([ipc.getConfig(), loadHome()]);
@@ -86,13 +91,15 @@ async function loadOpenApps() {
   }
 }
 
-async function loadTerminalOptions() {
+/** The install state of the editors and terminals the Settings dropdowns offer. */
+async function loadAppOptions() {
   try {
-    const options = await ipc.getTerminalOptions();
-    if (JSON.stringify(options) !== JSON.stringify(useData.getState().terminalOptions))
-      useData.getState().setTerminalOptions(options);
+    const [editors, terminals] = await Promise.all([ipc.getEditorOptions(), ipc.getTerminalOptions()]);
+    const data = useData.getState();
+    if (JSON.stringify(editors) !== JSON.stringify(data.editorOptions)) data.setEditorOptions(editors);
+    if (JSON.stringify(terminals) !== JSON.stringify(data.terminalOptions)) data.setTerminalOptions(terminals);
   } catch (e) {
-    console.error('cannot list terminals', e);
+    console.error('cannot list editors and terminals', e);
   }
 }
 

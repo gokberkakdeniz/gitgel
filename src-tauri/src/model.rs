@@ -105,6 +105,8 @@ pub struct Settings {
     /// Whether the main sidebar is shown; remembered, configs from before it load as shown.
     #[serde(default = "on")]
     pub sidebar_visible: bool,
+    /// Settings › General › Editor, for the open items; configs from before it load as `auto`.
+    pub editor: EditorChoice,
     /// Settings › Behaviour › Terminal, for the entry menus' open items.
     pub terminal: TerminalChoice,
     /// The `other` terminal: a command (`%` becomes the folder), an app name, a `.app` path or
@@ -253,6 +255,7 @@ impl Default for Settings {
             history_layout: HistoryLayout::Tree,
             appearance: Appearance::System,
             sidebar_visible: true,
+            editor: EditorChoice::Auto,
             terminal: TerminalChoice::Auto,
             terminal_command: String::new(),
             check_updates: true,
@@ -472,6 +475,19 @@ pub enum Language {
     System,
     En,
     Tr,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EditorChoice {
+    /// The first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text.
+    #[default]
+    Auto,
+    Cursor,
+    Vscode,
+    Windsurf,
+    Zed,
+    Sublime,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1294,7 +1310,16 @@ pub struct OpenApp {
     pub name: String,
     /// PNG data URL of the app's icon.
     pub icon: Option<String>,
-    /// False only for a terminal that is not installed.
+    /// False only for a chosen editor or terminal that is not installed.
+    pub found: bool,
+}
+
+/// An editor the Settings dropdown can choose: whether it is installed (`apps.rs`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EditorOption {
+    pub choice: EditorChoice,
+    pub name: String,
     pub found: bool,
 }
 

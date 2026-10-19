@@ -50,6 +50,7 @@ export interface Settings {
   historyLayout: HistoryLayout; // Settings › Appearance › History › Layout
   appearance: Appearance; // Settings › Appearance
   sidebarVisible: boolean; // the main sidebar is shown; remembered
+  editor: EditorChoice; // Settings › General › Editor, for "Open in …"
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"
   terminalCommand: string; // the Other terminal: a command (`%` = folder), an app name, a .app path or a bundle id; empty = Automatic
   checkUpdates: boolean; // Settings › Behaviour › Check for Updates
@@ -66,6 +67,7 @@ export interface Prompts {
   abortOperation: boolean; // Abort of a rebase, merge, cherry-pick or revert (T3)
   amendPushed: boolean; // Amend of a commit already on the remote (Hi10)
 }
+export type EditorChoice = 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime';
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
   version: 1;
@@ -475,7 +477,14 @@ export interface OpenApp {
   id: string; // "vscode"
   name: string; // "VS Code"
   icon: string | null; // PNG data URL of the app's icon
-  found: boolean; // false only for a terminal that is not installed
+  found: boolean; // false only for a chosen editor or terminal that is not installed
+}
+
+/** An editor the Settings dropdown can choose: whether it is installed. */
+export interface EditorOption {
+  choice: EditorChoice; // "cursor" | "vscode" | …
+  name: string; // "VS Code"
+  found: boolean;
 }
 
 /** A terminal the Settings dropdown can choose: whether it is installed. */

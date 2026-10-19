@@ -72,10 +72,10 @@ pub fn run() {
             menu::install(app)?;
             let config_path = config::config_path(app.handle())?;
             let mut config = config::load(&config_path);
-            // A chosen terminal that is no longer installed falls back to Automatic.
-            if apps::reset_missing_terminal(&mut config.settings) {
+            // A chosen editor or terminal that is no longer installed falls back to Automatic.
+            if apps::reset_missing_apps(&mut config.settings) {
                 if let Err(e) = config::save(&config_path, &config) {
-                    log::warn!("cannot save the terminal fallback: {e}");
+                    log::warn!("cannot save the app fallback: {e}");
                 }
             }
             let zoom = config.settings.zoom;
@@ -135,6 +135,7 @@ pub fn run() {
             commands::set_repo_pinned,
             commands::update_settings,
             commands::get_open_apps,
+            commands::get_editor_options,
             commands::get_terminal_options,
             commands::open_folder,
             commands::open_file,

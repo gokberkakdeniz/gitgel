@@ -29,9 +29,9 @@ export function CopyBranchItem({ entry, onDone }: { entry: EntrySummary; onDone:
   );
 }
 
-/** Open in Finder, then Open in <App> for each app, then the terminal; shared by the entry menus.
+/** Open in Finder, then the editor and the terminal chosen in Settings; shared by the entry menus.
  * A branch that is not checked out opens its repository folder. Nothing is listed for a missing
- * repo or a deleted branch, and a terminal that is not installed is left out (`EntryMenuNote`
+ * repo or a deleted branch, and a chosen app that is not installed is left out (`EntryMenuNote`
  * says why). Each item shows the app's own icon, grayscale. */
 export function OpenItems({ entry, onDone }: { entry: EntrySummary; onDone: () => void }) {
   const apps = useData((s) => s.openApps);
@@ -82,7 +82,7 @@ export function useRepoFolder(repoId: string): string | null {
   return useData((s) => s.config?.repos.find((r) => r.id === repoId)?.path ?? null);
 }
 
-/** Open in Finder (the file selected), then Open in <App> for each editor; the file menu's items.
+/** Open in Finder (the file selected), then the chosen editor; the file menu's items.
  * No terminal: it has no use for a file. `at` is asked when an editor is picked: where the diff
  * showing this file has its cursor (the editor opens there). */
 export function FileOpenItems({
@@ -122,12 +122,12 @@ export function FileOpenItems({
  * Nothing when all is well. */
 export function EntryMenuNote({ entry }: { entry: EntrySummary }) {
   const apps = useData((s) => s.openApps);
-  const missingTerminal = apps.find((a) => a.id === 'terminal' && !a.found);
+  const missingApp = apps.find((a) => !a.found);
   const note = (() => {
     if (entry.state === 'repo_missing') return t('review.goneRepo');
     if (entry.state === 'branch_deleted') return t('project.branchDeleted');
     if (!openableFolder(entry)) return t('open.notCheckedOut');
-    if (missingTerminal) return t('open.termMissing', { app: missingTerminal.name });
+    if (missingApp) return t('open.termMissing', { app: missingApp.name });
     return null;
   })();
   if (!note) return null;

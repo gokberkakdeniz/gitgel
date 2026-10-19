@@ -35,6 +35,7 @@ import type {
   StageFiles,
   StageLines,
   Settings,
+  EditorOption,
   TerminalOption,
   UpdateCheck,
   UpdateInfo,
@@ -116,6 +117,9 @@ export const updateSettings = (settings: Settings) => invoke<Config>('update_set
 
 /** Installed apps for the open items, in menu order. */
 export const getOpenApps = () => invoke<OpenApp[]>('get_open_apps');
+
+/** The known editors with their install state, for the Settings dropdown. */
+export const getEditorOptions = () => invoke<EditorOption[]>('get_editor_options');
 
 /** Terminal, iTerm2 and WezTerm with their install state, for the Settings dropdown. */
 export const getTerminalOptions = () => invoke<TerminalOption[]>('get_terminal_options');

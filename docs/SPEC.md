@@ -234,7 +234,7 @@ gitgel/
       ├─ menu.rs                  # app menu: Settings…, Check for Updates…, View › Font Size, Help items, dev Window items
       ├─ logs.rs                  # Help › Show Logs in Finder
       ├─ appearance.rs            # main window theme and background; shown by the page (`reveal_window`)
-      ├─ apps.rs                  # open items: installed editors/terminals, open a folder
+      ├─ apps.rs                  # open items: the chosen editor/terminal, open a folder
       ├─ nearest.rs               # nearest default: local vs remote default base
       ├─ memory.rs                # frees libgit2 memory after full scans
       ├─ updates.rs               # in-app updates: check, install, restart
@@ -844,7 +844,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   same with the file's path in its worktree, else the repository folder; with a commit shown it is
   the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (the remote's
   file page at the commit: GitHub-style `/blob/<sha>/<path>#L12-L13`, GitLab `/-/blob/…`, Bitbucket `/src/…#lines-…`;
-  only for a file shown at a commit, with a remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_remote_url`, `open_remote_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in each editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas R1, `menu: diff`). The editor is created once; changing
+  only for a file shown at a commit, with a remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_remote_url`, `open_remote_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in the chosen editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas R1, `menu: diff`). The editor is created once; changing
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
   shown"; files over 1 MiB "File is too large to show (over 1 MB)".
 - **Diff view menu:** the view button (split or unified icon + "Split" / "Unified" + chevron;
@@ -951,18 +951,17 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
     in the Project entry menu (§14);
     there `branch.project` and `GITGEL_PROJECT` are the project's name (none in a draft).
   - **Open items**: divider, "Open in Finder" (the worktree folder, or the repository folder
-    when the branch is not checked out), then "Open in <App>" for
-    each installed editor, in this order: Cursor, VS Code, Windsurf, Zed, Sublime Text, then one
-    item for the terminal chosen in Settings › General ("Open in Terminal", "Open in iTerm2",
-    "Open in WezTerm", or the Other app's or command's name). Editors that are not installed are
-    not listed. Each item's icon is the app's own macOS icon, 16px, drawn grayscale
+    when the branch is not checked out), then one item for the editor chosen in Settings ›
+    General ("Open in Cursor", "Open in VS Code", …; none when Automatic finds no editor), then
+    one item for the terminal chosen there ("Open in Terminal", "Open in iTerm2",
+    "Open in WezTerm", or the Other app's or command's name). Each item's icon is the app's own macOS icon, 16px, drawn grayscale
     (`filter: grayscale(1)`), Finder's too; without one, a terminal line icon.
     A pick closes the menu; a failure is logged (`log::warn!`), nothing is shown.
     - Items that cannot be used are left out, not shown disabled. A branch that is not checked
       out still opens its repository folder, and the menu's closing note says "Not checked out"
       (it covers the worktree scripts too,
       §14). A missing repo or a deleted branch has nothing to open: no open items, and the note
-      says "Repository not found" / "Branch deleted" (a gone detached worktree counts as deleted). A chosen terminal
+      says "Repository not found" / "Branch deleted" (a gone detached worktree counts as deleted). A chosen editor or terminal
       that is not installed is left out and the note says "<Name> not installed". The note is 12px `warning.text`, line-height 1.45, padding
       6px 10px 4px, with a 14px circle-i icon.
     - One note at most per menu, at its very end after a divider (below Remove from project and
@@ -1114,13 +1113,19 @@ outside or leaving the page closes it (`src/commands/`).
   - "Check Out New Branches In": a dropdown (`Select`): Repository folder (default), New
     worktree, Branch only (`settings.newBranchCheckout`: `main` / `worktree` / `none`). The row
     New Branch's Check out list opens on (§15 "New branch").
-- **General:** serif 18px heading "General", then Language, Terminal and Check for updates in one
-  group.
+- **General:** serif 18px heading "General", then Language, Editor, Terminal and Check for updates
+  in one group.
   - "Language": a dropdown at the top (native `<select>`, as Terminal): System (default, follows
     the browser language), English, Türkçe. The pick stays pending until a `ConfirmModal`
     ("Confirm Reload", "Gitgel reloads to show the new language.", Cancel / Reload) applies it: confirm saves
     (`settings.language`) and reloads the page; Cancel reverts. The route is restored from
     `sessionStorage` after the reload.
+  - "Editor": a dropdown (native `<select>`, as Terminal): "Automatic (<Name>)" (default: the
+    first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text; "Automatic" when none is),
+    Cursor, VS Code, Windsurf, Zed, Sublime Text. Editors that are not installed are disabled. At
+    launch a chosen editor that is not installed falls back to Automatic. When it is gone while
+    the app runs, a right-aligned 12px `warning` line: "<Name> is not installed". Saved at once
+    (`settings.editor`). The open items list only this editor.
   - "Terminal": a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
@@ -1463,6 +1468,7 @@ export interface Settings {
   diffContextLines: 3 | 5 | 10;  // default 3; anything else reads as 3
   zoom: number;                  // View › Font Size, percent; default 100
   language: 'system' | 'en' | 'tr'; // Settings › General › Language; default 'system'
+  editor: 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime'; // Settings › General › Editor; default 'auto'
   terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   checkUpdates: boolean;         // Settings › General › Check for updates; default true
@@ -1710,10 +1716,15 @@ export interface BaseOptions {
 }
 export interface ProjectView { project: ProjectConfig; entries: EntrySummary[] }
 export interface OpenApp {
-  id: string;                    // "vscode"; "finder"; "terminal" is the chosen terminal
+  id: string;                    // "vscode" (the chosen editor); "finder"; "terminal" is the chosen terminal
   name: string;                  // "VS Code"
   icon: string | null;           // PNG data URL of the app's icon
-  found: boolean;                // false only for a terminal that is not installed
+  found: boolean;                // false only for a chosen editor or terminal that is not installed
+}
+export interface EditorOption {
+  choice: 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime';
+  name: string;                  // "VS Code"
+  found: boolean;                // false when not installed; the dropdown disables it
 }
 export interface TerminalOption {
   choice: 'terminal' | 'iterm' | 'wezterm';
@@ -1745,9 +1756,9 @@ pub enum AppError {
 - `state/data.ts`: `config`, `scan` (by repo id), `scannedOnce`, `repoVersion[repoId]` (bumped on
   each `repo-updated`), `configVersion`. Scan records of repos no longer in the config are ignored.
   `openApps`: the installed apps for the open items, loaded with the config and
-  again on every window focus (an app installed meanwhile appears) and when the terminal
-  settings change. `terminalOptions`: the install state of Terminal/iTerm2/WezTerm for the
-  Settings dropdown, loaded the same way.
+  again on every window focus (an app installed meanwhile appears) and when the editor or
+  terminal settings change. `editorOptions` / `terminalOptions`: the install state of the editors
+  and of Terminal/iTerm2/WezTerm for the Settings dropdowns, loaded the same way.
 - `state/nav.ts`: history router (`stack`, `index`; `push`, `replace`, `back`, `forward`). Routes:
   `branches` (optional `focusRepoId`), `project` (`projectId`, `'draft'` for a draft),
   `review` (`target`, `focusKey?`, `backLabel`), `settings`. The stack persists in
@@ -1796,7 +1807,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `set_repo_pinned` | `repoId, pinned` | `Config` (a pin goes after the earlier ones) |
 | `locate_repo` | `repoId, path` | `Config` |
 | `update_settings` | `settings: Settings` | `Config` |
-| `get_open_apps` | – | `OpenApp[]` (in menu order; the terminal always, `found: false` when missing) |
+| `get_open_apps` | – | `OpenApp[]` (Finder, the chosen editor, the chosen terminal; an explicit editor and the terminal always, `found: false` when missing) |
+| `get_editor_options` | – | `EditorOption[]` (Cursor/VS Code/Windsurf/Zed/Sublime Text with install state) |
 | `get_terminal_options` | – | `TerminalOption[]` (Terminal/iTerm2/WezTerm with install state) |
 | `get_remote_url` | `repoId` | `RemoteInfo \| null` (`base` + `kind`: github, gitlab, bitbucket, other; `origin`, else the first remote; null for no remote or a local path) |
 | `open_remote_link` | `url` | `null` (opens an `https://…` remote page in the browser; anything else is refused) |
@@ -2106,7 +2118,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Checkout branch | `FlowV4.dc.html` | canvas page "Branch actions": V4, the dialog over Branches, interactive (`case` repository, worktree, new: the row picked first; `remote`: from a Remote Branches row) |
 | Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `ReviewFocus` (page menu) |
 | Operations in progress | `FlowT1.dc.html`, `ReviewRebase.dc.html` | canvas page "Branch actions", T1: Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase); canvas page "Review", R4: the operation banner (names, (2/4), Abort / Continue), the head's `rebasing` pill, ⚠ / ✓ file marks and the Abort confirmation |
-| File menu | `ReviewFocus.dc.html` | the file row's right-click menu (its `file` menu in the logic): Discard / copy paths for Uncommitted, Open in Finder / Cursor |
+| File menu | `ReviewFocus.dc.html` | the file row's right-click menu (its `file` menu in the logic): Discard / copy paths for Uncommitted, Open in Finder / the chosen editor |
 | Discard | `ReviewFocus.dc.html` | the Uncommitted row's and file rows' menus, the hover ↶ and Confirm Discard Changes (`discard` / `discardAll` modals in its logic) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `ReviewFocus` with `embedded` (width 1020, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `ReviewFocus.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings (Appearance). Projects and Palette still use hex; theme them with the same mapping |
