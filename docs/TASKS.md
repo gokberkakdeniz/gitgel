@@ -700,6 +700,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) The open items list one editor, the one chosen in Settings › General › Editor (Automatic: the first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text), instead of every installed editor; `settings.editor`, `get_editor_options` — 2026-10-19
 - [x] (on request) Xcode and Typora in Settings › General › Editor (Xcode opens a file at the line with its bundled `xed --line`) — 2026-10-19
 - [x] (on request) Settings › General › Editor › Other: an app name, `.app` path, bundle id or command (`%` = folder or file), as the Other terminal; `settings.editorCommand` — 2026-10-20
+- [x] (on request) Review: the Uncommitted card is a "Changes · N" header (`0` when clean) with its Staged / Unstaged files always listed, and a "Commits" header above the rows; both fold — 2026-10-20
 
 ---
 

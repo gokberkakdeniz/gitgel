@@ -361,6 +361,7 @@
   "history.pullRebase": "Çek (Yeniden Temellendir)",
   "history.forcePush": "Gönder (Zorla)",
   "history.commitsList": "Commit'ler",
+  "history.changes": "Değişiklikler",
   "history.revNotFound": "{$rev} bulunamadı",
   "history.noMatch": "“{$q}” ile eşleşen commit yok",
   "history.clearSearch": "Aramayı temizle",

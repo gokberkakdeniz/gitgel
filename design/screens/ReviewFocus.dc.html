@@ -102,25 +102,8 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <sc-if value="{{it.isHint}}" hint-placeholder-val="{{false}}">
 <div style="flex-shrink: 0; margin: 2px 0 6px; padding: 7px 10px; border-radius: 8px; background: rgba(var(--warning-rgb), 0.12); color: var(--warning); font-size: 12px; line-height: 1.4">{{it.text}}</div>
 </sc-if>
-<sc-if value="{{it.isWip}}" hint-placeholder-val="{{false}}">
-<div class="gg-wrap gg-row" style="{{it.wrapStyle}}">
-<button type="button" class="gg-hit" onClick="{{it.pick}}" onContextMenu="{{it.menu}}" aria-pressed="{{it.sel}}" title="HEAD ↔ working tree" style="{{it.hitStyle}}">
-<sc-if value="{{it.two}}" hint-placeholder-val="{{true}}">
-<span style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-text)"></span></span>
-<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 13px; font-weight: 500; color: var(--accent-text); white-space: nowrap">Uncommitted changes</span><sc-if value="{{it.failed}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="commit failed" tone="danger" size="sm" hint-size="72px,16px"></dc-import></sc-if></span>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span>
-</span>
-</sc-if>
-<sc-if value="{{it.one}}" hint-placeholder-val="{{false}}">
-<span style="width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--accent-text)"></span>
-<span style="font-size: 13px; font-weight: 500; color: var(--accent-text); white-space: nowrap">Uncommitted changes</span>
-<sc-if value="{{it.failed}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="commit failed" tone="danger" size="sm" hint-size="72px,16px"></dc-import></sc-if>
-<span style="flex-grow: 1"></span>
-<span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span>
-</sc-if>
-</button>
-</div>
+<sc-if value="{{it.isListHead}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{it.toggle}}" onContextMenu="{{it.menu}}" aria-expanded="{{it.open}}" style="{{it.wrapStyle}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{it.chevStyle}}"><path d="m6 9 6 6 6-6"></path></svg><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-body); white-space: nowrap">{{it.label}}</span><sc-if value="{{it.hasCount}}" hint-placeholder-val="{{true}}"><span style="min-width: 18px; height: 18px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 5px; border-radius: 9px; background: var(--bg-hover); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)">{{it.count}}</span></sc-if><sc-if value="{{it.failed}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="commit failed" tone="danger" size="sm" hint-size="72px,16px"></dc-import></sc-if><span style="flex-grow: 1"></span><span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span></button>
 </sc-if>
 <sc-if value="{{it.isBase}}" hint-placeholder-val="{{false}}">
 <div class="gg-row" style="{{it.wrapStyle}}">
@@ -1295,8 +1278,7 @@ class Component extends DCLogic {
       } else {
         shown.forEach(function (f) { out.push(fileRow(f)); });
       }
-      if (isWip && !e.wip.length) out.push({ isNote: true, label: 'No changes', wrapStyle: noteStyle(c2) });
-      if (isWip && cmode === 'inline' && !c2) out.push({ isComposer: true, cm: cmFor(e, 'inline') });
+      if (isWip && cmode === 'inline' && !c2 && selE.id === e.id && selRow === 'wip') out.push({ isComposer: true, cm: cmFor(e, 'inline') });
     };
 
     var entryItem = function (e, collapsed) {
@@ -1311,13 +1293,31 @@ class Component extends DCLogic {
         pullTitle: 'Pull from origin/' + e.branch, pull: function () { self.pull(e.id); }, pullStyle: chip(false),
         wrapStyle: 'flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding-right: 4px; border-radius: 8px; margin-top: 2px' };
     };
-    var wipItem = function (e, multi) {
-      var on = selE.id === e.id && selRow === 'wip', inMulti = !!multi && multi.indexOf('wip') >= 0;
-      // No file count; one-line mode: the Uncommitted row is one line too (dot and title, no
-      // age); the dashed border still sets it apart.
-      return { isWip: true, two: !oneLine, one: oneLine, sel: on, meta: oneLine ? '' : (e.wip.length ? e.wipAge : 'No changes'), failed: !!st.failed[e.id],
-        pick: pickRow(e, 'wip'), menu: e.wip.length ? menuAt({ kind: 'wip', e: e.id }) : undefined,
-        wrapStyle: wrap(on, inMulti, 'border: 1px dashed var(--border-strong); margin-top: 2px; '), hitStyle: hit(oneLine ? '4px 8px' : '6px 8px') };
+    // Changes and Commits (VS Code's Changes and Graph): headings across the list's full width,
+    // each folding what is under it. Changes counts Uncommitted's files (0 when clean) and lists
+    // them whichever row is picked; ⌘ / ⇧-click on it takes Uncommitted among several rows, a
+    // right-click opens its menu. Clicking a file picks Uncommitted.
+    var headStyle = function (top, tint, shut) {
+      return 'flex-shrink: 0; display: flex; align-items: center; gap: 6px; margin: ' + (top ? '6px' : '0') + ' -8px 0; padding: ' + (top ? '10px 16px ' + (shut ? '10px' : '4px') : '4px 16px') + '; border: 0; ' +
+        (top ? 'border-top: 1px solid var(--bg-hover); ' : '') + (top && shut ? 'border-bottom: 1px solid var(--bg-hover); ' : '') +
+        'background: ' + (tint ? 'rgba(var(--accent-rgb), 0.18)' : 'transparent') + '; font: inherit; color: inherit; text-align: left; cursor: pointer';
+    };
+    var chev = function (open) { return 'stroke: var(--text-muted); flex-shrink: 0; transition: transform 0.15s; ' + (open ? '' : 'transform: rotate(-90deg)'); };
+    var changesItem = function (e, multi) {
+      var key = e.id + ':changes', open = !st.secShut[key], inMulti = !!multi && multi.indexOf('wip') >= 0;
+      var fold = function () { self.setState({ secShut: self.kv('secShut', key, open) }); };
+      var pick = pickRow(e, 'wip');
+      return { isListHead: true, label: 'Changes', hasCount: true, count: String(e.wip.length), open: open, chevStyle: chev(open),
+        meta: e.wip.length ? e.wipAge : '', failed: !!st.failed[e.id],
+        toggle: function (ev) { if (hasWip(e) && ev && (ev.metaKey || ev.ctrlKey || ev.shiftKey)) pick(ev); else fold(); },
+        menu: e.wip.length ? menuAt({ kind: 'wip', e: e.id }) : undefined,
+        wrapStyle: headStyle(false, inMulti, false) };
+    };
+    var commitsItem = function (e) {
+      var key = e.id + ':commits', open = !st.secShut[key];
+      return { isListHead: true, label: 'Commits', hasCount: false, open: open, chevStyle: chev(open), meta: '', failed: false,
+        toggle: function () { self.setState({ secShut: self.kv('secShut', key, open) }); },
+        wrapStyle: headStyle(true, false, !open) };
     };
     // The whole review (merge-base..branch) is the base line under the branch's commits:
     // "base main · 8c2d5e1". Picking it shows every file the branch changes. The ahead counts
@@ -1373,9 +1373,17 @@ class Component extends DCLogic {
         var multi = st.sel.e === e.id && st.sel.rows ? st.sel.rows : null;
         // A line's selection tints the rows it takes in.
         var lineRows = selE.id === e.id && (selRow === 'range' || selRow === 'origin') ? self.lineKeys(e, selRow) : null;
-        if (hasWip(e) && (!terms.length || branchHit || e.wip.some(fileHit))) {
-          items.push(wipItem(e, multi || lineRows)); nav.push(navRow(e, 'wip'));
-          if (!cols && openRow === 'wip') pushFiles(e, 'wip', items, nav, false);
+        var headed = !!e.wt && !terms.length;
+        if (headed) {
+          items.push(changesItem(e, multi || lineRows));
+          if (hasWip(e)) nav.push(navRow(e, 'wip'));
+          if (!cols && !st.secShut[e.id + ':changes']) pushFiles(e, 'wip', items, nav, false);
+          items.push(commitsItem(e));
+          // Commits folded: nothing under it.
+          if (st.secShut[e.id + ':commits']) return;
+        } else if (hasWip(e) && e.wip.some(fileHit)) {
+          items.push(changesItem(e, multi || lineRows)); nav.push(navRow(e, 'wip'));
+          if (!cols) pushFiles(e, 'wip', items, nav, false);
         }
         var shas = e.commits.map(function (c) { return c.sha; });
         var oldest = -1;

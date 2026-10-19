@@ -283,6 +283,7 @@
   "history.pullRebase": "Pull (Rebase)",
   "history.forcePush": "Force Push",
   "history.commitsList": "Commits",
+  "history.changes": "Changes",
   "history.revNotFound": "{$rev} not found",
   "history.noMatch": "No commits match “{$q}”",
   "history.clearSearch": "Clear Search",

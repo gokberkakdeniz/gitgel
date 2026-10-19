@@ -788,7 +788,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   - **Stacked warning** (margin 2px 0 6px, padding 7px 10px, radius 8, warning tone) when commits
     come from another branch: `N of M commits come from <branch>. A different base may fit
     better.`; those commits carry a warning sm mono pill with the branch's name.
-  - The rows of the open branch, as §16 describes (Uncommitted, commits, base log), without
+  - The rows of the open branch, as §16 describes (Changes, Commits, commits, base log), without
     day labels, and two lines among them:
     - **Origin line**, when some commits of the branch are not on its upstream yet: above the
       newest commit the remote has, a dashed `border.strong` rule on both sides of mono 11
@@ -2637,7 +2637,7 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   then a divider and the open items of §5 Review "File rows" for the files on disk (several open
   one after another). Each file is read from its own entry's worktree, so picks across repos
   with the same paths copy and open the right files. A commit's or a stash's files keep the open items alone.
-- **Uncommitted row menu** (Review, right-click the "Uncommitted changes" row): danger "Discard
+- **Uncommitted row menu** (Review, right-click the Changes header while there are uncommitted files): danger "Discard
   All Changes…" and "Stash All Changes…" (`package`; opens Stash (P4) at the pointer, to its right as the menu, disabled
   when nothing can be stashed).
 - **Confirm Discard Changes** (`Modal` 480px, 160px from the top): `ModalHeader` "Confirm Discard
@@ -3082,18 +3082,24 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
   on this machine (`localStorage`). Only while searching a label (section
   label style, padding 14px 16px 6px) `N matching commits` (`N+` while there are more); otherwise
   the list starts with its rows (the subtitle names the rev). Rows (padding 6px 8px 8px, gap 2):
-  - **Uncommitted changes** (when `rev` is a local branch checked out in a worktree with
-    uncommitted files; never while searching): first. 1px dashed
-    `border.strong`, radius 8, padding 7px 8px; a 24px slot with an 8px `accent.text` dot; 13px/500
-    `accent.text` "Uncommitted changes"; mono 11 muted `<age>` (the age of the newest uncommitted
-    file, as on Branches; left out when unknown), after `N conflicts · ` when some are unmerged;
-    no file count. With "Commit rows: One line" it is one line too, padding 4px 8px: the dot and
-    the title (and its pill), no age; only `N conflicts` on the right when some are unmerged.
-    Picking it lists its files under it in two sections, Staged and Unstaged (the commit form
-    below; "Sections" under "Commit form"); after a failed commit the row
-    carries a danger sm pill "commit failed" after the title. Right-click on the row:
-    Discard All Changes… / Stash All Changes…; its files can be picked with ⌘ / ⇧-click and
-    discarded, staged or copied from their right-click menu (§15 "Discard", Hi8).
+  - **Changes** (VS Code's Changes; when `rev` is a local branch checked out in a worktree;
+    never while searching): first, a header button across the list's full width (margin 0
+    −8px, padding 4px 16px) that folds what is under it (per branch while the app runs;
+    open by default): a chevron, "Changes" in the section label style but 600 `text.body`, its
+    file count in a §5 section pill (`0` when the worktree is clean), a danger sm pill "commit
+    failed" after a failed commit, and on the right mono 11 muted `<age>` (the newest
+    uncommitted file's, as on Branches; left out when unknown), after `N conflicts · ` when
+    some are unmerged. With uncommitted files it stands for Uncommitted too: ⌘ / ⇧-click takes
+    it among several rows (tinted then), right-click opens Discard All Changes… / Stash All
+    Changes…. Under it, whichever row is picked (tree layout), Uncommitted's files in two
+    sections, Staged and Unstaged ("Sections" under "Commit form"); clicking one picks
+    Uncommitted with that file (↑ / ↓ reach Uncommitted too). Its files can be picked with ⌘ /
+    ⇧-click (while Uncommitted is picked) and discarded, staged or copied from their
+    right-click menu (§15 "Discard", Hi8). Picking Uncommitted shows the commit form below.
+  - **Commits** (with Changes): a header button as Changes' (but padding 10px 16px 4px, plus
+    margin-top 6 and a top border `bg.hover`): chevron and "Commits". It folds every row under
+    it (per branch while the app runs; ↑ / ↓ then skip them); folded, padding-bottom 10 and a
+    bottom border `bg.hover` close it.
   - **Commit row** (`role="option"`, tooltip: the full message, subject and body): padding 7px 8px, radius 8, gap
     10; picked: `bg.hover`. A 24px avatar: the author's initials (first letters of the first two
     words, upper case), 10px/600 `text.strong` on `bg.avatar`; an author whose name contains

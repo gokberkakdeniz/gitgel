@@ -593,9 +593,19 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     () => historyRows(commits, { wip, base, ahead: data?.ahead ?? null, upstream: search ? null : data?.upstream }),
     [commits, wip, base, data, search],
   );
-  // The rows ↑ / ↓ step through, top to bottom: Uncommitted, then the commits. The stashes, in
-  // their own section under the list (as in Review), are picked by click.
-  const order = useMemo(() => [...(wip ? [WIP] : []), ...commits.map((c) => c.sha)], [wip, commits]);
+  // A checked-out branch's list opens with Changes (Uncommitted's files, `0` when clean) and
+  // Commits headings; each folds what is under it (per branch while the app runs).
+  const headed = !search && !!entry?.worktreePath;
+  const shutSections = useUi((s) => s.shutSections);
+  const changesShut = !!shutSections[`${draftKey}\u0000changes`];
+  const commitsShut = headed && !!shutSections[`${draftKey}\u0000commits`];
+  const foldList = (part: 'changes' | 'commits') => useUi.getState().toggleSection(`${draftKey}\u0000${part}`);
+  // The rows ↑ / ↓ step through, top to bottom: Uncommitted, then the commits (unless folded).
+  // The stashes, in their own section under the list (as in Review), are picked by click.
+  const order = useMemo(
+    () => [...(wip ? [WIP] : []), ...(commitsShut ? [] : commits.map((c) => c.sha))],
+    [wip, commits, commitsShut],
+  );
 
   // The picked row: the one asked for while it is listed, else Uncommitted, else the newest commit.
   const [picked, setPicked] = useState<string | null>(() => project?.pick.get() ?? null);
@@ -670,8 +680,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // The single row shown is Uncommitted.
   const wipShown = current === WIP && !isMulti;
   // Uncommitted's rows: Staged then Unstaged; a file staged and changed again is in both, so a
-  // row's id is `s:` / `u:` and its path.
-  const wipRows: WipRow[] = wipShown
+  // row's id is `s:` / `u:` and its path. Listed under Changes whichever row is picked.
+  const wipRows: WipRow[] = wip
     ? [
         ...staged.map((f) => ({ id: `s:${f.path}`, file: f, sec: 's' as const })),
         ...unstaged.map((f) => ({ id: `u:${f.path}`, file: f, sec: 'u' as const })),
@@ -807,7 +817,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   };
   const click = (row: string) => {
     if (row !== current || isMulti) pick(row);
-    else if (!columns) setFilesOpen((o) => !o);
+    else if (!columns && row !== WIP) setFilesOpen((o) => !o);
   };
   // Several rows (Hi12): ⌘-click adds or drops one, ⇧-click takes the range from the last one
   // clicked. Down to one row, that row is picked as usual.
@@ -1061,6 +1071,35 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       picks={wipShown ? picks : undefined}
       actions={wipShown ? (r) => wipActions(r as WipRow) : undefined}
       conflict={wipShown && entry ? (f) => conflictOf(entry, f) : undefined}
+    />
+  );
+  // Uncommitted's files under Changes (tree), whichever row is picked: a click picks Uncommitted
+  // with that file.
+  const wipList = wip && !columns && (
+    <FileList
+      rows={wipRows}
+      file={wipShown ? (fileId ?? undefined) : undefined}
+      folder={folder}
+      stage={
+        index
+          ? {
+              disabled: committing,
+              counts: { s: staged.length, u: unstaged.length },
+              onRow: (r) => stageFiles([r.file], r.sec === 's' ? 'unstaged' : 'staged'),
+              onAll: (sec) => (sec === 's' ? stageFiles(staged, 'unstaged') : stageFiles(unstaged, 'staged')),
+              onDiscard: (r) => discard([r]),
+              foldKey: draftKey,
+            }
+          : undefined
+      }
+      onFile={(id) => {
+        if (!wipShown) pick(WIP);
+        setPath(id);
+        setLand('first');
+      }}
+      picks={wipShown ? picks : undefined}
+      actions={(r) => wipActions(r as WipRow)}
+      conflict={entry ? (f) => conflictOf(entry, f) : undefined}
     />
   );
   const commitForm = ((wipShown && wip) || amending) && (
@@ -1450,7 +1489,41 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
               </div>
             )}
             {label && <div className={styles.listLabel}>{label}</div>}
-            {rows.map((r) => (
+            {headed && (
+              <ChangesHead
+                count={wip ? wipFiles.length || (entry?.uncommitted ?? 0) : 0}
+                shut={changesShut}
+                onFold={() => foldList('changes')}
+                wip={
+                  wip
+                    ? {
+                        picked: isMulti && selected.includes(WIP),
+                        conflicts: entry?.conflicts ?? 0,
+                        age: entry?.changedAt ?? null,
+                        failed: commitFailed,
+                        onPick: (e) => clickRow(WIP, e),
+                        onMenu: setWipMenu,
+                      }
+                    : null
+                }
+              />
+            )}
+            {headed && !changesShut && wipList}
+            {headed && (
+              <button
+                type="button"
+                className={`${styles.listHead} ${styles.commitsHead} ${commitsShut ? styles.commitsShut : ''}`}
+                aria-expanded={!commitsShut}
+                onClick={() => foldList('commits')}
+              >
+                <ChevronDownIcon
+                  size={12}
+                  className={commitsShut ? `${parts.sectionChevron} ${parts.sectionShut}` : parts.sectionChevron}
+                />
+                <span className={`${parts.sectionLabel} ${styles.headLabel}`}>{t('history.commitsList')}</span>
+              </button>
+            )}
+            {rows.map((r) => r.kind !== 'wip' && !commitsShut && (
               <ListRow
                 key={rowKey(r)}
                 row={r}
@@ -1458,13 +1531,9 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 selected={isMulti ? selected : []}
                 filesAt={filesAt}
                 fileList={!columns && filesOpen ? fileList : null}
-                wipConflicts={entry?.conflicts ?? 0}
-                wipAge={entry?.changedAt ?? null}
-                wipFailed={commitFailed}
                 onPick={clickRow}
                 onLine={pickLine}
                 lineOn={lineOn}
-                onWipMenu={setWipMenu}
                 onCommitMenu={(commit, at) => {
                   // On one of several picked commits the menu is theirs: Squash, when they can be.
                   const many = isMulti && selected.includes(commit.sha);
@@ -1707,19 +1776,67 @@ function rowKey(r: HistoryRow): string {
   return r.kind === 'commit' ? r.commit.sha : r.kind;
 }
 
+/** Changes (SPEC §5), as Commits: folds Uncommitted's files; ⌘ / ⇧-click takes Uncommitted
+ * among several rows, a right-click opens its menu. */
+function ChangesHead({
+  count,
+  shut,
+  onFold,
+  wip,
+}: {
+  count: number;
+  shut: boolean;
+  onFold: () => void;
+  wip: {
+    /** Among several picked rows (Hi12): tinted. */
+    picked: boolean;
+    conflicts: number;
+    age: number | null;
+    /** The last commit failed. */
+    failed: boolean;
+    onPick: (e: React.MouseEvent) => void;
+    onMenu: (at: DOMRect) => void;
+  } | null;
+}) {
+  const meta =
+    wip &&
+    [wip.conflicts > 0 && t('branches.conflictCount', { ...cnt(wip.conflicts) }), wip.age && ageText(wip.age)]
+      .filter(Boolean)
+      .join(' · ');
+  return (
+    <button
+      type="button"
+      className={`${styles.listHead} ${styles.changesHead} ${wip?.picked ? styles.rowPicked : ''}`}
+      aria-expanded={!shut}
+      onClick={(e) => (wip && (e.metaKey || e.shiftKey) ? wip.onPick(e) : onFold())}
+      onContextMenu={(e) => {
+        if (!wip) return;
+        e.preventDefault();
+        wip.onMenu(new DOMRect(e.clientX, e.clientY, 0, 0));
+      }}
+    >
+      <ChevronDownIcon size={12} className={shut ? `${parts.sectionChevron} ${parts.sectionShut}` : parts.sectionChevron} />
+      <span className={`${parts.sectionLabel} ${styles.headLabel}`}>{t('history.changes')}</span>
+      <span className={parts.sectionPill}>{formatCount(count)}</span>
+      {wip?.failed && (
+        <Pill tone="danger" size="sm">
+          {t('history.commitFailed')}
+        </Pill>
+      )}
+      {meta && <span className={styles.changesMeta}>{meta}</span>}
+    </button>
+  );
+}
+
 function ListRow({
   row,
   current,
   selected,
   filesAt,
   fileList,
-  wipConflicts,
-  wipAge,
-  wipFailed,
   onPick,
   onLine,
   lineOn,
-  onWipMenu,
   onCommitMenu,
   amending,
   fromBranch,
@@ -1730,19 +1847,13 @@ function ListRow({
   selected: string[];
   /** The row the files are listed under. */
   filesAt: string | null;
-  wipConflicts: number;
-  wipAge: number | null;
   /** The picked row's files, listed under it (tree layout); null when folded or in columns. */
   fileList: React.ReactNode;
-  /** Uncommitted: the last commit failed. */
-  wipFailed: boolean;
   onPick: (row: string, e: React.MouseEvent) => void;
   /** The origin or base line clicked: picks the rows above it. */
   onLine: (line: 'origin' | 'base') => void;
   /** Whether the picked rows are exactly that line's. */
   lineOn: (line: 'origin' | 'base') => boolean;
-  /** A right-click on the Uncommitted row, at the pointer. */
-  onWipMenu: (at: DOMRect) => void;
   /** A right-click on a commit row, at the pointer. */
   onCommitMenu: (commit: HistoryCommit, at: DOMRect) => void;
   /** The commit being amended (Hi10): its row says so. */
@@ -1776,67 +1887,9 @@ function ListRow({
         </button>
       );
     }
-    case 'wip': {
-      const on = current === WIP;
-      const many = selected.includes(WIP);
-      const cls = [styles.wip, oneLine && styles.wipOneLine, on && styles.rowOn, many && styles.rowPicked]
-        .filter(Boolean)
-        .join(' ');
-      const title = (
-        <span className={styles.subjectLine}>
-          <span className={styles.wipTitle}>{t('history.wipTitle')}</span>
-          {wipFailed && (
-            <Pill tone="danger" size="sm">
-              {t('history.commitFailed')}
-            </Pill>
-          )}
-        </span>
-      );
-      // No file count; one-line rows leave out the age too.
-      const metaText = [
-        wipConflicts > 0 && t('branches.conflictCount', { ...cnt(wipConflicts) }),
-        !oneLine && wipAge && ageText(wipAge),
-      ]
-        .filter(Boolean)
-        .join(' · ');
-      const meta = metaText && <span className={styles.meta}>{metaText}</span>;
-      return (
-        <>
-          <button
-            type="button"
-            role="option"
-            aria-selected={on || many}
-            title={t('history.showWip')}
-            className={cls}
-            onClick={(e) => onPick(WIP, e)}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              onWipMenu(new DOMRect(e.clientX, e.clientY, 0, 0));
-            }}
-          >
-            {oneLine ? (
-              // One line, as the commit rows: dot and title (conflicts, if any, on the right).
-              <>
-                <span className={styles.wipDot} />
-                {title}
-                {meta}
-              </>
-            ) : (
-              <>
-                <span className={styles.wipSlot}>
-                  <span className={styles.wipDot} />
-                </span>
-                <span className={styles.rowText}>
-                  {title}
-                  {meta}
-                </span>
-              </>
-            )}
-          </button>
-          {filesAt === WIP && fileList}
-        </>
-      );
-    }
+    case 'wip':
+      // Changes, above the rows (ChangesHead).
+      return null;
     case 'commit': {
       const c = row.commit;
       const on = current === c.sha;

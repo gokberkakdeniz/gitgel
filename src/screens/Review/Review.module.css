@@ -95,6 +95,50 @@
   text-overflow: ellipsis;
 }
 
+/* Changes and Commits (SPEC §5, VS Code's Changes and Graph): each folds what is under it.
+ * They run across the list's side padding (8px), edge to edge. */
+.listHead {
+  margin: 0 -8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* First in the list, under its 6px top padding. */
+.changesHead {
+  padding-top: 4px;
+}
+
+.commitsHead {
+  margin-top: 6px;
+  border-top: 1px solid var(--bg-hover);
+}
+
+/* Folded: a rule closes it too, as tall below as above. */
+.commitsShut {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bg-hover);
+}
+
+.changesMeta {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* The list's own headings read above Staged / Unstaged. */
+.listHead .headLabel {
+  font-weight: 600;
+  color: var(--text-body);
+}
+
 .listEmpty {
   display: flex;
   flex-direction: column;
@@ -105,8 +149,7 @@
   color: var(--text-muted);
 }
 
-.commit,
-.wip {
+.commit {
   width: 100%;
   flex-shrink: 0;
   /* A row scrolled into view keeps the list's side padding (8px) above and below it. */
@@ -122,8 +165,7 @@
   cursor: pointer;
 }
 
-.commit:hover,
-.wip:hover {
+.commit:hover {
   background: var(--bg-sunken);
 }
 
@@ -146,52 +188,12 @@
   color: var(--text-muted);
 }
 
-.wip {
-  margin-top: 4px;
-  border: 1px dashed var(--border-strong);
-}
-
-.wipSlot {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .wipDot {
   width: 8px;
   height: 8px;
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--accent-text);
-}
-
-/* One-line commit rows: Uncommitted is one line too, as tall as a commit (4px + the border). */
-.wipOneLine {
-  padding: 4px 8px;
-}
-
-.wipOneLine .subjectLine {
-  flex-grow: 1;
-}
-
-.wipOneLine .wipTitle {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.wipOneLine .meta {
-  flex-shrink: 0;
-}
-
-.wipTitle {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--accent-text);
 }
 
 .rowText {
