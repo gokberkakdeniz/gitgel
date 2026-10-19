@@ -696,6 +696,7 @@ rather than as a task is listed the same way, marked "(on request)".
   - note: the old ⌘K shortcuts stay as they are for now (user decision); Stash…, Change Base… and a project-wide Fetch are not in the palette yet.
 - [x] (on request) Release notes get a `### Changed` group, listed first, for breaking changes (something the user relied on works differently, moved or is gone); SPEC §12 "Release notes" — 2026-10-18
 - [x] T27.6 ✋ Checkpoint — phase 27 — 2026-10-18
+- [x] (on request) Staging picked lines: the diff's right-click menu on an Uncommitted file has Stage Selected Lines / Stage Change (Unstage … on a Staged row); the new staged version is made from the shown texts and written with `hash-object` + `update-index` after checking the index still holds what was shown (`git_stage_lines`, `src/monaco/lineStage.ts`, §15 "Stage") — 2026-10-19
 
 ---
 

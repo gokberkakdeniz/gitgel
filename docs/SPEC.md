@@ -223,6 +223,7 @@ gitgel/
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
 │  └─ monaco/   monaco.ts  setup.ts  theme.ts  language.ts  DiffView.tsx  position.ts  changeNav.ts
+│               # lineStage.ts (the diff's Stage / Unstage of picked lines, §15 "Stage")
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
    ├─ Info.plist                  # merged into the bundle's: LSEnvironment (MallocLargeCache=0)
@@ -834,12 +835,16 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   (default: changes only, 3 lines around each change; Whole file shows everything). No minimap, overview ruler or sticky scroll;
   `useInlineViewWhenSpaceIsLimited: false`. **Right-click** (Monaco's own menu is off) opens a
   230px menu on the lines selected (when the click is inside the selection, else the clicked line;
-  line numbers of the side clicked): "Copy relative reference" (`@<path>:<line>` or
+  line numbers of the side clicked). On an Uncommitted file it starts with the stage items of §15
+  "Stage" (picked lines), then a divider: "Stage Selected Lines" (`plus`; a Staged row's diff
+  "Unstage Selected Lines", `remove`) when the click is inside a selection that touches a change,
+  and "Stage Change" / "Unstage Change" for the change at the clicked line (unified: also on its
+  removed lines), left out when the selection takes the same. Then "Copy relative reference" (`@<path>:<line>` or
   `@<path>:<from>-<to>`, the path relative to the repository), "Copy absolute reference" (the
   same with the file's path in its worktree, else the repository folder; with a commit shown it is
   the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (the remote's
   file page at the commit: GitHub-style `/blob/<sha>/<path>#L12-L13`, GitLab `/-/blob/…`, Bitbucket `/src/…#lines-…`;
-  only for a file shown at a commit, with a remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_remote_url`, `open_remote_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in each editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas D11, `menu: diff`). The editor is created once; changing
+  only for a file shown at a commit, with a remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_remote_url`, `open_remote_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in each editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas R1, `menu: diff`). The editor is created once; changing
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
   shown"; files over 1 MiB "File is too large to show (over 1 MB)".
 - **Diff view menu:** the view button (split or unified icon + "Split" / "Unified" + chevron;
@@ -1665,7 +1670,7 @@ export type ReviewTarget =
   | { kind: 'branch'; repoId: string; branch: string | null;
       worktreePath: string | null; tipOverride: string | null }
   | { kind: 'stashes'; repoId: string };   // a repo's stash stack: no groups (§15)
-export interface FilePair { original: string; modified: string; binary: boolean; tooLarge: boolean }
+export interface FilePair { original: string; modified: string; binary: boolean; tooLarge: boolean; lossy: boolean }
 export interface RemoteInfo { base: string; kind: 'github' | 'gitlab' | 'bitbucket' | 'other' }
 ```
 
@@ -1814,6 +1819,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`summary`, `description`, `noVerify`, `amend`: the newest commit's SHA or null) | `ScriptRun` (§15 "Commit"; commits what is staged) |
 | `get_index_changes` | `entry: EntryRef` | `IndexChanges` (`staged`: HEAD ↔ index, `unstaged`: index ↔ working tree, untracked included; `FileChange[]` each) |
 | `git_stage` | `entry: EntryRef`, `files: StageFiles` (`stage: string[]`, `unstage: string[]`) | `ScriptRun` (§15 "Stage") |
+| `git_stage_lines` | `entry: EntryRef`, `lines: StageLines` (`path`, `content`: the file's new staged version, `expect`: the staged blob it was made from or null, `unstage`) | `ScriptRun` (§15 "Stage", picked lines) |
 | `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`, `keepIndex: string[]`: those of `paths` that go back to the index) | `ScriptRun` (§15 "Discard") |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
@@ -1837,7 +1843,7 @@ Notes:
 - `read_file_pair`: blobs are read from the main repo (worktrees share its object DB). Either
   side over 1 MiB (checked with the blob header, not the content) → `tooLarge`, empty content.
   `binary` if the change is binary or either side has a NUL in its first 8000 bytes. Text is
-  UTF-8 lossy. The right side comes from disk when `newOid` is null and the kind is not D: the
+  UTF-8 lossy (`lossy` when a side is not valid UTF-8: its lines cannot be staged). The right side comes from disk when `newOid` is null and the kind is not D: the
   worktree path must be one of the repo's known worktrees and the canonical file path must stay
   inside it (else `Forbidden`); symlinks show their link text; a file that just vanished is `""`.
 - `update_settings` validates the base order (not empty) and threshold (1–365) and clamps
@@ -2664,6 +2670,25 @@ repository.
 - **Failed**: the rows go back and a failed toast says “Couldn't stage <file>” (“Couldn't stage
   N files”, “Couldn't unstage …”) with the last output line and "Show Output", which opens the
   run's output panel.
+- **Picked lines** (the diff's right-click menu, §5 "Diff"; `src/monaco/lineStage.ts`): on an
+  Unstaged row's diff (index ↔ working tree) "Stage Selected Lines" / "Stage Change" put the
+  picked changes in the index; on a Staged row's diff (HEAD ↔ index) "Unstage Selected Lines" /
+  "Unstage Change" take them out. The changes are Monaco's, as shown (whitespace setting
+  included): a change cut to the selected lines pairs them one to one when both sides have as
+  many lines, else takes the other side whole (VS Code's rule); a change with no lines on the
+  side selected is taken when the selection spans its place; an empty side (new, untracked or
+  deleted file) has no lines. The texts on screen give the file's new staged version: when it is
+  the whole file (all of its changes), the row's + / − runs instead. Otherwise the index side of
+  the diff shows it at once and `git_stage_lines` queues (same queue, Commit off, one command of
+  its own): `{ git -C "$GITGEL_FOLDER" update-index --add --cacheinfo
+  "$GITGEL_MODE,$(git … hash-object -w --path="$GITGEL_PATH" -- "$GITGEL_BLOB"),$GITGEL_PATH"; }
+  || { sleep 0.5 && …; }`, the content in a temp file (`GITGEL_BLOB`, removed when the run ends)
+  cleaned as `git add` would for that path, the mode the index entry's, else HEAD's, else the
+  file's (executable or not). Refused before running: the index no longer holds `expect` for the
+  path ("The staged version of <path> changed. Pick the lines again."), a conflicted file, a
+  symlink or submodule, plus `git_stage`'s checks. The items are left out while a stage or commit
+  runs, for a binary, too large or not UTF-8 file, and until the last stage of the file was read
+  back. Failed: the diff goes back and the toast is the row's (“Couldn't stage <file>”).
 
 ### Commit
 

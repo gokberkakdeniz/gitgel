@@ -182,6 +182,7 @@ pub fn run() {
             commands::git_discard,
             commands::get_index_changes,
             commands::git_stage,
+            commands::git_stage_lines,
             commands::git_push,
         ])
         .build(tauri::generate_context!())

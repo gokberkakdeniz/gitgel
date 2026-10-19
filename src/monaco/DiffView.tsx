@@ -13,6 +13,7 @@ import type { DiffContext, DiffLayout, DiffMode, FileChange } from '../lib/types
 import { useInvoke } from '../lib/useInvoke';
 import styles from './DiffView.module.css';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
+import { cutHunks, hunkAt, hunkAtZone, stagedContent, wholeCut, withoutEmptySide, type Cut } from './lineStage';
 import { languageForPath } from './language';
 import { diffPosition, setDiffPosition } from './position';
 import { fileReference, permalink } from './reference';
@@ -54,6 +55,23 @@ export interface DiffNav {
   goTo: (index: number) => void;
 }
 
+/** The texts on screen and the blobs they were read from (null: none, or the working tree). */
+interface Shown {
+  original: string;
+  modified: string;
+  oldOid: string | null;
+  newOid: string | null;
+}
+
+/** Staging picked lines of an Uncommitted file (SPEC §15 "Stage"): an Unstaged row stages
+ * them, a Staged row (`unstage`) takes them out of the index. */
+export interface LineStage {
+  unstage: boolean;
+  /** Puts the file's new staged version in the index (null: the whole file, as the row's + / −),
+   * made from the staged blob `expect` (null: none); resolves false when it could not. */
+  apply: (content: string | null, expect: string | null) => Promise<boolean>;
+}
+
 interface Props {
   repoId: string;
   worktreePath: string | null;
@@ -89,6 +107,9 @@ interface Props {
   onCommitStep: (dir: 1 | -1) => void;
   /** ⌘K while the diff has focus: the file filter. */
   onFocusFilter: () => void;
+  /** The right-click menu's Stage / Unstage items; none (a commit, or a stage or commit
+   * running), no items. */
+  lineStage?: LineStage | null;
 }
 
 /** Side-by-side diff of one file. The editor stays mounted; only its content changes. */
@@ -115,6 +136,7 @@ export function DiffView({
   onToggleContext,
   onCommitStep,
   onFocusFilter,
+  lineStage = null,
 }: Props) {
   const [ready, setReady] = useState(false);
   /** The right-click menu: where it opens and the lines it refers to (`modified`: the new side). */
@@ -124,6 +146,11 @@ export function DiffView({
     to: number;
     endColumn: number;
     modified: boolean;
+    /** The selected lines' changes, cut down to them; the clicked change. */
+    lines: Cut[] | null;
+    change: Cut[] | null;
+    /** The texts the changes are of. */
+    text: Shown | null;
   } | null>(null);
   const effective = useEffectiveTheme();
   useEffect(() => {
@@ -171,7 +198,14 @@ export function DiffView({
   const changeKey = `${change.path}\u0000${change.oldOid}\u0000${change.newOid}`;
   const { data } = useInvoke(
     // Tagged with the file it belongs to: the previous file stays on screen while loading.
-    () => readFilePair(repoId, worktreePath, change).then((pair) => ({ ...pair, fileKey })),
+    () =>
+      readFilePair(repoId, worktreePath, change).then((pair) => ({
+        ...pair,
+        fileKey,
+        changeKey,
+        oldOid: change.oldOid,
+        newOid: change.newOid,
+      })),
     [repoId, worktreePath, changeKey, mode, fileKey],
     // Blob contents never change; only a working-tree side needs refetching.
     { repoIds: change.newOid === null ? [repoId] : [] },
@@ -193,6 +227,8 @@ export function DiffView({
     /** The line at the top of the view before new content of the same file came in. */
     keepLine: null as number | null,
     decorations: [] as monaco.editor.IEditorDecorationsCollection[],
+    /** The texts `hunks` were computed for; picked lines are staged only from those. */
+    hunksFor: null as Shown | null,
   });
 
   const report = () => latest.current.onNav({ index: nav.current.index, count: nav.current.hunks.length });
@@ -244,6 +280,7 @@ export function DiffView({
     const n = nav.current;
     if (!m) return;
     refold();
+    n.hunksFor = shownText.current;
     n.hunks = (m.editor.getLineChanges() ?? []).map((c) => ({
       originalStart: c.originalStartLineNumber,
       originalEnd: c.originalEndLineNumber,
@@ -342,29 +379,74 @@ export function DiffView({
       ? t('diff.tooLarge')
       : null;
 
-  // New content for the file on screen (another layer, a refresh): note the line at the top
-  // before the editor takes it.
+  // Picked lines being staged: the index side shows their new staged version at once, until the
+  // index read after the stage brings the file in again (another change key) or the stage failed.
+  const [staging, setStaging] = useState<{
+    fileKey: string;
+    changeKey: string;
+    side: 'original' | 'modified';
+    text: string;
+  } | null>(null);
+  const pending =
+    staging && data && staging.fileKey === data.fileKey && staging.changeKey === data.changeKey ? staging : null;
+  const shown: Shown = useMemo(
+    () => ({
+      original: message ? '' : pending?.side === 'original' ? pending.text : (data?.original ?? ''),
+      modified: message ? '' : pending?.side === 'modified' ? pending.text : (data?.modified ?? ''),
+      oldOid: data?.oldOid ?? null,
+      newOid: data?.newOid ?? null,
+    }),
+    [data, message, pending],
+  );
+
+  // New content for the file on screen (another layer, a refresh, staged lines): note the line
+  // at the top before the editor takes it.
   useLayoutEffect(() => {
     const m = mounted.current;
     const n = nav.current;
     if (!m || !data || n.shownKey !== data.fileKey) return;
     n.keepLine = m.editor.getModifiedEditor().getVisibleRanges()[0]?.startLineNumber ?? null;
-  }, [data]);
+  }, [shown]);
 
   // Which file's content is on screen. Monaco reports no diff update when the text does not
   // change (e.g. two binary files), so settle those here.
-  const shownText = useRef<{ original: string; modified: string } | null>(null);
+  const shownText = useRef<Shown | null>(null);
   useEffect(() => {
     nav.current.shownKey = data?.fileKey ?? null;
-    const text = { original: message ? '' : (data?.original ?? ''), modified: message ? '' : (data?.modified ?? '') };
     const same =
-      shownText.current?.original === text.original && shownText.current?.modified === text.modified;
-    shownText.current = text;
+      shownText.current?.original === shown.original && shownText.current?.modified === shown.modified;
+    shownText.current = shown;
     // Same text as before (another file with equal content, or both sides empty): the current
     // line changes still hold, so land now.
     if (data && same) onDiffUpdated();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [shown]);
+
+  // Lines can be staged from text read whole and as it is, once the last stage was read back.
+  const canStage = !!lineStage && !!data && !data.binary && !data.tooLarge && !data.lossy && !pending;
+
+  // Stage / Unstage from the menu: the cuts' new staged version, or the whole file when they
+  // take all of it. Made from the texts the menu was opened on, if they are still on screen.
+  const stageCuts = (cuts: Cut[], text: Shown | null) => {
+    setMenu(null);
+    if (!lineStage || !data || !text || text !== nav.current.hunksFor) return;
+    const content = stagedContent(text.original, text.modified, cuts, lineStage.unstage);
+    const expect = lineStage.unstage ? text.newOid : text.oldOid;
+    if (content === (lineStage.unstage ? text.original : text.modified)) {
+      void lineStage.apply(null, expect);
+      return;
+    }
+    const next = {
+      fileKey: data.fileKey,
+      changeKey: data.changeKey,
+      side: lineStage.unstage ? ('modified' as const) : ('original' as const),
+      text: content,
+    };
+    setStaging(next);
+    void lineStage.apply(content, expect).then((ok) => {
+      if (!ok) setStaging((s) => (s === next ? null : s));
+    });
+  };
 
   return (
     <div className={styles.view}>
@@ -372,8 +454,8 @@ export function DiffView({
         <DiffEditor
           theme={MONACO_THEMES[effective]}
           language={language}
-          original={message ? '' : (data?.original ?? '')}
-          modified={message ? '' : (data?.modified ?? '')}
+          original={shown.original}
+          modified={shown.modified}
           options={options}
           loading={null}
           keepCurrentOriginalModel
@@ -400,20 +482,48 @@ export function DiffView({
                 report();
               }
             });
-            // Right-click: copy a reference to the selected lines, else the clicked one.
+            // Right-click: copy a reference to the selected lines, else the clicked one; stage
+            // the selected lines or the clicked change.
             for (const ed of [original, modified]) {
               ed.onContextMenu((e) => {
+                const { clientX, clientY } = e.event.browserEvent;
+                const rect = new DOMRect(clientX, clientY, 0, 0);
+                const n = nav.current;
+                // The changes are those of the text on screen (not one still being diffed).
+                const text = n.hunksFor;
+                const hunks =
+                  text && text === shownText.current ? withoutEmptySide(n.hunks, text.original, text.modified) : [];
+                const side = ed === modified ? ('modified' as const) : ('original' as const);
+                // Unified layout: removed lines are a view zone of the new side (Monaco gives the
+                // line above as its position).
+                const zone =
+                  e.target.type === monaco.editor.MouseTargetType.CONTENT_VIEW_ZONE
+                    ? hunkAtZone(hunks, e.target.detail.afterLineNumber)
+                    : null;
                 const line = e.target.position?.lineNumber;
                 if (!line) return;
                 const sel = ed.getSelection();
                 const inSel = sel && !sel.isEmpty() && sel.containsPosition(e.target.position!);
-                const { clientX, clientY } = e.event.browserEvent;
+                // A selection ending at the start of a line (line numbers clicked) leaves it out.
+                const to =
+                  inSel && sel.endColumn === 1 && sel.endLineNumber > sel.startLineNumber
+                    ? sel.endLineNumber - 1
+                    : (sel?.endLineNumber ?? line);
+                const lines = inSel
+                  ? cutHunks(hunks, { side, from: sel.startLineNumber, to, lines: ed.getModel()?.getLineCount() ?? 0 })
+                  : [];
+                const at = zone ?? hunkAt(hunks, side, line);
+                const change = at ? [wholeCut(at)] : null;
                 setMenu({
-                  rect: new DOMRect(clientX, clientY, 0, 0),
+                  rect,
                   from: inSel ? sel.startLineNumber : line,
                   to: inSel ? sel.endLineNumber : line,
                   endColumn: inSel ? sel.endColumn : 2,
                   modified: ed === modified,
+                  lines: lines.length > 0 ? lines : null,
+                  // Left out when the selection takes the same.
+                  change: change && JSON.stringify(change) !== JSON.stringify(lines) ? change : null,
+                  text,
                 });
               });
             }
@@ -441,6 +551,21 @@ export function DiffView({
       {menu && (
         <Popover anchorRect={menu.rect} width={230} onClose={() => setMenu(null)}>
           <Menu aria-label={t('diff.actions')} autoFocus>
+            {canStage && (menu.lines || menu.change) && (
+              <>
+                {menu.lines && (
+                  <MenuItem icon={lineStage.unstage ? 'remove' : 'plus'} onSelect={() => stageCuts(menu.lines!, menu.text)}>
+                    {t(lineStage.unstage ? 'diff.unstageLines' : 'diff.stageLines')}
+                  </MenuItem>
+                )}
+                {menu.change && (
+                  <MenuItem icon={lineStage.unstage ? 'remove' : 'plus'} onSelect={() => stageCuts(menu.change!, menu.text)}>
+                    {t(lineStage.unstage ? 'diff.unstageChange' : 'diff.stageChange')}
+                  </MenuItem>
+                )}
+                <MenuDivider />
+              </>
+            )}
             <MenuItem icon={<CopyIcon />} onSelect={() => copy(fileReference(change.path, menu.from, menu.to, menu.endColumn))}>
               {t('diff.copyRelative')}
             </MenuItem>

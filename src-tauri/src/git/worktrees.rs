@@ -115,6 +115,68 @@ pub fn staged(wt_repo: &Repository) -> Result<(Vec<String>, PathBuf), AppError> 
     Ok((paths, wt_repo.path().join("index")))
 }
 
+/// The mode a new staged version of `rel` gets (`100644` / `100755`), after checking that the
+/// index still holds `expect` for it (none: not in the index). From the index entry, else HEAD,
+/// else the file on disk. Symlinks, submodules and conflicted files are refused. Read only.
+pub fn stage_mode(
+    wt_repo: &Repository,
+    folder: &Path,
+    rel: &str,
+    expect: Option<&str>,
+) -> Result<String, AppError> {
+    const LINK: u32 = 0o120000;
+    const GITLINK: u32 = 0o160000;
+    let mut index = wt_repo.index()?;
+    index.read(false)?;
+    let path = Path::new(rel);
+    if (1..=3).any(|stage| index.get_path(path, stage).is_some()) {
+        return Err(AppError::Invalid(format!("{rel} has merge conflicts.")));
+    }
+    let entry = index.get_path(path, 0);
+    let now = entry.as_ref().map(|e| e.id.to_string());
+    if now.as_deref() != expect {
+        return Err(AppError::Invalid(format!(
+            "The staged version of {rel} changed. Pick the lines again."
+        )));
+    }
+    let mode = match entry {
+        Some(e) => e.mode,
+        None => {
+            let head = match wt_repo.head() {
+                Ok(h) => Some(h.peel_to_tree()?),
+                Err(_) => None,
+            };
+            match head.and_then(|t| t.get_path(path).ok()) {
+                Some(e) => e.filemode() as u32,
+                None => {
+                    let meta = std::fs::symlink_metadata(folder.join(path))?;
+                    if meta.file_type().is_symlink() {
+                        LINK
+                    } else {
+                        use std::os::unix::fs::PermissionsExt;
+                        if meta.permissions().mode() & 0o111 != 0 {
+                            0o100755
+                        } else {
+                            0o100644
+                        }
+                    }
+                }
+            }
+        }
+    };
+    if mode == LINK || mode == GITLINK {
+        return Err(AppError::Invalid(format!(
+            "Lines of {rel} cannot be staged: it is a symlink or a submodule."
+        )));
+    }
+    Ok(if mode & 0o111 != 0 {
+        "100755"
+    } else {
+        "100644"
+    }
+    .into())
+}
+
 /// For each path (relative to the worktree): whether git knows it, in the index or in HEAD.
 /// A discard puts these back with `git restore` and removes the others (untracked) with `git
 /// clean`. Read only, as `staged`.

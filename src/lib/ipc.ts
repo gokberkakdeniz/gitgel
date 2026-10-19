@@ -33,6 +33,7 @@ import type {
   StashPush,
   StashChanges,
   StageFiles,
+  StageLines,
   Settings,
   TerminalOption,
   UpdateCheck,
@@ -246,6 +247,10 @@ export const getIndexChanges = (entry: EntryRef) => invoke<IndexChanges>('get_in
 
 /** Stage / Unstage (Review's sections): whole files into the index or out of it. */
 export const gitStage = (entry: EntryRef, files: StageFiles) => invoke<ScriptRun>('git_stage', { entry, files });
+
+/** Stage / Unstage of picked lines (the diff's menu): one file's new staged version. */
+export const gitStageLines = (entry: EntryRef, lines: StageLines) =>
+  invoke<ScriptRun>('git_stage_lines', { entry, lines });
 
 /** Typed text for a running script. */
 export const writeScriptInput = (runId: string, data: string) => invoke<null>('write_script_input', { runId, data });

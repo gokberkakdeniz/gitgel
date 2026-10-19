@@ -1175,6 +1175,41 @@ mod tests {
         assert_eq!(paths(&split.unstaged), ["b*.txt"]);
     }
 
+    /// Picked lines (SPEC §15 "Stage"): the new staged version goes into the index, the working
+    /// tree and the mode stay, and a name with spaces or quotes is no problem.
+    #[test]
+    fn git_action_stages_picked_lines() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a b'\"$x.txt", Some(b"one\ntwo\n"))], "base", 1);
+        t.checkout_main();
+        t.write_file(t.path(), "a b'\"$x.txt", b"one\nONE\ntwo\nTWO\n");
+        let dir = tempfile::TempDir::new().unwrap();
+        let blob = dir.path().join("blob");
+        std::fs::write(&blob, b"one\nONE\ntwo\n").unwrap();
+        let folder = t.path().to_string_lossy().into_owned();
+        let (out, ended) = pty(
+            &super::super::git::stage_lines_command(),
+            &[
+                ("GITGEL_FOLDER", &folder),
+                ("GITGEL_PATH", "a b'\"$x.txt"),
+                ("GITGEL_MODE", "100644"),
+                ("GITGEL_BLOB", &blob.to_string_lossy()),
+            ],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        let mut index = t.repo.index().unwrap();
+        index.read(true).unwrap();
+        let entry = index.get_path(Path::new("a b'\"$x.txt"), 0).unwrap();
+        assert_eq!(entry.mode, 0o100644);
+        let staged = t.repo.find_blob(entry.id).unwrap();
+        assert_eq!(staged.content(), b"one\nONE\ntwo\n");
+        assert_eq!(
+            std::fs::read(t.path().join("a b'\"$x.txt")).unwrap(),
+            b"one\nONE\ntwo\nTWO\n"
+        );
+    }
+
     /// Discard of an Unstaged row (SPEC §15): the file goes back to what is staged, not to HEAD.
     #[test]
     fn git_action_discards_back_to_the_index() {

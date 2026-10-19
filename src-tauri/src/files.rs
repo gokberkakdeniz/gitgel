@@ -118,6 +118,7 @@ fn read_pair(
         modified: String::new(),
         binary,
         too_large,
+        lossy: false,
     };
     if change.binary {
         return Ok(empty(true, false));
@@ -167,6 +168,7 @@ fn read_pair(
         return Ok(empty(true, false));
     }
     Ok(FilePair {
+        lossy: std::str::from_utf8(&original).is_err() || std::str::from_utf8(&modified).is_err(),
         original: String::from_utf8_lossy(&original).into_owned(),
         modified: String::from_utf8_lossy(&modified).into_owned(),
         binary: false,

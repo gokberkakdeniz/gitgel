@@ -1175,6 +1175,9 @@ pub struct FilePair {
     pub modified: String,
     pub binary: bool,
     pub too_large: bool,
+    /// A side is not valid UTF-8 (shown with replacement characters), so its lines cannot be
+    /// staged from the text.
+    pub lossy: bool,
 }
 
 /// A repository remote's web page (`remote_url`): `origin` if there is one.

@@ -459,6 +459,83 @@ pub fn stage(state: &AppState, entry: EntryRef, files: StageFiles) -> Result<Scr
     )
 }
 
+/// What a Stage of picked lines (the diff's menu) puts in git's index: one file's new staged
+/// version, made from the lines shown.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StageLines {
+    /// Relative to the worktree.
+    pub path: String,
+    /// The file's whole new staged version.
+    pub content: String,
+    /// The staged blob the content was made from (none: the file is not in the index); refused
+    /// when the index has another by now.
+    pub expect: Option<String>,
+    /// Only names the run: "Unstage" when the content takes changes out of the index.
+    pub unstage: bool,
+}
+
+/// Stage / Unstage of picked lines (SPEC §15 "Stage"): the file's new staged version is written
+/// as a blob and put in the index (`hash-object -w` + `update-index --cacheinfo`), the file's
+/// mode kept. A git action without toasts of its own, queued with the whole-file ones.
+pub fn stage_lines(
+    state: &AppState,
+    entry: EntryRef,
+    lines: StageLines,
+) -> Result<ScriptRun, AppError> {
+    if !valid_relative(&lines.path) {
+        return Err(AppError::Invalid("The file has no valid path.".into()));
+    }
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let mode = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        worktrees::stage_mode(&wt, &tree.path, &lines.path, lines.expect.as_deref())?
+    };
+    let blob = std::env::temp_dir().join(format!("gitgel-{}.blob", new_id("stage")));
+    std::fs::write(&blob, lines.content.as_bytes())?;
+    let env = vec![
+        (
+            "GITGEL_FOLDER".to_string(),
+            tree.path.to_string_lossy().into_owned(),
+        ),
+        ("GITGEL_PATH".to_string(), lines.path.clone()),
+        ("GITGEL_MODE".to_string(), mode),
+        (
+            "GITGEL_BLOB".to_string(),
+            blob.to_string_lossy().into_owned(),
+        ),
+    ];
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}stage"),
+            name: if lines.unstage { "Unstage" } else { "Stage" }.into(),
+            icon: "plus".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: stage_lines_command(),
+            env: with_git_env(env),
+            cleanup: vec![blob],
+        },
+    )
+}
+
 /// What deleting `branch` loses (Delete Branch's note). Read only.
 pub fn branch_loss(state: &AppState, repo_id: &str, branch: &str) -> Result<BranchLoss, AppError> {
     let repo = open_repo(state, repo_id)?;
@@ -2026,6 +2103,18 @@ pub(super) fn stage_command(shape: StageShape) -> String {
     format!("{{ {once}; }} || {{ sleep 0.5 && {once}; }}")
 }
 
+/// `git -C "$GITGEL_FOLDER" update-index --add --cacheinfo "$GITGEL_MODE,$(git -C
+/// "$GITGEL_FOLDER" hash-object -w --path="$GITGEL_PATH" -- "$GITGEL_BLOB"),$GITGEL_PATH"`: the
+/// blob is cleaned as `git add` would for that path (`--path`), run once more after a short wait
+/// if it fails (`index.lock`); only fixed text and quoted variables.
+pub(super) fn stage_lines_command() -> String {
+    let git = "git -C \"$GITGEL_FOLDER\"";
+    let once = format!(
+        "{git} update-index --add --cacheinfo \"$GITGEL_MODE,$({git} hash-object -w --path=\"$GITGEL_PATH\" -- \"$GITGEL_BLOB\"),$GITGEL_PATH\""
+    );
+    format!("{{ {once}; }} || {{ sleep 0.5 && {once}; }}")
+}
+
 /// `git -C "$GITGEL_FOLDER" add -A -- "$GITGEL_PATH_1" … && git -C "$GITGEL_FOLDER" rebase
 /// --continue` (no `add` without paths), or `… rebase --abort`: only fixed text and quoted
 /// variables.
@@ -2429,5 +2518,42 @@ mod tests {
             stage_command(unborn),
             format!("{{ {once}; }} || {{ sleep 0.5 && {once}; }}")
         );
+        let once = r#"git -C "$GITGEL_FOLDER" update-index --add --cacheinfo "$GITGEL_MODE,$(git -C "$GITGEL_FOLDER" hash-object -w --path="$GITGEL_PATH" -- "$GITGEL_BLOB"),$GITGEL_PATH""#;
+        assert_eq!(
+            stage_lines_command(),
+            format!("{{ {once}; }} || {{ sleep 0.5 && {once}; }}")
+        );
+    }
+
+    /// Picked lines: the index must still hold what they were picked from; the mode comes from
+    /// the index, else HEAD, else the file.
+    #[test]
+    fn stage_mode_checks_the_index() {
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        t.commit_on("main", &[("a.txt", Some(b"a\n"))], "base", 1);
+        t.checkout_main();
+        let staged = t
+            .repo
+            .index()
+            .unwrap()
+            .get_path(Path::new("a.txt"), 0)
+            .unwrap()
+            .id
+            .to_string();
+        let mode =
+            |rel: &str, expect: Option<&str>| worktrees::stage_mode(&t.repo, t.path(), rel, expect);
+        assert_eq!(mode("a.txt", Some(&staged)).unwrap(), "100644");
+        assert!(mode("a.txt", None).is_err());
+        t.write_file(t.path(), "run.sh", b"echo\n");
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(
+            t.path().join("run.sh"),
+            std::fs::Permissions::from_mode(0o755),
+        )
+        .unwrap();
+        assert_eq!(mode("run.sh", None).unwrap(), "100755");
+        std::os::unix::fs::symlink("a.txt", t.path().join("link")).unwrap();
+        assert!(mode("link", None).is_err());
     }
 }

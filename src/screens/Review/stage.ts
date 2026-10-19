@@ -1,13 +1,14 @@
 // Stage / Unstage (SPEC §15 "Stage", Hi5): Review's Staged and Unstaged sections are git's
 // index. A click moves the row at once; its git command waits 150ms for more clicks and runs
 // with them as one, one at a time per repository (git's index.lock, and one git action per
-// repository). While a repository's queue is not empty its Commit button is off. A failed run
-// puts the rows back and says so in a toast.
+// repository). Picked lines of a diff queue here too, each as a command of its own. While a
+// repository's queue is not empty its Commit button is off. A failed run puts the rows back and
+// says so in a toast.
 import { create } from 'zustand';
 import { t } from '../../i18n';
 import { cnt } from '../../lib/format';
-import { gitStage } from '../../lib/ipc';
-import type { AppError, EntryRef, FileChange, IndexChanges } from '../../lib/types';
+import { gitStage, gitStageLines } from '../../lib/ipc';
+import type { AppError, EntryRef, FileChange, IndexChanges, ScriptRun, StageLines } from '../../lib/types';
 import { nameRun, useRuns } from '../../scripts/runs';
 import { useUi } from '../../state/ui';
 
@@ -99,61 +100,128 @@ export function requestStage(target: StageTarget, ops: StageOp[]): void {
   );
 }
 
-async function flush(repoId: string): Promise<void> {
-  // The running command flushes the queue when it ends.
-  if (running.has(repoId)) return;
-  const batch = waiting.get(repoId);
-  waiting.delete(repoId);
-  if (!batch || batch.ops.size === 0) {
-    setBusy(repoId, false);
-    return;
-  }
-  running.add(repoId);
-  const ops = [...batch.ops.values()];
-  const stage = ops.filter((o) => o.to === 'staged').flatMap((o) => o.paths);
-  const unstage = ops.filter((o) => o.to === 'unstaged').flatMap((o) => o.paths);
-  const verb = stage.length > 0 ? 'stage' : 'unstage';
-  const fail = (message: string, runId?: string) => {
-    // The rows go back; the next read of the index says where they are.
-    setOver(batch.target.entryKey, (m) => ops.forEach((o) => delete m[o.path]));
-    useUi.getState().showToast({
-      status: 'failed',
-      message: t(verb === 'stage' ? 'history.couldNotStage' : 'history.couldNotUnstage', {
-        ...cnt(ops.length),
-        file: ops[0].path.split('/').pop() ?? ops[0].path,
-      }),
-      sub: message,
-      ...(runId && {
-        actionLabel: t('common.showOutput'),
-        onAction: () => useRuns.getState().showOutput(runId),
-        owner: runId,
-      }),
-    });
-  };
+/** A Stage of picked lines (the diff's menu): one file's new staged version, a command of its
+ * own in the same queue. */
+interface LinesJob {
+  target: StageTarget;
+  lines: StageLines;
+  done: (ok: boolean) => void;
+}
+const linesWaiting = new Map<string, LinesJob[]>();
+
+/** Queues picked lines; resolves false when they could not be staged (the toast says so). */
+export function requestStageLines(target: StageTarget, lines: StageLines): Promise<boolean> {
+  return new Promise((done) => {
+    const { repoId } = target;
+    linesWaiting.set(repoId, [...(linesWaiting.get(repoId) ?? []), { target, lines, done }]);
+    setBusy(repoId, true);
+    void flush(repoId);
+  });
+}
+
+/** Runs one stage command and waits for it; a failure is told in a toast. */
+async function execute(
+  target: StageTarget,
+  verb: 'stage' | 'unstage',
+  start: () => Promise<ScriptRun>,
+  toast: (message: string, runId?: string) => void,
+): Promise<boolean> {
   try {
-    const run = await gitStage(batch.target.entry, { stage, unstage });
+    const run = await start();
     nameRun(run.runId, t(verb === 'stage' ? 'history.stageAct' : 'history.unstageAct'), '');
     const runs = useRuns.getState();
     if (!runs.runs[run.runId]) runs.put(run);
-    await new Promise<void>((done) => {
+    return await new Promise<boolean>((done) => {
       const ended = () => {
         const r = useRuns.getState().runs[run.runId];
         if (!r || r.status === 'running') return false;
-        if (r.status !== 'exited' || r.exitCode !== 0) fail(r.lastLine || batch.target.label, r.runId);
-        done();
+        const ok = r.status === 'exited' && r.exitCode === 0;
+        if (!ok) toast(r.lastLine || target.label, r.runId);
+        done(ok);
         return true;
       };
       if (ended()) return;
       const off = useRuns.subscribe(() => ended() && off());
     });
   } catch (err) {
-    fail((err as AppError).message);
+    toast((err as AppError).message);
+    return false;
+  }
+}
+
+const failToast = (message: string, sub: string, runId?: string) =>
+  useUi.getState().showToast({
+    status: 'failed',
+    message,
+    sub,
+    ...(runId && {
+      actionLabel: t('common.showOutput'),
+      onAction: () => useRuns.getState().showOutput(runId),
+      owner: runId,
+    }),
+  });
+
+const fileName = (path: string) => path.split('/').pop() ?? path;
+
+async function flush(repoId: string): Promise<void> {
+  // The running command flushes the queue when it ends.
+  if (running.has(repoId)) return;
+  const job = linesWaiting.get(repoId)?.shift();
+  const batch = job ? undefined : waiting.get(repoId);
+  if (!job) waiting.delete(repoId);
+  if (!job && (!batch || batch.ops.size === 0)) {
+    setBusy(repoId, false);
+    return;
+  }
+  running.add(repoId);
+  const target = job?.target ?? batch!.target;
+  try {
+    if (job) {
+      const verb = job.lines.unstage ? 'unstage' : 'stage';
+      const ok = await execute(
+        target,
+        verb,
+        () => gitStageLines(target.entry, job.lines),
+        (sub, runId) =>
+          failToast(
+            t(verb === 'stage' ? 'history.couldNotStage' : 'history.couldNotUnstage', {
+              ...cnt(1),
+              file: fileName(job.lines.path),
+            }),
+            sub,
+            runId,
+          ),
+      );
+      job.done(ok);
+    } else {
+      const ops = [...batch!.ops.values()];
+      const stage = ops.filter((o) => o.to === 'staged').flatMap((o) => o.paths);
+      const unstage = ops.filter((o) => o.to === 'unstaged').flatMap((o) => o.paths);
+      const verb = stage.length > 0 ? 'stage' : 'unstage';
+      await execute(
+        target,
+        verb,
+        () => gitStage(target.entry, { stage, unstage }),
+        (sub, runId) => {
+          // The rows go back; the next read of the index says where they are.
+          setOver(target.entryKey, (m) => ops.forEach((o) => delete m[o.path]));
+          failToast(
+            t(verb === 'stage' ? 'history.couldNotStage' : 'history.couldNotUnstage', {
+              ...cnt(ops.length),
+              file: fileName(ops[0].path),
+            }),
+            sub,
+            runId,
+          );
+        },
+      );
+    }
   } finally {
     running.delete(repoId);
-    const key = batch.target.entryKey;
+    const key = target.entryKey;
     useStage.setState((s) => ({ done: { ...s.done, [key]: (s.done[key] ?? 0) + 1 } }));
   }
-  if (waiting.has(repoId)) await flush(repoId);
+  if (waiting.has(repoId) || (linesWaiting.get(repoId)?.length ?? 0) > 0) await flush(repoId);
   else setBusy(repoId, false);
 }
 

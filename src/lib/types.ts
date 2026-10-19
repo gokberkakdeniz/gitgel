@@ -259,6 +259,14 @@ export interface StageFiles {
   stage: string[];
   unstage: string[];
 }
+/** A Stage of picked lines (`git_stage_lines`): one file's new staged version. */
+export interface StageLines {
+  path: string;
+  content: string;
+  /** The staged blob the content was made from; null: not in the index. */
+  expect: string | null;
+  unstage: boolean;
+}
 /** What a Commit holds (W1a, `git_commit`). */
 export interface CommitFiles {
   summary: string;
@@ -426,6 +434,8 @@ export interface FilePair {
   modified: string;
   binary: boolean;
   tooLarge: boolean;
+  /** A side is not valid UTF-8: its lines cannot be staged from the text. */
+  lossy: boolean;
 }
 
 // ---- Other ----

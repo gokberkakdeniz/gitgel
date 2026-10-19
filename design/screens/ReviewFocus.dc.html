@@ -364,13 +364,13 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <div style="border-right: 1px solid var(--border); overflow: hidden">
 <sc-for list="{{lines}}" as="l" hint-placeholder-count="12">
 <sc-if value="{{l.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{l.unfold}}" title="Show unchanged lines" style="{{l.foldStyle}}">{{l.text}}</button></sc-if>
-<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div style="{{l.lStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.ln}}</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)">{{l.lMark}}</span><span style="white-space: pre">{{l.lt}}</span></div></sc-if>
+<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div onContextMenu="{{l.lMenu}}" style="{{l.lStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.ln}}</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)">{{l.lMark}}</span><span style="white-space: pre">{{l.lt}}</span></div></sc-if>
 </sc-for>
 </div>
 <div style="overflow: hidden">
 <sc-for list="{{lines}}" as="l" hint-placeholder-count="12">
 <sc-if value="{{l.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{l.unfold}}" title="Show unchanged lines" style="{{l.foldStyle}}">{{l.text}}</button></sc-if>
-<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div style="{{l.rStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.rn}}</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">{{l.rMark}}</span><span style="white-space: pre">{{l.rt}}</span></div></sc-if>
+<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div onContextMenu="{{l.rMenu}}" style="{{l.rStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.rn}}</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">{{l.rMark}}</span><span style="white-space: pre">{{l.rt}}</span></div></sc-if>
 </sc-for>
 </div>
 </div>
@@ -379,7 +379,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; padding: 6px 0 32px">
 <sc-for list="{{uLines}}" as="u" hint-placeholder-count="14">
 <sc-if value="{{u.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{u.unfold}}" title="Show unchanged lines" style="{{u.foldStyle}}">{{u.text}}</button></sc-if>
-<sc-if value="{{u.isLine}}" hint-placeholder-val="{{true}}"><div style="{{u.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 8px; color: var(--text-faint)">{{u.on}}</span><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{u.nn}}</span><span style="{{u.markStyle}}">{{u.mark}}</span><span style="white-space: pre">{{u.t}}</span></div></sc-if>
+<sc-if value="{{u.isLine}}" hint-placeholder-val="{{true}}"><div onContextMenu="{{u.menu}}" style="{{u.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 8px; color: var(--text-faint)">{{u.on}}</span><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{u.nn}}</span><span style="{{u.markStyle}}">{{u.mark}}</span><span style="white-space: pre">{{u.t}}</span></div></sc-if>
 </sc-for>
 </div>
 </sc-if>
@@ -1554,10 +1554,22 @@ class Component extends DCLogic {
     var foldText = function (r) { var n = r[6]; return '⋯ ' + n + ' unchanged line' + (n === 1 ? '' : 's'); };
     var unfoldFn = function (r) { return function () { self.setState({ unfold: self.kv('unfold', fileKey + '#' + r[7], true) }); }; };
     var foldStyle = function (pad) { return 'display: flex; width: 100%; padding: 0 0 0 ' + pad + 'px; border: 0; color: var(--text-faint); background: var(--bg-sunken); font-family: inherit; font-size: 11px; line-height: 20px; text-align: left; cursor: pointer'; };
+    // The diff's right-click menu: on an Uncommitted file, Stage (Unstage on a Staged row) Selected
+    // Lines when text is selected and Stage Change on a changed line, then the reference and open items.
+    var canStageLines = selRow === 'wip' && !!selFile && !st.busy[selE.id] && !st.stq[selE.id];
+    var diffMenu = function (changed, side) {
+      return function (ev) {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        var sel = typeof window !== 'undefined' && window.getSelection ? String(window.getSelection()) : '';
+        self.openMenu({ kind: 'diff', e: selE.id, stage: canStageLines, staged: !!(selFile && selFile.st), changed: changed, lines: changed && sel.trim().length > 0, side: side }, ev);
+      };
+    };
     var lines = (rows || []).map(function (r, i) {
       var k = r[4];
       if (k === 'fold') return { isFold: true, text: foldText(r), unfold: unfoldFn(r), foldStyle: foldStyle(58) };
       return { isLine: true, ln: r[0], lt: r[1], rn: r[2], rt: r[3],
+        lMenu: diffMenu(k === 'mod' || k === 'del', 'l'), rMenu: diffMenu(k === 'mod' || k === 'add', 'r'),
         lMark: k === 'mod' || k === 'del' ? '−' : '', rMark: k === 'mod' || k === 'add' ? '+' : '',
         lStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'add' ? hatch : k ? 'background: rgba(var(--danger-rgb), 0.17)' : ''),
         rStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'del' ? hatch : k ? 'background: rgba(var(--success-rgb), 0.15)' : '') };
@@ -1565,7 +1577,7 @@ class Component extends DCLogic {
     var uLines = [], pend = [];
     var uRow = function (on, nn, mark, t, kind, isCur) {
       var bg = kind === 'del' ? 'background: rgba(var(--danger-rgb), 0.17)' : kind === 'add' ? 'background: rgba(var(--success-rgb), 0.15)' : '';
-      uLines.push({ isLine: true, on: on, nn: nn, mark: mark, t: t, style: base0 + (isCur ? cur : '') + bg, markStyle: 'width: 14px; flex-shrink: 0; color: ' + (kind === 'del' ? 'var(--danger)' : 'var(--success)') });
+      uLines.push({ isLine: true, on: on, nn: nn, mark: mark, t: t, menu: diffMenu(!!kind, kind === 'del' ? 'l' : 'r'), style: base0 + (isCur ? cur : '') + bg, markStyle: 'width: 14px; flex-shrink: 0; color: ' + (kind === 'del' ? 'var(--danger)' : 'var(--success)') });
     };
     var flush = function () {
       if (!pend.length) return;
@@ -1649,6 +1661,15 @@ class Component extends DCLogic {
           { label: 'Copy File Path', icon: 'copy', onSelect: close }, { label: 'Copy Relative File Path', icon: 'copy', onSelect: close }, { kind: 'sep' },
           { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }];
         else menuItems = [{ label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }];
+      } else if (M.kind === 'diff') {
+        menuLabel = 'Diff Actions';
+        menuW = 230;
+        var unst = M.staged, sIcon = unst ? 'remove' : 'plus';
+        if (M.stage && M.lines) menuItems.push({ label: unst ? 'Unstage Selected Lines' : 'Stage Selected Lines', icon: sIcon, onSelect: close });
+        if (M.stage && M.changed) menuItems.push({ label: unst ? 'Unstage Change' : 'Stage Change', icon: sIcon, onSelect: close });
+        if (menuItems.length) menuItems.push({ kind: 'sep' });
+        menuItems.push({ label: 'Copy Relative Reference', icon: 'copy', onSelect: close }, { label: 'Copy Absolute Reference', icon: 'copy', onSelect: close });
+        if (selFile && selFile.k !== 'D') menuItems.push({ kind: 'sep' }, { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close });
       } else if (M.kind === 'stash') {
         menuLabel = 'Stash Options';
         if (me.wt) menuItems = [{ label: 'Apply', icon: 'download', onSelect: function () { self.setState({ menu: null }); self.applyStash(M.sid, false); } }, { label: 'Pop', icon: 'undo', onSelect: function () { self.setState({ menu: null }); self.applyStash(M.sid, true); } }, { kind: 'sep' }];

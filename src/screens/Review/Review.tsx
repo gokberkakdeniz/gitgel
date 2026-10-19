@@ -38,7 +38,7 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useInvoke } from '../../lib/useInvoke';
 import { next, prev } from '../../monaco/changeNav';
 import { commitUrl } from '../../monaco/reference';
-import { DiffView, type DiffNav, type NavInfo } from '../../monaco/DiffView';
+import { DiffView, type DiffNav, type LineStage, type NavInfo } from '../../monaco/DiffView';
 import { CopyBranchItem, EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder } from '../../components/OpenItems';
 import { useData } from '../../state/data';
 import { type CommitDraft, commitDraftKey, EMPTY_COMMIT_DRAFT, useUi } from '../../state/ui';
@@ -53,7 +53,7 @@ import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
 import { CommitForm } from './CommitForm';
 import { generateMessage } from './generate';
 import { SquashModal } from './SquashModal';
-import { requestStage, useStage, withMoves, type StageOp, type StageTo } from './stage';
+import { requestStage, requestStageLines, useStage, withMoves, type StageOp, type StageTo } from './stage';
 import { SwitchBranchDialog } from './SwitchBranch';
 import { historyRows, initials, isBot, lineRows, whenLabel, type HistoryRow } from './rows';
 
@@ -379,11 +379,14 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     const ops: StageOp[] = list
       .filter((f) => !seen.has(f.path) && !!seen.add(f.path))
       .map((f) => ({ path: f.path, paths: stagePaths(f), to, from: where(f.path) }));
-    requestStage(
-      { entry: entryRef, entryKey: entry.key, repoId, label: `${repoName} / ${entry.branch ?? entry.shortSha ?? ''}` },
-      ops,
-    );
+    requestStage(stageTarget(entry, entryRef), ops);
   };
+  const stageTarget = (e: NonNullable<typeof entry>, ref: EntryRef) => ({
+    entry: ref,
+    entryKey: e.key,
+    repoId,
+    label: `${repoName} / ${e.branch ?? e.shortSha ?? ''}`,
+  });
   // The form is kept per branch in the store, so leaving Review and coming back keeps it.
   const draftKey = commitDraftKey(repoId, rev);
   const { summary, description, amending } = useUi((s) => s.commitDrafts[draftKey]) ?? EMPTY_COMMIT_DRAFT;
@@ -728,6 +731,24 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           },
     };
   };
+  // The diff's Stage / Unstage of picked lines (§15 "Stage"): an Unstaged row stages them, a
+  // Staged row takes them out; all of the file goes as the row's + / − does. Left out while a
+  // commit or a stage runs, or the row's move is not read back yet.
+  const lineStage: LineStage | null =
+    wipRow && entry && entryRef && !committing && !staging && wipRow.file.kind !== 'C' && !moves?.[wipRow.file.path]
+      ? {
+          unstage: wipRow.sec === 's',
+          apply: (content, expect) => {
+            const f = wipRow.file;
+            const unstage = wipRow.sec === 's';
+            if (content === null) {
+              stageFiles([f], unstage ? 'unstaged' : 'staged');
+              return Promise.resolve(true);
+            }
+            return requestStageLines(stageTarget(entry, entryRef), { path: f.path, content, expect, unstage });
+          },
+        }
+      : null;
   // The Uncommitted row's right-click menu: Discard All Changes, Stash All Changes.
   const [wipMenu, setWipMenu] = useState<DOMRect | null>(null);
   // A commit row's right-click menu (Hi10): Amend Commit… on the newest one, Copy SHA. On one of
@@ -1590,6 +1611,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 onToggleContext={() => viewRef.current.toggleContext()}
                 onCommitStep={(dir) => stepRowRef.current(dir)}
                 onFocusFilter={focusSearch}
+                lineStage={lineStage}
               />
             </>
           )}

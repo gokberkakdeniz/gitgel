@@ -881,6 +881,19 @@ pub async fn git_stage(
     .await
 }
 
+/// Stage / Unstage of picked lines (the diff's menu): one file's new staged version.
+#[tauri::command]
+pub async fn git_stage_lines(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    lines: scripts::git::StageLines,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::stage_lines(state, entry, lines)
+    })
+    .await
+}
+
 /// Sync (W4a): `git push` of the entry's branch to its remote; `force`: `--force-with-lease`.
 #[tauri::command]
 pub async fn git_push(
