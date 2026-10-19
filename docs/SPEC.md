@@ -1121,8 +1121,8 @@ outside or leaving the page closes it (`src/commands/`).
     (`settings.language`) and reloads the page; Cancel reverts. The route is restored from
     `sessionStorage` after the reload.
   - "Editor": a dropdown (native `<select>`, as Terminal): "Automatic (<Name>)" (default: the
-    first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text; "Automatic" when none is),
-    Cursor, VS Code, Windsurf, Zed, Sublime Text. Editors that are not installed are disabled. At
+    first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text, Xcode, Typora; "Automatic"
+    when none is), Cursor, VS Code, Windsurf, Zed, Sublime Text, Xcode, Typora. Editors that are not installed are disabled. At
     launch a chosen editor that is not installed falls back to Automatic. When it is gone while
     the app runs, a right-aligned 12px `warning` line: "<Name> is not installed". Saved at once
     (`settings.editor`). The open items list only this editor.
@@ -1468,7 +1468,7 @@ export interface Settings {
   diffContextLines: 3 | 5 | 10;  // default 3; anything else reads as 3
   zoom: number;                  // View › Font Size, percent; default 100
   language: 'system' | 'en' | 'tr'; // Settings › General › Language; default 'system'
-  editor: 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime'; // Settings › General › Editor; default 'auto'
+  editor: 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime' | 'xcode' | 'typora'; // Settings › General › Editor; default 'auto'
   terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   checkUpdates: boolean;         // Settings › General › Check for updates; default true
@@ -1722,7 +1722,7 @@ export interface OpenApp {
   found: boolean;                // false only for a chosen editor or terminal that is not installed
 }
 export interface EditorOption {
-  choice: 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime';
+  choice: 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime' | 'xcode' | 'typora';
   name: string;                  // "VS Code"
   found: boolean;                // false when not installed; the dropdown disables it
 }
@@ -1808,7 +1808,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `locate_repo` | `repoId, path` | `Config` |
 | `update_settings` | `settings: Settings` | `Config` |
 | `get_open_apps` | – | `OpenApp[]` (Finder, the chosen editor, the chosen terminal; an explicit editor and the terminal always, `found: false` when missing) |
-| `get_editor_options` | – | `EditorOption[]` (Cursor/VS Code/Windsurf/Zed/Sublime Text with install state) |
+| `get_editor_options` | – | `EditorOption[]` (Cursor/VS Code/Windsurf/Zed/Sublime Text/Xcode/Typora with install state) |
 | `get_terminal_options` | – | `TerminalOption[]` (Terminal/iTerm2/WezTerm with install state) |
 | `get_remote_url` | `repoId` | `RemoteInfo \| null` (`base` + `kind`: github, gitlab, bitbucket, other; `origin`, else the first remote; null for no remote or a local path) |
 | `open_remote_link` | `url` | `null` (opens an `https://…` remote page in the browser; anything else is refused) |
@@ -1863,7 +1863,8 @@ Notes:
 - Open items, in `src-tauri/src/apps.rs`: a fixed list of `id`, name and bundle
   id — `cursor` Cursor `com.todesktop.230313mzl4w4u92`, `vscode` VS Code `com.microsoft.VSCode`,
   `windsurf` Windsurf `com.exafunction.windsurf`, `zed` Zed `dev.zed.Zed`, `sublime` Sublime Text
-  `com.sublimetext.4`; `finder` Finder `com.apple.finder` first; terminals: Terminal `com.apple.Terminal`, iTerm2 `com.googlecode.iterm2`, WezTerm
+  `com.sublimetext.4`, `xcode` Xcode `com.apple.dt.Xcode`, `typora` Typora `abnerworks.Typora`;
+  `finder` Finder `com.apple.finder` first; terminals: Terminal `com.apple.Terminal`, iTerm2 `com.googlecode.iterm2`, WezTerm
   `com.github.wez.wezterm`, or the Other app (Settings › General), listed last with id
   `terminal`, always (with `found: false` when not installed; Automatic picks
   the first installed of iTerm2, WezTerm, Terminal). `get_open_apps` asks Launch Services for each bundle id
@@ -1875,7 +1876,9 @@ Notes:
   - `open_file` at a line: Cursor, VS Code, Windsurf and Zed get `<scheme>://file/<path>:<line>:<column>`
     (`cursor`, `vscode`, `windsurf`, `zed`; percent-encoded) through `open_url` with the app's
     bundle, so it needs no `code` on the PATH; Sublime Text runs its bundled
-    `Contents/SharedSupport/bin/subl <path>:<line>:<column>`; without it, the plain file.
+    `Contents/SharedSupport/bin/subl <path>:<line>:<column>`, Xcode its bundled
+    `Contents/Developer/usr/bin/xed --line <line> <path>`; without them (and in Typora), the plain
+    file.
   - Terminals: Terminal and iTerm2 open with `open_path`. WezTerm runs
     `<bundle>/Contents/MacOS/wezterm start --cwd <folder>`. Other: a single word or path that
     resolves to an app (name in `/Applications`, `/Applications/Utilities`,

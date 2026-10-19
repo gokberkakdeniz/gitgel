@@ -329,7 +329,7 @@ class Component extends DCLogic {
     };
     var bn = baseNotes[baseAdd] || baseNotes.typing;
     // The one editor the open items list. Not installed (here Windsurf, Zed, Sublime Text): cannot be picked.
-    var editors = [['auto', 'Automatic (Cursor)'], ['cursor', 'Cursor'], ['vscode', 'VS Code'], ['windsurf', 'Windsurf'], ['zed', 'Zed'], ['sublime', 'Sublime Text']].map(function (x) {
+    var editors = [['auto', 'Automatic (Cursor)'], ['cursor', 'Cursor'], ['vscode', 'VS Code'], ['windsurf', 'Windsurf'], ['zed', 'Zed'], ['sublime', 'Sublime Text'], ['xcode', 'Xcode'], ['typora', 'Typora']].map(function (x) {
       return { value: x[0], label: x[1], on: x[0] === 'auto', disabled: x[0] === 'windsurf' || x[0] === 'zed' || x[0] === 'sublime' };
     });
     var term = this.props.terminal ?? 'auto';

@@ -480,7 +480,7 @@ pub enum Language {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EditorChoice {
-    /// The first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text.
+    /// The first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text, Xcode, Typora.
     #[default]
     Auto,
     Cursor,
@@ -488,6 +488,8 @@ pub enum EditorChoice {
     Windsurf,
     Zed,
     Sublime,
+    Xcode,
+    Typora,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

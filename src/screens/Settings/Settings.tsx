@@ -413,6 +413,8 @@ function EditorSetting({ config }: { config: Config }) {
             { value: 'windsurf', label: 'Windsurf', disabled: missing('windsurf') },
             { value: 'zed', label: 'Zed', disabled: missing('zed') },
             { value: 'sublime', label: 'Sublime Text', disabled: missing('sublime') },
+            { value: 'xcode', label: 'Xcode', disabled: missing('xcode') },
+            { value: 'typora', label: 'Typora', disabled: missing('typora') },
           ]}
         />
       </label>

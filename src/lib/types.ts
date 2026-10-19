@@ -67,7 +67,7 @@ export interface Prompts {
   abortOperation: boolean; // Abort of a rebase, merge, cherry-pick or revert (T3)
   amendPushed: boolean; // Amend of a commit already on the remote (Hi10)
 }
-export type EditorChoice = 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime';
+export type EditorChoice = 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime' | 'xcode' | 'typora';
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
   version: 1;

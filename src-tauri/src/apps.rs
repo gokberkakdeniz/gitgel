@@ -40,6 +40,13 @@ const EDITORS: &[(EditorChoice, &str, &str, &str)] = &[
         "Sublime Text",
         "com.sublimetext.4",
     ),
+    (EditorChoice::Xcode, "xcode", "Xcode", "com.apple.dt.Xcode"),
+    (
+        EditorChoice::Typora,
+        "typora",
+        "Typora",
+        "abnerworks.Typora",
+    ),
 ];
 
 /// The known terminals: choice, display name, bundle id. Automatic tries them in this order:
@@ -155,6 +162,9 @@ const GOTO_SCHEMES: &[(&str, &str)] = &[
 /// Sublime Text's command line tool, inside its bundle; it takes `<path>:<line>:<column>`.
 const SUBLIME_CLI: &str = "Contents/SharedSupport/bin/subl";
 
+/// Xcode's command line tool, inside its bundle; it takes `--line <line> <path>`.
+const XCODE_CLI: &str = "Contents/Developer/usr/bin/xed";
+
 /// Opens `path` in the editor `app` at a line and column; an editor that cannot is given the
 /// plain file.
 fn open_at(path: &Path, app: &str, app_path: &str, line: u32, column: u32) -> Result<(), AppError> {
@@ -163,10 +173,16 @@ fn open_at(path: &Path, app: &str, app_path: &str, line: u32, column: u32) -> Re
         let url = format!("{scheme}://file{}", encode_path(&target));
         tauri_plugin_opener::open_url(url, Some(app_path))
     } else {
-        let cli = Path::new(app_path).join(SUBLIME_CLI);
-        if app == "sublime" && cli.is_file() {
-            let dir = path.parent().unwrap_or(path).to_string_lossy();
-            return spawn_detached(&cli.to_string_lossy(), &[&target], &dir);
+        let dir = path.parent().unwrap_or(path).to_string_lossy();
+        let sublime = Path::new(app_path).join(SUBLIME_CLI);
+        if app == "sublime" && sublime.is_file() {
+            return spawn_detached(&sublime.to_string_lossy(), &[&target], &dir);
+        }
+        let xed = Path::new(app_path).join(XCODE_CLI);
+        if app == "xcode" && xed.is_file() {
+            let line = line.max(1).to_string();
+            let file = path.to_string_lossy();
+            return spawn_detached(&xed.to_string_lossy(), &["--line", &line, &file], &dir);
         }
         tauri_plugin_opener::open_path(path, Some(app_path))
     };
