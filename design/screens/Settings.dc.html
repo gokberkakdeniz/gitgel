@@ -67,6 +67,13 @@ button,input{font-family:inherit}
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Editor</span></span>
 <dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Editor" options="{{editors}}" hint-size="230px,36px"></dc-import>
 </div>
+<sc-if value="{{editorOther}}" hint-placeholder-val="{{false}}">
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Editor Command</span>
+<dc-import name="Input" theme="{{themeName}}" size="36" width="100%" value="idea %" placeholder="idea %" label="Editor Command" left-icon="none" right-text="" clearable="{{false}}" hint-size="100%,36px"></dc-import>
+<span style="font-size: 12px; line-height: 1.5; color: var(--text-muted)">An app name such as Nova, or a command. <span style="font-family: 'JetBrains Mono', monospace; color: var(--text-code)">%</span> becomes the folder or file.</span>
+</label>
+</sc-if>
 <div style="display: flex; flex-direction: column; gap: 10px">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Terminal</span></span>
@@ -221,7 +228,7 @@ button,input{font-family:inherit}
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"baseHover": {"editor": "enum", "options": ["none", "1", "2", "3"], "default": "none"}, "baseAdd": {"editor": "enum", "options": ["none", "typing", "duplicate", "invalid"], "default": "none"}, "section": {"editor": "enum", "options": ["general", "appearance", "repositories", "scripts", "ai", "prompts", "shortcuts"], "default": "general"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "appearance": {"editor": "enum", "options": ["system", "light", "dark"], "default": "system"}, "terminal": {"editor": "enum", "options": ["auto", "terminal", "iterm", "wezterm", "other", "missing"], "default": "auto"}, "$preview": {"width": 1280, "height": 800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"baseHover": {"editor": "enum", "options": ["none", "1", "2", "3"], "default": "none"}, "baseAdd": {"editor": "enum", "options": ["none", "typing", "duplicate", "invalid"], "default": "none"}, "section": {"editor": "enum", "options": ["general", "appearance", "repositories", "scripts", "ai", "prompts", "shortcuts"], "default": "general"}, "theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "appearance": {"editor": "enum", "options": ["system", "light", "dark"], "default": "system"}, "editorChoice": {"editor": "enum", "options": ["auto", "other"], "default": "auto"}, "terminal": {"editor": "enum", "options": ["auto", "terminal", "iterm", "wezterm", "other", "missing"], "default": "auto"}, "$preview": {"width": 1280, "height": 800}}'>
 class Component extends DCLogic {
   renderVals() {
     var ok = 'font-size: 12px; color: var(--text-muted); white-space: nowrap';
@@ -328,9 +335,10 @@ class Component extends DCLogic {
       invalid: ['Not a valid branch name', 'font-size: 12px; color: var(--danger)', 'release candidate', 'invalid']
     };
     var bn = baseNotes[baseAdd] || baseNotes.typing;
+    var editorChoice = this.props.editorChoice ?? 'auto';
     // The one editor the open items list. Not installed (here Windsurf, Zed, Sublime Text): cannot be picked.
-    var editors = [['auto', 'Automatic (Cursor)'], ['cursor', 'Cursor'], ['vscode', 'VS Code'], ['windsurf', 'Windsurf'], ['zed', 'Zed'], ['sublime', 'Sublime Text'], ['xcode', 'Xcode'], ['typora', 'Typora']].map(function (x) {
-      return { value: x[0], label: x[1], on: x[0] === 'auto', disabled: x[0] === 'windsurf' || x[0] === 'zed' || x[0] === 'sublime' };
+    var editors = [['auto', 'Automatic (Cursor)'], ['cursor', 'Cursor'], ['vscode', 'VS Code'], ['windsurf', 'Windsurf'], ['zed', 'Zed'], ['sublime', 'Sublime Text'], ['xcode', 'Xcode'], ['typora', 'Typora'], ['other', 'Other']].map(function (x) {
+      return { value: x[0], label: x[1], on: x[0] === editorChoice, disabled: x[0] === 'windsurf' || x[0] === 'zed' || x[0] === 'sublime' };
     });
     var term = this.props.terminal ?? 'auto';
     var termKind = term === 'missing' ? 'iterm' : term;
@@ -360,6 +368,7 @@ class Component extends DCLogic {
       editors: editors,
       terminals: terminals,
       terminalOther: termKind === 'other',
+      editorOther: editorChoice === 'other',
       terminalMissing: term === 'missing',
       // Repositories › Check Out New Branches In: the row New Branch (V2) opens on.
       newBranchChoices: [['main', 'Repository folder'], ['worktree', 'New worktree'], ['none', 'Branch only']].map(function (x) {

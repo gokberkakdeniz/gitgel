@@ -60,7 +60,10 @@ const TERMINALS: &[(TerminalChoice, &str, &str)] = &[
 /// The id of the terminal item, whichever app it is.
 const TERMINAL: &str = "terminal";
 
-/// Where an `other` terminal given by name is looked for.
+/// The id of the Other editor's item, whichever app or command it is.
+const OTHER_EDITOR: &str = "editor";
+
+/// Where an `other` editor or terminal given by name is looked for.
 const APP_DIRS: &[&str] = &[
     "/Applications",
     "/Applications/Utilities",
@@ -79,11 +82,11 @@ pub fn installed(settings: &Settings) -> Vec<OpenApp> {
         icon: icon(&path),
         found: true,
     });
-    let editor = resolve_editor(settings.editor, app_path).map(|e| OpenApp {
+    let editor = resolve_editor(settings, app_path, find_other).map(|e| OpenApp {
         id: e.id.into(),
-        name: e.name.into(),
+        found: e.app_path.is_some() || e.command.is_some(),
         icon: e.app_path.as_deref().and_then(icon),
-        found: e.app_path.is_some(),
+        name: e.name,
     });
     let term = resolve_terminal(settings);
     let terminal = OpenApp {
@@ -99,19 +102,52 @@ pub fn installed(settings: &Settings) -> Vec<OpenApp> {
         .collect()
 }
 
-/// The editor Settings resolves to; `app_path` is `None` when it is not installed.
+/// The editor Settings resolves to; `app_path` is `None` when it is not installed (for an Other
+/// command, the app its first word names, for the icon).
 struct ResolvedEditor {
     id: &'static str,
-    name: &'static str,
+    name: String,
     app_path: Option<String>,
+    /// An Other command; every `%` becomes the folder or file.
+    command: Option<String>,
 }
 
 /// Automatic: the first installed editor, or none. An explicit choice is kept even when it is
-/// not installed.
+/// not installed. Other: a word or path that resolves to an app opens with it, anything else is
+/// a command; empty means Automatic.
 fn resolve_editor(
-    choice: EditorChoice,
+    settings: &Settings,
     bundle: impl Fn(&str) -> Option<String>,
+    find: impl Fn(&str) -> Option<String>,
 ) -> Option<ResolvedEditor> {
+    let command = settings.editor_command.trim();
+    let other = settings.editor == EditorChoice::Other;
+    if other && !command.is_empty() {
+        if let Some(path) = find(command) {
+            return Some(ResolvedEditor {
+                id: OTHER_EDITOR,
+                name: app_stem(&path),
+                app_path: Some(path),
+                command: None,
+            });
+        }
+        let first = first_word(command);
+        let (name, app_path) = match find(first) {
+            Some(path) => (app_stem(&path), Some(path)),
+            None => (first.to_string(), None),
+        };
+        return Some(ResolvedEditor {
+            id: OTHER_EDITOR,
+            name,
+            app_path,
+            command: Some(command.into()),
+        });
+    }
+    let choice = if other {
+        EditorChoice::Auto
+    } else {
+        settings.editor
+    };
     EDITORS.iter().find_map(|(c, id, name, b)| {
         let app_path = bundle(b);
         let picked = if choice == EditorChoice::Auto {
@@ -119,8 +155,29 @@ fn resolve_editor(
         } else {
             *c == choice
         };
-        picked.then_some(ResolvedEditor { id, name, app_path })
+        picked.then(|| ResolvedEditor {
+            id,
+            name: (*name).into(),
+            app_path,
+            command: None,
+        })
     })
+}
+
+/// Opens `target` (a folder or a file) in the Other editor: with its app, or by running its
+/// command in `cwd`.
+fn open_in_other_editor(target: &str, cwd: &str, settings: &Settings) -> Result<(), AppError> {
+    let editor = resolve_editor(settings, app_path, find_other)
+        .filter(|e| e.id == OTHER_EDITOR)
+        .ok_or_else(|| AppError::NotFound(format!("app {OTHER_EDITOR}")))?;
+    match (editor.command, editor.app_path) {
+        (Some(command), _) => run_command(&command, target, cwd),
+        (None, Some(path)) => tauri_plugin_opener::open_path(target, Some(path)).map_err(|e| {
+            log::warn!("cannot open {target} in {}: {e}", editor.name);
+            AppError::Io(e.to_string())
+        }),
+        (None, None) => Err(AppError::NotFound(format!("editor {}", editor.name))),
+    }
 }
 
 /// The known editors with their install state, for the Settings dropdown.
@@ -140,6 +197,9 @@ pub fn open_folder(path: &str, app: &str, settings: &Settings) -> Result<(), App
     check_folder(Path::new(path))?;
     if app == TERMINAL {
         return open_in_terminal(path, settings);
+    }
+    if app == OTHER_EDITOR {
+        return open_in_other_editor(path, path, settings);
     }
     let app_path = bundle_id(app)
         .and_then(app_path)
@@ -214,6 +274,7 @@ pub fn open_file(
     file: &str,
     app: &str,
     at: Option<(u32, u32)>,
+    settings: &Settings,
 ) -> Result<(), AppError> {
     check_folder(Path::new(folder))?;
     let rel = Path::new(file);
@@ -233,6 +294,9 @@ pub fn open_file(
         tauri_plugin_opener::reveal_item_in_dir(&path)
     } else if app == TERMINAL {
         return Err(AppError::NotFound(format!("app {app}")));
+    } else if app == OTHER_EDITOR {
+        let dir = path.parent().unwrap_or(&path).to_string_lossy();
+        return open_in_other_editor(&shown, &dir, settings);
     } else {
         let app_path = bundle_id(app)
             .and_then(app_path)
@@ -264,7 +328,7 @@ fn open_in_terminal(folder: &str, settings: &Settings) -> Result<(), AppError> {
                 folder,
             )
         }
-        Some(TerminalAction::Shell(template)) => run_command(&template, folder),
+        Some(TerminalAction::Shell(template)) => run_command(&template, folder, folder),
         None => Err(AppError::NotFound(format!("terminal {}", term.name))),
     }
 }
@@ -459,9 +523,9 @@ fn first_word(command: &str) -> &str {
     command.split_whitespace().next().unwrap_or(command)
 }
 
-/// Every `%` in the command becomes the folder, single-quoted for the shell.
-fn fill_command(template: &str, folder: &str) -> String {
-    template.replace('%', &shell_quote(folder))
+/// Every `%` in the command becomes the folder (or file), single-quoted for the shell.
+fn fill_command(template: &str, target: &str) -> String {
+    template.replace('%', &shell_quote(target))
 }
 
 /// `'...'`; an inner `'` becomes `'\''`.
@@ -469,15 +533,11 @@ fn shell_quote(s: &str) -> String {
     format!("'{}'", s.replace('\'', "'\\''"))
 }
 
-/// Runs an Other command with the folder as working directory: `$SHELL -l -c <command>`
+/// Runs an Other command for `target` (a folder or a file) in `cwd`: `$SHELL -l -c <command>`
 /// (`/bin/zsh` without `$SHELL`). Detached: stdio is null and a thread reaps the child.
-fn run_command(template: &str, folder: &str) -> Result<(), AppError> {
+fn run_command(template: &str, target: &str, cwd: &str) -> Result<(), AppError> {
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into());
-    spawn_detached(
-        &shell,
-        &["-l", "-c", &fill_command(template, folder)],
-        folder,
-    )
+    spawn_detached(&shell, &["-l", "-c", &fill_command(template, target)], cwd)
 }
 
 // The one `Command` exception (SPEC §0): terminals are started here and never run git.
@@ -501,8 +561,8 @@ fn spawn_detached(program: &str, args: &[&str], cwd: &str) -> Result<(), AppErro
     Ok(())
 }
 
-/// An `other` terminal: a `.app` path, an app name in the usual folders (with or without
-/// `.app`), or a bundle id.
+/// An `other` editor or terminal: a `.app` path, an app name in the usual folders (with or
+/// without `.app`), or a bundle id.
 fn find_other(input: &str) -> Option<String> {
     let input = input.trim();
     if input.is_empty() {
@@ -664,18 +724,50 @@ mod tests {
         assert_eq!(bundle_id("notepad"), None);
     }
 
+    fn with_editor(editor: EditorChoice, command: &str) -> Settings {
+        Settings {
+            editor,
+            editor_command: command.into(),
+            ..Settings::default()
+        }
+    }
+
     #[test]
     fn automatic_editor_takes_the_first_installed() {
         let zed = |id: &str| (id == "dev.zed.Zed").then(|| "/Zed.app".into());
-        let resolved = resolve_editor(EditorChoice::Auto, zed).expect("zed");
+        let auto = with_editor(EditorChoice::Auto, "");
+        let resolved = resolve_editor(&auto, zed, no_app).expect("zed");
         assert_eq!(resolved.id, "zed");
         assert_eq!(resolved.app_path.as_deref(), Some("/Zed.app"));
         // Nothing installed: no editor item.
-        assert!(resolve_editor(EditorChoice::Auto, no_bundle).is_none());
+        assert!(resolve_editor(&auto, no_bundle, no_app).is_none());
         // An explicit choice stays, without an app.
-        let cursor = resolve_editor(EditorChoice::Cursor, zed).expect("cursor");
+        let cursor = with_editor(EditorChoice::Cursor, "");
+        let cursor = resolve_editor(&cursor, zed, no_app).expect("cursor");
         assert_eq!(cursor.name, "Cursor");
         assert!(cursor.app_path.is_none());
+    }
+
+    #[test]
+    fn other_editor_is_an_app_or_a_command() {
+        let zed = |id: &str| (id == "dev.zed.Zed").then(|| "/Zed.app".into());
+        // An empty command means Automatic.
+        let blank = with_editor(EditorChoice::Other, " ");
+        assert_eq!(resolve_editor(&blank, zed, no_app).unwrap().id, "zed");
+
+        let nova = |input: &str| (input == "Nova").then(|| "/Applications/Nova.app".into());
+        let app = with_editor(EditorChoice::Other, "Nova");
+        let resolved = resolve_editor(&app, zed, nova).unwrap();
+        assert_eq!(resolved.id, OTHER_EDITOR);
+        assert_eq!(resolved.name, "Nova");
+        assert!(resolved.command.is_none());
+
+        let cmd = with_editor(EditorChoice::Other, "idea %");
+        let resolved = resolve_editor(&cmd, zed, nova).unwrap();
+        assert_eq!(resolved.id, OTHER_EDITOR);
+        assert_eq!(resolved.name, "idea");
+        assert!(resolved.app_path.is_none());
+        assert_eq!(resolved.command.as_deref(), Some("idea %"));
     }
 
     #[test]

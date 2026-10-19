@@ -1122,10 +1122,17 @@ outside or leaving the page closes it (`src/commands/`).
     `sessionStorage` after the reload.
   - "Editor": a dropdown (native `<select>`, as Terminal): "Automatic (<Name>)" (default: the
     first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text, Xcode, Typora; "Automatic"
-    when none is), Cursor, VS Code, Windsurf, Zed, Sublime Text, Xcode, Typora. Editors that are not installed are disabled. At
-    launch a chosen editor that is not installed falls back to Automatic. When it is gone while
-    the app runs, a right-aligned 12px `warning` line: "<Name> is not installed". Saved at once
-    (`settings.editor`). The open items list only this editor.
+    when none is), Cursor, VS Code, Windsurf, Zed, Sublime Text, Xcode, Typora, "Other". Editors
+    that are not installed are disabled. At launch a chosen editor that is not installed falls
+    back to Automatic (an Other one is left alone). Other shows under it, as Terminal's, a 36px
+    mono input (placeholder `idea %`, saved on blur/↵, trimmed; empty = Automatic) and a 12px
+    muted note: "An app name such as Nova, or a command. % becomes the folder or file." A word or
+    path that resolves to an app (looked up as the Other terminal) opens with it; anything else
+    runs as the Other terminal's command, `%` being the folder or file, in that folder (a file:
+    its folder); no line. When the chosen editor is gone while the app runs, a right-aligned
+    12px `warning` line: "<Name> is not installed". Saved at once (`settings.editor`,
+    `settings.editorCommand`). The open items list only this editor (Other: its app's or the
+    command's first word's name, id `editor`).
   - "Terminal": a 230 × 36px
     dropdown (native `<select>`, `bg.elevated`, 1px border, radius 8, 13px, 12px chevron at the
     right): "Automatic (<Name>)" (default: the first installed of iTerm2, WezTerm, Terminal),
@@ -1468,7 +1475,8 @@ export interface Settings {
   diffContextLines: 3 | 5 | 10;  // default 3; anything else reads as 3
   zoom: number;                  // View › Font Size, percent; default 100
   language: 'system' | 'en' | 'tr'; // Settings › General › Language; default 'system'
-  editor: 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime' | 'xcode' | 'typora'; // Settings › General › Editor; default 'auto'
+  editor: 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime' | 'xcode' | 'typora' | 'other'; // Settings › General › Editor; default 'auto'
+  editorCommand: string;         // Other: an app or a command (`%` = folder or file); default ''
   terminal: 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other'; // default 'auto'
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   checkUpdates: boolean;         // Settings › General › Check for updates; default true

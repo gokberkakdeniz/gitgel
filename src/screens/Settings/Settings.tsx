@@ -388,7 +388,13 @@ function LanguageSetting({ config }: { config: Config }) {
 
 /** The app behind "Open in <editor>" in the entry and file menus. */
 function EditorSetting({ config }: { config: Config }) {
-  const { editor } = config.settings;
+  const { editor, editorCommand } = config.settings;
+  const [command, setCommand] = useState(editorCommand);
+  useEffect(() => setCommand(editorCommand), [editorCommand]);
+  const saveCommand = () => {
+    const trimmed = command.trim();
+    if (trimmed !== editorCommand) void updateSettings({ ...config.settings, editorCommand: trimmed });
+  };
   const openApps = useData((s) => s.openApps);
   const editorApp = openApps.find((a) => a.id !== 'finder' && a.id !== 'terminal');
   const loaded = openApps.length > 0;
@@ -415,9 +421,31 @@ function EditorSetting({ config }: { config: Config }) {
             { value: 'sublime', label: 'Sublime Text', disabled: missing('sublime') },
             { value: 'xcode', label: 'Xcode', disabled: missing('xcode') },
             { value: 'typora', label: 'Typora', disabled: missing('typora') },
+            { value: 'other', label: t('settings.terminalOther') },
           ]}
         />
       </label>
+      {editor === 'other' && (
+        <label className={styles.terminalOther}>
+          <span className={styles.srOnly}>{t('settings.editorCmd')}</span>
+          <Input
+            mono
+            size={36}
+            className={styles.terminalCommand}
+            placeholder={t('settings.editorPh')}
+            value={command}
+            onChange={setCommand}
+            onBlur={saveCommand}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                saveCommand();
+                e.currentTarget.blur();
+              }
+            }}
+          />
+          <span className={styles.settingHint}>{t('settings.editorCmdHint')}</span>
+        </label>
+      )}
       {loaded && editorApp && !editorApp.found && (
         <span className={styles.terminalMissing}>{t('settings.editorMissing', { name: editorApp.name })}</span>
       )}

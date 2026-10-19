@@ -107,6 +107,9 @@ pub struct Settings {
     pub sidebar_visible: bool,
     /// Settings › General › Editor, for the open items; configs from before it load as `auto`.
     pub editor: EditorChoice,
+    /// The `other` editor: an app name, a `.app` path, a bundle id or a command (`%` becomes the
+    /// folder or file). Empty means Automatic.
+    pub editor_command: String,
     /// Settings › Behaviour › Terminal, for the entry menus' open items.
     pub terminal: TerminalChoice,
     /// The `other` terminal: a command (`%` becomes the folder), an app name, a `.app` path or
@@ -256,6 +259,7 @@ impl Default for Settings {
             appearance: Appearance::System,
             sidebar_visible: true,
             editor: EditorChoice::Auto,
+            editor_command: String::new(),
             terminal: TerminalChoice::Auto,
             terminal_command: String::new(),
             check_updates: true,
@@ -490,6 +494,7 @@ pub enum EditorChoice {
     Sublime,
     Xcode,
     Typora,
+    Other,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

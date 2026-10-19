@@ -160,6 +160,7 @@ pub fn update_settings(state: &AppState, settings: Settings) -> Result<Config, A
             date_format: crate::model::valid_date_format(&settings.date_format).to_string(),
             time_format: crate::model::valid_time_format(&settings.time_format).to_string(),
             diff_tab_size: crate::model::valid_tab_size(settings.diff_tab_size),
+            editor_command: settings.editor_command.trim().to_string(),
             terminal_command: settings.terminal_command.trim().to_string(),
             ..settings
         };

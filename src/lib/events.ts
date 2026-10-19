@@ -34,6 +34,7 @@ async function start() {
     if (
       before &&
       (before.editor !== after.editor ||
+        before.editorCommand !== after.editorCommand ||
         before.terminal !== after.terminal ||
         before.terminalCommand !== after.terminalCommand)
     ) {

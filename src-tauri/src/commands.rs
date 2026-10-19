@@ -387,7 +387,10 @@ pub async fn open_file(
     column: Option<u32>,
 ) -> Result<(), AppError> {
     let at = line.map(|l| (l, column.unwrap_or(1)));
-    blocking(&state, move |_| apps::open_file(&folder, &file, &app, at)).await
+    blocking(&state, move |state| {
+        apps::open_file(&folder, &file, &app, at, &config::snapshot(state).settings)
+    })
+    .await
 }
 
 /// The update found by the last check, if any (§12 "Updates").

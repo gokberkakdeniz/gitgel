@@ -180,7 +180,8 @@ mod tests {
         // Set apart: one more key in the literal passes `json!`'s recursion limit.
         value["settings"]["commitRows"] = json!("one-line");
         value["settings"]["historyLayout"] = json!("columns");
-        value["settings"]["editor"] = json!("zed");
+        value["settings"]["editor"] = json!("other");
+        value["settings"]["editorCommand"] = json!("idea %");
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(
             config.repos,
@@ -256,6 +257,7 @@ mod tests {
         );
         assert_eq!(config.settings.diff_context_lines, 3);
         assert_eq!(config.settings.editor, crate::model::EditorChoice::Auto);
+        assert_eq!(config.settings.editor_command, "");
         assert_eq!(config.settings.terminal, crate::model::TerminalChoice::Auto);
         assert_eq!(config.settings.terminal_command, "");
         assert_eq!(config.settings.prompts, crate::model::Prompts::default());

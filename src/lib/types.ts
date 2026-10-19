@@ -51,6 +51,7 @@ export interface Settings {
   appearance: Appearance; // Settings › Appearance
   sidebarVisible: boolean; // the main sidebar is shown; remembered
   editor: EditorChoice; // Settings › General › Editor, for "Open in …"
+  editorCommand: string; // the Other editor: an app name, a .app path, a bundle id or a command (`%` = folder or file); empty = Automatic
   terminal: TerminalChoice; // Settings › Behaviour › Terminal, for "Open in …"
   terminalCommand: string; // the Other terminal: a command (`%` = folder), an app name, a .app path or a bundle id; empty = Automatic
   checkUpdates: boolean; // Settings › Behaviour › Check for Updates
@@ -67,7 +68,7 @@ export interface Prompts {
   abortOperation: boolean; // Abort of a rebase, merge, cherry-pick or revert (T3)
   amendPushed: boolean; // Amend of a commit already on the remote (Hi10)
 }
-export type EditorChoice = 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime' | 'xcode' | 'typora';
+export type EditorChoice = 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime' | 'xcode' | 'typora' | 'other';
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';
 export interface Config {
   version: 1;
@@ -482,7 +483,7 @@ export interface OpenApp {
 
 /** An editor the Settings dropdown can choose: whether it is installed. */
 export interface EditorOption {
-  choice: EditorChoice; // "cursor" | "vscode" | …
+  choice: EditorChoice; // "cursor" | "vscode" | … (never "auto" or "other")
   name: string; // "VS Code"
   found: boolean;
 }
