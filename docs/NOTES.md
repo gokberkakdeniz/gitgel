@@ -26,3 +26,10 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   about: showing them on History's commit rows, creating one on a commit (lightweight or
   annotated), deleting one, and pushing it (`git push origin <tag>`; tags are not pushed with the
   branch). Creating, deleting and pushing are git actions (SPEC §0, §10).
+- **Hunk buttons in the diff gutter** (2026-10-19). VS Code's diff editor shows Revert (↶) and
+  Stage (+) beside each hunk. Monaco 0.57 has the gutter menu (`renderGutterMenu`) but only with
+  Revert Block, and only when the modified side is writable (ours is `readOnly`); Stage comes
+  from VS Code's git extension via `MenuId.DiffEditorHunkToolbar`, which standalone Monaco does
+  not expose (only through internal ESM modules, which may break on upgrades). Sturdier: our own
+  glyph-margin / overlay widget per hunk from `getLineChanges()`, wired to the picked-lines
+  stage/unstage (`79f1a20`); Revert would be a git action (SPEC §0, §10).
