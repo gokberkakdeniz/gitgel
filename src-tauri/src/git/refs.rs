@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 
-use git2::{BranchType, Oid, Repository};
+use git2::{BranchType, Direction, Oid, Remote, Repository};
 
 use crate::error::AppError;
 use crate::model::BranchLoss;
@@ -51,10 +51,72 @@ pub fn upstream_of(repo: &Repository, branch: &str) -> Option<String> {
             }
         }
     }
+    origin_fallback(repo, branch)
+}
+
+fn origin_fallback(repo: &Repository, branch: &str) -> Option<String> {
     let fallback = format!("origin/{branch}");
     repo.find_reference(&format!("refs/remotes/{fallback}"))
         .is_ok()
         .then_some(fallback)
+}
+
+/// [`upstream_of`] for many branches at once, as `branch -> upstream`. The configuration is read
+/// once and each remote looked up once: libgit2 does both on every `upstream()` call, which
+/// takes seconds over a repository's thousand-odd branches.
+pub fn upstreams<'a>(
+    repo: &Repository,
+    branches: impl IntoIterator<Item = &'a String>,
+) -> HashMap<String, String> {
+    let mut remote: HashMap<String, String> = HashMap::new();
+    let mut merge: HashMap<String, String> = HashMap::new();
+    if let Ok(cfg) = repo.config().and_then(|mut c| c.snapshot()) {
+        if let Ok(mut entries) = cfg.entries(Some(r"^branch\..*\.(remote|merge)$")) {
+            while let Some(Ok(entry)) = entries.next() {
+                let (Ok(name), Ok(value)) = (entry.name(), entry.value()) else {
+                    continue;
+                };
+                let Some(rest) = name.strip_prefix("branch.") else {
+                    continue;
+                };
+                if let Some(b) = rest.strip_suffix(".remote") {
+                    remote.insert(b.to_string(), value.to_string());
+                } else if let Some(b) = rest.strip_suffix(".merge") {
+                    merge.insert(b.to_string(), value.to_string());
+                }
+            }
+        }
+    }
+    let mut found: HashMap<String, Option<Remote>> = HashMap::new();
+    let mut out = HashMap::new();
+    for branch in branches {
+        let configured = remote
+            .get(branch)
+            .zip(merge.get(branch))
+            .and_then(|(r, m)| {
+                let refname = if r == "." {
+                    m.clone()
+                } else {
+                    let rem = found
+                        .entry(r.clone())
+                        .or_insert_with(|| repo.find_remote(r).ok())
+                        .as_ref()?;
+                    let spec = rem
+                        .refspecs()
+                        .find(|s| s.direction() == Direction::Fetch && s.src_matches(m))?;
+                    spec.transform(m).ok()?.as_str().ok()?.to_string()
+                };
+                repo.find_reference(&refname).ok()?;
+                refname
+                    .strip_prefix("refs/remotes/")
+                    .or_else(|| refname.strip_prefix("refs/heads/"))
+                    .map(str::to_string)
+            });
+        if let Some(up) = configured.or_else(|| origin_fallback(repo, branch)) {
+            out.insert(branch.clone(), up);
+        }
+    }
+    out
 }
 
 /// Where a local branch is pushed to and pulled from (W4a).
@@ -436,6 +498,29 @@ mod tests {
             upstream_of(&t.repo, "feature").as_deref(),
             Some("origin/main")
         );
+    }
+
+    #[test]
+    fn upstreams_match_upstream_of() {
+        let t = TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        t.set_origin_head("main");
+        for b in ["feature", "local", "plain"] {
+            t.branch_from(b, tip);
+        }
+        t.set_upstream("feature", "origin/main");
+        t.set_upstream("local", "main");
+        let names: Vec<String> = local_branches(&t.repo)
+            .unwrap()
+            .into_iter()
+            .map(|b| b.name)
+            .collect();
+        let all = upstreams(&t.repo, &names);
+        assert_eq!(all.get("feature").map(String::as_str), Some("origin/main"));
+        assert_eq!(all.get("local").map(String::as_str), Some("main"));
+        for b in &names {
+            assert_eq!(all.get(b).cloned(), upstream_of(&t.repo, b), "{b}");
+        }
     }
 
     #[test]

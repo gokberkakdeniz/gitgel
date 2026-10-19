@@ -330,10 +330,7 @@ fn remotes(repo: &Repo, branch_names: &HashSet<String>) -> Vec<RemoteBranch> {
             return Vec::new();
         }
     };
-    let upstreams: HashSet<String> = branch_names
-        .iter()
-        .filter_map(|b| refs::upstream_of(repo, b))
-        .collect();
+    let upstreams: HashSet<String> = refs::upstreams(repo, branch_names).into_values().collect();
     let mut out: Vec<RemoteBranch> = tips
         .into_iter()
         .filter(|r| {

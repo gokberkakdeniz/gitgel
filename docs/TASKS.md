@@ -701,6 +701,7 @@ rather than as a task is listed the same way, marked "(on request)".
 - [x] (on request) Xcode and Typora in Settings › General › Editor (Xcode opens a file at the line with its bundled `xed --line`) — 2026-10-19
 - [x] (on request) Settings › General › Editor › Other: an app name, `.app` path, bundle id or command (`%` = folder or file), as the Other terminal; `settings.editorCommand` — 2026-10-20
 - [x] (on request) Review: the Uncommitted card is a "Changes · N" header (`0` when clean) with its Staged / Unstaged files always listed, and a "Commits" header above the rows; both fold — 2026-10-20
+- [x] (on request) Scans of a repository with many branches no longer spend seconds finding upstreams (frontend's 1412 branches: ~12.5 s → ~10 ms per scan, so new commits show up at once): `refs::upstreams` reads the config and each remote once instead of libgit2's `upstream()` per branch — 2026-10-20
 
 ---
 
