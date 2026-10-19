@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.1 — 2026-10-20
+
+### New
+- Stage and unstage selected lines from the diff's right-click menu.
+- Settings › General › Editor: pick one editor, or a custom app or command.
+
+### Improved
+- New commits and branch changes appear right away in repositories with many branches.
+- Review's Changes and Commits headers fold their rows.
+
+### Fixed
+- Review shows tags fetched or created while Gitgel is open.
+
 ## 0.2.0 — 2026-10-18
 
 ### Changed
