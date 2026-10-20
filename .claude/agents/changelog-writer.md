@@ -21,6 +21,9 @@ The version (e.g. `0.1.18`). If none is given, take the next patch after the top
 ```
 ## <version> — YYYY-MM-DD
 
+### Changed
+- ...
+
 ### New
 - ...
 
@@ -30,7 +33,8 @@ The version (e.g. `0.1.18`). If none is given, take the next patch after the top
 ### Fixed
 - ...
 ```
-- Groups in this order: New, Improved, Fixed. Leave out an empty group.
+- Groups in this order: Changed, New, Improved, Fixed. Leave out an empty group.
+  - Changed: a breaking change: something the user relied on works differently, moved or is gone (`Review and History are one screen, named Review: …`, `Review's file groups, modes and file filter are gone.`). A change that only adds to what was there is Improved, not Changed.
   - New: a feature the user did not have: a new action, flow, screen or capability (`Discard Changes`, `Turkish translation`).
   - Improved: something that existed does more, shows more or behaves better: an existing panel, list, menu or Settings section gains a detail, an option or a control (`The output panel shows the running command.`, a resizable sidebar, new formats in Settings › Appearance).
   - Fixed: a bug in something that shipped in an earlier release.
