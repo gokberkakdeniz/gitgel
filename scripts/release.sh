@@ -124,6 +124,8 @@ else
     --title "Gitgel $VERSION" \
     --notes "$NOTES"$'\n\n'"$INSTALL_NOTE"
 fi
+# gh creates the tag on GitHub only; bring it into the local repo too.
+git fetch -q origin "refs/tags/$TAG:refs/tags/$TAG"
 
 echo "Uploaded $(basename "$ZIP") to $TAG: $(gh release view "$TAG" --json url --jq .url)"
 
