@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2 — 2026-11-10
+
+### Improved
+- Review's stash rows have a right-click menu: Apply, Pop and Drop.
+- Review's commit and stash file menus copy the file path.
+- Review's file bar path is selectable.
+
 ## 0.2.1 — 2026-10-20
 
 ### New
