@@ -95,8 +95,8 @@ export function FileBar({
   const { layout, ignoreWs, context, contextLines, saveView, toggleWs } = view;
   return (
     <div className={styles.fileBar}>
-      <span className={styles.filePath}>{file.path}</span>
-      <span className={styles.muted}>{label}</span>
+      <span className={`${styles.filePath} selectable`}>{file.path}</span>
+      <span className={`${styles.muted} selectable`}>{label}</span>
       {ignoreWs && (
         <Pill tone="accent" title={t('review.showWs')} onClick={toggleWs}>
           {t('review.wsIgnored')}

@@ -427,7 +427,7 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   `secondary`. Icon-only buttons are `IconButton` (28 plain, 24 in compact list rows, 32 boxed).
   A copy button (the output panel's Copy, Review's commit header's copy SHA) says it worked: for 1.5 s its icon becomes `check` and
   it turns `success.text`, a labelled one reading "Copied" (`useCopy`, `src/lib/useCopy.ts`). Rendered
-  texts (a commit's subject, body, short SHAs) are selectable and copy through the system menu or
+  texts (a commit's subject, body, short SHAs, the file bar's path and compare label) are selectable and copy through the system menu or
   shortcut; the webview menu is left alone on them (`App.tsx`).
 - `PageMenu`: the ⋮ (`more-vertical`) 32px boxed `IconButton` (`aria-label` "More actions") that
   ends Review's header; a 240px `Menu`, right-aligned under it, with the page's

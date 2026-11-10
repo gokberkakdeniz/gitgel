@@ -471,6 +471,7 @@ it was done within a topic.
 - [x] Review's commit rows and commit header show the commit's tags as neutral mono pills (read only; `HistoryCommit.tags`) — 2026-10-18
 - [x] A commit row's tooltip is the commit's full message instead of "Show this commit" — 2026-10-18
 - [x] Review: the Uncommitted card is a "Changes · N" header (`0` when clean) with its Staged / Unstaged files always listed, and a "Commits" header above the rows; both fold — 2026-10-20
+- [x] The file bar's path and compare label are selectable, so they can be copied — 2026-11-10
 
 ### Git actions
 - [x] Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree
