@@ -739,6 +739,8 @@ it was done within a topic.
   page instead of hot-swapping it, which left the event listeners on the old store (runs stuck
   on running) — 2026-10-04
 - [x] Dev builds add Window › Show Web Inspector (⌥⌘I) and Reload Page (⌥⌘R) — 2026-10-17
+- [x] README: screenshots and an animated WebP demo (`docs/assets/`), taken on `scripts/make-demo.sh`'s
+  demo repositories — 2026-11-10
 
 ---
 

@@ -12,6 +12,11 @@
   macOS · Apple silicon · <a href="LICENSE">MIT</a>
 </p>
 
+<p align="center">
+  <img src="docs/assets/demo.webp" width="100%" alt="Opening a project, its branch diff and another branch from the command palette"><br>
+  <img src="docs/assets/branches.webp" width="50%" alt="Branches: every branch and worktree of two repositories"><img src="docs/assets/review.webp" width="50%" alt="Gitgel reviewing a branch's commits and uncommitted changes">
+</p>
+
 ---
 
 Coding agents (Cursor, Codex, Claude Code) leave their work in branches and worktrees spread
@@ -105,6 +110,9 @@ scripts/make-fixtures.sh delete-branch   # delete the `to-be-deleted` branch
 scripts/make-fixtures.sh remove-repo     # move web-app away (missing repo)
 scripts/make-fixtures.sh restore-repo    # move it back
 ```
+
+`scripts/make-demo.sh` builds the repositories in the README's screenshots in `~/gitgel-demo`,
+and `scripts/make-demo.sh open` starts Gitgel on them with a config of their own.
 
 ### Releasing
 

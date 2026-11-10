@@ -177,6 +177,7 @@ gitgel/
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
+├─ scripts/make-demo.sh           # the README screenshots' demo repositories (§12)
 ├─ scripts/i18n-check.mjs         # `pnpm i18n:check`: en/tr key parity, MF2 validity, the code's keys and variables
 ├─ scripts/release.sh             # `pnpm release` (§12)
 ├─ index.html  package.json  pnpm-lock.yaml  .nvmrc  vite.config.ts  tsconfig*.json
@@ -2187,6 +2188,15 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   - `not-a-repo/`.
   - Subcommands: `delete-branch` (deletes `to-be-deleted`), `remove-repo` / `restore-repo` (moves
     web-app away and back).
+- **Demo:** `scripts/make-demo.sh` builds the README's demo in `~/gitgel-demo` (or
+  `$GITGEL_DEMO`, marker `.gitgel-demo`): `storefront` and `orders-api`, each cloned from a bare
+  remote, with `claude/…`, `codex/…` and `cursor/…` branches, two of them in worktrees (one with
+  uncommitted changes), a stash, and a "Checkout redesign" project. The config sits in the demo's
+  own home (`~/gitgel-demo/home`); `make-demo.sh open` starts the app with `HOME` set to it, so
+  the user's config and repositories stay out of the screenshots. The README's images are in
+  `docs/assets/` (WebP; window 1440×900, dark, with its shadow on a generated gradient
+  wallpaper); its recording is `demo.webp`, an animated WebP
+  (an image, so `<img>` plays it; a video file in the repository does not play in a README).
 - **Performance targets:** first scan < 3 s; a file change reaches the screen in < 1 s (300 ms
   debounce included); a full rescan with nothing changed < 300 ms; switching files in Review is
   instant; an event storm (hundreds of files) is merged into a few jobs without freezing the UI.
