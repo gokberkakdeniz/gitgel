@@ -470,7 +470,8 @@
   cursor: pointer;
 }
 
-.stashRow:hover {
+.stashRow:hover,
+.stashRow.menuOpen {
   background: var(--bg-sunken);
 }
 

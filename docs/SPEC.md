@@ -209,7 +209,7 @@ gitgel/
 │  │            #   Switch Branch, AmendModal, CherryPickMenu and SquashModal (§5, §16);
 │  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
 │  │            #   stage.ts: Stage / Unstage's queue and the rows moved before git confirms (§15 "Stage")
-│  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashTargetMenu
+│  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashRowMenu, StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
 │  │            # Discard Changes), picks.ts (⌘ / ⇧-click picking of Uncommitted's files)
@@ -2536,7 +2536,9 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1, P5) and the Review pa
   `stash@{n}` sit on its first line), mono 11 muted `stash@{n}`; line 2 (indent 21) mono 11 muted
   `<repo> / <branch> · N files · <age>` (`<branch> (deleted)`, `detached HEAD`). Picking one lists
   its files under it (file rows as in a group) and opens its first file; the right pane shows
-  it. Picking an entry's file, switching mode or typing in the file filter leaves the stash; the
+  it. Right-click opens "Stash Options" at the pointer (row tinted `bg.sunken` meanwhile): Apply
+  (`download`) and Pop (`undo`) into the worktree its branch is checked out in (left out when it
+  is not), divider, danger Drop (`trash`, the confirmation P6). Picking an entry's file, switching mode or typing in the file filter leaves the stash; the
   section is hidden while filtering.
 - **Stash pane:** an entry bar of two lines (P3): 15px/600 `text.strong` message (one line,
   ellipsis, tooltip the whole message) with the buttons on the right; under it a mono 11 muted

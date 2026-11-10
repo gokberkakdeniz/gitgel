@@ -12,6 +12,13 @@ import { applyStash, askDrop } from './actions';
 import styles from './StashBar.module.css';
 import { StashTargetMenu } from './StashTargetMenu';
 
+/** The checked-out entry of the branch the stash was taken on, where Apply / Pop go straight. */
+export function useStashHome(stash: ReviewStash) {
+  return useData((s) =>
+    stash.branch === null ? undefined : s.scan[stash.repoId]?.active.find((e) => e.worktreePath && e.branch === stash.branch),
+  );
+}
+
 /** Above a stash's diff: its message and actions, then which stash, where it was taken and on
  * what. Two lines, so a long message does not push the rest out. */
 export function StashBar({ stash, base }: { stash: ReviewStash; base: string }) {
@@ -19,9 +26,7 @@ export function StashBar({ stash, base }: { stash: ReviewStash; base: string }) 
   // Apply / Pop: straight into the worktree its branch is checked out in; otherwise the
   // worktree picker (P5) under the button.
   const [pick, setPick] = useState<{ pop: boolean; rect: DOMRect } | null>(null);
-  const home = useData((s) =>
-    stash.branch === null ? undefined : s.scan[stash.repoId]?.active.find((e) => e.worktreePath && e.branch === stash.branch),
-  );
+  const home = useStashHome(stash);
   const act = (pop: boolean, el: HTMLElement) =>
     home ? void applyStash(stash, home, pop) : setPick({ pop, rect: el.getBoundingClientRect() });
   const where = home

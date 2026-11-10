@@ -18,6 +18,7 @@ import { basename } from '../../lib/paths';
 import type { DiffContext, DiffLayout, FileChange, Settings, StashChanges } from '../../lib/types';
 import type { NavInfo } from '../../monaco/DiffView';
 import { diffPosition } from '../../monaco/position';
+import { StashRowMenu } from '../../stash/StashRowMenu';
 import { useData } from '../../state/data';
 import { useUi } from '../../state/ui';
 import styles from './parts.module.css';
@@ -513,6 +514,8 @@ export function StashSection({
   fold?: { open: boolean; onToggle: () => void };
 }) {
   const repos = useData((s) => s.config?.repos);
+  // A row's right-click menu: Apply, Pop, Drop.
+  const [menu, setMenu] = useState<{ stash: ReviewStash; at: DOMRect } | null>(null);
   return (
     <section aria-label={t('branches.stashes')} className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
       {fold ? (
@@ -531,10 +534,14 @@ export function StashSection({
           <div key={`${st.repoId}:${st.sha}`} className={styles.stash}>
             <button
               type="button"
-              className={on ? `${styles.stashRow} ${styles.stashOn}` : styles.stashRow}
+              className={[styles.stashRow, on && styles.stashOn, menu?.stash.sha === st.sha && styles.menuOpen].filter(Boolean).join(' ')}
               aria-expanded={on}
               title={st.message}
               onClick={() => onPick(st.sha)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setMenu({ stash: st, at: new DOMRect(e.clientX, e.clientY, 0, 0) });
+              }}
             >
               <span className={styles.stashLine}>
                 <Icon name="package" size={13} strokeWidth={1.6} className={styles.stashIcon} />
@@ -559,6 +566,7 @@ export function StashSection({
           </div>
         );
       })}
+      {menu && <StashRowMenu stash={menu.stash} at={menu.at} onClose={() => setMenu(null)} />}
     </section>
   );
 }

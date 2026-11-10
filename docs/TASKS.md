@@ -533,6 +533,7 @@ it was done within a topic.
 - [x] Squash N Commits… also shows for commits already pushed or below the base line (e.g. on `main`); the dialog's force-push note covers them — 2026-10-17
 - [x] History's Uncommitted in Staged / Unstaged sections (git's index; replaces the commit boxes): + / − and Stage all / Unstage all stage at once through a queue (150ms batches, one command at a time per repository, Commit off meanwhile, rows put back with a failed toast), a file staged and changed again is in both and its Unstaged diff shows only the changes since; commits take what is staged; discarding an Unstaged row goes back to the staged version (`get_index_changes`, `git_stage`, §15 "Stage") — 2026-10-18
 - [x] Staging picked lines: the diff's right-click menu on an Uncommitted file has Stage Selected Lines / Stage Change (Unstage … on a Staged row); the new staged version is made from the shown texts and written with `hash-object` + `update-index` after checking the index still holds what was shown (`git_stage_lines`, `src/monaco/lineStage.ts`, §15 "Stage") — 2026-10-19
+- [x] Right-click a stash row in Review opens Stash Options (Apply, Pop, Drop), as on the canvas — 2026-11-10
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked
