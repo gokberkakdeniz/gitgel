@@ -1255,7 +1255,7 @@ class Component extends DCLogic {
         var cf = isWip && OP && OP.e === e.id ? OP.files[path] : null;
         return { isFile: true, kind: f.k, name: f.name, dir: f.dir, add: f.add, del: f.del, hasAdd: !cf && !!f.add, hasDel: !cf && !!f.del, cUn: cf === 'unresolved', cOk: cf === 'resolved', on: on,
           pick: pickFile(e, row, id),
-          menu: f.k === 'D' && !isWip ? undefined : menuAt({ kind: 'file', e: e.id, row: row, path: path, part: f.part }),
+          menu: menuAt({ kind: 'file', e: e.id, row: row, path: path, part: f.part, gone: f.k === 'D' }),
           hasAct: !!o, actIcon: o && o.glyph === '−' ? 'remove' : 'plus', actPath: o && o.glyph === '−' ? 'M5 12h14' : 'M12 5v14M5 12h14', actTitle: o ? o.title : '', rowCls: o ? 'gg-has' : '',
           discardTitle: 'Discard Changes…', discard: function () { self.setState({ menu: null, modal: { kind: 'discard', e: e.id, paths: [path], part: f.part } }); },
           act: function () { if (cf === 'unresolved') self.resolveConflict(path); self.toggleStage(e.id, path, f.part); },
@@ -1668,7 +1668,10 @@ class Component extends DCLogic {
         if (M.row === 'wip') menuItems = [{ label: 'Discard Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discard', e: M.e, paths: [M.path], part: M.part } }); } }, { kind: 'sep' },
           { label: 'Copy File Path', icon: 'copy', onSelect: close }, { label: 'Copy Relative File Path', icon: 'copy', onSelect: close }, { kind: 'sep' },
           { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }];
-        else menuItems = [{ label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }];
+        else {
+          menuItems = [{ label: 'Copy File Path', icon: 'copy', onSelect: close }, { label: 'Copy Relative File Path', icon: 'copy', onSelect: close }];
+          if (!M.gone) menuItems.push({ kind: 'sep' }, { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close });
+        }
       } else if (M.kind === 'diff') {
         menuLabel = 'Diff Actions';
         menuW = 230;

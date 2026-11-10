@@ -552,6 +552,7 @@ it was done within a topic.
 - [x] Menus: an item's label stays on one line and ends in "…" (a long script name has its whole name as tooltip) — 2026-10-12
 - [x] Branch menus: two or more scripts go in a Run Script submenu; a single script stays an item of its own — 2026-10-16
 - [x] The open items list one editor, the one chosen in Settings › General › Editor (Automatic: the first installed of Cursor, VS Code, Windsurf, Zed, Sublime Text), instead of every installed editor; `settings.editor`, `get_editor_options` — 2026-10-19
+- [x] A commit's or a stash's file menu has Copy File Path and Copy Relative File Path too (deleted files included) — 2026-11-10
 
 ### Scripts and output panel
 - [x] Script run toasts have a ✕ that dismisses them; the script keeps running

@@ -2130,7 +2130,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Checkout branch | `FlowV4.dc.html` | canvas page "Branch actions": V4, the dialog over Branches, interactive (`case` repository, worktree, new: the row picked first; `remote`: from a Remote Branches row) |
 | Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `ReviewFocus` (page menu) |
 | Operations in progress | `FlowT1.dc.html`, `ReviewRebase.dc.html` | canvas page "Branch actions", T1: Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase); canvas page "Review", R4: the operation banner (names, (2/4), Abort / Continue), the head's `rebasing` pill, ⚠ / ✓ file marks and the Abort confirmation |
-| File menu | `ReviewFocus.dc.html` | the file row's right-click menu (its `file` menu in the logic): Discard / copy paths for Uncommitted, Open in Finder / the chosen editor |
+| File menu | `ReviewFocus.dc.html` | the file row's right-click menu (its `file` menu in the logic): Discard for Uncommitted, the copy paths, Open in Finder / the chosen editor |
 | Discard | `ReviewFocus.dc.html` | the Uncommitted row's and file rows' menus, the hover ↶ and Confirm Discard Changes (`discard` / `discardAll` modals in its logic) |
 | Review, sidebar open | `ReviewSidebar.dc.html` | Sidebar + `ReviewFocus` with `embedded` (width 1020, no traffic lights / show-sidebar) |
 | Themes | every file above except Projects and Palette | `.theme-dark` / `.theme-light` token classes in each file's `<style>` (e.g. `ReviewFocus.dc.html` 16–17); the root gets `class="theme-…"` from its `theme` prop (`Settings` derives it from `appearance`). Canvas page "Light mode": L1 Branches, L2 Review with sidebar (and its dark twin), L3 Settings (Appearance). Projects and Palette still use hex; theme them with the same mapping |
@@ -2638,7 +2638,8 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   Paths", one per line) and "Copy Relative File Path" ("Copy Relative Paths"), `copy` icons;
   then a divider and the open items of §5 Review "File rows" for the files on disk (several open
   one after another). Each file is read from its own entry's worktree, so picks across repos
-  with the same paths copy and open the right files. A commit's or a stash's files keep the open items alone.
+  with the same paths copy and open the right files. A commit's or a stash's files have the two copy items, then
+  the open items after a divider (none for a deleted file).
 - **Uncommitted row menu** (Review, right-click the Changes header while there are uncommitted files): danger "Discard
   All Changes…" and "Stash All Changes…" (`package`; opens Stash (P4) at the pointer, to its right as the menu, disabled
   when nothing can be stashed).

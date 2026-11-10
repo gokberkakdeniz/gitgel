@@ -322,7 +322,6 @@ export function FileRow({
     );
   // A deleted file is not on disk.
   const menuFolder = f.kind === 'D' ? null : folder;
-  const hasMenu = !!actions || !!menuFolder;
   const state = picked ? styles.picked : on ? styles.selected : menu ? styles.menuOpen : '';
   const button = (
       <button
@@ -330,14 +329,10 @@ export function FileRow({
         className={stage ? styles.fileRowBare : `${styles.fileRow} ${state}`}
         aria-current={on || undefined}
         onClick={onClick}
-        onContextMenu={
-          hasMenu
-            ? (ev) => {
-                ev.preventDefault();
-                setMenu(new DOMRect(ev.clientX, ev.clientY, 0, 0));
-              }
-            : undefined
-        }
+        onContextMenu={(ev) => {
+          ev.preventDefault();
+          setMenu(new DOMRect(ev.clientX, ev.clientY, 0, 0));
+        }}
         title={f.path}
       >
         <KindBadge kind={f.kind} />
@@ -382,8 +377,8 @@ export function FileRow({
       ) : (
         button
       )}
-      {menu && hasMenu && (
-        <Popover anchorRect={menu} width={actions ? 230 : 220} onClose={() => setMenu(null)}>
+      {menu && (
+        <Popover anchorRect={menu} width={230} onClose={() => setMenu(null)}>
           <Menu aria-label={actions && actions.files.length > 1 ? t('review.filesActions', { n: formatCount(actions.files.length) }) : t('review.fileActions', { file: basename(f.path) })}>
             {actions ? (
               <UncommittedItems
@@ -392,13 +387,19 @@ export function FileRow({
                 onDone={() => setMenu(null)}
               />
             ) : (
-              menuFolder && (
-                <FileOpenItems
-                  files={[{ folder: menuFolder, path: f.path }]}
-                  at={() => (on ? diffPosition(f.path) : null)}
-                  onDone={() => setMenu(null)}
-                />
-              )
+              <>
+                <CopyPathItems files={[{ folder, path: f.path }]} onDone={() => setMenu(null)} />
+                {menuFolder && (
+                  <>
+                    <MenuDivider />
+                    <FileOpenItems
+                      files={[{ folder: menuFolder, path: f.path }]}
+                      at={() => (on ? diffPosition(f.path) : null)}
+                      onDone={() => setMenu(null)}
+                    />
+                  </>
+                )}
+              </>
             )}
           </Menu>
         </Popover>
@@ -420,13 +421,7 @@ function UncommittedItems({
 }) {
   const { files, onDiscard, onStage } = actions;
   const one = files.length === 1;
-  const relative = files.map((x) => x.file.path);
-  const absolute = files.every((x) => x.folder) ? files.map((x) => `${x.folder}/${x.file.path}`) : null;
   const onDisk = files.flatMap((x) => (x.folder && x.file.kind !== 'D' ? [{ folder: x.folder, path: x.file.path }] : []));
-  const copy = (paths: string[]) => {
-    onDone();
-    void writeText(paths.join('\n'));
-  };
   return (
     <>
       <MenuItem
@@ -466,6 +461,29 @@ function UncommittedItems({
         </>
       )}
       <MenuDivider />
+      <CopyPathItems files={files.map((x) => ({ folder: x.folder, path: x.file.path }))} onDone={onDone} />
+      {onDisk.length > 0 && (
+        <>
+          <MenuDivider />
+          <FileOpenItems files={onDisk} at={at} onDone={onDone} />
+        </>
+      )}
+    </>
+  );
+}
+
+/** Copy File Path (absolute; left out without a folder) and Copy Relative File Path; several
+ * files: Copy (Relative) Paths, one per line. */
+function CopyPathItems({ files, onDone }: { files: { folder: string | null; path: string }[]; onDone: () => void }) {
+  const one = files.length === 1;
+  const relative = files.map((x) => x.path);
+  const absolute = files.every((x) => x.folder) ? files.map((x) => `${x.folder}/${x.path}`) : null;
+  const copy = (paths: string[]) => {
+    onDone();
+    void writeText(paths.join('\n'));
+  };
+  return (
+    <>
       {absolute && (
         <MenuItem icon="copy" onSelect={() => copy(absolute)}>
           {one ? t('review.copyFile') : t('review.copyPaths')}
@@ -474,12 +492,6 @@ function UncommittedItems({
       <MenuItem icon="copy" onSelect={() => copy(relative)}>
         {one ? t('review.copyRelFile') : t('review.copyRelPaths')}
       </MenuItem>
-      {onDisk.length > 0 && (
-        <>
-          <MenuDivider />
-          <FileOpenItems files={onDisk} at={at} onDone={onDone} />
-        </>
-      )}
     </>
   );
 }
