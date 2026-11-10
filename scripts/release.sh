@@ -8,13 +8,15 @@
 # The tap is a clone of that repository next to this one, or at $GITGEL_TAP_DIR.
 #
 # In-app updates: the build is also packed as a signed `.app.tar.gz` (the updater key, by default
-# ~/.tauri/gitgel.key, or $GITGEL_UPDATER_KEY), uploaded next to the zip in the tap release, and
-# the tap's gitgel/latest.json (the app's update endpoint) is pointed at it in the cask's commit.
+# ~/.tauri/gitgel.key, or $TAURI_SIGNING_PRIVATE_KEY), uploaded next to the zip in the tap release,
+# and the tap's gitgel/latest.json (the app's update endpoint) is pointed at it in the cask's
+# commit.
 #
 # Signing: the build is signed with the Developer ID Application certificate in the keychain and
-# notarized (the ticket stapled to the app) with an App Store Connect API key: the .p8 file
-# ~/.private_keys/AuthKey_<key id>.p8 (or $GITGEL_NOTARY_KEY) and the team's issuer id. Only the
-# key's path goes on notarytool's command line, never a secret.
+# notarized (the ticket stapled to the app) with an App Store Connect API key, in Tauri's variables:
+# $APPLE_API_KEY_PATH (by default ~/.private_keys/AuthKey_<key id>.p8), $APPLE_API_KEY (by default
+# the key id from the file's name) and $APPLE_API_ISSUER (the team's issuer id, never in the repo).
+# Only the key's path goes on notarytool's command line, never a secret.
 # A plain `pnpm tauri build` stays ad-hoc signed and needs neither.
 #
 # Release notes: the version's section of CHANGELOG.md (SPEC §12 "Release notes") is the text of
@@ -50,7 +52,7 @@ TAP_REPO="gokberkakdeniz/homebrew-tap"
 TAP_DIR="${GITGEL_TAP_DIR:-../homebrew-tap}"
 CASK="Casks/gitgel.rb"
 TAP_TAG="gitgel-$VERSION"
-UPDATER_KEY="${GITGEL_UPDATER_KEY:-$HOME/.tauri/gitgel.key}"
+UPDATER_KEY="${TAURI_SIGNING_PRIVATE_KEY:-$HOME/.tauri/gitgel.key}"
 UPDATE="$BUNDLE/Gitgel-$VERSION-macos-$ARCH.app.tar.gz"
 LATEST="gitgel/latest.json"
 
@@ -68,15 +70,18 @@ BREW_NOTE=$'<hr>\n\nInstall with Homebrew:\n```bash\nbrew install --cask gokberk
 # The sections the update feed carries, newest first, headings included.
 FEED_NOTES="$(awk '/^## / { n++ } n >= 1 && n <= 10' "$CHANGELOG")"
 
-[[ -f "$UPDATER_KEY" ]] || die "no updater key at $UPDATER_KEY; restore it or set GITGEL_UPDATER_KEY"
+# Tauri takes the key itself or its path; a path is read here, as before.
+[[ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" || -f "$UPDATER_KEY" ]] || die "no updater key at $UPDATER_KEY; restore it or set TAURI_SIGNING_PRIVATE_KEY"
+[[ -f "$UPDATER_KEY" ]] && UPDATER_KEY="$(cat "$UPDATER_KEY")"
 # By the certificate's SHA-1: codesign no longer finds a name with non-ASCII letters (the "ö").
 SIGNING_IDENTITY="$(security find-identity -v -p codesigning | sed -nE 's/^ *[0-9]+\) ([0-9A-F]{40}) "Developer ID Application: .*"$/\1/p' | head -1)"
 [[ -n "$SIGNING_IDENTITY" ]] || die "no Developer ID Application certificate in the keychain"
-NOTARY_KEY="${GITGEL_NOTARY_KEY:-$(ls "$HOME"/.private_keys/AuthKey_*.p8 2>/dev/null | head -1)}"
-[[ -f "$NOTARY_KEY" ]] || die "no App Store Connect API key; put AuthKey_<key id>.p8 in ~/.private_keys or set GITGEL_NOTARY_KEY"
+NOTARY_KEY="${APPLE_API_KEY_PATH:-$(ls "$HOME"/.private_keys/AuthKey_*.p8 2>/dev/null | head -1)}"
+[[ -f "$NOTARY_KEY" ]] || die "no App Store Connect API key; put AuthKey_<key id>.p8 in ~/.private_keys or set APPLE_API_KEY_PATH"
 NOTARY_KEY_ID="$(basename "$NOTARY_KEY" .p8)"
-NOTARY_KEY_ID="${NOTARY_KEY_ID#AuthKey_}"
-NOTARY_ISSUER="${GITGEL_NOTARY_ISSUER:-REDACTED}"
+NOTARY_KEY_ID="${APPLE_API_KEY:-${NOTARY_KEY_ID#AuthKey_}}"
+NOTARY_ISSUER="${APPLE_API_ISSUER:-}"
+[[ -n "$NOTARY_ISSUER" ]] || die "no App Store Connect issuer id; set APPLE_API_ISSUER"
 [[ -z "$(git status --porcelain)" ]] || die "uncommitted changes; commit them first"
 HEAD_SHA="$(git rev-parse HEAD)"
 [[ -n "$(git branch -r --contains "$HEAD_SHA")" ]] || die "HEAD is not pushed; push it first"
@@ -101,7 +106,7 @@ BUILD_CONFIG="$(node -e '
   const signingIdentity = process.argv[1];
   console.log(JSON.stringify({ bundle: { createUpdaterArtifacts: true, macOS: { signingIdentity } } }));
 ' "$SIGNING_IDENTITY")"
-TAURI_SIGNING_PRIVATE_KEY="$(cat "$UPDATER_KEY")" TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${GITGEL_UPDATER_KEY_PASSWORD:-}" \
+TAURI_SIGNING_PRIVATE_KEY="$UPDATER_KEY" TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-}" \
   APPLE_SIGNING_IDENTITY="$SIGNING_IDENTITY" \
   APPLE_API_KEY_PATH="$NOTARY_KEY" APPLE_API_KEY="$NOTARY_KEY_ID" APPLE_API_ISSUER="$NOTARY_ISSUER" \
   pnpm tauri build --bundles app --config "$BUILD_CONFIG"

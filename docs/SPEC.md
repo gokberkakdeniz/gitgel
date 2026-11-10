@@ -2209,9 +2209,9 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   keychain (passed as `--config` `signingIdentity` and `APPLE_SIGNING_IDENTITY`; hardened
   runtime, no entitlements) and has Tauri notarize and staple the app with an App Store Connect
   API key (`APPLE_API_KEY_PATH` / `APPLE_API_KEY` / `APPLE_API_ISSUER`): the `.p8` file
-  `~/.private_keys/AuthKey_<key id>.p8` (or `$GITGEL_NOTARY_KEY`), the key id from its name, the
-  issuer id in `release.sh` (or `$GITGEL_NOTARY_ISSUER`). Only the key's path reaches
-  `notarytool`'s command line, never a password. It stops before building when either is
+  `~/.private_keys/AuthKey_<key id>.p8` (or `$APPLE_API_KEY_PATH`), the key id from its name (or
+  `$APPLE_API_KEY`), the issuer id from `$APPLE_API_ISSUER` (never in the repo). Only the
+  key's path reaches `notarytool`'s command line, never a password. It stops before building when either is
   missing, and before uploading unless `codesign --verify --deep --strict`, `stapler validate`
   and `spctl --assess` pass.
 - **Release notes:** `CHANGELOG.md` holds one `## <version> — YYYY-MM-DD`
@@ -2231,7 +2231,7 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   `notes`, so an app several versions behind still sees what it skips.
 - **Updates:** the release build also makes `Gitgel.app.tar.gz` and its minisign signature
   (`createUpdaterArtifacts`, passed with `--config` only by `release.sh`, so a plain build needs
-  no key; key `~/.tauri/gitgel.key` or `$GITGEL_UPDATER_KEY`, public key in `tauri.conf.json`).
+  no key; key `~/.tauri/gitgel.key` or `$TAURI_SIGNING_PRIVATE_KEY`, public key in `tauri.conf.json`).
   It is uploaded as `Gitgel-<version>-macos-arm64.app.tar.gz` next to the zip in the tap release,
   and `gitgel/latest.json` in the tap (`version`, `pub_date`, `notes`,
   `platforms.darwin-aarch64` url + signature) is committed with the cask. The app reads it from
