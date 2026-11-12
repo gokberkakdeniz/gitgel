@@ -43,7 +43,7 @@ function Sheet({ paths }: { paths: string[] }) {
     <Modal aria-label={t('addrepos.title')} width={600} paddingTop={110} onClose={close}>
       <ModalHeader
         title={t('addrepos.title')}
-        sub={t(hasRepos ? 'addrepos.subSkip' : 'addrepos.subNew', { n: String(paths.length) })}
+        sub={t(hasRepos ? 'addrepos.subSkip' : 'addrepos.subNew', { ...cnt(paths.length) })}
       />
       <div className={styles.list}>
         {checks?.map((c, i) => (
