@@ -469,6 +469,10 @@ pub enum Appearance {
     System,
     Light,
     Dark,
+    #[serde(rename = "github-light")]
+    GithubLight,
+    #[serde(rename = "github-dark")]
+    GithubDark,
 }
 
 /// Settings › General › Language: the UI language; `system` follows the OS/browser.

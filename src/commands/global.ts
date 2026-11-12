@@ -8,7 +8,8 @@ import { rescanAll } from '../lib/events';
 import { checkForUpdates, openWindow, reportIssue, updateSettings } from '../lib/ipc';
 import { readProjectSort, sortProjects } from '../lib/projectSort';
 import { setSidebarVisible } from '../lib/sidebar';
-import type { Appearance, EntrySummary, Settings } from '../lib/types';
+import type { EntrySummary, Settings } from '../lib/types';
+import { THEME_CHOICES } from '../lib/theme';
 import { paletteItems } from '../screens/Palette/items';
 import { selectRepoScans, useData } from '../state/data';
 import { openSettings, selectCanBack, selectCanForward, selectRoute, useNav, type Route } from '../state/nav';
@@ -98,12 +99,6 @@ const SETTINGS: { id: SettingsSection; label: string }[] = [
   { id: 'shortcuts', label: 'settings.navShortcuts' },
 ];
 
-const THEMES: { id: Appearance; label: string }[] = [
-  { id: 'system', label: 'settings.themeSystem' },
-  { id: 'light', label: 'settings.themeLight' },
-  { id: 'dark', label: 'settings.themeDark' },
-];
-
 function saveSettings(patch: Partial<Settings>): void {
   const now = useData.getState().config?.settings;
   if (now) void updateSettings({ ...now, ...patch });
@@ -156,7 +151,7 @@ export function appCommands(route: Route): Command[] {
   );
   if (settings)
     list.push(
-      ...THEMES.filter((th) => th.id !== settings.appearance).map((th) => ({
+      ...THEME_CHOICES.filter((th) => th.id !== settings.appearance).map((th) => ({
         id: `theme:${th.id}`,
         title: t('cmd.theme', { name: t(th.label) }),
         group: settingsGroup,

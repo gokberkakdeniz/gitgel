@@ -308,6 +308,25 @@ mod tests {
     }
 
     #[test]
+    fn github_appearance_round_trips_through_config() {
+        for (value, expected) in [
+            ("github-light", crate::model::Appearance::GithubLight),
+            ("github-dark", crate::model::Appearance::GithubDark),
+        ] {
+            let config: Config = serde_json::from_value(json!({
+                "version": 1,
+                "settings": { "appearance": value }
+            }))
+            .unwrap();
+            assert_eq!(config.settings.appearance, expected);
+            assert_eq!(
+                serde_json::to_value(&config).unwrap()["settings"]["appearance"],
+                value
+            );
+        }
+    }
+
+    #[test]
     fn appearance_values_outside_the_choices_read_as_defaults() {
         let config: Config = serde_json::from_value(json!({
             "version": 1,
