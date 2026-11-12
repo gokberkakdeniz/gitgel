@@ -1,5 +1,5 @@
 // Same values as tokens.css, for code that cannot read CSS variables (the Monaco theme).
-// `colors` / `kindColors` are the dark palette (backwards compatibility); `palettes` holds both.
+// `colors` / `kindColors` are the dark palette (backwards compatibility).
 export const darkColors = {
   bgSidebar: '#0e0d0c',
   bgMain: '#141311',
@@ -84,9 +84,88 @@ export const lightColors = {
   diffFoldBg: '#f4f2ee',
 } as const;
 
-export const palettes = { dark: darkColors, light: lightColors } as const;
+export const githubLightColors = {
+  bgSidebar: '#f6f8fa',
+  bgMain: '#ffffff',
+  bgSunken: '#f6f8fa',
+  bgBand: '#f0f3f6',
+  bgElevated: '#ffffff',
+  bgHover: '#eaeef2',
+  bgSidebarActive: '#ddf4ff',
+  bgPressed: '#d8dee4',
+  bgAvatar: '#d0d7de',
+  border: '#d0d7de',
+  borderRow: '#eaeef2',
+  borderStrong: '#8c959f',
+  textStrong: '#1f2328',
+  textCode: '#1f2328',
+  textBody: '#1f2328',
+  textMuted: '#656d76',
+  textFaint: '#6e7781',
+  accent: '#0969da',
+  accentText: '#0969da',
+  accentHover: '#0550ae',
+  onAccent: '#ffffff',
+  selectedBg: '#ddf4ff',
+  successText: '#1a7f37',
+  successBg: '#dafbe1',
+  warningText: '#9a6700',
+  warningBg: '#fff8c5',
+  dangerText: '#cf222e',
+  dangerBg: '#ffebe9',
+  dangerFill: '#cf222e',
+  diffAddBg: '#dafbe1',
+  diffDelBg: '#ffebe9',
+  diffAddMark: '#1a7f37',
+  diffDelMark: '#cf222e',
+  diffFoldBg: '#f6f8fa',
+} as const;
 
-export type EffectiveTheme = 'dark' | 'light';
+export const githubDarkColors = {
+  bgSidebar: '#010409',
+  bgMain: '#0d1117',
+  bgSunken: '#010409',
+  bgBand: '#161b22',
+  bgElevated: '#161b22',
+  bgHover: '#21262d',
+  bgSidebarActive: '#1f2937',
+  bgPressed: '#30363d',
+  bgAvatar: '#30363d',
+  border: '#30363d',
+  borderRow: '#21262d',
+  borderStrong: '#6e7681',
+  textStrong: '#e6edf3',
+  textCode: '#e6edf3',
+  textBody: '#e6edf3',
+  textMuted: '#8b949e',
+  textFaint: '#7d8590',
+  accent: '#1f6feb',
+  accentText: '#58a6ff',
+  accentHover: '#79c0ff',
+  onAccent: '#ffffff',
+  selectedBg: 'rgba(56,139,253,0.15)',
+  successText: '#3fb950',
+  successBg: 'rgba(46,160,67,0.15)',
+  warningText: '#d29922',
+  warningBg: 'rgba(187,128,9,0.15)',
+  dangerText: '#f85149',
+  dangerBg: 'rgba(248,81,73,0.15)',
+  dangerFill: '#da3633',
+  diffAddBg: 'rgba(46,160,67,0.15)',
+  diffDelBg: 'rgba(248,81,73,0.15)',
+  diffAddMark: '#3fb950',
+  diffDelMark: '#f85149',
+  diffFoldBg: '#010409',
+} as const;
+
+export const palettes = {
+  dark: darkColors,
+  light: lightColors,
+  'github-light': githubLightColors,
+  'github-dark': githubDarkColors,
+} as const;
+
+export type EffectiveTheme = keyof typeof palettes;
 
 export const colors = darkColors;
 

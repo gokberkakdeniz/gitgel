@@ -1,7 +1,7 @@
-// The `gitgel-dark` / `gitgel-light` Monaco themes, built from the design tokens
-// (docs/SPEC.md §4). DiffView picks one through its `theme` prop.
+// DiffView picks a Monaco theme built from the app's design tokens through its `theme` prop.
 import type * as Monaco from 'monaco-editor';
-import { darkColors, lightColors, type EffectiveTheme } from '../styles/tokens';
+import { palettes, type EffectiveTheme } from '../styles/tokens';
+import { isDarkTheme } from '../lib/theme';
 
 const hex = (c: string) => c.replace('#', '');
 
@@ -23,11 +23,28 @@ interface Palette {
   removedText: string;
   number: string;
   type: string;
+  keyword?: string;
+  string?: string;
 }
 
 function paletteOf(theme: EffectiveTheme): Palette {
-  const c = theme === 'dark' ? darkColors : lightColors;
-  return theme === 'dark'
+  const c = palettes[theme];
+  if (theme === 'github-light' || theme === 'github-dark') {
+    const dark = isDarkTheme(theme);
+    return {
+      ...c,
+      base: dark ? 'vs-dark' : 'vs',
+      insertedLine: dark ? '#2ea04326' : '#dafbe1',
+      removedLine: dark ? '#f8514926' : '#ffebe9',
+      insertedText: dark ? '#3fb9504d' : '#aceebb',
+      removedText: dark ? '#f851494d' : '#ffcecb',
+      number: dark ? '79c0ff' : '0550ae',
+      type: dark ? 'ffa657' : '953800',
+      keyword: dark ? '#ff7b72' : '#cf222e',
+      string: dark ? '#a5d6ff' : '#0a3069',
+    };
+  }
+  return isDarkTheme(theme)
     ? {
         base: 'vs-dark',
         textCode: c.textCode,
@@ -68,7 +85,12 @@ function paletteOf(theme: EffectiveTheme): Palette {
       };
 }
 
-export const MONACO_THEMES = { dark: 'gitgel-dark', light: 'gitgel-light' } as const;
+export const MONACO_THEMES = {
+  dark: 'gitgel-dark',
+  light: 'gitgel-light',
+  'github-light': 'github-light',
+  'github-dark': 'github-dark',
+} as const;
 
 function definition(p: Palette): Monaco.editor.IStandaloneThemeData {
   return {
@@ -76,8 +98,8 @@ function definition(p: Palette): Monaco.editor.IStandaloneThemeData {
     inherit: true,
     rules: [
       { token: '', foreground: hex(p.textCode) },
-      { token: 'keyword', foreground: hex(p.accentText) },
-      { token: 'string', foreground: hex(p.warningText) },
+      { token: 'keyword', foreground: hex(p.keyword ?? p.accentText) },
+      { token: 'string', foreground: hex(p.string ?? p.warningText) },
       { token: 'number', foreground: p.number },
       { token: 'type', foreground: p.type },
       { token: 'comment', foreground: hex(p.textFaint), fontStyle: 'italic' },
@@ -111,6 +133,7 @@ function definition(p: Palette): Monaco.editor.IStandaloneThemeData {
 }
 
 export function defineTheme(monaco: Pick<typeof Monaco, 'editor'>) {
-  monaco.editor.defineTheme(MONACO_THEMES.dark, definition(paletteOf('dark')));
-  monaco.editor.defineTheme(MONACO_THEMES.light, definition(paletteOf('light')));
+  for (const theme of Object.keys(MONACO_THEMES) as EffectiveTheme[]) {
+    monaco.editor.defineTheme(MONACO_THEMES[theme], definition(paletteOf(theme)));
+  }
 }

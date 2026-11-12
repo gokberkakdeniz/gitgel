@@ -9,16 +9,20 @@
       // (docs/SPEC.md §4 "Light theme"); apply it before the bundle loads.
       try {
         var t = localStorage.getItem('gitgel.effective-theme');
-        if (t !== 'light' && t !== 'dark') {
+        var grounds = {
+          light: ['#fbfaf7', '#ffffff'],
+          dark: ['#141311', '#211f1c'],
+          'github-light': ['#ffffff', '#ffffff'],
+          'github-dark': ['#0d1117', '#161b22'],
+        };
+        if (!Object.prototype.hasOwnProperty.call(grounds, t)) {
           t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         document.documentElement.dataset.theme = t;
         // The <html> element exists already; paint it now so there is no white flash. The small
         // windows (?window=…) stand on bg.elevated, the main one on bg.main.
         var small = /[?&]window=/.test(window.location.search);
-        document.documentElement.style.background = small
-          ? t === 'dark' ? '#211f1c' : '#ffffff'
-          : t === 'dark' ? '#141311' : '#fbfaf7';
+        document.documentElement.style.background = grounds[t][small ? 1 : 0];
       } catch (e) {
         /* The bundle applies the theme once it loads. */
       }

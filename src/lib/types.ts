@@ -26,7 +26,7 @@ export interface ProjectConfig {
 }
 export type DiffLayout = 'split' | 'unified';
 export type DiffContext = 'changes' | 'whole';
-export type Appearance = 'system' | 'light' | 'dark';
+export type Appearance = 'system' | 'light' | 'dark' | 'github-light' | 'github-dark';
 export type CommitRows = 'two-line' | 'one-line';
 export type HistoryLayout = 'tree' | 'columns';
 export type Language = 'system' | 'en' | 'tr';
