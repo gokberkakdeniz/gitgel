@@ -14,6 +14,20 @@ function check(value: Record<string, unknown>, rule: Rule, where: string) {
   }
 }
 
+/** WCAG relative luminance of `#rrggbb`. */
+function luminance(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrast(a: string, b: string) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 describe('themes', () => {
   it('have distinct lowercase ids', () => {
     const ids = THEMES.map((t) => t.id);
@@ -41,6 +55,28 @@ describe('themes', () => {
         expect(Object.keys(t[m]).sort()).toEqual(['colors', 'editor']);
         check({ ...t[m].colors }, schema.definitions.colors, `${t.id}.${m}.colors`);
         check({ ...t[m].editor }, schema.definitions.editor, `${t.id}.${m}.editor`);
+      }
+  });
+
+  it('keep text readable on its ground (WCAG AA)', () => {
+    for (const t of THEMES)
+      for (const m of MODES) {
+        const c = t[m].colors;
+        const pairs: [string, string, string][] = [
+          ['textMuted', c.textMuted, c.bgMain],
+          ['textMuted on sidebar', c.textMuted, c.bgSidebar],
+          ['accentText', c.accentText, c.bgMain],
+          ['onAccent', c.onAccent, c.accent],
+          ['white on dangerFill', '#ffffff', c.dangerFill],
+          ['textCode', c.textCode, c.bgMain],
+        ];
+        for (const [what, fg, bg] of pairs)
+          expect(contrast(fg, bg), `${t.id}.${m} ${what}`).toBeGreaterThanOrEqual(4.5);
+        // Syntax colours sit on the editor ground; comments may be quieter.
+        const { keyword, string, number, type, comment } = t[m].editor;
+        for (const fg of [keyword, string, number, type])
+          expect(contrast(fg, c.bgMain), `${t.id}.${m} ${fg}`).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(comment, c.bgMain), `${t.id}.${m} comment`).toBeGreaterThanOrEqual(2.5);
       }
   });
 
