@@ -138,7 +138,6 @@ mod tests {
                 "ignoreWhitespace": true,
                 "zoom": 125,
                 "language": "tr",
-                "theme": "github",
                 "appearance": "system",
                 "dateFormat": "dd.MM.yyyy",
                 "timeFormat": "HH.mm",
@@ -183,6 +182,7 @@ mod tests {
         value["settings"]["historyLayout"] = json!("columns");
         value["settings"]["editor"] = json!("other");
         value["settings"]["editorCommand"] = json!("idea %");
+        value["settings"]["theme"] = json!("github");
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(
             config.repos,
