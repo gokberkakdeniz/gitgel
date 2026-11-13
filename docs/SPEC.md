@@ -1186,7 +1186,7 @@ outside or leaving the page closes it (`src/commands/`).
 - **Appearance:** serif 18px heading "Appearance".
   - "Theme": one row, the label and a 230px field drawn as a Select showing the choice
     ("Gitgel System"). It opens a menu (width 230) of every theme, custom ones last, in every mode it
-    has — "<Theme> System", "<Theme> Light", "<Theme> Dark" (§4 "Themes"), a divider between themes, a check on
+    has — "<Theme> System", "<Theme> Light", "<Theme> Dark" (§4 "Themes"), a check on
     the current one, opened with focus on it. The row under the keyboard (↑ ↓) or the pointer is
     previewed at once in this window (page and editor; System shows the macOS appearance);
     ↵ or a click saves it (`settings.theme`, `settings.appearance`; default Gitgel System), esc
