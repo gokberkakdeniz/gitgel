@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import { CheckIcon, ChevronRightIcon, Icon, InfoIcon, type IconName } from './icons';
 import { Segmented, type SegmentedOption } from './Segmented';
 import styles from './Menu.module.css';
@@ -12,7 +12,7 @@ interface MenuProps {
   autoFocus?: boolean;
 }
 
-/** ↑/↓ move between the enabled items. */
+/** ↑/↓ move between the enabled items; the item under a resting pointer then gives up its highlight until the pointer moves. */
 export function Menu({ children, 'aria-label': label, autoFocus }: MenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const items = () => [...(ref.current?.querySelectorAll<HTMLElement>(ITEMS) ?? [])];
@@ -26,10 +26,16 @@ export function Menu({ children, 'aria-label': label, autoFocus }: MenuProps) {
     if (all.length === 0) return;
     const i = all.indexOf(document.activeElement as HTMLElement);
     const next = e.key === 'ArrowDown' ? (i + 1) % all.length : (i <= 0 ? all.length : i) - 1;
+    ref.current!.dataset.keys = '';
     all[next].focus();
   };
+  const point = (e: MouseEvent) => {
+    if (ref.current?.dataset.keys === undefined) return;
+    delete ref.current.dataset.keys;
+    (e.target as HTMLElement).closest<HTMLElement>(ITEMS)?.focus();
+  };
   return (
-    <div ref={ref} role="menu" aria-label={label} className={styles.menu} onKeyDown={move}>
+    <div ref={ref} role="menu" aria-label={label} className={styles.menu} onKeyDown={move} onMouseMove={point}>
       {children}
     </div>
   );
