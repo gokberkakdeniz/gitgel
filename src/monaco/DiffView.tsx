@@ -18,7 +18,6 @@ import { languageForPath } from './language';
 import { diffPosition, setDiffPosition } from './position';
 import { fileReference, permalink } from './reference';
 import { monacoReady } from './setup';
-import { MONACO_THEMES } from './theme';
 
 const OPTIONS: monaco.editor.IDiffEditorConstructionOptions = {
   readOnly: true,
@@ -452,7 +451,7 @@ export function DiffView({
     <div className={styles.view}>
       {ready && (
         <DiffEditor
-          theme={MONACO_THEMES[effective]}
+          theme={effective}
           language={language}
           original={shown.original}
           modified={shown.modified}

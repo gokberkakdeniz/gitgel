@@ -96,12 +96,12 @@ const col: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12 }
 
 export function ListStory() {
   const [theme, setTheme] = useState(() => {
-    const t = window.location.hash === '#list-light' ? 'light' : (document.documentElement.dataset.theme ?? 'dark');
+    const t = window.location.hash === '#list-light' ? 'gitgel-light' : (document.documentElement.dataset.theme ?? 'gitgel-dark');
     document.documentElement.dataset.theme = t;
     return t;
   });
   const flip = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
+    const next = theme === 'gitgel-dark' ? 'gitgel-light' : 'gitgel-dark';
     document.documentElement.dataset.theme = next;
     document.documentElement.style.background = '';
     setTheme(next);
@@ -111,7 +111,7 @@ export function ListStory() {
       <div style={{ width: 1040, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 28, padding: '40px 48px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 400, color: 'var(--text-strong)' }}>List</h1>
-          <Button onClick={flip}>{theme === 'dark' ? 'Light' : 'Dark'}</Button>
+          <Button onClick={flip}>{theme === 'gitgel-dark' ? 'Light' : 'Dark'}</Button>
         </div>
 
         <section style={col}>

@@ -19,9 +19,9 @@ import {
   validTimeFormat,
 } from '../../lib/format';
 import { updateSettings } from '../../lib/ipc';
-import { THEME_CHOICES } from '../../lib/theme';
+import { THEME_CHOICES, resolveEffective } from '../../lib/theme';
 import type { Appearance as AppearanceSetting, CommitRows, Config, HistoryLayout, Settings } from '../../lib/types';
-import { palettes, type EffectiveTheme } from '../../styles/tokens';
+import { variantOf, type EffectiveTheme } from '../../themes';
 import { useData } from '../../state/data';
 import { useUi } from '../../state/ui';
 import styles from './Settings.module.css';
@@ -42,7 +42,7 @@ function box(x: number, y: number, w: number, h: number, c: string, r = 2): Reac
 
 /** One 120 × 72 mini-window in the given theme. */
 function Layer({ theme, clip }: { theme: EffectiveTheme; clip?: boolean }) {
-  const p = palettes[theme];
+  const p = variantOf(theme).colors;
   return (
     <span
       aria-hidden
@@ -114,9 +114,9 @@ function ThemePreview({ appearance }: { appearance: AppearanceSetting }) {
   return (
     <span className={styles.tileFrame} aria-hidden>
       {appearance === 'system' ? (
-        <><Layer theme="dark" /><Layer theme="light" clip /></>
+        <><Layer theme="gitgel-dark" /><Layer theme="gitgel-light" clip /></>
       ) : (
-        <Layer theme={appearance} />
+        <Layer theme={resolveEffective(appearance, false)} />
       )}
     </span>
   );

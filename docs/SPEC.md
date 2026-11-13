@@ -184,7 +184,8 @@ gitgel/
 ├─ src/
 │  ├─ main.tsx                    # font imports, Monaco setup
 │  ├─ App.tsx                     # layout, route switch, global shortcuts, drop overlay
-│  ├─ styles/   tokens.css  tokens.ts  global.css
+│  ├─ styles/   tokens.css  global.css
+│  ├─ themes/   # §4 "Themes": types.ts, index.ts and one file per theme (gitgel.ts, github.ts)
 │  ├─ lib/      types.ts  ipc.ts  events.ts  useInvoke.ts  format.ts  paths.ts  entryKey.ts
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts  zoom.ts
 │  │            useCopy.ts  changelog.ts (CHANGELOG.md parsed, version compare)  whatsNew.ts
@@ -268,12 +269,29 @@ gitgel/
 
 ## 4. Visual system
 
-Two themes, dark and light, picked in Settings › Appearance › Theme (§5):
-System (default), Light or Dark. Warm neutrals, one cool accent. Tokens are CSS variables in
-`src/styles/tokens.css` (`bg.sidebar` → `--bg-sidebar`, `text.muted` → `--text-muted`, …): dark
-values on `:root`, light values on `:root[data-theme="light"]` (see "Light theme" below); the same
-values per theme in `src/styles/tokens.ts` for Monaco. The reference screens use the same tokens:
-each file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(--…)`.
+Each theme has a light and a dark variant, picked in Settings › Appearance › Theme (§5). Gitgel's
+own theme, described here: warm neutrals, one cool accent. Tokens are CSS variables (`bg.sidebar` →
+`--bg-sidebar`, `text.muted` → `--text-muted`, …). The reference screens use the same tokens: each
+file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(--…)`.
+
+### Themes
+
+`src/themes/` is the one place a theme's colours live: a file per theme (`gitgel.ts`, `github.ts`)
+exporting a `Theme` (`types.ts`): `id`, `name`, and `light` / `dark`, each with `colors` (the
+tokens below, camelCase) and `editor` (Monaco's syntax and diff colours). `index.ts` lists them in
+`THEMES` and builds everything else from that list:
+
+- **CSS**: `installThemes()` (called in `main.tsx`) adds one `<style>` with a rule per theme and
+  mode, `:root[data-theme="<id>-<mode>"]` (`gitgel-dark`, `github-light`, …), and Gitgel dark on
+  bare `:root`. Besides the tokens it sets `color-scheme` and the mixed values: `--accent-rgb`,
+  `--warning-rgb`, `--danger-rgb`, `--diff-filler` (stripes of `bg.band` on `bg.main`) and
+  `--focus-ring` (from `accent`). `src/styles/tokens.css` holds only fonts and radii.
+- **Monaco**: `src/monaco/theme.ts` defines a theme per rule above, with the same name.
+- **Launch**: `applyTheme` caches the effective theme and its `bg.main` / `bg.elevated` in
+  `localStorage`; `index.html` applies them before the bundle loads (with nothing cached,
+  Gitgel's by the macOS appearance).
+
+Adding a theme: a new file in `src/themes/`, one line in `THEMES`.
 
 ### Colour tokens
 
@@ -316,7 +334,7 @@ each file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(
   (accepted deviation from the reference's "⋯ N unchanged lines").
 - Current change (§5 Review): 3px accent bar `inset 3px 0 0 #7fb3c4` on its lines in both panes.
 
-Monaco theme `gitgel-dark` (`src/monaco/theme.ts`, base `vs-dark`): background `#141311`, foreground
+Monaco theme `gitgel-dark` (base `vs-dark`): background `#141311`, foreground
 `#e0ddd6`, line numbers `#75726b` (active `#a09d96`), inserted line `#5db87226`, removed line
 `#c645452b`, inserted text `#5db87240`, removed text `#c6454548`, diagonal fill `#1c1b18`,
 unchanged region `#1a1917` / `#75726b`, border `#302e2a`, scrollbars `#383631`. Syntax colours:
@@ -333,7 +351,7 @@ ring in its text colour; its folder label ends in ` · conflict`. `KindBadge` (`
 
 ### Light theme
 
-Same tokens, light values (`:root[data-theme="light"]`). The left side stays darker than the
+Same tokens, light values (`gitgel-light`). The left side stays darker than the
 right: the sidebar and the review file list are the darkest surfaces, content the lightest,
 popovers and menus white. Everything not listed (traffic lights, fonts, sizes, radii, which token
 each component uses) is the same as dark.
