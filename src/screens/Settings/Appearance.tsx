@@ -1,8 +1,8 @@
 // Settings › Appearance: Theme (every theme as System / Light / Dark, previewed while the
 // list is open), Formatting, Diff and Review (docs/SPEC.md §5).
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDownIcon } from '../../components/icons';
-import { Menu, MenuDivider, MenuItem } from '../../components/Menu';
+import { Menu, MenuItem } from '../../components/Menu';
 import { Popover } from '../../components/Popover';
 import { Select } from '../../components/Select';
 import { Switch } from '../../components/Switch';
@@ -125,13 +125,15 @@ function ThemeGroup({ config }: { config: Config }) {
             }}
           >
             <Menu aria-label={t('settings.themeName')}>
-              {choices.map((c, i) => (
-                <Fragment key={`${c.theme}-${c.appearance}`}>
-                  {i > 0 && c.theme !== choices[i - 1].theme && <MenuDivider />}
-                  <MenuItem checked={on(c)} onSelect={() => pick(c)} onHover={(el) => el.focus()}>
-                    {name(c)}
-                  </MenuItem>
-                </Fragment>
+              {choices.map((c) => (
+                <MenuItem
+                  key={`${c.theme}-${c.appearance}`}
+                  checked={on(c)}
+                  onSelect={() => pick(c)}
+                  onHover={(el) => el.focus()}
+                >
+                  {name(c)}
+                </MenuItem>
               ))}
             </Menu>
           </div>
