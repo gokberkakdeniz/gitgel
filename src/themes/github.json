@@ -11,13 +11,13 @@
       "bgElevated": "#ffffff",
       "bgTrack": "#eaeef2",
       "bgHover": "#eaeef2",
-      "bgSidebarActive": "#ddf4ff",
-      "bgPressed": "#d8dee4",
+      "bgSidebarActive": "#e2e7ec",
+      "bgPressed": "#ffffff",
       "bgAvatar": "#d0d7de",
-      "border": "#d0d7de",
+      "border": "#d8dee4",
       "borderRow": "#eaeef2",
-      "borderStrong": "#8c959f",
-      "chipOpenBorder": "#8c959f",
+      "borderStrong": "#d0d7de",
+      "chipOpenBorder": "#afb8c1",
       "textStrong": "#1f2328",
       "textCode": "#1f2328",
       "textBody": "#1f2328",
@@ -64,10 +64,10 @@
       "number": "#0550ae",
       "type": "#953800",
       "comment": "#6e7781",
-      "insertedLine": "#dafbe1",
-      "removedLine": "#ffebe9",
-      "insertedText": "#aceebb",
-      "removedText": "#ffcecb"
+      "insertedLine": "#4ac26b33",
+      "removedLine": "#ff818233",
+      "insertedText": "#4ac26b66",
+      "removedText": "#ff818266"
     }
   },
   "dark": {
@@ -79,12 +79,12 @@
       "bgElevated": "#161b22",
       "bgTrack": "#21262d",
       "bgHover": "#21262d",
-      "bgSidebarActive": "#1f2937",
+      "bgSidebarActive": "#1c2128",
       "bgPressed": "#30363d",
       "bgAvatar": "#30363d",
       "border": "#30363d",
       "borderRow": "#21262d",
-      "borderStrong": "#6e7681",
+      "borderStrong": "#3d444d",
       "chipOpenBorder": "#6e7681",
       "textStrong": "#e6edf3",
       "textCode": "#e6edf3",
@@ -134,8 +134,8 @@
       "comment": "#7d8590",
       "insertedLine": "#2ea04326",
       "removedLine": "#f8514926",
-      "insertedText": "#3fb9504d",
-      "removedText": "#f851494d"
+      "insertedText": "#2ea04366",
+      "removedText": "#f8514966"
     }
   }
 }
