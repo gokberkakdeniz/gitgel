@@ -607,7 +607,7 @@ it was done within a topic.
 - [x] Date Format adds `MMMM d, yyyy`, `d MMM yyyy`, `d MMMM yyyy`; the Date and Time Format samples show the current date and time — 2026-10-17
 - [x] Xcode and Typora in Settings › General › Editor (Xcode opens a file at the line with its bundled `xed --line`) — 2026-10-19
 - [x] Settings › General › Editor › Other: an app name, `.app` path, bundle id or command (`%` = folder or file), as the Other terminal; `settings.editorCommand` — 2026-10-20
-- [x] Themes: Gitgel, GitHub and Monokai, each with System, Light and Dark, and Dracula (dark only) (Settings › Appearance › Theme: one list, previewed while moving through it; palette "Theme: …"; `settings.theme`); a theme is one JSON file in `src/themes/` (app and editor colours, `theme.schema.json`) — 2026-11-13
+- [x] Themes: Gitgel, Ayu, GitHub and Monokai, each with System, Light and Dark, and Dracula (dark only) (Settings › Appearance › Theme: one list, previewed while moving through it; palette "Theme: …"; `settings.theme`); a theme is one JSON file in `src/themes/` (app and editor colours, `theme.schema.json`) — 2026-11-13
 - [x] Custom themes: `*.json` files in the `themes` folder beside `config.json`, same format as the built-in ones (schema copied there); a theme may have only light or only dark, and is then listed in that mode only — 2026-11-13
 
 ### Window, app menu and sidebar
