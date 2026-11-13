@@ -110,7 +110,7 @@
       "properties": {
         "bgSidebar": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^#[0-9a-f]{6}$",
           "description": "Sidebar and the review file list; the left side is the darkest surface."
         },
         "bgMain": {
@@ -120,12 +120,12 @@
         },
         "bgSunken": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^#[0-9a-f]{6}$",
           "description": "Inset areas: wells, the folded region of a diff."
         },
         "bgBand": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^#[0-9a-f]{6}$",
           "description": "Bands and headers; one stripe of the diff filler."
         },
         "bgElevated": {
@@ -160,7 +160,7 @@
         },
         "border": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^#[0-9a-f]{6}$",
           "description": "Default 1px border."
         },
         "borderRow": {
@@ -170,7 +170,7 @@
         },
         "borderStrong": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^#[0-9a-f]{6}$",
           "description": "Border of a control that needs a little more weight; scrollbar thumbs."
         },
         "chipOpenBorder": {
