@@ -205,113 +205,28 @@
   color: var(--text-faint);
 }
 
-/* Appearance */
-
-.themeTrigger {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pop);
-  background: var(--bg-sunken);
-  color: var(--text-muted);
-  text-align: left;
-  cursor: pointer;
-}
-
-.themeTrigger:hover {
-  background: var(--bg-hover);
-  border-color: var(--border-strong);
-}
-
-.themeTriggerText {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.themeDrawer {
-  position: fixed;
-  inset: 0;
-  margin: 0 0 0 auto;
-  width: 440px;
-  max-width: 100vw;
-  height: 100dvh;
-  max-height: 100dvh;
-  padding: 0;
-  border: 0;
-  border-left: 1px solid var(--border);
-  background: var(--bg-main);
-  color: var(--text-body);
-  box-shadow: var(--shadow-modal);
-}
-
-.themeDrawer[open] {
-  display: flex;
-  flex-direction: column;
-}
-
-.themeDrawer::backdrop {
-  background: var(--scrim);
-}
-
-.themeDrawerHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 24px 24px 0;
-}
-
-.themeDrawerHint {
-  margin: 8px 24px 20px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
+/* Appearance: the theme select and its System / Light / Dark tiles. */
 
 .tiles {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 2px 24px 24px;
-  overflow: auto;
+  gap: 16px;
 }
 
 .tile {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 12px;
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pop);
-  color: var(--text-body);
-  text-align: left;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
   cursor: pointer;
-}
-
-.tile:hover {
-  background: var(--bg-hover);
-}
-
-.tile[aria-checked='true'] {
-  background: var(--selected-bg);
-  border-color: var(--accent-text);
-}
-
-.tile:focus-visible,
-.themeTrigger:focus-visible {
-  outline: 2px solid var(--accent-text);
-  outline-offset: 2px;
+  font-size: 12px;
 }
 
 .tileFrame {
   position: relative;
   display: block;
-  flex-shrink: 0;
   width: 120px;
   height: 72px;
   overflow: hidden;
@@ -319,55 +234,17 @@
   box-shadow: 0 0 0 1px var(--border);
 }
 
-.tileLabel {
-  flex: 1;
+.tileFrameOn {
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
-.tile[aria-checked='true'] .tileLabel {
+.tileLabel {
+  color: var(--text-muted);
+}
+
+.tileLabelOn {
   color: var(--text-strong);
   font-weight: 500;
-}
-
-.themeCheck {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  color: var(--accent-text);
-}
-
-.tile[aria-checked='true'] .themeCheck {
-  border-color: currentColor;
-}
-
-.themeError {
-  margin: 0;
-  padding: 12px 24px;
-  border-top: 1px solid var(--border);
-  background: var(--danger-bg);
-  color: var(--danger-text);
-}
-
-@media (max-width: 380px) {
-  .themeDrawerHeader {
-    padding: 20px 16px 0;
-  }
-  .themeDrawerHint {
-    margin-left: 16px;
-    margin-right: 16px;
-  }
-  .tiles {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .tile {
-    gap: 12px;
-    padding: 10px;
-  }
 }
 
 /* Behaviour › Terminal: the dropdown, the Other input and note, and the not-found line. */

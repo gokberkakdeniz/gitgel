@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { IconButton } from '../../components/IconButton';
-import { CheckIcon, ChevronRightIcon, CloseIcon } from '../../components/icons';
+// Settings › Appearance: Theme (a theme and its System / Light / Dark tiles), Formatting, Diff
+// and Review (docs/SPEC.md §5). The mini-window previews are plain elements drawn in the
+// theme's colours (design/screens/Settings.dc.html `layer()`), not images.
+import { useRef } from 'react';
 import { Select } from '../../components/Select';
 import { Switch } from '../../components/Switch';
 import { t } from '../../i18n';
@@ -19,11 +19,9 @@ import {
   validTimeFormat,
 } from '../../lib/format';
 import { updateSettings } from '../../lib/ipc';
-import { THEME_CHOICES, resolveEffective, type ThemeChoice } from '../../lib/theme';
-import type { CommitRows, Config, HistoryLayout, Settings } from '../../lib/types';
-import { themeOf, variantOf, type EffectiveTheme } from '../../themes';
-import { useData } from '../../state/data';
-import { useUi } from '../../state/ui';
+import { APPEARANCES } from '../../lib/theme';
+import type { Appearance as AppearanceSetting, CommitRows, Config, HistoryLayout, Settings } from '../../lib/types';
+import { THEMES, effectiveId, themeOf, variantOf, type EffectiveTheme } from '../../themes';
 import styles from './Settings.module.css';
 
 const DOTS = ['#ff5f57', '#febc2e', '#28c840'];
@@ -82,151 +80,79 @@ export function AppearanceSection({ config }: { config: Config }) {
   );
 }
 
-const sameChoice = (a: ThemeChoice, b: ThemeChoice) =>
-  themeOf(a.theme).id === themeOf(b.theme).id && a.appearance === b.appearance;
-const choiceName = (c: (typeof THEME_CHOICES)[number]) => `${c.name} ${t(c.label)}`;
-
 function ThemeGroup({ config }: { config: Config }) {
-  const current = THEME_CHOICES.find((c) => sameChoice(c, config.settings))!;
-  const [open, setOpen] = useState(false);
-  return (
-    <section aria-labelledby="theme-title" className={styles.section}>
-      <span id="theme-title" className={styles.settingName}>
-        {t('settings.themeName')}
-      </span>
-      <button
-        type="button"
-        className={styles.themeTrigger}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        onClick={() => setOpen(true)}
-      >
-        <ThemePreview choice={current} />
-        <span className={styles.themeTriggerText}>
-          <span className={styles.settingName}>{choiceName(current)}</span>
-          <span className={styles.settingHint}>{t('settings.browseThemes')}</span>
-        </span>
-        <ChevronRightIcon size={16} />
-      </button>
-      <span className={styles.settingHint}>{t('settings.themeHint')}</span>
-      {open && <ThemeDrawer config={config} onClose={() => setOpen(false)} />}
-    </section>
-  );
-}
-
-function ThemePreview({ choice }: { choice: ThemeChoice }) {
-  return (
-    <span className={styles.tileFrame} aria-hidden>
-      {choice.appearance === 'system' ? (
-        <><Layer theme={resolveEffective(choice, true)} /><Layer theme={resolveEffective(choice, false)} clip /></>
-      ) : (
-        <Layer theme={resolveEffective(choice, false)} />
-      )}
-    </span>
-  );
-}
-
-function ThemeDrawer({ config, onClose }: { config: Config; onClose: () => void }) {
-  const current: ThemeChoice = config.settings;
-  const dialog = useRef<HTMLDialogElement>(null);
+  const theme = themeOf(config.settings.theme).id;
+  const current: AppearanceSetting = config.settings.appearance ?? 'system';
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(false);
+  const save = (patch: Partial<Settings>) => void updateSettings({ ...config.settings, ...patch });
 
-  useEffect(() => {
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const el = dialog.current!;
-    useUi.getState().modalOpened();
-    el.showModal();
-    el.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus();
-    return () => {
-      el.close();
-      useUi.getState().modalClosed();
-      previous?.focus();
-    };
-  }, []);
-
-  const pick = async (a: ThemeChoice) => {
-    if (sameChoice(a, current) || saving) return;
-    setSaving(true);
-    setError(false);
-    try {
-      const settings = useData.getState().config?.settings ?? config.settings;
-      const saved = await updateSettings({ ...settings, theme: a.theme, appearance: a.appearance });
-      useData.getState().setConfig(saved);
-    } catch {
-      setError(true);
-    } finally {
-      setSaving(false);
-    }
+  const pick = (a: AppearanceSetting) => {
+    if (a !== current) save({ appearance: a });
   };
 
   // Radio semantics: the arrow keys move (and pick) the choice.
   const onKeyDown = (e: React.KeyboardEvent) => {
-    const i = THEME_CHOICES.findIndex((a) => sameChoice(a, current));
+    const i = APPEARANCES.findIndex((a) => a.id === current);
     let next: number | null = null;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % THEME_CHOICES.length;
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i + THEME_CHOICES.length - 1) % THEME_CHOICES.length;
-    else if (e.key === 'Home') next = 0;
-    else if (e.key === 'End') next = THEME_CHOICES.length - 1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % APPEARANCES.length;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i + APPEARANCES.length - 1) % APPEARANCES.length;
     if (next === null) return;
     e.preventDefault();
-    if (saving) return;
-    void pick(THEME_CHOICES[next]);
+    pick(APPEARANCES[next].id);
     buttons.current[next]?.focus();
   };
 
-  return createPortal(
-    <dialog
-      ref={dialog}
-      className={styles.themeDrawer}
-      aria-labelledby="theme-drawer-title"
-      aria-describedby="theme-drawer-hint"
-      onCancel={(e) => {
-        e.preventDefault();
-        onClose();
-      }}
-      onMouseDown={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const outside = e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom;
-        if (e.target === e.currentTarget && outside) onClose();
-      }}
-    >
-      <div className={styles.themeDrawerHeader}>
-        <h2 id="theme-drawer-title" className={styles.heading}>{t('settings.themeName')}</h2>
-        <IconButton aria-label={t('common.close')} onClick={onClose}>
-          <CloseIcon size={14} />
-        </IconButton>
-      </div>
-      <p id="theme-drawer-hint" className={styles.themeDrawerHint}>{t('settings.themeDrawerHint')}</p>
-      <div role="radiogroup" aria-labelledby="theme-drawer-title" aria-busy={saving} className={styles.tiles} onKeyDown={onKeyDown}>
-        {THEME_CHOICES.map((a, i) => {
-          const on = sameChoice(a, current);
+  return (
+    <section aria-labelledby="theme-title" className={styles.section}>
+      <label className={styles.setting}>
+        <span className={styles.settingText}>
+          <span id="theme-title" className={styles.settingName}>
+            {t('settings.themeName')}
+          </span>
+        </span>
+        <Select
+          aria-label={t('settings.themeName')}
+          value={theme}
+          onChange={(id) => save({ theme: id })}
+          options={THEMES.map((th) => ({ value: th.id, label: th.name }))}
+        />
+      </label>
+      <div role="radiogroup" aria-labelledby="theme-title" className={styles.tiles} onKeyDown={onKeyDown}>
+        {APPEARANCES.map((a, i) => {
+          const on = current === a.id;
           return (
             <button
-              key={`${a.theme}-${a.appearance}`}
+              key={a.id}
               ref={(el) => {
                 buttons.current[i] = el;
               }}
               type="button"
               role="radio"
               aria-checked={on}
-              aria-disabled={saving}
               // One tab stop for the group; the arrow keys move between tiles.
               tabIndex={on ? 0 : -1}
-              onClick={() => void pick(a)}
+              onClick={() => pick(a.id)}
               className={styles.tile}
             >
-              <ThemePreview choice={a} />
-              <span className={styles.tileLabel}>{choiceName(a)}</span>
-              <span className={styles.themeCheck}>{on && <CheckIcon size={14} />}</span>
+              <span className={on ? `${styles.tileFrame} ${styles.tileFrameOn}` : styles.tileFrame}>
+                {a.id === 'system' ? (
+                  <>
+                    <Layer theme={effectiveId(theme, 'dark')} />
+                    <Layer theme={effectiveId(theme, 'light')} clip />
+                  </>
+                ) : (
+                  <Layer theme={effectiveId(theme, a.id)} />
+                )}
+              </span>
+              <span className={on ? `${styles.tileLabel} ${styles.tileLabelOn}` : styles.tileLabel}>
+                {t(a.label)}
+              </span>
             </button>
           );
         })}
       </div>
-      {error && <p role="alert" className={styles.themeError}>{t('settings.themeSaveFailed')}</p>}
-    </dialog>,
-    document.body,
+      <span className={styles.settingHint}>{t('settings.themeHint')}</span>
+    </section>
   );
 }
 

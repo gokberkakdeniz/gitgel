@@ -100,7 +100,10 @@ button,input{font-family:inherit}
 <sc-if value="{{isAppearance}}" hint-placeholder-val="{{false}}">
 <h2 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 400; letter-spacing: -0.2px; color: var(--text-strong)">Appearance</h2>
 <section aria-labelledby="theme-title" style="display: flex; flex-direction: column; gap: 12px">
-<span id="theme-title" style="color: var(--text-strong)">Theme</span>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span id="theme-title" style="color: var(--text-strong)">Theme</span></span>
+<dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Theme" options="{{themeNames}}" hint-size="230px,36px"></dc-import>
+</div>
 <div role="radiogroup" aria-labelledby="theme-title" style="display: flex; gap: 16px">
 <sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
 <button role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; cursor: pointer; font-size: 12px">
@@ -373,6 +376,10 @@ class Component extends DCLogic {
       // Repositories › Check Out New Branches In: the row New Branch (V2) opens on.
       newBranchChoices: [['main', 'Repository folder'], ['worktree', 'New worktree'], ['none', 'Branch only']].map(function (x) {
         return { value: x[0], label: x[1], on: x[0] === 'main' };
+      }),
+      // Appearance › Theme: the themes by name; the tiles below pick its System / Light / Dark.
+      themeNames: [['gitgel', 'Gitgel'], ['github', 'GitHub'], ['monokai', 'Monokai']].map(function (x) {
+        return { value: x[0], label: x[1], on: x[0] === 'gitgel' };
       }),
       languages: [['system', 'System'], ['en', 'English'], ['tr', 'Türkçe']].map(function (x) {
         return { value: x[0], label: x[1], on: x[0] === 'system' };
