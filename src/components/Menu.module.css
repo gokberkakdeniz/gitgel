@@ -18,7 +18,8 @@
   cursor: pointer;
 }
 
-.item:not(:disabled):hover,
+/* After ↑/↓ (data-keys) only the focused item is lit, not the one under a resting pointer. */
+.menu:not([data-keys]) .item:not(:disabled):hover,
 .item:focus-visible {
   background: var(--bg-hover);
   box-shadow: none;
