@@ -269,7 +269,9 @@ gitgel/
 
 ## 4. Visual system
 
-Each theme has a light and a dark variant, picked in Settings › Appearance › Theme (§5). Gitgel's
+Each theme has a light and a dark variant; Settings › Appearance › Theme (§5) picks the theme
+(`settings.theme`) and its mode (`settings.appearance`): System (default, follows macOS), Light or
+Dark, so every theme has all three. Gitgel's
 own theme, described here: warm neutrals, one cool accent. Tokens are CSS variables (`bg.sidebar` →
 `--bg-sidebar`, `text.muted` → `--text-muted`, …). The reference screens use the same tokens: each
 file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(--…)`.
@@ -1083,8 +1085,8 @@ outside or leaving the page closes it (`src/commands/`).
     only Add Branches…), Edit Project, Rename Project (project review), Delete Project… (both).
   - **General**: New Project… ⌘N, Go to Branches, Go Back ⌘[, Go Forward ⌘], Show / Hide Sidebar
     ⌘B, Refresh, Add Repository…, Check for Updates…, What's New, About Gitgel, Report an Issue.
-  - **Settings**: Open Settings ⌘,, Settings: <section> for each section, Theme: <name> for the
-    two themes not chosen, Commit Rows: <name> and Layout: <name> for the Appearance choice not
+  - **Settings**: Open Settings ⌘,, Settings: <section> for each section, Theme: <name> for every
+    theme in every mode but the chosen one ("Theme: GitHub System", "Theme: GitHub Light", …), Commit Rows: <name> and Layout: <name> for the Appearance choice not
     made (One Line / Two Lines, Columns / Tree).
 - Screens add their rows with `useCommandSource` (`src/commands/registry.ts`), read when the
   palette opens; the app's own are in `global.ts`, the branch's in `branch.ts`, which reuse the
@@ -1500,7 +1502,8 @@ export interface Settings {
   terminalCommand: string;       // Other: a command (`%` = folder) or an app; default '' (T14.7)
   checkUpdates: boolean;         // Settings › General › Check for updates; default true
   lastSeenVersion: string;       // version whose What's New was shown; default ''
-  appearance: 'system' | 'light' | 'dark'; // Settings › Appearance › Theme; default 'system' (T10.1)
+  theme: string;                 // Settings › Appearance › Theme: a theme id (§4 "Themes"); default 'gitgel', an unknown one shows as it
+  appearance: 'system' | 'light' | 'dark'; // Settings › Appearance › Theme: the theme's mode; default 'system' (T10.1)
   dateFormat: string;            // Settings › Appearance › Formatting › Date Format pattern; default 'MMM d, yyyy'
   timeFormat: string;            // Settings › Appearance › Formatting › Time Format pattern; default 'HH:mm'
   numberFormat: NumberFormat;    // Settings › Appearance › Formatting › Number Format; default 'plain-comma'

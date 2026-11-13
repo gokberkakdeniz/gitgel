@@ -50,14 +50,15 @@ export default function App() {
   }, []);
 
   // Appearance (Settings › Appearance): the config wins once loaded; System follows macOS.
+  const theme = useData((s) => s.config?.settings.theme);
   const appearance = useData((s) => s.config?.settings.appearance);
   useEffect(() => {
-    return watchSystemTheme(() => useData.getState().config?.settings.appearance ?? 'system');
+    return watchSystemTheme(() => useData.getState().config?.settings);
   }, []);
   // Until the config arrives, the theme index.html applied from the cache stays.
   useEffect(() => {
-    if (appearance) applyTheme(resolveEffective(appearance, systemIsDark()), appearance);
-  }, [appearance]);
+    if (theme && appearance) applyTheme(resolveEffective({ theme, appearance }, systemIsDark()), appearance);
+  }, [theme, appearance]);
 
   // The UI language and formats (Settings › General, Appearance): the config wins once
   // loaded; until then the module defaults (the browser language) stand. One re-render,

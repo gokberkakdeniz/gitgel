@@ -10,6 +10,7 @@ import { readProjectSort, sortProjects } from '../lib/projectSort';
 import { setSidebarVisible } from '../lib/sidebar';
 import type { EntrySummary, Settings } from '../lib/types';
 import { THEME_CHOICES } from '../lib/theme';
+import { themeOf } from '../themes';
 import { paletteItems } from '../screens/Palette/items';
 import { selectRepoScans, useData } from '../state/data';
 import { openSettings, selectCanBack, selectCanForward, selectRoute, useNav, type Route } from '../state/nav';
@@ -151,11 +152,11 @@ export function appCommands(route: Route): Command[] {
   );
   if (settings)
     list.push(
-      ...THEME_CHOICES.filter((th) => th.id !== settings.appearance).map((th) => ({
-        id: `theme:${th.id}`,
-        title: t('cmd.theme', { name: t(th.label) }),
+      ...THEME_CHOICES.filter((c) => c.theme !== themeOf(settings.theme).id || c.appearance !== settings.appearance).map((c) => ({
+        id: `theme:${c.theme}:${c.appearance}`,
+        title: t('cmd.theme', { name: `${c.name} ${t(c.label)}` }),
         group: settingsGroup,
-        run: () => saveSettings({ appearance: th.id }),
+        run: () => saveSettings({ theme: c.theme, appearance: c.appearance }),
       })),
       // Review's commit rows and layout (Settings › Appearance): the one not chosen.
       settings.commitRows === 'one-line'

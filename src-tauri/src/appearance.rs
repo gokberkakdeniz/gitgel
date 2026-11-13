@@ -17,21 +17,15 @@ pub fn show_main_window(app: &AppHandle, appearance: Appearance) {
     };
     let theme = match appearance {
         Appearance::System => None,
-        Appearance::Light | Appearance::GithubLight => Some(Theme::Light),
-        Appearance::Dark | Appearance::GithubDark => Some(Theme::Dark),
+        Appearance::Light => Some(Theme::Light),
+        Appearance::Dark => Some(Theme::Dark),
     };
     if let Err(e) = window.set_theme(theme) {
         log::warn!("cannot set the window theme: {e}");
     }
     // With System, the window now reports the macOS appearance.
     let dark = !matches!(theme.map_or_else(|| window.theme(), Ok), Ok(Theme::Light));
-    let background = match appearance {
-        Appearance::GithubLight => Color(0xff, 0xff, 0xff, 0xff),
-        Appearance::GithubDark => Color(0x0d, 0x11, 0x17, 0xff),
-        _ if dark => DARK_BG,
-        _ => LIGHT_BG,
-    };
-    if let Err(e) = window.set_background_color(Some(background)) {
+    if let Err(e) = window.set_background_color(Some(if dark { DARK_BG } else { LIGHT_BG })) {
         log::warn!("cannot set the window background: {e}");
     }
     // In case the page never says it is ready.

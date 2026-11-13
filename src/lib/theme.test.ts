@@ -1,21 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { resolveEffective } from './theme';
+import { THEME_CHOICES, resolveEffective } from './theme';
 
 describe('resolveEffective', () => {
-  it('keeps an explicit choice whatever the system does', () => {
-    expect(resolveEffective('light', true)).toBe('gitgel-light');
-    expect(resolveEffective('light', false)).toBe('gitgel-light');
-    expect(resolveEffective('dark', true)).toBe('gitgel-dark');
-    expect(resolveEffective('dark', false)).toBe('gitgel-dark');
+  it('keeps an explicit mode whatever the system does', () => {
+    expect(resolveEffective({ theme: 'gitgel', appearance: 'light' }, true)).toBe('gitgel-light');
+    expect(resolveEffective({ theme: 'gitgel', appearance: 'dark' }, false)).toBe('gitgel-dark');
+    expect(resolveEffective({ theme: 'github', appearance: 'light' }, true)).toBe('github-light');
   });
 
-  it('follows the system when set to system', () => {
-    expect(resolveEffective('system', true)).toBe('gitgel-dark');
-    expect(resolveEffective('system', false)).toBe('gitgel-light');
+  it('follows the system in any theme when set to system', () => {
+    expect(resolveEffective({ theme: 'gitgel', appearance: 'system' }, true)).toBe('gitgel-dark');
+    expect(resolveEffective({ theme: 'github', appearance: 'system' }, true)).toBe('github-dark');
+    expect(resolveEffective({ theme: 'github', appearance: 'system' }, false)).toBe('github-light');
   });
 
-  it.each(['github-light', 'github-dark'] as const)('keeps %s independent of the system appearance', (theme) => {
-    expect(resolveEffective(theme, true)).toBe(theme);
-    expect(resolveEffective(theme, false)).toBe(theme);
+  it('reads a theme that is not there as the default', () => {
+    expect(resolveEffective({ theme: 'gone', appearance: 'dark' }, false)).toBe('gitgel-dark');
+  });
+});
+
+describe('THEME_CHOICES', () => {
+  it('has System, Light and Dark for every theme', () => {
+    const github = THEME_CHOICES.filter((c) => c.theme === 'github');
+    expect(github.map((c) => c.appearance)).toEqual(['system', 'light', 'dark']);
+    expect(github[0].name).toBe('GitHub');
   });
 });

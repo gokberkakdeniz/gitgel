@@ -533,8 +533,6 @@
   "settings.themeSystem": "Sistem",
   "settings.themeLight": "Açık",
   "settings.themeDark": "Koyu",
-  "settings.themeGithubLight": "GitHub Açık",
-  "settings.themeGithubDark": "GitHub Koyu",
   "settings.browseThemes": "Temalara göz at",
   "settings.themeDrawerHint": "Bir tema seçin. Değişiklikler hemen uygulanır.",
   "settings.themeSaveFailed": "Tema kaydedilemedi. Yeniden denemek için tekrar seçin.",
