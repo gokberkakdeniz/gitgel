@@ -28,6 +28,8 @@ const GROUNDS_KEY = 'gitgel.theme-grounds';
 // store so `applyTheme` (called from anywhere) notifies React subscribers.
 const initial = typeof document !== 'undefined' ? document.documentElement.dataset.theme : undefined;
 let current: EffectiveTheme = isEffective(initial) ? initial : 'gitgel-dark';
+// What `applyTheme` last set; a preview goes back to it.
+let applied = current;
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -53,7 +55,7 @@ export function applyTheme(effective: EffectiveTheme, appearance: Appearance) {
   document.documentElement.dataset.theme = effective;
   // index.html painted <html> before the CSS loaded; from here the tokens take over.
   document.documentElement.style.removeProperty('background');
-  current = effective;
+  current = applied = effective;
   notify();
   const { bgMain, bgElevated } = variantOf(effective).colors;
   try {
@@ -73,6 +75,17 @@ export function applyTheme(effective: EffectiveTheme, appearance: Appearance) {
   } catch {
     // Not running under Tauri.
   }
+}
+
+/**
+ * Shows a theme in this window's page and editor without saving it (Settings › Appearance ›
+ * Theme, while its list is open); `null` goes back to the applied one.
+ */
+export function previewTheme(effective: EffectiveTheme | null) {
+  const next = effective ?? applied;
+  if (next === current) return;
+  document.documentElement.dataset.theme = current = next;
+  notify();
 }
 
 /** Follows the macOS appearance while the setting is System. Call once from the app root. */

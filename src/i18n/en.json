@@ -503,7 +503,6 @@
   "settings.themeSystem": "System",
   "settings.themeLight": "Light",
   "settings.themeDark": "Dark",
-  "settings.themeHint": "System follows the macOS appearance and switches with it.",
   "settings.navAppearance": "Appearance",
   "settings.appearanceHeading": "Appearance",
   "settings.formattingName": "Formatting",
