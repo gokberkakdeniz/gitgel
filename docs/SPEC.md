@@ -185,7 +185,7 @@ gitgel/
 │  ├─ main.tsx                    # font imports, Monaco setup
 │  ├─ App.tsx                     # layout, route switch, global shortcuts, drop overlay
 │  ├─ styles/   tokens.css  global.css
-│  ├─ themes/   # §4 "Themes": a JSON file per theme (gitgel.json, github.json), theme.schema.json, types.ts, index.ts
+│  ├─ themes/   # §4 "Themes": a JSON file per theme (gitgel.json, github.json, monokai.json), theme.schema.json, types.ts, index.ts
 │  ├─ lib/      types.ts  ipc.ts  events.ts  useInvoke.ts  format.ts  paths.ts  entryKey.ts
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts  zoom.ts
 │  │            useCopy.ts  changelog.ts (CHANGELOG.md parsed, version compare)  whatsNew.ts
@@ -279,7 +279,7 @@ file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(--…
 ### Themes
 
 `src/themes/` is the one place a theme's colours live: a JSON file per theme (`gitgel.json`,
-`github.json`) written to `theme.schema.json` (each names it in `$schema`, so an editor completes
+`github.json`, `monokai.json`) written to `theme.schema.json` (each names it in `$schema`, so an editor completes
 and checks it; `index.test.ts` checks every file against it too): `id`, `name`, and `light` /
 `dark`, each with `colors` (the tokens below, camelCase) and `editor` (Monaco's syntax and diff
 colours). `types.ts` is the same shape for the code. `index.ts` reads every `*.json` there into
@@ -295,7 +295,9 @@ colours). `types.ts` is the same shape for the code. `index.ts` reads every `*.j
   `localStorage`; `index.html` applies them before the bundle loads (with nothing cached,
   Gitgel's by the macOS appearance).
 
-Adding a theme: a new `<id>.json` in `src/themes/`; nothing else changes.
+Adding a theme: a new `<id>.json` in `src/themes/`; nothing else changes. `index.test.ts` also
+holds every theme to a contrast floor (text, accent and status colours 4.5:1 on their ground,
+syntax colours 3.5:1).
 
 ### Colour tokens
 
