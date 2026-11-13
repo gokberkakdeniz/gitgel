@@ -332,10 +332,10 @@ class Component extends DCLogic {
       newBranchChoices: [['main', 'Repository folder'], ['worktree', 'New worktree'], ['none', 'Branch only']].map(function (x) {
         return { value: x[0], label: x[1], on: x[0] === 'main' };
       }),
-      // Appearance › Theme: every theme as System / Light / Dark, in one list (the app previews the row under the keyboard or pointer).
-      themeNames: ['Gitgel', 'GitHub', 'Monokai'].reduce(function (all, name) {
-        return all.concat(['System', 'Light', 'Dark'].map(function (mode) {
-          var label = name + ' ' + mode;
+      // Appearance › Theme: every theme as System / Light / Dark, in one list (the app previews the row under the keyboard or pointer); a theme with one mode (Dracula) lists only that.
+      themeNames: [['Gitgel'], ['Dracula', ['Dark']], ['GitHub'], ['Monokai']].reduce(function (all, theme) {
+        return all.concat((theme[1] || ['System', 'Light', 'Dark']).map(function (mode) {
+          var label = theme[0] + ' ' + mode;
           return { value: label, label: label, on: label === 'Gitgel System' };
         }));
       }, []),
