@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3 — 2026-11-13
+
+### Fixed
+- Add Repositories shows the selected folder count.
+
 ## 0.2.2 — 2026-11-10
 
 ### Improved
