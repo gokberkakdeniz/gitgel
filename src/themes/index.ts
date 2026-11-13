@@ -1,13 +1,16 @@
-// The themes of the app and of Monaco (docs/SPEC.md §4 "Themes"). A new theme is a file here
-// (see `types.ts`) added to `THEMES`; its CSS tokens and its Monaco themes come from it.
-import { github } from './github';
-import { gitgel } from './gitgel';
+// The themes of the app and of Monaco (docs/SPEC.md §4 "Themes"). A theme is a `<id>.json` file
+// in this folder, written to `theme.schema.json`; its CSS tokens and its Monaco themes come from
+// it. `index.html` holds a copy of Gitgel's two grounds (bgMain, bgElevated) for the first launch.
 import type { Theme, ThemeColors, ThemeVariant } from './types';
 
 export type { EditorColors, Theme, ThemeColors, ThemeVariant } from './types';
 
-/** In the order Settings lists them; the first is the default. */
-export const THEMES: readonly Theme[] = [gitgel, github];
+const files = import.meta.glob<Theme>(['./*.json', '!./theme.schema.json'], { eager: true, import: 'default' });
+
+/** In the order Settings lists them: Gitgel, the default, then by name. */
+export const THEMES: readonly Theme[] = Object.values(files).sort(
+  (a, b) => Number(b.id === 'gitgel') - Number(a.id === 'gitgel') || a.name.localeCompare(b.name),
+);
 
 export type Mode = 'light' | 'dark';
 export const MODES: readonly Mode[] = ['light', 'dark'];

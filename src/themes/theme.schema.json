@@ -1,0 +1,442 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gitgel theme",
+  "description": "One theme of Gitgel: the app's colour tokens and the editor's colours, light and dark. A *.json file next to this one is picked up by src/themes/index.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "light",
+    "dark"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*$",
+      "description": "Saved in the config and used in data-theme (<id>-light, <id>-dark)."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Shown as is in every language."
+    },
+    "light": {
+      "$ref": "#/definitions/variant"
+    },
+    "dark": {
+      "$ref": "#/definitions/variant"
+    }
+  },
+  "definitions": {
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "colors",
+        "editor"
+      ],
+      "properties": {
+        "colors": {
+          "$ref": "#/definitions/colors"
+        },
+        "editor": {
+          "$ref": "#/definitions/editor"
+        }
+      }
+    },
+    "colors": {
+      "type": "object",
+      "description": "The app's tokens; bgSidebar is --bg-sidebar in CSS. Any CSS colour unless a pattern asks for #rrggbb (those are mixed into tints, handed to the native window or to Monaco).",
+      "additionalProperties": false,
+      "required": [
+        "bgSidebar",
+        "bgMain",
+        "bgSunken",
+        "bgBand",
+        "bgElevated",
+        "bgTrack",
+        "bgHover",
+        "bgSidebarActive",
+        "bgPressed",
+        "bgAvatar",
+        "border",
+        "borderRow",
+        "borderStrong",
+        "chipOpenBorder",
+        "textStrong",
+        "textCode",
+        "textBody",
+        "textMuted",
+        "textFaint",
+        "textDisabled",
+        "iconDisabled",
+        "accent",
+        "accentText",
+        "accentHover",
+        "onAccent",
+        "selectedBg",
+        "successText",
+        "successBg",
+        "warningTint",
+        "warningText",
+        "warningBg",
+        "dangerTint",
+        "dangerText",
+        "dangerBg",
+        "dangerFill",
+        "diffAddBg",
+        "diffDelBg",
+        "diffAddMark",
+        "diffDelMark",
+        "diffFoldBg",
+        "kindAText",
+        "kindABg",
+        "kindMText",
+        "kindMBg",
+        "kindRText",
+        "kindRBg",
+        "kindDText",
+        "kindDBg",
+        "kindUText",
+        "kindUBg",
+        "shadowPop",
+        "shadowModal",
+        "scrim"
+      ],
+      "properties": {
+        "bgSidebar": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Sidebar and the review file list; the left side is the darkest surface."
+        },
+        "bgMain": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Content ground, the editor and the main window behind the page."
+        },
+        "bgSunken": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Inset areas: wells, the folded region of a diff."
+        },
+        "bgBand": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bands and headers; one stripe of the diff filler."
+        },
+        "bgElevated": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Popovers, menus, fields, modals and the small windows."
+        },
+        "bgTrack": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Track of a segmented control or a progress bar."
+        },
+        "bgHover": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Hovered row or button."
+        },
+        "bgSidebarActive": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Current item of the sidebar."
+        },
+        "bgPressed": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Chosen segment, pressed or open control."
+        },
+        "bgAvatar": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Avatar without a picture."
+        },
+        "border": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Default 1px border."
+        },
+        "borderRow": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Line between rows; quieter than border."
+        },
+        "borderStrong": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Border of a control that needs a little more weight; scrollbar thumbs."
+        },
+        "chipOpenBorder": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Border of a chip or menu trigger while it is open."
+        },
+        "textStrong": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Headings and emphasised text."
+        },
+        "textCode": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Code in the editor and the terminal."
+        },
+        "textBody": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Body text."
+        },
+        "textMuted": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Secondary text; 4.5:1 on bgMain."
+        },
+        "textFaint": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Line numbers and placeholders only."
+        },
+        "textDisabled": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Disabled text."
+        },
+        "iconDisabled": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Disabled icon."
+        },
+        "accent": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Primary button, checked controls, focus ring; tints are mixed from it."
+        },
+        "accentText": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Links and accent-coloured text; 4.5:1 on bgMain."
+        },
+        "accentHover": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Hovered link."
+        },
+        "onAccent": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Text and marks on accent; 4.5:1 on it."
+        },
+        "selectedBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Selected row."
+        },
+        "successText": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Success text."
+        },
+        "successBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Success ground."
+        },
+        "warningTint": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "The amber that warning tints are mixed from."
+        },
+        "warningText": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Warning text."
+        },
+        "warningBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Warning ground."
+        },
+        "dangerTint": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "The red that danger tints are mixed from."
+        },
+        "dangerText": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Error text."
+        },
+        "dangerBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Error ground."
+        },
+        "dangerFill": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Destructive button, under white text."
+        },
+        "diffAddBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Added line outside the editor."
+        },
+        "diffDelBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Removed line outside the editor."
+        },
+        "diffAddMark": {
+          "type": "string",
+          "minLength": 1,
+          "description": "+ counts and marks."
+        },
+        "diffDelMark": {
+          "type": "string",
+          "minLength": 1,
+          "description": "− counts and marks."
+        },
+        "diffFoldBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Folded unchanged lines."
+        },
+        "kindAText": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge A (added): letter."
+        },
+        "kindABg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge A: ground."
+        },
+        "kindMText": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge M (modified): letter."
+        },
+        "kindMBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge M: ground."
+        },
+        "kindRText": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge R (renamed): letter."
+        },
+        "kindRBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge R: ground."
+        },
+        "kindDText": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge D (deleted) and C (conflict): letter."
+        },
+        "kindDBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge D and C: ground."
+        },
+        "kindUText": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge U (untracked): letter."
+        },
+        "kindUBg": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File badge U: ground."
+        },
+        "shadowPop": {
+          "type": "string",
+          "minLength": 1,
+          "description": "box-shadow of popovers and menus."
+        },
+        "shadowModal": {
+          "type": "string",
+          "minLength": 1,
+          "description": "box-shadow of modals."
+        },
+        "scrim": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Layer behind a modal."
+        }
+      }
+    },
+    "editor": {
+      "type": "object",
+      "description": "Monaco's own colours; the rest of the editor uses the tokens.",
+      "additionalProperties": false,
+      "required": [
+        "keyword",
+        "string",
+        "number",
+        "type",
+        "comment",
+        "insertedLine",
+        "removedLine",
+        "insertedText",
+        "removedText"
+      ],
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Keywords."
+        },
+        "string": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Strings."
+        },
+        "number": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Numbers."
+        },
+        "type": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Types."
+        },
+        "comment": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "Comments (italic)."
+        },
+        "insertedLine": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?$",
+          "description": "Ground of an added line; translucent, so the selection shows through."
+        },
+        "removedLine": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?$",
+          "description": "Ground of a removed line; translucent."
+        },
+        "insertedText": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?$",
+          "description": "Ground of the added part of a line; translucent."
+        },
+        "removedText": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?$",
+          "description": "Ground of the removed part of a line; translucent."
+        }
+      }
+    }
+  }
+}
