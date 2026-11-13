@@ -607,6 +607,7 @@ it was done within a topic.
 - [x] Date Format adds `MMMM d, yyyy`, `d MMM yyyy`, `d MMMM yyyy`; the Date and Time Format samples show the current date and time — 2026-10-17
 - [x] Xcode and Typora in Settings › General › Editor (Xcode opens a file at the line with its bundled `xed --line`) — 2026-10-19
 - [x] Settings › General › Editor › Other: an app name, `.app` path, bundle id or command (`%` = folder or file), as the Other terminal; `settings.editorCommand` — 2026-10-20
+- [x] Themes: Gitgel, GitHub and Monokai, each with System, Light and Dark (Settings › Appearance › Theme dropdown + tiles, palette "Theme: …"; `settings.theme`); a theme is one JSON file in `src/themes/` (app and editor colours, `theme.schema.json`) — 2026-11-13
 
 ### Window, app menu and sidebar
 - [x] Help › Show Logs in Finder — 2026-09-26
