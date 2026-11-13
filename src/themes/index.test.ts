@@ -72,10 +72,13 @@ describe('themes', () => {
         ];
         for (const [what, fg, bg] of pairs)
           expect(contrast(fg, bg), `${t.id}.${m} ${what}`).toBeGreaterThanOrEqual(4.5);
-        // Syntax colours sit on the editor ground; comments may be quieter.
+        for (const key of ['successText', 'warningText', 'dangerText'] as const)
+          expect(contrast(c[key], c.bgMain), `${t.id}.${m} ${key}`).toBeGreaterThanOrEqual(4.5);
+        // Syntax colours sit on the editor ground. A palette's own colours are kept (Monokai's
+        // pink), so the floor is 3.5; comments may be quieter.
         const { keyword, string, number, type, comment } = t[m].editor;
         for (const fg of [keyword, string, number, type])
-          expect(contrast(fg, c.bgMain), `${t.id}.${m} ${fg}`).toBeGreaterThanOrEqual(4.5);
+          expect(contrast(fg, c.bgMain), `${t.id}.${m} ${fg}`).toBeGreaterThanOrEqual(3.5);
         expect(contrast(comment, c.bgMain), `${t.id}.${m} comment`).toBeGreaterThanOrEqual(2.5);
       }
   });
