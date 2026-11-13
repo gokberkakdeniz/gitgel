@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.4 — 2026-11-13
+
+### New
+- Color themes: Gitgel, Ayu, Ayu Mirage, Dracula, GitHub and Monokai, each with System, Light and Dark.
+- Custom themes from the themes folder beside `config.json`.
+
+### Fixed
+- A fork's pull request branch shows what is pushed.
+
 ## 0.2.3 — 2026-11-13
 
 ### Fixed
