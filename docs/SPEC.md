@@ -1172,16 +1172,13 @@ outside or leaving the page closes it (`src/commands/`).
   - "Check for updates": a switch, on by default (`settings.checkUpdates`). Off hides a found
     update; on checks at once.
 - **Appearance:** serif 18px heading "Appearance".
-  - "Theme": a row with a dropdown of the themes by name (as Formatting; `settings.theme`,
-    default Gitgel; §4 "Themes"), then a radiogroup of three tiles, gap 16: **System** (default), **Light**,
-    **Dark**, drawn in the chosen theme's colours. Tile: 120 × 72 mini-window preview (radius 9, clipped): a
-    32px sidebar strip with traffic lights and three lines, content with a title bar, three lines
-    and an accent chip, drawn in that theme's colours; System is split diagonally (light
-    top-left, dark bottom-right). 12px label under the tile. Selected: `0 0 0 2px accent` ring
-    and `text.strong` 500 label; others `0 0 0 1px border` and a muted label. Arrow keys move the
-    choice (radio semantics). Under the tiles, 12px muted: "System follows the macOS appearance
-    and switches with it." A choice applies at once and is saved (`settings.theme`,
-    `settings.appearance`).
+  - "Theme": one row, the label and a 230px field drawn as a Select showing the choice
+    ("Gitgel System"). It opens a menu (width 230) of every theme in every mode — "<Theme>
+    System", "<Theme> Light", "<Theme> Dark" (§4 "Themes"), a divider between themes, a check on
+    the current one, opened with focus on it. The row under the keyboard (↑ ↓) or the pointer is
+    previewed at once in this window (page and editor; System shows the macOS appearance);
+    ↵ or a click saves it (`settings.theme`, `settings.appearance`; default Gitgel System), esc
+    or a click outside goes back to the saved theme.
   - "Formatting": three dropdowns (native `<select>`, as Terminal), each option showing a sample
     (the current date and time / 1234567.89) followed by its pattern, then a checkbox:
     - "Date Format" (`settings.dateFormat`, default `MMM d, yyyy`): `MMM d, yyyy`, `MMMM do,

@@ -104,23 +104,6 @@ button,input{font-family:inherit}
 <span style="display: flex; flex-direction: column; gap: 2px"><span id="theme-title" style="color: var(--text-strong)">Theme</span></span>
 <dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Theme" options="{{themeNames}}" hint-size="230px,36px"></dc-import>
 </div>
-<div role="radiogroup" aria-labelledby="theme-title" style="display: flex; gap: 16px">
-<sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
-<button role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; cursor: pointer; font-size: 12px">
-<span style="{{t.frameStyle}}">
-<sc-for list="{{t.layers}}" as="ly" hint-placeholder-count="1">
-<span style="{{ly.style}}">
-<sc-for list="{{ly.rects}}" as="rc" hint-placeholder-count="6">
-<span style="{{rc}}"></span>
-</sc-for>
-</span>
-</sc-for>
-</span>
-<span style="{{t.labelStyle}}">{{t.label}}</span>
-</button>
-</sc-for>
-</div>
-<span style="font-size: 12px; color: var(--text-muted)">System follows the macOS appearance and switches with it.</span>
 </section>
 <section style="display: flex; flex-direction: column; gap: 12px">
 <span style="color: var(--text-strong)">Formatting</span>
@@ -278,34 +261,6 @@ class Component extends DCLogic {
     var appearance = (this.state && this.state.appearance) || this.props.appearance || 'system';
     var osTheme = this.props.theme || 'dark';
     var theme = appearance === 'system' ? osTheme : appearance;
-    var P = {
-      light: { sb: '#f1efea', main: '#fbfaf7', line: '#dcd8d0', strong: '#8a857c', accent: '#3a7b8f', edge: '#e2ded6' },
-      dark: { sb: '#0e0d0c', main: '#141311', line: '#383631', strong: '#75726b', accent: '#4f8fa3', edge: '#262420' }
-    };
-    var box = function (x, y, w, h, c, r) { return 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; width: ' + w + 'px; height: ' + h + 'px; background: ' + c + '; border-radius: ' + (r || 2) + 'px'; };
-    var layer = function (k, clip) {
-      var p = P[k];
-      return {
-        style: 'position: absolute; inset: 0; background: ' + p.main + (clip ? '; clip-path: polygon(0 0, 100% 0, 0 100%)' : ''),
-        rects: [
-          box(0, 0, 32, 72, p.sb, 0), box(32, 0, 1, 72, p.edge, 0),
-          box(6, 6, 4, 4, '#ff5f57', 2), box(12, 6, 4, 4, '#febc2e', 2), box(18, 6, 4, 4, '#28c840', 2),
-          box(6, 20, 20, 3, p.line), box(6, 27, 15, 3, p.line), box(6, 34, 18, 3, p.line),
-          box(40, 9, 42, 5, p.strong), box(40, 22, 70, 3, p.line), box(40, 29, 58, 3, p.line), box(40, 36, 64, 3, p.line),
-          box(40, 50, 26, 9, p.accent, 3)
-        ]
-      };
-    };
-    var themes = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(function (t) {
-      var on = appearance === t[0];
-      return {
-        label: t[1], on: on,
-        pick: function () { self.setState({ appearance: t[0] }); },
-        layers: t[0] === 'system' ? [layer('dark'), layer('light', true)] : [layer(t[0])],
-        frameStyle: 'position: relative; display: block; width: 120px; height: 72px; border-radius: 9px; overflow: hidden; ' + (on ? 'box-shadow: 0 0 0 2px var(--accent)' : 'box-shadow: 0 0 0 1px var(--border)'),
-        labelStyle: on ? 'color: var(--text-strong); font-weight: 500' : 'color: var(--text-muted)'
-      };
-    });
     var section = (this.state && this.state.section) || this.props.section || 'general';
     // Section list (SettingsNav): icons by id.
     var sections = [['general', 'General', ''], ['appearance', 'Appearance', ''], ['repositories', 'Repositories', '4'], ['scripts', 'Scripts', '5'], ['ai', 'AI', ''], ['prompts', 'Prompts', ''], ['shortcuts', 'Shortcuts', '']].map(function (x) {
@@ -350,7 +305,7 @@ class Component extends DCLogic {
       return { value: x[0], label: x[1], on: termKind === x[0], disabled: x[0] === 'iterm' };
     });
     var out = {
-      themeClass: 'theme-' + theme, themeName: theme, themes: themes,
+      themeClass: 'theme-' + theme, themeName: theme,
       sections: sections,
       bases: bases, baseAdding: baseAdd !== 'none', baseNotAdding: baseAdd === 'none',
       baseNote: bn[0], baseNoteStyle: bn[1], baseDraft: bn[2], baseInputState: bn[3],
@@ -377,10 +332,13 @@ class Component extends DCLogic {
       newBranchChoices: [['main', 'Repository folder'], ['worktree', 'New worktree'], ['none', 'Branch only']].map(function (x) {
         return { value: x[0], label: x[1], on: x[0] === 'main' };
       }),
-      // Appearance › Theme: the themes by name; the tiles below pick its System / Light / Dark.
-      themeNames: [['gitgel', 'Gitgel'], ['github', 'GitHub'], ['monokai', 'Monokai']].map(function (x) {
-        return { value: x[0], label: x[1], on: x[0] === 'gitgel' };
-      }),
+      // Appearance › Theme: every theme as System / Light / Dark, in one list (the app previews the row under the keyboard or pointer).
+      themeNames: ['Gitgel', 'GitHub', 'Monokai'].reduce(function (all, name) {
+        return all.concat(['System', 'Light', 'Dark'].map(function (mode) {
+          var label = name + ' ' + mode;
+          return { value: label, label: label, on: label === 'Gitgel System' };
+        }));
+      }, []),
       languages: [['system', 'System'], ['en', 'English'], ['tr', 'Türkçe']].map(function (x) {
         return { value: x[0], label: x[1], on: x[0] === 'system' };
       }),
