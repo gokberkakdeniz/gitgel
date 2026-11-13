@@ -1,5 +1,5 @@
-// What a theme file holds (docs/SPEC.md §4 "Themes"). One file per theme in this folder, each
-// with a light and a dark variant; `index.ts` lists them.
+// What a theme file (`<id>.json`) holds, as `theme.schema.json` describes it (docs/SPEC.md §4
+// "Themes"); index.test.ts checks every file against the schema.
 
 /** The app's colour tokens; `bgSidebar` is `--bg-sidebar` in CSS. Any CSS colour value. */
 export interface ThemeColors {

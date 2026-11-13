@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { MODES, THEMES, effectiveId, isEffective, modeOf, themeCss, themeOf, variantOf } from './index';
+import schema from './theme.schema.json';
+
+type Rule = { required: string[]; properties: Record<string, { type: string; pattern?: string }> };
+
+/** The part of JSON Schema `theme.schema.json` uses: exact keys, strings, patterns. */
+function check(value: Record<string, unknown>, rule: Rule, where: string) {
+  expect(Object.keys(value).sort(), where).toEqual([...rule.required].sort());
+  for (const [key, v] of Object.entries(value)) {
+    expect(typeof v, `${where}.${key}`).toBe('string');
+    const { pattern } = rule.properties[key];
+    if (pattern) expect(v, `${where}.${key}`).toMatch(new RegExp(pattern));
+  }
+}
 
 describe('themes', () => {
   it('have distinct lowercase ids', () => {
     const ids = THEMES.map((t) => t.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const id of ids) expect(id).toMatch(/^[a-z][a-z0-9]*$/);
+    for (const id of ids) expect(id).toMatch(new RegExp(schema.properties.id.pattern));
   });
 
   it('resolve by id, an unknown one as the default', () => {
@@ -22,14 +35,17 @@ describe('themes', () => {
     expect(isEffective(undefined)).toBe(false);
   });
 
-  it('use #rrggbb where a tint is mixed and #rrggbb(aa) in the editor', () => {
+  it('follow theme.schema.json', () => {
     for (const t of THEMES)
       for (const m of MODES) {
-        const { colors, editor } = t[m];
-        for (const c of [colors.accent, colors.warningTint, colors.dangerTint, colors.bgMain, colors.bgElevated])
-          expect(c, `${t.id}-${m}`).toMatch(/^#[0-9a-f]{6}$/);
-        for (const c of Object.values(editor)) expect(c, `${t.id}-${m}`).toMatch(/^#[0-9a-f]{6}([0-9a-f]{2})?$/);
+        expect(Object.keys(t[m]).sort()).toEqual(['colors', 'editor']);
+        check({ ...t[m].colors }, schema.definitions.colors, `${t.id}.${m}.colors`);
+        check({ ...t[m].editor }, schema.definitions.editor, `${t.id}.${m}.editor`);
       }
+  });
+
+  it('start with Gitgel', () => {
+    expect(THEMES[0].id).toBe('gitgel');
   });
 });
 
