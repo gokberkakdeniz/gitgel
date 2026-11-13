@@ -5,24 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gitgel</title>
     <script>
-      // No flash of the other theme: the effective theme is cached in localStorage
-      // (docs/SPEC.md §4 "Light theme"); apply it before the bundle loads.
+      // No flash of the other theme: the effective theme and its two grounds are cached in
+      // localStorage (src/lib/theme.ts); apply them before the bundle loads.
       try {
         var t = localStorage.getItem('gitgel.effective-theme');
-        var grounds = {
-          light: ['#fbfaf7', '#ffffff'],
-          dark: ['#141311', '#211f1c'],
-          'github-light': ['#ffffff', '#ffffff'],
-          'github-dark': ['#0d1117', '#161b22'],
-        };
-        if (!Object.prototype.hasOwnProperty.call(grounds, t)) {
-          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        var grounds = (localStorage.getItem('gitgel.theme-grounds') || '').split(',');
+        if (!t || grounds.length !== 2) {
+          // Nothing cached yet: Gitgel's own theme (src/themes/gitgel.ts), by the macOS appearance.
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          t = dark ? 'gitgel-dark' : 'gitgel-light';
+          grounds = dark ? ['#141311', '#211f1c'] : ['#fbfaf7', '#ffffff'];
         }
         document.documentElement.dataset.theme = t;
         // The <html> element exists already; paint it now so there is no white flash. The small
         // windows (?window=…) stand on bg.elevated, the main one on bg.main.
         var small = /[?&]window=/.test(window.location.search);
-        document.documentElement.style.background = grounds[t][small ? 1 : 0];
+        document.documentElement.style.background = grounds[small ? 1 : 0];
       } catch (e) {
         /* The bundle applies the theme once it loads. */
       }

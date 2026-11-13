@@ -1,7 +1,7 @@
 // Effective theme resolution (docs/SPEC.md §4 "Light theme", §5 Settings › Appearance).
 import { useSyncExternalStore } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { palettes, type EffectiveTheme } from '../styles/tokens';
+import { isEffective, modeOf, variantOf, type EffectiveTheme } from '../themes';
 import type { Appearance } from './types';
 
 export type { EffectiveTheme };
@@ -14,13 +14,14 @@ export const THEME_CHOICES: { id: Appearance; label: string }[] = [
   { id: 'github-dark', label: 'settings.themeGithubDark' },
 ];
 
+// Read by index.html before the bundle loads: the theme, and its bgMain and bgElevated.
 const CACHE_KEY = 'gitgel.effective-theme';
+const GROUNDS_KEY = 'gitgel.theme-grounds';
 
 // The effective theme for components (e.g. the Monaco `theme` prop). Kept in a module-level
 // store so `applyTheme` (called from anywhere) notifies React subscribers.
 const initial = typeof document !== 'undefined' ? document.documentElement.dataset.theme : undefined;
-let current: EffectiveTheme =
-  initial && Object.prototype.hasOwnProperty.call(palettes, initial) ? initial as EffectiveTheme : 'dark';
+let current: EffectiveTheme = isEffective(initial) ? initial : 'gitgel-dark';
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -33,11 +34,8 @@ export function systemIsDark(): boolean {
 
 /** The setting, or for System the macOS appearance. */
 export function resolveEffective(appearance: Appearance, dark: boolean): EffectiveTheme {
-  return appearance === 'system' ? (dark ? 'dark' : 'light') : appearance;
-}
-
-export function isDarkTheme(theme: EffectiveTheme): boolean {
-  return theme === 'dark' || theme === 'github-dark';
+  if (appearance === 'system') return dark ? 'gitgel-dark' : 'gitgel-light';
+  return appearance === 'light' || appearance === 'dark' ? `gitgel-${appearance}` : appearance;
 }
 
 /**
@@ -52,8 +50,10 @@ export function applyTheme(effective: EffectiveTheme, appearance: Appearance) {
   document.documentElement.style.removeProperty('background');
   current = effective;
   notify();
+  const { bgMain, bgElevated } = variantOf(effective).colors;
   try {
     localStorage.setItem(CACHE_KEY, effective);
+    localStorage.setItem(GROUNDS_KEY, `${bgMain},${bgElevated}`);
   } catch {
     // Private browsing or similar; theming still works for this run.
   }
@@ -61,12 +61,10 @@ export function applyTheme(effective: EffectiveTheme, appearance: Appearance) {
   try {
     const win = getCurrentWindow();
     const warn = (what: string) => (e: unknown) => console.warn(`${what} failed`, e);
-    const nativeTheme = appearance === 'system' ? null : isDarkTheme(effective) ? 'dark' : 'light';
-    win.setTheme(nativeTheme).catch(warn('setTheme'));
+    win.setTheme(appearance === 'system' ? null : modeOf(effective)).catch(warn('setTheme'));
     // Seen while resizing and before the page paints; the launch value is set in Rust.
     const small = new URLSearchParams(window.location.search).has('window');
-    const background = small ? palettes[effective].bgElevated : palettes[effective].bgMain;
-    win.setBackgroundColor(background).catch(warn('setBackgroundColor'));
+    win.setBackgroundColor(small ? bgElevated : bgMain).catch(warn('setBackgroundColor'));
   } catch {
     // Not running under Tauri.
   }
