@@ -503,8 +503,6 @@
   "settings.themeSystem": "System",
   "settings.themeLight": "Light",
   "settings.themeDark": "Dark",
-  "settings.themeGithubLight": "GitHub Light",
-  "settings.themeGithubDark": "GitHub Dark",
   "settings.browseThemes": "Browse themes",
   "settings.themeDrawerHint": "Choose a theme. Changes apply immediately.",
   "settings.themeSaveFailed": "Could not save the theme. Choose it again to retry.",

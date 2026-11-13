@@ -19,9 +19,9 @@ import {
   validTimeFormat,
 } from '../../lib/format';
 import { updateSettings } from '../../lib/ipc';
-import { THEME_CHOICES, resolveEffective } from '../../lib/theme';
-import type { Appearance as AppearanceSetting, CommitRows, Config, HistoryLayout, Settings } from '../../lib/types';
-import { variantOf, type EffectiveTheme } from '../../themes';
+import { THEME_CHOICES, resolveEffective, type ThemeChoice } from '../../lib/theme';
+import type { CommitRows, Config, HistoryLayout, Settings } from '../../lib/types';
+import { themeOf, variantOf, type EffectiveTheme } from '../../themes';
 import { useData } from '../../state/data';
 import { useUi } from '../../state/ui';
 import styles from './Settings.module.css';
@@ -82,8 +82,12 @@ export function AppearanceSection({ config }: { config: Config }) {
   );
 }
 
+const sameChoice = (a: ThemeChoice, b: ThemeChoice) =>
+  themeOf(a.theme).id === themeOf(b.theme).id && a.appearance === b.appearance;
+const choiceName = (c: (typeof THEME_CHOICES)[number]) => `${c.name} ${t(c.label)}`;
+
 function ThemeGroup({ config }: { config: Config }) {
-  const current: AppearanceSetting = config.settings.appearance ?? 'system';
+  const current = THEME_CHOICES.find((c) => sameChoice(c, config.settings))!;
   const [open, setOpen] = useState(false);
   return (
     <section aria-labelledby="theme-title" className={styles.section}>
@@ -97,9 +101,9 @@ function ThemeGroup({ config }: { config: Config }) {
         aria-expanded={open}
         onClick={() => setOpen(true)}
       >
-        <ThemePreview appearance={current} />
+        <ThemePreview choice={current} />
         <span className={styles.themeTriggerText}>
-          <span className={styles.settingName}>{t(THEME_CHOICES.find((a) => a.id === current)!.label)}</span>
+          <span className={styles.settingName}>{choiceName(current)}</span>
           <span className={styles.settingHint}>{t('settings.browseThemes')}</span>
         </span>
         <ChevronRightIcon size={16} />
@@ -110,20 +114,20 @@ function ThemeGroup({ config }: { config: Config }) {
   );
 }
 
-function ThemePreview({ appearance }: { appearance: AppearanceSetting }) {
+function ThemePreview({ choice }: { choice: ThemeChoice }) {
   return (
     <span className={styles.tileFrame} aria-hidden>
-      {appearance === 'system' ? (
-        <><Layer theme="gitgel-dark" /><Layer theme="gitgel-light" clip /></>
+      {choice.appearance === 'system' ? (
+        <><Layer theme={resolveEffective(choice, true)} /><Layer theme={resolveEffective(choice, false)} clip /></>
       ) : (
-        <Layer theme={resolveEffective(appearance, false)} />
+        <Layer theme={resolveEffective(choice, false)} />
       )}
     </span>
   );
 }
 
 function ThemeDrawer({ config, onClose }: { config: Config; onClose: () => void }) {
-  const current = config.settings.appearance ?? 'system';
+  const current: ThemeChoice = config.settings;
   const dialog = useRef<HTMLDialogElement>(null);
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const [saving, setSaving] = useState(false);
@@ -142,13 +146,13 @@ function ThemeDrawer({ config, onClose }: { config: Config; onClose: () => void 
     };
   }, []);
 
-  const pick = async (a: AppearanceSetting) => {
-    if (a === current || saving) return;
+  const pick = async (a: ThemeChoice) => {
+    if (sameChoice(a, current) || saving) return;
     setSaving(true);
     setError(false);
     try {
       const settings = useData.getState().config?.settings ?? config.settings;
-      const saved = await updateSettings({ ...settings, appearance: a });
+      const saved = await updateSettings({ ...settings, theme: a.theme, appearance: a.appearance });
       useData.getState().setConfig(saved);
     } catch {
       setError(true);
@@ -159,7 +163,7 @@ function ThemeDrawer({ config, onClose }: { config: Config; onClose: () => void 
 
   // Radio semantics: the arrow keys move (and pick) the choice.
   const onKeyDown = (e: React.KeyboardEvent) => {
-    const i = THEME_CHOICES.findIndex((a) => a.id === current);
+    const i = THEME_CHOICES.findIndex((a) => sameChoice(a, current));
     let next: number | null = null;
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % THEME_CHOICES.length;
     else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i + THEME_CHOICES.length - 1) % THEME_CHOICES.length;
@@ -168,7 +172,7 @@ function ThemeDrawer({ config, onClose }: { config: Config; onClose: () => void 
     if (next === null) return;
     e.preventDefault();
     if (saving) return;
-    void pick(THEME_CHOICES[next].id);
+    void pick(THEME_CHOICES[next]);
     buttons.current[next]?.focus();
   };
 
@@ -197,10 +201,10 @@ function ThemeDrawer({ config, onClose }: { config: Config; onClose: () => void 
       <p id="theme-drawer-hint" className={styles.themeDrawerHint}>{t('settings.themeDrawerHint')}</p>
       <div role="radiogroup" aria-labelledby="theme-drawer-title" aria-busy={saving} className={styles.tiles} onKeyDown={onKeyDown}>
         {THEME_CHOICES.map((a, i) => {
-          const on = current === a.id;
+          const on = sameChoice(a, current);
           return (
             <button
-              key={a.id}
+              key={`${a.theme}-${a.appearance}`}
               ref={(el) => {
                 buttons.current[i] = el;
               }}
@@ -210,11 +214,11 @@ function ThemeDrawer({ config, onClose }: { config: Config; onClose: () => void 
               aria-disabled={saving}
               // One tab stop for the group; the arrow keys move between tiles.
               tabIndex={on ? 0 : -1}
-              onClick={() => void pick(a.id)}
+              onClick={() => void pick(a)}
               className={styles.tile}
             >
-              <ThemePreview appearance={a.id} />
-              <span className={styles.tileLabel}>{t(a.label)}</span>
+              <ThemePreview choice={a} />
+              <span className={styles.tileLabel}>{choiceName(a)}</span>
               <span className={styles.themeCheck}>{on && <CheckIcon size={14} />}</span>
             </button>
           );

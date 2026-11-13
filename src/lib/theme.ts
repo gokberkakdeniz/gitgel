@@ -1,18 +1,24 @@
 // Effective theme resolution (docs/SPEC.md §4 "Light theme", §5 Settings › Appearance).
 import { useSyncExternalStore } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { isEffective, modeOf, variantOf, type EffectiveTheme } from '../themes';
-import type { Appearance } from './types';
+import { THEMES, effectiveId, isEffective, modeOf, variantOf, type EffectiveTheme } from '../themes';
+import type { Appearance, Settings } from './types';
 
 export type { EffectiveTheme };
 
-export const THEME_CHOICES: { id: Appearance; label: string }[] = [
+export const APPEARANCES: { id: Appearance; label: string }[] = [
   { id: 'system', label: 'settings.themeSystem' },
   { id: 'light', label: 'settings.themeLight' },
   { id: 'dark', label: 'settings.themeDark' },
-  { id: 'github-light', label: 'settings.themeGithubLight' },
-  { id: 'github-dark', label: 'settings.themeGithubDark' },
 ];
+
+/** What Settings › Appearance › Theme saves: a theme (src/themes) and how it follows macOS. */
+export type ThemeChoice = Pick<Settings, 'theme' | 'appearance'>;
+
+/** Every theme in every mode ("GitHub Light", "GitHub System", …), for the command palette. */
+export const THEME_CHOICES: (ThemeChoice & { name: string; label: string })[] = THEMES.flatMap((th) =>
+  APPEARANCES.map((a) => ({ theme: th.id, appearance: a.id, name: th.name, label: a.label })),
+);
 
 // Read by index.html before the bundle loads: the theme, and its bgMain and bgElevated.
 const CACHE_KEY = 'gitgel.effective-theme';
@@ -32,10 +38,9 @@ export function systemIsDark(): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-/** The setting, or for System the macOS appearance. */
-export function resolveEffective(appearance: Appearance, dark: boolean): EffectiveTheme {
-  if (appearance === 'system') return dark ? 'gitgel-dark' : 'gitgel-light';
-  return appearance === 'light' || appearance === 'dark' ? `gitgel-${appearance}` : appearance;
+/** The chosen theme in the chosen mode, or for System in the macOS appearance. */
+export function resolveEffective({ theme, appearance }: ThemeChoice, dark: boolean): EffectiveTheme {
+  return effectiveId(theme, appearance === 'system' ? (dark ? 'dark' : 'light') : appearance);
 }
 
 /**
@@ -71,10 +76,11 @@ export function applyTheme(effective: EffectiveTheme, appearance: Appearance) {
 }
 
 /** Follows the macOS appearance while the setting is System. Call once from the app root. */
-export function watchSystemTheme(getAppearance: () => Appearance): () => void {
+export function watchSystemTheme(getChoice: () => ThemeChoice | undefined): () => void {
   const query = window.matchMedia('(prefers-color-scheme: dark)');
   const onChange = () => {
-    if (getAppearance() === 'system') applyTheme(resolveEffective('system', query.matches), 'system');
+    const choice = getChoice();
+    if (choice?.appearance === 'system') applyTheme(resolveEffective(choice, query.matches), 'system');
   };
   query.addEventListener('change', onChange);
   return () => query.removeEventListener('change', onChange);

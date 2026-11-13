@@ -26,7 +26,7 @@ export interface ProjectConfig {
 }
 export type DiffLayout = 'split' | 'unified';
 export type DiffContext = 'changes' | 'whole';
-export type Appearance = 'system' | 'light' | 'dark' | 'github-light' | 'github-dark';
+export type Appearance = 'system' | 'light' | 'dark';
 export type CommitRows = 'two-line' | 'one-line';
 export type HistoryLayout = 'tree' | 'columns';
 export type Language = 'system' | 'en' | 'tr';
@@ -48,7 +48,8 @@ export interface Settings {
   diffTabSize: number; // Settings › Appearance › Diff › Tab size
   commitRows: CommitRows; // Settings › Appearance › Review › Commit rows
   historyLayout: HistoryLayout; // Settings › Appearance › History › Layout
-  appearance: Appearance; // Settings › Appearance
+  theme: string; // Settings › Appearance › Theme: a theme id (src/themes)
+  appearance: Appearance; // Settings › Appearance › Theme: its mode
   sidebarVisible: boolean; // the main sidebar is shown; remembered
   editor: EditorChoice; // Settings › General › Editor, for "Open in …"
   editorCommand: string; // the Other editor: an app name, a .app path, a bundle id or a command (`%` = folder or file); empty = Automatic

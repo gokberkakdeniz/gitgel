@@ -100,7 +100,11 @@ pub struct Settings {
     /// Settings › Appearance › History › Layout; anything else reads as a tree.
     #[serde(deserialize_with = "history_layout")]
     pub history_layout: HistoryLayout,
-    /// Settings › Appearance; configs from before it load as `system`.
+    /// Settings › Appearance › Theme: the id of a theme in `src/themes`. The page resolves it
+    /// (one it does not know is the default), so a new theme needs nothing here.
+    pub theme: String,
+    /// Settings › Appearance › Theme, the mode; anything else reads as `system`.
+    #[serde(deserialize_with = "appearance")]
     pub appearance: Appearance,
     /// Whether the main sidebar is shown; remembered, configs from before it load as shown.
     #[serde(default = "on")]
@@ -256,6 +260,7 @@ impl Default for Settings {
             diff_tab_size: 4,
             commit_rows: CommitRows::TwoLine,
             history_layout: HistoryLayout::Tree,
+            theme: "gitgel".to_string(),
             appearance: Appearance::System,
             sidebar_visible: true,
             editor: EditorChoice::Auto,
@@ -404,6 +409,15 @@ fn language<'de, D: Deserializer<'de>>(d: D) -> Result<Language, D::Error> {
 }
 
 /// Reads `commitRows` leniently: an unknown value is `two-line`.
+fn appearance<'de, D: Deserializer<'de>>(d: D) -> Result<Appearance, D::Error> {
+    let value = serde_json::Value::deserialize(d)?;
+    Ok(match value.as_str() {
+        Some("light") => Appearance::Light,
+        Some("dark") => Appearance::Dark,
+        _ => Appearance::System,
+    })
+}
+
 fn commit_rows<'de, D: Deserializer<'de>>(d: D) -> Result<CommitRows, D::Error> {
     let value = serde_json::Value::deserialize(d)?;
     Ok(match value.as_str() {
@@ -469,10 +483,6 @@ pub enum Appearance {
     System,
     Light,
     Dark,
-    #[serde(rename = "github-light")]
-    GithubLight,
-    #[serde(rename = "github-dark")]
-    GithubDark,
 }
 
 /// Settings › General › Language: the UI language; `system` follows the OS/browser.

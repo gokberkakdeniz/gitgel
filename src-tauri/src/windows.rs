@@ -84,10 +84,6 @@ pub fn open(app: &AppHandle, aux: Aux) {
     builder = match appearance {
         Appearance::Light => builder.theme(Some(Theme::Light)).background_color(LIGHT_BG),
         Appearance::Dark => builder.theme(Some(Theme::Dark)).background_color(DARK_BG),
-        Appearance::GithubLight => builder.theme(Some(Theme::Light)).background_color(LIGHT_BG),
-        Appearance::GithubDark => builder
-            .theme(Some(Theme::Dark))
-            .background_color(Color(0x16, 0x1b, 0x22, 0xff)),
         Appearance::System => {
             builder.background_color(if dark_system(app) { DARK_BG } else { LIGHT_BG })
         }

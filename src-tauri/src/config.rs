@@ -138,6 +138,7 @@ mod tests {
                 "ignoreWhitespace": true,
                 "zoom": 125,
                 "language": "tr",
+                "theme": "github",
                 "appearance": "system",
                 "dateFormat": "dd.MM.yyyy",
                 "timeFormat": "HH.mm",
@@ -308,22 +309,20 @@ mod tests {
     }
 
     #[test]
-    fn github_appearance_round_trips_through_config() {
-        for (value, expected) in [
-            ("github-light", crate::model::Appearance::GithubLight),
-            ("github-dark", crate::model::Appearance::GithubDark),
-        ] {
-            let config: Config = serde_json::from_value(json!({
-                "version": 1,
-                "settings": { "appearance": value }
-            }))
-            .unwrap();
-            assert_eq!(config.settings.appearance, expected);
-            assert_eq!(
-                serde_json::to_value(&config).unwrap()["settings"]["appearance"],
-                value
-            );
-        }
+    fn theme_round_trips_through_config_and_defaults_to_gitgel() {
+        let config: Config = serde_json::from_value(json!({
+            "version": 1,
+            "settings": { "theme": "github", "appearance": "dark" }
+        }))
+        .unwrap();
+        assert_eq!(config.settings.theme, "github");
+        assert_eq!(config.settings.appearance, crate::model::Appearance::Dark);
+        let saved = serde_json::to_value(&config).unwrap();
+        assert_eq!(saved["settings"]["theme"], "github");
+        assert_eq!(saved["settings"]["appearance"], "dark");
+
+        let old: Config = serde_json::from_value(json!({ "version": 1, "settings": {} })).unwrap();
+        assert_eq!(old.settings.theme, "gitgel");
     }
 
     #[test]
@@ -332,10 +331,12 @@ mod tests {
             "version": 1,
             "settings": {
                 "dateFormat": "yMd", "timeFormat": 12, "numberFormat": "grouped",
-                "diffTabSize": 7, "commitRows": "compact", "historyLayout": "grid"
+                "diffTabSize": 7, "commitRows": "compact", "historyLayout": "grid",
+                "appearance": "github-dark"
             }
         }))
         .unwrap();
+        assert_eq!(config.settings.appearance, crate::model::Appearance::System);
         assert_eq!(config.settings.date_format, "MMM d, yyyy");
         assert_eq!(config.settings.time_format, "HH:mm");
         assert_eq!(
