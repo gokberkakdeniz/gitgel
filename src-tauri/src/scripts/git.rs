@@ -813,6 +813,29 @@ fn launch_sync(
 /// Fetch (W4a): `git fetch --all --prune` in the repository folder.
 pub fn fetch(state: &AppState, repo_id: &str) -> Result<ScriptRun, AppError> {
     let repo = open_repo(state, repo_id)?;
+    let urls = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        refs::url_tracked(&git)
+    };
+    let mut specs: Vec<(String, String)> = Vec::new();
+    for t in urls {
+        let spec = (t.remote.clone(), own_refspec(&t));
+        if !specs.contains(&spec) {
+            specs.push(spec);
+        }
+    }
+    let env: Vec<(String, String)> = specs
+        .into_iter()
+        .enumerate()
+        .flat_map(|(i, (remote, spec))| {
+            let n = i + 1;
+            [
+                (format!("GITGEL_REMOTE_{n}"), remote),
+                (format!("GITGEL_REFSPEC_{n}"), spec),
+            ]
+        })
+        .collect();
     launch_sync(
         state,
         "fetch",
@@ -821,9 +844,17 @@ pub fn fetch(state: &AppState, repo_id: &str) -> Result<ScriptRun, AppError> {
         repo.main.clone(),
         repo.name.clone(),
         repo.id.clone(),
-        "git fetch --all --prune".into(),
-        Vec::new(),
+        fetch_command(env.len() / 2),
+        env,
     )
+}
+
+/// What fetches a branch on a URL into the ref Gitgel keeps for it, else its ref on the remote.
+fn own_refspec(t: &refs::Tracking) -> String {
+    match &t.own_ref {
+        Some(own) => format!("+refs/heads/{}:{own}", t.branch),
+        None => format!("refs/heads/{}", t.branch),
+    }
 }
 
 /// A branch entry's repository, branch and where it syncs to.
@@ -849,18 +880,16 @@ pub fn pull(state: &AppState, entry: EntryRef, rebase: bool) -> Result<ScriptRun
     if tracking.tracking.is_none() {
         return Err(AppError::Invalid(format!(
             "{branch} is not on {}.",
-            tracking.remote
+            tracking.name
         )));
     }
     let tree = repo.tree_of(&entry).ok_or_else(|| {
         AppError::Invalid(format!("{} / {branch} is not checked out.", repo.name))
     })?;
+    let merge = own_refspec(&tracking);
     let env = vec![
         ("GITGEL_REMOTE".into(), tracking.remote),
-        (
-            "GITGEL_MERGE".into(),
-            format!("refs/heads/{}", tracking.branch),
-        ),
+        ("GITGEL_MERGE".into(), merge),
     ];
     launch_sync(
         state,
@@ -883,18 +912,27 @@ pub fn push(state: &AppState, entry: EntryRef, force: bool) -> Result<ScriptRun,
     if force && tracking.tracking.is_none() {
         return Err(AppError::Invalid(format!(
             "{branch} is not on {}.",
-            tracking.remote
+            tracking.name
         )));
     }
     let tree = repo.tree_of(&entry);
     let new = tracking.tracking.is_none() && !tracking.configured;
-    let env = vec![
+    let own = tracking.own_ref.is_some();
+    let mut env = vec![
         ("GITGEL_REMOTE".into(), tracking.remote),
         (
             "GITGEL_REFSPEC".into(),
             format!("refs/heads/{branch}:refs/heads/{}", tracking.branch),
         ),
     ];
+    if let Some(own) = tracking.own_ref {
+        env.push((
+            "GITGEL_LEASE".into(),
+            format!("refs/heads/{}:{own}", tracking.branch),
+        ));
+        env.push(("GITGEL_TRACKING".into(), own));
+        env.push(("GITGEL_LOCAL".into(), format!("refs/heads/{branch}")));
+    }
     let key = entry_key(
         &repo.id,
         Some(&branch),
@@ -909,7 +947,7 @@ pub fn push(state: &AppState, entry: EntryRef, force: bool) -> Result<ScriptRun,
         tree.map_or_else(|| repo.main.clone(), |t| t.path.clone()),
         format!("{} / {branch}", repo.name),
         key,
-        upload_command(new, force),
+        upload_command(new, force, own),
         env,
     )
 }
@@ -1465,6 +1503,10 @@ pub fn delete_branch(
             }
         }
     };
+    let own = tracking.as_ref().and_then(|t| t.own_ref.clone());
+    if let Some(own) = &own {
+        env.push(("GITGEL_TRACKING".into(), own.clone()));
+    }
     if remote {
         let t = tracking
             .filter(|t| t.tracking.is_some())
@@ -1475,7 +1517,7 @@ pub fn delete_branch(
             format!("refs/heads/{}", t.branch),
         ));
     }
-    let command = delete_branch_command(remote, checked_out, stash);
+    let command = delete_branch_command(remote, checked_out, stash, own.is_some());
     run::launch(
         state,
         Launch {
@@ -1506,7 +1548,12 @@ pub fn delete_branch(
 /// <switch or remove> &&] git branch -D "$GITGEL_BRANCH"`: only fixed text and quoted variables.
 /// The changes go to a stash (`stash push` of a clean checkout saves nothing and succeeds), or are
 /// dropped (`reset --hard` and `clean -fd`; a linked worktree's `remove --force` drops them).
-pub(super) fn delete_branch_command(remote: bool, checked_out: CheckedOut, stash: bool) -> String {
+pub(super) fn delete_branch_command(
+    remote: bool,
+    checked_out: CheckedOut,
+    stash: bool,
+    own: bool,
+) -> String {
     let git = "git -C \"$GITGEL_FOLDER\"";
     let mut steps = Vec::new();
     if remote {
@@ -1531,6 +1578,10 @@ pub(super) fn delete_branch_command(remote: bool, checked_out: CheckedOut, stash
         }
     }
     steps.push("git branch -D \"$GITGEL_BRANCH\"".to_string());
+    // The ref Gitgel kept for a branch on a URL goes with it.
+    if own {
+        steps.push("git update-ref -d \"$GITGEL_TRACKING\"".to_string());
+    }
     steps.join(" && ")
 }
 
@@ -2006,10 +2057,32 @@ pub(super) fn download_command(rebase: bool) -> String {
     format!("git pull{rebase} \"$GITGEL_REMOTE\" \"$GITGEL_MERGE\"")
 }
 
-pub(super) fn upload_command(set_upstream: bool, force: bool) -> String {
+/// `own`: the remote is a URL, so the push itself moves the ref Gitgel keeps for the branch
+/// (`refs::Tracking::own_ref`), and a forced one names it as what the remote must still have.
+pub(super) fn upload_command(set_upstream: bool, force: bool, own: bool) -> String {
     let upstream = if set_upstream { " --set-upstream" } else { "" };
-    let force = if force { " --force-with-lease" } else { "" };
-    format!("git push{upstream}{force} \"$GITGEL_REMOTE\" \"$GITGEL_REFSPEC\"")
+    let force = match (force, own) {
+        (false, _) => "",
+        (true, false) => " --force-with-lease",
+        (true, true) => " --force-with-lease=\"$GITGEL_LEASE\"",
+    };
+    let track = if own {
+        " && git update-ref \"$GITGEL_TRACKING\" \"$GITGEL_LOCAL\""
+    } else {
+        ""
+    };
+    format!("git push{upstream}{force} \"$GITGEL_REMOTE\" \"$GITGEL_REFSPEC\"{track}")
+}
+
+/// `git fetch --all --prune`, then one fetch per branch on a URL (`refs::url_tracked`).
+pub(super) fn fetch_command(urls: usize) -> String {
+    let mut command = String::from("git fetch --all --prune");
+    for n in 1..=urls {
+        command.push_str(&format!(
+            " && git fetch \"$GITGEL_REMOTE_{n}\" \"$GITGEL_REFSPEC_{n}\""
+        ));
+    }
+    command
 }
 
 /// `git -C "$GITGEL_FOLDER_1" stash push … [-- "$GITGEL_PATH_1_1" …] && git -C "$GITGEL_FOLDER_2" …`:
@@ -2369,23 +2442,23 @@ mod tests {
     #[test]
     fn delete_branch_commands_hold_no_values() {
         assert_eq!(
-            delete_branch_command(false, CheckedOut::No, true),
+            delete_branch_command(false, CheckedOut::No, true, false),
             r#"git branch -D "$GITGEL_BRANCH""#
         );
         assert_eq!(
-            delete_branch_command(true, CheckedOut::No, true),
+            delete_branch_command(true, CheckedOut::No, true, false),
             r#"git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF" && git branch -D "$GITGEL_BRANCH""#
         );
         assert_eq!(
-            delete_branch_command(false, CheckedOut::Main, true),
+            delete_branch_command(false, CheckedOut::Main, true, false),
             r#"git -C "$GITGEL_FOLDER" stash push --include-untracked --message "$GITGEL_MESSAGE" && git -C "$GITGEL_FOLDER" switch -q "$GITGEL_BASE" && git branch -D "$GITGEL_BRANCH""#
         );
         assert_eq!(
-            delete_branch_command(false, CheckedOut::Main, false),
+            delete_branch_command(false, CheckedOut::Main, false, false),
             r#"git -C "$GITGEL_FOLDER" reset -q --hard && git -C "$GITGEL_FOLDER" clean -fdq && git -C "$GITGEL_FOLDER" switch -q "$GITGEL_BASE" && git branch -D "$GITGEL_BRANCH""#
         );
         assert_eq!(
-            delete_branch_command(true, CheckedOut::Linked, false),
+            delete_branch_command(true, CheckedOut::Linked, false, false),
             r#"git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF" && git worktree remove --force "$GITGEL_FOLDER" && git branch -D "$GITGEL_BRANCH""#
         );
     }
@@ -2401,16 +2474,29 @@ mod tests {
             r#"git pull --rebase "$GITGEL_REMOTE" "$GITGEL_MERGE""#
         );
         assert_eq!(
-            upload_command(false, false),
+            upload_command(false, false, false),
             r#"git push "$GITGEL_REMOTE" "$GITGEL_REFSPEC""#
         );
         assert_eq!(
-            upload_command(true, false),
+            upload_command(true, false, false),
             r#"git push --set-upstream "$GITGEL_REMOTE" "$GITGEL_REFSPEC""#
         );
         assert_eq!(
-            upload_command(false, true),
+            upload_command(false, true, false),
             r#"git push --force-with-lease "$GITGEL_REMOTE" "$GITGEL_REFSPEC""#
+        );
+        assert_eq!(
+            upload_command(false, true, true),
+            r#"git push --force-with-lease="$GITGEL_LEASE" "$GITGEL_REMOTE" "$GITGEL_REFSPEC" && git update-ref "$GITGEL_TRACKING" "$GITGEL_LOCAL""#
+        );
+        assert_eq!(fetch_command(0), "git fetch --all --prune");
+        assert_eq!(
+            fetch_command(1),
+            r#"git fetch --all --prune && git fetch "$GITGEL_REMOTE_1" "$GITGEL_REFSPEC_1""#
+        );
+        assert_eq!(
+            delete_branch_command(false, CheckedOut::No, true, true),
+            r#"git branch -D "$GITGEL_BRANCH" && git update-ref -d "$GITGEL_TRACKING""#
         );
     }
 

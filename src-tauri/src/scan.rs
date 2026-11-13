@@ -550,7 +550,7 @@ pub fn branch_upstream(
 ) -> Option<Upstream> {
     let tracking = refs::tracking(repo, branch)?;
     let mut up = Upstream {
-        remote: tracking.remote,
+        remote: tracking.name,
         name: None,
         ahead: ahead.unwrap_or(0),
         behind: 0,

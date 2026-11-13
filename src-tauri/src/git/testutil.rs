@@ -196,6 +196,26 @@ impl TestRepo {
         }
     }
 
+    /// Adds the remote `name` to the config.
+    pub fn add_remote(&self, name: &str) {
+        self.repo
+            .remote(name, "https://example.invalid/other.git")
+            .unwrap();
+    }
+
+    /// Sets `branch`'s upstream to the branch of the same name at `url`, as `gh pr checkout`
+    /// does for a fork's branch.
+    pub fn set_upstream_url(&self, branch: &str, url: &str) {
+        let mut cfg = self.repo.config().unwrap();
+        cfg.set_str(&format!("branch.{branch}.remote"), url)
+            .unwrap();
+        cfg.set_str(
+            &format!("branch.{branch}.merge"),
+            &format!("refs/heads/{branch}"),
+        )
+        .unwrap();
+    }
+
     /// Makes `branch` track the remote-tracking branch `upstream` (e.g. `origin/main`).
     pub fn set_upstream(&self, branch: &str, upstream: &str) {
         // libgit2 needs the remote to exist in the config.

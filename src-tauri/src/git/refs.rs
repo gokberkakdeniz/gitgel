@@ -51,7 +51,59 @@ pub fn upstream_of(repo: &Repository, branch: &str) -> Option<String> {
             }
         }
     }
+    if let Some(name) = tracking(repo, branch)
+        .filter(|t| t.own_ref.is_some())
+        .and_then(|t| t.tracking)
+    {
+        return Some(name);
+    }
     origin_fallback(repo, branch)
+}
+
+/// The remote-tracking ref Gitgel keeps for an upstream set to a URL instead of a remote's name
+/// (`gh pr checkout` of a fork's branch writes one), which git gives none: `refs/remotes/<owner>/
+/// <branch>`, the owner read from the URL (`git@github.com:owner/repo.git`). `None` when
+/// `remote` is not a URL or a remote has the owner's name.
+fn own_ref(repo: &Repository, remote: &str, branch: &str) -> Option<(String, String)> {
+    if !remote.contains([':', '/']) || repo.find_remote(remote).is_ok() {
+        return None;
+    }
+    let mut parts = remote.rsplit(['/', ':']).filter(|p| !p.is_empty());
+    let last = parts.next()?;
+    let owner = parts
+        .next()
+        .unwrap_or_else(|| last.trim_end_matches(".git"));
+    let refname = format!("refs/remotes/{owner}/{branch}");
+    (git2::Reference::is_valid_name(&refname) && repo.find_remote(owner).is_err())
+        .then(|| (owner.to_string(), refname))
+}
+
+/// The local branches whose upstream is a URL, with the ref Gitgel keeps for each ([`own_ref`]):
+/// `git fetch --all` does not reach them.
+pub fn url_tracked(repo: &Repository) -> Vec<Tracking> {
+    let mut out = Vec::new();
+    let Ok(cfg) = repo.config().and_then(|mut c| c.snapshot()) else {
+        return out;
+    };
+    let Ok(mut entries) = cfg.entries(Some(r"^branch\..*\.remote$")) else {
+        return out;
+    };
+    while let Some(Ok(entry)) = entries.next() {
+        let (Ok(name), Ok(value)) = (entry.name(), entry.value()) else {
+            continue;
+        };
+        let Some(branch) = name
+            .strip_prefix("branch.")
+            .and_then(|n| n.strip_suffix(".remote"))
+        else {
+            continue;
+        };
+        if !value.contains([':', '/']) || repo.find_branch(branch, BranchType::Local).is_err() {
+            continue;
+        }
+        out.extend(tracking(repo, branch).filter(|t| t.own_ref.is_some()));
+    }
+    out
 }
 
 fn origin_fallback(repo: &Repository, branch: &str) -> Option<String> {
@@ -100,11 +152,16 @@ pub fn upstreams<'a>(
                     let rem = found
                         .entry(r.clone())
                         .or_insert_with(|| repo.find_remote(r).ok())
-                        .as_ref()?;
-                    let spec = rem
-                        .refspecs()
-                        .find(|s| s.direction() == Direction::Fetch && s.src_matches(m))?;
-                    spec.transform(m).ok()?.as_str().ok()?.to_string()
+                        .as_ref();
+                    match rem {
+                        Some(rem) => {
+                            let spec = rem
+                                .refspecs()
+                                .find(|s| s.direction() == Direction::Fetch && s.src_matches(m))?;
+                            spec.transform(m).ok()?.as_str().ok()?.to_string()
+                        }
+                        None => own_ref(repo, r, m.strip_prefix("refs/heads/")?)?.1,
+                    }
                 };
                 repo.find_reference(&refname).ok()?;
                 refname
@@ -122,8 +179,10 @@ pub fn upstreams<'a>(
 /// Where a local branch is pushed to and pulled from (W4a).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Tracking {
-    /// The remote, e.g. `origin`.
+    /// The remote as git takes it: its name (`origin`), or the URL the upstream is set to.
     pub remote: String,
+    /// The remote's name as shown: `remote`, or a URL's owner.
+    pub name: String,
     /// The branch's name on the remote.
     pub branch: String,
     /// The remote-tracking branch (`origin/feat/x`); `None` when the remote does not have the
@@ -131,6 +190,8 @@ pub struct Tracking {
     pub tracking: Option<String>,
     /// The upstream is set in the branch's config (`branch.<name>.remote` / `.merge`).
     pub configured: bool,
+    /// The remote-tracking ref Gitgel updates itself, for a URL ([`own_ref`]).
+    pub own_ref: Option<String>,
 }
 
 /// The configured upstream of `branch` when it is on a remote; otherwise the same name on the
@@ -149,16 +210,32 @@ pub fn tracking(repo: &Repository, branch: &str) -> Option<Tracking> {
                 .and_then(|m| m.strip_prefix("refs/heads/").map(str::to_string)),
         );
     if let Some((remote, merge)) = configured {
+        if let Some((name, own)) = own_ref(repo, &remote, &merge) {
+            let tracking = repo
+                .find_reference(&own)
+                .is_ok()
+                .then(|| format!("{name}/{merge}"));
+            return Some(Tracking {
+                remote,
+                name,
+                branch: merge,
+                tracking,
+                configured: true,
+                own_ref: Some(own),
+            });
+        }
         let tracking = repo
             .find_branch(branch, BranchType::Local)
             .ok()
             .and_then(|b| b.upstream().ok())
             .and_then(|up| up.name().ok().flatten().map(str::to_string));
         return Some(Tracking {
+            name: remote.clone(),
             remote,
             branch: merge,
             tracking,
             configured: true,
+            own_ref: None,
         });
     }
     let remote = default_remote(repo)?;
@@ -168,10 +245,12 @@ pub fn tracking(repo: &Repository, branch: &str) -> Option<Tracking> {
         .is_ok()
         .then_some(name);
     Some(Tracking {
+        name: remote.clone(),
         remote,
         branch: branch.to_string(),
         tracking,
         configured: false,
+        own_ref: None,
     })
 }
 
@@ -535,9 +614,11 @@ mod tests {
             tracking(&t.repo, "feature"),
             Some(Tracking {
                 remote: "origin".into(),
+                name: "origin".into(),
                 branch: "feature".into(),
                 tracking: None,
                 configured: false,
+                own_ref: None,
             })
         );
         t.set_remote("origin/feature", tip);
@@ -551,11 +632,56 @@ mod tests {
             tracking(&t.repo, "feature"),
             Some(Tracking {
                 remote: "origin".into(),
+                name: "origin".into(),
                 branch: "other".into(),
                 tracking: Some("origin/other".into()),
                 configured: true,
+                own_ref: None,
             })
         );
+    }
+
+    #[test]
+    fn an_upstream_set_to_a_url_tracks_a_ref_named_after_its_owner() {
+        let t = TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        t.branch_from("feat/x", tip);
+        t.add_origin();
+        let url = "git@github.com:someone/repo.git";
+        t.set_upstream_url("feat/x", url);
+        let expect = |tracking: Option<&str>| {
+            Some(Tracking {
+                remote: url.into(),
+                name: "someone".into(),
+                branch: "feat/x".into(),
+                tracking: tracking.map(str::to_string),
+                configured: true,
+                own_ref: Some("refs/remotes/someone/feat/x".into()),
+            })
+        };
+        // Not fetched or pushed from Gitgel yet.
+        assert_eq!(tracking(&t.repo, "feat/x"), expect(None));
+        assert_eq!(upstream_of(&t.repo, "feat/x"), None);
+        t.set_remote("someone/feat/x", tip);
+        assert_eq!(tracking(&t.repo, "feat/x"), expect(Some("someone/feat/x")));
+        assert_eq!(
+            upstream_of(&t.repo, "feat/x").as_deref(),
+            Some("someone/feat/x")
+        );
+        let name = "feat/x".to_string();
+        assert_eq!(
+            upstreams(&t.repo, [&name])
+                .get("feat/x")
+                .map(String::as_str),
+            Some("someone/feat/x")
+        );
+        assert_eq!(
+            url_tracked(&t.repo),
+            vec![expect(Some("someone/feat/x")).unwrap()]
+        );
+        // A remote of the owner's name keeps its refs to itself.
+        t.add_remote("someone");
+        assert_eq!(tracking(&t.repo, "feat/x").and_then(|t| t.own_ref), None);
     }
 
     #[test]

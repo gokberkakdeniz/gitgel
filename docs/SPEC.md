@@ -2826,6 +2826,11 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   history with it. `ahead` / `behind` against the remote-tracking branch, as of the last fetch;
   when the remote does not have the branch (`name` null), `ahead` is the branch's commits on top
   of its base. Shown as `origin ↑2 ↓1` (`origin` when level, `not on origin · ↑3`).
+  An upstream set to a URL instead of a remote's name (`gh pr checkout` of a fork's branch
+  writes `branch.<name>.remote = git@github.com:<owner>/<repo>.git`) has no remote-tracking
+  branch in git, so Gitgel keeps one, `refs/remotes/<owner>/<branch on the remote>`
+  (`Tracking::own_ref`; not when a remote is named `<owner>`): the remote is shown as
+  `<owner>`, and Fetch, Pull and Push below move the ref.
 - **What each can do** (`syncState`): Pull needs the remote-tracking branch, commits behind it
   and a checkout (else disabled with "Not on origin" / "Nothing to pull" / "Not checked out");
   Push needs a remote, commits ahead and none behind (else "No remote" / "Behind origin, pull
@@ -2851,10 +2856,13 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   missing repository. Review's page menu, whose header has Fetch / Pull / Push, keeps only
   Checkout Branch… and Rebase on `<base>` of the group. While an operation is in progress the group is its Continue / Abort
   instead (§15 "Operations in progress"; also for a detached HEAD).
-- **Fetch**: `git fetch --all --prune` in the repository folder. Success toast `Fetched <repo>`.
+- **Fetch**: `git fetch --all --prune` in the repository folder, then, for each local branch
+  whose upstream is a URL, `&& git fetch "$GITGEL_REMOTE_<n>" "$GITGEL_REFSPEC_<n>"`
+  (`+refs/heads/<branch on the remote>:<its own ref>`). Success toast `Fetched <repo>`.
 - **Pull**: `git pull [--rebase] "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<branch on the
   remote>`) in the worktree, so a branch without a configured upstream pulls too and git's own
-  `pull.rebase` / `pull.ff` settings apply. Success toast `Pulled <branch>`.
+  `pull.rebase` / `pull.ff` settings apply; for an upstream on a URL `$GITGEL_MERGE` is the
+  Fetch refspec above, so the pull moves the own ref too. Success toast `Pulled <branch>`.
 - **Rebase on `<base>`** (`git_rebase_on_base`): the branch onto the entry's base, in the
   worktree. When the base is on a remote (a local base's upstream the remote has, or a
   remote-tracking base, `origin/HEAD` followed to its branch): `git pull --rebase
@@ -2865,9 +2873,12 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
 - **Push**: `git push [--set-upstream] "$GITGEL_REMOTE" "$GITGEL_REFSPEC"`
   (`refs/heads/<branch>:refs/heads/<branch on the remote>`), in the worktree when there is one
   (hooks see it), else the repository folder; `--set-upstream` only for a branch the remote does
-  not have and that has no configured upstream. Success toast `Pushed <branch>`.
+  not have and that has no configured upstream. To a URL it ends with `&& git update-ref
+  "$GITGEL_TRACKING" "$GITGEL_LOCAL"` (the own ref, to the pushed branch). Success toast
+  `Pushed <branch>`.
 - **Force push** (a diverged branch, e.g. after a rebase): the same with `--force-with-lease`, so
-  it overwrites only what the last fetch saw on the remote (a push someone made since is refused).
+  it overwrites only what the last fetch saw on the remote (a push someone made since is refused);
+  to a URL, `--force-with-lease="$GITGEL_LEASE"` (`refs/heads/<branch on the remote>:<own ref>`).
   Success toast `Force pushed <branch>`.
 - **Failures**: a sync that exits non-zero opens its output panel (N4) instead of the failed toast
   (git's message, or a prompt for a password or passphrase, is there). One that cannot start shows
@@ -2995,7 +3006,8 @@ action runs in the repository ("A git action is running").
   3. In the repository folder: without the stash option `reset -q --hard` and `clean -fdq` there,
      then `git -C "$GITGEL_FOLDER" switch -q "$GITGEL_BASE"` (the repo's base branch). In a linked
      worktree: `git worktree remove --force "$GITGEL_FOLDER"`.
-  4. `git branch -D "$GITGEL_BRANCH"`.
+  4. `git branch -D "$GITGEL_BRANCH"`; for an upstream on a URL (§15 "Sync"), then `git update-ref -d
+     "$GITGEL_TRACKING"` (the ref Gitgel kept for it).
 
   Refused for the base branch, an operation in progress, or a tip that is no longer the one the
   menu showed (the repo is rescanned). Success toast `Deleted <branch>`; a failure opens the

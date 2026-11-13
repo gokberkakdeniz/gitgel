@@ -535,6 +535,7 @@ it was done within a topic.
 - [x] History's Uncommitted in Staged / Unstaged sections (git's index; replaces the commit boxes): + / − and Stage all / Unstage all stage at once through a queue (150ms batches, one command at a time per repository, Commit off meanwhile, rows put back with a failed toast), a file staged and changed again is in both and its Unstaged diff shows only the changes since; commits take what is staged; discarding an Unstaged row goes back to the staged version (`get_index_changes`, `git_stage`, §15 "Stage") — 2026-10-18
 - [x] Staging picked lines: the diff's right-click menu on an Uncommitted file has Stage Selected Lines / Stage Change (Unstage … on a Staged row); the new staged version is made from the shown texts and written with `hash-object` + `update-index` after checking the index still holds what was shown (`git_stage_lines`, `src/monaco/lineStage.ts`, §15 "Stage") — 2026-10-19
 - [x] Right-click a stash row in Review opens Stash Options (Apply, Pop, Drop), as on the canvas — 2026-11-10
+- [x] A branch whose upstream is a URL (`gh pr checkout` of a fork's branch) is followed too: Gitgel keeps `refs/remotes/<owner>/<branch>` for it, moved by Push, Pull and Fetch and removed by Delete Branch, so a push no longer stays `not on … · ↑N` — 2026-11-13
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked
