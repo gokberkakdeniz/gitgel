@@ -13,7 +13,7 @@ use crate::model::{
 };
 use crate::state::AppState;
 use crate::{
-    ai, apps, base, files, history, projects, repos, review, scan, scripts, updates, watch,
+    ai, apps, base, files, history, projects, repos, review, scan, scripts, themes, updates, watch,
 };
 
 /// Runs git or disk work off the async runtime.
@@ -346,6 +346,16 @@ pub async fn get_open_apps(state: State<'_, AppState>) -> Result<Vec<OpenApp>, A
         Ok(apps::installed(&config::snapshot(state).settings))
     })
     .await
+}
+
+/// The custom theme files of the `themes` folder beside `config.json`, unparsed.
+#[tauri::command]
+pub async fn get_custom_themes(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<Vec<themes::ThemeFile>, AppError> {
+    let dir = config::config_path(&app)?.with_file_name("themes");
+    blocking(&state, move |_| Ok(themes::read(&dir))).await
 }
 
 /// The known editors with their install state, for the Settings dropdown.

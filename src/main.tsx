@@ -10,9 +10,12 @@ import '@fontsource/source-serif-4/500.css';
 import './styles/tokens.css';
 import './styles/global.css';
 import { applyCachedZoom } from './lib/zoom';
+import { loadCustomThemes } from './lib/theme';
 import { installThemes } from './themes';
 
+// The built-in themes and the custom ones as last read, then the custom ones from disk.
 installThemes();
+void loadCustomThemes();
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 const render = (node: React.ReactNode) => root.render(<React.StrictMode>{node}</React.StrictMode>);

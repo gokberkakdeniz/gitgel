@@ -21,9 +21,17 @@ import {
   validTimeFormat,
 } from '../../lib/format';
 import { updateSettings } from '../../lib/ipc';
-import { THEME_CHOICES, previewTheme, resolveEffective, systemIsDark, type ThemeChoice } from '../../lib/theme';
-import type { Appearance as AppearanceSetting, CommitRows, Config, HistoryLayout, Settings } from '../../lib/types';
-import { themeOf } from '../../themes';
+import {
+  choiceOf,
+  loadCustomThemes,
+  previewTheme,
+  resolveEffective,
+  systemIsDark,
+  themeChoices,
+  useThemes,
+  type ThemeChoice,
+} from '../../lib/theme';
+import type { CommitRows, Config, HistoryLayout, Settings } from '../../lib/types';
 import select from '../../components/Select.module.css';
 import styles from './Settings.module.css';
 
@@ -41,10 +49,11 @@ export function AppearanceSection({ config }: { config: Config }) {
 
 function ThemeGroup({ config }: { config: Config }) {
   const { settings } = config;
-  const theme = themeOf(settings.theme).id;
-  const appearance: AppearanceSetting = settings.appearance ?? 'system';
-  const on = (c: ThemeChoice) => c.theme === theme && c.appearance === appearance;
-  const name = (c: (typeof THEME_CHOICES)[number]) => `${c.name} ${t(c.label)}`;
+  useThemes();
+  const choices = themeChoices();
+  const current = choiceOf(settings);
+  const on = (c: ThemeChoice) => c.theme === current.theme && c.appearance === current.appearance;
+  const name = (c: (typeof choices)[number]) => `${c.name} ${t(c.label)}`;
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const button = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLDivElement>(null);
@@ -55,7 +64,9 @@ function ThemeGroup({ config }: { config: Config }) {
   // Opens on the current choice; closing without a pick ends the preview.
   useEffect(() => {
     if (!anchor) return;
-    items()[THEME_CHOICES.findIndex(on)]?.focus();
+    items()[choices.findIndex(on)]?.focus();
+    // The themes folder may have changed since launch.
+    void loadCustomThemes();
     return () => {
       if (!picked.current) previewTheme(null);
       picked.current = false;
@@ -98,7 +109,7 @@ function ThemeGroup({ config }: { config: Config }) {
               setAnchor(e.currentTarget.getBoundingClientRect());
             }}
           >
-            <span id="theme-value">{name(THEME_CHOICES.find(on)!)}</span>
+            <span id="theme-value">{name(choices.find(on)!)}</span>
           </button>
           <ChevronDownIcon size={12} className={select.chevron} />
         </span>
@@ -109,14 +120,14 @@ function ThemeGroup({ config }: { config: Config }) {
           <div
             ref={list}
             onFocus={(e) => {
-              const c = THEME_CHOICES[items().indexOf(e.target as HTMLElement)];
+              const c = choices[items().indexOf(e.target as HTMLElement)];
               if (c) previewTheme(resolveEffective(c, systemIsDark()));
             }}
           >
             <Menu aria-label={t('settings.themeName')}>
-              {THEME_CHOICES.map((c, i) => (
+              {choices.map((c, i) => (
                 <Fragment key={`${c.theme}-${c.appearance}`}>
-                  {i > 0 && c.theme !== THEME_CHOICES[i - 1].theme && <MenuDivider />}
+                  {i > 0 && c.theme !== choices[i - 1].theme && <MenuDivider />}
                   <MenuItem checked={on(c)} onSelect={() => pick(c)} onHover={(el) => el.focus()}>
                     {name(c)}
                   </MenuItem>

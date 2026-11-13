@@ -269,9 +269,10 @@ gitgel/
 
 ## 4. Visual system
 
-Each theme has a light and a dark variant; Settings › Appearance › Theme (§5) picks the theme
-(`settings.theme`) and its mode (`settings.appearance`): System (default, follows macOS), Light or
-Dark, so every theme has all three. Gitgel's
+A theme has a light and a dark variant, or one of them; Settings › Appearance › Theme (§5) picks
+the theme (`settings.theme`) and its mode (`settings.appearance`): System (default, follows
+macOS), Light or Dark. A theme with one variant is offered in that mode only (no System), and a
+saved mode it does not have reads as the one it has. Gitgel's
 own theme, described here: warm neutrals, one cool accent. Tokens are CSS variables (`bg.sidebar` →
 `--bg-sidebar`, `text.muted` → `--text-muted`, …). The reference screens use the same tokens: each
 file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(--…)`.
@@ -281,7 +282,7 @@ file defines `.theme-dark` / `.theme-light` in its `<style>` and uses `var(--…
 `src/themes/` is the one place a theme's colours live: a JSON file per theme (`gitgel.json`,
 `github.json`, `monokai.json`) written to `theme.schema.json` (each names it in `$schema`, so an editor completes
 and checks it; `index.test.ts` checks every file against it too): `id`, `name`, and `light` /
-`dark`, each with `colors` (the tokens below, camelCase) and `editor` (Monaco's syntax and diff
+`dark` (at least one), each with `colors` (the tokens below, camelCase) and `editor` (Monaco's syntax and diff
 colours). `types.ts` is the same shape for the code. `index.ts` reads every `*.json` there into
 `THEMES` (Gitgel first, then by name) and builds everything else from that list:
 
@@ -295,9 +296,20 @@ colours). `types.ts` is the same shape for the code. `index.ts` reads every `*.j
   `localStorage`; `index.html` applies them before the bundle loads (with nothing cached,
   Gitgel's by the macOS appearance).
 
-Adding a theme: a new `<id>.json` in `src/themes/`; nothing else changes. `index.test.ts` also
-holds every theme to a contrast floor (text, accent and status colours 4.5:1 on their ground,
-syntax colours 3.5:1).
+- **Custom themes**: `*.json` files in the `themes` folder beside `config.json`
+  (`~/Library/Application Support/com.gitgel.desktop/themes/`), in the same format. The backend
+  (`themes.rs`, `get_custom_themes`) creates the folder, keeps a copy of `theme.schema.json` in
+  it (so a file can name `./theme.schema.json` in `$schema`) and returns the files unparsed;
+  `validate.ts` checks each against the schema, and `setCustomThemes` adds the valid ones to
+  `THEMES` after the built-in ones, by name, and rewrites the CSS and the Monaco themes. A file
+  that is not JSON, does not follow the schema or uses a taken `id` is left out and named in the
+  console. They are read at launch and again when Settings opens the theme list; the files as
+  last read are cached in `localStorage`, so a window starts with them and the other windows
+  follow a change. A saved theme whose file is gone reads as Gitgel.
+
+Adding a built-in theme: a new `<id>.json` in `src/themes/`; nothing else changes.
+`index.test.ts` also holds every built-in theme to a contrast floor (text, accent and status
+colours 4.5:1 on their ground, syntax colours 3.5:1).
 
 ### Colour tokens
 
@@ -1173,8 +1185,8 @@ outside or leaving the page closes it (`src/commands/`).
     update; on checks at once.
 - **Appearance:** serif 18px heading "Appearance".
   - "Theme": one row, the label and a 230px field drawn as a Select showing the choice
-    ("Gitgel System"). It opens a menu (width 230) of every theme in every mode — "<Theme>
-    System", "<Theme> Light", "<Theme> Dark" (§4 "Themes"), a divider between themes, a check on
+    ("Gitgel System"). It opens a menu (width 230) of every theme, custom ones last, in every mode it
+    has — "<Theme> System", "<Theme> Light", "<Theme> Dark" (§4 "Themes"), a divider between themes, a check on
     the current one, opened with focus on it. The row under the keyboard (↑ ↓) or the pointer is
     previewed at once in this window (page and editor; System shows the macOS appearance);
     ↵ or a click saves it (`settings.theme`, `settings.appearance`; default Gitgel System), esc

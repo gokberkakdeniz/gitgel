@@ -9,6 +9,7 @@ import { fmtFromSettings, getFmt, setFmt } from '../lib/format';
 import { getLocale, resolveLocale, setLocale } from '../i18n';
 import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme, type ThemeChoice } from '../lib/theme';
 import type { Config } from '../lib/types';
+import { onThemesChange } from '../themes';
 import { AboutWindow } from './AboutWindow';
 import { UpdateWindow } from './UpdateWindow';
 import { WhatsNewWindow } from './WhatsNewWindow';
@@ -54,8 +55,11 @@ export function AuxApp({ label }: { label: string }) {
     });
     const unlisten = listen<Config>('config-changed', (e) => apply(e.payload.settings));
     const unwatch = watchSystemTheme(() => choice);
+    // The saved theme may be a custom one, which arrives after launch.
+    const unthemes = onThemesChange(() => choice && apply(choice));
     return () => {
       unwatch();
+      unthemes();
       void unlisten.then((fn) => fn());
     };
   }, []);

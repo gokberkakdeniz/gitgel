@@ -1,7 +1,21 @@
 // Effective theme resolution (docs/SPEC.md §4 "Light theme", §5 Settings › Appearance).
 import { useSyncExternalStore } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { THEMES, effectiveId, isEffective, modeOf, variantOf, type EffectiveTheme } from '../themes';
+import {
+  THEMES,
+  effectiveId,
+  isEffective,
+  modeOf,
+  modesOf,
+  onThemesChange,
+  setCustomThemes,
+  themeOf,
+  themeOfEffective,
+  themesVersion,
+  variantOf,
+  type EffectiveTheme,
+} from '../themes';
+import { getCustomThemes } from './ipc';
 import type { Appearance, Settings } from './types';
 
 export type { EffectiveTheme };
@@ -15,10 +29,46 @@ export const APPEARANCES: { id: Appearance; label: string }[] = [
 /** What Settings › Appearance › Theme saves: a theme (src/themes) and how it follows macOS. */
 export type ThemeChoice = Pick<Settings, 'theme' | 'appearance'>;
 
-/** Every theme in every mode ("GitHub Light", "GitHub System", …), for the command palette. */
-export const THEME_CHOICES: (ThemeChoice & { name: string; label: string })[] = THEMES.flatMap((th) =>
-  APPEARANCES.map((a) => ({ theme: th.id, appearance: a.id, name: th.name, label: a.label })),
-);
+/**
+ * Every theme in every mode it has ("GitHub System", "GitHub Light", …), for Settings and the
+ * command palette. A theme with one mode has no System.
+ */
+export function themeChoices(): (ThemeChoice & { name: string; label: string })[] {
+  return THEMES.flatMap((th) => {
+    const modes = modesOf(th);
+    return APPEARANCES.filter((a) => (a.id === 'system' ? modes.length === 2 : modes.includes(a.id))).map((a) => ({
+      theme: th.id,
+      appearance: a.id,
+      name: th.name,
+      label: a.label,
+    }));
+  });
+}
+
+/** The saved choice as one of `themeChoices()`: a theme or mode that is gone is the nearest one. */
+export function choiceOf({ theme, appearance }: ThemeChoice): ThemeChoice {
+  const th = themeOf(theme);
+  const modes = modesOf(th);
+  return { theme: th.id, appearance: modes.length === 2 || appearance === modes[0] ? appearance : modes[0] };
+}
+
+/**
+ * Reads the custom themes (`<config folder>/themes/*.json`) again. Called at launch and when
+ * Settings opens the theme list; files that do not follow the schema are named in the console.
+ */
+export async function loadCustomThemes(): Promise<void> {
+  try {
+    for (const problem of setCustomThemes(await getCustomThemes())) console.warn(`Theme ${problem}`);
+  } catch (e) {
+    // Outside Tauri there are none.
+    console.warn('get_custom_themes failed', e);
+  }
+}
+
+/** React hook; re-renders when the custom themes change (its value changes with them). */
+export function useThemes(): number {
+  return useSyncExternalStore(onThemesChange, themesVersion);
+}
 
 // Read by index.html before the bundle loads: the theme, and its bgMain and bgElevated.
 const CACHE_KEY = 'gitgel.effective-theme';
@@ -68,7 +118,9 @@ export function applyTheme(effective: EffectiveTheme, appearance: Appearance) {
   try {
     const win = getCurrentWindow();
     const warn = (what: string) => (e: unknown) => console.warn(`${what} failed`, e);
-    win.setTheme(appearance === 'system' ? null : modeOf(effective)).catch(warn('setTheme'));
+    // A theme with one mode keeps it under System too.
+    const follows = appearance === 'system' && modesOf(themeOfEffective(effective)).length === 2;
+    win.setTheme(follows ? null : modeOf(effective)).catch(warn('setTheme'));
     // Seen while resizing and before the page paints; the launch value is set in Rust.
     const small = new URLSearchParams(window.location.search).has('window');
     win.setBackgroundColor(small ? bgElevated : bgMain).catch(warn('setBackgroundColor'));
