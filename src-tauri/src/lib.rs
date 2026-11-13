@@ -21,6 +21,7 @@ pub mod scan;
 pub mod scripts;
 pub mod ssh;
 pub mod state;
+pub mod themes;
 pub mod timing;
 pub mod trash;
 pub mod updates;
@@ -135,6 +136,7 @@ pub fn run() {
             commands::set_repo_pinned,
             commands::update_settings,
             commands::get_open_apps,
+            commands::get_custom_themes,
             commands::get_editor_options,
             commands::get_terminal_options,
             commands::open_folder,

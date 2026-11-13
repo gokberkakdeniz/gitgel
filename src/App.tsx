@@ -22,7 +22,7 @@ import { t } from './i18n';
 import { revealWindow } from './lib/ipc';
 import { isTextField } from './lib/shortcuts';
 import { setSidebarVisible } from './lib/sidebar';
-import { applyTheme, resolveEffective, systemIsDark, watchSystemTheme } from './lib/theme';
+import { applyTheme, resolveEffective, systemIsDark, useThemes, watchSystemTheme } from './lib/theme';
 import { useFolderDrop } from './lib/useFolderDrop';
 import { useWhatsNewAfterUpdate } from './lib/whatsNew';
 import { applyZoom } from './lib/zoom';
@@ -52,13 +52,16 @@ export default function App() {
   // Appearance (Settings › Appearance): the config wins once loaded; System follows macOS.
   const theme = useData((s) => s.config?.settings.theme);
   const appearance = useData((s) => s.config?.settings.appearance);
+  const themes = useThemes();
   useEffect(() => {
     return watchSystemTheme(() => useData.getState().config?.settings);
   }, []);
   // Until the config arrives, the theme index.html applied from the cache stays.
   useEffect(() => {
     if (theme && appearance) applyTheme(resolveEffective({ theme, appearance }, systemIsDark()), appearance);
-  }, [theme, appearance]);
+    // Again when the custom themes arrive or change: the saved one may be among them.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme, appearance, themes]);
 
   // The UI language and formats (Settings › General, Appearance): the config wins once
   // loaded; until then the module defaults (the browser language) stand. One re-render,

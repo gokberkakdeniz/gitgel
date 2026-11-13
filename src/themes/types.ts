@@ -92,6 +92,13 @@ export interface Theme {
   id: string;
   /** Shown as is in every language. */
   name: string;
-  light: ThemeVariant;
-  dark: ThemeVariant;
+  /** At least one of the two; a theme with one is offered in that mode only. */
+  light?: ThemeVariant;
+  dark?: ThemeVariant;
+}
+
+/** A custom theme file as the backend read it (`get_custom_themes`). */
+export interface ThemeFile {
+  name: string;
+  content: string;
 }

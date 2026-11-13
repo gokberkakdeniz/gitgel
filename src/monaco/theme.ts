@@ -1,7 +1,7 @@
 // The Monaco themes, one per theme and mode, named as `data-theme` (`gitgel-dark`, …) and built
 // from src/themes (docs/SPEC.md §4). DiffView picks one through its `theme` prop.
 import type * as Monaco from 'monaco-editor';
-import { MODES, THEMES, type Mode, type ThemeVariant } from '../themes';
+import { THEMES, modesOf, type Mode, type ThemeVariant } from '../themes';
 
 const hex = (c: string) => c.replace('#', '');
 
@@ -47,5 +47,5 @@ function definition(mode: Mode, { colors: c, editor: e }: ThemeVariant): Monaco.
 
 export function defineTheme(monaco: Pick<typeof Monaco, 'editor'>) {
   for (const t of THEMES)
-    for (const m of MODES) monaco.editor.defineTheme(`${t.id}-${m}`, definition(m, t[m]));
+    for (const m of modesOf(t)) monaco.editor.defineTheme(`${t.id}-${m}`, definition(m, t[m]!));
 }

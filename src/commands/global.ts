@@ -9,8 +9,7 @@ import { checkForUpdates, openWindow, reportIssue, updateSettings } from '../lib
 import { readProjectSort, sortProjects } from '../lib/projectSort';
 import { setSidebarVisible } from '../lib/sidebar';
 import type { EntrySummary, Settings } from '../lib/types';
-import { THEME_CHOICES } from '../lib/theme';
-import { themeOf } from '../themes';
+import { choiceOf, themeChoices } from '../lib/theme';
 import { paletteItems } from '../screens/Palette/items';
 import { selectRepoScans, useData } from '../state/data';
 import { openSettings, selectCanBack, selectCanForward, selectRoute, useNav, type Route } from '../state/nav';
@@ -150,9 +149,10 @@ export function appCommands(route: Route): Command[] {
       run: () => openSettings(s.id),
     })),
   );
-  if (settings)
+  if (settings) {
+    const current = choiceOf(settings);
     list.push(
-      ...THEME_CHOICES.filter((c) => c.theme !== themeOf(settings.theme).id || c.appearance !== settings.appearance).map((c) => ({
+      ...themeChoices().filter((c) => c.theme !== current.theme || c.appearance !== current.appearance).map((c) => ({
         id: `theme:${c.theme}:${c.appearance}`,
         title: t('cmd.theme', { name: `${c.name} ${t(c.label)}` }),
         group: settingsGroup,
@@ -166,6 +166,7 @@ export function appCommands(route: Route): Command[] {
         ? { id: 'layout:tree', title: t('cmd.layout', { name: t('settings.historyLayoutTree') }), group: settingsGroup, run: () => saveSettings({ historyLayout: 'tree' }) }
         : { id: 'layout:columns', title: t('cmd.layout', { name: t('settings.historyLayoutColumns') }), group: settingsGroup, run: () => saveSettings({ historyLayout: 'columns' }) },
     );
+  }
   list.push(
     {
       id: 'checkUpdates',

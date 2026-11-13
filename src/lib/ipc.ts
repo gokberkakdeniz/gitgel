@@ -40,6 +40,7 @@ import type {
   UpdateCheck,
   UpdateInfo,
 } from './types';
+import type { ThemeFile } from '../themes/types';
 
 export const getConfig = () => invoke<Config>('get_config');
 
@@ -117,6 +118,9 @@ export const updateSettings = (settings: Settings) => invoke<Config>('update_set
 
 /** Installed apps for the open items, in menu order. */
 export const getOpenApps = () => invoke<OpenApp[]>('get_open_apps');
+
+/** The custom theme files of `<config folder>/themes`, unparsed (src/themes checks them). */
+export const getCustomThemes = () => invoke<ThemeFile[]>('get_custom_themes');
 
 /** The known editors with their install state, for the Settings dropdown. */
 export const getEditorOptions = () => invoke<EditorOption[]>('get_editor_options');

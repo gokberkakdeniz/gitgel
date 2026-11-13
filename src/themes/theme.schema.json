@@ -1,14 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Gitgel theme",
-  "description": "One theme of Gitgel: the app's colour tokens and the editor's colours, light and dark. A *.json file next to this one is picked up by src/themes/index.ts.",
+  "description": "One theme of Gitgel: the app's colour tokens and the editor's colours, in light, dark or both. Built-in themes are the *.json files next to this one (src/themes); custom ones go in the themes folder beside config.json.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "id",
-    "name",
-    "light",
-    "dark"
+    "name"
+  ],
+  "anyOf": [
+    {
+      "required": [
+        "light"
+      ]
+    },
+    {
+      "required": [
+        "dark"
+      ]
+    }
   ],
   "properties": {
     "$schema": {
@@ -25,10 +35,12 @@
       "description": "Shown as is in every language."
     },
     "light": {
-      "$ref": "#/definitions/variant"
+      "$ref": "#/definitions/variant",
+      "description": "Leave out for a dark-only theme."
     },
     "dark": {
-      "$ref": "#/definitions/variant"
+      "$ref": "#/definitions/variant",
+      "description": "Leave out for a light-only theme."
     }
   },
   "definitions": {
@@ -135,27 +147,27 @@
         },
         "bgTrack": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Track of a segmented control or a progress bar."
         },
         "bgHover": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Hovered row or button."
         },
         "bgSidebarActive": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Current item of the sidebar."
         },
         "bgPressed": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Chosen segment, pressed or open control."
         },
         "bgAvatar": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Avatar without a picture."
         },
         "border": {
@@ -165,7 +177,7 @@
         },
         "borderRow": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Line between rows; quieter than border."
         },
         "borderStrong": {
@@ -175,12 +187,12 @@
         },
         "chipOpenBorder": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Border of a chip or menu trigger while it is open."
         },
         "textStrong": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Headings and emphasised text."
         },
         "textCode": {
@@ -190,7 +202,7 @@
         },
         "textBody": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Body text."
         },
         "textMuted": {
@@ -205,12 +217,12 @@
         },
         "textDisabled": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Disabled text."
         },
         "iconDisabled": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Disabled icon."
         },
         "accent": {
@@ -225,7 +237,7 @@
         },
         "accentHover": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Hovered link."
         },
         "onAccent": {
@@ -235,17 +247,17 @@
         },
         "selectedBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Selected row."
         },
         "successText": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Success text."
         },
         "successBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Success ground."
         },
         "warningTint": {
@@ -255,12 +267,12 @@
         },
         "warningText": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Warning text."
         },
         "warningBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Warning ground."
         },
         "dangerTint": {
@@ -270,12 +282,12 @@
         },
         "dangerText": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Error text."
         },
         "dangerBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Error ground."
         },
         "dangerFill": {
@@ -285,92 +297,92 @@
         },
         "diffAddBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Added line outside the editor."
         },
         "diffDelBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Removed line outside the editor."
         },
         "diffAddMark": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "+ counts and marks."
         },
         "diffDelMark": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "− counts and marks."
         },
         "diffFoldBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Folded unchanged lines."
         },
         "kindAText": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge A (added): letter."
         },
         "kindABg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge A: ground."
         },
         "kindMText": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge M (modified): letter."
         },
         "kindMBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge M: ground."
         },
         "kindRText": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge R (renamed): letter."
         },
         "kindRBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge R: ground."
         },
         "kindDText": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge D (deleted) and C (conflict): letter."
         },
         "kindDBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge D and C: ground."
         },
         "kindUText": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge U (untracked): letter."
         },
         "kindUBg": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "File badge U: ground."
         },
         "shadowPop": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "box-shadow of popovers and menus."
         },
         "shadowModal": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "box-shadow of modals."
         },
         "scrim": {
           "type": "string",
-          "minLength": 1,
+          "pattern": "^[^;{}<>]+$",
           "description": "Layer behind a modal."
         }
       }
