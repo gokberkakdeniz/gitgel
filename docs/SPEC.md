@@ -72,6 +72,11 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`
   - `cargo fmt --manifest-path src-tauri/Cargo.toml --check`
 
+  `.githooks/pre-commit` runs the quick ones on every commit (`pnpm install` sets
+  `core.hooksPath`): lint, `tsc --noEmit` and `pnpm i18n:check` when anything outside
+  `src-tauri/`, `docs/`, `design/` and `*.md` is staged; `cargo fmt --check` and clippy when
+  `src-tauri/` is.
+
   For UI work, also open the screen with `pnpm tauri dev` and compare it with its `.dc.html`.
 
 ### Tasks
@@ -178,6 +183,7 @@ gitgel/
 ├─ CHANGELOG.md                   # release notes, newest first; written at release (§12)
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
+├─ .githooks/pre-commit           # lint, tsc, i18n, cargo fmt and clippy before a commit (§0)
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
 ├─ scripts/make-demo.sh           # the README screenshots' demo repositories (§12)
 ├─ scripts/i18n-check.mjs         # `pnpm i18n:check`: en/tr key parity, MF2 validity, the code's keys and variables

@@ -1,0 +1,23 @@
+#!/bin/sh
+# Checks before a commit (`pnpm install` points git here: core.hooksPath). Skip with --no-verify.
+set -e
+cd "$(git rev-parse --show-toplevel)"
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -n "$staged" ] || exit 0
+
+if echo "$staged" | grep -qvE '^(src-tauri|docs|design)/|\.md$'; then
+  echo "pre-commit: biome lint"
+  pnpm -s lint
+  echo "pre-commit: tsc"
+  pnpm -s tsc --noEmit
+  echo "pre-commit: i18n"
+  pnpm -s i18n:check
+fi
+
+if echo "$staged" | grep -q '^src-tauri/'; then
+  echo "pre-commit: cargo fmt"
+  cargo fmt --manifest-path src-tauri/Cargo.toml --check
+  echo "pre-commit: cargo clippy"
+  cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --quiet -- -D warnings
+fi
