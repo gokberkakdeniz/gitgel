@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { branchCommands } from '../../commands/branch';
 import { entryGoItem } from '../../commands/global';
 import { useCommandSource, type Command } from '../../commands/registry';
-import { BranchIcon, CheckIcon, ChevronDownIcon, CopyIcon, Icon } from '../../components/icons';
+import { BranchIcon, CheckIcon, ChevronDownIcon, CopyIcon, Icon, MoreVerticalIcon } from '../../components/icons';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
@@ -1369,6 +1369,17 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
         <Popover anchorRect={wipMenu} width={230} onClose={() => setWipMenu(null)}>
           <Menu aria-label={t('history.wipActions')}>
             <MenuItem
+              icon="package"
+              disabled={!stashAction.open}
+              onSelect={() => {
+                setWipMenu(null);
+                stashAction.open?.(wipMenu);
+              }}
+            >
+              {t('history.stashAll')}
+            </MenuItem>
+            <MenuItem
+              icon="trash"
               danger
               disabled={wipFiles.length === 0}
               onSelect={() => {
@@ -1380,16 +1391,6 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
               }}
             >
               {t('history.discardAll')}
-            </MenuItem>
-            <MenuItem
-              icon="package"
-              disabled={!stashAction.open}
-              onSelect={() => {
-                setWipMenu(null);
-                stashAction.open?.(wipMenu);
-              }}
-            >
-              {t('history.stashAll')}
             </MenuItem>
           </Menu>
         </Popover>
@@ -1589,6 +1590,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                         age: entry?.changedAt ?? null,
                         failed: commitFailed,
                         onPick: (e) => clickRow(WIP, e),
+                        menuOpen: !!wipMenu,
                         onMenu: setWipMenu,
                       }
                     : null
@@ -1882,7 +1884,7 @@ function rowKey(r: HistoryRow): string {
 }
 
 /** Changes (SPEC §5), as Commits: folds Uncommitted's files; ⌘ / ⇧-click takes Uncommitted
- * among several rows, a right-click opens its menu. */
+ * among several rows, its ⋮ or a right-click opens its menu. */
 function ChangesHead({
   count,
   shut,
@@ -1900,6 +1902,9 @@ function ChangesHead({
     /** The last commit failed. */
     failed: boolean;
     onPick: (e: React.MouseEvent) => void;
+    /** Its menu is open: the ⋮ stays lit. */
+    menuOpen: boolean;
+    /** The ⋮ (its rect) or a right-click (the pointer). */
     onMenu: (at: DOMRect) => void;
   } | null;
 }) {
@@ -1909,30 +1914,48 @@ function ChangesHead({
       .filter(Boolean)
       .join(' · ');
   return (
-    <button
-      type="button"
+    <div
       className={`${styles.listHead} ${styles.changesHead} ${wip?.picked ? styles.rowPicked : ''}`}
-      aria-expanded={!shut}
-      onClick={(e) => (wip && (e.metaKey || e.shiftKey) ? wip.onPick(e) : onFold())}
       onContextMenu={(e) => {
         if (!wip) return;
         e.preventDefault();
         wip.onMenu(new DOMRect(e.clientX, e.clientY, 0, 0));
       }}
     >
-      <ChevronDownIcon
-        size={12}
-        className={shut ? `${parts.sectionChevron} ${parts.sectionShut}` : parts.sectionChevron}
-      />
-      <span className={`${parts.sectionLabel} ${styles.headLabel}`}>{t('history.changes')}</span>
-      <span className={parts.sectionPill}>{formatCount(count)}</span>
-      {wip?.failed && (
-        <Pill tone="danger" size="sm">
-          {t('history.commitFailed')}
-        </Pill>
+      <button
+        type="button"
+        className={styles.headFold}
+        aria-expanded={!shut}
+        onClick={(e) => (wip && (e.metaKey || e.shiftKey) ? wip.onPick(e) : onFold())}
+      >
+        <ChevronDownIcon
+          size={12}
+          className={shut ? `${parts.sectionChevron} ${parts.sectionShut}` : parts.sectionChevron}
+        />
+        <span className={`${parts.sectionLabel} ${styles.headLabel}`}>{t('history.changes')}</span>
+        <span className={parts.sectionPill}>{formatCount(count)}</span>
+        {wip?.failed && (
+          <Pill tone="danger" size="sm">
+            {t('history.commitFailed')}
+          </Pill>
+        )}
+        {meta && <span className={styles.changesMeta}>{meta}</span>}
+      </button>
+      {wip && (
+        <IconButton
+          size={24}
+          className={styles.headMore}
+          aria-label={t('history.wipActions')}
+          title={t('history.wipActions')}
+          aria-haspopup="menu"
+          aria-expanded={wip.menuOpen}
+          active={wip.menuOpen}
+          onClick={(e) => wip.onMenu(e.currentTarget.getBoundingClientRect())}
+        >
+          <MoreVerticalIcon size={14} />
+        </IconButton>
       )}
-      {meta && <span className={styles.changesMeta}>{meta}</span>}
-    </button>
+    </div>
   );
 }
 

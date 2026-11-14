@@ -2697,9 +2697,9 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   one after another). Each file is read from its own entry's worktree, so picks across repos
   with the same paths copy and open the right files. A commit's or a stash's files have the two copy items, then
   the open items after a divider (none for a deleted file).
-- **Uncommitted row menu** (Review, right-click the Changes header while there are uncommitted files): danger "Discard
-  All Changes…" and "Stash All Changes…" (`package`; opens Stash (P4) at the pointer, to its right as the menu, disabled
-  when nothing can be stashed).
+- **Uncommitted row menu** (Review, the Changes header's ⋮ or a right-click on it, while there are uncommitted
+  files; 230px, under the ⋮ or at the pointer): "Stash All Changes…" (`package`; opens Stash (P4) where the
+  menu was, disabled when nothing can be stashed), then danger "Discard All Changes…" (`trash`).
 - **Confirm Discard Changes** (`Modal` 480px, 160px from the top): `ModalHeader` "Confirm Discard
   Changes" with ✕ ("Confirm Discard All Changes" for Discard All Changes); a body (padding 4px
   24px 22px, gap 16) with a 28px `warning` icon (stroke 1.6, `warning`) beside a column (gap 12):
@@ -3162,8 +3162,9 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     failed" after a failed commit, and on the right mono 11 muted `<age>` (the newest
     uncommitted file's, as on Branches; left out when unknown), after `N conflicts · ` when
     some are unmerged. With uncommitted files it stands for Uncommitted too: ⌘ / ⇧-click takes
-    it among several rows (tinted then), right-click opens Discard All Changes… / Stash All
-    Changes…. Under it, whichever row is picked (tree layout), Uncommitted's files in two
+    it among several rows (tinted then), and a ⋮ closes the header (a 24px icon button,
+    `more-vertical` 14, 12px from the edge, lit while its menu is open): it or a right-click
+    opens Stash All Changes… / Discard All Changes…. Under it, whichever row is picked (tree layout), Uncommitted's files in two
     sections, Staged and Unstaged ("Sections" under "Commit form"); clicking one picks
     Uncommitted with that file (↑ / ↓ reach Uncommitted too). Its files can be picked with ⌘ /
     ⇧-click (while Uncommitted is picked) and discarded, staged or copied from their

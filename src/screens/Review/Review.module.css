@@ -109,9 +109,29 @@
   text-align: left;
 }
 
-/* First in the list, under its 6px top padding. */
+/* First in the list, under its 6px top padding. Its fold button and, with uncommitted files, a ⋮
+ * for its menu; the button carries the padding so the whole header folds. */
 .changesHead {
-  padding-top: 4px;
+  padding: 0 12px 0 0;
+  cursor: default;
+}
+
+.headFold {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 4px 16px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* 24px in an 18px line: it does not make the header taller. */
+.headMore {
+  margin: -3px 0;
 }
 
 .commitsHead {

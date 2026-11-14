@@ -103,7 +103,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <div style="flex-shrink: 0; margin: 2px 0 6px; padding: 7px 10px; border-radius: 8px; background: rgba(var(--warning-rgb), 0.12); color: var(--warning); font-size: 12px; line-height: 1.4">{{it.text}}</div>
 </sc-if>
 <sc-if value="{{it.isListHead}}" hint-placeholder-val="{{false}}">
-<button type="button" onClick="{{it.toggle}}" onContextMenu="{{it.menu}}" aria-expanded="{{it.open}}" style="{{it.wrapStyle}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{it.chevStyle}}"><path d="m6 9 6 6 6-6"></path></svg><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-body); white-space: nowrap">{{it.label}}</span><sc-if value="{{it.hasCount}}" hint-placeholder-val="{{true}}"><span style="min-width: 18px; height: 18px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 5px; border-radius: 9px; background: var(--bg-hover); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)">{{it.count}}</span></sc-if><sc-if value="{{it.failed}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="commit failed" tone="danger" size="sm" hint-size="72px,16px"></dc-import></sc-if><span style="flex-grow: 1"></span><span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span></button>
+<div onContextMenu="{{it.menu}}" style="{{it.wrapStyle}}"><button type="button" onClick="{{it.toggle}}" aria-expanded="{{it.open}}" style="{{it.foldStyle}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{it.chevStyle}}"><path d="m6 9 6 6 6-6"></path></svg><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-body); white-space: nowrap">{{it.label}}</span><sc-if value="{{it.hasCount}}" hint-placeholder-val="{{true}}"><span style="min-width: 18px; height: 18px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 5px; border-radius: 9px; background: var(--bg-hover); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)">{{it.count}}</span></sc-if><sc-if value="{{it.failed}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="commit failed" tone="danger" size="sm" hint-size="72px,16px"></dc-import></sc-if><span style="flex-grow: 1"></span><span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{it.meta}}</span></button><sc-if value="{{it.hasMore}}" hint-placeholder-val="{{false}}"><button type="button" aria-label="Uncommitted Changes Actions" title="Uncommitted Changes Actions" aria-haspopup="menu" aria-expanded="{{it.moreOn}}" onClick="{{it.more}}" style="{{it.moreStyle}}"><dc-import name="Icon" icon="more-vertical" size="{{14}}" hint-size="14px,14px"></dc-import></button></sc-if></div>
 </sc-if>
 <sc-if value="{{it.isBase}}" hint-placeholder-val="{{false}}">
 <div class="gg-row" style="{{it.wrapStyle}}">
@@ -820,6 +820,7 @@ class Component extends DCLogic {
     if (!root) return { x: 480, y: 240, right: false };
     var rr = root.getBoundingClientRect();
     var sc = rr.width / (root.offsetWidth || 1280) || 1;
+    if (btn === 'left') { var bl = t.getBoundingClientRect(); return { x: (bl.left - rr.left) / sc, y: (bl.bottom - rr.top) / sc + 4, right: false }; }
     if (btn) { var br = t.getBoundingClientRect(); return { x: (br.right - rr.left) / sc, y: (br.bottom - rr.top) / sc + 4, right: true }; }
     return { x: (ev.clientX - rr.left) / sc + 2, y: (ev.clientY - rr.top) / sc + 2, right: false };
   }
@@ -1295,29 +1296,41 @@ class Component extends DCLogic {
     };
     // Changes and Commits (VS Code's Changes and Graph): headings across the list's full width,
     // each folding what is under it. Changes counts Uncommitted's files (0 when clean) and lists
-    // them whichever row is picked; ⌘ / ⇧-click on it takes Uncommitted among several rows, a
-    // right-click opens its menu. Clicking a file picks Uncommitted.
+    // them whichever row is picked; ⌘ / ⇧-click on it takes Uncommitted among several rows, its ⋮
+    // (shown with uncommitted files) or a right-click opens its menu. Clicking a file picks Uncommitted.
     var headStyle = function (top, tint, shut) {
-      return 'flex-shrink: 0; display: flex; align-items: center; gap: 6px; margin: ' + (top ? '6px' : '0') + ' -8px 0; padding: ' + (top ? '10px 16px ' + (shut ? '10px' : '4px') : '4px 16px') + '; border: 0; ' +
+      return 'flex-shrink: 0; display: flex; align-items: center; margin: ' + (top ? '6px' : '0') + ' -8px 0; padding: 0 12px 0 0; ' +
         (top ? 'border-top: 1px solid var(--bg-hover); ' : '') + (top && shut ? 'border-bottom: 1px solid var(--bg-hover); ' : '') +
-        'background: ' + (tint ? 'rgba(var(--accent-rgb), 0.18)' : 'transparent') + '; font: inherit; color: inherit; text-align: left; cursor: pointer';
+        'background: ' + (tint ? 'rgba(var(--accent-rgb), 0.18)' : 'transparent');
+    };
+    // The header's fold button carries the padding, so the whole header folds.
+    var foldStyle = function (top, shut) {
+      return 'flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; padding: ' + (top ? '10px 4px ' + (shut ? '10px' : '4px') : '4px 4px 4px') + ' 16px; border: 0; ' +
+        'background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer';
+    };
+    // Changes' ⋮: 24px in an 18px line (it does not make the header taller), lit while its menu is open.
+    var moreStyle = function (on) {
+      return 'flex-shrink: 0; width: 24px; height: 24px; margin: -3px 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; ' +
+        'background: ' + (on ? 'var(--bg-sidebar-active)' : 'transparent') + '; color: ' + (on ? 'var(--text-strong)' : 'var(--text-muted)') + '; cursor: pointer';
     };
     var chev = function (open) { return 'stroke: var(--text-muted); flex-shrink: 0; transition: transform 0.15s; ' + (open ? '' : 'transform: rotate(-90deg)'); };
     var changesItem = function (e, multi) {
       var key = e.id + ':changes', open = !st.secShut[key], inMulti = !!multi && multi.indexOf('wip') >= 0;
       var fold = function () { self.setState({ secShut: self.kv('secShut', key, open) }); };
       var pick = pickRow(e, 'wip');
+      var moreOn = !!(st.menu && st.menu.kind === 'wip' && st.menu.e === e.id);
       return { isListHead: true, label: 'Changes', hasCount: true, count: String(e.wip.length), open: open, chevStyle: chev(open),
         meta: e.wip.length ? e.wipAge : '', failed: !!st.failed[e.id],
         toggle: function (ev) { if (hasWip(e) && ev && (ev.metaKey || ev.ctrlKey || ev.shiftKey)) pick(ev); else fold(); },
         menu: e.wip.length ? menuAt({ kind: 'wip', e: e.id }) : undefined,
-        wrapStyle: headStyle(false, inMulti, false) };
+        hasMore: e.wip.length > 0, more: menuAt({ kind: 'wip', e: e.id }, 'left'), moreOn: moreOn, moreStyle: moreStyle(moreOn),
+        wrapStyle: headStyle(false, inMulti, false), foldStyle: foldStyle(false, false) };
     };
     var commitsItem = function (e) {
       var key = e.id + ':commits', open = !st.secShut[key];
       return { isListHead: true, label: 'Commits', hasCount: false, open: open, chevStyle: chev(open), meta: '', failed: false,
         toggle: function () { self.setState({ secShut: self.kv('secShut', key, open) }); },
-        wrapStyle: headStyle(true, false, !open) };
+        hasMore: false, wrapStyle: headStyle(true, false, !open), foldStyle: foldStyle(true, !open) };
     };
     // The whole review (merge-base..branch) is the base line under the branch's commits:
     // "base main · 8c2d5e1". Picking it shows every file the branch changes. The ahead counts
@@ -1661,8 +1674,8 @@ class Component extends DCLogic {
           { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }, { label: 'Open in Terminal', app: 'terminal', onSelect: close }];
       } else if (M.kind === 'wip') {
         menuLabel = 'Uncommitted Options';
-        if (me.wip.length) menuItems = [{ label: 'Discard All Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discardAll', e: M.e } }); } },
-          { label: 'Stash All Changes…', icon: 'package', onSelect: function () { self.stashAll(M.e); } }];
+        if (me.wip.length) menuItems = [{ label: 'Stash All Changes…', icon: 'package', onSelect: function () { self.stashAll(M.e); } },
+          { label: 'Discard All Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discardAll', e: M.e } }); } }];
       } else if (M.kind === 'file') {
         menuLabel = 'File Options';
         if (M.row === 'wip') menuItems = [{ label: 'Discard Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discard', e: M.e, paths: [M.path], part: M.part } }); } }, { kind: 'sep' },
