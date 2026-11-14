@@ -3192,7 +3192,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     muted; tooltip author · date); no avatar. Right-click on it (Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
     "Revert Changes" (`revert`, below), "Create Tag…" (`tag`, below), "Cherry-Pick to" (`rebase`, a
-    chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
+    chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`), "Copy Tags" (`copy`; "Copy Tag" for one; the names with spaces between; left out without a tag) and "Open Permalink" (`link`; the commit's page on the remote in the browser, as the header's SHA; only for a commit the branch's upstream has, on a GitHub, GitLab or Bitbucket remote). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
     file shown on `bg.hover`). Not with "Layout: Columns" (below).

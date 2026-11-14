@@ -419,6 +419,7 @@
   "history.amendingPill": "düzeltiliyor",
   "history.amendTo": "{$rev} dalındaki {$sha} commit'ini düzelt",
   "history.menuCopySha": "SHA'yı Kopyala",
+  "history.menuCopyTags": ".input {$n :string} .match $n 1 {{Etiketi Kopyala}} * {{Etiketleri Kopyala}}",
   "history.commitMenu": "{$sha} işlemleri",
   "history.commitFiles": "{$d} dosyayı commit et",
   "history.commitBtn": "Commit",

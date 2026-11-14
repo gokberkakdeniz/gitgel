@@ -1734,6 +1734,10 @@ class Component extends DCLogic {
           }
           menuItems.push({ kind: 'sep' });
           menuItems.push({ label: 'Copy SHA', icon: 'copy', onSelect: close });
+          var mtags = me.commits[mi].tags || [];
+          if (mtags.length) menuItems.push({ label: mtags.length > 1 ? 'Copy Tags' : 'Copy Tag', icon: 'copy', onSelect: close });
+          // Only a commit the remote has.
+          if (mi >= me.unpushed) menuItems.push({ label: 'Open Permalink', icon: 'link', onSelect: close });
         }
       }
       var h = 14;

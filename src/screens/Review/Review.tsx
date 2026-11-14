@@ -591,6 +591,11 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       done: t('revert.done', { sha, rev }),
     });
   };
+  // Open Permalink: a commit the branch's remote has (below the upstream line), on a host whose
+  // commit pages are known.
+  const { data: remoteInfo } = useInvoke(() => getRemoteUrl(repoId), [repoId]);
+  const webRemote = remoteInfo && remoteInfo.kind !== 'other' ? remoteInfo : null;
+  const onRemote = (c: HistoryCommit) => !!data?.upstream?.name && commits.indexOf(c) >= data.upstream.ahead;
   // Create Tag: any commit, checked out or not; the name (and a message) in a dialog.
   const [askTag, setAskTag] = useState<HistoryCommit | null>(null);
   const createTag = (c: HistoryCommit, tag: string, message: string) => {
@@ -1511,6 +1516,32 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             </MenuItem>
           </Menu>
           {cherrySub && (
+            {commitMenu.commit.tags.length > 0 && (
+              <MenuItem
+                icon="copy"
+                onHover={() => setCherrySub(null)}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  void writeText(commitMenu.commit.tags.join(' '));
+                }}
+              >
+                {t('history.menuCopyTags', cnt(commitMenu.commit.tags.length))}
+              </MenuItem>
+            )}
+            {webRemote && onRemote(commitMenu.commit) && (
+              <MenuItem
+                icon="link"
+                onHover={() => setCherrySub(null)}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  void openRemoteLink(commitUrl(webRemote, commitMenu.commit.sha)).catch((e) =>
+                    console.error('cannot open link', e),
+                  );
+                }}
+              >
+                {t('diff.openPermalink')}
+              </MenuItem>
+            )}
             <Popover
               anchor={cherrySub.el}
               anchorRect={cherrySub.el.getBoundingClientRect()}
