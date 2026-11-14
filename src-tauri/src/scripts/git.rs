@@ -1551,13 +1551,38 @@ pub fn squash(
     summary: String,
     description: String,
 ) -> Result<ScriptRun, AppError> {
+    if shas.len() < 2 {
+        return Err(AppError::Invalid("Pick at least two commits.".into()));
+    }
+    rewrite(state, entry, shas, summary, description, false)
+}
+
+/// Reword (SPEC §16 "Reword"): a commit of the entry's branch gets a new message, as a squash of
+/// that one commit: the same tree, parent and author, the commits above it rebased onto it.
+/// Refused for a merge commit or the branch's first commit, and as Squash.
+pub fn reword(
+    state: &AppState,
+    entry: EntryRef,
+    sha: String,
+    summary: String,
+    description: String,
+) -> Result<ScriptRun, AppError> {
+    rewrite(state, entry, vec![sha], summary, description, true)
+}
+
+/// Squash and Reword's run: `shas` (newest first) become one commit with the message.
+fn rewrite(
+    state: &AppState,
+    entry: EntryRef,
+    shas: Vec<String>,
+    summary: String,
+    description: String,
+    reword: bool,
+) -> Result<ScriptRun, AppError> {
     let summary = summary.trim().to_string();
     let body = description.trim().to_string();
     if summary.is_empty() {
         return Err(AppError::Invalid("Write a summary.".into()));
-    }
-    if shas.len() < 2 {
-        return Err(AppError::Invalid("Pick at least two commits.".into()));
     }
     let repo = open_repo(state, &entry.repo_id)?;
     repo.not_busy(state)?;
@@ -1583,6 +1608,12 @@ pub fn squash(
                 .map_err(|_| AppError::NotFound(format!("commit {sha}")))
         };
         let newest = find(&shas[0])?;
+        // The new commit has one parent: a reworded merge would lose its other one.
+        if reword && newest.parent_count() != 1 {
+            return Err(AppError::Invalid(
+                "Only a commit with one parent can be reworded.".into(),
+            ));
+        }
         let mut oldest = newest.clone();
         for sha in &shas[1..] {
             if oldest.parent_id(0).ok().map(|p| p.to_string()).as_deref() != Some(sha.as_str()) {
@@ -1640,9 +1671,16 @@ pub fn squash(
     run::launch(
         state,
         Launch {
-            script_id: format!("{ACTION_PREFIX}squash"),
-            name: format!("Squash {} Commits", shas.len()),
-            icon: "rebase".into(),
+            script_id: format!(
+                "{ACTION_PREFIX}{}",
+                if reword { "reword" } else { "squash" }
+            ),
+            name: if reword {
+                format!("Reword {}", shas[0].chars().take(7).collect::<String>())
+            } else {
+                format!("Squash {} Commits", shas.len())
+            },
+            icon: if reword { "pencil" } else { "rebase" }.into(),
             entry_key: entry_key(
                 &repo.id,
                 entry.branch.as_deref(),

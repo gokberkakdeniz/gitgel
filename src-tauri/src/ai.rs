@@ -566,8 +566,9 @@ fn squash_patch(
     repo_path: &Path,
     shas: &[String],
 ) -> Result<(Vec<String>, String, Oid, Vec<String>), AppError> {
-    if shas.len() < 2 {
-        return Err(AppError::Invalid("Pick at least two commits.".into()));
+    // One commit: Reword's, its own changes.
+    if shas.is_empty() {
+        return Err(AppError::Invalid("Pick a commit.".into()));
     }
     let shared = state.pool.get(repo_path)?;
     let repo = lock(&shared);

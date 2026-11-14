@@ -25,6 +25,7 @@ export function SquashModal({
   entry,
   sub,
   pushed,
+  reword,
   provider,
   providers,
   aiEnabled,
@@ -37,6 +38,8 @@ export function SquashModal({
   /** `<repo> / <branch>`. */
   sub: string;
   pushed: boolean;
+  /** Reword Commit (SPEC §16 "Reword"): one commit, its own message to change. */
+  reword?: boolean;
   /** The ✦'s provider, as the commit form's; null (no ✦) when the menu is empty. */
   provider: CommitProvider | null;
   providers: CommitProvider[];
@@ -77,13 +80,14 @@ export function SquashModal({
       },
     );
   };
+  const title = t(reword ? 'reword.title' : 'squash.title');
   const squash = () => {
     if (!ok) return;
     onClose();
     onSquash(msg.summary, msg.description);
   };
   return (
-    <Modal aria-label={t('squash.title')} width={560} paddingTop={110} onClose={onClose}>
+    <Modal aria-label={title} width={560} paddingTop={110} onClose={onClose}>
       <div
         onKeyDown={(e) => {
           if (e.key === 'Enter' && e.metaKey) {
@@ -92,7 +96,7 @@ export function SquashModal({
           }
         }}
       >
-        <ModalHeader title={t('squash.title')} sub={sub} subMono onClose={onClose} />
+        <ModalHeader title={title} sub={sub} subMono onClose={onClose} />
         <div className={styles.body}>
           <Input
             size={36}
@@ -122,14 +126,14 @@ export function SquashModal({
             value={msg.description}
             onChange={(e) => setMsg((m) => ({ ...m, description: e.target.value }))}
           />
-          {pushed && <span className={styles.note}>{t('squash.forcePush')}</span>}
+          {pushed && <span className={styles.note}>{t(reword ? 'reword.forcePush' : 'squash.forcePush')}</span>}
         </div>
         <ModalFooter>
           <Button size={36} onClick={onClose}>
             {t('common.cancel')}
           </Button>
           <Button variant="primary" size={36} kbd="⌘↵" disabled={!ok} onClick={squash}>
-            {t('squash.button')}
+            {t(reword ? 'reword.button' : 'squash.button')}
           </Button>
         </ModalFooter>
       </div>

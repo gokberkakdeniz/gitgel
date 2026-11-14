@@ -1902,6 +1902,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `check_new_tag` | `repoId, name` | `NewTagProblem \| null` (`badName`, `exists`) |
 | `git_delete_tag` | `entry: EntryRef, name, remote: boolean` (the tag on the remote too) | `ScriptRun` (§16 "Delete Tag") |
 | `get_tag_remote` | `repoId` | `string \| null` (`origin`, else the only remote) |
+| `git_reword` | `entry: EntryRef, sha, summary, description` | `ScriptRun` (§16 "Reword") |
 | `git_squash` | `entry: EntryRef, shas: string[]` (newest first), `summary, description` | `ScriptRun` (§16 "Squash") |
 
 Notes:
@@ -3183,7 +3184,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11
     `accent.text`, a 7ch column, wider for a longer SHA; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
     muted; tooltip author · date); no avatar. Right-click on it (Hi10; a 240px menu): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
-    in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
+    in a worktree; disabled while a commit runs or mid-operation), "Reword Commit…" (`edit`, below), "Undo Commit" (`undo`, below),
     "Reset to Commit…" (`history`, below), "Checkout Commit…" (`worktree`, below), "Revert Changes" (`revert`, below), "Create Branch from Commit…" (`branch`, below), "Create Tag…" (`tag`, below), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
     chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`), "Copy Tags" (`copy`; "Copy Tag" for one; the names with spaces between; left out without a tag) and "Open Permalink" (`link`; the commit's page on the remote in the browser, as the header's SHA; only for a commit the branch's upstream has, on a GitHub, GitLab or Bitbucket remote). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
@@ -3365,6 +3366,18 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     first parent of the one before, the branch no longer has them, an operation in progress,
     another git action in the repository. Pushed commits leave the branch diverged, so the
     diverged banner offers Force Push.
+  - **Reword** (GitHub Desktop's Reword Commit; `SquashModal` with `reword`): on a commit with
+    one parent when `rev` is checked out in a worktree and no commit, amend of it or operation
+    is in progress; left out otherwise. Opens "Reword Commit" (Squash's dialog; sub `<repo> /
+    <sha>` mono): the summary and description filled with the commit's, the ✦ (for that
+    commit's changes), under the upstream line the note "This commit is on the remote: the
+    branch will need a force push.", Cancel and primary "Reword" (⌘↵). Runs as a squash of that
+    one commit (`git_reword`): `git commit-tree` with its tree, parent, author and date and the
+    new message, then `git reset -q --soft` onto it, or `git rebase -q --autostash
+    --rebase-merges --onto <it> <sha>` when commits sit above; the index and the working tree
+    stay. A git action (script id `git:reword`, name "Reword <sha>", `pencil` icon, toast
+    “Rewording <sha>…”, then “Reworded <sha> on <rev>”). Refused as Squash, and for a merge
+    commit or the branch's first one. Unlike Amend it runs no hooks and takes nothing staged.
 - **Several rows** (Hi12; GitHub Desktop's multi-commit diff): ⌘-click adds a row to
   the picked one or takes it out, ⇧-click takes the range from the last row clicked, ⇧↑ / ⇧↓ in
   the list move the range's far end; Uncommitted can be one of them, the stashes cannot. The

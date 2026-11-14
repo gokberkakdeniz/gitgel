@@ -195,6 +195,9 @@ export const gitSquash = (entry: EntryRef, shas: string[], summary: string, desc
 /** Cherry-Pick to: `git cherry-pick <sha>` in one of the repository's worktrees. */
 export const gitCherryPick = (repoId: string, sha: string, worktreePath: string) =>
   invoke<ScriptRun>('git_cherry_pick', { repoId, sha, worktreePath });
+/** Reword: a commit of the entry's branch gets this message. */
+export const gitReword = (entry: EntryRef, sha: string, summary: string, description: string) =>
+  invoke<ScriptRun>('git_reword', { entry, sha, summary, description });
 /** Reset to Commit: the branch back to `sha` (`tip`: its newest commit as shown); the commits'
  * changes stay staged, or with `hard` go, the uncommitted ones too. */
 export const gitReset = (entry: EntryRef, sha: string, tip: string, hard: boolean) =>

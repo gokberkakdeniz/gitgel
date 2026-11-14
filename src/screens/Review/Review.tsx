@@ -52,6 +52,7 @@ import {
   gitDeleteTag,
   gitReset,
   gitRevert,
+  gitReword,
   gitSquash,
   gitUndoCommit,
   openRemoteLink,
@@ -906,6 +907,20 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       { done: t('squash.done', { ...n, rev }) },
     );
   };
+  // Reword: a one-parent commit of the checked-out branch gets a new message (Squash's dialog).
+  const rewordable = (c: HistoryCommit) =>
+    c.parents === 1 && !!entry?.worktreePath && !entry.operation && !committing && amending?.sha !== c.sha;
+  const [askReword, setAskReword] = useState<HistoryCommit | null>(null);
+  const reword = (c: HistoryCommit, summary: string, description: string) => {
+    if (!entryRef) return;
+    const sha = c.shortSha;
+    void startGitAction(
+      t('reword.act', { sha }),
+      t('reword.running', { sha }),
+      () => gitReword(entryRef, c.sha, summary, description),
+      { done: t('reword.done', { sha, rev }) },
+    );
+  };
   // Cherry-Pick to's picker, beside its item (Hi11).
   const [cherrySub, setCherrySub] = useState<{ el: HTMLElement; focus?: boolean } | null>(null);
   useEffect(() => setCherrySub(null), [commitMenu]);
@@ -1494,6 +1509,20 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           onSquash={(summary, description) => squash(askSquash, summary, description)}
         />
       )}
+      {askReword && entryRef && (
+        <SquashModal
+          reword
+          commits={[askReword]}
+          entry={entryRef}
+          sub={`${repoName} / ${askReword.shortSha}`}
+          pushed={!!data?.upstream?.name && commits.indexOf(askReword) >= data.upstream.ahead}
+          provider={provider}
+          providers={menuProviders}
+          aiEnabled={ai?.enabled ?? true}
+          onClose={() => setAskReword(null)}
+          onSquash={(summary, description) => reword(askReword, summary, description)}
+        />
+      )}
       {commitMenu && !commitMenu.many && (
         <Popover anchorRect={commitMenu.at} width={240} onClose={() => setCommitMenu(null)}>
           <Menu aria-label={t('history.commitMenu', { sha: commitMenu.commit.shortSha })}>
@@ -1508,6 +1537,18 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 }}
               >
                 {t('amend.menuAmend')}
+              </MenuItem>
+            )}
+            {rewordable(commitMenu.commit) && (
+              <MenuItem
+                icon="edit"
+                onHover={closeSubs}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  setAskReword(commitMenu.commit);
+                }}
+              >
+                {t('reword.menu')}
               </MenuItem>
             )}
             {undoable(commitMenu.commit) && (

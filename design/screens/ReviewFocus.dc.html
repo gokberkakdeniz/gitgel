@@ -1003,6 +1003,14 @@ class Component extends DCLogic {
     this.setState(Object.assign({ E: r.E, modal: null }, this.selPart(r.e, ns)));
     this.toast({ status: 'success', message: 'Squashed ' + n + ' commits into ' + ns });
   }
+  reword() {
+    var m = this.state.modal, ns = this.sha();
+    var r = this.mapE(m.e, function (x) {
+      x.commits.forEach(function (c, i) { if (c.sha === m.sha) { c.dk = c.dk || c.sha; c.sha = ns; c.subject = m.summary.trim(); c.body = (m.body || '').trim(); if (i >= x.unpushed) { x.unpushed = i + 1; x.force = true; } } });
+    });
+    this.setState(Object.assign({ E: r.E, modal: null }, this.selPart(r.e, ns)));
+    this.toast({ status: 'success', message: 'Reworded ' + m.sha + ' on ' + r.e.branch });
+  }
   discard(id, paths, part) {
     var self = this, s = this.state;
     // The part changed since staging: the working copy goes back to the staged version.
@@ -1747,6 +1755,8 @@ class Component extends DCLogic {
         var mshas = me.commits.map(function (c) { return c.sha; }), mi = mshas.indexOf(M.sha);
         if (mi >= 0) {
           if (mi === 0 && me.wt) menuItems.push({ label: 'Amend Commit…', icon: 'edit', onSelect: function () { self.amendStart(M.e); } });
+          // Reword Commit…: Squash's dialog for one commit, its message to change.
+          if (me.wt) menuItems.push({ label: 'Reword Commit…', icon: 'edit', onSelect: function () { var rc = me.commits[mi]; self.setState({ menu: null, modal: { kind: 'reword', e: M.e, sha: M.sha, summary: rc.subject, body: rc.body || '', force: mi >= me.unpushed } }); } });
           if (mi === 0 && me.unpushed > 0 && me.wt) menuItems.push({ label: 'Undo Commit', icon: 'undo', onSelect: function () { self.undoCommit(M.e); } });
           // Reset to Commit…: the branch back to a commit under its newest one; asks first.
           if (mi > 0 && me.wt) menuItems.push({ label: 'Reset to Commit…', icon: 'history', onSelect: function () { self.setState({ menu: null, modal: { kind: 'reset', e: M.e, sha: M.sha, hard: false } }); } });
@@ -1820,6 +1830,14 @@ class Component extends DCLogic {
         md.setBody = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { body: ev.target.value }) }); };
         md.hasNote = !!MD.force; md.note = 'Some of these commits are on origin. Squashing them will require a force push.';
         md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Squash ' + MD.shas.length + ' Commits', variant: 'primary', disabled: !(MD.summary || '').trim(), onPress: function () { self.squash(); } }];
+      } else if (MD.kind === 'reword') {
+        // Reword Commit: Squash's fields with the commit's own message.
+        md.title = 'Reword Commit'; md.hasSub = true; md.sub = mE.repo + ' / ' + MD.sha; md.isSquash = true; md.width = 540;
+        md.summary = MD.summary; md.body = MD.body;
+        md.setSummary = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { summary: ev.target.value }) }); };
+        md.setBody = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { body: ev.target.value }) }); };
+        md.hasNote = !!MD.force; md.note = 'This commit is on the remote: the branch will need a force push.';
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Reword', variant: 'primary', disabled: !(MD.summary || '').trim(), onPress: function () { self.reword(); } }];
       } else if (MD.kind === 'reset') {
         // Confirm Reset to Commit: the branch and the commit, how many commits leave, and the option to discard their changes.
         var rsShas = mE.commits.map(function (c) { return c.sha; }), rsN = rsShas.indexOf(MD.sha), rsC = mE.commits[rsN];

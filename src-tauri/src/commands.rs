@@ -770,6 +770,21 @@ pub async fn git_revert(
     .await
 }
 
+/// Reword: a commit of the entry's branch gets a new message.
+#[tauri::command]
+pub async fn git_reword(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    sha: String,
+    summary: String,
+    description: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::reword(state, entry, sha, summary, description)
+    })
+    .await
+}
+
 /// Squash: consecutive commits of the entry's branch (newest first) become one.
 #[tauri::command]
 pub async fn git_squash(

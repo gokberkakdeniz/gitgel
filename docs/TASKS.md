@@ -545,6 +545,7 @@ it was done within a topic.
 - [x] Reset to Commit…: the commit menu's item on a commit under the newest one asks first; `git reset --soft` (the commits' changes stay staged, as Undo Commit), or `--hard` with "Discard their changes" — 2026-11-14
   - note: soft chosen over GitHub Desktop's mixed, to match Undo Commit.
 - [x] Checkout Commit…: the commit menu opens Checkout Branch's dialog for the commit; the picked worktree (or a new one) gets it as a detached HEAD (`git switch --detach`, `git worktree add --detach`) — 2026-11-14
+- [x] Reword Commit…: the commit menu opens Squash's dialog with the commit's message; any one-parent commit of a checked-out branch, the commits above it rebased onto the reworded one — 2026-11-15
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked
