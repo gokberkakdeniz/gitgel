@@ -713,6 +713,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   );
   const spanned = isMulti && consecutive ? rangeChanges : undefined;
   const commit = isMulti ? undefined : commits.find((c) => c.sha === current);
+  // The commit the diff's new side is at; its permalinks need it on the remote.
+  const shownCommit = isMulti ? commits.find((c) => c.sha === newest) : commit;
   const stash = isMulti ? undefined : stashes.find((s) => stashRow(s.sha) === current);
 
   // A commit's files are fetched once (a commit never changes).
@@ -1514,8 +1516,6 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             >
               {t('history.menuCopySha')}
             </MenuItem>
-          </Menu>
-          {cherrySub && (
             {commitMenu.commit.tags.length > 0 && (
               <MenuItem
                 icon="copy"
@@ -1542,6 +1542,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 {t('diff.openPermalink')}
               </MenuItem>
             )}
+          </Menu>
+          {cherrySub && (
             <Popover
               anchor={cherrySub.el}
               anchorRect={cherrySub.el.getBoundingClientRect()}
@@ -1827,7 +1829,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 repoId={stash ? stash.repoId : repoId}
                 worktreePath={wipShown || withWip ? (entry?.worktreePath ?? null) : null}
                 folder={stash ? (repos?.find((r) => r.id === stash.repoId)?.path ?? null) : folder}
-                commit={isMulti ? newest : (commit?.sha ?? null)}
+                commit={shownCommit && onRemote(shownCommit) ? shownCommit.sha : null}
                 parent={isMulti ? (spanned?.parent ?? null) : (commitChanges?.parent ?? null)}
                 change={file}
                 mode={wipShown ? 'uncommitted' : withWip ? 'all' : 'committed'}

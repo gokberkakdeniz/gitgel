@@ -76,7 +76,8 @@ interface Props {
   worktreePath: string | null;
   /** The folder the file is on disk in (worktree, else repository), for the absolute reference. */
   folder: string | null;
-  /** The commit the file is shown at (its modified side), for the permalink; none, no permalink. */
+  /** The commit the file is shown at (its modified side), for the permalink; none (also for a
+   * commit the remote does not have), no permalink. */
   commit: string | null;
   /** The commit's first parent: what the old side shows (none for a root commit). */
   parent: string | null;

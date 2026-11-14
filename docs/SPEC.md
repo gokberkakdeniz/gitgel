@@ -890,7 +890,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   removed lines), left out when the selection takes the same. Then "Copy relative reference" (`@<path>:<line>` or
   `@<path>:<from>-<to>`, the path relative to the repository), "Copy absolute reference" (the
   same with the file's path in its worktree, else the repository folder; with a commit shown it is
-  the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (the remote's
+  the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (only for a commit the branch's upstream has; the remote's
   file page at the commit: GitHub-style `/blob/<sha>/<path>#L12-L13`, GitLab `/-/blob/…`, Bitbucket `/src/…#lines-…`;
   only for a file shown at a commit, with a remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_remote_url`, `open_remote_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in the chosen editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas R1, `menu: diff`). The editor is created once; changing
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
