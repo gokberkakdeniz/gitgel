@@ -21,10 +21,10 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   not expose (only through internal ESM modules, which may break on upgrades). Sturdier: our own
   glyph-margin / overlay widget per hunk from `getLineChanges()`, wired to the picked-lines
   stage/unstage (`79f1a20`); Revert would be a git action (SPEC §0, §10).
-- **More in the commit menu** (2026-11-14). GitHub Desktop has them: Create Branch from Commit
-  (New Branch with the commit as its base), Reset to Commit (the branch back to it; soft / mixed
-  / hard to decide), Checkout Commit (a detached HEAD). Each a git action on the existing
-  pattern. Further: reordering commits by dragging and rewording one, beside Squash.
+- **More in the commit menu** (2026-11-14). GitHub Desktop has them: Reset to Commit (the branch
+  back to it; soft / mixed / hard to decide), Checkout Commit (a detached HEAD). Each a git
+  action on the existing pattern. Further: reordering commits by dragging and rewording one,
+  beside Squash.
 - **Viewed files** (2026-11-14). Marking a file of a review as viewed, with a count of what is
   left; where the marks live and when a changed file loses its mark are open.
 - **Notes on lines** (2026-11-14). A local note on a diff line, and copying all of a review's

@@ -54,11 +54,24 @@ export function NewBranchButton({ scan, className }: { scan: RepoScan; className
   );
 }
 
-function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRect: DOMRect; onClose: () => void }) {
+/** The New Branch form. With `commit` (the commit menu's Create Branch from Commit…, SPEC §16) the
+ * base is that commit and cannot be changed. */
+export function NewBranchForm({
+  scan,
+  anchorRect,
+  commit,
+  onClose,
+}: {
+  scan: RepoScan;
+  anchorRect: DOMRect;
+  commit?: { sha: string; shortSha: string };
+  onClose: () => void;
+}) {
   const repoId = scan.repo.id;
   const bases = useMemo(() => baseChoices(scan), [scan]);
   const [name, setName] = useState('');
-  const [base, setBase] = useState(bases[0] ?? '');
+  const [pickedBase, setBase] = useState(bases[0] ?? '');
+  const base = commit?.sha ?? pickedBase;
   // Check out, in Settings' order: the repository folder (its changes brought along or stashed),
   // a new worktree or the branch only; it opens on Settings › Repositories' choice.
   const [where, setWhere] = useState<Where>(() => useData.getState().config?.settings.newBranchCheckout ?? 'main');
@@ -137,7 +150,7 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
           done: t('branches.created', { branch }),
           // A base other than the repo's default is stored for the branch once it exists.
           onStart: (runId) => {
-            if (base === scan.defaultBase) return;
+            if (commit || base === scan.defaultBase) return;
             const ended = () => {
               const r = useRuns.getState().runs[runId];
               if (!r || r.status === 'running') return false;
@@ -162,10 +175,10 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
     }
   };
 
-  const message = error ?? (problem ? t(PROBLEM[problem], { branch, base }) : null);
+  const message = error ?? (problem ? t(PROBLEM[problem], { branch, base: commit?.shortSha ?? base }) : null);
   const nameInvalid = problem === 'badName' || problem === 'exists';
   return (
-    <Popover anchorRect={anchorRect} width={400} alignRight onClose={onClose}>
+    <Popover anchorRect={anchorRect} width={400} alignRight={!commit} onClose={onClose}>
       <div
         role="dialog"
         aria-label={t('branches.newBranch')}
@@ -207,7 +220,14 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
           <label className={styles.label} htmlFor="new-branch-base">
             {t('branches.newBase')}
           </label>
-          <BasePicker id="new-branch-base" bases={bases} value={base} onChange={setBase} />
+          {commit ? (
+            <div id="new-branch-base" className={`${styles.baseField} ${styles.baseFixed}`}>
+              <Icon name="history" size={14} className={styles.baseIcon} />
+              <span className={styles.baseValue}>{commit.shortSha}</span>
+            </div>
+          ) : (
+            <BasePicker id="new-branch-base" bases={bases} value={base} onChange={setBase} />
+          )}
         </div>
         <div className={styles.field}>
           <span id="new-branch-checkout" className={styles.label}>

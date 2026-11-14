@@ -88,6 +88,7 @@ import { conflictsBanner } from './banners';
 import styles from './Review.module.css';
 import { AmendModal } from './AmendModal';
 import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
+import { NewBranchForm } from '../../sync/NewBranch';
 import { DeleteTagModal } from './DeleteTagModal';
 import { CommitForm } from './CommitForm';
 import { generateMessage } from './generate';
@@ -598,6 +599,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const { data: remoteInfo } = useInvoke(() => getRemoteUrl(repoId), [repoId]);
   const webRemote = remoteInfo && remoteInfo.kind !== 'other' ? remoteInfo : null;
   const onRemote = (c: HistoryCommit) => !!data?.upstream?.name && commits.indexOf(c) >= data.upstream.ahead;
+  // Create Branch from Commit: New Branch's form with the commit as its base, at the menu's place.
+  const [askBranch, setAskBranch] = useState<{ commit: HistoryCommit; at: DOMRect } | null>(null);
   // Create Tag: any commit, checked out or not; the name (and a message) in a dialog.
   const [askTag, setAskTag] = useState<HistoryCommit | null>(null);
   const createTag = (c: HistoryCommit, tag: string, message: string) => {
@@ -1473,7 +1476,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
         />
       )}
       {commitMenu && !commitMenu.many && (
-        <Popover anchorRect={commitMenu.at} width={220} onClose={() => setCommitMenu(null)}>
+        <Popover anchorRect={commitMenu.at} width={240} onClose={() => setCommitMenu(null)}>
           <Menu aria-label={t('history.commitMenu', { sha: commitMenu.commit.shortSha })}>
             {commitMenu.commit.sha === tip && entry?.worktreePath && (
               <MenuItem
@@ -1510,6 +1513,18 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 }}
               >
                 {t('revert.menu')}
+              </MenuItem>
+            )}
+            {repoScan?.status === 'ok' && (
+              <MenuItem
+                icon="branch"
+                onHover={closeSubs}
+                onSelect={() => {
+                  setAskBranch({ commit: commitMenu.commit, at: commitMenu.at });
+                  setCommitMenu(null);
+                }}
+              >
+                {t('history.menuBranch')}
               </MenuItem>
             )}
             {entryRef && (
@@ -1667,6 +1682,14 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             </Popover>
           )}
         </Popover>
+      )}
+      {askBranch && repoScan && (
+        <NewBranchForm
+          scan={repoScan}
+          anchorRect={askBranch.at}
+          commit={askBranch.commit}
+          onClose={() => setAskBranch(null)}
+        />
       )}
       {askTag && (
         <TagModal

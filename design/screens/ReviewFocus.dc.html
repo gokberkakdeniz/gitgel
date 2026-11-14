@@ -1740,6 +1740,8 @@ class Component extends DCLogic {
           if (mi === 0 && me.wt) menuItems.push({ label: 'Amend Commit…', icon: 'edit', onSelect: function () { self.amendStart(M.e); } });
           if (mi === 0 && me.unpushed > 0 && me.wt) menuItems.push({ label: 'Undo Commit', icon: 'undo', onSelect: function () { self.undoCommit(M.e); } });
           if (me.wt) menuItems.push({ label: 'Revert Changes', icon: 'revert', onSelect: function () { self.setState({ menu: null }); self.revert(M.e, M.sha); } });
+          // Create Branch from Commit…: New Branch's form (V2) with the commit as its base.
+          menuItems.push({ label: 'Create Branch from Commit…', icon: 'branch', onSelect: close });
           menuItems.push({ label: 'Create Tag…', icon: 'tag', onSelect: function () { self.setState({ menu: null, modal: { kind: 'tag', e: M.e, sha: M.sha, name: '', message: '' } }); } });
           // Delete Tag…: asks first (several tags: the newest here; the app opens a picker beside the item).
           var dtags = me.commits[mi].tags || [];

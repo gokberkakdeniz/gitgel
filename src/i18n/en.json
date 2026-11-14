@@ -343,6 +343,7 @@
   "history.amendingPill": "amending",
   "history.amendTo": "Amend {$sha} on {$rev}",
   "history.menuCopySha": "Copy SHA",
+  "history.menuBranch": "Create Branch from Commit…",
   "history.menuCopyTags": ".input {$n :string} .match $n 1 {{Copy Tag}} * {{Copy Tags}}",
   "history.commitMenu": "{$sha} actions",
   "history.commitFiles": ".input {$n :string} .match $n 1 {{Commit 1 file}} * {{Commit {$d} files}}",

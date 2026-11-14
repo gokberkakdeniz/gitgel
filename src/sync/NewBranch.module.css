@@ -65,6 +65,11 @@
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
 }
 
+/* A commit as the base (Create Branch from Commit): not a picker. */
+.baseFixed {
+  cursor: default;
+}
+
 .baseIcon {
   flex-shrink: 0;
   color: var(--text-muted);

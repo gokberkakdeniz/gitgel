@@ -541,6 +541,7 @@ it was done within a topic.
 - [x] Create Tag…: the commit menu opens "Create a Tag" (name, optional message); `git tag` on that commit as a git action, annotated with a message, lightweight without; the tag stays local — 2026-11-14
 - [x] Stash asks only for the message: Changes' Stash All Changes… and a new Stash Changes… in the file menu (the picked files) open a modal with only the message; Stash… left Review's page menu and the entry / file picker dialog is gone — 2026-11-14
 - [x] Delete Tag…: the commit menu's item (a picker for several tags) asks first, with an option to delete the tag on the remote too; `git tag -d`, and `git push --delete` when the remote has it. Any tag can be deleted (GitHub Desktop only allows unpushed ones) — 2026-11-14
+- [x] Create Branch from Commit…: the commit menu opens New Branch's form with the commit as its base (the Base field shows the short SHA and is not a picker) — 2026-11-14
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked

@@ -3178,9 +3178,9 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     below the base line: subject `text.muted`, row opacity 0.7. With "Commit rows: One line"
     (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11
     `accent.text`, a 7ch column, wider for a longer SHA; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
-    muted; tooltip author · date); no avatar. Right-click on it (Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
+    muted; tooltip author · date); no avatar. Right-click on it (Hi10; a 240px menu): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
-    "Revert Changes" (`revert`, below), "Create Tag…" (`tag`, below), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
+    "Revert Changes" (`revert`, below), "Create Branch from Commit…" (`branch`, below), "Create Tag…" (`tag`, below), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
     chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`), "Copy Tags" (`copy`; "Copy Tag" for one; the names with spaces between; left out without a tag) and "Open Permalink" (`link`; the commit's page on the remote in the browser, as the header's SHA; only for a commit the branch's upstream has, on a GitHub, GitLab or Bitbucket remote). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -3271,6 +3271,11 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     Refused before running: the branch no longer has the commit, an operation in progress,
     another git action in the repository. On conflicts git stops, the toast fails with git's last
     line, and the entry shows the revert in progress (§15 "Operations in progress").
+  - **Create Branch from Commit** (GitHub Desktop's): on any commit, whether `rev` is checked
+    out or not. Opens New Branch's form (§15 "New branch", `NewBranchForm`) at the pointer with
+    the commit as its base: "Base" shows the short SHA (`history` icon, mono) and is not a
+    picker; the name, Check out, the checks and the run are New Branch's (`GITGEL_BASE` is the
+    commit). No base is stored for the branch.
   - **Create Tag** (GitHub Desktop's Create Tag…; `TagModal`): on any commit, whether `rev` is
     checked out or not. It opens "Create a Tag" (480px; sub `<repo> / <sha>` mono): a 36px mono
     `Input` "Name", a 3-row textarea "Message (optional)", Cancel and primary "Create Tag" (↵ in
