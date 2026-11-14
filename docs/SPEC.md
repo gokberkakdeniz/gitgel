@@ -219,7 +219,8 @@ gitgel/
 │  │            #   file row, stash section, diff view settings, page layout
 │  │            # Review/Review.tsx: the screen (BranchReview, ProjectReview, StashReview around BranchView),
 │  │            #   header.tsx (title, rename), banners.ts, rows.ts (its list rows), the commit form,
-│  │            #   Switch Branch, AmendModal, CherryPickMenu, SquashModal, TagModal and DeleteTagModal (§5, §16);
+│  │            #   Switch Branch, AmendModal, CherryPickMenu, SquashModal, TagModal, DeleteTagModal and
+│  │            #   ResetModal (§5, §16);
 │  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
 │  │            #   stage.ts: Stage / Unstage's queue and the rows moved before git confirms (§15 "Stage")
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashDialog (P4), StashRowMenu, StashTargetMenu
@@ -1894,6 +1895,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_push` | `entry: EntryRef, force: boolean` | `ScriptRun` |
 | `git_operation` | `entry: EntryRef, abort: boolean` | `ScriptRun` (§15 "Operations in progress") |
 | `git_revert` | `entry: EntryRef, sha` | `ScriptRun` (§16 "Revert Changes") |
+| `git_reset` | `entry: EntryRef, sha, tip` (the branch's newest commit as shown), `hard: boolean` | `ScriptRun` (§16 "Reset to Commit") |
 | `git_create_tag` | `entry: EntryRef, sha, name, message` (annotated when `message` is not empty) | `ScriptRun` (§16 "Create Tag") |
 | `check_new_tag` | `repoId, name` | `NewTagProblem \| null` (`badName`, `exists`) |
 | `git_delete_tag` | `entry: EntryRef, name, remote: boolean` (the tag on the remote too) | `ScriptRun` (§16 "Delete Tag") |
@@ -3180,7 +3182,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     `accent.text`, a 7ch column, wider for a longer SHA; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
     muted; tooltip author · date); no avatar. Right-click on it (Hi10; a 240px menu): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
-    "Revert Changes" (`revert`, below), "Create Branch from Commit…" (`branch`, below), "Create Tag…" (`tag`, below), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
+    "Reset to Commit…" (`history`, below), "Revert Changes" (`revert`, below), "Create Branch from Commit…" (`branch`, below), "Create Tag…" (`tag`, below), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
     chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`), "Copy Tags" (`copy`; "Copy Tag" for one; the names with spaces between; left out without a tag) and "Open Permalink" (`link`; the commit's page on the remote in the browser, as the header's SHA; only for a commit the branch's upstream has, on a GitHub, GitLab or Bitbucket remote). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -3263,6 +3265,22 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     Uncommitted lists them under Staged. When the form is empty, the commit's summary and description
     come back into it. Refused before running: HEAD is another commit by then, a root or merge
     commit, a commit on the remote, an operation in progress, another git action in the repository.
+  - **Reset to Commit** (GitHub Desktop's Reset to Commit…; `ResetModal`): on a commit under
+    the branch's newest one when `rev` is checked out in a worktree and no commit, amend or
+    operation is in progress; left out otherwise. It asks first: "Confirm Reset to Commit"
+    (`ConfirmModal`, 460px; the box names `<repo> / <branch>` with the `branch` icon and `<sha>
+    <subject>` with the `history` icon), the note `N commits leave the branch.` (not while
+    searching) and, when one of them is under the upstream line, `Some are on the remote: the
+    branch will need a force push.`, a `Checkbox` "Discard their changes" (off; "Discard their
+    changes and N uncommitted changes" when the worktree has some), Cancel (focused) and danger
+    "Reset". Runs `git reset -q --soft "$GITGEL_COMMIT"` in the worktree as a git action (script
+    id `git:reset`, name "Reset to <sha>", `undo` icon, toast “Resetting to <sha>…”, then “Reset
+    <rev> to <sha>”): the commits above it go and their changes stay staged, as Undo Commit's
+    (GitHub Desktop keeps them unstaged). With the option, `--hard`: their changes and the
+    uncommitted ones go too (untracked files stay). Refused before running: HEAD is no longer
+    the commit the list showed as newest, the commit is HEAD or not under it, an operation in
+    progress, another git action in the repository. Pushed commits leave the branch diverged, so
+    the diverged banner offers Force Push.
   - **Revert Changes** (GitHub Desktop's Revert Changes in Commit, shortened): on any commit
     when `rev` is checked out in a worktree and no commit, amend of it or operation is in
     progress; left out otherwise. Runs `git revert --no-edit "$GITGEL_COMMIT"` (`-m 1` for a merge

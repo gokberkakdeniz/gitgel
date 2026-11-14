@@ -195,6 +195,10 @@ export const gitSquash = (entry: EntryRef, shas: string[], summary: string, desc
 /** Cherry-Pick to: `git cherry-pick <sha>` in one of the repository's worktrees. */
 export const gitCherryPick = (repoId: string, sha: string, worktreePath: string) =>
   invoke<ScriptRun>('git_cherry_pick', { repoId, sha, worktreePath });
+/** Reset to Commit: the branch back to `sha` (`tip`: its newest commit as shown); the commits'
+ * changes stay staged, or with `hard` go, the uncommitted ones too. */
+export const gitReset = (entry: EntryRef, sha: string, tip: string, hard: boolean) =>
+  invoke<ScriptRun>('git_reset', { entry, sha, tip, hard });
 /** Create Tag: `git tag <name> <sha>`, annotated when `message` is not empty. */
 export const gitCreateTag = (entry: EntryRef, sha: string, name: string, message: string) =>
   invoke<ScriptRun>('git_create_tag', { entry, sha, name, message });

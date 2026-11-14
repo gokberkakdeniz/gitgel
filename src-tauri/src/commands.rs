@@ -702,6 +702,22 @@ pub async fn git_create_tag(
     .await
 }
 
+/// Reset to Commit: the entry's branch back to `sha`, its changes kept staged or, with `hard`,
+/// dropped.
+#[tauri::command]
+pub async fn git_reset(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    sha: String,
+    tip: String,
+    hard: bool,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::reset_to(state, entry, &sha, &tip, hard)
+    })
+    .await
+}
+
 /// Delete Tag: `git tag -d` of `name`, with `remote` on the remote too.
 #[tauri::command]
 pub async fn git_delete_tag(

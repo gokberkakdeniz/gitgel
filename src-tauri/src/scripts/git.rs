@@ -1210,6 +1210,85 @@ pub fn undo_commit(state: &AppState, entry: EntryRef, sha: &str) -> Result<Scrip
     )
 }
 
+/// Reset to Commit (SPEC §16 "Reset to Commit"): `git reset --soft <sha>` in the entry's worktree,
+/// so the commits above `sha` go and their changes stay staged; with `hard`, `git reset --hard`,
+/// which drops them and the uncommitted changes too. `tip` is the commit the menu showed as the
+/// branch's newest. Refused when HEAD is another commit by then, when `sha` is HEAD or not
+/// under it, or mid-operation.
+pub fn reset_to(
+    state: &AppState,
+    entry: EntryRef,
+    sha: &str,
+    tip: &str,
+    hard: bool,
+) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let full = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        if operation::read(&wt).is_some() || !operation::unmerged(&wt)?.is_empty() {
+            return Err(AppError::Invalid(format!(
+                "{} has an operation in progress.",
+                repo.label(tree)
+            )));
+        }
+        let commit = git2::Oid::from_str(sha)
+            .and_then(|oid| wt.find_commit(oid))
+            .map_err(|_| AppError::NotFound(format!("commit {sha}")))?
+            .id();
+        let head = wt
+            .head()
+            .and_then(|h| h.peel_to_commit())
+            .map_err(|_| AppError::Invalid("The branch has no commit.".into()))?
+            .id();
+        if head.to_string() != tip {
+            return Err(AppError::Invalid(
+                "The branch has a new commit; reset again.".into(),
+            ));
+        }
+        if head == commit || !wt.graph_descendant_of(head, commit).unwrap_or(false) {
+            return Err(AppError::Invalid(
+                "The branch has no commits above this one.".into(),
+            ));
+        }
+        commit.to_string()
+    };
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}reset"),
+            name: format!("Reset to {}", &full[..7]),
+            icon: "undo".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                Some(&tree.path.to_string_lossy()),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: reset_command(hard),
+            env: with_git_env(vec![("GITGEL_COMMIT".into(), full)]),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `git reset -q --soft "$GITGEL_COMMIT"` (`--hard`): only fixed text and a quoted variable.
+pub(super) fn reset_command(hard: bool) -> String {
+    let mode = if hard { "--hard" } else { "--soft" };
+    format!("git reset -q {mode} \"$GITGEL_COMMIT\"")
+}
+
 /// Revert Changes (SPEC §16): `git revert --no-edit <sha>` (`-m 1` for a merge commit) in
 /// the entry's worktree, a new commit that undoes it. Refused mid-operation or for a commit the
 /// branch does not have; a conflict stops git there, and the revert then shows on the entry (§15).
@@ -2518,6 +2597,18 @@ mod tests {
         assert!(remote.contains(r#"git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF""#));
         // One quoted string for the user's shell: no quote of its own inside.
         assert_eq!(remote.matches('\'').count(), 2);
+    }
+
+    #[test]
+    fn reset_commands_hold_no_values() {
+        assert_eq!(
+            reset_command(false),
+            r#"git reset -q --soft "$GITGEL_COMMIT""#
+        );
+        assert_eq!(
+            reset_command(true),
+            r#"git reset -q --hard "$GITGEL_COMMIT""#
+        );
     }
 
     #[test]

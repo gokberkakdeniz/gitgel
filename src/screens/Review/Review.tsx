@@ -50,6 +50,7 @@ import {
   gitCommit,
   gitCreateTag,
   gitDeleteTag,
+  gitReset,
   gitRevert,
   gitSquash,
   gitUndoCommit,
@@ -92,6 +93,7 @@ import { NewBranchForm } from '../../sync/NewBranch';
 import { DeleteTagModal } from './DeleteTagModal';
 import { CommitForm } from './CommitForm';
 import { generateMessage } from './generate';
+import { ResetModal } from './ResetModal';
 import { SquashModal } from './SquashModal';
 import { TagModal } from './TagModal';
 import { requestStage, requestStageLines, useStage, withMoves, type StageOp, type StageTo } from './stage';
@@ -593,6 +595,22 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     void startGitAction(t('revert.act', { sha }), t('revert.running', { sha }), () => gitRevert(entryRef, c.sha), {
       done: t('revert.done', { sha, rev }),
     });
+  };
+  // Reset to Commit: the checked-out branch back to a commit under its newest one; asks first.
+  const resettable = (c: HistoryCommit) =>
+    !!entry?.worktreePath && !entry.operation && !committing && !amending && !!tip && c.sha !== tip;
+  const [askReset, setAskReset] = useState<HistoryCommit | null>(null);
+  const resetTo = (c: HistoryCommit, hard: boolean) => {
+    if (!entryRef || !tip) return;
+    const sha = c.shortSha;
+    void startGitAction(
+      t('reset.act', { sha }),
+      t('reset.running', { sha }),
+      () => gitReset(entryRef, c.sha, tip, hard),
+      {
+        done: t('reset.done', { sha, rev }),
+      },
+    );
   };
   // Open Permalink: a commit the branch's remote has (below the upstream line), on a host whose
   // commit pages are known.
@@ -1503,6 +1521,18 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 {t('undo.menu')}
               </MenuItem>
             )}
+            {resettable(commitMenu.commit) && (
+              <MenuItem
+                icon="history"
+                onHover={closeSubs}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  setAskReset(commitMenu.commit);
+                }}
+              >
+                {t('reset.menu')}
+              </MenuItem>
+            )}
             {revertable(commitMenu.commit) && (
               <MenuItem
                 icon="revert"
@@ -1689,6 +1719,17 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           anchorRect={askBranch.at}
           commit={askBranch.commit}
           onClose={() => setAskBranch(null)}
+        />
+      )}
+      {askReset && (
+        <ResetModal
+          sub={`${repoName} / ${rev}`}
+          commit={askReset}
+          count={search || commits.indexOf(askReset) < 0 ? null : commits.indexOf(askReset)}
+          pushed={!search && !!data?.upstream?.name && commits.indexOf(askReset) > data.upstream.ahead}
+          dirty={entry?.uncommitted ?? 0}
+          onClose={() => setAskReset(null)}
+          onReset={(hard) => resetTo(askReset, hard)}
         />
       )}
       {askTag && (

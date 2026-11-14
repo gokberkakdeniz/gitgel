@@ -973,6 +973,15 @@ class Component extends DCLogic {
     this.setState({ E: r.E, modal: null });
     this.toast({ status: 'success', message: 'Deleted tag ' + m.tag });
   }
+  resetTo() {
+    var m = this.state.modal;
+    var r = this.mapE(m.e, function (x) {
+      var n = x.commits.map(function (c) { return c.sha; }).indexOf(m.sha);
+      x.commits.splice(0, n); x.unpushed = Math.max(0, x.unpushed - n);
+    });
+    this.setState(Object.assign({ E: r.E, modal: null }, this.selPart(r.e, m.sha)));
+    this.toast({ status: 'success', message: 'Reset ' + r.e.branch + ' to ' + m.sha });
+  }
   openSquash(id) {
     var e = this.entry(id), list = this.multiList(e, this.state.sel);
     if (!list) return;
@@ -1739,6 +1748,8 @@ class Component extends DCLogic {
         if (mi >= 0) {
           if (mi === 0 && me.wt) menuItems.push({ label: 'Amend Commit…', icon: 'edit', onSelect: function () { self.amendStart(M.e); } });
           if (mi === 0 && me.unpushed > 0 && me.wt) menuItems.push({ label: 'Undo Commit', icon: 'undo', onSelect: function () { self.undoCommit(M.e); } });
+          // Reset to Commit…: the branch back to a commit under its newest one; asks first.
+          if (mi > 0 && me.wt) menuItems.push({ label: 'Reset to Commit…', icon: 'history', onSelect: function () { self.setState({ menu: null, modal: { kind: 'reset', e: M.e, sha: M.sha, hard: false } }); } });
           if (me.wt) menuItems.push({ label: 'Revert Changes', icon: 'revert', onSelect: function () { self.setState({ menu: null }); self.revert(M.e, M.sha); } });
           // Create Branch from Commit…: New Branch's form (V2) with the commit as its base.
           menuItems.push({ label: 'Create Branch from Commit…', icon: 'branch', onSelect: close });
@@ -1807,6 +1818,14 @@ class Component extends DCLogic {
         md.setBody = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { body: ev.target.value }) }); };
         md.hasNote = !!MD.force; md.note = 'Some of these commits are on origin. Squashing them will require a force push.';
         md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Squash ' + MD.shas.length + ' Commits', variant: 'primary', disabled: !(MD.summary || '').trim(), onPress: function () { self.squash(); } }];
+      } else if (MD.kind === 'reset') {
+        // Confirm Reset to Commit: the branch and the commit, how many commits leave, and the option to discard their changes.
+        var rsShas = mE.commits.map(function (c) { return c.sha; }), rsN = rsShas.indexOf(MD.sha), rsC = mE.commits[rsN];
+        md.title = 'Confirm Reset to Commit'; md.hasList = true; md.list = [{ path: mE.repo + ' / ' + mE.branch }, { path: MD.sha + ' ' + rsC.subject }];
+        md.hasNote = true; md.note = (rsN === 1 ? '1 commit leaves the branch.' : rsN + ' commits leave the branch.') + (rsN > mE.unpushed ? ' Some are on the remote: the branch will need a force push.' : '');
+        md.hasCheck = true; md.checkLabel = mE.wip.length ? 'Discard their changes and ' + mE.wip.length + ' uncommitted ' + (mE.wip.length === 1 ? 'change' : 'changes') : 'Discard their changes'; md.checked = !!MD.hard;
+        md.toggleCheck = function () { self.setState({ modal: Object.assign({}, self.state.modal, { hard: !self.state.modal.hard }) }); };
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Reset', variant: 'danger', onPress: function () { self.resetTo(); } }];
       } else if (MD.kind === 'deleteTag') {
         // Confirm Delete Tag: the tag, and the option to delete it on the remote too.
         md.title = 'Confirm Delete Tag'; md.hasList = true; md.list = [{ path: mE.repo + ' / ' + MD.tag }];

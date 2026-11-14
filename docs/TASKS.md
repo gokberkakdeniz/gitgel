@@ -542,6 +542,8 @@ it was done within a topic.
 - [x] Stash asks only for the message: Changes' Stash All Changes… and a new Stash Changes… in the file menu (the picked files) open a modal with only the message; Stash… left Review's page menu and the entry / file picker dialog is gone — 2026-11-14
 - [x] Delete Tag…: the commit menu's item (a picker for several tags) asks first, with an option to delete the tag on the remote too; `git tag -d`, and `git push --delete` when the remote has it. Any tag can be deleted (GitHub Desktop only allows unpushed ones) — 2026-11-14
 - [x] Create Branch from Commit…: the commit menu opens New Branch's form with the commit as its base (the Base field shows the short SHA and is not a picker) — 2026-11-14
+- [x] Reset to Commit…: the commit menu's item on a commit under the newest one asks first; `git reset --soft` (the commits' changes stay staged, as Undo Commit), or `--hard` with "Discard their changes" — 2026-11-14
+  - note: soft chosen over GitHub Desktop's mixed, to match Undo Commit.
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked
