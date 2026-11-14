@@ -285,6 +285,9 @@ export interface FileActions {
    * with its worktree: a project review's picks can span repositories with the same paths. */
   files: { file: FileChange; folder: string | null }[];
   onDiscard: () => void;
+  /** Stash Changes…: asks for the message. Left out when git cannot stash there (merge
+   * conflicts, an operation in progress). */
+  onStash?: () => void;
   /** Uncommitted's sections, with several files: Stage / Unstage Selected Files, whichever the
    * picked rows allow. */
   onStage?: { stage?: () => void; unstage?: () => void };
@@ -439,7 +442,7 @@ export function FileRow({
   );
 }
 
-/** Uncommitted's file menu (Hi8, D12; GitHub Desktop's texts): Discard, Include / Exclude (Review,
+/** Uncommitted's file menu (Hi8, D12; GitHub Desktop's texts): Discard, Stash, Include / Exclude (Review,
  * several files), the paths, then the open items for the files still on disk. */
 function UncommittedItems({
   actions,
@@ -450,7 +453,7 @@ function UncommittedItems({
   at: () => { line: number; column: number } | null;
   onDone: () => void;
 }) {
-  const { files, onDiscard, onStage } = actions;
+  const { files, onDiscard, onStash, onStage } = actions;
   const one = files.length === 1;
   const onDisk = files.flatMap((x) =>
     x.folder && x.file.kind !== 'D' ? [{ folder: x.folder, path: x.file.path }] : [],
@@ -466,6 +469,16 @@ function UncommittedItems({
       >
         {one ? t('review.discardOne') : t('review.discardN', { n: String(files.length) })}
       </MenuItem>
+      {onStash && (
+        <MenuItem
+          onSelect={() => {
+            onDone();
+            onStash();
+          }}
+        >
+          {one ? t('review.stashOne') : t('review.stashN', { n: String(files.length) })}
+        </MenuItem>
+      )}
       {!one && (onStage?.stage || onStage?.unstage) && (
         <>
           <MenuDivider />

@@ -3,15 +3,11 @@
 Things to look at later, so they are not forgotten. Not tasks yet: when one is decided, it becomes
 a task in `docs/TASKS.md` (or is dropped) and leaves this file.
 
-- **Stash All Changes… in the Changes header's menu** (2026-10-15). It opens the same Stash dialog
-  as Review's ⋮ › Stash, so it is a duplicate; it is there because GitHub Desktop has it beside
-  Discard All Changes…. The menu opens from the header's ⋮ or a right-click, and the dialog where
-  the menu was (`atPointer`). Options: remove it, or keep both. Kept for now.
 - **Menu items still shown disabled** (2026-10-16). SPEC §7 now leaves out items that cannot be
   used; the ones disabled before that rule were kept. While a git action runs: the Sync group
   (Fetch, Pull, Push, Force Push, Rebase), Continue / Abort, Delete Branch, Checkout, the Remote
   Branches menu (hiding these makes them vanish for a few seconds). By state: Amend Commit…
-  (a commit running or mid-operation), Discard All Changes (no files), Stash All Changes / Stash
+  (a commit running or mid-operation), Discard All Changes (no files), Stash All Changes
   (nothing to stash), Project's missing-folder item, History's item disabled without a scan.
   Proposal: keep the first group disabled, leave out the second.
 - **Tags** (2026-10-17). Tags are read (base choices in the Base menu, pills on Review's commit

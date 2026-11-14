@@ -401,6 +401,9 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <textarea aria-label="Description" placeholder="Description" value="{{md.body}}" onChange="{{md.setBody}}" style="height: 132px; box-sizing: border-box; padding: 9px 12px; resize: none; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-family: inherit; font-size: 12px; line-height: 1.5; outline: none"></textarea>
 </div>
 </sc-if>
+<sc-if value="{{md.isStashMsg}}" hint-placeholder-val="{{false}}">
+<input aria-label="Message" placeholder="Message" value="{{md.message}}" onChange="{{md.setMessage}}" style="height: 32px; box-sizing: border-box; padding: 0 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none">
+</sc-if>
 <sc-if value="{{md.isTag}}" hint-placeholder-val="{{false}}">
 <div style="display: flex; flex-direction: column; gap: 8px">
 <input aria-label="Name" placeholder="Name" value="{{md.name}}" onChange="{{md.setName}}" style="height: 36px; box-sizing: border-box; padding: 0 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none">
@@ -995,14 +998,18 @@ class Component extends DCLogic {
     }
     this.setState(Object.assign({ E: r.E, modal: null, menu: null }, part));
   }
-  stashAll(id) {
-    var self = this, e = this.entry(id), n = e.wip.length, c0 = e.commits[0];
-    var nst = { id: 'n' + (++this.tid), e: id, age: 'now', msg: 'WIP on ' + e.branch + (c0 ? ': ' + c0.sha + ' ' + c0.subject : ''),
-      files: e.wip.map(function (f) { return { k: f.k, name: f.name, dir: f.dir, add: f.nu ? f.nu.tot[0] : f.add, del: f.nu ? f.nu.tot[1] : f.del, dk: f.dk || 'wip' }; }) };
-    var r = this.mapE(id, function (x) { x.wip = []; });
+  // Stash Changes: every uncommitted file (paths null) or the picked ones, under the message
+  // (empty: git's own "WIP on …").
+  stashAll(id, paths, message) {
+    var self = this, e = this.entry(id), c0 = e.commits[0];
+    var mine = function (f) { return !paths || paths.indexOf(self.pathOf(f)) >= 0; };
+    var taken = e.wip.filter(mine), n = taken.length;
+    var nst = { id: 'n' + (++this.tid), e: id, age: 'now', msg: (message || '').trim() || 'WIP on ' + e.branch + (c0 ? ': ' + c0.sha + ' ' + c0.subject : ''),
+      files: taken.map(function (f) { return { k: f.k, name: f.name, dir: f.dir, add: f.nu ? f.nu.tot[0] : f.add, del: f.nu ? f.nu.tot[1] : f.del, dk: f.dk || 'wip' }; }) };
+    var r = this.mapE(id, function (x) { x.wip = x.wip.filter(function (f) { return !mine(f); }); });
     this.setState({ stashes: [nst].concat(this.state.stashes), stashOpen: true });
     var part = this.state.sel.e === id && this.state.sel.row === 'wip' ? this.selPart(r.e, this.firstRow(r.e)) : {};
-    this.setState(Object.assign({ E: r.E, menu: null }, part));
+    this.setState(Object.assign({ E: r.E, menu: null, modal: null }, part));
     this.toast({ status: 'success', message: 'Stashed ' + n + (n === 1 ? ' change' : ' changes') + ' from ' + e.branch });
   }
   applyStash(sid, pop) {
@@ -1657,7 +1664,6 @@ class Component extends DCLogic {
         var meOp = OP && OP.e === me.id && OP.kind === 'rebase';
         var meUn = meOp && Object.keys(OP.files).some(function (k) { return OP.files[k] === 'unresolved'; });
         if (branchScope) branchItems.push({ label: 'Switch Branch…', icon: 'branch', kbd: '⇧⌘B', onSelect: close });
-        if (me && me.wip.length && me.wt && !meOp) branchItems.push({ label: 'Stash…', icon: 'package', onSelect: function () { self.stashAll(me.id); } });
         branchItems.push({ label: 'Change Base…', icon: 'branch', sub: 'base: ' + me.base, onSelect: function () { self.setState({ menu: Object.assign({}, self.state.menu, { kind: 'base' }) }); } });
         if (meOp) {
           if (!meUn) branchItems.push({ label: 'Continue Rebase', icon: 'arrow-right', onSelect: function () { self.endOp(false); } });
@@ -1689,11 +1695,12 @@ class Component extends DCLogic {
           { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }, { label: 'Open in Terminal', app: 'terminal', onSelect: close }];
       } else if (M.kind === 'wip') {
         menuLabel = 'Uncommitted Options';
-        if (me.wip.length) menuItems = [{ label: 'Stash All Changes…', icon: 'package', onSelect: function () { self.stashAll(M.e); } },
+        if (me.wip.length) menuItems = [{ label: 'Stash All Changes…', icon: 'package', onSelect: function () { self.setState({ menu: null, modal: { kind: 'stash', e: M.e, paths: null, message: '' } }); } },
           { label: 'Discard All Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discardAll', e: M.e } }); } }];
       } else if (M.kind === 'file') {
         menuLabel = 'File Options';
-        if (M.row === 'wip') menuItems = [{ label: 'Discard Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discard', e: M.e, paths: [M.path], part: M.part } }); } }, { kind: 'sep' },
+        if (M.row === 'wip') menuItems = [{ label: 'Discard Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discard', e: M.e, paths: [M.path], part: M.part } }); } },
+          { label: 'Stash Changes…', icon: 'package', onSelect: function () { self.setState({ menu: null, modal: { kind: 'stash', e: M.e, paths: [M.path], message: '' } }); } }, { kind: 'sep' },
           { label: 'Copy File Path', icon: 'copy', onSelect: close }, { label: 'Copy Relative File Path', icon: 'copy', onSelect: close }, { kind: 'sep' },
           { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }];
         else {
@@ -1761,7 +1768,7 @@ class Component extends DCLogic {
     if (MD) {
       var mE = this.entry(MD.e);
       var closeM = function () { self.setState({ modal: null }); };
-      md = { title: '', hasSub: false, sub: '', hasText: false, text: '', hasList: false, list: [], isSquash: false, isTag: false, hasError: false, error: '', isOutput: false, hasNote: false, note: '', buttons: [], width: 460 };
+      md = { title: '', hasSub: false, sub: '', hasText: false, text: '', hasList: false, list: [], isSquash: false, isStashMsg: false, isTag: false, hasError: false, error: '', isOutput: false, hasNote: false, note: '', buttons: [], width: 460 };
       if (MD.kind === 'discard') {
         md.title = 'Confirm Discard Changes'; md.hasText = true; md.text = 'Are you sure you want to discard all changes to:';
         md.hasList = true; md.list = MD.paths.map(function (p) { return { path: p }; });
@@ -1786,6 +1793,12 @@ class Component extends DCLogic {
         md.setBody = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { body: ev.target.value }) }); };
         md.hasNote = !!MD.force; md.note = 'Some of these commits are on origin. Squashing them will require a force push.';
         md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Squash ' + MD.shas.length + ' Commits', variant: 'primary', disabled: !(MD.summary || '').trim(), onPress: function () { self.squash(); } }];
+      } else if (MD.kind === 'stash') {
+        // Stash Changes: only the message is asked.
+        md.title = 'Stash Changes'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch; md.isStashMsg = true; md.width = 480;
+        md.message = MD.message;
+        md.setMessage = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { message: ev.target.value }) }); };
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Stash', variant: 'primary', onPress: function () { self.stashAll(MD.e, MD.paths, MD.message); } }];
       } else if (MD.kind === 'tag') {
         // Create a Tag: a name and an optional message (annotated with one, lightweight without).
         var tgName = (MD.name || '').trim();

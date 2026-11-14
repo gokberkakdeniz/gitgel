@@ -32,7 +32,7 @@ import {
   type SyncTarget,
 } from '../../sync/sync';
 import { StashBar } from '../../stash/StashBar';
-import { useStashAction } from '../../stash/StashAction';
+import { StashDialog, stashPush } from '../../stash/StashDialog';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
@@ -792,6 +792,10 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     const keep = list.filter((f) => !head.has(f.path) && staged.some((x) => x.path === f.path)).map((f) => f.path);
     askDiscard({ targets: [targetOf(entry, list, keep)], all });
   };
+  // Stash Changes (P4): all of Uncommitted (`files` null) or the picked files; the dialog asks only
+  // for the message. git cannot stash merge conflicts.
+  const [askStash, setAskStash] = useState<{ files: FileChange[] | null } | null>(null);
+  const canStash = !!entry?.worktreePath && !entry.operation && entry.conflicts === 0 && wipFiles.length > 0;
   const wipActions = (row: WipRow): FileActions => {
     const ids = picks.targets(row.id);
     const rows = wipRows.filter((x) => ids.includes(x.id));
@@ -803,6 +807,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     return {
       files: shown.map((x) => ({ file: x.file, folder })),
       onDiscard: () => discard(rows),
+      onStash: canStash ? () => setAskStash({ files: shown.map((x) => x.file) }) : undefined,
       onStage: off
         ? undefined
         : {
@@ -1134,7 +1139,6 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const diverged = divergedBanner(syncTarget);
   // Its buttons wait while a git action runs in the repository (one at a time).
   const gitBusy = useGitActionRunning(repoId);
-  const stashAction = useStashAction(wipReview?.groups ?? []);
   // Change Base… (⋮) opens the Base menu where the ⋮ was.
   const [baseMenu, setBaseMenu] = useState<DOMRect | null>(null);
   const [baseSaved, setBaseSaved] = useState<string | null>(null);
@@ -1283,7 +1287,6 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                   {t('history.switchBranch')}
                 </MenuItem>
               )}
-              {entry?.worktreePath && !entry.operation && stashAction.item(close, anchor)}
               {entry && (
                 <MenuItem
                   icon={<BranchIcon size={14} />}
@@ -1353,7 +1356,13 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           );
         }}
       </PageMenu>
-      {stashAction.dialog}
+      {askStash && entry && (
+        <StashDialog
+          push={stashPush(entry, wipFiles, askStash.files)}
+          sub={`${repoName} / ${rev}`}
+          onClose={() => setAskStash(null)}
+        />
+      )}
       {baseMenu && entry && (
         <BaseMenu
           repoId={repoId}
@@ -1390,10 +1399,10 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           <Menu aria-label={t('history.wipActions')}>
             <MenuItem
               icon="package"
-              disabled={!stashAction.open}
+              disabled={!canStash}
               onSelect={() => {
                 setWipMenu(null);
-                stashAction.open?.(wipMenu);
+                setAskStash({ files: null });
               }}
             >
               {t('history.stashAll')}

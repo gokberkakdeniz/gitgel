@@ -51,7 +51,7 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 - UI copy is English and matches the reference screens exactly (singular/plural included). It
   follows the macOS HIG: buttons, menu items and list actions use title case with a verb
   first ("Copy Branch Name", "Review Changes"); an item that needs more input before it can
-  finish ends in "…" ("Add Repository…", "Change Base…", "Stash…", "Delete Project…",
+  finish ends in "…" ("Add Repository…", "Change Base…", "Stash Changes…", "Delete Project…",
   "Import…", "Export…", "Locate…"); inline actions that finish at once, and items that open a
   submenu, do not ("Rename", "Copy", "Fetch", "Push", "Rebase on <base>", "Apply to"). Turkish
   menu items use title case too ("Dal Adını Kopyala"). Progress text keeps its "…" ("Scanning
@@ -222,7 +222,7 @@ gitgel/
 │  │            #   Switch Branch, AmendModal, CherryPickMenu, SquashModal and TagModal (§5, §16);
 │  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
 │  │            #   stage.ts: Stage / Unstage's queue and the rows moved before git confirms (§15 "Stage")
-│  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashRowMenu, StashTargetMenu
+│  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashDialog (P4), StashRowMenu, StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
 │  ├─ discard/  # §15 discard: discard.ts (asks or runs, Settings › Prompts), DiscardModal (Confirm
 │  │            # Discard Changes), picks.ts (⌘ / ⇧-click picking of Uncommitted's files)
@@ -810,8 +810,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   - The page menu (⋮, `PageMenu`):
     - Project scope, in two labelled parts (`MenuLabel`): **Project**: "Refresh" (full rescan),
       "Edit Project" (`pencil`; the project page, going back to it when Review came from
-      there); divider; **Branch** (the open entry): "Stash…" (§15; checked out, with
-      uncommitted files, no operation in progress), "Change Base…" (`branch`, sub `base <ref>`;
+      there); divider; **Branch** (the open entry): "Change Base…" (`branch`, sub `base <ref>`;
       opens the Base menu at the ⋮), "Rebase on <base>" (§15 "Sync"; mid-operation "Continue
       <op>" (when no file has markers) and "Abort <op>…" in its place, §15 "Operations in
       progress"), "Copy Branch Name", divider, the open items, the Scripts group (menu
@@ -1118,7 +1117,7 @@ outside or leaving the page closes it (`src/commands/`).
 - Screens add their rows with `useCommandSource` (`src/commands/registry.ts`), read when the
   palette opens; the app's own are in `global.ts`, the branch's in `branch.ts`, which reuse the
   menus' rules (`syncState`, `rebaseBase`, `canCheckout`, `canDeleteBranch`, `branchScripts`).
-  Not in the palette yet: Stash…, Change Base… and Fetch of a whole project.
+  Not in the palette yet: Change Base… and Fetch of a whole project.
 
 ### Settings (`Settings.dc.html`)
 
@@ -1352,7 +1351,7 @@ open.
 - **P · Stashes.** Each repo band on Branches lists its stash stack (P1); a stash opens the
   stash review (P3). Project and branch reviews list the stashes taken on their branches under
   the files (P2). Picking one shows what it holds, against the commit it was taken on. Stash
-  stashes the review's entries (P4); Apply / Pop pick a worktree (P5); Drop asks first (P6).
+  stashes an entry's uncommitted changes, all or the picked files (P4); Apply / Pop pick a worktree (P5); Drop asks first (P6).
   Each runs git like a script: a toast, and its output on click.
 - **J · Open elsewhere.** The ⋯ menu of an entry (Project, Review) or
   row (Branches) opens its worktree folder in Finder or in an installed editor or terminal; a
@@ -2583,10 +2582,6 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1, P5) and the Review pa
   danger "Drop…" (`⌫`). Apply to and Pop to open the worktree picker (P5) beside the item on
   hover or click (→ from the keyboard, ← back), Drop opens the confirmation (P6). Popovers follow
   their anchor when the page scrolls or resizes (scroll listener and `ResizeObserver`).
-- **Page menu** (Review, project and branch scope): "Stash…" (`package`) first in
-  the ⋮ menu; it opens the Stash changes dialog (P4) under the ⋮ button. Left out while no
-  checked-out entry has uncommitted changes; disabled, tooltip "Resolve the merge conflicts first;
-  git cannot stash them", while every entry with changes has conflicts.
 - **Review list** (P2): after the groups (and the "not reviewable" line), under a 1px `bg.hover`
   rule: section label `Stashes of this project · N` (branch scope `Stashes of this branch · N`),
   the stashes taken on one of the review's branches (project order). Rows (padding 6px 8px,
@@ -2629,22 +2624,12 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
   else "The stash list changed. Pick the stash again." (and the repo is rescanned); one git
   action at a time per repository, else "Another git action is running in <repo>." A refused
   action shows a failed toast `“<name>” could not start` with that text.
-- **Stash changes** (P4, "Stash" in Review's page menu): a 420px popover under the
-  button, padding 16, gap 12: serif 18px "Stash changes"; "In" (12px/500) and one group per entry
-  of the review that is checked out, in review order. The entry row (26px): a `Checkbox` (on when
-  every file is picked, mixed with a dash when some are, off with none; a click picks all or
-  none), repo 12px/600 `text.strong`, mono 11 branch, then on the right a 22px button `N files ›`
-  (`k of N files` when only some are picked; chevron down while open; tooltip "Pick files" /
-  "Hide files") that shows the entry's uncommitted files under it; "no changes" and disabled when
-  it has none; with merge conflicts, disabled with a danger `N conflicts` (tooltip "Resolve its
-  merge conflicts first; git cannot stash them."), as git refuses to stash then. File rows (26px, indent 24): `Checkbox`, kind badge, mono 12 `text.strong` name,
-  mono 11 `text.faint` folder as in Review (`· untracked`, `← old path`). Every file starts
-  picked; the files of a review with one entry start shown. Entries that are not checked out are
-  not listed. "Message" `Input` 32px, focused (empty: git writes its own "WIP on <branch>: …"). A
-  12px muted note: "One stash per entry, same message." plus, for each repo with 2+ entries with
-  files picked, "Both are in <repo>, so its stack gets 2 new stashes." (3+: "N are in <repo>, so
-  its stack gets N new stashes."). Footer: Cancel and primary "Stash N entries ↵" ("Stash 1 entry
-  ↵"; N = entries with a file picked), disabled with none. ↵ stashes, Esc cancels.
+- **Stash changes** (P4; `StashDialog`): from Changes' "Stash All Changes…" (every uncommitted
+  file of the entry) or a file's "Stash Changes…" (that file, or the picked ones; below). It asks
+  only for the message: a `Modal` (480px, 160px from the top; `ModalHeader` "Stash Changes", sub
+  `<repo> / <branch>` mono, ✕) with a 36px `Input` "Message", focused (empty: git writes its own "WIP on <branch>: …"),
+  Cancel and primary "Stash ↵". ↵ stashes, Esc cancels. Not offered for an entry with merge
+  conflicts (git refuses to stash them) or an operation in progress.
   One git action "Stash changes" for those entries, one after another, stopping at the first
   failure: `git -C "$GITGEL_FOLDER_1" stash push [--include-untracked] [--message
   "$GITGEL_MESSAGE"] [-- "$GITGEL_PATH_1_1" …] && git -C "$GITGEL_FOLDER_2" …`, run in the first
@@ -2690,7 +2675,9 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   (discarded, committed) leave them too. Listed in Settings › Shortcuts ("Pick files").
 - **File menu** (right-click an Uncommitted file; deleted files too): on a picked file it acts on
   every picked one, on any other file on that file alone. A 230px menu: danger "Discard
-  Changes…" (several: "Discard N Selected Changes…"); with several files, a divider
+  Changes…" (several: "Discard N Selected Changes…"); "Stash Changes…" (several: "Stash N
+  Selected Changes…"; asks for the message (P4) and stashes only those files;
+  left out with merge conflicts or an operation in progress); with several files, a divider
   and "Stage Selected Files" (`plus`, when some are in Unstaged) / "Unstage Selected Files"
   (`remove`, when some are in Staged), left out while a commit or a stage runs (§15 "Stage"); a
   divider, "Copy File Path" (the absolute path; several: "Copy
@@ -2700,8 +2687,7 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   with the same paths copy and open the right files. A commit's or a stash's files have the two copy items, then
   the open items after a divider (none for a deleted file).
 - **Uncommitted row menu** (Review, the Changes header's ⋮ or a right-click on it, while there are uncommitted
-  files; 230px, under the ⋮ or at the pointer): "Stash All Changes…" (`package`; opens Stash (P4) where the
-  menu was, disabled when nothing can be stashed), then danger "Discard All Changes…" (`trash`).
+  files; 230px, under the ⋮ or at the pointer): "Stash All Changes…" (`package`; asks for the message (P4), disabled when nothing can be stashed), then danger "Discard All Changes…" (`trash`).
 - **Confirm Discard Changes** (`Modal` 480px, 160px from the top): `ModalHeader` "Confirm Discard
   Changes" with ✕ ("Confirm Discard All Changes" for Discard All Changes); a body (padding 4px
   24px 22px, gap 16) with a 28px `warning` icon (stroke 1.6, `warning`) beside a column (gap 12):
