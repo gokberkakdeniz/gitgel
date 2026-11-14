@@ -473,6 +473,7 @@ it was done within a topic.
 - [x] Review: the Uncommitted card is a "Changes · N" header (`0` when clean) with its Staged / Unstaged files always listed, and a "Commits" header above the rows; both fold — 2026-10-20
 - [x] The file bar's path and compare label are selectable, so they can be copied — 2026-11-10
 - [x] Review's Changes header has a ⋮ for its menu, which only a right-click opened; Stash All Changes… is first, Discard All Changes… second with a `trash` icon — 2026-11-14
+- [x] Staged / Unstaged show their count beside the label, as Changes does, instead of at the row's right end — 2026-11-14
 
 ### Git actions
 - [x] Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree

@@ -2168,6 +2168,7 @@ function FileList({
             className={open ? parts.sectionChevron : `${parts.sectionChevron} ${parts.sectionShut}`}
           />
           <span className={parts.sectionLabel}>{t(sec === 's' ? 'history.staged' : 'history.unstaged')}</span>
+          <span className={parts.sectionPill}>{formatCount(stage.counts[sec])}</span>
         </button>
         {stage.counts[sec] > 0 && (
           <button
@@ -2181,7 +2182,6 @@ function FileList({
             <Icon name={sec === 's' ? 'minus' : 'plus'} size={14} />
           </button>
         )}
-        <span className={parts.sectionPill}>{formatCount(stage.counts[sec])}</span>
       </div>
     );
   };
