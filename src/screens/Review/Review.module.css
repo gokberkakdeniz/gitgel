@@ -255,6 +255,38 @@
   text-overflow: ellipsis;
 }
 
+/* Several tags: the newest one's pill with a second pill's edge behind it. */
+.tagStack {
+  position: relative;
+  display: flex;
+  padding-right: 4px;
+}
+
+.tagStack::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+}
+
+.tagStack > * {
+  position: relative;
+}
+
+/* A commit's tags, under the stack while hovered. */
+.moreTags {
+  gap: 2px;
+  padding: 6px 10px;
+  max-width: 320px;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
 .meta,
 .metaLine {
   font-family: var(--font-mono);

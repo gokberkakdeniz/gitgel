@@ -2084,7 +2084,7 @@ function ListRow({
               {fromBranch[c.sha]}
             </Pill>
           )}
-          <TagPills tags={c.tags} first />
+          <TagPills tags={c.tags} />
         </>
       );
       const age = c.committedAt ? ageTitle(c.committedAt) : undefined;
@@ -2303,23 +2303,40 @@ function ShaLink({ repoId, sha, short }: { repoId: string; sha: string; short: s
   );
 }
 
-/** A commit's tags (§16), as neutral mono pills on the right of its line. `first`: only the
- * first one and `+N` for the rest (a list row). */
-function TagPills({ tags, first }: { tags: string[]; first?: boolean }) {
+/** A commit's tags (§16) on the right of its line (a list row, the commit's header): the newest
+ * one as a neutral mono pill. With more, a second pill's edge shows behind it (GitHub Desktop's
+ * stack) and hovering lists them all under it. Not a `title`: the row has one (the commit's
+ * message), and macOS keeps showing that one. */
+function TagPills({ tags }: { tags: string[] }) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
   if (!tags.length) return null;
-  const shown = first ? tags.slice(0, 1) : tags;
-  const rest = tags.length - shown.length;
+  if (tags.length === 1)
+    return (
+      <span className={styles.tags}>
+        <Pill tone="neutral" size="sm" mono title={tags[0]} className={styles.tag}>
+          {tags[0]}
+        </Pill>
+      </span>
+    );
   return (
     <span className={styles.tags}>
-      {shown.map((tag) => (
-        <Pill key={tag} tone="neutral" size="sm" mono title={tag} className={styles.tag}>
-          {tag}
+      <span
+        className={styles.tagStack}
+        // Empty: the row's tooltip stays away while the list shows.
+        title=""
+        onMouseEnter={(e) => setRect(e.currentTarget.getBoundingClientRect())}
+        onMouseLeave={() => setRect(null)}
+      >
+        <Pill tone="neutral" size="sm" mono aria-label={tags.join(', ')} className={styles.tag}>
+          {tags[0]}
         </Pill>
-      ))}
-      {rest > 0 && (
-        <Pill tone="neutral" size="sm" mono title={tags.slice(1).join('\n')}>
-          +{formatCount(rest)}
-        </Pill>
+      </span>
+      {rect && (
+        <Popover anchorRect={rect} alignRight className={styles.moreTags} onClose={() => setRect(null)}>
+          {tags.map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
+        </Popover>
       )}
     </span>
   );

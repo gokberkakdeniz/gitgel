@@ -3180,8 +3180,11 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     words, upper case), 10px/600 `text.strong` on `bg.avatar`; an author whose name contains
     `[bot]` gets "BOT" in `text.muted` on `bg.band` with a 1px dashed `border.strong`. Then 13px
     `text.strong` subject (ellipsis) with an outline sm pill "merge" for a merge commit and a
-    neutral mono sm pill for the first tag on it (annotated tags peeled, sorted; at most 120px,
-    ellipsis) and `+N` for the others (tooltip: their names) on the right of the line; line 2
+    neutral mono sm pill for the newest tag on it (annotated tags peeled; by an annotated tag's
+    date or a lightweight one's ref file's, packed lightweight ones last by name; at most 120px,
+    ellipsis); with more tags a second pill's edge shows 4px behind it on the right
+    (`border.strong`; GitHub Desktop's stack) and hovering lists them all under it (mono 11, one
+    per line, at once; not a tooltip, since the row has its own) on the right of the line; line 2
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
     below the base line: subject `text.muted`, row opacity 0.7. With "Commit rows: One line"
     (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11
@@ -3279,9 +3282,6 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     Refused before running: the branch no longer has the commit, an operation in progress,
     another git action in the repository. On conflicts git stops, the toast fails with git's last
     line, and the entry shows the revert in progress (§15 "Operations in progress").
-  - **Cherry-Pick to** (Hi11; `CherryPickMenu`): opens a 280px picker beside the item
-    on hover or click (→ from the keyboard, ← back), like Apply to (P5): one item per
-    checked-out entry of the repository but the one History shows (scan
   - **Create Tag** (GitHub Desktop's Create Tag…; `TagModal`): on any commit, whether `rev` is
     checked out or not. It opens "Create a Tag" (480px; sub `<repo> / <sha>` mono): a 36px mono
     `Input` "Name", a 3-row textarea "Message (optional)", Cancel and primary "Create Tag" (↵ in
@@ -3294,6 +3294,9 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     tag <name>…”, then “Created tag <name> on <sha>”); the commit row then gets its pill. The tag
     stays local: tags are not pushed with the branch. Refused before running: a bad or taken
     name, a commit the repository does not have, another git action in the repository.
+  - **Cherry-Pick to** (Hi11; `CherryPickMenu`): opens a 280px picker beside the item
+    on hover or click (→ from the keyboard, ← back), like Apply to (P5): one item per
+    checked-out entry of the repository but the one History shows (scan
     order; one with an operation in progress is left out): `branch` icon, the branch (short SHA
     when detached) and under it the folder (`~/…`), nothing else; each on one line, ending in
     "…" when long. A pick
@@ -3342,7 +3345,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
   commit stays when it is still listed, else Uncommitted or the newest is picked. Search picks the
   first match.
 - **Pane** : a commit header (padding 14px 18px, bottom border `border`, gap 8):
-  15px/600 `text.strong` subject (selectable) with a pill per tag on the right (at most 120px each, ellipsis); the body (13px, line-height 1.5, `text.muted`, `white-space:
+  15px/600 `text.strong` subject (selectable) with its tags on the right as on its row (the newest one's pill, stacked when there are more, the list on hover); the body (13px, line-height 1.5, `text.muted`, `white-space:
   pre-wrap`, max-width 720px; left out when empty; selectable); mono 11 muted meta (selectable): an 18px avatar, the author
   (`text.body`), `·` the committer time (`today 11:42`, `yesterday 11:42`, `Oct 2, 11:42`, `Oct 2,
   2025`), `·` the short SHA (`accent.text`, selectable; a click opens the commit on the remote when the repo
