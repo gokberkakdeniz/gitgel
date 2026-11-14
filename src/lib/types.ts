@@ -205,6 +205,8 @@ export interface BranchLoss {
   lost: number; // its own remote-tracking branch kept
   lostWithRemote: number; // its remote branch deleted too
 }
+/** What stops Create Tag (`check_new_tag`). */
+export type NewTagProblem = 'badName' | 'exists';
 /** What stops New Branch (`check_new_branch`). */
 export type NewBranchProblem = 'badName' | 'exists' | 'badFolder' | 'folderNotEmpty' | 'mainBusy' | 'cannotBring';
 /** Where New Branch checks the branch out: a new linked worktree, the repository folder (its

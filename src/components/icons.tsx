@@ -431,6 +431,16 @@ export function RevertIcon({ size = 14, className, strokeWidth: sw }: IconProps)
   );
 }
 
+/** A tag: a label with its hole. */
+export function TagIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
+      <path d="M3 4.5V11a2 2 0 0 0 .6 1.4l8 8a2 2 0 0 0 2.8 0l6-6a2 2 0 0 0 0-2.8l-8-8A2 2 0 0 0 11 3H4.5A1.5 1.5 0 0 0 3 4.5Z" />
+      <path d="M7.5 7.5h.01" />
+    </Svg>
+  );
+}
+
 export function DownloadIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   return (
     <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
@@ -588,6 +598,7 @@ const ICONS = {
   trash: TrashIcon,
   undo: UndoIcon,
   revert: RevertIcon,
+  tag: TagIcon,
   history: HistoryIcon,
   pin: PinIcon,
   download: DownloadIcon,

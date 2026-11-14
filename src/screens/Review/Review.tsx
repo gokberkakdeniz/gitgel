@@ -48,6 +48,7 @@ import {
   getStashChanges,
   generateMessageStart,
   gitCommit,
+  gitCreateTag,
   gitRevert,
   gitSquash,
   gitUndoCommit,
@@ -89,6 +90,7 @@ import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
 import { CommitForm } from './CommitForm';
 import { generateMessage } from './generate';
 import { SquashModal } from './SquashModal';
+import { TagModal } from './TagModal';
 import { requestStage, requestStageLines, useStage, withMoves, type StageOp, type StageTo } from './stage';
 import { SwitchBranchDialog } from './SwitchBranch';
 import { historyRows, initials, isBot, lineRows, whenLabel, type HistoryRow } from './rows';
@@ -588,6 +590,17 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     void startGitAction(t('revert.act', { sha }), t('revert.running', { sha }), () => gitRevert(entryRef, c.sha), {
       done: t('revert.done', { sha, rev }),
     });
+  };
+  // Create Tag: any commit, checked out or not; the name (and a message) in a dialog.
+  const [askTag, setAskTag] = useState<HistoryCommit | null>(null);
+  const createTag = (c: HistoryCommit, tag: string, message: string) => {
+    if (!entryRef) return;
+    void startGitAction(
+      t('tag.act', { tag }),
+      t('tag.running', { tag }),
+      () => gitCreateTag(entryRef, c.sha, tag, message),
+      { done: t('tag.done', { tag, sha: c.shortSha }) },
+    );
   };
   const stopAmend = () => {
     if (!amending) return;
@@ -1463,6 +1476,18 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 {t('revert.menu')}
               </MenuItem>
             )}
+            {entryRef && (
+              <MenuItem
+                icon="tag"
+                onHover={() => setCherrySub(null)}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  setAskTag(commitMenu.commit);
+                }}
+              >
+                {t('tag.menu')}
+              </MenuItem>
+            )}
             {cherryTo.length > 0 && (
               <MenuItem
                 icon="rebase"
@@ -1512,6 +1537,14 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             </Popover>
           )}
         </Popover>
+      )}
+      {askTag && (
+        <TagModal
+          repoId={repoId}
+          sub={`${repoName} / ${askTag.shortSha}`}
+          onClose={() => setAskTag(null)}
+          onCreate={(tag, message) => createTag(askTag, tag, message)}
+        />
       )}
       {askAmend && <AmendModal onClose={() => setAskAmend(null)} onBegin={() => beginAmend(askAmend)} />}
       {project

@@ -8,8 +8,9 @@ use crate::git::inspect;
 use crate::model::{
     BaseOptions, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config, EditorOption,
     EntryRef, FileChange, FilePair, FolderCheck, HistoryPage, IndexChanges, NewBranchCheckout,
-    NewBranchProblem, OpenApp, ProjectConfig, ProjectView, RangeChanges, RemoteInfo, ReviewData,
-    ReviewTarget, ScanResult, ScriptConfig, ScriptRun, Settings, StashChanges, TerminalOption,
+    NewBranchProblem, NewTagProblem, OpenApp, ProjectConfig, ProjectView, RangeChanges, RemoteInfo,
+    ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun, Settings, StashChanges,
+    TerminalOption,
 };
 use crate::state::AppState;
 use crate::{
@@ -682,6 +683,34 @@ pub async fn git_undo_commit(
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
         scripts::git::undo_commit(state, entry, &sha)
+    })
+    .await
+}
+
+/// Create Tag: `git tag` of `name` on the commit `sha`, annotated when `message` is not empty.
+#[tauri::command]
+pub async fn git_create_tag(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    sha: String,
+    name: String,
+    message: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::create_tag(state, entry, &sha, &name, &message)
+    })
+    .await
+}
+
+/// Create Tag's check as the name is typed.
+#[tauri::command]
+pub async fn check_new_tag(
+    state: State<'_, AppState>,
+    repo_id: String,
+    name: String,
+) -> Result<Option<NewTagProblem>, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::check_new_tag(state, &repo_id, &name)
     })
     .await
 }

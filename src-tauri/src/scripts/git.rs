@@ -14,7 +14,7 @@ use crate::error::AppError;
 use crate::git::{diff, operation, refs, stash, worktrees};
 use crate::model::{
     entry_key, BranchLoss, CheckoutProblem, CheckoutTarget, EntryRef, IndexChanges,
-    NewBranchCheckout, NewBranchProblem, OperationKind, ScriptRun, UpdateReason,
+    NewBranchCheckout, NewBranchProblem, NewTagProblem, OperationKind, ScriptRun, UpdateReason,
 };
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -1275,6 +1275,101 @@ pub(super) fn revert_command(merge: bool) -> String {
     format!("git revert --no-edit{mainline} \"$GITGEL_COMMIT\"")
 }
 
+/// Create Tag's checks (SPEC §16 "Create Tag"). Read only: the name is one git takes for a tag (and
+/// not an option) and no tag has it.
+pub(super) fn new_tag_problem(git: &git2::Repository, name: &str) -> Option<NewTagProblem> {
+    let full = format!("refs/tags/{name}");
+    if name.starts_with('-') || name == "HEAD" || !git2::Reference::is_valid_name(&full) {
+        return Some(NewTagProblem::BadName);
+    }
+    git.find_reference(&full)
+        .is_ok()
+        .then_some(NewTagProblem::Exists)
+}
+
+/// Create Tag's checks for the dialog, as it is filled in, and again before the run. Read only.
+pub fn check_new_tag(
+    state: &AppState,
+    repo_id: &str,
+    name: &str,
+) -> Result<Option<NewTagProblem>, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    let shared = state.pool.get(&repo.path)?;
+    let git = lock(&shared);
+    Ok(new_tag_problem(&git, name))
+}
+
+/// Create Tag (SPEC §16 "Create Tag"): the tag `name` on the commit `sha`, annotated with
+/// `message` when there is one, lightweight otherwise. Runs in the repository folder; the branch
+/// need not be checked out. `entry` only says whose run it is.
+pub fn create_tag(
+    state: &AppState,
+    entry: EntryRef,
+    sha: &str,
+    name: &str,
+    message: &str,
+) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let full = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        if let Some(problem) = new_tag_problem(&git, name) {
+            return Err(AppError::Invalid(match problem {
+                NewTagProblem::BadName => format!("{name} is not a valid tag name."),
+                NewTagProblem::Exists => format!("{name} already exists."),
+            }));
+        }
+        let commit = git2::Oid::from_str(sha)
+            .and_then(|oid| git.find_commit(oid))
+            .map_err(|_| AppError::NotFound(format!("commit {sha}")))?;
+        commit.id().to_string()
+    };
+    let message = message.trim();
+    let mut env = vec![
+        ("GITGEL_TAG".to_string(), name.to_string()),
+        ("GITGEL_COMMIT".to_string(), full.clone()),
+    ];
+    if !message.is_empty() {
+        env.push(("GITGEL_MESSAGE".into(), message.to_string()));
+    }
+    let label = entry
+        .branch
+        .clone()
+        .unwrap_or_else(|| full.chars().take(7).collect());
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}create-tag"),
+            name: format!("Create Tag {name}"),
+            icon: "tag".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: format!("{} / {label}", repo.name),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: repo.main.clone(),
+            command: create_tag_command(!message.is_empty()),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `git tag [-a -m "$GITGEL_MESSAGE"] "$GITGEL_TAG" "$GITGEL_COMMIT"`: only fixed text and quoted
+/// variables.
+pub(super) fn create_tag_command(annotated: bool) -> String {
+    let message = if annotated {
+        r#" -a -m "$GITGEL_MESSAGE""#
+    } else {
+        ""
+    };
+    format!(r#"git tag{message} "$GITGEL_TAG" "$GITGEL_COMMIT""#)
+}
+
 /// Squash (SPEC §16, Hi13): consecutive commits of the entry's branch (`shas`, newest first, each
 /// the first parent of the one before) become one commit with `summary` and `description`, the
 /// oldest one's author and the newest one's tree, on the oldest one's parent (`git commit-tree`).
@@ -2296,6 +2391,32 @@ mod tests {
             UNDO_COMMIT_COMMAND,
             r#"git reset -q --soft "$GITGEL_PARENT""#
         );
+    }
+
+    #[test]
+    fn create_tag_commands_hold_no_values() {
+        assert_eq!(
+            create_tag_command(false),
+            r#"git tag "$GITGEL_TAG" "$GITGEL_COMMIT""#
+        );
+        assert_eq!(
+            create_tag_command(true),
+            r#"git tag -a -m "$GITGEL_MESSAGE" "$GITGEL_TAG" "$GITGEL_COMMIT""#
+        );
+    }
+
+    #[test]
+    fn new_tag_problem_checks_the_name() {
+        let t = crate::git::testutil::TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        t.tag("v1.0", tip);
+        let p = |name: &str| new_tag_problem(&t.repo, name);
+        assert_eq!(p("v1.1"), None);
+        assert_eq!(p("release/2026"), None);
+        for bad in ["", "-x", "HEAD", "a..b", "a b", "x.lock", "a/"] {
+            assert_eq!(p(bad), Some(NewTagProblem::BadName), "{bad:?}");
+        }
+        assert_eq!(p("v1.0"), Some(NewTagProblem::Exists));
     }
 
     #[test]

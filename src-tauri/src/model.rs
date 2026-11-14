@@ -856,6 +856,16 @@ pub enum NewBranchProblem {
     CannotBring,
 }
 
+/// What stops Create Tag (SPEC §16 "Create Tag"), for the dialog's message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum NewTagProblem {
+    /// Not a name git takes for a tag.
+    BadName,
+    /// A tag has it.
+    Exists,
+}
+
 /// Where New Branch checks the new branch out.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]

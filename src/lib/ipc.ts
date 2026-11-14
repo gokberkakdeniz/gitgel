@@ -20,6 +20,7 @@ import type {
   IndexChanges,
   NewBranchCheckout,
   NewBranchProblem,
+  NewTagProblem,
   OpenApp,
   ProjectConfig,
   ProjectView,
@@ -194,6 +195,12 @@ export const gitSquash = (entry: EntryRef, shas: string[], summary: string, desc
 /** Cherry-Pick to: `git cherry-pick <sha>` in one of the repository's worktrees. */
 export const gitCherryPick = (repoId: string, sha: string, worktreePath: string) =>
   invoke<ScriptRun>('git_cherry_pick', { repoId, sha, worktreePath });
+/** Create Tag: `git tag <name> <sha>`, annotated when `message` is not empty. */
+export const gitCreateTag = (entry: EntryRef, sha: string, name: string, message: string) =>
+  invoke<ScriptRun>('git_create_tag', { entry, sha, name, message });
+/** Create Tag's check as the name is typed. */
+export const checkNewTag = (repoId: string, name: string) =>
+  invoke<NewTagProblem | null>('check_new_tag', { repoId, name });
 /** Continue or abort the operation stopped in the entry's worktree. */
 export const gitOperation = (entry: EntryRef, abort: boolean) => invoke<ScriptRun>('git_operation', { entry, abort });
 

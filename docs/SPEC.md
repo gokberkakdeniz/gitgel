@@ -219,7 +219,7 @@ gitgel/
 │  │            #   file row, stash section, diff view settings, page layout
 │  │            # Review/Review.tsx: the screen (BranchReview, ProjectReview, StashReview around BranchView),
 │  │            #   header.tsx (title, rename), banners.ts, rows.ts (its list rows), the commit form,
-│  │            #   Switch Branch, AmendModal, CherryPickMenu and SquashModal (§5, §16);
+│  │            #   Switch Branch, AmendModal, CherryPickMenu, SquashModal and TagModal (§5, §16);
 │  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
 │  │            #   stage.ts: Stage / Unstage's queue and the rows moved before git confirms (§15 "Stage")
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashAction + StashDialog (P4), StashRowMenu, StashTargetMenu
@@ -1894,6 +1894,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_push` | `entry: EntryRef, force: boolean` | `ScriptRun` |
 | `git_operation` | `entry: EntryRef, abort: boolean` | `ScriptRun` (§15 "Operations in progress") |
 | `git_revert` | `entry: EntryRef, sha` | `ScriptRun` (§16 "Revert Changes") |
+| `git_create_tag` | `entry: EntryRef, sha, name, message` (annotated when `message` is not empty) | `ScriptRun` (§16 "Create Tag") |
+| `check_new_tag` | `repoId, name` | `NewTagProblem \| null` (`badName`, `exists`) |
 | `git_squash` | `entry: EntryRef, shas: string[]` (newest first), `summary, description` | `ScriptRun` (§16 "Squash") |
 
 Notes:
@@ -3186,7 +3188,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     `accent.text`, a 7ch column, wider for a longer SHA; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
     muted; tooltip author · date); no avatar. Right-click on it (Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
-    "Revert Changes" (`revert`, below), "Cherry-Pick to" (`rebase`, a
+    "Revert Changes" (`revert`, below), "Create Tag…" (`tag`, below), "Cherry-Pick to" (`rebase`, a
     chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -3280,6 +3282,18 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
   - **Cherry-Pick to** (Hi11; `CherryPickMenu`): opens a 280px picker beside the item
     on hover or click (→ from the keyboard, ← back), like Apply to (P5): one item per
     checked-out entry of the repository but the one History shows (scan
+  - **Create Tag** (GitHub Desktop's Create Tag…; `TagModal`): on any commit, whether `rev` is
+    checked out or not. It opens "Create a Tag" (480px; sub `<repo> / <sha>` mono): a 36px mono
+    `Input` "Name", a 3-row textarea "Message (optional)", Cancel and primary "Create Tag" (↵ in
+    the name, ⌘↵ anywhere). The name is checked 150 ms after the last key (`check_new_tag`): one
+    git does not take for a tag (or starting with `-`, or `HEAD`) shows 12px `danger.text` "Not a
+    valid tag name", one a tag already has "<name> already exists"; the field is invalid and the
+    button off meanwhile. Runs `git tag "$GITGEL_TAG" "$GITGEL_COMMIT"` (a lightweight tag), with a
+    message `git tag -a -m "$GITGEL_MESSAGE" …` (an annotated one), in the repository folder as a
+    git action (script id `git:create-tag`, name "Create Tag <name>", `tag` icon, toast “Creating
+    tag <name>…”, then “Created tag <name> on <sha>”); the commit row then gets its pill. The tag
+    stays local: tags are not pushed with the branch. Refused before running: a bad or taken
+    name, a commit the repository does not have, another git action in the repository.
     order; one with an operation in progress is left out): `branch` icon, the branch (short SHA
     when detached) and under it the folder (`~/…`), nothing else; each on one line, ending in
     "…" when long. A pick

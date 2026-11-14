@@ -401,6 +401,13 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <textarea aria-label="Description" placeholder="Description" value="{{md.body}}" onChange="{{md.setBody}}" style="height: 132px; box-sizing: border-box; padding: 9px 12px; resize: none; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-family: inherit; font-size: 12px; line-height: 1.5; outline: none"></textarea>
 </div>
 </sc-if>
+<sc-if value="{{md.isTag}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<input aria-label="Name" placeholder="Name" value="{{md.name}}" onChange="{{md.setName}}" style="height: 36px; box-sizing: border-box; padding: 0 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none">
+<textarea aria-label="Message (optional)" placeholder="Message (optional)" value="{{md.message}}" onChange="{{md.setMessage}}" style="height: 76px; box-sizing: border-box; padding: 9px 12px; resize: none; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-family: inherit; font-size: 12px; line-height: 1.5; outline: none"></textarea>
+<sc-if value="{{md.hasError}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--danger-text)">{{md.error}}</p></sc-if>
+</div>
+</sc-if>
 <sc-if value="{{md.isOutput}}" hint-placeholder-val="{{false}}">
 <div role="log" aria-label="Hook output" tabIndex="0" style="height: 300px; overflow: auto; padding: 14px 16px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; color: var(--text-code); outline: none">
 <sc-for list="{{md.out}}" as="o" hint-placeholder-count="8"><div style="{{o.style}}">{{o.text}}</div></sc-for>
@@ -945,6 +952,14 @@ class Component extends DCLogic {
     this.setState({ E: r.E, menu: null });
     this.toast({ status: 'success', message: 'Cherry-picked ' + sha + ' onto ' + r.e.branch, actionLabel: 'Show',
       onAction: function () { self.setState(Object.assign({ active: toId }, self.selPart(self.entry(toId), ns))); } });
+  }
+  createTag() {
+    var m = this.state.modal, name = (m.name || '').trim();
+    var r = this.mapE(m.e, function (x) {
+      x.commits.forEach(function (c) { if (c.sha === m.sha) c.tags = (c.tags || []).concat([name]).sort(); });
+    });
+    this.setState({ E: r.E, modal: null });
+    this.toast({ status: 'success', message: 'Created tag ' + name + ' on ' + m.sha });
   }
   openSquash(id) {
     var e = this.entry(id), list = this.multiList(e, this.state.sel);
@@ -1709,6 +1724,7 @@ class Component extends DCLogic {
           if (mi === 0 && me.wt) menuItems.push({ label: 'Amend Commit…', icon: 'edit', onSelect: function () { self.amendStart(M.e); } });
           if (mi === 0 && me.unpushed > 0 && me.wt) menuItems.push({ label: 'Undo Commit', icon: 'undo', onSelect: function () { self.undoCommit(M.e); } });
           if (me.wt) menuItems.push({ label: 'Revert Changes', icon: 'revert', onSelect: function () { self.setState({ menu: null }); self.revert(M.e, M.sha); } });
+          menuItems.push({ label: 'Create Tag…', icon: 'tag', onSelect: function () { self.setState({ menu: null, modal: { kind: 'tag', e: M.e, sha: M.sha, name: '', message: '' } }); } });
           var targets = E.filter(function (x) { return x.repo === me.repo && x.id !== me.id && x.wt; });
           if (targets.length) {
             menuItems.push({ kind: 'sep' });
@@ -1741,7 +1757,7 @@ class Component extends DCLogic {
     if (MD) {
       var mE = this.entry(MD.e);
       var closeM = function () { self.setState({ modal: null }); };
-      md = { title: '', hasSub: false, sub: '', hasText: false, text: '', hasList: false, list: [], isSquash: false, isOutput: false, hasNote: false, note: '', buttons: [], width: 460 };
+      md = { title: '', hasSub: false, sub: '', hasText: false, text: '', hasList: false, list: [], isSquash: false, isTag: false, hasError: false, error: '', isOutput: false, hasNote: false, note: '', buttons: [], width: 460 };
       if (MD.kind === 'discard') {
         md.title = 'Confirm Discard Changes'; md.hasText = true; md.text = 'Are you sure you want to discard all changes to:';
         md.hasList = true; md.list = MD.paths.map(function (p) { return { path: p }; });
@@ -1766,6 +1782,17 @@ class Component extends DCLogic {
         md.setBody = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { body: ev.target.value }) }); };
         md.hasNote = !!MD.force; md.note = 'Some of these commits are on origin. Squashing them will require a force push.';
         md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Squash ' + MD.shas.length + ' Commits', variant: 'primary', disabled: !(MD.summary || '').trim(), onPress: function () { self.squash(); } }];
+      } else if (MD.kind === 'tag') {
+        // Create a Tag: a name and an optional message (annotated with one, lightweight without).
+        var tgName = (MD.name || '').trim();
+        var tgTaken = !!tgName && E.some(function (x) { return x.repo === mE.repo && x.commits.some(function (c) { return (c.tags || []).indexOf(tgName) >= 0; }); });
+        var tgBad = !!tgName && (/^-|\s|\.\.|\/$|\.lock$/.test(tgName) || tgName === 'HEAD');
+        md.title = 'Create a Tag'; md.hasSub = true; md.sub = mE.repo + ' / ' + MD.sha; md.isTag = true; md.width = 480;
+        md.name = MD.name; md.message = MD.message;
+        md.setName = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { name: ev.target.value }) }); };
+        md.setMessage = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { message: ev.target.value }) }); };
+        md.hasError = tgBad || tgTaken; md.error = tgBad ? 'Not a valid tag name' : tgName + ' already exists';
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Create Tag', variant: 'primary', disabled: !tgName || tgBad || tgTaken, onPress: function () { self.createTag(); } }];
       } else if (MD.kind === 'output') {
         md.title = 'Commit'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch + ' · ' + mE.wt; md.isOutput = true; md.width = 760;
         var Cc = 'color: var(--text-code);', Mu = 'color: var(--text-muted);', Su = 'color: var(--success);', Da = 'color: var(--danger);', Ac = 'color: var(--accent-text);';
