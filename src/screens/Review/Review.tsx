@@ -49,6 +49,7 @@ import {
   generateMessageStart,
   gitCommit,
   gitCreateTag,
+  gitDeleteTag,
   gitRevert,
   gitSquash,
   gitUndoCommit,
@@ -87,6 +88,7 @@ import { conflictsBanner } from './banners';
 import styles from './Review.module.css';
 import { AmendModal } from './AmendModal';
 import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
+import { DeleteTagModal } from './DeleteTagModal';
 import { CommitForm } from './CommitForm';
 import { generateMessage } from './generate';
 import { SquashModal } from './SquashModal';
@@ -607,6 +609,17 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       { done: t('tag.done', { tag, sha: c.shortSha }) },
     );
   };
+  // Delete Tag: asks first; with a remote, there too.
+  const [askDeleteTag, setAskDeleteTag] = useState<string | null>(null);
+  const deleteTag = (tag: string, remote: boolean) => {
+    if (!entryRef) return;
+    void startGitAction(
+      t('tag.deleteAct', { tag }),
+      t('tag.deleting', { tag }),
+      () => gitDeleteTag(entryRef, tag, remote),
+      { done: t('tag.deleted', { tag }) },
+    );
+  };
   const stopAmend = () => {
     if (!amending) return;
     setDraft({ summary: amending.summary, description: amending.description, amending: null });
@@ -874,6 +887,13 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // Cherry-Pick to's picker, beside its item (Hi11).
   const [cherrySub, setCherrySub] = useState<{ el: HTMLElement; focus?: boolean } | null>(null);
   useEffect(() => setCherrySub(null), [commitMenu]);
+  // Delete Tag's picker beside its item, for a commit with several tags.
+  const [tagSub, setTagSub] = useState<{ el: HTMLElement; focus?: boolean } | null>(null);
+  useEffect(() => setTagSub(null), [commitMenu]);
+  const closeSubs = () => {
+    setCherrySub(null);
+    setTagSub(null);
+  };
   const cherryTo = cherryTargets(repoScan?.active ?? [], entry);
   // HEAD moved under the form (a commit made elsewhere): amending would rewrite another commit.
   useEffect(() => {
@@ -1459,7 +1479,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
               <MenuItem
                 icon="pencil"
                 disabled={committing || !!entry.operation || amending?.sha === commitMenu.commit.sha}
-                onHover={() => setCherrySub(null)}
+                onHover={closeSubs}
                 onSelect={() => {
                   setCommitMenu(null);
                   startAmend(commitMenu.commit);
@@ -1471,7 +1491,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             {undoable(commitMenu.commit) && (
               <MenuItem
                 icon="undo"
-                onHover={() => setCherrySub(null)}
+                onHover={closeSubs}
                 onSelect={() => {
                   setCommitMenu(null);
                   undoCommit(commitMenu.commit);
@@ -1483,7 +1503,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             {revertable(commitMenu.commit) && (
               <MenuItem
                 icon="revert"
-                onHover={() => setCherrySub(null)}
+                onHover={closeSubs}
                 onSelect={() => {
                   setCommitMenu(null);
                   revertCommit(commitMenu.commit);
@@ -1495,7 +1515,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             {entryRef && (
               <MenuItem
                 icon="tag"
-                onHover={() => setCherrySub(null)}
+                onHover={closeSubs}
                 onSelect={() => {
                   setCommitMenu(null);
                   setAskTag(commitMenu.commit);
@@ -1504,12 +1524,46 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 {t('tag.menu')}
               </MenuItem>
             )}
+            {entryRef && commitMenu.commit.tags.length === 1 && (
+              <MenuItem
+                icon="trash"
+                onHover={closeSubs}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  setAskDeleteTag(commitMenu.commit.tags[0]);
+                }}
+              >
+                {t('tag.deleteMenu')}
+              </MenuItem>
+            )}
+            {entryRef && commitMenu.commit.tags.length > 1 && (
+              <MenuItem
+                icon="trash"
+                submenu
+                onHover={(el) => {
+                  setCherrySub(null);
+                  setTagSub({ el });
+                }}
+                onSelect={(el) => {
+                  setCherrySub(null);
+                  setTagSub({ el, focus: true });
+                }}
+              >
+                {t('tag.deleteMenu')}
+              </MenuItem>
+            )}
             {cherryTo.length > 0 && (
               <MenuItem
                 icon="rebase"
                 submenu
-                onHover={(el) => setCherrySub({ el })}
-                onSelect={(el) => setCherrySub({ el, focus: true })}
+                onHover={(el) => {
+                  setTagSub(null);
+                  setCherrySub({ el });
+                }}
+                onSelect={(el) => {
+                  setTagSub(null);
+                  setCherrySub({ el, focus: true });
+                }}
               >
                 {t('cherry.menu')}
               </MenuItem>
@@ -1517,7 +1571,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             <MenuDivider />
             <MenuItem
               icon="copy"
-              onHover={() => setCherrySub(null)}
+              onHover={closeSubs}
               onSelect={() => {
                 setCommitMenu(null);
                 void writeText(commitMenu.commit.sha);
@@ -1528,7 +1582,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             {commitMenu.commit.tags.length > 0 && (
               <MenuItem
                 icon="copy"
-                onHover={() => setCherrySub(null)}
+                onHover={closeSubs}
                 onSelect={() => {
                   setCommitMenu(null);
                   void writeText(commitMenu.commit.tags.join(' '));
@@ -1540,7 +1594,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             {webRemote && onRemote(commitMenu.commit) && (
               <MenuItem
                 icon="link"
-                onHover={() => setCherrySub(null)}
+                onHover={closeSubs}
                 onSelect={() => {
                   setCommitMenu(null);
                   void openRemoteLink(commitUrl(webRemote, commitMenu.commit.sha)).catch((e) =>
@@ -1552,6 +1606,40 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
               </MenuItem>
             )}
           </Menu>
+          {tagSub && (
+            <Popover
+              anchor={tagSub.el}
+              anchorRect={tagSub.el.getBoundingClientRect()}
+              side="right"
+              width={220}
+              onClose={() => setTagSub(null)}
+            >
+              <div
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowLeft') return;
+                  e.preventDefault();
+                  tagSub.el.focus();
+                  setTagSub(null);
+                }}
+              >
+                <Menu aria-label={t('tag.deleteAria')} autoFocus={!!tagSub.focus}>
+                  {commitMenu.commit.tags.map((tag) => (
+                    <MenuItem
+                      key={tag}
+                      icon="tag"
+                      oneLine
+                      onSelect={() => {
+                        setCommitMenu(null);
+                        setAskDeleteTag(tag);
+                      }}
+                    >
+                      {tag}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </div>
+            </Popover>
+          )}
           {cherrySub && (
             <Popover
               anchor={cherrySub.el}
@@ -1586,6 +1674,15 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           sub={`${repoName} / ${askTag.shortSha}`}
           onClose={() => setAskTag(null)}
           onCreate={(tag, message) => createTag(askTag, tag, message)}
+        />
+      )}
+      {askDeleteTag && (
+        <DeleteTagModal
+          repoId={repoId}
+          repoName={repoName}
+          tag={askDeleteTag}
+          onClose={() => setAskDeleteTag(null)}
+          onDelete={(remote) => deleteTag(askDeleteTag, remote)}
         />
       )}
       {askAmend && <AmendModal onClose={() => setAskAmend(null)} onBegin={() => beginAmend(askAmend)} />}

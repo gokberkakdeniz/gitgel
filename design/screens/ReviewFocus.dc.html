@@ -401,6 +401,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <textarea aria-label="Description" placeholder="Description" value="{{md.body}}" onChange="{{md.setBody}}" style="height: 132px; box-sizing: border-box; padding: 9px 12px; resize: none; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-family: inherit; font-size: 12px; line-height: 1.5; outline: none"></textarea>
 </div>
 </sc-if>
+<sc-if value="{{md.hasCheck}}" hint-placeholder-val="{{false}}"><dc-import name="Checkbox" theme="none" label="{{md.checkLabel}}" checked="{{md.checked}}" on-toggle="{{md.toggleCheck}}" hint-size="220px,20px"></dc-import></sc-if>
 <sc-if value="{{md.isStashMsg}}" hint-placeholder-val="{{false}}">
 <input aria-label="Message" placeholder="Message" value="{{md.message}}" onChange="{{md.setMessage}}" style="height: 32px; box-sizing: border-box; padding: 0 12px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; color: var(--text-strong); font-family: inherit; font-size: 13px; outline: none">
 </sc-if>
@@ -963,6 +964,14 @@ class Component extends DCLogic {
     });
     this.setState({ E: r.E, modal: null });
     this.toast({ status: 'success', message: 'Created tag ' + name + ' on ' + m.sha });
+  }
+  deleteTag() {
+    var m = this.state.modal;
+    var r = this.mapE(m.e, function (x) {
+      x.commits.forEach(function (c) { if (c.sha === m.sha) c.tags = (c.tags || []).filter(function (n) { return n !== m.tag; }); });
+    });
+    this.setState({ E: r.E, modal: null });
+    this.toast({ status: 'success', message: 'Deleted tag ' + m.tag });
   }
   openSquash(id) {
     var e = this.entry(id), list = this.multiList(e, this.state.sel);
@@ -1732,6 +1741,9 @@ class Component extends DCLogic {
           if (mi === 0 && me.unpushed > 0 && me.wt) menuItems.push({ label: 'Undo Commit', icon: 'undo', onSelect: function () { self.undoCommit(M.e); } });
           if (me.wt) menuItems.push({ label: 'Revert Changes', icon: 'revert', onSelect: function () { self.setState({ menu: null }); self.revert(M.e, M.sha); } });
           menuItems.push({ label: 'Create Tag…', icon: 'tag', onSelect: function () { self.setState({ menu: null, modal: { kind: 'tag', e: M.e, sha: M.sha, name: '', message: '' } }); } });
+          // Delete Tag…: asks first (several tags: the newest here; the app opens a picker beside the item).
+          var dtags = me.commits[mi].tags || [];
+          if (dtags.length) menuItems.push({ label: 'Delete Tag…', icon: 'trash', submenu: dtags.length > 1, onSelect: function () { self.setState({ menu: null, modal: { kind: 'deleteTag', e: M.e, sha: M.sha, tag: dtags[0], remote: false } }); } });
           var targets = E.filter(function (x) { return x.repo === me.repo && x.id !== me.id && x.wt; });
           if (targets.length) {
             menuItems.push({ kind: 'sep' });
@@ -1768,7 +1780,7 @@ class Component extends DCLogic {
     if (MD) {
       var mE = this.entry(MD.e);
       var closeM = function () { self.setState({ modal: null }); };
-      md = { title: '', hasSub: false, sub: '', hasText: false, text: '', hasList: false, list: [], isSquash: false, isStashMsg: false, isTag: false, hasError: false, error: '', isOutput: false, hasNote: false, note: '', buttons: [], width: 460 };
+      md = { title: '', hasSub: false, sub: '', hasText: false, text: '', hasList: false, list: [], isSquash: false, hasCheck: false, checkLabel: '', checked: false, isStashMsg: false, isTag: false, hasError: false, error: '', isOutput: false, hasNote: false, note: '', buttons: [], width: 460 };
       if (MD.kind === 'discard') {
         md.title = 'Confirm Discard Changes'; md.hasText = true; md.text = 'Are you sure you want to discard all changes to:';
         md.hasList = true; md.list = MD.paths.map(function (p) { return { path: p }; });
@@ -1793,6 +1805,12 @@ class Component extends DCLogic {
         md.setBody = function (ev) { self.setState({ modal: Object.assign({}, self.state.modal, { body: ev.target.value }) }); };
         md.hasNote = !!MD.force; md.note = 'Some of these commits are on origin. Squashing them will require a force push.';
         md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Squash ' + MD.shas.length + ' Commits', variant: 'primary', disabled: !(MD.summary || '').trim(), onPress: function () { self.squash(); } }];
+      } else if (MD.kind === 'deleteTag') {
+        // Confirm Delete Tag: the tag, and the option to delete it on the remote too.
+        md.title = 'Confirm Delete Tag'; md.hasList = true; md.list = [{ path: mE.repo + ' / ' + MD.tag }];
+        md.hasCheck = true; md.checkLabel = 'Also delete from origin'; md.checked = !!MD.remote;
+        md.toggleCheck = function () { self.setState({ modal: Object.assign({}, self.state.modal, { remote: !self.state.modal.remote }) }); };
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Delete Tag', variant: 'danger', onPress: function () { self.deleteTag(); } }];
       } else if (MD.kind === 'stash') {
         // Stash Changes: only the message is asked.
         md.title = 'Stash Changes'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch; md.isStashMsg = true; md.width = 480;

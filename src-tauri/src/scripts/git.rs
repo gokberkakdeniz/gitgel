@@ -1370,6 +1370,95 @@ pub(super) fn create_tag_command(annotated: bool) -> String {
     format!(r#"git tag{message} "$GITGEL_TAG" "$GITGEL_COMMIT""#)
 }
 
+/// Delete Tag's remote (SPEC §16 "Delete Tag"): where its "Also delete from" option deletes the
+/// tag, `origin` or the only remote; none, no option. Read only.
+pub fn tag_remote(state: &AppState, repo_id: &str) -> Result<Option<String>, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    let shared = state.pool.get(&repo.path)?;
+    let git = lock(&shared);
+    Ok(refs::default_remote(&git))
+}
+
+/// Delete Tag (SPEC §16 "Delete Tag"): `git tag -d <name>` in the repository folder; with
+/// `remote`, the tag on the remote first, when the remote has it. `entry` only says whose run it
+/// is. Refused when the tag is gone already.
+pub fn delete_tag(
+    state: &AppState,
+    entry: EntryRef,
+    name: &str,
+    remote: bool,
+) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let full = format!("refs/tags/{name}");
+    let on = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        if name.starts_with('-') || git.find_reference(&full).is_err() {
+            drop(git);
+            scan::rescan_repo(state, &repo.id, UpdateReason::Rescan, None);
+            return Err(AppError::Invalid(format!("{name} is not a tag.")));
+        }
+        if remote {
+            Some(
+                refs::default_remote(&git)
+                    .ok_or_else(|| AppError::Invalid(format!("{} has no remote.", repo.name)))?,
+            )
+        } else {
+            None
+        }
+    };
+    let mut env = vec![("GITGEL_TAG".to_string(), name.to_string())];
+    if let Some(on) = &on {
+        env.push(("GITGEL_REMOTE".into(), on.clone()));
+        env.push(("GITGEL_REMOTE_REF".into(), full));
+    }
+    let label = entry
+        .branch
+        .clone()
+        .unwrap_or_else(|| entry.worktree_path.clone().unwrap_or_default());
+    let command = delete_tag_command(on.is_some());
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}delete-tag"),
+            name: format!("Delete Tag {name}"),
+            icon: "trash".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: format!("{} / {label}", repo.name),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: repo.main.clone(),
+            command: if on.is_some() {
+                format!("{LOAD_KEYS}{command}")
+            } else {
+                command
+            },
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `git tag -d "$GITGEL_TAG"`; with `remote`, first `git push "$GITGEL_REMOTE" --delete
+/// "$GITGEL_REMOTE_REF"` when `git ls-remote --exit-code` finds the tag there (status 2: the
+/// remote does not have it, which is fine; any other failure stops the run and keeps the tag).
+/// The remote form is one `/bin/sh -c '…'`, so the user's shell only reads a quoted string: only
+/// fixed text, the values come from the environment.
+pub(super) fn delete_tag_command(remote: bool) -> String {
+    let local = r#"git tag -d "$GITGEL_TAG""#;
+    if !remote {
+        return local.into();
+    }
+    format!(
+        r#"/bin/sh -c 'git ls-remote --exit-code "$GITGEL_REMOTE" "$GITGEL_REMOTE_REF" >/dev/null; s=$?; if [ $s -eq 0 ]; then git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF" || exit $?; elif [ $s -ne 2 ]; then exit $s; fi; {local}'"#
+    )
+}
+
 /// Squash (SPEC §16, Hi13): consecutive commits of the entry's branch (`shas`, newest first, each
 /// the first parent of the one before) become one commit with `summary` and `description`, the
 /// oldest one's author and the newest one's tree, on the oldest one's parent (`git commit-tree`).
@@ -2417,6 +2506,18 @@ mod tests {
             assert_eq!(p(bad), Some(NewTagProblem::BadName), "{bad:?}");
         }
         assert_eq!(p("v1.0"), Some(NewTagProblem::Exists));
+    }
+
+    #[test]
+    fn delete_tag_commands_hold_no_values() {
+        assert_eq!(delete_tag_command(false), r#"git tag -d "$GITGEL_TAG""#);
+        let remote = delete_tag_command(true);
+        assert!(
+            remote.starts_with("/bin/sh -c '") && remote.ends_with(r#"git tag -d "$GITGEL_TAG"'"#)
+        );
+        assert!(remote.contains(r#"git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF""#));
+        // One quoted string for the user's shell: no quote of its own inside.
+        assert_eq!(remote.matches('\'').count(), 2);
     }
 
     #[test]

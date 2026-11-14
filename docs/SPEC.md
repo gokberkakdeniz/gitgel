@@ -219,7 +219,7 @@ gitgel/
 │  │            #   file row, stash section, diff view settings, page layout
 │  │            # Review/Review.tsx: the screen (BranchReview, ProjectReview, StashReview around BranchView),
 │  │            #   header.tsx (title, rename), banners.ts, rows.ts (its list rows), the commit form,
-│  │            #   Switch Branch, AmendModal, CherryPickMenu, SquashModal and TagModal (§5, §16);
+│  │            #   Switch Branch, AmendModal, CherryPickMenu, SquashModal, TagModal and DeleteTagModal (§5, §16);
 │  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
 │  │            #   stage.ts: Stage / Unstage's queue and the rows moved before git confirms (§15 "Stage")
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashDialog (P4), StashRowMenu, StashTargetMenu
@@ -1895,6 +1895,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_revert` | `entry: EntryRef, sha` | `ScriptRun` (§16 "Revert Changes") |
 | `git_create_tag` | `entry: EntryRef, sha, name, message` (annotated when `message` is not empty) | `ScriptRun` (§16 "Create Tag") |
 | `check_new_tag` | `repoId, name` | `NewTagProblem \| null` (`badName`, `exists`) |
+| `git_delete_tag` | `entry: EntryRef, name, remote: boolean` (the tag on the remote too) | `ScriptRun` (§16 "Delete Tag") |
+| `get_tag_remote` | `repoId` | `string \| null` (`origin`, else the only remote) |
 | `git_squash` | `entry: EntryRef, shas: string[]` (newest first), `summary, description` | `ScriptRun` (§16 "Squash") |
 
 Notes:
@@ -3177,7 +3179,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     `accent.text`, a 7ch column, wider for a longer SHA; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
     muted; tooltip author · date); no avatar. Right-click on it (Hi10): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
-    "Revert Changes" (`revert`, below), "Create Tag…" (`tag`, below), "Cherry-Pick to" (`rebase`, a
+    "Revert Changes" (`revert`, below), "Create Tag…" (`tag`, below), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
     chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`), "Copy Tags" (`copy`; "Copy Tag" for one; the names with spaces between; left out without a tag) and "Open Permalink" (`link`; the commit's page on the remote in the browser, as the header's SHA; only for a commit the branch's upstream has, on a GitHub, GitLab or Bitbucket remote). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -3280,6 +3282,21 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     tag <name>…”, then “Created tag <name> on <sha>”); the commit row then gets its pill. The tag
     stays local: tags are not pushed with the branch. Refused before running: a bad or taken
     name, a commit the repository does not have, another git action in the repository.
+  - **Delete Tag** (`DeleteTagModal`): on a commit with a tag. With several tags the item has a
+    chevron and opens a 220px picker beside it, as Cherry-Pick to: one item per tag (`tag` icon,
+    the name, newest first). It asks first: "Confirm Delete Tag" (`ConfirmModal`, 460px; the box
+    names `<repo> / <tag>` with the `tag` icon), with a remote (`origin`, else the only one;
+    `get_tag_remote`) a `Checkbox` "Also delete from <remote>" (off), Cancel (focused) and danger
+    "Delete Tag". Runs `git tag -d "$GITGEL_TAG"` in the repository folder as a git action
+    (script id `git:delete-tag`, name "Delete Tag <name>", `trash` icon, toast “Deleting tag
+    <name>…”, then “Deleted tag <name>”). With the option the tag goes on the remote first, when
+    the remote has it: `git ls-remote --exit-code` asks (status 2, not there, is fine), then `git
+    push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF"`; a failure there stops the run and keeps
+    the local tag. That form is one `/bin/sh -c '…'` of fixed text, so the user's shell reads only
+    a quoted string. Without the option a tag that was pushed stays on the remote and comes back
+    with the next fetch (GitHub Desktop disables the item for those instead). Refused before
+    running: the tag is gone already, no remote for the option, another git action in the
+    repository.
   - **Cherry-Pick to** (Hi11; `CherryPickMenu`): opens a 280px picker beside the item
     on hover or click (→ from the keyboard, ← back), like Apply to (P5): one item per
     checked-out entry of the repository but the one History shows (scan

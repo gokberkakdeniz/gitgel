@@ -702,6 +702,32 @@ pub async fn git_create_tag(
     .await
 }
 
+/// Delete Tag: `git tag -d` of `name`, with `remote` on the remote too.
+#[tauri::command]
+pub async fn git_delete_tag(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    name: String,
+    remote: bool,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::delete_tag(state, entry, &name, remote)
+    })
+    .await
+}
+
+/// Delete Tag's remote: where its option deletes the tag too.
+#[tauri::command]
+pub async fn get_tag_remote(
+    state: State<'_, AppState>,
+    repo_id: String,
+) -> Result<Option<String>, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::tag_remote(state, &repo_id)
+    })
+    .await
+}
+
 /// Create Tag's check as the name is typed.
 #[tauri::command]
 pub async fn check_new_tag(

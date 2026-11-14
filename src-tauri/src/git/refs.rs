@@ -255,7 +255,7 @@ pub fn tracking(repo: &Repository, branch: &str) -> Option<Tracking> {
 }
 
 /// `origin` when it is configured, else the only remote.
-fn default_remote(repo: &Repository) -> Option<String> {
+pub fn default_remote(repo: &Repository) -> Option<String> {
     if repo.find_remote("origin").is_ok() {
         return Some("origin".into());
     }

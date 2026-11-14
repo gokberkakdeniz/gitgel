@@ -198,6 +198,11 @@ export const gitCherryPick = (repoId: string, sha: string, worktreePath: string)
 /** Create Tag: `git tag <name> <sha>`, annotated when `message` is not empty. */
 export const gitCreateTag = (entry: EntryRef, sha: string, name: string, message: string) =>
   invoke<ScriptRun>('git_create_tag', { entry, sha, name, message });
+/** Delete Tag: `git tag -d <name>`, with `remote` on the remote too. */
+export const gitDeleteTag = (entry: EntryRef, name: string, remote: boolean) =>
+  invoke<ScriptRun>('git_delete_tag', { entry, name, remote });
+/** Delete Tag's remote (`origin`, or the only one); null without one. */
+export const getTagRemote = (repoId: string) => invoke<string | null>('get_tag_remote', { repoId });
 /** Create Tag's check as the name is typed. */
 export const checkNewTag = (repoId: string, name: string) =>
   invoke<NewTagProblem | null>('check_new_tag', { repoId, name });
