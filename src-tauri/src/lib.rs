@@ -182,6 +182,8 @@ pub fn run() {
             commands::check_new_branch,
             commands::git_checkout_branch,
             commands::check_checkout,
+            commands::git_checkout_commit,
+            commands::check_checkout_commit,
             commands::get_branch_loss,
             commands::git_commit,
             commands::generate_message_start,

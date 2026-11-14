@@ -1750,6 +1750,8 @@ class Component extends DCLogic {
           if (mi === 0 && me.unpushed > 0 && me.wt) menuItems.push({ label: 'Undo Commit', icon: 'undo', onSelect: function () { self.undoCommit(M.e); } });
           // Reset to Commit…: the branch back to a commit under its newest one; asks first.
           if (mi > 0 && me.wt) menuItems.push({ label: 'Reset to Commit…', icon: 'history', onSelect: function () { self.setState({ menu: null, modal: { kind: 'reset', e: M.e, sha: M.sha, hard: false } }); } });
+          // Checkout Commit…: Checkout Branch's dialog (V4) for the commit, as a detached HEAD.
+          menuItems.push({ label: 'Checkout Commit…', icon: 'worktree', onSelect: close });
           if (me.wt) menuItems.push({ label: 'Revert Changes', icon: 'revert', onSelect: function () { self.setState({ menu: null }); self.revert(M.e, M.sha); } });
           // Create Branch from Commit…: New Branch's form (V2) with the commit as its base.
           menuItems.push({ label: 'Create Branch from Commit…', icon: 'branch', onSelect: close });

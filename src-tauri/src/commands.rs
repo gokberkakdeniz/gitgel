@@ -878,6 +878,34 @@ pub async fn check_checkout(
     .await
 }
 
+/// Checkout Commit: the commit as a detached HEAD, checked out where `target` says.
+#[tauri::command]
+pub async fn git_checkout_commit(
+    state: State<'_, AppState>,
+    repo_id: String,
+    sha: String,
+    target: CheckoutTarget,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::checkout_commit(state, &repo_id, &sha, target)
+    })
+    .await
+}
+
+/// Checkout Commit's checks as the dialog is filled in.
+#[tauri::command]
+pub async fn check_checkout_commit(
+    state: State<'_, AppState>,
+    repo_id: String,
+    sha: String,
+    target: CheckoutTarget,
+) -> Result<Option<CheckoutProblem>, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::check_checkout_commit(state, &repo_id, &sha, &target)
+    })
+    .await
+}
+
 /// Commit (W1a): what is staged in the entry's worktree, with the message.
 #[tauri::command]
 pub async fn git_commit(

@@ -236,6 +236,12 @@ export const gitCheckoutBranch = (repoId: string, branch: string, remote: boolea
 /** Checkout Branch's checks as the dialog is filled in. */
 export const checkCheckout = (repoId: string, branch: string, remote: boolean, target: CheckoutTarget) =>
   invoke<CheckoutProblem | null>('check_checkout', { repoId, branch, remote, target });
+/** Checkout Commit: the commit as a detached HEAD, checked out where `target` says. */
+export const gitCheckoutCommit = (repoId: string, sha: string, target: CheckoutTarget) =>
+  invoke<ScriptRun>('git_checkout_commit', { repoId, sha, target });
+/** Checkout Commit's checks as the dialog is filled in. */
+export const checkCheckoutCommit = (repoId: string, sha: string, target: CheckoutTarget) =>
+  invoke<CheckoutProblem | null>('check_checkout_commit', { repoId, sha, target });
 
 /** Commit (W1a): the checked files of the entry's worktree, with the message. */
 export const gitCommit = (entry: EntryRef, files: CommitFiles) => invoke<ScriptRun>('git_commit', { entry, files });

@@ -2047,14 +2047,48 @@ pub(super) fn create_branch_command(run: NewBranchRun) -> String {
 }
 
 /// What Checkout Branch checks out: a local branch checked out nowhere, or a remote-tracking
-/// branch (`origin/feat`) as a new local branch (`feat`) tracking it.
+/// branch (`origin/feat`) as a new local branch (`feat`) tracking it. Checkout Commit: a commit,
+/// as a detached HEAD.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct CheckoutSource {
-    /// The local branch.
+    /// The local branch; a commit's short SHA.
     local: String,
     /// The remote-tracking ref it starts from (`refs/remotes/origin/feat`), for a remote branch.
     start: Option<String>,
     tip: git2::Oid,
+    /// A commit: HEAD is detached at `tip`.
+    detach: bool,
+}
+
+/// What a checkout was asked for.
+#[derive(Debug, Clone, Copy)]
+enum CheckoutOf<'a> {
+    Branch { branch: &'a str, remote: bool },
+    Commit(&'a str),
+}
+
+impl CheckoutOf<'_> {
+    /// The name the refusals use: the branch, or the commit's short SHA.
+    fn name(&self) -> String {
+        match self {
+            CheckoutOf::Branch { branch, .. } => branch.to_string(),
+            CheckoutOf::Commit(sha) => sha.chars().take(7).collect(),
+        }
+    }
+}
+
+/// Checkout Commit's source: a commit the repository has, by its full SHA.
+fn commit_source(git: &git2::Repository, sha: &str) -> Result<CheckoutSource, CheckoutProblem> {
+    let tip = git2::Oid::from_str(sha)
+        .ok()
+        .filter(|oid| sha.len() == 40 && git.find_commit(*oid).is_ok())
+        .ok_or(CheckoutProblem::Unavailable)?;
+    Ok(CheckoutSource {
+        local: sha[..7].to_string(),
+        start: None,
+        tip,
+        detach: true,
+    })
 }
 
 /// The branch to check out, or what stops it. A local branch must not be checked out in any of
@@ -2085,6 +2119,7 @@ fn checkout_source(
             local: local.to_string(),
             start: Some(format!("refs/remotes/{branch}")),
             tip,
+            detach: false,
         });
     }
     let tip = found(branch, git2::BranchType::Local)
@@ -2097,6 +2132,7 @@ fn checkout_source(
         local: branch.to_string(),
         start: None,
         tip,
+        detach: false,
     })
 }
 
@@ -2115,14 +2151,19 @@ struct CheckoutPlan {
 fn plan_checkout(
     state: &AppState,
     repo: &Repo,
-    branch: &str,
-    remote: bool,
+    of: CheckoutOf<'_>,
     target: &CheckoutTarget,
 ) -> Result<Result<CheckoutPlan, CheckoutProblem>, AppError> {
     let source = {
         let shared = state.pool.get(&repo.path)?;
         let git = lock(&shared);
-        match checkout_source(&git, &repo.trees, branch, remote) {
+        let source = match of {
+            CheckoutOf::Branch { branch, remote } => {
+                checkout_source(&git, &repo.trees, branch, remote)
+            }
+            CheckoutOf::Commit(sha) => commit_source(&git, sha),
+        };
+        match source {
             Ok(source) => source,
             Err(problem) => return Ok(Err(problem)),
         }
@@ -2168,7 +2209,18 @@ pub fn check_checkout(
     target: &CheckoutTarget,
 ) -> Result<Option<CheckoutProblem>, AppError> {
     let repo = open_repo(state, repo_id)?;
-    Ok(plan_checkout(state, &repo, branch, remote, target)?.err())
+    Ok(plan_checkout(state, &repo, CheckoutOf::Branch { branch, remote }, target)?.err())
+}
+
+/// Checkout Commit's checks for the dialog (SPEC §16 "Checkout Commit"), as Checkout Branch's.
+pub fn check_checkout_commit(
+    state: &AppState,
+    repo_id: &str,
+    sha: &str,
+    target: &CheckoutTarget,
+) -> Result<Option<CheckoutProblem>, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    Ok(plan_checkout(state, &repo, CheckoutOf::Commit(sha), target)?.err())
 }
 
 /// How Checkout Branch runs (SPEC §15 "Checkout branch").
@@ -2179,6 +2231,10 @@ pub(super) enum CheckoutRun {
     Switch { stash: bool, track: bool },
     /// A new linked worktree in `$GITGEL_FOLDER`.
     Worktree { track: bool },
+    /// The worktree in `$GITGEL_FOLDER` detaches its HEAD at `$GITGEL_COMMIT`; `stash` as Switch.
+    Detach { stash: bool },
+    /// A new linked worktree in `$GITGEL_FOLDER`, its HEAD detached at `$GITGEL_COMMIT`.
+    DetachWorktree,
 }
 
 /// Checkout Branch (SPEC §15 "Checkout branch"): a local branch checked out nowhere, or a remote
@@ -2192,9 +2248,36 @@ pub fn checkout_branch(
     remote: bool,
     target: CheckoutTarget,
 ) -> Result<ScriptRun, AppError> {
+    checkout(
+        state,
+        repo_id,
+        CheckoutOf::Branch { branch, remote },
+        target,
+    )
+}
+
+/// Checkout Commit (SPEC §16 "Checkout Commit"): a commit as a detached HEAD, in one of the repo's
+/// worktrees (which switches to it, its uncommitted changes brought along or stashed first) or in
+/// a new linked worktree. Runs in the repository folder.
+pub fn checkout_commit(
+    state: &AppState,
+    repo_id: &str,
+    sha: &str,
+    target: CheckoutTarget,
+) -> Result<ScriptRun, AppError> {
+    checkout(state, repo_id, CheckoutOf::Commit(sha), target)
+}
+
+fn checkout(
+    state: &AppState,
+    repo_id: &str,
+    of: CheckoutOf<'_>,
+    target: CheckoutTarget,
+) -> Result<ScriptRun, AppError> {
     let repo = open_repo(state, repo_id)?;
     repo.not_busy(state)?;
-    let plan = match plan_checkout(state, &repo, branch, remote, &target)? {
+    let branch = of.name();
+    let plan = match plan_checkout(state, &repo, of, &target)? {
         Ok(plan) => plan,
         Err(problem) => {
             scan::rescan_repo(state, &repo.id, UpdateReason::Rescan, None);
@@ -2220,10 +2303,13 @@ pub fn checkout_branch(
     } = plan;
     let local = source.local;
     let track = source.start.is_some();
-    let mut env = vec![
-        ("GITGEL_BRANCH".to_string(), local.clone()),
-        ("GITGEL_FOLDER".to_string(), folder.clone()),
-    ];
+    let detach = source.detach;
+    let mut env = vec![("GITGEL_FOLDER".to_string(), folder.clone())];
+    if detach {
+        env.push(("GITGEL_COMMIT".into(), source.tip.to_string()));
+    } else {
+        env.push(("GITGEL_BRANCH".into(), local.clone()));
+    }
     if let Some(start) = source.start {
         env.push(("GITGEL_START".into(), start));
     }
@@ -2235,20 +2321,32 @@ pub fn checkout_branch(
                     format!("Before switching to {local}"),
                 ));
             }
-            CheckoutRun::Switch {
-                stash: !bring,
-                track,
+            if detach {
+                CheckoutRun::Detach { stash: !bring }
+            } else {
+                CheckoutRun::Switch {
+                    stash: !bring,
+                    track,
+                }
             }
         }
+        None if detach => CheckoutRun::DetachWorktree,
         None => CheckoutRun::Worktree { track },
     };
     run::launch(
         state,
         Launch {
-            script_id: format!("{ACTION_PREFIX}checkout-branch"),
+            script_id: format!(
+                "{ACTION_PREFIX}{}",
+                if detach {
+                    "checkout-commit"
+                } else {
+                    "checkout-branch"
+                }
+            ),
             name: format!("Checkout {local}"),
             icon: "branch".into(),
-            entry_key: entry_key(&repo.id, Some(&local), Some(&folder)),
+            entry_key: entry_key(&repo.id, (!detach).then_some(local.as_str()), Some(&folder)),
             repo_label: format!("{} / {local}", repo.name),
             repo_id: repo.id.clone(),
             also_rescan: Vec::new(),
@@ -2262,10 +2360,24 @@ pub fn checkout_branch(
 
 /// `[git -C "$GITGEL_FOLDER" stash push … &&] git -C "$GITGEL_FOLDER" switch …` or `git worktree
 /// add …`; a remote branch becomes a local one tracking it (`--track -c` / `--track -b`, from
-/// `$GITGEL_START`): only fixed text and quoted variables.
+/// `$GITGEL_START`); a commit detaches HEAD (`switch --detach`, `worktree add --detach`): only
+/// fixed text and quoted variables.
 pub(super) fn checkout_command(run: CheckoutRun) -> String {
     let git = r#"git -C "$GITGEL_FOLDER""#;
     match run {
+        CheckoutRun::Detach { stash } => {
+            let switch = format!(r#"{git} switch --detach "$GITGEL_COMMIT""#);
+            if stash {
+                format!(
+                    r#"{git} stash push --include-untracked --message "$GITGEL_MESSAGE" && {switch}"#
+                )
+            } else {
+                switch
+            }
+        }
+        CheckoutRun::DetachWorktree => {
+            r#"git worktree add --detach "$GITGEL_FOLDER" "$GITGEL_COMMIT""#.into()
+        }
         CheckoutRun::Switch { stash, track } => {
             let switch = if track {
                 format!(r#"{git} switch --track -c "$GITGEL_BRANCH" "$GITGEL_START""#)
@@ -2722,6 +2834,42 @@ mod tests {
             checkout_command(CheckoutRun::Worktree { track: true }),
             r#"git worktree add --track -b "$GITGEL_BRANCH" "$GITGEL_FOLDER" "$GITGEL_START""#
         );
+        assert_eq!(
+            checkout_command(CheckoutRun::Detach { stash: false }),
+            r#"git -C "$GITGEL_FOLDER" switch --detach "$GITGEL_COMMIT""#
+        );
+        assert_eq!(
+            checkout_command(CheckoutRun::Detach { stash: true }),
+            r#"git -C "$GITGEL_FOLDER" stash push --include-untracked --message "$GITGEL_MESSAGE" && git -C "$GITGEL_FOLDER" switch --detach "$GITGEL_COMMIT""#
+        );
+        assert_eq!(
+            checkout_command(CheckoutRun::DetachWorktree),
+            r#"git worktree add --detach "$GITGEL_FOLDER" "$GITGEL_COMMIT""#
+        );
+    }
+
+    #[test]
+    fn commit_source_takes_full_shas_of_commits() {
+        let t = crate::git::testutil::TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        let sha = tip.to_string();
+        let source = commit_source(&t.repo, &sha).unwrap();
+        assert_eq!(
+            (source.local.as_str(), source.tip, source.detach),
+            (&sha[..7], tip, true)
+        );
+        for bad in [
+            "main",
+            &sha[..7],
+            "-x",
+            "0000000000000000000000000000000000000000",
+        ] {
+            assert_eq!(
+                commit_source(&t.repo, bad),
+                Err(CheckoutProblem::Unavailable),
+                "{bad}"
+            );
+        }
     }
 
     #[test]

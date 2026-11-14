@@ -89,6 +89,7 @@ import { conflictsBanner } from './banners';
 import styles from './Review.module.css';
 import { AmendModal } from './AmendModal';
 import { CherryPickMenu, cherryTargets } from './CherryPickMenu';
+import { openCheckout } from '../../sync/CheckoutBranch';
 import { NewBranchForm } from '../../sync/NewBranch';
 import { DeleteTagModal } from './DeleteTagModal';
 import { CommitForm } from './CommitForm';
@@ -1531,6 +1532,23 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 }}
               >
                 {t('reset.menu')}
+              </MenuItem>
+            )}
+            {repoScan?.status === 'ok' && (
+              <MenuItem
+                icon="worktree"
+                onHover={closeSubs}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  openCheckout({
+                    repoId,
+                    branch: commitMenu.commit.shortSha,
+                    remote: false,
+                    commit: commitMenu.commit.sha,
+                  });
+                }}
+              >
+                {t('history.menuCheckout')}
               </MenuItem>
             )}
             {revertable(commitMenu.commit) && (

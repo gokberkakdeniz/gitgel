@@ -1885,6 +1885,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `stash_push` | `entries: StashPush[]` (an `EntryRef` with `paths: string[] \| null`, `untracked`), `message: string` | `ScriptRun` (one git action for all entries, §15) |
 | `stash_apply` | `repoId, index, sha, worktreePath, pop: boolean` | `ScriptRun` |
 | `stash_drop` | `repoId, index, sha` | `ScriptRun` |
+| `git_checkout_commit` | `repoId, sha` (full), `target: CheckoutTarget` | `ScriptRun` (§16 "Checkout Commit") |
+| `check_checkout_commit` | `repoId, sha, target: CheckoutTarget` | `CheckoutProblem \| null` |
 | `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`summary`, `description`, `noVerify`, `amend`: the newest commit's SHA or null) | `ScriptRun` (§15 "Commit"; commits what is staged) |
 | `get_index_changes` | `entry: EntryRef` | `IndexChanges` (`staged`: HEAD ↔ index, `unstaged`: index ↔ working tree, untracked included; `FileChange[]` each) |
 | `git_stage` | `entry: EntryRef`, `files: StageFiles` (`stage: string[]`, `unstage: string[]`) | `ScriptRun` (§15 "Stage") |
@@ -3182,7 +3184,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     `accent.text`, a 7ch column, wider for a longer SHA; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
     muted; tooltip author · date); no avatar. Right-click on it (Hi10; a 240px menu): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Undo Commit" (`undo`, below),
-    "Reset to Commit…" (`history`, below), "Revert Changes" (`revert`, below), "Create Branch from Commit…" (`branch`, below), "Create Tag…" (`tag`, below), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
+    "Reset to Commit…" (`history`, below), "Checkout Commit…" (`worktree`, below), "Revert Changes" (`revert`, below), "Create Branch from Commit…" (`branch`, below), "Create Tag…" (`tag`, below), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
     chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`), "Copy Tags" (`copy`; "Copy Tag" for one; the names with spaces between; left out without a tag) and "Open Permalink" (`link`; the commit's page on the remote in the browser, as the header's SHA; only for a commit the branch's upstream has, on a GitHub, GitLab or Bitbucket remote). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -3281,6 +3283,18 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     the commit the list showed as newest, the commit is HEAD or not under it, an operation in
     progress, another git action in the repository. Pushed commits leave the branch diverged, so
     the diverged banner offers Force Push.
+  - **Checkout Commit** (GitHub Desktop's Checkout Commit): on any commit, whether `rev` is
+    checked out or not. Opens Checkout Branch's dialog (§15 "Checkout branch") for the commit:
+    title "Checkout Commit", sub `<repo> / <sha>`, the same list (the repository folder, New
+    worktree with the folder `<repo>-worktrees/<sha>`, the linked worktrees; "Bring to <sha>" /
+    "Stash" for a picked one with uncommitted changes) and the same checks
+    (`check_checkout_commit`; the commit must be one the repository has: "<sha> cannot be
+    checked out"). Run (`git_checkout_commit`, script id `git:checkout-commit`, name "Checkout
+    <sha>", `branch` icon, toast “Checking out <sha>…”, then “Checked out <sha>”), in the
+    repository folder: an existing worktree `git -C "$GITGEL_FOLDER" switch --detach
+    "$GITGEL_COMMIT"` (after `stash push --include-untracked --message "Before switching to
+    <sha>"` with Stash), a new one `git worktree add --detach "$GITGEL_FOLDER"
+    "$GITGEL_COMMIT"`. The folder is then a detached entry on Branches.
   - **Revert Changes** (GitHub Desktop's Revert Changes in Commit, shortened): on any commit
     when `rev` is checked out in a worktree and no commit, amend of it or operation is in
     progress; left out otherwise. Runs `git revert --no-edit "$GITGEL_COMMIT"` (`-m 1` for a merge

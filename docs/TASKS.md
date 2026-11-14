@@ -544,6 +544,7 @@ it was done within a topic.
 - [x] Create Branch from Commit…: the commit menu opens New Branch's form with the commit as its base (the Base field shows the short SHA and is not a picker) — 2026-11-14
 - [x] Reset to Commit…: the commit menu's item on a commit under the newest one asks first; `git reset --soft` (the commits' changes stay staged, as Undo Commit), or `--hard` with "Discard their changes" — 2026-11-14
   - note: soft chosen over GitHub Desktop's mixed, to match Undo Commit.
+- [x] Checkout Commit…: the commit menu opens Checkout Branch's dialog for the commit; the picked worktree (or a new one) gets it as a detached HEAD (`git switch --detach`, `git worktree add --detach`) — 2026-11-14
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked

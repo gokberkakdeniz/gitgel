@@ -1,7 +1,8 @@
 // Checkout Branch (SPEC §15 "Checkout branch"): a git action from the branch menus, checking a
 // branch that is checked out nowhere (or a remote branch, as a local one tracking it) out in one
 // of its repo's worktrees, which switches to it (its uncommitted changes brought along or
-// stashed), or in a new linked worktree.
+// stashed), or in a new linked worktree. Checkout Commit (SPEC §16), from Review's commit menu,
+// is the same dialog for a commit, checked out as a detached HEAD.
 import { open } from '@tauri-apps/plugin-dialog';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { create } from 'zustand';
@@ -11,7 +12,7 @@ import { MenuItem } from '../components/Menu';
 import { Modal } from '../components/Modal';
 import { t } from '../i18n';
 import { cnt } from '../lib/format';
-import { checkCheckout, gitCheckoutBranch } from '../lib/ipc';
+import { checkCheckout, checkCheckoutCommit, gitCheckoutBranch, gitCheckoutCommit } from '../lib/ipc';
 import { basename, expandHome, tildifyHome } from '../lib/paths';
 import type { AppError, CheckoutProblem, CheckoutTarget, EntrySummary, RepoScan } from '../lib/types';
 import { startGitAction } from '../scripts/runs';
@@ -28,10 +29,12 @@ interface Request {
   repoId: string;
   branch: string;
   remote: boolean;
+  /** Checkout Commit: the commit's full SHA; `branch` is then its short SHA. */
+  commit?: string;
 }
 const useCheckout = create<{ req: Request | null }>()(() => ({ req: null }));
 
-/** Opens Checkout Branch: from a Remote Branches row's menu. */
+/** Opens Checkout Branch: from a Remote Branches row's menu; Checkout Commit with `commit`. */
 export function openCheckout(req: Request) {
   useCheckout.setState({ req });
 }
@@ -151,7 +154,10 @@ function CheckoutForm({ req, scan, onClose }: { req: Request; scan: RepoScan; on
     setChecking(true);
     let live = true;
     const timer = setTimeout(() => {
-      checkCheckout(repoId, req.branch, req.remote, target)
+      (req.commit
+        ? checkCheckoutCommit(repoId, req.commit, target)
+        : checkCheckout(repoId, req.branch, req.remote, target)
+      )
         .then((p) => live && setProblem(p))
         .catch(() => live && setProblem(null))
         .finally(() => live && setChecking(false));
@@ -160,21 +166,23 @@ function CheckoutForm({ req, scan, onClose }: { req: Request; scan: RepoScan; on
       live = false;
       clearTimeout(timer);
     };
-  }, [repoId, req.branch, req.remote, target]);
+  }, [repoId, req.branch, req.remote, req.commit, target]);
 
   const canRun = !problem && !checking && !starting && !running && (target.kind === 'existing' || !!newFolder);
   const run = async () => {
     if (!canRun) return;
     setStarting(true);
     try {
-      const started = await gitCheckoutBranch(repoId, req.branch, req.remote, target);
+      const started = await (req.commit
+        ? gitCheckoutCommit(repoId, req.commit, target)
+        : gitCheckoutBranch(repoId, req.branch, req.remote, target));
       onClose();
       void startGitAction(
-        t('branches.actCheckout', { branch }),
-        t('branches.checkingOut', { branch }),
+        t(req.commit ? 'history.actCheckout' : 'branches.actCheckout', { branch }),
+        t(req.commit ? 'history.checkingOut' : 'branches.checkingOut', { branch }),
         () => Promise.resolve(started),
         {
-          done: t('branches.checkedOut', { branch }),
+          done: t(req.commit ? 'history.checkedOut' : 'branches.checkedOut', { branch }),
         },
       );
     } catch (err) {
@@ -209,16 +217,28 @@ function CheckoutForm({ req, scan, onClose }: { req: Request; scan: RepoScan; on
       >
         <div role="radiogroup" aria-label={t('branches.newChanges', { ...cnt(n) })} className={nb.changes}>
           <span className={nb.changesLabel}>{t('branches.newChanges', { ...cnt(n) })}</span>
-          <SubChoice title={t('branches.checkoutBring', { branch })} on={bring} onPick={() => setBring(true)} />
+          <SubChoice
+            title={t(req.commit ? 'history.checkoutBring' : 'branches.checkoutBring', { branch })}
+            on={bring}
+            onPick={() => setBring(true)}
+          />
           <SubChoice title={t('branches.newStash')} on={!bring} onPick={() => setBring(false)} />
         </div>
       </Choice>
     );
   };
 
-  const message = error ?? (problem ? t(PROBLEM[problem], { branch, base: branch }) : null);
+  const message =
+    error ??
+    (problem
+      ? t(req.commit && problem === 'unavailable' ? 'history.checkoutUnavailable' : PROBLEM[problem], {
+          branch,
+          base: branch,
+        })
+      : null);
+  const title = t(req.commit ? 'history.checkoutTitle' : 'branches.checkoutTitle');
   return (
-    <Modal aria-label={t('branches.checkoutTitle')} width={460} paddingTop={140} onClose={onClose}>
+    <Modal aria-label={title} width={460} paddingTop={140} onClose={onClose}>
       <div
         className={styles.body}
         onKeyDown={(e) => {
@@ -230,7 +250,7 @@ function CheckoutForm({ req, scan, onClose }: { req: Request; scan: RepoScan; on
         }}
       >
         <div className={styles.head}>
-          <div className={styles.title}>{t('branches.checkoutTitle')}</div>
+          <div className={styles.title}>{title}</div>
           <div className={styles.sub}>{`${scan.name} / ${req.branch}`}</div>
         </div>
         <div className={nb.field}>
