@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { branchCommands } from '../../commands/branch';
 import { entryGoItem } from '../../commands/global';
 import { useCommandSource, type Command } from '../../commands/registry';
@@ -15,6 +16,7 @@ import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { Pill } from '../../components/Pill';
 import { Banner } from '../../components/Banner';
 import { Button } from '../../components/Button';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { startGitAction, useRuns } from '../../scripts/runs';
 import { providerOrder } from '../../lib/ai';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
@@ -50,6 +52,7 @@ import {
   gitCommit,
   gitCreateTag,
   gitDeleteTag,
+  gitReorder,
   gitReset,
   gitRevert,
   gitReword,
@@ -95,6 +98,7 @@ import { NewBranchForm } from '../../sync/NewBranch';
 import { DeleteTagModal } from './DeleteTagModal';
 import { CommitForm } from './CommitForm';
 import { generateMessage } from './generate';
+import { reorderSpan, useCommitDrag } from './reorder';
 import { ResetModal } from './ResetModal';
 import { SquashModal } from './SquashModal';
 import { TagModal } from './TagModal';
@@ -921,6 +925,28 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       { done: t('reword.done', { sha, rev }) },
     );
   };
+  // Reorder: the checked-out branch's own one-parent commits, from the newest down to the first
+  // merge or commit of the base, can be dragged to another place among themselves.
+  const movable = useMemo(() => {
+    if (!headed || !entry?.worktreePath || entry.operation || committing || amending) return [];
+    const stop = commits.findIndex((c) => c.inBase || c.parents !== 1);
+    const list = (stop < 0 ? commits : commits.slice(0, stop)).map((c) => c.sha);
+    return list.length > 1 ? list : [];
+  }, [headed, entry?.worktreePath, entry?.operation, committing, amending, commits]);
+  const reorder = (order: string[]) => {
+    if (!entryRef) return;
+    void startGitAction(t('reorder.act'), t('reorder.running'), () => gitReorder(entryRef, order), {
+      done: t('reorder.done', { rev }),
+    });
+  };
+  // A moved commit under the upstream line is on the remote: asks first.
+  const [askReorder, setAskReorder] = useState<string[] | null>(null);
+  const commitDrag = useCommitDrag(movable, (next) => {
+    const order = reorderSpan(movable, next);
+    if (order.length < 2) return;
+    if (data?.upstream?.name && order.length > data.upstream.ahead) setAskReorder(order);
+    else reorder(order);
+  });
   // Cherry-Pick to's picker, beside its item (Hi11).
   const [cherrySub, setCherrySub] = useState<{ el: HTMLElement; focus?: boolean } | null>(null);
   useEffect(() => setCherrySub(null), [commitMenu]);
@@ -1791,6 +1817,38 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           onReset={(hard) => resetTo(askReset, hard)}
         />
       )}
+      {commitDrag.line &&
+        createPortal(
+          <div
+            className={styles.dropLine}
+            style={{ top: commitDrag.line.top, left: commitDrag.line.left, width: commitDrag.line.width }}
+          />,
+          document.body,
+        )}
+      {askReorder && (
+        <ConfirmModal
+          aria-label={t('reorder.title')}
+          title={t('reorder.title')}
+          width={460}
+          onClose={() => setAskReorder(null)}
+          context={[{ icon: 'branch', text: `${repoName} / ${rev}` }]}
+          note={t('squash.forcePush')}
+        >
+          <Button size={36} autoFocus onClick={() => setAskReorder(null)}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="primary"
+            size={36}
+            onClick={() => {
+              setAskReorder(null);
+              reorder(askReorder);
+            }}
+          >
+            {t('reorder.button')}
+          </Button>
+        </ConfirmModal>
+      )}
       {askTag && (
         <TagModal
           repoId={repoId}
@@ -1929,6 +1987,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                     }}
                     amending={amending?.sha ?? null}
                     fromBranch={fromBranch}
+                    drag={commitDrag}
                   />
                 ),
             )}
@@ -2266,6 +2325,7 @@ function ListRow({
   onCommitMenu,
   amending,
   fromBranch,
+  drag,
 }: {
   row: HistoryRow;
   current: string | null;
@@ -2286,6 +2346,8 @@ function ListRow({
   amending: string | null;
   /** Commits that come from another branch (stacked), by SHA: a warning pill names it. */
   fromBranch: Record<string, string>;
+  /** Reorder: a press on a commit row may become a drag; the dragged one is dimmed. */
+  drag: { dragging: string | null; onPointerDown: (sha: string) => (e: React.PointerEvent<HTMLElement>) => void };
 }) {
   const oneLine = useData((s) => s.config?.settings.commitRows === 'one-line');
   switch (row.kind) {
@@ -2326,6 +2388,7 @@ function ListRow({
         on && styles.rowOn,
         many && styles.rowPicked,
         c.inBase && styles.shared,
+        drag.dragging === c.sha && styles.rowDragged,
       ]
         .filter(Boolean)
         .join(' ');
@@ -2358,6 +2421,8 @@ function ListRow({
             aria-selected={on || many}
             title={c.body ? `${c.subject}\n\n${c.body}` : c.subject}
             className={cls}
+            data-commit={c.sha}
+            onPointerDown={drag.onPointerDown(c.sha)}
             onClick={(e) => onPick(c.sha, e)}
             onContextMenu={(e) => {
               e.preventDefault();

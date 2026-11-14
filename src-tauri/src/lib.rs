@@ -171,6 +171,7 @@ pub fn run() {
             commands::git_cherry_pick,
             commands::git_squash,
             commands::git_reword,
+            commands::git_reorder,
             commands::git_revert,
             commands::git_reset,
             commands::git_create_tag,

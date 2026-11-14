@@ -222,6 +222,7 @@ gitgel/
 │  │            #   Switch Branch, AmendModal, CherryPickMenu, SquashModal, TagModal, DeleteTagModal and
 │  │            #   ResetModal (§5, §16);
 │  │            #   GenerateButton + generate.ts: Generate message's ✦ and its run (§15)
+│  │            #   reorder.ts: dragging a commit row to another place (§16 "Reorder")
 │  │            #   stage.ts: Stage / Unstage's queue and the rows moved before git confirms (§15 "Stage")
 │  ├─ stash/    # §15 writing stashes: actions.ts (git actions), StashDialog (P4), StashRowMenu, StashTargetMenu
 │  │            # (Apply to / Pop to, P5), DropStashModal (P6)
@@ -1903,6 +1904,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_delete_tag` | `entry: EntryRef, name, remote: boolean` (the tag on the remote too) | `ScriptRun` (§16 "Delete Tag") |
 | `get_tag_remote` | `repoId` | `string \| null` (`origin`, else the only remote) |
 | `git_reword` | `entry: EntryRef, sha, summary, description` | `ScriptRun` (§16 "Reword") |
+| `git_reorder` | `entry: EntryRef, order: string[]` (HEAD's newest commits in their new order, newest first) | `ScriptRun` (§16 "Reorder") |
 | `git_squash` | `entry: EntryRef, shas: string[]` (newest first), `summary, description` | `ScriptRun` (§16 "Squash") |
 
 Notes:
@@ -3378,6 +3380,25 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     stay. A git action (script id `git:reword`, name "Reword <sha>", `pencil` icon, toast
     “Rewording <sha>…”, then “Reworded <sha> on <rev>”). Refused as Squash, and for a merge
     commit or the branch's first one. Unlike Amend it runs no hooks and takes nothing staged.
+  - **Reorder** (GitHub Desktop's drag to reorder; `reorder.ts`): a commit row dragged to
+    another place. Only among the branch's own one-parent commits, from the newest down to the
+    first merge commit or commit under the base line, when `rev` is checked out in a worktree,
+    not while searching, and no commit, amend or operation is in progress. A press becomes a
+    drag after 6px (pointer events, as Settings › Scripts' rows): the row dims to 0.5, the
+    cursor is `grabbing`, and a 2px `accent` line across the list marks where it lands (above
+    the first row, else under the row before it); release moves it, Esc cancels, and the click
+    that ends a drag picks nothing. A moved commit under the upstream line asks first: "Confirm
+    Reorder Commits" (`ConfirmModal`, 460px; `<repo> / <branch>`, Squash's force-push note,
+    Cancel focused, primary "Reorder"). Runs `git rebase -q -i --autostash "$GITGEL_PARENT"`
+    (the parent of the lowest commit that changes place) in the worktree as a git action
+    (`git_reorder`, script id `git:reorder`, name "Reorder Commits", `rebase` icon, toast
+    “Reordering commits…”, then “Reordered commits on <rev>”); the todo is one `pick` per commit
+    from there up, oldest first, in `GITGEL_TODO`, written to git's todo file by a fixed
+    `GIT_SEQUENCE_EDITOR` (`/bin/sh -c 'printf "%s\n" "$GITGEL_TODO" > "$1"' --`). Refused
+    before running: the commits sent are not exactly HEAD's newest ones (the branch moved), a
+    merge or the branch's first commit among them, an operation in progress, another git action
+    in the repository. On conflicts git stops and the entry shows the rebase in progress (§15
+    "Operations in progress").
 - **Several rows** (Hi12; GitHub Desktop's multi-commit diff): ⌘-click adds a row to
   the picked one or takes it out, ⇧-click takes the range from the last row clicked, ⇧↑ / ⇧↓ in
   the list move the range's far end; Uncommitted can be one of them, the stashes cannot. The

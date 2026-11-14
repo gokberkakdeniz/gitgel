@@ -1697,6 +1697,113 @@ fn rewrite(
     )
 }
 
+/// Reorder (SPEC §16 "Reorder"): the branch's newest commits in a new order. `order` (newest
+/// first) must hold exactly the commits from HEAD down its first parents, each with one parent;
+/// they are picked again in that order on the oldest one's parent (`git rebase -i`, its todo
+/// written from `$GITGEL_TODO`). Refused mid-operation, for a merge or the branch's first
+/// commit among them, or once HEAD's commits are no longer those.
+pub fn reorder(
+    state: &AppState,
+    entry: EntryRef,
+    order: Vec<String>,
+) -> Result<ScriptRun, AppError> {
+    if order.len() < 2 {
+        return Err(AppError::Invalid("Pick at least two commits.".into()));
+    }
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let (parent, todo) = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        if operation::read(&wt).is_some() || !operation::unmerged(&wt)?.is_empty() {
+            return Err(AppError::Invalid(format!(
+                "{} has an operation in progress.",
+                repo.label(tree)
+            )));
+        }
+        let mut at = wt
+            .head()
+            .and_then(|h| h.peel_to_commit())
+            .map_err(|_| AppError::Invalid("The branch has no commit.".into()))?;
+        let mut chain = Vec::with_capacity(order.len());
+        let parent = loop {
+            if at.parent_count() != 1 {
+                return Err(AppError::Invalid(
+                    "A merge commit or the branch's first commit cannot be moved.".into(),
+                ));
+            }
+            chain.push(at.id().to_string());
+            let parent = at.parent(0)?;
+            if chain.len() == order.len() {
+                break parent.id().to_string();
+            }
+            at = parent;
+        };
+        reorder_todo(&chain, &order).map(|todo| (parent, todo))
+    }
+    .ok_or_else(|| {
+        AppError::Invalid("The branch no longer has these commits; move it again.".into())
+    })?;
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}reorder"),
+            name: "Reorder Commits".into(),
+            icon: "rebase".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                Some(&tree.path.to_string_lossy()),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: REORDER_COMMAND.into(),
+            env: with_git_env(vec![
+                ("GITGEL_PARENT".into(), parent),
+                ("GITGEL_TODO".into(), todo),
+                ("GIT_SEQUENCE_EDITOR".into(), REORDER_EDITOR.into()),
+            ]),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// Reorder's todo, oldest first: one `pick` per commit of `order` (newest first), which must be
+/// `chain` (HEAD's commits, newest first) in another order; `None` otherwise.
+pub(super) fn reorder_todo(chain: &[String], order: &[String]) -> Option<String> {
+    let mut a: Vec<&String> = chain.iter().collect();
+    let mut b: Vec<&String> = order.iter().collect();
+    a.sort();
+    b.sort();
+    a.dedup();
+    if a != b || a.len() != chain.len() || chain == order {
+        return None;
+    }
+    Some(
+        order
+            .iter()
+            .rev()
+            .map(|sha| format!("pick {sha}"))
+            .collect::<Vec<_>>()
+            .join("\n"),
+    )
+}
+
+/// Reorder's command: only fixed text and a quoted variable; the todo comes from the editor.
+pub(super) const REORDER_COMMAND: &str = "git rebase -q -i --autostash \"$GITGEL_PARENT\"";
+/// Reorder's `GIT_SEQUENCE_EDITOR`: git runs it with the todo file as its argument, and it
+/// writes `$GITGEL_TODO` there. Fixed text.
+pub(super) const REORDER_EDITOR: &str = r#"/bin/sh -c 'printf "%s\n" "$GITGEL_TODO" > "$1"' --"#;
+
 /// Squash's command: the new commit made by `git commit-tree` (with the oldest commit's author)
 /// goes into `git reset --soft`, or into `git rebase --onto` when newer commits sit above the
 /// squashed ones. Only fixed text and quoted variables.
@@ -2747,6 +2854,25 @@ mod tests {
         assert!(remote.contains(r#"git push "$GITGEL_REMOTE" --delete "$GITGEL_REMOTE_REF""#));
         // One quoted string for the user's shell: no quote of its own inside.
         assert_eq!(remote.matches('\'').count(), 2);
+    }
+
+    #[test]
+    fn reorder_todo_picks_oldest_first() {
+        let s = |v: &[&str]| v.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        let chain = s(&["c", "b", "a"]);
+        assert_eq!(
+            reorder_todo(&chain, &s(&["b", "c", "a"])).as_deref(),
+            Some("pick a\npick c\npick b")
+        );
+        // The same order, other commits, a commit twice or one missing: nothing to run.
+        for bad in [
+            s(&["c", "b", "a"]),
+            s(&["c", "b", "x"]),
+            s(&["b", "b", "a"]),
+            s(&["b", "c"]),
+        ] {
+            assert_eq!(reorder_todo(&chain, &bad), None, "{bad:?}");
+        }
     }
 
     #[test]

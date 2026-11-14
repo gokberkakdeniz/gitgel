@@ -204,6 +204,20 @@
   opacity: 0.7;
 }
 
+/* Reorder: the commit being dragged, and the line where it lands. */
+.rowDragged {
+  opacity: 0.5;
+}
+
+.dropLine {
+  position: fixed;
+  z-index: 50;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
 .shared .subject {
   color: var(--text-muted);
 }

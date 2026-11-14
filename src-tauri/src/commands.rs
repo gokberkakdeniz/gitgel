@@ -770,6 +770,19 @@ pub async fn git_revert(
     .await
 }
 
+/// Reorder: the entry's newest commits in this order (newest first).
+#[tauri::command]
+pub async fn git_reorder(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    order: Vec<String>,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::reorder(state, entry, order)
+    })
+    .await
+}
+
 /// Reword: a commit of the entry's branch gets a new message.
 #[tauri::command]
 pub async fn git_reword(

@@ -195,6 +195,9 @@ export const gitSquash = (entry: EntryRef, shas: string[], summary: string, desc
 /** Cherry-Pick to: `git cherry-pick <sha>` in one of the repository's worktrees. */
 export const gitCherryPick = (repoId: string, sha: string, worktreePath: string) =>
   invoke<ScriptRun>('git_cherry_pick', { repoId, sha, worktreePath });
+/** Reorder: the entry's newest commits in this order (newest first; all of them from HEAD down
+ * to the oldest one that moves). */
+export const gitReorder = (entry: EntryRef, order: string[]) => invoke<ScriptRun>('git_reorder', { entry, order });
 /** Reword: a commit of the entry's branch gets this message. */
 export const gitReword = (entry: EntryRef, sha: string, summary: string, description: string) =>
   invoke<ScriptRun>('git_reword', { entry, sha, summary, description });
