@@ -747,6 +747,7 @@ it was done within a topic.
 - [x] Linting: `pnpm lint` (Biome: linter and formatter check; `pnpm format` rewrites) for JS, TS,
   CSS, JSON and HTML, and a pre-commit hook (`.githooks/pre-commit`) that runs it with `tsc`,
   `pnpm i18n:check`, `cargo fmt --check` and clippy — 2026-11-14
+- [x] Commit messages must be Conventional Commits (`.githooks/commit-msg`) — 2026-11-14
 
 ---
 

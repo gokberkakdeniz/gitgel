@@ -76,7 +76,8 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   `.githooks/pre-commit` runs the quick ones on every commit (`pnpm install` sets
   `core.hooksPath`): lint, `tsc --noEmit` and `pnpm i18n:check` when anything outside
   `src-tauri/`, `docs/`, `design/` and `*.md` is staged; `cargo fmt --check` and clippy when
-  `src-tauri/` is.
+  `src-tauri/` is. `.githooks/commit-msg` refuses a subject that is not a Conventional Commit
+  (`type(scope): subject`; feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert).
 
   For UI work, also open the screen with `pnpm tauri dev` and compare it with its `.dc.html`.
 
@@ -185,6 +186,7 @@ gitgel/
 ├─ design/screens/*.dc.html       # visual reference (read-only)
 ├─ docs/PROGRESS.md               # this file
 ├─ .githooks/pre-commit           # lint, tsc, i18n, cargo fmt and clippy before a commit (§0)
+├─ .githooks/commit-msg           # Conventional Commits only (§0)
 ├─ scripts/make-fixtures.sh       # test repositories (§12)
 ├─ scripts/make-demo.sh           # the README screenshots' demo repositories (§12)
 ├─ scripts/i18n-check.mjs         # `pnpm i18n:check`: en/tr key parity, MF2 validity, the code's keys and variables
