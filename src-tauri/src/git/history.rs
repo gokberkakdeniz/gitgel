@@ -719,7 +719,16 @@ mod tests {
         t.tag("tree", t.repo.find_commit(tip).unwrap().tree_id());
 
         let w = walk(&t.repo, &tip.to_string(), None, &[], 200).unwrap();
-        let tags: Vec<_> = w.commits.iter().map(|c| c.tags.clone()).collect();
+        // Their order (newest first) is `refs::tags_by_commit`'s test.
+        let tags: Vec<_> = w
+            .commits
+            .iter()
+            .map(|c| {
+                let mut tags = c.tags.clone();
+                tags.sort();
+                tags
+            })
+            .collect();
         assert_eq!(tags, [vec!["v1.0", "v1.1"], vec!["first"]]);
     }
 

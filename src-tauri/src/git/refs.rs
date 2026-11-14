@@ -321,21 +321,47 @@ pub fn tags(repo: &Repository) -> Result<Vec<String>, AppError> {
     Ok(tags)
 }
 
-/// Tag names by the commit they point to (annotated tags peeled), each list sorted. Tags on
-/// anything other than a commit are left out.
+/// Tag names by the commit they point to (annotated tags peeled), each list newest first by
+/// when the tag was made: an annotated tag's own date, a lightweight one's ref file's (a packed
+/// lightweight tag has none; those come last, by name). Tags on anything other than a commit are
+/// left out.
 pub fn tags_by_commit(repo: &Repository) -> Result<HashMap<Oid, Vec<String>>, AppError> {
-    let mut out: HashMap<Oid, Vec<String>> = HashMap::new();
+    let mut out: HashMap<Oid, Vec<(Option<i64>, String)>> = HashMap::new();
     for r in repo.references_glob("refs/tags/*")? {
         let r = r?;
         let (Ok(name), Ok(commit)) = (r.shorthand(), r.peel_to_commit()) else {
             continue;
         };
-        out.entry(commit.id()).or_default().push(name.to_string());
+        out.entry(commit.id())
+            .or_default()
+            .push((tag_made_at(repo, &r), name.to_string()));
     }
-    for names in out.values_mut() {
-        names.sort();
+    Ok(out
+        .into_iter()
+        .map(|(oid, mut tags)| {
+            tags.sort_by(|a, b| match (a.0, b.0) {
+                (Some(x), Some(y)) => y.cmp(&x).then_with(|| a.1.cmp(&b.1)),
+                (Some(_), None) => std::cmp::Ordering::Less,
+                (None, Some(_)) => std::cmp::Ordering::Greater,
+                (None, None) => a.1.cmp(&b.1),
+            });
+            (oid, tags.into_iter().map(|(_, name)| name).collect())
+        })
+        .collect())
+}
+
+/// When a tag was made, in milliseconds: the tagger's date of an annotated tag, else the
+/// modification time of its loose ref file (git keeps no date for a lightweight tag).
+fn tag_made_at(repo: &Repository, r: &git2::Reference) -> Option<i64> {
+    if let Ok(tag) = r.peel_to_tag() {
+        if let Some(tagger) = tag.tagger() {
+            return Some(tagger.when().seconds() * 1000);
+        }
     }
-    Ok(out)
+    let file = repo.commondir().join(r.name().ok()?);
+    let made = std::fs::metadata(file).ok()?.modified().ok()?;
+    let since = made.duration_since(std::time::UNIX_EPOCH).ok()?;
+    i64::try_from(since.as_millis()).ok()
 }
 
 /// A fingerprint of every tag's name and target: it changes when a tag is added, moved or
@@ -739,6 +765,33 @@ mod tests {
             resolve_default_base(&t.repo, &order(&["nope", "main~0"])),
             Some(("main~0".into(), "main~0".into()))
         );
+    }
+
+    #[test]
+    fn tags_by_commit_lists_the_newest_tag_first() {
+        let t = TestRepo::new();
+        let a = t.commit_on("main", &[("a", Some(b"a"))], "a", 1);
+        let file = |name: &str| t.repo.commondir().join("refs/tags").join(name);
+        let at = |name: &str, secs: u64| {
+            let when = std::time::UNIX_EPOCH + std::time::Duration::from_secs(secs);
+            std::fs::File::options()
+                .write(true)
+                .open(file(name))
+                .unwrap()
+                .set_modified(when)
+                .unwrap();
+        };
+        t.tag("b", a);
+        t.tag("a", a);
+        t.tag("c", a);
+        at("b", 100);
+        at("a", 200);
+        at("c", 300);
+        assert_eq!(tags_by_commit(&t.repo).unwrap()[&a], ["c", "a", "b"]);
+        // An annotated tag goes by its own date (now), whatever its file says.
+        t.tag_annotated("z", a);
+        at("z", 1);
+        assert_eq!(tags_by_commit(&t.repo).unwrap()[&a], ["z", "c", "a", "b"]);
     }
 
     #[test]
