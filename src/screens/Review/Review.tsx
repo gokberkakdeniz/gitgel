@@ -1335,19 +1335,17 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
         <Popover anchorRect={commitMenu.at} width={220} onClose={() => setCommitMenu(null)}>
           <Menu aria-label={t('history.commitMenu', { sha: commitMenu.commit.shortSha })}>
             {commitMenu.commit.sha === tip && entry?.worktreePath && (
-              <>
-                <MenuItem
-                  icon="pencil"
-                  disabled={committing || !!entry.operation || amending?.sha === commitMenu.commit.sha}
-                  onHover={() => setCherrySub(null)}
-                  onSelect={() => {
-                    setCommitMenu(null);
-                    startAmend(commitMenu.commit);
-                  }}
-                >
-                  {t('amend.menuAmend')}
-                </MenuItem>
-              </>
+              <MenuItem
+                icon="pencil"
+                disabled={committing || !!entry.operation || amending?.sha === commitMenu.commit.sha}
+                onHover={() => setCherrySub(null)}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  startAmend(commitMenu.commit);
+                }}
+              >
+                {t('amend.menuAmend')}
+              </MenuItem>
             )}
             {undoable(commitMenu.commit) && (
               <MenuItem

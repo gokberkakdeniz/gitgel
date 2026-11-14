@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": { "includes": ["**", "!design", "!src-tauri/gen", "!src-tauri/target"] },
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "a11y": "off",
+      "correctness": { "useExhaustiveDependencies": "off" },
+      "style": { "noNonNullAssertion": "off", "noDescendingSpecificity": "off" },
+      "complexity": { "noImportantStyles": "off" },
+      "suspicious": {
+        "noArrayIndexKey": "off",
+        "noControlCharactersInRegex": "off",
+        "noTemplateCurlyInString": "off",
+        "noFocusedTests": "off",
+        "noDuplicateTestHooks": "off",
+        "noPrototypeBuiltins": "off"
+      }
+    }
+  },
+  "overrides": [
+    { "includes": ["index.html"], "linter": { "rules": { "correctness": { "noInnerDeclarations": "off" } } } }
+  ],
+  "css": { "parser": { "cssModules": true } }
+}

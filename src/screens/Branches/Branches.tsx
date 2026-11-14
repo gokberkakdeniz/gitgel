@@ -1,5 +1,5 @@
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BaseMenu } from '../../components/BaseMenu/BaseMenu';
 import { Button } from '../../components/Button';
 import { Checkbox } from '../../components/Checkbox';
@@ -236,7 +236,7 @@ function BranchList() {
     ...(shownStashes > 0 ? [t('branches.subStashes', { ...cnt(shownStashes) })] : []),
   ].join(' · ');
 
-  let body;
+  let body: ReactNode;
   // Repos appear as they finish scanning; the rest are counted below the list.
   const pending = config.repos.length - scans.length;
   const pendingNote =

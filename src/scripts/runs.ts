@@ -87,7 +87,7 @@ export function onRunOutput(runId: string, listener: OutputListener): () => void
 
 /** `script-output`: to the panel showing that run, if any. */
 export function applyRunOutput(chunk: ScriptOutputChunk): void {
-  outputListeners.get(chunk.runId)?.forEach((l) => l(chunk));
+  for (const l of outputListeners.get(chunk.runId) ?? []) l(chunk);
 }
 
 /** `{branch}`, `{base}` and `{repo}` in a script's name, as the menu shows it. */

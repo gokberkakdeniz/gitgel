@@ -60,6 +60,6 @@ export function onGenerateFinished(runId: string, listener: Listener): () => voi
 /** `generate-finished`: to whoever started that run, or kept until it subscribes. */
 export function applyGenerateFinished(result: GenerateFinished): void {
   const set = listeners.get(result.runId);
-  if (set) set.forEach((l) => l(result));
+  if (set) for (const l of set) l(result);
   else early.set(result.runId, result);
 }

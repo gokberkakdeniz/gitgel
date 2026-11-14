@@ -66,9 +66,11 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   simplest behaviour and mention it at the next checkpoint.
 - After every task these must pass:
   - `pnpm build` (tsc + vite)
+  - `pnpm lint` (Biome's linter over JS, TS, CSS, JSON and HTML; rules in `biome.json`)
   - `pnpm test` (vitest)
   - `cargo test --manifest-path src-tauri/Cargo.toml`
   - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`
+  - `cargo fmt --manifest-path src-tauri/Cargo.toml --check`
 
   For UI work, also open the screen with `pnpm tauri dev` and compare it with its `.dc.html`.
 
@@ -180,7 +182,7 @@ gitgel/
 ├─ scripts/make-demo.sh           # the README screenshots' demo repositories (§12)
 ├─ scripts/i18n-check.mjs         # `pnpm i18n:check`: en/tr key parity, MF2 validity, the code's keys and variables
 ├─ scripts/release.sh             # `pnpm release` (§12)
-├─ index.html  package.json  pnpm-lock.yaml  .nvmrc  vite.config.ts  tsconfig*.json
+├─ index.html  package.json  pnpm-lock.yaml  .nvmrc  vite.config.ts  tsconfig*.json  biome.json
 ├─ src/
 │  ├─ main.tsx                    # font imports, Monaco setup
 │  ├─ App.tsx                     # layout, route switch, global shortcuts, drop overlay

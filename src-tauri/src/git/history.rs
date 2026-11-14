@@ -712,19 +712,11 @@ mod tests {
         let t = TestRepo::new();
         let root = t.commit_on("main", &[("a", Some(b"a"))], "init", 3);
         let tip = t.commit_on("main", &[("b", Some(b"b"))], "second", 1);
-        let root_obj = t.repo.find_object(root, None).unwrap();
-        let tip_obj = t.repo.find_object(tip, None).unwrap();
-        t.repo.tag_lightweight("v1.1", &tip_obj, false).unwrap();
-        let sig = git2::Signature::now("Test", "test@example.com").unwrap();
-        t.repo
-            .tag("v1.0", &tip_obj, &sig, "annotated", false)
-            .unwrap();
-        t.repo.tag_lightweight("first", &root_obj, false).unwrap();
+        t.tag("v1.1", tip);
+        t.tag_annotated("v1.0", tip);
+        t.tag("first", root);
         // A tag on a tree is no commit's.
-        let tree = t.repo.find_commit(tip).unwrap().tree().unwrap();
-        t.repo
-            .tag_lightweight("tree", tree.as_object(), false)
-            .unwrap();
+        t.tag("tree", t.repo.find_commit(tip).unwrap().tree_id());
 
         let w = walk(&t.repo, &tip.to_string(), None, &[], 200).unwrap();
         let tags: Vec<_> = w.commits.iter().map(|c| c.tags.clone()).collect();

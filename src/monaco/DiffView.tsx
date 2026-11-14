@@ -189,7 +189,7 @@ export function DiffView({
       } catch {
         // Already disposed.
       }
-      m.models.forEach((model) => model.dispose());
+      for (const model of m.models) model.dispose();
     },
     [],
   );

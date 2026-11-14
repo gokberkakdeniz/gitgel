@@ -586,9 +586,9 @@ fn squash_patch(
         }
         oldest = find(sha)?;
     }
-    let parent = oldest.parent(0).map_err(|_| {
-        AppError::Invalid("The branch's first commit cannot be squashed.".into())
-    })?;
+    let parent = oldest
+        .parent(0)
+        .map_err(|_| AppError::Invalid("The branch's first commit cannot be squashed.".into()))?;
     let mut opts = DiffOptions::new();
     opts.context_lines(3).ignore_submodules(true);
     let diff = repo.diff_tree_to_tree(
@@ -608,7 +608,9 @@ fn squash_patch(
     }
     let mut stat = Vec::new();
     let mut patch = Vec::new();
-    add_patches(&diff, diff::NewSide::Tree, &mut stat, &mut patch, |_, _| true)?;
+    add_patches(&diff, diff::NewSide::Tree, &mut stat, &mut patch, |_, _| {
+        true
+    })?;
     Ok((stat, fit_patch(patch), parent.id(), paths))
 }
 

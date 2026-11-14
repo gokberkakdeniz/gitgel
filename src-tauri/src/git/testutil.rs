@@ -143,6 +143,15 @@ impl TestRepo {
             .unwrap();
     }
 
+    /// An annotated tag on `oid`.
+    pub fn tag_annotated(&self, name: &str, oid: Oid) {
+        let target = self.repo.find_object(oid, None).unwrap();
+        let sig = git2::Signature::now("Test", "test@example.com").unwrap();
+        self.repo
+            .tag(name, &target, &sig, "annotated", false)
+            .unwrap();
+    }
+
     /// Moves a branch to `oid` (simulates a fast-forward merge).
     pub fn set_branch(&self, name: &str, oid: Oid) {
         self.repo

@@ -82,7 +82,9 @@ const setOver = (entryKey: string, change: (m: Record<string, StageTo>) => void)
 export function requestStage(target: StageTarget, ops: StageOp[]): void {
   if (ops.length === 0) return;
   const { repoId, entryKey } = target;
-  setOver(entryKey, (m) => ops.forEach((o) => (m[o.path] = o.to)));
+  setOver(entryKey, (m) => {
+    for (const o of ops) m[o.path] = o.to;
+  });
   const batch = waiting.get(repoId) ?? { target, ops: new Map<string, StageOp>() };
   for (const o of ops) {
     const before = batch.ops.get(o.path);
@@ -204,7 +206,9 @@ async function flush(repoId: string): Promise<void> {
         () => gitStage(target.entry, { stage, unstage }),
         (sub, runId) => {
           // The rows go back; the next read of the index says where they are.
-          setOver(target.entryKey, (m) => ops.forEach((o) => delete m[o.path]));
+          setOver(target.entryKey, (m) => {
+            for (const o of ops) delete m[o.path];
+          });
           failToast(
             t(verb === 'stage' ? 'history.couldNotStage' : 'history.couldNotUnstage', {
               ...cnt(ops.length),
