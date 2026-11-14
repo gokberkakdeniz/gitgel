@@ -526,7 +526,8 @@ screens mount, and a variants board beside it (`ButtonSpec.dc.html`, `MenuSpec.d
   are not `Input`s.
 - `Popover`: positioned under an anchor rect, kept inside the viewport (flips above; when it fits
   on neither side it takes the roomier one and scrolls, since the webview cannot draw outside the
-  window), `bg.elevated`, radius 12, popover shadow; outside click and Esc close it.
+  window; one beside its anchor, a submenu, starts 2px past the edge of the menu its item is in, is at most 320px tall and scrolls past that), `bg.elevated`,
+  radius 12, popover shadow; outside click and Esc close it.
 - `Menu`: padding 6, items 8px 10px, radius 8, active item `bg.hover`; `danger`, `hint`, `sub`
   lines and dividers; ↑/↓ move between the enabled items. Items may carry an icon on the left:
   a 16px slot, gap 10; line icons are 14px, stroke 1.8, `text.muted` (danger

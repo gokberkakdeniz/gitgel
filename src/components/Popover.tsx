@@ -32,6 +32,8 @@ interface Props {
 
 const GAP = 6;
 const MARGIN = 8;
+/** The tallest a popover beside its anchor (a submenu) gets; a longer list scrolls. */
+const SIDE_MAX = 320;
 
 /** A popover opened inside another (a submenu) registers with it, so a click in it is not a
  * click outside the parent, and Esc closes the innermost one first. */
@@ -57,8 +59,9 @@ function place(
     let left = a.right + 2;
     if (left + w > vw - MARGIN) left = a.left - 2 - w;
     left = Math.max(MARGIN, left);
-    const height = Math.min(h, vh - 2 * MARGIN);
-    const top = Math.max(MARGIN, Math.min(a.top - 6, vh - MARGIN - height));
+    const height = Math.min(h, SIDE_MAX, vh - 2 * MARGIN);
+    // Its first item level with the anchor: up by the menu's padding (6) and the border (1).
+    const top = Math.max(MARGIN, Math.min(a.top - 7, vh - MARGIN - height));
     return { top, left, maxHeight: h > height ? height : undefined };
   }
   let left = o.alignRight ? a.right - w : a.left;
@@ -116,6 +119,12 @@ export function Popover({ anchorRect, onClose, width, alignRight, above, side, a
       const dx = now.left - t.start.left;
       const dy = now.top - t.start.top;
       if (dx || dy) a = new DOMRect(a.x + dx, a.y + dy, a.width, a.height);
+    }
+    // A submenu opens beside the menu its item is in, not over that menu's edge.
+    const menu = side === 'right' && t?.el.isConnected ? t.el.closest('[data-popover]') : null;
+    if (menu) {
+      const m = menu.getBoundingClientRect();
+      a = new DOMRect(m.x, a.y, m.width, a.height);
     }
     const next = place(a, el.offsetWidth, el.scrollHeight, { alignRight, above, side });
     setPos((p) => (p && p.top === next.top && p.left === next.left && p.maxHeight === next.maxHeight ? p : next));
