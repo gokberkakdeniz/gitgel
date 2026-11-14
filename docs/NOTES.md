@@ -21,3 +21,34 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   not expose (only through internal ESM modules, which may break on upgrades). Sturdier: our own
   glyph-margin / overlay widget per hunk from `getLineChanges()`, wired to the picked-lines
   stage/unstage (`79f1a20`); Revert would be a git action (SPEC §0, §10).
+- **More in the commit menu** (2026-11-14). GitHub Desktop has them: Create Branch from Commit
+  (New Branch with the commit as its base), Reset to Commit (the branch back to it; soft / mixed
+  / hard to decide), Checkout Commit (a detached HEAD). Each a git action on the existing
+  pattern. Further: reordering commits by dragging and rewording one, beside Squash.
+- **Viewed files** (2026-11-14). Marking a file of a review as viewed, with a count of what is
+  left; where the marks live and when a changed file loses its mark are open.
+- **Notes on lines** (2026-11-14). A local note on a diff line, and copying all of a review's
+  notes at once (with their `@path:line` references) to hand to an agent.
+- **Blame and file history** (2026-11-14). Neither exists: who last changed a line, and the
+  commits of one file.
+- **Image diffs** (2026-11-14). A binary file only says so today; images could show side by
+  side.
+- **Comparing two refs** (2026-11-14). Two branches or two commits against each other, not only
+  a branch against its base.
+- **Conflicts** (2026-11-14). In a conflicted file: take ours, theirs or both, and opening it in
+  an external merge tool. Today Review only lists the files and offers Continue / Abort.
+- **Merge** (2026-11-14). Merging another branch into the open one; only Rebase on base exists.
+- **Background fetch** (2026-11-14). Fetching on an interval. SPEC §5 Settings says there is no
+  refresh interval on purpose, so this would change that decision.
+- **Pull requests** (2026-11-14). A branch's pull request: its state and checks, and a link to
+  open or create one. Needs the host's API or `gh`.
+- **Ignore a file** (2026-11-14). "Add to .gitignore" in Uncommitted's file menu. It writes a
+  file in the worktree, not the repository: to decide whether that is a git action.
+- **Stash picked lines** (2026-11-14). As staging picked lines, but into a stash.
+- **Command palette** (2026-11-14). Change Base… and Fetch of a whole project are not in it
+  (SPEC §5 "Command palette").
+- **More from the AI providers** (2026-11-14). A summary of a review, or a pull request
+  description, from the provider that writes commit messages.
+- **Many tags on a commit** (2026-11-14). The list under a stacked tag pill cannot scroll (the
+  pointer cannot enter it), so a commit with dozens of tags gets a long one. Option: show the
+  first few and `+N`.
