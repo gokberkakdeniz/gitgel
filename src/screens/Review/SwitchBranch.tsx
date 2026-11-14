@@ -65,7 +65,14 @@ function switchItems(scan: RepoScan, now: number = Date.now() / 1000): Item[] {
     });
   }
   for (const r of scan.remotes) {
-    items.push({ rev: r.name, group: 'remote', name: r.name, worktreePath: null, meta: agoText(r.lastCommitAt, now), merged: false });
+    items.push({
+      rev: r.name,
+      group: 'remote',
+      name: r.name,
+      worktreePath: null,
+      meta: agoText(r.lastCommitAt, now),
+      merged: false,
+    });
   }
   return items;
 }

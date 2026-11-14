@@ -58,18 +58,16 @@ describe('stagedContent', () => {
 
   it('unstages picked lines back to the original', () => {
     // Staged diff: HEAD → index. Unstaging X only leaves the rest staged.
-    expect(stagedContent(original, modified, cutHunks(hunks, pick('modified', 4, 4)), true)).toBe(
-      'a\nB\nc\nY\nd\n',
-    );
+    expect(stagedContent(original, modified, cutHunks(hunks, pick('modified', 4, 4)), true)).toBe('a\nB\nc\nY\nd\n');
     expect(stagedContent(original, modified, hunks.map(wholeCut), true)).toBe(original);
   });
 
   it('keeps line ends and a missing last newline', () => {
     expect(stagedContent('a\r\nb', 'a\r\nb\r\nc', [wholeCut(h(2, 0, 3, 3))], false)).toBe('a\r\nb\r\nc');
     expect(stagedContent('a', 'a\nb', [wholeCut(h(1, 0, 2, 2))], false)).toBe('a\nb');
-    expect(stagedContent('', 'x\ny\n', cutHunks([h(0, 0, 1, 2)], { side: 'modified', from: 1, to: 1, lines: 3 }), false)).toBe(
-      'x\n',
-    );
+    expect(
+      stagedContent('', 'x\ny\n', cutHunks([h(0, 0, 1, 2)], { side: 'modified', from: 1, to: 1, lines: 3 }), false),
+    ).toBe('x\n');
   });
 });
 

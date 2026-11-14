@@ -114,10 +114,22 @@ export function appCommands(route: Route): Command[] {
     { id: 'newProject', title: t('sidebar.newProject'), group: general, keys: '⌘N', run: () => startDraftProject([]) },
   ];
   if (route.name !== 'branches')
-    list.push({ id: 'goBranches', title: t('cmd.goBranches'), group: general, run: () => nav.push({ name: 'branches' }) });
-  if (selectCanBack(nav)) list.push({ id: 'back', title: t('cmd.back'), group: general, keys: '⌘[', run: () => useNav.getState().back() });
+    list.push({
+      id: 'goBranches',
+      title: t('cmd.goBranches'),
+      group: general,
+      run: () => nav.push({ name: 'branches' }),
+    });
+  if (selectCanBack(nav))
+    list.push({ id: 'back', title: t('cmd.back'), group: general, keys: '⌘[', run: () => useNav.getState().back() });
   if (selectCanForward(nav))
-    list.push({ id: 'forward', title: t('cmd.forward'), group: general, keys: '⌘]', run: () => useNav.getState().forward() });
+    list.push({
+      id: 'forward',
+      title: t('cmd.forward'),
+      group: general,
+      keys: '⌘]',
+      run: () => useNav.getState().forward(),
+    });
   list.push(
     {
       id: 'sidebar',
@@ -152,19 +164,41 @@ export function appCommands(route: Route): Command[] {
   if (settings) {
     const current = choiceOf(settings);
     list.push(
-      ...themeChoices().filter((c) => c.theme !== current.theme || c.appearance !== current.appearance).map((c) => ({
-        id: `theme:${c.theme}:${c.appearance}`,
-        title: t('cmd.theme', { name: `${c.name} ${t(c.label)}` }),
-        group: settingsGroup,
-        run: () => saveSettings({ theme: c.theme, appearance: c.appearance }),
-      })),
+      ...themeChoices()
+        .filter((c) => c.theme !== current.theme || c.appearance !== current.appearance)
+        .map((c) => ({
+          id: `theme:${c.theme}:${c.appearance}`,
+          title: t('cmd.theme', { name: `${c.name} ${t(c.label)}` }),
+          group: settingsGroup,
+          run: () => saveSettings({ theme: c.theme, appearance: c.appearance }),
+        })),
       // Review's commit rows and layout (Settings › Appearance): the one not chosen.
       settings.commitRows === 'one-line'
-        ? { id: 'rows:two', title: t('cmd.commitRows', { name: t('settings.commitRowsTwo') }), group: settingsGroup, run: () => saveSettings({ commitRows: 'two-line' }) }
-        : { id: 'rows:one', title: t('cmd.commitRows', { name: t('settings.commitRowsOne') }), group: settingsGroup, run: () => saveSettings({ commitRows: 'one-line' }) },
+        ? {
+            id: 'rows:two',
+            title: t('cmd.commitRows', { name: t('settings.commitRowsTwo') }),
+            group: settingsGroup,
+            run: () => saveSettings({ commitRows: 'two-line' }),
+          }
+        : {
+            id: 'rows:one',
+            title: t('cmd.commitRows', { name: t('settings.commitRowsOne') }),
+            group: settingsGroup,
+            run: () => saveSettings({ commitRows: 'one-line' }),
+          },
       settings.historyLayout === 'columns'
-        ? { id: 'layout:tree', title: t('cmd.layout', { name: t('settings.historyLayoutTree') }), group: settingsGroup, run: () => saveSettings({ historyLayout: 'tree' }) }
-        : { id: 'layout:columns', title: t('cmd.layout', { name: t('settings.historyLayoutColumns') }), group: settingsGroup, run: () => saveSettings({ historyLayout: 'columns' }) },
+        ? {
+            id: 'layout:tree',
+            title: t('cmd.layout', { name: t('settings.historyLayoutTree') }),
+            group: settingsGroup,
+            run: () => saveSettings({ historyLayout: 'tree' }),
+          }
+        : {
+            id: 'layout:columns',
+            title: t('cmd.layout', { name: t('settings.historyLayoutColumns') }),
+            group: settingsGroup,
+            run: () => saveSettings({ historyLayout: 'columns' }),
+          },
     );
   }
   list.push(

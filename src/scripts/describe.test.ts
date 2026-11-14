@@ -32,7 +32,6 @@ describe('scriptMeta', () => {
   });
 });
 
-
 describe('scriptProblem', () => {
   const ok = { ...newScript(), name: 'Run tests', command: 'pnpm test' };
   const input = (id: string, extra = {}) => ({

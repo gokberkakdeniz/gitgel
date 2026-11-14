@@ -56,8 +56,18 @@ export function BaseOrder({ config }: { config: Config }) {
             titleMono: true,
             actionsOnHover: true,
             actions: [
-              { icon: 'arrow-up', ariaLabel: t('settings.baseMoveUp', { name }), disabled: i === 0, onPress: () => move(i, -1) },
-              { icon: 'arrow-down', ariaLabel: t('settings.baseMoveDown', { name }), disabled: i === list.length - 1, onPress: () => move(i, 1) },
+              {
+                icon: 'arrow-up',
+                ariaLabel: t('settings.baseMoveUp', { name }),
+                disabled: i === 0,
+                onPress: () => move(i, -1),
+              },
+              {
+                icon: 'arrow-down',
+                ariaLabel: t('settings.baseMoveDown', { name }),
+                disabled: i === list.length - 1,
+                onPress: () => move(i, 1),
+              },
               // The list is never empty: the last branch cannot be removed.
               {
                 icon: 'close',

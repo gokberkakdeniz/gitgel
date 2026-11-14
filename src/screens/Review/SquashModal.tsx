@@ -61,10 +61,21 @@ export function SquashModal({
     const active = forced ?? provider;
     if (!active || generating) return;
     setGenerating(true);
-    generateMessage(active, () => generateMessageStart(entry, [], active, null, commits.map((c) => c.sha)), {
-      ended: () => open.current && setGenerating(false),
-      answer: (summary, description) => open.current && setMsg({ summary, description }),
-    });
+    generateMessage(
+      active,
+      () =>
+        generateMessageStart(
+          entry,
+          [],
+          active,
+          null,
+          commits.map((c) => c.sha),
+        ),
+      {
+        ended: () => open.current && setGenerating(false),
+        answer: (summary, description) => open.current && setMsg({ summary, description }),
+      },
+    );
   };
   const squash = () => {
     if (!ok) return;

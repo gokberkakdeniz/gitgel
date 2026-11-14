@@ -24,9 +24,7 @@ describe('permalink', () => {
     expect(permalink(github, 'abc123', 'src/a b.ts', 12, 12)).toBe(
       'https://github.com/o/r/blob/abc123/src/a%20b.ts#L12',
     );
-    expect(permalink(github, 'abc123', 'a.ts', 12, 14, 1)).toBe(
-      'https://github.com/o/r/blob/abc123/a.ts#L12-L13',
-    );
+    expect(permalink(github, 'abc123', 'a.ts', 12, 14, 1)).toBe('https://github.com/o/r/blob/abc123/a.ts#L12-L13');
   });
 
   it('shapes the link by host', () => {
@@ -36,9 +34,7 @@ describe('permalink', () => {
     expect(permalink(bitbucket, 'abc123', 'a.ts', 12, 14, 1)).toBe(
       'https://bitbucket.org/o/r/src/abc123/a.ts#lines-12:13',
     );
-    expect(permalink(other, 'abc123', 'a.ts', 12, 12)).toBe(
-      'https://gitea.example.com/o/r/blob/abc123/a.ts#L12',
-    );
+    expect(permalink(other, 'abc123', 'a.ts', 12, 12)).toBe('https://gitea.example.com/o/r/blob/abc123/a.ts#L12');
   });
 });
 

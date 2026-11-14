@@ -51,7 +51,11 @@ export function paletteItems(
         : merged
           ? join([e.repoName, t('palette.mergedInto', { base: e.base ?? '' }), age(e.lastCommitAt)])
           : group === 'worktrees'
-            ? join([e.repoName, ...stats, !!e.uncommitted && t('palette.uncommittedCount', { n: formatCount(e.uncommitted) })])
+            ? join([
+                e.repoName,
+                ...stats,
+                !!e.uncommitted && t('palette.uncommittedCount', { n: formatCount(e.uncommitted) }),
+              ])
             : join([e.repoName, ...stats, age(e.lastCommitAt)]);
       items.push({
         key: e.key,
@@ -78,7 +82,11 @@ export function paletteItems(
         worktreePath: null,
         meta: inside
           ? join([o.repoName, t('palette.alreadyIn', { project: projectName })])
-          : join([o.repoName, o.merged && t('palette.mergedInto', { base: scan.defaultBase ?? '' }), age(o.lastCommitAt)]),
+          : join([
+              o.repoName,
+              o.merged && t('palette.mergedInto', { base: scan.defaultBase ?? '' }),
+              age(o.lastCommitAt),
+            ]),
         tag: inside ? 'In Project' : o.merged ? 'merged' : null,
         disabled: inside,
       });

@@ -106,9 +106,7 @@ function PickView({
           {shown.map((p) => (
             <button key={p.id} type="button" className={styles.project} onClick={() => void pick(p)}>
               <span className={styles.projectName}>{p.name}</span>
-              <span className={styles.count}>
-                {t('project.entryCount', { ...cnt(p.entries.length) })}
-              </span>
+              <span className={styles.count}>{t('project.entryCount', { ...cnt(p.entries.length) })}</span>
             </button>
           ))}
         </div>

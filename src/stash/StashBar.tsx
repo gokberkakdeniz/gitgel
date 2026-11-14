@@ -15,7 +15,9 @@ import { StashTargetMenu } from './StashTargetMenu';
 /** The checked-out entry of the branch the stash was taken on, where Apply / Pop go straight. */
 export function useStashHome(stash: ReviewStash) {
   return useData((s) =>
-    stash.branch === null ? undefined : s.scan[stash.repoId]?.active.find((e) => e.worktreePath && e.branch === stash.branch),
+    stash.branch === null
+      ? undefined
+      : s.scan[stash.repoId]?.active.find((e) => e.worktreePath && e.branch === stash.branch),
   );
 }
 
@@ -39,10 +41,20 @@ export function StashBar({ stash, base }: { stash: ReviewStash; base: string }) 
           {stash.message}
         </span>
         <span className={parts.grow} />
-        <Button size={28} title={t('stash.applyTitle', { where })} active={pick?.pop === false} onClick={(e) => act(false, e.currentTarget)}>
+        <Button
+          size={28}
+          title={t('stash.applyTitle', { where })}
+          active={pick?.pop === false}
+          onClick={(e) => act(false, e.currentTarget)}
+        >
           {t('stash.applyBtn')}
         </Button>
-        <Button size={28} title={t('stash.popTitle', { where })} active={pick?.pop === true} onClick={(e) => act(true, e.currentTarget)}>
+        <Button
+          size={28}
+          title={t('stash.popTitle', { where })}
+          active={pick?.pop === true}
+          onClick={(e) => act(true, e.currentTarget)}
+        >
           {t('stash.popBtn')}
         </Button>
         <Button size={28} className={styles.dropButton} onClick={() => askDrop(stash)}>

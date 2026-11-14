@@ -93,7 +93,13 @@ export function baseRows(o: BaseOptions, q: string, custom: boolean, branch: str
   for (const r of o.remotes) {
     if (!match(r)) continue;
     const sameName = branch !== null && r.slice(r.indexOf('/') + 1) === branch;
-    rows.push({ section: 'Remote Branches', value: r, label: r, note: sameName ? t('base.sameName') : undefined, selected: stored(r) });
+    rows.push({
+      section: 'Remote Branches',
+      value: r,
+      label: r,
+      note: sameName ? t('base.sameName') : undefined,
+      selected: stored(r),
+    });
   }
   if (query) {
     for (const t of o.tags) {
@@ -106,7 +112,12 @@ export function baseRows(o: BaseOptions, q: string, custom: boolean, branch: str
 /** The row the menu opens on: the checked one, else the first that can be chosen. */
 export function initialRow(rows: BaseRow[]): number {
   const at = rows.findIndex((r) => r.selected && !r.disabled);
-  return at >= 0 ? at : Math.max(0, rows.findIndex((r) => !r.disabled));
+  return at >= 0
+    ? at
+    : Math.max(
+        0,
+        rows.findIndex((r) => !r.disabled),
+      );
 }
 
 /** Text that could be a commit SHA (7–40 hex characters). */

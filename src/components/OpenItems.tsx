@@ -68,7 +68,10 @@ export function OpenItems({ entry, onDone }: { entry: EntrySummary; onDone: () =
 
 /** The folder a file row's menu opens files from: the entry's folder (see `OpenItems`). */
 export function useEntryFolder(entry: EntrySummary | undefined): string | null {
-  return entryFolder(entry, useData((s) => s.config));
+  return entryFolder(
+    entry,
+    useData((s) => s.config),
+  );
 }
 
 /** `useEntryFolder` for a caller that has the config already (and may ask for several entries). */
@@ -108,7 +111,8 @@ export function FileOpenItems({
             onSelect={() => {
               onDone();
               const where = a.id === 'finder' || files.length > 1 ? null : at();
-              for (const f of files) openFile(f.folder, f.path, a.id, where).catch((e) => console.error('cannot open file', e));
+              for (const f of files)
+                openFile(f.folder, f.path, a.id, where).catch((e) => console.error('cannot open file', e));
             }}
           >
             {t('open.inApp', { app: a.name })}

@@ -37,7 +37,8 @@ type Row =
   | { kind: 'command'; item: Command }
   | { kind: 'help'; item: { prefix: Prefix; title: string; group: string } };
 
-const rowKey = (r: Row) => (r.kind === 'go' ? `go:${r.item.key}` : r.kind === 'command' ? `cmd:${r.item.id}` : `help:${r.item.prefix}`);
+const rowKey = (r: Row) =>
+  r.kind === 'go' ? `go:${r.item.key}` : r.kind === 'command' ? `cmd:${r.item.id}` : `help:${r.item.prefix}`;
 
 function PaletteDialog({ mode }: { mode: 'go' | 'commands' }) {
   const close = () => useUi.getState().setCommandPalette(null);
@@ -46,12 +47,21 @@ function PaletteDialog({ mode }: { mode: 'go' | 'commands' }) {
     const route = selectRoute(useNav.getState());
     const parts = contributions();
     // The screen's groups first, the app's after; the order within each as given.
-    const order = ['cmd.groupReview', 'cmd.groupBranch', 'cmd.groupProject', 'cmd.groupGeneral', 'cmd.groupSettings'].map((k) => t(k));
+    const order = [
+      'cmd.groupReview',
+      'cmd.groupBranch',
+      'cmd.groupProject',
+      'cmd.groupGeneral',
+      'cmd.groupSettings',
+    ].map((k) => t(k));
     const rank = (c: Command) => order.indexOf(c.group);
     const all = [...parts.flatMap((p) => p.commands ?? []), ...appCommands(route)];
     return {
       go: [...parts.flatMap((p) => p.go ?? []), ...appGoItems(route)],
-      commands: all.map((c, i) => ({ c, i })).sort((a, b) => rank(a.c) - rank(b.c) || a.i - b.i).map((x) => x.c),
+      commands: all
+        .map((c, i) => ({ c, i }))
+        .sort((a, b) => rank(a.c) - rank(b.c) || a.i - b.i)
+        .map((x) => x.c),
     };
   });
   const [recent] = useState(loadRecent);
@@ -67,7 +77,10 @@ function PaletteDialog({ mode }: { mode: 'go' | 'commands' }) {
   const rows: Row[] = useMemo(() => {
     if (parsed.mode === 'help') return HELP.map((h) => ({ kind: 'help', item: { ...h, group: 'help' } }));
     if (parsed.mode === 'commands')
-      return searchCommands(commands, parsed.text, recent, t('cmd.groupRecent')).map((item) => ({ kind: 'command', item }));
+      return searchCommands(commands, parsed.text, recent, t('cmd.groupRecent')).map((item) => ({
+        kind: 'command',
+        item,
+      }));
     return searchGo(go, parsed.text, parsed.kinds).map((item) => ({ kind: 'go', item }));
   }, [parsed.mode, parsed.text, parsed.kinds, commands, go, recent]);
 
@@ -109,7 +122,13 @@ function PaletteDialog({ mode }: { mode: 'go' | 'commands' }) {
   let lastGroup: string | null = null;
   let lastHeaded = false;
   return (
-    <Modal aria-label={t(inCommands ? 'cmd.commandsTitle' : 'cmd.goTitle')} width={620} paddingTop={96} closeOnScrim onClose={close}>
+    <Modal
+      aria-label={t(inCommands ? 'cmd.commandsTitle' : 'cmd.goTitle')}
+      width={620}
+      paddingTop={96}
+      closeOnScrim
+      onClose={close}
+    >
       <label className={styles.search}>
         <SearchIcon size={17} className={styles.searchIcon} />
         <input
@@ -129,7 +148,8 @@ function PaletteDialog({ mode }: { mode: 'go' | 'commands' }) {
           // project on show's entries its name, with a line after them.
           const group = row.item.group;
           const heading = row.kind === 'go' ? row.item.heading : undefined;
-          const title = group === lastGroup || row.kind === 'help' ? null : row.kind === 'command' ? group : (heading ?? null);
+          const title =
+            group === lastGroup || row.kind === 'help' ? null : row.kind === 'command' ? group : (heading ?? null);
           const line = row.kind === 'go' && !heading && lastHeaded;
           lastGroup = group;
           lastHeaded = !!heading;

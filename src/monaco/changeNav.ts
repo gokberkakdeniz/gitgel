@@ -29,10 +29,7 @@ export interface NavState {
   fileIndex: number;
 }
 
-export type NavStep =
-  | { kind: 'hunk'; index: number }
-  | { kind: 'file'; key: string; land: 'first' | 'last' }
-  | null;
+export type NavStep = { kind: 'hunk'; index: number } | { kind: 'file'; key: string; land: 'first' | 'last' } | null;
 
 export function next(s: NavState): NavStep {
   const i = s.index ?? -1;

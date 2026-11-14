@@ -7,8 +7,24 @@ import { List, type ListAction, type ListItem } from './List';
 const x = (label: string): ListAction => ({ icon: 'close', ariaLabel: label });
 
 const repos: ListItem[] = [
-  { key: 'web', title: 'web-app', titleWeight: 500, titleWidth: 96, detail: '~/code/web-app', aside: 'base main', actions: [x('Remove repository')] },
-  { key: 'api', title: 'api-server', titleWeight: 500, titleWidth: 96, detail: '~/code/api-server', aside: 'base main', actions: [x('Remove repository')] },
+  {
+    key: 'web',
+    title: 'web-app',
+    titleWeight: 500,
+    titleWidth: 96,
+    detail: '~/code/web-app',
+    aside: 'base main',
+    actions: [x('Remove repository')],
+  },
+  {
+    key: 'api',
+    title: 'api-server',
+    titleWeight: 500,
+    titleWidth: 96,
+    detail: '~/code/api-server',
+    aside: 'base main',
+    actions: [x('Remove repository')],
+  },
   {
     key: 'admin',
     title: 'admin-panel',
@@ -96,7 +112,10 @@ const col: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12 }
 
 export function ListStory() {
   const [theme, setTheme] = useState(() => {
-    const t = window.location.hash === '#list-light' ? 'gitgel-light' : (document.documentElement.dataset.theme ?? 'gitgel-dark');
+    const t =
+      window.location.hash === '#list-light'
+        ? 'gitgel-light'
+        : (document.documentElement.dataset.theme ?? 'gitgel-dark');
     document.documentElement.dataset.theme = t;
     return t;
   });
@@ -108,22 +127,52 @@ export function ListStory() {
   };
   return (
     <div style={{ height: '100%', overflow: 'auto', background: 'var(--bg-main)' }}>
-      <div style={{ width: 1040, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 28, padding: '40px 48px' }}>
+      <div
+        style={{
+          width: 1040,
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 28,
+          padding: '40px 48px',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 400, color: 'var(--text-strong)' }}>List</h1>
+          <h1
+            style={{
+              margin: 0,
+              fontFamily: 'var(--font-serif)',
+              fontSize: 28,
+              fontWeight: 400,
+              color: 'var(--text-strong)',
+            }}
+          >
+            List
+          </h1>
           <Button onClick={flip}>{theme === 'gitgel-dark' ? 'Light' : 'Dark'}</Button>
         </div>
 
         <section style={col}>
           <h2 style={h2}>Settings › Repositories · regular</h2>
           <List label="Repositories" items={repos} addLabel="+ Add repository" onAdd={() => {}} />
-          <span style={note}>titleWeight 500 + titleWidth 96; aside "base main"; a missing repo: danger Pill + Locate; ✕</span>
+          <span style={note}>
+            titleWeight 500 + titleWidth 96; aside "base main"; a missing repo: danger Pill + Locate; ✕
+          </span>
         </section>
 
         <section style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
           <div style={col}>
             <h2 style={h2}>Default base · compact, radius 10</h2>
-            <List label="Default base order" ordered density="compact" radius={10} width={280} items={bases(1)} addLabel="+ Add branch" onAdd={() => {}} />
+            <List
+              label="Default base order"
+              ordered
+              density="compact"
+              radius={10}
+              width={280}
+              items={bases(1)}
+              addLabel="+ Add branch"
+              onAdd={() => {}}
+            />
             <span style={note}>↑ ↓ ✕ show on hover (row 2)</span>
           </div>
           <div style={col}>
@@ -135,7 +184,13 @@ export function ListStory() {
               radius={10}
               width={280}
               items={bases(-1)}
-              adding={{ value: 'release candidate', onChange: () => {}, placeholder: 'Branch name, e.g. develop', invalid: true, 'aria-label': 'Add a base branch' }}
+              adding={{
+                value: 'release candidate',
+                onChange: () => {},
+                placeholder: 'Branch name, e.g. develop',
+                invalid: true,
+                'aria-label': 'Add a base branch',
+              }}
             />
             <span style={note}>the add row becomes a 28px mono Input</span>
           </div>
@@ -147,7 +202,14 @@ export function ListStory() {
 
         <section style={col}>
           <h2 style={h2}>Settings › Scripts · regular, tile lead</h2>
-          <List label="Scripts" items={[script('Open pull request', 'pull-request'), script('Run tests', 'test'), script('Copy Linear link', 'link', true)]} />
+          <List
+            label="Scripts"
+            items={[
+              script('Open pull request', 'pull-request'),
+              script('Run tests', 'test'),
+              script('Copy Linear link', 'link', true),
+            ]}
+          />
           <span style={note}>handle + tile; Switch, ✎, ✕; an off script dims its tile and title</span>
         </section>
 

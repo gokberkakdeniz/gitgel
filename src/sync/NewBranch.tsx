@@ -129,21 +129,26 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
     try {
       const run = await gitCreateBranch(repoId, branch, base, checkout);
       onClose();
-      void startGitAction(t('branches.actCreate', { branch }), t('branches.creating', { branch }), () => Promise.resolve(run), {
-        done: t('branches.created', { branch }),
-        // A base other than the repo's default is stored for the branch once it exists.
-        onStart: (runId) => {
-          if (base === scan.defaultBase) return;
-          const ended = () => {
-            const r = useRuns.getState().runs[runId];
-            if (!r || r.status === 'running') return false;
-            if (r.status === 'exited' && r.exitCode === 0) void setBranchBase(`${repoId}:${branch}`, base);
-            return true;
-          };
-          if (ended()) return;
-          const off = useRuns.subscribe(() => ended() && off());
+      void startGitAction(
+        t('branches.actCreate', { branch }),
+        t('branches.creating', { branch }),
+        () => Promise.resolve(run),
+        {
+          done: t('branches.created', { branch }),
+          // A base other than the repo's default is stored for the branch once it exists.
+          onStart: (runId) => {
+            if (base === scan.defaultBase) return;
+            const ended = () => {
+              const r = useRuns.getState().runs[runId];
+              if (!r || r.status === 'running') return false;
+              if (r.status === 'exited' && r.exitCode === 0) void setBranchBase(`${repoId}:${branch}`, base);
+              return true;
+            };
+            if (ended()) return;
+            const off = useRuns.subscribe(() => ended() && off());
+          },
         },
-      });
+      );
     } catch (err) {
       setError((err as AppError).message);
       setStarting(false);
@@ -167,7 +172,12 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
         className={styles.form}
         onKeyDown={(e) => {
           // Listed in lib/shortcuts.ts.
-          if (e.key === 'Enter' && !e.nativeEvent.isComposing && (e.target as HTMLElement).tagName === 'INPUT' && (e.target as HTMLInputElement).type !== 'checkbox') {
+          if (
+            e.key === 'Enter' &&
+            !e.nativeEvent.isComposing &&
+            (e.target as HTMLElement).tagName === 'INPUT' &&
+            (e.target as HTMLInputElement).type !== 'checkbox'
+          ) {
             e.preventDefault();
             void create();
           }
@@ -181,7 +191,17 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
           <label className={styles.label} htmlFor="new-branch-name">
             {t('branches.newName')}
           </label>
-          <Input id="new-branch-name" size={32} mono autoFocus spellCheck={false} autoComplete="off" invalid={nameInvalid} value={name} onChange={setName} />
+          <Input
+            id="new-branch-name"
+            size={32}
+            mono
+            autoFocus
+            spellCheck={false}
+            autoComplete="off"
+            invalid={nameInvalid}
+            value={name}
+            onChange={setName}
+          />
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="new-branch-base">
@@ -202,7 +222,11 @@ function NewBranchForm({ scan, anchorRect, onClose }: { scan: RepoScan; anchorRe
               more={dirty > 0}
               onPick={() => setWhere('main')}
             >
-              <div role="radiogroup" aria-label={t('branches.newChanges', { ...cnt(dirty) })} className={styles.changes}>
+              <div
+                role="radiogroup"
+                aria-label={t('branches.newChanges', { ...cnt(dirty) })}
+                className={styles.changes}
+              >
                 <span className={styles.changesLabel}>{t('branches.newChanges', { ...cnt(dirty) })}</span>
                 <SubChoice title={t('branches.newBring')} on={bring} onPick={() => setBring(true)} />
                 <SubChoice title={t('branches.newStash')} on={!bring} onPick={() => setBring(false)} />
@@ -300,7 +324,9 @@ export function Choice({
             </span>
           )}
         </span>
-        {more && <ChevronDownIcon size={12} className={on ? styles.chevron : `${styles.chevron} ${styles.chevronShut}`} />}
+        {more && (
+          <ChevronDownIcon size={12} className={on ? styles.chevron : `${styles.chevron} ${styles.chevronShut}`} />
+        )}
       </button>
       {on && more && <div className={styles.choiceMore}>{children}</div>}
     </div>
@@ -409,7 +435,8 @@ function BasePicker({
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                     e.preventDefault();
-                    if (rows.length) setActive((a) => (a + (e.key === 'ArrowDown' ? 1 : -1) + rows.length) % rows.length);
+                    if (rows.length)
+                      setActive((a) => (a + (e.key === 'ArrowDown' ? 1 : -1) + rows.length) % rows.length);
                   } else if (e.key === 'Enter') {
                     // Not the form's ↵ (the event bubbles to it through the portal).
                     e.preventDefault();

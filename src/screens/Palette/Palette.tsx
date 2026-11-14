@@ -112,53 +112,53 @@ function PaletteDialog({ projectId }: { projectId: string }) {
           }
         }}
       >
-      <label className={styles.search}>
-        <SearchIcon size={17} className={styles.searchIcon} />
-        <input
-          ref={inputRef}
-          autoFocus
-          aria-label={t('branches.searchBranches')}
-          className={styles.input}
-          value={query}
-          spellCheck={false}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setNavigating(false);
-          }}
-          onKeyDown={onKeyDown}
-        />
-        <span className={styles.hint}>{t('palette.hint')}</span>
-      </label>
+        <label className={styles.search}>
+          <SearchIcon size={17} className={styles.searchIcon} />
+          <input
+            ref={inputRef}
+            autoFocus
+            aria-label={t('branches.searchBranches')}
+            className={styles.input}
+            value={query}
+            spellCheck={false}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setNavigating(false);
+            }}
+            onKeyDown={onKeyDown}
+          />
+          <span className={styles.hint}>{t('palette.hint')}</span>
+        </label>
 
-      <div ref={listRef} className={styles.list}>
-        {shown.map((item) => {
-          const title = item.group !== lastGroup ? t(GROUP_TITLES[item.group]) : null;
-          lastGroup = item.group;
-          return (
-            <div key={item.key}>
-              {title && <div className={styles.groupTitle}>{title}</div>}
-              <Row
-                item={item}
-                checked={checked.has(item.key)}
-                active={item === activeItem}
-                onToggle={() => toggle(item.key)}
-                onHover={() => {
-                  const i = enabled.indexOf(item);
-                  if (i >= 0) setActive(i);
-                }}
-              />
-            </div>
-          );
-        })}
-        {shown.length === 0 && <div className={styles.empty}>{t('palette.noMatches')}</div>}
-      </div>
+        <div ref={listRef} className={styles.list}>
+          {shown.map((item) => {
+            const title = item.group !== lastGroup ? t(GROUP_TITLES[item.group]) : null;
+            lastGroup = item.group;
+            return (
+              <div key={item.key}>
+                {title && <div className={styles.groupTitle}>{title}</div>}
+                <Row
+                  item={item}
+                  checked={checked.has(item.key)}
+                  active={item === activeItem}
+                  onToggle={() => toggle(item.key)}
+                  onHover={() => {
+                    const i = enabled.indexOf(item);
+                    if (i >= 0) setActive(i);
+                  }}
+                />
+              </div>
+            );
+          })}
+          {shown.length === 0 && <div className={styles.empty}>{t('palette.noMatches')}</div>}
+        </div>
 
-      <ModalFooter note={t('palette.selectedCount', { ...cnt(checked.size) })}>
-        <Button onClick={close}>{t('common.cancel')}</Button>
-        <Button variant="primary" kbd="↵" disabled={checked.size === 0} onClick={() => void add(false)}>
-          {t('palette.add')}
-        </Button>
-      </ModalFooter>
+        <ModalFooter note={t('palette.selectedCount', { ...cnt(checked.size) })}>
+          <Button onClick={close}>{t('common.cancel')}</Button>
+          <Button variant="primary" kbd="↵" disabled={checked.size === 0} onClick={() => void add(false)}>
+            {t('palette.add')}
+          </Button>
+        </ModalFooter>
       </div>
     </Modal>
   );

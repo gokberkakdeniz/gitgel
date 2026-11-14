@@ -29,6 +29,13 @@ describe('draftRows', () => {
       scan,
     );
     expect(rows[0]).toBe(active);
-    expect(rows[1]).toMatchObject({ key: 'r_1:old', repoName: 'web-app', base: 'main', lastCommitAt: 42, state: 'merged', ahead: null });
+    expect(rows[1]).toMatchObject({
+      key: 'r_1:old',
+      repoName: 'web-app',
+      base: 'main',
+      lastCommitAt: 42,
+      state: 'merged',
+      ahead: null,
+    });
   });
 });

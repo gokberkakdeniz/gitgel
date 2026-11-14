@@ -15,7 +15,7 @@ body {
   margin: 0;
   background: var(--bg-main);
   color: var(--text-body);
-  font: 13px/1.4 var(--font-ui);
+  font: 13px / 1.4 var(--font-ui);
   -webkit-font-smoothing: antialiased;
   user-select: none;
   -webkit-user-select: none;

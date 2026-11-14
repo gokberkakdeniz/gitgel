@@ -7,7 +7,7 @@ staged=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -n "$staged" ] || exit 0
 
 if echo "$staged" | grep -qvE '^(src-tauri|docs|design)/|\.md$'; then
-  echo "pre-commit: biome lint"
+  echo "pre-commit: biome (lint, format)"
   pnpm -s lint
   echo "pre-commit: tsc"
   pnpm -s tsc --noEmit

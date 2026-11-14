@@ -30,7 +30,13 @@ export type Appearance = 'system' | 'light' | 'dark';
 export type CommitRows = 'two-line' | 'one-line';
 export type HistoryLayout = 'tree' | 'columns';
 export type Language = 'system' | 'en' | 'tr';
-export type NumberFormat = 'plain-dot' | 'plain-comma' | 'group-comma-dot' | 'group-dot-comma' | 'group-space-dot' | 'group-space-comma';
+export type NumberFormat =
+  | 'plain-dot'
+  | 'plain-comma'
+  | 'group-comma-dot'
+  | 'group-dot-comma'
+  | 'group-space-dot'
+  | 'group-space-comma';
 export interface Settings {
   newBranchCheckout: 'worktree' | 'main' | 'none'; // the row New Branch opens with
   defaultBaseOrder: string[];
@@ -203,9 +209,19 @@ export interface BranchLoss {
 export type NewBranchProblem = 'badName' | 'exists' | 'badFolder' | 'folderNotEmpty' | 'mainBusy' | 'cannotBring';
 /** Where New Branch checks the branch out: a new linked worktree, the repository folder (its
  * uncommitted changes brought along, or stashed first) or nowhere. */
-export type NewBranchCheckout = { kind: 'worktree'; folder: string } | { kind: 'main'; bring: boolean } | { kind: 'none' };
+export type NewBranchCheckout =
+  | { kind: 'worktree'; folder: string }
+  | { kind: 'main'; bring: boolean }
+  | { kind: 'none' };
 /** What stops Checkout Branch (`check_checkout`). */
-export type CheckoutProblem = 'unavailable' | 'exists' | 'noWorktree' | 'busy' | 'cannotBring' | 'badFolder' | 'folderNotEmpty';
+export type CheckoutProblem =
+  | 'unavailable'
+  | 'exists'
+  | 'noWorktree'
+  | 'busy'
+  | 'cannotBring'
+  | 'badFolder'
+  | 'folderNotEmpty';
 /** Where Checkout Branch checks the branch out: one of the repo's worktrees, which switches to it
  * (its uncommitted changes brought along, or stashed first), or a new linked worktree. */
 export type CheckoutTarget = { kind: 'existing'; folder: string; bring: boolean } | { kind: 'new'; folder: string };

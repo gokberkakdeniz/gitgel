@@ -80,18 +80,12 @@ export function note(c: FolderCheck): string {
   const repo = c.repoPath ? tildifyHome(c.repoPath) : '';
   switch (c.kind) {
     case 'repo':
-      return c.defaultBase
-        ? t('addrepos.noteBase', { base: c.defaultBase })
-        : t('addrepos.noteNoBase');
+      return c.defaultBase ? t('addrepos.noteBase', { base: c.defaultBase }) : t('addrepos.noteNoBase');
     case 'resolved':
-      return c.via === 'worktree'
-        ? t('addrepos.noteWorktree', { repo })
-        : t('addrepos.noteInside', { repo });
+      return c.via === 'worktree' ? t('addrepos.noteWorktree', { repo }) : t('addrepos.noteInside', { repo });
     case 'duplicate':
       if (c.via === 'worktree') {
-        return c.duplicateOf === 'config'
-          ? t('addrepos.noteWtAdded', { repo })
-          : t('addrepos.noteWtBatch', { repo });
+        return c.duplicateOf === 'config' ? t('addrepos.noteWtAdded', { repo }) : t('addrepos.noteWtBatch', { repo });
       }
       return c.duplicateOf === 'config' ? t('addrepos.noteAdded') : t('addrepos.noteBatch');
     case 'not_git':

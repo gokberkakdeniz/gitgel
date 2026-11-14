@@ -50,7 +50,9 @@ export function upstreamLabel(u: Upstream): string {
     return u.ahead > 0
       ? translate('sync.upNotOn', { remote: u.remote, n: formatCount(u.ahead) })
       : translate('sync.upNotOnPlain', { remote: u.remote });
-  return [u.remote, u.ahead > 0 && `↑${formatCount(u.ahead)}`, u.behind > 0 && `↓${formatCount(u.behind)}`].filter(Boolean).join(' ');
+  return [u.remote, u.ahead > 0 && `↑${formatCount(u.ahead)}`, u.behind > 0 && `↓${formatCount(u.behind)}`]
+    .filter(Boolean)
+    .join(' ');
 }
 
 export function upstreamTitle(u: Upstream): string {
@@ -69,7 +71,12 @@ export function upstreamTitle(u: Upstream): string {
 export function divergedBanner(t: SyncTarget): string | null {
   const u = t.upstream;
   if (!u || !syncState(t).diverged) return null;
-  return translate('sync.diverged', { n: String(u.behind), d: formatCount(u.behind), branch: t.branch ?? '', remote: u.remote });
+  return translate('sync.diverged', {
+    n: String(u.behind),
+    d: formatCount(u.behind),
+    branch: t.branch ?? '',
+    remote: u.remote,
+  });
 }
 
 /** What "Rebase on <base>" rebases on: the base of a checked-out branch, unless that is the branch
@@ -102,9 +109,14 @@ export function pullBranch(t: SyncTarget, rebase = false): Promise<void> {
 
 /** The branch rebased on its base, fresh from the base's remote when it has one (SPEC §15). */
 export function rebaseOnBase(t: SyncTarget, base: string): Promise<void> {
-  return startGitAction(translate('sync.rebaseOn', { base }), translate('sync.rebasingOn', { base }), () => gitRebaseOnBase(refOf(t)), {
-    done: translate('sync.rebased', { branch: t.branch ?? '', base }),
-  });
+  return startGitAction(
+    translate('sync.rebaseOn', { base }),
+    translate('sync.rebasingOn', { base }),
+    () => gitRebaseOnBase(refOf(t)),
+    {
+      done: translate('sync.rebased', { branch: t.branch ?? '', base }),
+    },
+  );
 }
 
 export function pushBranch(t: SyncTarget): Promise<void> {

@@ -41,7 +41,14 @@ export function ReviewHeader({
   const project = target.kind === 'project' ? config?.projects.find((p) => p.id === target.projectId) : undefined;
   useCommandSource(() => ({
     commands: project
-      ? [{ id: 'project:rename', title: t('project.renameProject'), group: t('cmd.groupProject'), run: () => setRenaming(true) }]
+      ? [
+          {
+            id: 'project:rename',
+            title: t('project.renameProject'),
+            group: t('cmd.groupProject'),
+            run: () => setRenaming(true),
+          },
+        ]
       : [],
   }));
 

@@ -44,7 +44,12 @@ const NestContext = createContext<Nest | null>(null);
 type Pos = { top: number; left: number; maxHeight?: number };
 
 /** Where a popover of size w × h goes for an anchor rect, kept inside the viewport. */
-function place(a: DOMRect, w: number, h: number, o: { alignRight?: boolean; above?: boolean; side?: 'below' | 'right' }): Pos {
+function place(
+  a: DOMRect,
+  w: number,
+  h: number,
+  o: { alignRight?: boolean; above?: boolean; side?: 'below' | 'right' },
+): Pos {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   if (o.side === 'right') {
@@ -71,17 +76,7 @@ function place(a: DOMRect, w: number, h: number, o: { alignRight?: boolean; abov
   return { top, left, maxHeight: h > room ? room : undefined };
 }
 
-export function Popover({
-  anchorRect,
-  onClose,
-  width,
-  alignRight,
-  above,
-  side,
-  anchor,
-  className,
-  children,
-}: Props) {
+export function Popover({ anchorRect, onClose, width, alignRight, above, side, anchor, className, children }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Pos | null>(null);
 

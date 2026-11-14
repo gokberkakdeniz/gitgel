@@ -35,9 +35,24 @@ const CEL_SYNTAX = 'https://github.com/cel-expr/cel-spec/blob/master/doc/langdef
 
 /** The icons offered for a script (a part of the Icon set). */
 const SCRIPT_ICONS: IconName[] = [
-  'play', 'prompt', 'test', 'pull-request', 'rebase', 'link',
-  'upload', 'download', 'refresh', 'undo', 'code', 'package',
-  'rocket', 'bug', 'search', 'copy', 'folder', 'bolt',
+  'play',
+  'prompt',
+  'test',
+  'pull-request',
+  'rebase',
+  'link',
+  'upload',
+  'download',
+  'refresh',
+  'undo',
+  'code',
+  'package',
+  'rocket',
+  'bug',
+  'search',
+  'copy',
+  'folder',
+  'bolt',
 ];
 
 const TYPES: { value: ScriptInputType; label: string }[] = [
@@ -227,7 +242,15 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
     set({
       inputs: [
         ...s.inputs,
-        { id: `INPUT_${n}`, label: t('scripts.inputDefault'), type: 'text', default: '', options: [], required: false, when: '' },
+        {
+          id: `INPUT_${n}`,
+          label: t('scripts.inputDefault'),
+          type: 'text',
+          default: '',
+          options: [],
+          required: false,
+          when: '',
+        },
       ],
     });
     setOpenInput(s.inputs.length);
@@ -253,14 +276,17 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
   };
   const toggle = (kind: Pop['kind'], input?: number) => (e: MouseEvent<HTMLElement>) =>
     setPop(
-      pop?.kind === kind && pop.input === input
-        ? null
-        : { kind, input, rect: e.currentTarget.getBoundingClientRect() },
+      pop?.kind === kind && pop.input === input ? null : { kind, input, rect: e.currentTarget.getBoundingClientRect() },
     );
   const iconName = SCRIPT_ICONS.includes(s.icon) ? s.icon : 'prompt';
 
   return (
-    <Modal aria-label={t(initial.id ? 'scripts.editScript' : 'scripts.newScript')} width={600} paddingTop={110} onClose={onClose}>
+    <Modal
+      aria-label={t(initial.id ? 'scripts.editScript' : 'scripts.newScript')}
+      width={600}
+      paddingTop={110}
+      onClose={onClose}
+    >
       <ModalHeader title={t(initial.id ? 'scripts.editScript' : 'scripts.newScript')} onClose={onClose} />
       <div className={styles.body}>
         <div className={styles.field}>
@@ -347,7 +373,10 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                   className={reorder.dragId === key ? `${styles.input} ${styles.dragging}` : styles.input}
                 >
                   <div className={styles.inputRow}>
-                    <DragHandle aria-label={t('scripts.moveInput', { name: input.label })} {...reorder.handleProps(key)} />
+                    <DragHandle
+                      aria-label={t('scripts.moveInput', { name: input.label })}
+                      {...reorder.handleProps(key)}
+                    />
                     <button
                       type="button"
                       aria-expanded={open}
@@ -425,14 +454,16 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
                       {input.type === 'select' && (
                         <label className={`${styles.small} ${styles.span}`}>
                           <span className={styles.labelRow}>
-                            {t('scripts.optionsLabel')}<span>{t('scripts.optionsHint')}</span>
+                            {t('scripts.optionsLabel')}
+                            <span>{t('scripts.optionsHint')}</span>
                           </span>
                           <OptionsField options={input.options} onChange={(options) => setInput(i, { options })} />
                         </label>
                       )}
                       <label className={`${styles.small} ${styles.span}`}>
                         <span className={styles.labelRow}>
-                          {t('scripts.showWhen')}<span>{t('scripts.showWhenHint')}</span>
+                          {t('scripts.showWhen')}
+                          <span>{t('scripts.showWhenHint')}</span>
                         </span>
                         <span className={styles.areaWrap}>
                           <textarea
@@ -565,11 +596,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
             />
           </div>
           <div id="script-when-result" className={whenError ? `${styles.result} ${styles.bad}` : styles.result}>
-            {whenError ? (
-              <InfoIcon size={13} />
-            ) : (
-              s.when.trim() && <CheckIcon size={13} className={styles.ok} />
-            )}
+            {whenError ? <InfoIcon size={13} /> : s.when.trim() && <CheckIcon size={13} className={styles.ok} />}
             {whenError ? (
               <span>{whenError}</span>
             ) : s.when.trim() ? (
@@ -592,9 +619,7 @@ export function ScriptEditor({ script: initial, onClose }: { script: ScriptConfi
           onChange={(e) => set({ askFirst: e.target.checked })}
         />
       </div>
-      <ModalFooter
-        note={<span className={styles.problem}>{saveError ?? (s.name || s.command ? problem : null)}</span>}
-      >
+      <ModalFooter note={<span className={styles.problem}>{saveError ?? (s.name || s.command ? problem : null)}</span>}>
         <Button size={36} onClick={onClose}>
           {t('common.cancel')}
         </Button>

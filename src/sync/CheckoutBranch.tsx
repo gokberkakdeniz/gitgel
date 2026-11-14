@@ -52,7 +52,11 @@ const localName = (r: Request) => (r.remote ? r.branch.slice(r.branch.indexOf('/
 
 /** A local branch that is there and checked out nowhere. */
 export const canCheckout = (entry: EntrySummary) =>
-  !!entry.branch && !!entry.headSha && !entry.worktreePath && entry.state !== 'repo_missing' && entry.state !== 'branch_deleted';
+  !!entry.branch &&
+  !!entry.headSha &&
+  !entry.worktreePath &&
+  entry.state !== 'repo_missing' &&
+  entry.state !== 'branch_deleted';
 
 /** "Checkout Branch…", first in a branch menu's Sync group (`SyncItems`): a branch `canCheckout`
  * takes. Disabled while a git action runs in the repo. */
@@ -105,7 +109,8 @@ function CheckoutForm({ req, scan, onClose }: { req: Request; scan: RepoScan; on
       ...all.filter((e) => !isMain(e)).sort((a, b) => a.worktreePath.localeCompare(b.worktreePath)),
     ];
   }, [scan]);
-  const mainPath = trees[0] && trimSlash(trees[0].worktreePath) === trimSlash(scan.repo.path) ? trees[0].worktreePath : null;
+  const mainPath =
+    trees[0] && trimSlash(trees[0].worktreePath) === trimSlash(scan.repo.path) ? trees[0].worktreePath : null;
   // Opens on Settings › Repositories' choice for new branches: a new worktree, else the
   // repository folder.
   const [pick, setPick] = useState<Pick>(() =>
@@ -164,9 +169,14 @@ function CheckoutForm({ req, scan, onClose }: { req: Request; scan: RepoScan; on
     try {
       const started = await gitCheckoutBranch(repoId, req.branch, req.remote, target);
       onClose();
-      void startGitAction(t('branches.actCheckout', { branch }), t('branches.checkingOut', { branch }), () => Promise.resolve(started), {
-        done: t('branches.checkedOut', { branch }),
-      });
+      void startGitAction(
+        t('branches.actCheckout', { branch }),
+        t('branches.checkingOut', { branch }),
+        () => Promise.resolve(started),
+        {
+          done: t('branches.checkedOut', { branch }),
+        },
+      );
     } catch (err) {
       setError((err as AppError).message);
       setStarting(false);
@@ -229,7 +239,12 @@ function CheckoutForm({ req, scan, onClose }: { req: Request; scan: RepoScan; on
           </span>
           <div role="radiogroup" aria-labelledby="checkout-where" className={`${nb.choices} ${styles.list}`}>
             {trees.slice(0, mainPath ? 1 : 0).map(row)}
-            <Choice title={t('branches.newWorktree')} on={pick.kind === 'new'} more onPick={() => setPick({ kind: 'new' })}>
+            <Choice
+              title={t('branches.newWorktree')}
+              on={pick.kind === 'new'}
+              more
+              onPick={() => setPick({ kind: 'new' })}
+            >
               <div className={nb.folderRow}>
                 <Input
                   ref={folderInput}

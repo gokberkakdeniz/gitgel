@@ -58,8 +58,7 @@ export function ResizeHandle({
     const startSize = horizontal ? rect.height : rect.width;
     setDragging(true);
     document.body.classList.add(resizingClass);
-    const move = (ev: PointerEvent) =>
-      onResize(clamp(startSize + (horizontal ? ev.clientY : ev.clientX) - startAt));
+    const move = (ev: PointerEvent) => onResize(clamp(startSize + (horizontal ? ev.clientY : ev.clientX) - startAt));
     const up = () => {
       setDragging(false);
       document.body.classList.remove(resizingClass);

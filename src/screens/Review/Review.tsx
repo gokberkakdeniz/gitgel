@@ -22,17 +22,53 @@ import { conflictOf, conflictsTooltip, useGitActionRunning } from '../../sync/op
 import { OperationBanner, OperationPill } from '../../sync/OperationUi';
 import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
 import { DeleteBranchItem } from '../../sync/DeleteBranch';
-import { divergedBanner, forcePushBranch, pullBranch, syncState, upstreamLabel, upstreamTitle, type SyncTarget } from '../../sync/sync';
+import {
+  divergedBanner,
+  forcePushBranch,
+  pullBranch,
+  syncState,
+  upstreamLabel,
+  upstreamTitle,
+  type SyncTarget,
+} from '../../sync/sync';
 import { StashBar } from '../../stash/StashBar';
 import { useStashAction } from '../../stash/StashAction';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
 import { ageText, ageTitle, cnt, formatCount } from '../../lib/format';
 import { t } from '../../i18n';
-import { getAiStatus, getCommitChanges, getHistory, getRangeChanges, getIndexChanges, getRemoteUrl, getReview, getStashChanges, generateMessageStart, gitCommit, gitRevert, gitSquash, gitUndoCommit, openRemoteLink } from '../../lib/ipc';
+import {
+  getAiStatus,
+  getCommitChanges,
+  getHistory,
+  getRangeChanges,
+  getIndexChanges,
+  getRemoteUrl,
+  getReview,
+  getStashChanges,
+  generateMessageStart,
+  gitCommit,
+  gitRevert,
+  gitSquash,
+  gitUndoCommit,
+  openRemoteLink,
+} from '../../lib/ipc';
 import { isTextField } from '../../lib/shortcuts';
 import { basename, tildifyHome } from '../../lib/paths';
-import type { AiStatus, CommitChanges, CommitFiles, CommitProvider, EntryRef, EntrySummary, FileChange, HistoryCommit, RangeChanges, ReviewGroup, ReviewTarget, StashChanges } from '../../lib/types';
+import type {
+  AiStatus,
+  CommitChanges,
+  CommitFiles,
+  CommitProvider,
+  EntryRef,
+  EntrySummary,
+  FileChange,
+  HistoryCommit,
+  RangeChanges,
+  ReviewGroup,
+  ReviewTarget,
+  StashChanges,
+} from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useInvoke } from '../../lib/useInvoke';
@@ -87,9 +123,17 @@ export interface ProjectScope {
 
 /** Review of one branch (SPEC §5, branch scope): the rev the target names, else its branch, else
  * the SHA a detached worktree is on. */
-export function BranchReview({ target, backLabel }: { target: Extract<ReviewTarget, { kind: 'branch' }>; backLabel: string }) {
+export function BranchReview({
+  target,
+  backLabel,
+}: {
+  target: Extract<ReviewTarget, { kind: 'branch' }>;
+  backLabel: string;
+}) {
   const headSha = useData((s) =>
-    target.worktreePath ? s.scan[target.repoId]?.active.find((e) => e.worktreePath === target.worktreePath)?.headSha : undefined,
+    target.worktreePath
+      ? s.scan[target.repoId]?.active.find((e) => e.worktreePath === target.worktreePath)?.headSha
+      : undefined,
   );
   const rev = target.rev ?? target.tipOverride ?? target.branch ?? headSha ?? null;
   if (!rev) return null;
@@ -105,11 +149,22 @@ export function BranchReview({ target, backLabel }: { target: Extract<ReviewTarg
 
 /** A project's review (SPEC §5, project scope): one entry open at a time, the one a project row
  * asked for, else the first; each keeps its picked row while the screen is open. */
-export function ProjectReview({ projectId, backLabel, focusKey }: { projectId: string; backLabel: string; focusKey?: string }) {
+export function ProjectReview({
+  projectId,
+  backLabel,
+  focusKey,
+}: {
+  projectId: string;
+  backLabel: string;
+  focusKey?: string;
+}) {
   const projects = useData((s) => s.config?.projects);
   const project = projects?.find((p) => p.id === projectId);
   const repoIds = useMemo(() => [...new Set(project?.entries.map((e) => e.repoId) ?? [])], [project]);
-  const { data, error } = useInvoke(() => getReview({ kind: 'project', projectId }), [projectId], { repoIds, onConfig: true });
+  const { data, error } = useInvoke(() => getReview({ kind: 'project', projectId }), [projectId], {
+    repoIds,
+    onConfig: true,
+  });
   const groups = useMemo(() => data?.groups ?? [], [data]);
   const [openKey, setOpenKey] = useState<string | null>(focusKey ?? null);
   const picks = useRef(new Map<string, string | null>());
@@ -176,7 +231,10 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
   const base = changes?.base ?? stash?.base ?? '';
   const files = changes?.files ?? [];
   const [path, setPath] = useState<string | null>(null);
-  const fileIndex = Math.max(0, files.findIndex((f) => f.path === path));
+  const fileIndex = Math.max(
+    0,
+    files.findIndex((f) => f.path === path),
+  );
   const file = files[fileIndex];
   const [land, setLand] = useState<'first' | 'last'>('first');
   const [nav, setNav] = useState<NavInfo>({ index: null, count: 0 });
@@ -238,7 +296,14 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
             )}
           </div>
         </div>
-        <ResizeHandle pane={listPane} min={280} max={640} onResize={setListWidth} onReset={() => setListWidth(null)} label={t('history.resizeList')} />
+        <ResizeHandle
+          pane={listPane}
+          min={280}
+          max={640}
+          onResize={setListWidth}
+          onReset={() => setListWidth(null)}
+          label={t('history.resizeList')}
+        />
         <section className={parts.main}>
           {!stash ? (
             <div className={parts.empty}>{t('review.noStashes')}</div>
@@ -360,10 +425,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   useEffect(() => {
     if (indexRead && !useStage.getState().busy[repoId]) useStage.getState().settle(entryKey);
   }, [indexRead, repoId, entryKey]);
-  const index = useMemo(
-    () => (indexRead ? withMoves(indexRead, wipFiles, moves) : null),
-    [indexRead, wipFiles, moves],
-  );
+  const index = useMemo(() => (indexRead ? withMoves(indexRead, wipFiles, moves) : null), [indexRead, wipFiles, moves]);
   const staged = index?.staged ?? [];
   const unstaged = index?.unstaged ?? [];
   const stagePaths = (f: FileChange) => (f.oldPath ? [f.path, f.oldPath] : [f.path]);
@@ -407,17 +469,11 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // The menu lists the switched-on and installed providers in menu order (all while
   // the install state is unknown).
   const enabledProviders = useMemo(
-    () =>
-      providerOrder(ai?.order ?? []).filter(
-        (id) => ai === null || ai[id]?.enabled !== false,
-      ),
+    () => providerOrder(ai?.order ?? []).filter((id) => ai === null || ai[id]?.enabled !== false),
     [ai],
   );
   const menuProviders = useMemo(
-    () =>
-      enabledProviders.filter(
-        (id) => aiStatus === null || aiStatus.some((s) => s.id === id && s.installed),
-      ),
+    () => enabledProviders.filter((id) => aiStatus === null || aiStatus.some((s) => s.id === id && s.installed)),
     [enabledProviders, aiStatus],
   );
   // The bolt's provider: the menu's topmost; none when nothing switched on is installed.
@@ -431,12 +487,15 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   }, [repoId, rev]);
   // The commit running for this entry, and how the last one ended.
   const committing = useRuns((s) =>
-    Object.values(s.runs).some((r) => r.scriptId === 'git:commit' && r.status === 'running' && r.entryKey === entry?.key),
+    Object.values(s.runs).some(
+      (r) => r.scriptId === 'git:commit' && r.status === 'running' && r.entryKey === entry?.key,
+    ),
   );
-  const lastCommit = useRuns((s) =>
-    Object.values(s.runs)
-      .filter((r) => r.scriptId === 'git:commit' && r.entryKey === entry?.key)
-      .sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt))[0],
+  const lastCommit = useRuns(
+    (s) =>
+      Object.values(s.runs)
+        .filter((r) => r.scriptId === 'git:commit' && r.entryKey === entry?.key)
+        .sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt))[0],
   );
   const commitFailed =
     !!lastCommit && lastCommit.status === 'exited' && lastCommit.exitCode !== 0 && !lastCommit.stopped;
@@ -548,13 +607,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     setGenerating(true);
     generateMessage(
       active,
-      () =>
-        generateMessageStart(
-          entryRef,
-          included.flatMap(stagePaths),
-          active,
-          amending?.sha ?? null,
-        ),
+      () => generateMessageStart(entryRef, included.flatMap(stagePaths), active, amending?.sha ?? null),
       {
         started: (runId) => (genRun.current = runId),
         ended: (runId) => {
@@ -702,17 +755,14 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // it, else the same file in the other section (it moved there), else the first.
   const [path, setPath] = useState<string | null>(null);
   const moved = path && wipShown ? fileIds.indexOf(`${path.startsWith('s:') ? 'u' : 's'}:${path.slice(2)}`) : -1;
-  const fileIndex = path && fileIds.includes(path) ? fileIds.indexOf(path) : moved >= 0 ? moved : files.length > 0 ? 0 : -1;
+  const fileIndex =
+    path && fileIds.includes(path) ? fileIds.indexOf(path) : moved >= 0 ? moved : files.length > 0 ? 0 : -1;
   const file = fileIndex >= 0 ? files[fileIndex] : undefined;
   const fileId = fileIndex >= 0 ? fileIds[fileIndex] : null;
   const wipRow = wipShown && fileIndex >= 0 ? wipRows[fileIndex] : undefined;
   // Several of Uncommitted's files picked with ⌘ / ⇧-click (Hi8): their right-click menu acts on
   // all of them.
-  const picks = usePicks(
-    wipShown ? fileIds : [],
-    fileId,
-    `${repoId}\u0000${rev}\u0000${current}\u0000${isMulti}`,
-  );
+  const picks = usePicks(wipShown ? fileIds : [], fileId, `${repoId}\u0000${rev}\u0000${current}\u0000${isMulti}`);
   /** Discards rows: a Staged row's file goes back to HEAD, an Unstaged row's to what is staged. */
   const discard = (rows: WipRow[], all = false) => {
     if (!entry) return;
@@ -786,7 +836,13 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     void startGitAction(
       t('squash.act', n),
       t('squash.running', n),
-      () => gitSquash(entryRef, list.map((c) => c.sha), summary, description),
+      () =>
+        gitSquash(
+          entryRef,
+          list.map((c) => c.sha),
+          summary,
+          description,
+        ),
       { done: t('squash.done', { ...n, rev }) },
     );
   };
@@ -961,17 +1017,53 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     const review = t('cmd.groupReview');
     const commands: Command[] = [];
     if (!project && repoScan)
-      commands.push({ id: 'review:switch', title: t('history.switchBranch'), group: review, keys: '⇧⌘B', run: () => setSwitching(true) });
-    commands.push({ id: 'review:search', title: t('history.searchCommits'), group: review, keys: '⌘K', run: focusSearch });
+      commands.push({
+        id: 'review:switch',
+        title: t('history.switchBranch'),
+        group: review,
+        keys: '⇧⌘B',
+        run: () => setSwitching(true),
+      });
+    commands.push({
+      id: 'review:search',
+      title: t('history.searchCommits'),
+      group: review,
+      keys: '⌘K',
+      run: focusSearch,
+    });
     if (fileIds.length > 0)
       commands.push(
-        { id: 'review:nextChange', title: t('cmd.nextChange'), group: review, keys: '⌥↓', run: () => stepRef.current(1) },
-        { id: 'review:prevChange', title: t('cmd.prevChange'), group: review, keys: '⌥↑', run: () => stepRef.current(-1) },
+        {
+          id: 'review:nextChange',
+          title: t('cmd.nextChange'),
+          group: review,
+          keys: '⌥↓',
+          run: () => stepRef.current(1),
+        },
+        {
+          id: 'review:prevChange',
+          title: t('cmd.prevChange'),
+          group: review,
+          keys: '⌥↑',
+          run: () => stepRef.current(-1),
+        },
       );
     if (current && order.length > 1)
       commands.push(
-        { id: 'review:newer', title: t('cmd.newerCommit'), group: review, keys: '⌥⇧↑', run: () => stepRowRef.current(-1) },
-        { id: 'review:older', title: t('cmd.olderCommit'), group: review, keys: '⌥⇧↓', run: () => stepRowRef.current(1) },
+        {
+          id: 'review:newer',
+          title: t('cmd.newerCommit'),
+          group: review,
+          keys: '⌥⇧↑',
+          run: () => stepRowRef.current(-1),
+        },
+        {
+          id: 'review:older',
+          title: t('cmd.olderCommit'),
+          group: review,
+          keys: '⌥⇧↓',
+          run: () => stepRowRef.current(1),
+        },
       );
     if (project)
       commands.push({
@@ -1133,93 +1225,59 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
 
   const headerRight = (
     <>
-        <Input
-          ref={searchInput}
-          size={32}
-          leftIcon="search"
-          mono
-          clearable
-          className={styles.search}
-          value={query}
-          onChange={setQuery}
-          placeholder={t('history.searchCommits')}
-          aria-label={t('history.searchHint')}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              // Input clears a filled field first; this second Esc leaves it.
-              e.preventDefault();
-              e.currentTarget.blur();
-            }
-          }}
-        />
-        <SyncButtons
-          target={syncTarget}
-          fetchedAt={data?.fetchedAt ?? null}
-          repos={project ? projectRepos : undefined}
-        />
-        <PageMenu>
-          {(close, anchor) => {
-            // The open entry's part: Branch in a project review, the whole menu for a branch.
-            const branchItems = (
-              <>
-                {!project && (
-                  <MenuItem
-                    icon="branch"
-                    kbd="⇧⌘B"
-                    disabled={!repoScan}
-                    onSelect={() => {
-                      close();
-                      setSwitching(true);
-                    }}
-                  >
-                    {t('history.switchBranch')}
-                  </MenuItem>
-                )}
-                {entry?.worktreePath && !entry.operation && stashAction.item(close, anchor)}
-                {entry && (
-                  <MenuItem
-                    icon={<BranchIcon size={14} />}
-                    sub={t('review.baseSub', { base: entry.base ?? t('review.baseNone') })}
-                    onSelect={() => {
-                      close();
-                      setBaseMenu(anchor);
-                    }}
-                  >
-                    {t('review.changeBase')}
-                  </MenuItem>
-                )}
-                {entry && <SyncItems entry={entry} onDone={close} rebaseOnly />}
-                {!project && (
-                  <MenuItem
-                    icon="refresh"
-                    onSelect={() => {
-                      close();
-                      void rescanAll(true);
-                    }}
-                  >
-                    {t('review.refresh')}
-                  </MenuItem>
-                )}
-                {entry && (
-                  <>
-                    <CopyBranchItem entry={entry} onDone={close} />
-                    <MenuDivider />
-                    <OpenItems entry={entry} onDone={close} />
-                    {project ? (
-                      <ScriptsMenu entry={entry} menu="project" project={project.projectName} onDone={close} />
-                    ) : (
-                      <ScriptsMenu entry={entry} menu="branches" onDone={close} />
-                    )}
-                    <DeleteBranchItem entry={entry} onDone={close} />
-                    <EntryMenuNote entry={entry} />
-                  </>
-                )}
-              </>
-            );
-            if (!project) return branchItems;
-            return (
-              <>
-                <MenuLabel>{t('review.menuProject')}</MenuLabel>
+      <Input
+        ref={searchInput}
+        size={32}
+        leftIcon="search"
+        mono
+        clearable
+        className={styles.search}
+        value={query}
+        onChange={setQuery}
+        placeholder={t('history.searchCommits')}
+        aria-label={t('history.searchHint')}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            // Input clears a filled field first; this second Esc leaves it.
+            e.preventDefault();
+            e.currentTarget.blur();
+          }
+        }}
+      />
+      <SyncButtons target={syncTarget} fetchedAt={data?.fetchedAt ?? null} repos={project ? projectRepos : undefined} />
+      <PageMenu>
+        {(close, anchor) => {
+          // The open entry's part: Branch in a project review, the whole menu for a branch.
+          const branchItems = (
+            <>
+              {!project && (
+                <MenuItem
+                  icon="branch"
+                  kbd="⇧⌘B"
+                  disabled={!repoScan}
+                  onSelect={() => {
+                    close();
+                    setSwitching(true);
+                  }}
+                >
+                  {t('history.switchBranch')}
+                </MenuItem>
+              )}
+              {entry?.worktreePath && !entry.operation && stashAction.item(close, anchor)}
+              {entry && (
+                <MenuItem
+                  icon={<BranchIcon size={14} />}
+                  sub={t('review.baseSub', { base: entry.base ?? t('review.baseNone') })}
+                  onSelect={() => {
+                    close();
+                    setBaseMenu(anchor);
+                  }}
+                >
+                  {t('review.changeBase')}
+                </MenuItem>
+              )}
+              {entry && <SyncItems entry={entry} onDone={close} rebaseOnly />}
+              {!project && (
                 <MenuItem
                   icon="refresh"
                   onSelect={() => {
@@ -1229,44 +1287,77 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 >
                   {t('review.refresh')}
                 </MenuItem>
-                <MenuItem
-                  icon="pencil"
-                  onSelect={() => {
-                    close();
-                    editProject(project.projectId);
-                  }}
-                >
-                  {t('review.editProject')}
-                </MenuItem>
-                <MenuDivider />
-                <MenuLabel>{t('review.menuBranch')}</MenuLabel>
-                {branchItems}
-              </>
-            );
-          }}
-        </PageMenu>
-        {stashAction.dialog}
-        {baseMenu && entry && (
-          <BaseMenu
-            repoId={repoId}
-            entryKey={entry.key}
-            branchName={entry.branch ?? entry.shortSha ?? ''}
-            anchorRect={baseMenu}
-            alignRight
-            onClose={() => setBaseMenu(null)}
-            onChosen={(b) => setBaseSaved(t('review.baseSaved', { base: b }))}
-          />
-        )}
-        {switching && repoScan && (
-          <SwitchBranchDialog scan={repoScan} rev={rev} onClose={() => setSwitching(false)} />
-        )}
+              )}
+              {entry && (
+                <>
+                  <CopyBranchItem entry={entry} onDone={close} />
+                  <MenuDivider />
+                  <OpenItems entry={entry} onDone={close} />
+                  {project ? (
+                    <ScriptsMenu entry={entry} menu="project" project={project.projectName} onDone={close} />
+                  ) : (
+                    <ScriptsMenu entry={entry} menu="branches" onDone={close} />
+                  )}
+                  <DeleteBranchItem entry={entry} onDone={close} />
+                  <EntryMenuNote entry={entry} />
+                </>
+              )}
+            </>
+          );
+          if (!project) return branchItems;
+          return (
+            <>
+              <MenuLabel>{t('review.menuProject')}</MenuLabel>
+              <MenuItem
+                icon="refresh"
+                onSelect={() => {
+                  close();
+                  void rescanAll(true);
+                }}
+              >
+                {t('review.refresh')}
+              </MenuItem>
+              <MenuItem
+                icon="pencil"
+                onSelect={() => {
+                  close();
+                  editProject(project.projectId);
+                }}
+              >
+                {t('review.editProject')}
+              </MenuItem>
+              <MenuDivider />
+              <MenuLabel>{t('review.menuBranch')}</MenuLabel>
+              {branchItems}
+            </>
+          );
+        }}
+      </PageMenu>
+      {stashAction.dialog}
+      {baseMenu && entry && (
+        <BaseMenu
+          repoId={repoId}
+          entryKey={entry.key}
+          branchName={entry.branch ?? entry.shortSha ?? ''}
+          anchorRect={baseMenu}
+          alignRight
+          onClose={() => setBaseMenu(null)}
+          onChosen={(b) => setBaseSaved(t('review.baseSaved', { base: b }))}
+        />
+      )}
+      {switching && repoScan && <SwitchBranchDialog scan={repoScan} rev={rev} onClose={() => setSwitching(false)} />}
     </>
   );
 
   return (
     <div className={parts.screen}>
       {project ? (
-        <ReviewHeader entry={entry} target={{ kind: 'project', projectId: project.projectId }} backLabel={backLabel} stashes={stashes}>
+        <ReviewHeader
+          entry={entry}
+          target={{ kind: 'project', projectId: project.projectId }}
+          backLabel={backLabel}
+          stashes={stashes}
+        >
           {headerRight}
         </ReviewHeader>
       ) : (
@@ -1421,9 +1512,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           )}
         </Popover>
       )}
-      {askAmend && (
-        <AmendModal onClose={() => setAskAmend(null)} onBegin={() => beginAmend(askAmend)} />
-      )}
+      {askAmend && <AmendModal onClose={() => setAskAmend(null)} onBegin={() => beginAmend(askAmend)} />}
       {project
         ? project.groups.map(
             (g) => g.entry.operation && <OperationBanner key={g.entry.key} entry={g.entry} op={g.entry.operation} />,
@@ -1521,27 +1610,31 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 <span className={`${parts.sectionLabel} ${styles.headLabel}`}>{t('history.commitsList')}</span>
               </button>
             )}
-            {rows.map((r) => r.kind !== 'wip' && !commitsShut && (
-              <ListRow
-                key={rowKey(r)}
-                row={r}
-                current={isMulti ? null : current}
-                selected={isMulti ? selected : []}
-                filesAt={filesAt}
-                fileList={!columns && filesOpen ? fileList : null}
-                onPick={clickRow}
-                onLine={pickLine}
-                lineOn={lineOn}
-                onCommitMenu={(commit, at) => {
-                  // On one of several picked commits the menu is theirs: Squash, when they can be.
-                  const many = isMulti && selected.includes(commit.sha);
-                  if (many && !squashable) return;
-                  setCommitMenu({ commit, at, many });
-                }}
-                amending={amending?.sha ?? null}
-                fromBranch={fromBranch}
-              />
-            ))}
+            {rows.map(
+              (r) =>
+                r.kind !== 'wip' &&
+                !commitsShut && (
+                  <ListRow
+                    key={rowKey(r)}
+                    row={r}
+                    current={isMulti ? null : current}
+                    selected={isMulti ? selected : []}
+                    filesAt={filesAt}
+                    fileList={!columns && filesOpen ? fileList : null}
+                    onPick={clickRow}
+                    onLine={pickLine}
+                    lineOn={lineOn}
+                    onCommitMenu={(commit, at) => {
+                      // On one of several picked commits the menu is theirs: Squash, when they can be.
+                      const many = isMulti && selected.includes(commit.sha);
+                      if (many && !squashable) return;
+                      setCommitMenu({ commit, at, many });
+                    }}
+                    amending={amending?.sha ?? null}
+                    fromBranch={fromBranch}
+                  />
+                ),
+            )}
             {data && !data.tip && <div className={styles.listEmpty}>{t('history.revNotFound', { rev })}</div>}
             {project && project.notInReview > 0 && !search && (
               <div className={styles.notInReview}>
@@ -1588,7 +1681,14 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           {project && project.groups.length > 1 && entry && <OtherBranches project={project} open={entry.key} />}
           {!columns && commitForm}
         </div>
-        <ResizeHandle pane={listPane} min={280} max={640} onResize={setListWidth} onReset={() => setListWidth(null)} label={t('history.resizeList')} />
+        <ResizeHandle
+          pane={listPane}
+          min={280}
+          max={640}
+          onResize={setListWidth}
+          onReset={() => setListWidth(null)}
+          label={t('history.resizeList')}
+        />
         {columns && (
           <>
             <div ref={filesPane} className={styles.filesPane} style={filesWidth ? { width: filesWidth } : undefined}>
@@ -1642,17 +1742,19 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                   isMulti
                     ? `${spanned?.parent?.slice(0, 7) ?? t('review.emptyTree')} ↔ ${newest ? newest.slice(0, 7) : t('history.workingTree')}`
                     : current === WIP
-                    ? wipRow?.sec === 's'
-                      ? t('history.headToIndex')
-                      : t('history.indexToTree')
-                    : stash
-                      ? `${stashBase.slice(0, 7)} ↔ stash@{${stash.index}}`
-                      : `${commitChanges?.parent?.slice(0, 7) ?? t('review.emptyTree')} ↔ ${commit?.shortSha}`
+                      ? wipRow?.sec === 's'
+                        ? t('history.headToIndex')
+                        : t('history.indexToTree')
+                      : stash
+                        ? `${stashBase.slice(0, 7)} ↔ stash@{${stash.index}}`
+                        : `${commitChanges?.parent?.slice(0, 7) ?? t('review.emptyTree')} ↔ ${commit?.shortSha}`
                 }
                 view={view}
                 nav={nav}
                 prevFile={fileIndex > 0 ? `\u0000${fileIds[fileIndex - 1]}` : undefined}
-                nextFile={fileIndex >= 0 && fileIndex < fileIds.length - 1 ? `\u0000${fileIds[fileIndex + 1]}` : undefined}
+                nextFile={
+                  fileIndex >= 0 && fileIndex < fileIds.length - 1 ? `\u0000${fileIds[fileIndex + 1]}` : undefined
+                }
                 onStep={step}
               />
               <DiffView
@@ -1730,7 +1832,10 @@ function OtherBranches({ project, open: openKey }: { project: ProjectScope; open
         aria-expanded={shown}
         onClick={() => useUi.getState().toggleReviewBranches()}
       >
-        <ChevronDownIcon size={12} className={shown ? parts.sectionChevron : `${parts.sectionChevron} ${parts.sectionShut}`} />
+        <ChevronDownIcon
+          size={12}
+          className={shown ? parts.sectionChevron : `${parts.sectionChevron} ${parts.sectionShut}`}
+        />
         {t('review.branchesSection')} · {formatCount(others.length)}
       </button>
       {shown && (
@@ -1745,7 +1850,9 @@ function OtherBranches({ project, open: openKey }: { project: ProjectScope; open
                 key={e.key}
                 type="button"
                 className={styles.otherBranch}
-                title={[e.repoName, e.branch ?? e.shortSha, e.worktreePath ? tildifyHome(e.worktreePath) : null].filter(Boolean).join(' · ')}
+                title={[e.repoName, e.branch ?? e.shortSha, e.worktreePath ? tildifyHome(e.worktreePath) : null]
+                  .filter(Boolean)
+                  .join(' · ')}
                 onClick={() => project.onOpen(e.key)}
               >
                 <span className={styles.branchHeadLine}>
@@ -1813,7 +1920,10 @@ function ChangesHead({
         wip.onMenu(new DOMRect(e.clientX, e.clientY, 0, 0));
       }}
     >
-      <ChevronDownIcon size={12} className={shut ? `${parts.sectionChevron} ${parts.sectionShut}` : parts.sectionChevron} />
+      <ChevronDownIcon
+        size={12}
+        className={shut ? `${parts.sectionChevron} ${parts.sectionShut}` : parts.sectionChevron}
+      />
       <span className={`${parts.sectionLabel} ${styles.headLabel}`}>{t('history.changes')}</span>
       <span className={parts.sectionPill}>{formatCount(count)}</span>
       {wip?.failed && (
@@ -2030,7 +2140,10 @@ function FileList({
           aria-expanded={open}
           onClick={() => useUi.getState().toggleSection(`${stage.foldKey}\u0000${sec}`)}
         >
-          <ChevronDownIcon size={12} className={open ? parts.sectionChevron : `${parts.sectionChevron} ${parts.sectionShut}`} />
+          <ChevronDownIcon
+            size={12}
+            className={open ? parts.sectionChevron : `${parts.sectionChevron} ${parts.sectionShut}`}
+          />
           <span className={parts.sectionLabel}>{t(sec === 's' ? 'history.staged' : 'history.unstaged')}</span>
         </button>
         {stage.counts[sec] > 0 && (
@@ -2090,7 +2203,9 @@ function FileList({
 }
 
 function Avatar({ author, size }: { author: string; size: 18 | 24 }) {
-  const cls = [styles.avatar, size === 18 && styles.avatarSmall, isBot(author) && styles.avatarBot].filter(Boolean).join(' ');
+  const cls = [styles.avatar, size === 18 && styles.avatarSmall, isBot(author) && styles.avatarBot]
+    .filter(Boolean)
+    .join(' ');
   return (
     <span className={cls} title={author} aria-hidden>
       {initials(author)}

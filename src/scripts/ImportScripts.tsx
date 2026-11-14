@@ -54,7 +54,10 @@ export function ImportScripts({
     <Modal aria-label={t('scripts.importTitle')} width={680} paddingTop={110} onClose={onClose}>
       <ModalHeader
         title={t('scripts.importTitle')}
-        sub={t('scripts.importSub', { path: tildifyHome(path), scripts: t('scripts.scriptCount', { ...cnt(scripts.length) }) })}
+        sub={t('scripts.importSub', {
+          path: tildifyHome(path),
+          scripts: t('scripts.scriptCount', { ...cnt(scripts.length) }),
+        })}
         subMono
         onClose={onClose}
       />

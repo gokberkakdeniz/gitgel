@@ -10,7 +10,13 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function IconButton({ size = 28, active, className, type = 'button', ...rest }: Props) {
-  const cls = [styles.button, size === 32 ? styles.boxed : styles.plain, size === 24 && styles.s24, active && styles.active, className]
+  const cls = [
+    styles.button,
+    size === 32 ? styles.boxed : styles.plain,
+    size === 24 && styles.s24,
+    active && styles.active,
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
   return <button type={type} className={cls} {...rest} />;

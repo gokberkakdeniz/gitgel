@@ -85,7 +85,13 @@ export function UpdateWindow() {
           <Button size={36} className={styles.button} onClick={close}>
             {t('common.close')}
           </Button>
-          <Button variant="primary" size={36} className={styles.button} autoFocus onClick={() => void checkForUpdates()}>
+          <Button
+            variant="primary"
+            size={36}
+            className={styles.button}
+            autoFocus
+            onClick={() => void checkForUpdates()}
+          >
             {t('update.retry')}
           </Button>
         </>
@@ -162,7 +168,11 @@ function Bar({ percent = null }: { percent?: number | null }) {
           style={percent === null ? undefined : { width: `${percent}%` }}
         />
       </div>
-      {percent !== null && <span className={styles.percent}>{percent < 100 ? t('update.downloading', { p: String(percent) }) : t('update.installing')}</span>}
+      {percent !== null && (
+        <span className={styles.percent}>
+          {percent < 100 ? t('update.downloading', { p: String(percent) }) : t('update.installing')}
+        </span>
+      )}
     </div>
   );
 }

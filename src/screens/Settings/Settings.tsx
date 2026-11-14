@@ -126,23 +126,42 @@ function Repositories({ config }: { config: Config }) {
         items={config.repos.map((repo): ListItem => {
           const s = scan[repo.id];
           const name = basename(repo.path);
-          const remove: ListAction = { icon: 'close', ariaLabel: t('settings.removeRepo'), onPress: () => removeRow(repo) };
+          const remove: ListAction = {
+            icon: 'close',
+            ariaLabel: t('settings.removeRepo'),
+            onPress: () => removeRow(repo),
+          };
           return {
             key: repo.id,
             title: name,
             titleWeight: 500,
             titleWidth: 96,
             detail: tildifyHome(repo.path),
-            aside: s?.status === 'missing' || s?.status === 'error' ? undefined : s?.defaultBase ? t('branches.baseName', { base: s.defaultBase }) : s ? t('settings.noBase') : undefined,
+            aside:
+              s?.status === 'missing' || s?.status === 'error'
+                ? undefined
+                : s?.defaultBase
+                  ? t('branches.baseName', { base: s.defaultBase })
+                  : s
+                    ? t('settings.noBase')
+                    : undefined,
             actions:
               s?.status === 'missing'
                 ? [
                     { kind: 'pill', label: t('branches.pathNotFound'), tone: 'danger' },
-                    { label: t('settings.locate'), variant: 'secondary', ariaLabel: t('settings.locateName', { name }), onPress: () => void locate(repo) },
+                    {
+                      label: t('settings.locate'),
+                      variant: 'secondary',
+                      ariaLabel: t('settings.locateName', { name }),
+                      onPress: () => void locate(repo),
+                    },
                     remove,
                   ]
                 : s?.status === 'error'
-                  ? [{ kind: 'pill', label: t('settings.gitErrorPill'), tone: 'danger', title: s.error ?? undefined }, remove]
+                  ? [
+                      { kind: 'pill', label: t('settings.gitErrorPill'), tone: 'danger', title: s.error ?? undefined },
+                      remove,
+                    ]
                   : [remove],
           };
         })}
@@ -199,7 +218,9 @@ function Prompts({ config }: { config: Config }) {
           key={key}
           label={t(label)}
           checked={prompts[key]}
-          onChange={(e) => void updateSettings({ ...config.settings, prompts: { ...prompts, [key]: e.target.checked } })}
+          onChange={(e) =>
+            void updateSettings({ ...config.settings, prompts: { ...prompts, [key]: e.target.checked } })
+          }
         />
       ))}
     </section>
@@ -413,7 +434,10 @@ function EditorSetting({ config }: { config: Config }) {
           value={editor}
           onChange={(ed) => void updateSettings({ ...config.settings, editor: ed })}
           options={[
-            { value: 'auto', label: auto ? t('settings.terminalAuto', { name: auto.name }) : t('settings.terminalAutoPlain') },
+            {
+              value: 'auto',
+              label: auto ? t('settings.terminalAuto', { name: auto.name }) : t('settings.terminalAutoPlain'),
+            },
             { value: 'cursor', label: 'Cursor', disabled: missing('cursor') },
             { value: 'vscode', label: 'VS Code', disabled: missing('vscode') },
             { value: 'windsurf', label: 'Windsurf', disabled: missing('windsurf') },
@@ -480,7 +504,10 @@ function TerminalSetting({ config }: { config: Config }) {
           value={terminal}
           onChange={(term) => void updateSettings({ ...config.settings, terminal: term })}
           options={[
-            { value: 'auto', label: termApp ? t('settings.terminalAuto', { name: termApp.name }) : t('settings.terminalAutoPlain') },
+            {
+              value: 'auto',
+              label: termApp ? t('settings.terminalAuto', { name: termApp.name }) : t('settings.terminalAutoPlain'),
+            },
             { value: 'terminal', label: 'Terminal', disabled: missing('terminal') },
             { value: 'iterm', label: 'iTerm2', disabled: missing('iterm') },
             { value: 'wezterm', label: 'WezTerm', disabled: missing('wezterm') },
@@ -506,15 +533,11 @@ function TerminalSetting({ config }: { config: Config }) {
               }
             }}
           />
-          <span className={styles.settingHint}>
-            {t('settings.terminalCmdHint')}
-          </span>
+          <span className={styles.settingHint}>{t('settings.terminalCmdHint')}</span>
         </label>
       )}
       {loaded && termApp && !termApp.found && (
-        <span className={styles.terminalMissing}>
-          {t('settings.terminalMissing', { name: termApp.name })}
-        </span>
+        <span className={styles.terminalMissing}>{t('settings.terminalMissing', { name: termApp.name })}</span>
       )}
     </div>
   );

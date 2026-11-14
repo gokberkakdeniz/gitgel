@@ -46,6 +46,5 @@ function definition(mode: Mode, { colors: c, editor: e }: ThemeVariant): Monaco.
 }
 
 export function defineTheme(monaco: Pick<typeof Monaco, 'editor'>) {
-  for (const t of THEMES)
-    for (const m of modesOf(t)) monaco.editor.defineTheme(`${t.id}-${m}`, definition(m, t[m]!));
+  for (const t of THEMES) for (const m of modesOf(t)) monaco.editor.defineTheme(`${t.id}-${m}`, definition(m, t[m]!));
 }

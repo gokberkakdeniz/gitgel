@@ -152,7 +152,9 @@ export function DeleteBranchModal() {
     );
   const options = [
     ...(dirty > 0 ? [{ label: t('branches.deleteStash', { ...cnt(dirty) }), checked: stash, onChange: setStash }] : []),
-    ...(onRemote ? [{ label: t('branches.deleteRemote', { name: onRemote }), checked: remote, onChange: setRemote }] : []),
+    ...(onRemote
+      ? [{ label: t('branches.deleteRemote', { name: onRemote }), checked: remote, onChange: setRemote }]
+      : []),
   ];
   return (
     <ConfirmModal

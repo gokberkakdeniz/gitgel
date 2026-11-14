@@ -1,6 +1,15 @@
 // Data the backend pushes: config and scan results, kept current by backend events.
 import { create } from 'zustand';
-import type { Config, EditorOption, OpenApp, RepoScan, RepoUpdated, ScanResult, TerminalOption, UpdateInfo } from '../lib/types';
+import type {
+  Config,
+  EditorOption,
+  OpenApp,
+  RepoScan,
+  RepoUpdated,
+  ScanResult,
+  TerminalOption,
+  UpdateInfo,
+} from '../lib/types';
 
 interface DataState {
   config: Config | null;

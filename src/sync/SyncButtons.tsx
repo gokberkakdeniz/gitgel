@@ -8,7 +8,17 @@ import { useRuns } from '../scripts/runs';
 import { canCheckout, CheckoutBranchItem } from './CheckoutBranch';
 import { OperationItems } from './OperationUi';
 import styles from './SyncButtons.module.css';
-import { fetchRepo, forcePushBranch, pullBranch, pushBranch, rebaseBase, rebaseOnBase, syncState, SYNC_ACTIONS, type SyncTarget } from './sync';
+import {
+  fetchRepo,
+  forcePushBranch,
+  pullBranch,
+  pushBranch,
+  rebaseBase,
+  rebaseOnBase,
+  syncState,
+  SYNC_ACTIONS,
+  type SyncTarget,
+} from './sync';
 
 /** The sync action running in the repository, if any (one git action at a time per repository). */
 function useRunningSync(repoId: string): string | null {
@@ -109,7 +119,17 @@ function SyncButton({
 }
 
 /** Fetch of a whole repository: a 24px button in its Branches band. Spins while it runs. */
-export function RepoFetchButton({ repoId, repoName, remote, className }: { repoId: string; repoName: string; remote: string; className?: string }) {
+export function RepoFetchButton({
+  repoId,
+  repoName,
+  remote,
+  className,
+}: {
+  repoId: string;
+  repoName: string;
+  remote: string;
+  className?: string;
+}) {
   const running = useRunningSync(repoId);
   const busy = running === 'git:fetch';
   return (
@@ -166,7 +186,12 @@ export function SyncItems({
         <MenuDivider />
         {checkout}
         {base && (
-          <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => rebaseOnBase(entry, base))}>
+          <MenuItem
+            icon="rebase"
+            disabled={!!running}
+            title={busy ?? undefined}
+            onSelect={() => run(() => rebaseOnBase(entry, base))}
+          >
             {t('sync.rebaseOn', { base })}
           </MenuItem>
         )}
@@ -177,7 +202,12 @@ export function SyncItems({
     <>
       <MenuDivider />
       {checkout}
-      <MenuItem icon="download" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => fetchRepo(entry))}>
+      <MenuItem
+        icon="download"
+        disabled={!!running}
+        title={busy ?? undefined}
+        onSelect={() => run(() => fetchRepo(entry))}
+      >
         {t('sync.fetchBtn')}
       </MenuItem>
       <MenuItem
@@ -190,12 +220,22 @@ export function SyncItems({
         {t('sync.pullBtn')}
       </MenuItem>
       {st.diverged && !st.pull && (
-        <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => pullBranch(entry, true))}>
+        <MenuItem
+          icon="rebase"
+          disabled={!!running}
+          title={busy ?? undefined}
+          onSelect={() => run(() => pullBranch(entry, true))}
+        >
           {t('history.pullRebase')}
         </MenuItem>
       )}
       {base && (
-        <MenuItem icon="rebase" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => rebaseOnBase(entry, base))}>
+        <MenuItem
+          icon="rebase"
+          disabled={!!running}
+          title={busy ?? undefined}
+          onSelect={() => run(() => rebaseOnBase(entry, base))}
+        >
           {t('sync.rebaseOn', { base })}
         </MenuItem>
       )}
@@ -209,7 +249,12 @@ export function SyncItems({
         {t('sync.pushBtn')}
       </MenuItem>
       {st.diverged && (
-        <MenuItem icon="arrow-up" disabled={!!running} title={busy ?? undefined} onSelect={() => run(() => forcePushBranch(entry))}>
+        <MenuItem
+          icon="arrow-up"
+          disabled={!!running}
+          title={busy ?? undefined}
+          onSelect={() => run(() => forcePushBranch(entry))}
+        >
           {t('history.forcePush')}
         </MenuItem>
       )}

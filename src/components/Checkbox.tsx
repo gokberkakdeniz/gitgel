@@ -28,7 +28,11 @@ export function Checkbox({ className, label, sub, card, checked, mixed, ...rest 
         aria-checked={mixed ? 'mixed' : undefined}
         {...rest}
       />
-      {mixed ? <span className={styles.dash} /> : checked && <CheckIcon size={11} strokeWidth={3} className={styles.tick} />}
+      {mixed ? (
+        <span className={styles.dash} />
+      ) : (
+        checked && <CheckIcon size={11} strokeWidth={3} className={styles.tick} />
+      )}
     </span>
   );
   if (!label) return <span className={[styles.only, className].filter(Boolean).join(' ')}>{box}</span>;

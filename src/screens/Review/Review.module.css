@@ -430,7 +430,6 @@
   color: var(--text-body);
 }
 
-
 /* Several rows taken together (Hi12): one line each, the list scrolls past a few. */
 .rangeList {
   max-height: 104px;

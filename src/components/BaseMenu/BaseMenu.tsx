@@ -53,7 +53,14 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
   }, [data, query, custom, ownBranch, sha]);
   // Opens on the base in use; typing starts again from the top.
   useEffect(() => {
-    setActive(query ? Math.max(0, rows.findIndex((r) => !r.disabled)) : initialRow(rows));
+    setActive(
+      query
+        ? Math.max(
+            0,
+            rows.findIndex((r) => !r.disabled),
+          )
+        : initialRow(rows),
+    );
     // Only when the options arrive or the filter changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, query]);
@@ -122,21 +129,32 @@ export function BaseMenu({ repoId, entryKey, branchName, anchorRect, alignRight,
             const title = row.section !== lastSection && row.section !== 'Commit' ? sectionTitle(row.section) : null;
             lastSection = row.section;
             const dim = row.section === 'Other Branches' || row.section === 'Remote Branches';
-            const cls = [styles.row, row.sub && styles.stacked, i === active && styles.active, row.disabled && styles.disabled]
+            const cls = [
+              styles.row,
+              row.sub && styles.stacked,
+              i === active && styles.active,
+              row.disabled && styles.disabled,
+            ]
               .filter(Boolean)
               .join(' ');
             const nameCls =
-              row.section === 'Commit' ? styles.use : row.auto ? styles.plain : dim ? `${styles.name} ${styles.dim}` : styles.name;
+              row.section === 'Commit'
+                ? styles.use
+                : row.auto
+                  ? styles.plain
+                  : dim
+                    ? `${styles.name} ${styles.dim}`
+                    : styles.name;
             return (
               <div key={`${row.section}:${row.value}`}>
-              {title && (
-                <div className={styles.section}>
-                  <span>{title}</span>
-                  {title === t('base.secDefault') && data?.defaults && (
-                    <span className={styles.source}>{t('base.fromSource', { source: data.defaults.source })}</span>
-                  )}
-                </div>
-              )}
+                {title && (
+                  <div className={styles.section}>
+                    <span>{title}</span>
+                    {title === t('base.secDefault') && data?.defaults && (
+                      <span className={styles.source}>{t('base.fromSource', { source: data.defaults.source })}</span>
+                    )}
+                  </div>
+                )}
                 <button
                   type="button"
                   role="option"

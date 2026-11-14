@@ -93,12 +93,10 @@ export function tokenizeCommand(command: string): { text: string; variable?: str
 
 /** Terminal escapes out, for Copy Output. */
 export function plainText(output: string): string {
-  return (
-    output
-      .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
-      .replace(/\x1b\][^\x07\x1b]*(\x07|\x1b\\)/g, '')
-      .replace(/\r\n/g, '\n')
-  );
+  return output
+    .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
+    .replace(/\x1b\][^\x07\x1b]*(\x07|\x1b\\)/g, '')
+    .replace(/\r\n/g, '\n');
 }
 
 function clock(ms: number): string {
@@ -170,9 +168,11 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
     syncSize();
     // The webfont can arrive after the terminal opens; its metrics move the wrap point.
     let dead = false;
-    document.fonts?.ready.then(() => {
-      if (!dead) syncSize();
-    }).catch(() => {});
+    document.fonts?.ready
+      .then(() => {
+        if (!dead) syncSize();
+      })
+      .catch(() => {});
     term.current = t;
     // The command row above is resizable: when it grows, this box shrinks. Re-fit
     // the terminal so its canvas follows instead of painting over the footer.
@@ -255,12 +255,14 @@ function OutputPanel({ run, onClose }: { run: ScriptRun; onClose: () => void }) 
           ? t('scripts.stStopped')
           : run.exitCode !== null
             ? t('scripts.stExit', { code: String(run.exitCode) })
-            : (run.signal ?? t('scripts.stEnded'))} · {took}
+            : (run.signal ?? t('scripts.stEnded'))}{' '}
+        · {took}
       </Pill>
     );
 
   // A failed git action may offer Retry (a failed Commit also: without hooks).
-  const again = !running && run.status === 'exited' && run.exitCode !== 0 && !run.stopped ? gitActionAgain(run.runId) : undefined;
+  const again =
+    !running && run.status === 'exited' && run.exitCode !== 0 && !run.stopped ? gitActionAgain(run.runId) : undefined;
   const retry = again?.retry;
   useEffect(() => {
     if (!retry) return;

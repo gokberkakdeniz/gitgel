@@ -66,7 +66,8 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
   simplest behaviour and mention it at the next checkpoint.
 - After every task these must pass:
   - `pnpm build` (tsc + vite)
-  - `pnpm lint` (Biome's linter over JS, TS, CSS, JSON and HTML; rules in `biome.json`)
+  - `pnpm lint` (Biome's linter and formatter check over JS, TS, CSS, JSON and HTML; rules in
+    `biome.json`; `pnpm format` rewrites)
   - `pnpm test` (vitest)
   - `cargo test --manifest-path src-tauri/Cargo.toml`
   - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`

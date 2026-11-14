@@ -33,11 +33,7 @@ export function DiscardModal() {
       <div className={styles.body}>
         <WarningIcon size={28} strokeWidth={1.6} className={styles.icon} />
         <div className={styles.text}>
-          <p className={styles.lead}>
-            {list
-              ? t('discard.leadList')
-              : t('discard.leadCount', { n: String(n) })}
-          </p>
+          <p className={styles.lead}>{list ? t('discard.leadList') : t('discard.leadCount', { n: String(n) })}</p>
           {list && (
             <div className={grouped ? `${styles.files} ${styles.groups}` : styles.files}>
               {req.targets.map((g) => (
@@ -59,11 +55,7 @@ export function DiscardModal() {
           )}
           <p className={styles.note}>{t('discard.trashNote')}</p>
           {list && (
-            <Checkbox
-              label={t('settings.dontAsk')}
-              checked={dontAsk}
-              onChange={(e) => setDontAsk(e.target.checked)}
-            />
+            <Checkbox label={t('settings.dontAsk')} checked={dontAsk} onChange={(e) => setDontAsk(e.target.checked)} />
           )}
         </div>
       </div>

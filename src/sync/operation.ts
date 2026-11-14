@@ -10,10 +10,25 @@ import { startGitAction, useRuns } from '../scripts/runs';
 import { useData } from '../state/data';
 
 const NAMES: Record<OperationKind, { pill: string; title: string; verb: string; abort: string }> = {
-  rebase: { pill: 'sync.pillRebasing', title: 'sync.titleRebase', verb: 'sync.verbRebase', abort: 'sync.abortTitleRebase' },
+  rebase: {
+    pill: 'sync.pillRebasing',
+    title: 'sync.titleRebase',
+    verb: 'sync.verbRebase',
+    abort: 'sync.abortTitleRebase',
+  },
   merge: { pill: 'sync.pillMerging', title: 'sync.titleMerge', verb: 'sync.verbMerge', abort: 'sync.abortTitleMerge' },
-  cherry_pick: { pill: 'sync.pillCherry', title: 'sync.titleCherry', verb: 'sync.verbCherry', abort: 'sync.abortTitleCherry' },
-  revert: { pill: 'sync.pillReverting', title: 'sync.titleRevert', verb: 'sync.verbRevert', abort: 'sync.abortTitleRevert' },
+  cherry_pick: {
+    pill: 'sync.pillCherry',
+    title: 'sync.titleCherry',
+    verb: 'sync.verbCherry',
+    abort: 'sync.abortTitleCherry',
+  },
+  revert: {
+    pill: 'sync.pillReverting',
+    title: 'sync.titleRevert',
+    verb: 'sync.verbRevert',
+    abort: 'sync.abortTitleRevert',
+  },
 };
 
 /** "Rebase", "Cherry-Pick": for Continue Rebase, Abort Merge. */
@@ -58,9 +73,7 @@ export function operationTooltip(op: Operation): string {
 /** The conflicts pill's tooltip: which files still have conflicts. */
 export function conflictsTooltip(e: EntrySummary): string {
   const files = e.operation?.unresolved ?? [];
-  return files.length > 0
-    ? t('sync.conflictsIn', { files: files.join(', ') })
-    : t('sync.conflictsTree');
+  return files.length > 0 ? t('sync.conflictsIn', { files: files.join(', ') }) : t('sync.conflictsTree');
 }
 
 /** A file row's conflict mark (T2): only for a conflicted file of an operation in progress. */
@@ -140,15 +153,11 @@ export function continueOperation(e: EntrySummary, op: Operation): Promise<void>
   const branch = e.branch ?? e.shortSha ?? '';
   const done = {
     rebase: op.onto ? t('sync.rebased', { branch, base: op.onto }) : t('sync.rebasedPlain', { branch }),
-    merge: op.other
-      ? t('sync.doneMerged', { other: op.other, branch })
-      : t('sync.doneMergedPlain', { branch }),
+    merge: op.other ? t('sync.doneMerged', { other: op.other, branch }) : t('sync.doneMergedPlain', { branch }),
     cherry_pick: op.commit
       ? t('sync.doneCherry', { commit: op.commit, branch })
       : t('sync.doneCherryPlain', { branch }),
-    revert: op.commit
-      ? t('sync.doneRevert', { commit: op.commit, branch })
-      : t('sync.doneRevertPlain', { branch }),
+    revert: op.commit ? t('sync.doneRevert', { commit: op.commit, branch }) : t('sync.doneRevertPlain', { branch }),
   }[op.kind];
   // A next commit that conflicts too ends the run with an error: git says so in the output.
   return startGitAction(

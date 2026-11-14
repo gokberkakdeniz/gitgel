@@ -576,7 +576,7 @@ const ICONS = {
   'arrow-down': ArrowDownIcon,
   'arrow-right': ArrowRightIcon,
   plus: PlusIcon,
-minus: MinusIcon,
+  minus: MinusIcon,
   close: CloseIcon,
   check: CheckIcon,
   search: SearchIcon,

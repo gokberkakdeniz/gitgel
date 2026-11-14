@@ -93,81 +93,90 @@ export function Sidebar({ peek = false }: { peek?: boolean }) {
 
   const sidebar = (
     <>
-    <nav ref={pane} className={styles.sidebar} style={width ? { width } : undefined}>
-      <div className={styles.top} data-tauri-drag-region>
-        <div className={styles.lights} data-tauri-drag-region />
-        <IconButton
-          aria-label={peek ? t('nav.showSidebar') : t('sidebar.toggleSidebar')}
-          onClick={() => setSidebarVisible(peek)}
-        >
-          <SidebarIcon />
-        </IconButton>
-        <IconButton aria-label={t('sidebar.back')} onClick={back} disabled={!canBack}>
-          <BackIcon />
-        </IconButton>
-        <IconButton aria-label={t('sidebar.forward')} onClick={forward} disabled={!canForward}>
-          <ForwardIcon />
-        </IconButton>
-      </div>
+      <nav ref={pane} className={styles.sidebar} style={width ? { width } : undefined}>
+        <div className={styles.top} data-tauri-drag-region>
+          <div className={styles.lights} data-tauri-drag-region />
+          <IconButton
+            aria-label={peek ? t('nav.showSidebar') : t('sidebar.toggleSidebar')}
+            onClick={() => setSidebarVisible(peek)}
+          >
+            <SidebarIcon />
+          </IconButton>
+          <IconButton aria-label={t('sidebar.back')} onClick={back} disabled={!canBack}>
+            <BackIcon />
+          </IconButton>
+          <IconButton aria-label={t('sidebar.forward')} onClick={forward} disabled={!canForward}>
+            <ForwardIcon />
+          </IconButton>
+        </div>
 
-      <div className={styles.nav}>
-        <button
-          type="button"
-          className={onDraft ? `${styles.row} ${styles.active}` : styles.row}
-          title={t('sidebar.newProjectTitle')}
-          onClick={() => startDraftProject([])}
-        >
-          <span className={styles.plus}>
-            <PlusIcon />
-          </span>
-          <span>{t('sidebar.newProject')}</span>
-        </button>
-        <button
-          type="button"
-          className={route.name === 'branches' ? `${styles.row} ${styles.active}` : styles.row}
-          onClick={() => goBranches()}
-        >
-          <BranchIcon className={styles.branchIcon} />
-          <span className={styles.grow}>{t('sidebar.branches')}</span>
-          <span className={styles.count}>{formatCount(rowCount)}</span>
-        </button>
-      </div>
+        <div className={styles.nav}>
+          <button
+            type="button"
+            className={onDraft ? `${styles.row} ${styles.active}` : styles.row}
+            title={t('sidebar.newProjectTitle')}
+            onClick={() => startDraftProject([])}
+          >
+            <span className={styles.plus}>
+              <PlusIcon />
+            </span>
+            <span>{t('sidebar.newProject')}</span>
+          </button>
+          <button
+            type="button"
+            className={route.name === 'branches' ? `${styles.row} ${styles.active}` : styles.row}
+            onClick={() => goBranches()}
+          >
+            <BranchIcon className={styles.branchIcon} />
+            <span className={styles.grow}>{t('sidebar.branches')}</span>
+            <span className={styles.count}>{formatCount(rowCount)}</span>
+          </button>
+        </div>
 
-      <ProjectList route={route} draftName={onDraft ? draft?.name : undefined} />
+        <ProjectList route={route} draftName={onDraft ? draft?.name : undefined} />
 
-      <UpdateRow />
+        <UpdateRow />
 
-      <div className={repoNarrow ? `${styles.footer} ${styles.narrow}` : styles.footer}>
-        <button
-          type="button"
-          className={styles.repoRow}
-          tabIndex={repoNarrow ? -1 : undefined}
-          aria-hidden={repoNarrow || undefined}
-          onClick={() => openSettings('repositories')}
-        >
-          <FolderIcon className={styles.folderIcon} />
-          <span ref={repoLabel} className={styles.grow}>{repoText}</span>
-        </button>
-        <button
-          type="button"
-          aria-label={t('sidebar.addRepository')}
-          title={t('sidebar.addRepository')}
-          className={styles.repoAdd}
-          onClick={() => void openAddRepos()}
-        >
-          <PlusIcon size={16} />
-        </button>
-        <button
-          type="button"
-          aria-label={t('sidebar.settings')}
-          className={route.name === 'settings' ? `${styles.gear} ${styles.gearActive}` : styles.gear}
-          onClick={() => openSettings()}
-        >
-          <GearIcon />
-        </button>
-      </div>
-    </nav>
-    <ResizeHandle pane={pane} min={200} max={400} onResize={setWidth} onReset={() => setWidth(null)} label={t('sidebar.resizeSidebar')} />
+        <div className={repoNarrow ? `${styles.footer} ${styles.narrow}` : styles.footer}>
+          <button
+            type="button"
+            className={styles.repoRow}
+            tabIndex={repoNarrow ? -1 : undefined}
+            aria-hidden={repoNarrow || undefined}
+            onClick={() => openSettings('repositories')}
+          >
+            <FolderIcon className={styles.folderIcon} />
+            <span ref={repoLabel} className={styles.grow}>
+              {repoText}
+            </span>
+          </button>
+          <button
+            type="button"
+            aria-label={t('sidebar.addRepository')}
+            title={t('sidebar.addRepository')}
+            className={styles.repoAdd}
+            onClick={() => void openAddRepos()}
+          >
+            <PlusIcon size={16} />
+          </button>
+          <button
+            type="button"
+            aria-label={t('sidebar.settings')}
+            className={route.name === 'settings' ? `${styles.gear} ${styles.gearActive}` : styles.gear}
+            onClick={() => openSettings()}
+          >
+            <GearIcon />
+          </button>
+        </div>
+      </nav>
+      <ResizeHandle
+        pane={pane}
+        min={200}
+        max={400}
+        onResize={setWidth}
+        onReset={() => setWidth(null)}
+        label={t('sidebar.resizeSidebar')}
+      />
     </>
   );
   return peek ? (

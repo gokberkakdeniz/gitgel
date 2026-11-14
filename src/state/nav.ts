@@ -55,8 +55,7 @@ const saved = loadRoute();
 export const useNav = create<NavState>()((set) => ({
   stack: saved?.stack ?? [{ name: 'branches' }],
   index: saved?.index ?? 0,
-  push: (route) =>
-    set((s) => ({ stack: [...s.stack.slice(0, s.index + 1), route], index: s.index + 1 })),
+  push: (route) => set((s) => ({ stack: [...s.stack.slice(0, s.index + 1), route], index: s.index + 1 })),
   replace: (route) => set((s) => ({ stack: s.stack.map((r, i) => (i === s.index ? route : r)) })),
   back: () => set((s) => ({ index: Math.max(0, s.index - 1) })),
   forward: () => set((s) => ({ index: Math.min(s.stack.length - 1, s.index + 1) })),

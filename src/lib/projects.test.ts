@@ -21,8 +21,16 @@ describe('project helpers', () => {
   });
 
   it('drops the worktree path of branch entries', () => {
-    expect(refOf({ repoId: 'r', branch: 'x', worktreePath: '/wt' })).toEqual({ repoId: 'r', branch: 'x', worktreePath: null });
-    expect(refOf({ repoId: 'r', branch: null, worktreePath: '/wt' })).toEqual({ repoId: 'r', branch: null, worktreePath: '/wt' });
+    expect(refOf({ repoId: 'r', branch: 'x', worktreePath: '/wt' })).toEqual({
+      repoId: 'r',
+      branch: 'x',
+      worktreePath: null,
+    });
+    expect(refOf({ repoId: 'r', branch: null, worktreePath: '/wt' })).toEqual({
+      repoId: 'r',
+      branch: null,
+      worktreePath: '/wt',
+    });
   });
 
   it('summarizes entries', () => {

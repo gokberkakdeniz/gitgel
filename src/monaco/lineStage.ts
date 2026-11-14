@@ -24,10 +24,14 @@ export interface Cut {
   m: Span;
 }
 
-const span = (start: number, end: number): Span => (end === 0 ? { s: start + 1, e: start + 1 } : { s: start, e: end + 1 });
+const span = (start: number, end: number): Span =>
+  end === 0 ? { s: start + 1, e: start + 1 } : { s: start, e: end + 1 };
 
 /** The whole change. */
-export const wholeCut = (h: Hunk): Cut => ({ o: span(h.originalStart, h.originalEnd), m: span(h.modifiedStart, h.modifiedEnd) });
+export const wholeCut = (h: Hunk): Cut => ({
+  o: span(h.originalStart, h.originalEnd),
+  m: span(h.modifiedStart, h.modifiedEnd),
+});
 
 /** The change with lines on `side` at `line`. */
 export function hunkAt(hunks: Hunk[], side: Side, line: number): Hunk | null {

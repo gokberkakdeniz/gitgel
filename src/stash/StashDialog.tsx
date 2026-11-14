@@ -79,7 +79,9 @@ export function StashDialog({
   const [open, setOpen] = useState<string[]>(() => (rows.length === 1 ? [rows[0].entry.key] : []));
   const [message, setMessage] = useState('');
   const payload = stashPayload(rows, picks);
-  const pickedEntries = rows.filter((r) => r.files.some((f) => picks[r.entry.key]?.includes(f.path))).map((r) => r.entry);
+  const pickedEntries = rows
+    .filter((r) => r.files.some((f) => picks[r.entry.key]?.includes(f.path)))
+    .map((r) => r.entry);
 
   const stash = () => {
     if (payload.length === 0) return;
@@ -148,7 +150,10 @@ export function StashDialog({
                     >
                       {all
                         ? t('branches.fileCount', { ...cnt(r.files.length) })
-                        : t('stash.someFiles', { n: formatCount(n), files: t('branches.fileCount', { ...cnt(r.files.length) }) })}
+                        : t('stash.someFiles', {
+                            n: formatCount(n),
+                            files: t('branches.fileCount', { ...cnt(r.files.length) }),
+                          })}
                       {isOpen ? <ChevronDownIcon size={10} /> : <ChevronRightIcon size={10} />}
                     </button>
                   )}

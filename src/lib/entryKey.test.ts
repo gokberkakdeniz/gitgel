@@ -7,8 +7,6 @@ describe('entryKey', () => {
   });
 
   it('uses the worktree path for detached entries', () => {
-    expect(entryKey({ repoId: 'r_1', branch: null, worktreePath: '/Users/me/wt/d' })).toBe(
-      'r_1:@/Users/me/wt/d',
-    );
+    expect(entryKey({ repoId: 'r_1', branch: null, worktreePath: '/Users/me/wt/d' })).toBe('r_1:@/Users/me/wt/d');
   });
 });

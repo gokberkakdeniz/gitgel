@@ -68,8 +68,7 @@ const waiting = new Map<string, Batch>();
 const timers = new Map<string, number>();
 const running = new Set<string>();
 
-const setBusy = (repoId: string, on: boolean) =>
-  useStage.setState((s) => ({ busy: { ...s.busy, [repoId]: on } }));
+const setBusy = (repoId: string, on: boolean) => useStage.setState((s) => ({ busy: { ...s.busy, [repoId]: on } }));
 
 const setOver = (entryKey: string, change: (m: Record<string, StageTo>) => void) =>
   useStage.setState((s) => {
@@ -231,7 +230,11 @@ async function flush(repoId: string): Promise<void> {
 
 /** The index as shown: git's lists with the files moved but not read back yet. `whole` is each
  * file against HEAD (Uncommitted's list): a file staged or unstaged whole shows that. */
-export function withMoves(index: IndexChanges, whole: FileChange[], over: Record<string, StageTo> | undefined): IndexChanges {
+export function withMoves(
+  index: IndexChanges,
+  whole: FileChange[],
+  over: Record<string, StageTo> | undefined,
+): IndexChanges {
   if (!over || Object.keys(over).length === 0) return index;
   const staged = index.staged.filter((f) => !(f.path in over));
   const unstaged = index.unstaged.filter((f) => !(f.path in over));

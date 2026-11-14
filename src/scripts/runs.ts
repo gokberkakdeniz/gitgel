@@ -131,9 +131,7 @@ export function defaultInputs(
   menu: ScriptMenuName,
   project?: string,
 ): Record<string, string> {
-  return Object.fromEntries(
-    shownInputs(script, e, menu, project, {}).map(({ input }) => [input.id, input.default]),
-  );
+  return Object.fromEntries(shownInputs(script, e, menu, project, {}).map(({ input }) => [input.id, input.default]));
 }
 
 /** A menu pick: the run dialog when the script has inputs to show or asks first; else it runs. */
@@ -230,7 +228,9 @@ export async function startGitAction(
     runs.put(run);
     showRunToast(useRuns.getState().runs[run.runId]);
   } catch (err) {
-    useUi.getState().showToast({ status: 'failed', message: t('scripts.couldNotStart', { name }), sub: (err as AppError).message });
+    useUi
+      .getState()
+      .showToast({ status: 'failed', message: t('scripts.couldNotStart', { name }), sub: (err as AppError).message });
   }
 }
 
@@ -254,7 +254,9 @@ export function showRunToast(run: ScriptRun): void {
     return;
   }
   if (run.status === 'failed') {
-    useUi.getState().showToast({ status: 'failed', message: t('scripts.couldNotStart', { name: run.name }), sub: run.lastLine });
+    useUi
+      .getState()
+      .showToast({ status: 'failed', message: t('scripts.couldNotStart', { name: run.name }), sub: run.lastLine });
     return;
   }
   const ok = run.exitCode === 0;
@@ -271,7 +273,9 @@ export function showRunToast(run: ScriptRun): void {
   // The last line says how it went.
   useUi.getState().showToast({
     status: ok ? 'success' : 'failed',
-    message: ok ? (show?.done ?? t('scripts.finished', { name: run.name })) : t('scripts.failed', { name: run.name, why }),
+    message: ok
+      ? (show?.done ?? t('scripts.finished', { name: run.name }))
+      : t('scripts.failed', { name: run.name, why }),
     sub: run.lastLine || run.repoLabel,
     ...output,
   });

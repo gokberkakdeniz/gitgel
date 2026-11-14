@@ -33,25 +33,15 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "app"
-    ],
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
+    "targets": ["app"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "macOS": {
       "signingIdentity": "-"
     }
   },
   "plugins": {
     "updater": {
-      "endpoints": [
-        "https://raw.githubusercontent.com/gokberkakdeniz/homebrew-tap/master/gitgel/latest.json"
-      ],
+      "endpoints": ["https://raw.githubusercontent.com/gokberkakdeniz/homebrew-tap/master/gitgel/latest.json"],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUwOTNFOTJDQjk4MjdEMUMKUldRY2ZZSzVMT21UVUtqRDY3RU16eWYvSVJpb2gyT3pkS3hJQ3BLdDZXWjJLSnplTjV4QmlVM1IK"
     }
   }

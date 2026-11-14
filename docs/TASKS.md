@@ -744,9 +744,9 @@ it was done within a topic.
 - [x] Dev builds add Window › Show Web Inspector (⌥⌘I) and Reload Page (⌥⌘R) — 2026-10-17
 - [x] README: screenshots and an animated WebP demo (`docs/assets/`), taken on `scripts/make-demo.sh`'s
   demo repositories — 2026-11-10
-- [x] Linting: `pnpm lint` (Biome, linter only) for JS, TS, CSS, JSON and HTML, and a pre-commit hook
-  (`.githooks/pre-commit`) that runs it with `tsc`, `pnpm i18n:check`, `cargo fmt --check` and
-  clippy — 2026-11-14
+- [x] Linting: `pnpm lint` (Biome: linter and formatter check; `pnpm format` rewrites) for JS, TS,
+  CSS, JSON and HTML, and a pre-commit hook (`.githooks/pre-commit`) that runs it with `tsc`,
+  `pnpm i18n:check`, `cargo fmt --check` and clippy — 2026-11-14
 
 ---
 

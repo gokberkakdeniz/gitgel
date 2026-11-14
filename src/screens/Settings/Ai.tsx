@@ -24,10 +24,8 @@ export function Ai({ config }: { config: Config }) {
     void getAiStatus().then(setStatus, () => {});
   }, []);
   const [editing, setEditing] = useState<AiProviderMeta | null>(null);
-  const missing = (id: CommitProvider) =>
-    status !== null && !status.some((s) => s.id === id && s.installed);
-  const save = (next: Config['settings']['ai']) =>
-    void updateSettings({ ...config.settings, ai: next });
+  const missing = (id: CommitProvider) => status !== null && !status.some((s) => s.id === id && s.installed);
+  const save = (next: Config['settings']['ai']) => void updateSettings({ ...config.settings, ai: next });
   const withProvider = (id: CommitProvider, patch: Partial<AiProviderSettings>) => {
     const next = { ...ai };
     next[id] = { ...ai[id], ...patch };
@@ -37,13 +35,10 @@ export function Ai({ config }: { config: Config }) {
   const { listRef, order, dragId, handleProps, rowStyle, dropBefore, dropAfter } = useReorder(ids, (sorted) =>
     save({ ...ai, order: sorted }),
   );
-  const shown = order
-    .map((id) => AI_PROVIDERS.find((p) => p.id === id))
-    .filter((p): p is AiProviderMeta => !!p);
+  const shown = order.map((id) => AI_PROVIDERS.find((p) => p.id === id)).filter((p): p is AiProviderMeta => !!p);
 
   // Off and on at once, no toast: the row shows it.
-  const setOn = (meta: AiProviderMeta, on: boolean) =>
-    save(withProvider(meta.id, { enabled: on }));
+  const setOn = (meta: AiProviderMeta, on: boolean) => save(withProvider(meta.id, { enabled: on }));
 
   return (
     <>
@@ -270,9 +265,7 @@ function ProviderEditor({
                 aria-haspopup="menu"
                 aria-expanded={variables !== null}
                 title={t('settings.aiInsertVar')}
-                onClick={(e) =>
-                  setVariables(variables ? null : e.currentTarget.getBoundingClientRect())
-                }
+                onClick={(e) => setVariables(variables ? null : e.currentTarget.getBoundingClientRect())}
               >
                 {t('settings.aiAddVar')}
                 <ChevronDownIcon size={9} />

@@ -62,8 +62,20 @@ export function useDiffView() {
     const group = t('cmd.groupReview');
     return {
       commands: [
-        { id: 'view:layout', title: t(layout === 'split' ? 'cmd.viewUnified' : 'cmd.viewSplit'), group, keys: '⌥V', run: toggleLayout },
-        { id: 'view:context', title: t(context === 'changes' ? 'review.wholeFile' : 'review.changesOnly'), group, keys: '⌥C', run: toggleContext },
+        {
+          id: 'view:layout',
+          title: t(layout === 'split' ? 'cmd.viewUnified' : 'cmd.viewSplit'),
+          group,
+          keys: '⌥V',
+          run: toggleLayout,
+        },
+        {
+          id: 'view:context',
+          title: t(context === 'changes' ? 'review.wholeFile' : 'review.changesOnly'),
+          group,
+          keys: '⌥C',
+          run: toggleContext,
+        },
         { id: 'view:ws', title: t(ignoreWs ? 'cmd.showWs' : 'review.ignoreWs'), group, keys: '⌥W', run: toggleWs },
       ],
     };
@@ -208,12 +220,7 @@ function ViewMenu({
               {t('review.wholeFile')}
             </MenuItem>
             <MenuDivider />
-            <MenuItem
-              box={ignoreWs}
-              desc={t('review.wsDesc')}
-              kbd="⌥W"
-              onSelect={onToggleWs}
-            >
+            <MenuItem box={ignoreWs} desc={t('review.wsDesc')} kbd="⌥W" onSelect={onToggleWs}>
               {t('review.ignoreWs')}
             </MenuItem>
           </Menu>
@@ -241,16 +248,8 @@ function ChangeNav({
   const i = nav.index ?? 0;
   const atFirst = nav.count === 0 || i === 0;
   const atLast = nav.count === 0 || i >= nav.count - 1;
-  const prevTitle = atFirst
-    ? prevFile
-      ? t('review.prevFirst')
-      : t('review.firstChange')
-    : t('review.prevChange');
-  const nextTitle = atLast
-    ? nextFile
-      ? t('review.nextFirst')
-      : t('review.lastChange')
-    : t('review.nextChange');
+  const prevTitle = atFirst ? (prevFile ? t('review.prevFirst') : t('review.firstChange')) : t('review.prevChange');
+  const nextTitle = atLast ? (nextFile ? t('review.nextFirst') : t('review.lastChange')) : t('review.nextChange');
   return (
     <>
       <span aria-live="polite" className={styles.navLabel}>
@@ -262,8 +261,18 @@ function ChangeNav({
       </span>
       <Stepper
         aria-label={t('review.jumpChanges')}
-        up={{ 'aria-label': t('review.prevChangeBtn'), title: prevTitle, disabled: atFirst && !prevFile, cross: atFirst && !!prevFile }}
-        down={{ 'aria-label': t('review.nextChangeBtn'), title: nextTitle, disabled: atLast && !nextFile, cross: atLast && !!nextFile }}
+        up={{
+          'aria-label': t('review.prevChangeBtn'),
+          title: prevTitle,
+          disabled: atFirst && !prevFile,
+          cross: atFirst && !!prevFile,
+        }}
+        down={{
+          'aria-label': t('review.nextChangeBtn'),
+          title: nextTitle,
+          disabled: atLast && !nextFile,
+          cross: atLast && !!nextFile,
+        }}
         onStep={onStep}
       />
     </>
@@ -300,7 +309,13 @@ export function FileRow({
   folder: string | null;
   /** Uncommitted's sections (SPEC §5 "Uncommitted sections"): on hover, Discard and + (stage) or
    * − (unstage) open left of the counts, which stay last. */
-  stage?: { glyph: '+' | '−'; label: string; disabled: boolean; onClick: () => void; discard?: { label: string; onClick: () => void } };
+  stage?: {
+    glyph: '+' | '−';
+    label: string;
+    disabled: boolean;
+    onClick: () => void;
+    discard?: { label: string; onClick: () => void };
+  };
   /** Uncommitted's files: the menu discards and copies too, deleted files included. */
   actions?: FileActions;
   /** A conflicted file of an operation in progress (T2): ⚠ while it has git's markers, ✓ once
@@ -310,11 +325,21 @@ export function FileRow({
   const [menu, setMenu] = useState<DOMRect | null>(null);
   const counts =
     conflict === 'unresolved' ? (
-      <span className={styles.conflictMark} title={t('review.hasConflicts')} role="img" aria-label={t('review.hasConflicts')}>
+      <span
+        className={styles.conflictMark}
+        title={t('review.hasConflicts')}
+        role="img"
+        aria-label={t('review.hasConflicts')}
+      >
         <Icon name="warning" size={14} />
       </span>
     ) : conflict === 'resolved' ? (
-      <span className={styles.resolvedMark} title={t('review.conflictsResolved')} role="img" aria-label={t('review.conflictsResolved')}>
+      <span
+        className={styles.resolvedMark}
+        title={t('review.conflictsResolved')}
+        role="img"
+        aria-label={t('review.conflictsResolved')}
+      >
         <Icon name="check" size={14} />
       </span>
     ) : (
@@ -324,22 +349,22 @@ export function FileRow({
   const menuFolder = f.kind === 'D' ? null : folder;
   const state = picked ? styles.picked : on ? styles.selected : menu ? styles.menuOpen : '';
   const button = (
-      <button
-        type="button"
-        className={stage ? styles.fileRowBare : `${styles.fileRow} ${state}`}
-        aria-current={on || undefined}
-        onClick={onClick}
-        onContextMenu={(ev) => {
-          ev.preventDefault();
-          setMenu(new DOMRect(ev.clientX, ev.clientY, 0, 0));
-        }}
-        title={f.path}
-      >
-        <KindBadge kind={f.kind} />
-        <span className={styles.fileName}>{basename(f.path)}</span>
-        <span className={styles.fileDir}>{dirLabel(f)}</span>
-        {!stage && counts}
-      </button>
+    <button
+      type="button"
+      className={stage ? styles.fileRowBare : `${styles.fileRow} ${state}`}
+      aria-current={on || undefined}
+      onClick={onClick}
+      onContextMenu={(ev) => {
+        ev.preventDefault();
+        setMenu(new DOMRect(ev.clientX, ev.clientY, 0, 0));
+      }}
+      title={f.path}
+    >
+      <KindBadge kind={f.kind} />
+      <span className={styles.fileName}>{basename(f.path)}</span>
+      <span className={styles.fileDir}>{dirLabel(f)}</span>
+      {!stage && counts}
+    </button>
   );
   return (
     <>
@@ -379,7 +404,13 @@ export function FileRow({
       )}
       {menu && (
         <Popover anchorRect={menu} width={230} onClose={() => setMenu(null)}>
-          <Menu aria-label={actions && actions.files.length > 1 ? t('review.filesActions', { n: formatCount(actions.files.length) }) : t('review.fileActions', { file: basename(f.path) })}>
+          <Menu
+            aria-label={
+              actions && actions.files.length > 1
+                ? t('review.filesActions', { n: formatCount(actions.files.length) })
+                : t('review.fileActions', { file: basename(f.path) })
+            }
+          >
             {actions ? (
               <UncommittedItems
                 actions={actions}
@@ -421,7 +452,9 @@ function UncommittedItems({
 }) {
   const { files, onDiscard, onStage } = actions;
   const one = files.length === 1;
-  const onDisk = files.flatMap((x) => (x.folder && x.file.kind !== 'D' ? [{ folder: x.folder, path: x.file.path }] : []));
+  const onDisk = files.flatMap((x) =>
+    x.folder && x.file.kind !== 'D' ? [{ folder: x.folder, path: x.file.path }] : [],
+  );
   return (
     <>
       <MenuItem
@@ -529,10 +562,21 @@ export function StashSection({
   // A row's right-click menu: Apply, Pop, Drop.
   const [menu, setMenu] = useState<{ stash: ReviewStash; at: DOMRect } | null>(null);
   return (
-    <section aria-label={t('branches.stashes')} className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}>
+    <section
+      aria-label={t('branches.stashes')}
+      className={divider ? `${styles.stashes} ${styles.stashesRuled}` : styles.stashes}
+    >
       {fold ? (
-        <button type="button" className={`${styles.stashHeading} ${styles.stashFold}`} aria-expanded={fold.open} onClick={fold.onToggle}>
-          <ChevronDownIcon size={12} className={fold.open ? styles.sectionChevron : `${styles.sectionChevron} ${styles.sectionShut}`} />
+        <button
+          type="button"
+          className={`${styles.stashHeading} ${styles.stashFold}`}
+          aria-expanded={fold.open}
+          onClick={fold.onToggle}
+        >
+          <ChevronDownIcon
+            size={12}
+            className={fold.open ? styles.sectionChevron : `${styles.sectionChevron} ${styles.sectionShut}`}
+          />
           {heading} · {formatCount(stashes.length)}
         </button>
       ) : (
@@ -540,44 +584,47 @@ export function StashSection({
           {heading} · {formatCount(stashes.length)}
         </div>
       )}
-      {(!fold || fold.open) && stashes.map((st) => {
-        const on = st.sha === picked;
-        return (
-          <div key={`${st.repoId}:${st.sha}`} className={styles.stash}>
-            <button
-              type="button"
-              className={[styles.stashRow, on && styles.stashOn, menu?.stash.sha === st.sha && styles.menuOpen].filter(Boolean).join(' ')}
-              aria-expanded={on}
-              title={st.message}
-              onClick={() => onPick(st.sha)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setMenu({ stash: st, at: new DOMRect(e.clientX, e.clientY, 0, 0) });
-              }}
-            >
-              <span className={styles.stashLine}>
-                <Icon name="package" size={13} strokeWidth={1.6} className={styles.stashIcon} />
-                <span className={styles.stashMessage}>{st.message}</span>
-                <span className={styles.stashRef}>stash@{`{${st.index}}`}</span>
-              </span>
-              <span className={styles.stashMeta}>{stashMeta(st, withRepo)}</span>
-            </button>
-            {on && changes && (
-              <div className={styles.fileRows}>
-                {changes.files.map((f) => (
-                  <FileRow
-                    key={f.path}
-                    file={f}
-                    folder={repos?.find((r) => r.id === st.repoId)?.path ?? null}
-                    on={f.path === file}
-                    onClick={() => onFile(f.path)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {(!fold || fold.open) &&
+        stashes.map((st) => {
+          const on = st.sha === picked;
+          return (
+            <div key={`${st.repoId}:${st.sha}`} className={styles.stash}>
+              <button
+                type="button"
+                className={[styles.stashRow, on && styles.stashOn, menu?.stash.sha === st.sha && styles.menuOpen]
+                  .filter(Boolean)
+                  .join(' ')}
+                aria-expanded={on}
+                title={st.message}
+                onClick={() => onPick(st.sha)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setMenu({ stash: st, at: new DOMRect(e.clientX, e.clientY, 0, 0) });
+                }}
+              >
+                <span className={styles.stashLine}>
+                  <Icon name="package" size={13} strokeWidth={1.6} className={styles.stashIcon} />
+                  <span className={styles.stashMessage}>{st.message}</span>
+                  <span className={styles.stashRef}>stash@{`{${st.index}}`}</span>
+                </span>
+                <span className={styles.stashMeta}>{stashMeta(st, withRepo)}</span>
+              </button>
+              {on && changes && (
+                <div className={styles.fileRows}>
+                  {changes.files.map((f) => (
+                    <FileRow
+                      key={f.path}
+                      file={f}
+                      folder={repos?.find((r) => r.id === st.repoId)?.path ?? null}
+                      on={f.path === file}
+                      onClick={() => onFile(f.path)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       {menu && <StashRowMenu stash={menu.stash} at={menu.at} onClose={() => setMenu(null)} />}
     </section>
   );

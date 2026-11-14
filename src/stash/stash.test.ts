@@ -86,10 +86,7 @@ describe('stashPayload', () => {
   const a = entry('web-app', 'a', '/wt/a');
   const b = entry('api', 'b', '/wt/b');
   const renamed: FileChange = { ...file('new-name.ts', 'R'), oldPath: 'old-name.ts' };
-  const rows = stashRows([
-    group(a, [file('x.ts', 'M'), file('new.ts', 'U'), renamed]),
-    group(b, [file('y.ts', 'M')]),
-  ]);
+  const rows = stashRows([group(a, [file('x.ts', 'M'), file('new.ts', 'U'), renamed]), group(b, [file('y.ts', 'M')])]);
 
   it('sends no paths for an entry with every file picked, and leaves out entries with none', () => {
     expect(stashPayload(rows, { [a.key]: ['x.ts', 'new.ts', 'new-name.ts'], [b.key]: [] })).toEqual([
@@ -99,7 +96,13 @@ describe('stashPayload', () => {
 
   it('sends the picked paths, a rename with its old path, untracked only when one is picked', () => {
     expect(stashPayload(rows, { [a.key]: ['x.ts', 'new-name.ts'], [b.key]: ['y.ts'] })).toEqual([
-      { repoId: 'web-app', branch: 'a', worktreePath: null, paths: ['x.ts', 'old-name.ts', 'new-name.ts'], untracked: false },
+      {
+        repoId: 'web-app',
+        branch: 'a',
+        worktreePath: null,
+        paths: ['x.ts', 'old-name.ts', 'new-name.ts'],
+        untracked: false,
+      },
       { repoId: 'api', branch: 'b', worktreePath: null, paths: null, untracked: false },
     ]);
   });

@@ -112,17 +112,23 @@ describe('validate', () => {
   it('names the key that is wrong', () => {
     const dark = gitgel.dark!;
     expect(validate({ id: 'Night', name: 'Night', dark })).toContain('theme.id');
-    expect(validate({ id: 'night', name: 'Night', dark: { ...dark, colors: { ...dark.colors, accent: 'teal' } } })).toContain(
-      'dark.colors.accent',
-    );
+    expect(
+      validate({ id: 'night', name: 'Night', dark: { ...dark, colors: { ...dark.colors, accent: 'teal' } } }),
+    ).toContain('dark.colors.accent');
     const { scrim: _, ...rest } = dark.colors;
-    expect(validate({ id: 'night', name: 'Night', dark: { ...dark, colors: rest } })).toBe('dark.colors.scrim is missing');
-    expect(validate({ id: 'night', name: 'Night', dark: { ...dark, colors: { ...dark.colors, extra: '#000000' } } })).toBe(
-      'dark.colors.extra is not a known key',
+    expect(validate({ id: 'night', name: 'Night', dark: { ...dark, colors: rest } })).toBe(
+      'dark.colors.scrim is missing',
     );
+    expect(
+      validate({ id: 'night', name: 'Night', dark: { ...dark, colors: { ...dark.colors, extra: '#000000' } } }),
+    ).toBe('dark.colors.extra is not a known key');
     // A value goes into a style sheet as is.
     expect(
-      validate({ id: 'night', name: 'Night', dark: { ...dark, colors: { ...dark.colors, scrim: 'red} body{display:none' } } }),
+      validate({
+        id: 'night',
+        name: 'Night',
+        dark: { ...dark, colors: { ...dark.colors, scrim: 'red} body{display:none' } },
+      }),
     ).toContain('dark.colors.scrim');
   });
 });

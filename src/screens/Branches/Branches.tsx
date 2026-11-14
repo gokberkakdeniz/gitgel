@@ -240,9 +240,7 @@ function BranchList() {
   // Repos appear as they finish scanning; the rest are counted below the list.
   const pending = config.repos.length - scans.length;
   const pendingNote =
-    pending > 0 ? (
-      <div className={styles.pending}>{t('branches.pendingMore', { ...cnt(pending) })}</div>
-    ) : null;
+    pending > 0 ? <div className={styles.pending}>{t('branches.pendingMore', { ...cnt(pending) })}</div> : null;
   if (groups.length === 0 && (pending > 0 || !scannedOnce)) {
     body = <div className={`${styles.center} ${styles.muted}`}>{t('branches.scanning')}</div>;
   } else if (groups.length === 0 && filter.trim()) {
@@ -339,10 +337,7 @@ function BranchList() {
       )}
       {popover?.kind === 'menu' && popoverEntry && (
         <Popover anchorRect={popover.rect} width={260} alignRight={!popover.atPointer} onClose={() => setPopover(null)}>
-          <RowMenu
-            entry={popoverEntry}
-            onClose={() => setPopover(null)}
-          />
+          <RowMenu entry={popoverEntry} onClose={() => setPopover(null)} />
         </Popover>
       )}
       {popover?.kind === 'base' && popoverEntry && (
@@ -373,7 +368,11 @@ function SelectionBar({ selected, onAdded }: { selected: EntrySummary[]; onAdded
       <span className={styles.selCount}>{t('branches.selCount', { ...cnt(selected.length) })}</span>
       <span className={styles.selRepos}>{t('branches.selAcross', { ...cnt(repos) })}</span>
       <span className={styles.selDivider} />
-      <button type="button" className={styles.selAdd} onClick={(e) => setPickAt(e.currentTarget.getBoundingClientRect())}>
+      <button
+        type="button"
+        className={styles.selAdd}
+        onClick={(e) => setPickAt(e.currentTarget.getBoundingClientRect())}
+      >
         {t('branches.addToProject')}
         <ChevronDownIcon />
       </button>
@@ -440,7 +439,10 @@ function RepoSection({
           // ⌥-click: every band. Listed in lib/shortcuts.ts.
           onClick={(ev) => onToggle(ev.altKey)}
         >
-          <ChevronDownIcon size={12} className={open ? styles.bandChevron : `${styles.bandChevron} ${styles.bandShut}`} />
+          <ChevronDownIcon
+            size={12}
+            className={open ? styles.bandChevron : `${styles.bandChevron} ${styles.bandShut}`}
+          />
           <FolderIcon size={16} className={styles.bandIcon} />
           <span className={styles.repoName}>{scan.name}</span>
           <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
@@ -464,7 +466,9 @@ function RepoSection({
         )}
         <IconButton
           size={24}
-          aria-label={pinned ? t('branches.unpinName', { name: scan.name }) : t('branches.pinName', { name: scan.name })}
+          aria-label={
+            pinned ? t('branches.unpinName', { name: scan.name }) : t('branches.pinName', { name: scan.name })
+          }
           aria-pressed={pinned}
           title={pinned ? t('branches.unpin') : t('branches.pinToTop')}
           className={pinned ? `${styles.pin} ${styles.pinned}` : styles.pin}
@@ -473,18 +477,19 @@ function RepoSection({
           <PinIcon size={13} />
         </IconButton>
       </div>
-      {open && rows.map((e) => (
-        <Row
-          key={e.key}
-          entry={e}
-          isBase={isBaseRow(scan, e)}
-          projectNames={sortProjects(projectsOf(config, e.key), readProjectSort()).map((p) => p.name)}
-          selected={selectedKeys.includes(e.key)}
-          justAdded={justAdded.includes(e.key)}
-          popover={popover?.key === e.key ? popover.kind : null}
-          onPopover={(kind, rect, atPointer) => onPopover({ kind, key: e.key, rect, atPointer })}
-        />
-      ))}
+      {open &&
+        rows.map((e) => (
+          <Row
+            key={e.key}
+            entry={e}
+            isBase={isBaseRow(scan, e)}
+            projectNames={sortProjects(projectsOf(config, e.key), readProjectSort()).map((p) => p.name)}
+            selected={selectedKeys.includes(e.key)}
+            justAdded={justAdded.includes(e.key)}
+            popover={popover?.key === e.key ? popover.kind : null}
+            onPopover={(kind, rect, atPointer) => onPopover({ kind, key: e.key, rect, atPointer })}
+          />
+        ))}
       {open && stashes.length > 0 && (
         <StashList
           repoId={scan.repo.id}
@@ -525,7 +530,12 @@ function StashList({
   const picked = stashes.find((st) => st.sha === menu?.sha);
   const stash = picked && { ...picked, repoId, repoName };
   const open = (sha: string) =>
-    push({ name: 'review', target: { kind: 'stashes', repoId }, focusKey: sha, backLabel: t('branches.backToBranches') });
+    push({
+      name: 'review',
+      target: { kind: 'stashes', repoId },
+      focusKey: sha,
+      backLabel: t('branches.backToBranches'),
+    });
   return (
     <div className={styles.stashes}>
       <List
@@ -561,10 +571,18 @@ function StashList({
             <MenuItem kbd="↵" onHover={() => setSub(null)} onSelect={() => open(menu.sha)}>
               {t('stash.reviewChanges')}
             </MenuItem>
-            <MenuItem submenu onHover={(el) => setSub({ pop: false, el })} onSelect={(el) => setSub({ pop: false, el, focus: true })}>
+            <MenuItem
+              submenu
+              onHover={(el) => setSub({ pop: false, el })}
+              onSelect={(el) => setSub({ pop: false, el, focus: true })}
+            >
               {t('stash.applyTo')}
             </MenuItem>
-            <MenuItem submenu onHover={(el) => setSub({ pop: true, el })} onSelect={(el) => setSub({ pop: true, el, focus: true })}>
+            <MenuItem
+              submenu
+              onHover={(el) => setSub({ pop: true, el })}
+              onSelect={(el) => setSub({ pop: true, el, focus: true })}
+            >
               {t('stash.popTo')}
             </MenuItem>
             <MenuDivider />
@@ -640,7 +658,11 @@ function RemoteList({ repoId, remotes }: { repoId: string; remotes: RemoteBranch
               },
             },
           ],
-          rowProps: { className: styles.remoteRow, title: t('branches.showHistoryOf', { name: r.name }), onClick: () => open(r.name) },
+          rowProps: {
+            className: styles.remoteRow,
+            title: t('branches.showHistoryOf', { name: r.name }),
+            onClick: () => open(r.name),
+          },
         }))}
       />
       {menu && (
@@ -716,9 +738,7 @@ function Row({
     ui.setSelectedKeys(selected ? ui.selectedKeys.filter((k) => k !== e.key) : [...ui.selectedKeys, e.key]);
   };
   const hot = popover === 'projects' || popover === 'picker' || popover === 'menu';
-  const cls = [styles.grid, styles.row, selected && styles.selected, hot && styles.hot]
-    .filter(Boolean)
-    .join(' ');
+  const cls = [styles.grid, styles.row, selected && styles.selected, hot && styles.hot].filter(Boolean).join(' ');
   const name = e.branch ?? e.shortSha ?? '';
   const n = projectNames.length;
   const cellCls = [
@@ -742,12 +762,22 @@ function Row({
       {isBase ? (
         <span />
       ) : (
-        <Checkbox aria-label={t('branches.selectBranch', { name })} className={styles.check} checked={selected} onChange={toggle} />
+        <Checkbox
+          aria-label={t('branches.selectBranch', { name })}
+          className={styles.check}
+          checked={selected}
+          onChange={toggle}
+        />
       )}
       <div className={styles.branchCell}>
         {isBase ? (
           <span className={styles.nameLine}>
-            <button type="button" className={styles.branchName} onClick={() => openReview(e)} title={t('branches.showHistoryOf', { name })}>
+            <button
+              type="button"
+              className={styles.branchName}
+              onClick={() => openReview(e)}
+              title={t('branches.showHistoryOf', { name })}
+            >
               <span className={styles.nameHead}>{name}</span>
             </button>
             <Pill tone="outline" size="sm">
@@ -804,7 +834,12 @@ function Row({
         )}
       </div>
       {isBase ? (
-        <button type="button" className={styles.historyButton} title={t('branches.baseHistoryOf', { name })} onClick={() => openReview(e)}>
+        <button
+          type="button"
+          className={styles.historyButton}
+          title={t('branches.baseHistoryOf', { name })}
+          onClick={() => openReview(e)}
+        >
           <SplitIcon size={12} />
           {t('branches.historyBtn')}
         </button>

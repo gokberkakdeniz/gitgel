@@ -27,7 +27,12 @@ const options = (o: Partial<BaseOptions> = {}): BaseOptions => ({
 });
 
 const show = (rows: BaseRow[]) =>
-  rows.map((r) => [r.section, r.label === AUTOMATIC_LABEL ? t(r.label) : r.label, r.sub ?? r.note ?? '', r.selected ? '✓' : '']);
+  rows.map((r) => [
+    r.section,
+    r.label === AUTOMATIC_LABEL ? t(r.label) : r.label,
+    r.sub ?? r.note ?? '',
+    r.selected ? '✓' : '',
+  ]);
 
 const labels = (rows: BaseRow[]) => rows.map((r) => (r.label === AUTOMATIC_LABEL ? t(r.label) : r.label));
 
@@ -84,7 +89,9 @@ describe('baseRows', () => {
   });
 
   it('opens on the checked row, skipping disabled rows', () => {
-    expect(labels(baseRows(options(), '', false, null))[initialRow(baseRows(options(), '', false, null))]).toBe('Automatic');
+    expect(labels(baseRows(options(), '', false, null))[initialRow(baseRows(options(), '', false, null))]).toBe(
+      'Automatic',
+    );
     const stored = baseRows(options({ current: 'master' }), '', true, null);
     expect(stored[initialRow(stored)].label).toBe('master');
   });

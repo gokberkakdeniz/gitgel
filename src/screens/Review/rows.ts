@@ -104,5 +104,10 @@ export function isBot(author: string): boolean {
 export function initials(author: string): string {
   if (isBot(author)) return 'BOT';
   const words = author.trim().split(/\s+/).filter(Boolean);
-  return words.slice(0, 2).map((w) => w[0].toLocaleUpperCase('en-US')).join('') || '?';
+  return (
+    words
+      .slice(0, 2)
+      .map((w) => w[0].toLocaleUpperCase('en-US'))
+      .join('') || '?'
+  );
 }

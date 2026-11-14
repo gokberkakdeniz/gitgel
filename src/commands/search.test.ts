@@ -19,12 +19,19 @@ describe('searchGo', () => {
   });
 
   it('finds search-only rows, at most the limit per group', () => {
-    const many = Array.from({ length: SEARCH_ONLY_LIMIT + 5 }, (_, i) => go(`old/fix-${i}`, 'Older', { searchOnly: true }));
+    const many = Array.from({ length: SEARCH_ONLY_LIMIT + 5 }, (_, i) =>
+      go(`old/fix-${i}`, 'Older', { searchOnly: true }),
+    );
     expect(searchGo(many, 'fix')).toHaveLength(SEARCH_ONLY_LIMIT);
   });
 
   it('keeps each group together, the best match first', () => {
-    const items = [go('main', 'Projects'), go('queue-worker', 'Active'), go('feat/queue', 'Worktrees'), go('queue', 'Projects')];
+    const items = [
+      go('main', 'Projects'),
+      go('queue-worker', 'Active'),
+      go('feat/queue', 'Worktrees'),
+      go('queue', 'Projects'),
+    ];
     const keys = searchGo(items, 'queue').map((i) => i.key);
     expect(keys[0]).toBe('queue');
     const groups = searchGo(items, 'queue').map((i) => i.group);
@@ -44,7 +51,11 @@ describe('searchGo', () => {
 });
 
 describe('searchCommands', () => {
-  const all = [cmd('push', 'Push', 'Branch'), cmd('fetch', 'Fetch', 'Branch'), cmd('newProject', 'New Project…', 'General')];
+  const all = [
+    cmd('push', 'Push', 'Branch'),
+    cmd('fetch', 'Fetch', 'Branch'),
+    cmd('newProject', 'New Project…', 'General'),
+  ];
 
   it('lists recent ones first, under their own group, and not twice', () => {
     const out = searchCommands(all, '', ['newProject', 'gone'], 'Recently Used');

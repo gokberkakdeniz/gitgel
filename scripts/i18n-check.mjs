@@ -13,7 +13,7 @@ function load(name) {
   try {
     return JSON.parse(readFileSync(join(dir, name), 'utf8'));
   } catch (e) {
-    console.error(`i18n: cannot read ${name}: ${(e).message}`);
+    console.error(`i18n: cannot read ${name}: ${e.message}`);
     process.exit(1);
   }
 }
@@ -54,11 +54,14 @@ for (const key of Object.keys(tr)) {
 }
 for (const key of Object.keys(en)) {
   if (!(key in tr)) continue;
-  for (const [locale, source] of [['en', en[key]], ['tr', tr[key]]]) {
+  for (const [locale, source] of [
+    ['en', en[key]],
+    ['tr', tr[key]],
+  ]) {
     try {
       new MessageFormat(locale, source);
     } catch (e) {
-      errors.push(`${key}: broken MF2 in ${locale} (${(e).message})`);
+      errors.push(`${key}: broken MF2 in ${locale} (${e.message})`);
     }
   }
   if (typeof en[key] === 'string' && typeof tr[key] === 'string') {
@@ -67,7 +70,9 @@ for (const key of Object.keys(en)) {
     const missing = [...want].filter((p) => !have.has(p));
     const extra = [...have].filter((p) => !placeholders(en[key]).has(p));
     if (missing.length > 0 || extra.length > 0) {
-      errors.push(`${key}: placeholder mismatch (missing ${missing.join(', ') || '—'}, extra ${extra.join(', ') || '—'})`);
+      errors.push(
+        `${key}: placeholder mismatch (missing ${missing.join(', ') || '—'}, extra ${extra.join(', ') || '—'})`,
+      );
     }
   }
 }

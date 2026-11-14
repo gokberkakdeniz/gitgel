@@ -238,7 +238,14 @@ export function DiffView({
     if (!m || n.decorations.length < 2) return;
     const h = n.index === null ? undefined : n.hunks[n.index];
     const deco = (start: number, end: number) =>
-      end > 0 ? [{ range: new monaco.Range(start, 1, end, 1), options: { isWholeLine: true, className: 'gg-current-change' } }] : [];
+      end > 0
+        ? [
+            {
+              range: new monaco.Range(start, 1, end, 1),
+              options: { isWholeLine: true, className: 'gg-current-change' },
+            },
+          ]
+        : [];
     n.decorations[0].set(h ? deco(h.originalStart, h.originalEnd) : []);
     n.decorations[1].set(h ? deco(h.modifiedStart, h.modifiedEnd) : []);
   };
@@ -372,11 +379,7 @@ export function DiffView({
     setMenu(null);
   };
 
-  const message = data?.binary
-    ? t('diff.binary')
-    : data?.tooLarge
-      ? t('diff.tooLarge')
-      : null;
+  const message = data?.binary ? t('diff.binary') : data?.tooLarge ? t('diff.tooLarge') : null;
 
   // Picked lines being staged: the index side shows their new staged version at once, until the
   // index read after the stage brings the file in again (another change key) or the stage failed.
@@ -412,8 +415,7 @@ export function DiffView({
   const shownText = useRef<Shown | null>(null);
   useEffect(() => {
     nav.current.shownKey = data?.fileKey ?? null;
-    const same =
-      shownText.current?.original === shown.original && shownText.current?.modified === shown.modified;
+    const same = shownText.current?.original === shown.original && shownText.current?.modified === shown.modified;
     shownText.current = shown;
     // Same text as before (another file with equal content, or both sides empty): the current
     // line changes still hold, so land now.
@@ -553,19 +555,28 @@ export function DiffView({
             {canStage && (menu.lines || menu.change) && (
               <>
                 {menu.lines && (
-                  <MenuItem icon={lineStage.unstage ? 'remove' : 'plus'} onSelect={() => stageCuts(menu.lines!, menu.text)}>
+                  <MenuItem
+                    icon={lineStage.unstage ? 'remove' : 'plus'}
+                    onSelect={() => stageCuts(menu.lines!, menu.text)}
+                  >
                     {t(lineStage.unstage ? 'diff.unstageLines' : 'diff.stageLines')}
                   </MenuItem>
                 )}
                 {menu.change && (
-                  <MenuItem icon={lineStage.unstage ? 'remove' : 'plus'} onSelect={() => stageCuts(menu.change!, menu.text)}>
+                  <MenuItem
+                    icon={lineStage.unstage ? 'remove' : 'plus'}
+                    onSelect={() => stageCuts(menu.change!, menu.text)}
+                  >
                     {t(lineStage.unstage ? 'diff.unstageChange' : 'diff.stageChange')}
                   </MenuItem>
                 )}
                 <MenuDivider />
               </>
             )}
-            <MenuItem icon={<CopyIcon />} onSelect={() => copy(fileReference(change.path, menu.from, menu.to, menu.endColumn))}>
+            <MenuItem
+              icon={<CopyIcon />}
+              onSelect={() => copy(fileReference(change.path, menu.from, menu.to, menu.endColumn))}
+            >
               {t('diff.copyRelative')}
             </MenuItem>
             {folder && (

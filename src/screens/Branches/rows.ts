@@ -32,7 +32,10 @@ export function isBaseRow(scan: RepoScan, e: EntrySummary): boolean {
 
 /** Lowercase words; `-`, `/`, `_` and `.` count as spaces, so `to be` finds `to-be-deleted`. */
 function words(text: string): string {
-  return text.toLowerCase().replace(/[-/_.\s]+/g, ' ').trim();
+  return text
+    .toLowerCase()
+    .replace(/[-/_.\s]+/g, ' ')
+    .trim();
 }
 
 /**
@@ -91,7 +94,12 @@ export function branchGroups(
     );
     const rows = [...shown.filter((e) => isBaseRow(scan, e)), ...shown.filter((e) => !isBaseRow(scan, e))];
     const remotes = filter.trim() ? scan.remotes.filter((r) => matchesRemote(r, scan.name, filter)) : [];
-    if (rows.length > 0 || remotes.length > 0 || scan.repo.id === keepRepoId || (scan.status === 'error' && !filter.trim())) {
+    if (
+      rows.length > 0 ||
+      remotes.length > 0 ||
+      scan.repo.id === keepRepoId ||
+      (scan.status === 'error' && !filter.trim())
+    ) {
       const stashes = rows.length > 0 ? scan.stashes.filter((st) => matchesStash(st, scan.name, filter)) : [];
       groups.push({ scan, rows, stashes, remotes });
     }
@@ -138,10 +146,7 @@ export function afu(e: EntrySummary): { a: string; f: string; u: string; title: 
       ? t('branches.aheadNone')
       : t('branches.aheadCount', { ...cnt(e.ahead), behind: String(behind), e: formatCount(behind) });
   const files = t('branches.filesPart', { n: f === '—' ? '—' : f });
-  const un =
-    e.uncommitted === null
-      ? t('branches.uncheckedPart')
-      : t('branches.uncommittedPart', { n: u });
+  const un = e.uncommitted === null ? t('branches.uncheckedPart') : t('branches.uncommittedPart', { n: u });
   const title = `${ahead} · ${files} · ${un}`;
   return { a, f, u, title };
 }

@@ -28,7 +28,8 @@ export function branchCommands(entry: EntrySummary, menu: ScriptMenuName, projec
     const op = entry.operation;
     if (op) {
       const title = operationTitle(op);
-      if (!continueBlocked(op)) add('continue', t('sync.menuContinue', { title }), () => void continueOperation(entry, op));
+      if (!continueBlocked(op))
+        add('continue', t('sync.menuContinue', { title }), () => void continueOperation(entry, op));
       add('abort', t('sync.menuAbort', { title }), () => askAbort(entry, op));
     } else {
       if (canCheckout(entry))

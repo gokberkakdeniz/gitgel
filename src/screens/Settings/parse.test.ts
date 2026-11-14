@@ -10,7 +10,21 @@ describe('settings input', () => {
 
   it('rejects duplicates and invalid ref names', () => {
     expect(baseNameError('main', ['origin/HEAD', 'main'])).toBe('main is already in the list');
-    for (const bad of ['', 'release candidate', 'a..b', 'a~1', 'x:y', 'feat/', '/x', '-x', 'a.lock', '.hidden', 'a//b', 'a@{1}', 'end.']) {
+    for (const bad of [
+      '',
+      'release candidate',
+      'a..b',
+      'a~1',
+      'x:y',
+      'feat/',
+      '/x',
+      '-x',
+      'a.lock',
+      '.hidden',
+      'a//b',
+      'a@{1}',
+      'end.',
+    ]) {
       expect(baseNameError(bad, [])).toBe('Not a valid branch name');
     }
   });

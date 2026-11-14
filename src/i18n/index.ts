@@ -43,7 +43,13 @@ function warnOnce(key: string, message: string): void {
 }
 
 /** One message formatted; `strict` throws on any formatting error (a missing variable). */
-function format(loc: AppLocale, key: string, source: string, vars: Record<string, unknown> | undefined, strict: boolean): string {
+function format(
+  loc: AppLocale,
+  key: string,
+  source: string,
+  vars: Record<string, unknown> | undefined,
+  strict: boolean,
+): string {
   const cacheKey = `${loc}${key}`;
   let mf = compiled.get(cacheKey);
   if (!mf) {

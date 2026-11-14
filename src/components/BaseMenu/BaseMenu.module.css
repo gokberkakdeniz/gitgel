@@ -110,9 +110,6 @@
   color: var(--text-body);
 }
 
-
-
-
 /* The base in use: a check in a 16px column, as in the diff view menu. */
 .check {
   width: 16px;

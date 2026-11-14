@@ -112,8 +112,7 @@ export function checkWhen(expr: string, inputs: ScriptInput[] | null = null): st
   try {
     const result = (inputs ? environment(inputs) : scriptEnv).check(expr);
     if (!result.valid) return message(expr, result.error?.message ?? t('scripts.notValid'), inputs);
-    if (result.type !== 'bool' && result.type !== 'dyn')
-      return t('scripts.mustBool', { type: result.type });
+    if (result.type !== 'bool' && result.type !== 'dyn') return t('scripts.mustBool', { type: result.type });
     return null;
   } catch (e) {
     return message(expr, e instanceof Error ? e.message : String(e), inputs);

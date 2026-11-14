@@ -4,20 +4,13 @@
   "description": "One theme of Gitgel: the app's colour tokens and the editor's colours, in light, dark or both. Built-in themes are the *.json files next to this one (src/themes); custom ones go in the themes folder beside config.json.",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "id",
-    "name"
-  ],
+  "required": ["id", "name"],
   "anyOf": [
     {
-      "required": [
-        "light"
-      ]
+      "required": ["light"]
     },
     {
-      "required": [
-        "dark"
-      ]
+      "required": ["dark"]
     }
   ],
   "properties": {
@@ -47,10 +40,7 @@
     "variant": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "colors",
-        "editor"
-      ],
+      "required": ["colors", "editor"],
       "properties": {
         "colors": {
           "$ref": "#/definitions/colors"

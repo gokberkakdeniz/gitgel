@@ -49,8 +49,7 @@ export const inspectFolders = (paths: string[]) => invoke<FolderCheck[]>('inspec
 export const addRepos = (paths: string[]) => invoke<Config>('add_repos', { paths });
 
 /** Pins a repo to the top of Branches, or unpins it. */
-export const setRepoPinned = (repoId: string, pinned: boolean) =>
-  invoke<Config>('set_repo_pinned', { repoId, pinned });
+export const setRepoPinned = (repoId: string, pinned: boolean) => invoke<Config>('set_repo_pinned', { repoId, pinned });
 
 export const getScan = () => invoke<ScanResult>('get_scan');
 
@@ -73,7 +72,6 @@ export const getStashChanges = (repoId: string, sha: string) =>
 export const getHistory = (repoId: string, rev: string, base: string | null, query: string, limit: number) =>
   invoke<HistoryPage>('get_history', { repoId, rev, base, query, limit });
 
-
 export const readFilePair = (repoId: string, worktreePath: string | null, change: FileChange) =>
   invoke<FilePair>('read_file_pair', { repoId, worktreePath, change });
 
@@ -83,8 +81,7 @@ export const getRemoteUrl = (repoId: string) => invoke<RemoteInfo | null>('get_r
 export const createProject = (name: string, entries: EntryRef[]) =>
   invoke<ProjectConfig>('create_project', { name, entries });
 
-export const renameProject = (projectId: string, name: string) =>
-  invoke<Config>('rename_project', { projectId, name });
+export const renameProject = (projectId: string, name: string) => invoke<Config>('rename_project', { projectId, name });
 
 export const deleteProject = (projectId: string) => invoke<Config>('delete_project', { projectId });
 
@@ -94,14 +91,11 @@ export const addEntries = (projectId: string, entries: EntryRef[]) =>
 export const removeEntries = (projectId: string, keys: string[]) =>
   invoke<Config>('remove_entries', { projectId, keys });
 
-export const getProjectView = (projectId: string) =>
-  invoke<ProjectView>('get_project_view', { projectId });
+export const getProjectView = (projectId: string) => invoke<ProjectView>('get_project_view', { projectId });
 
-export const getBaseOptions = (repoId: string, key: string) =>
-  invoke<BaseOptions>('get_base_options', { repoId, key });
+export const getBaseOptions = (repoId: string, key: string) => invoke<BaseOptions>('get_base_options', { repoId, key });
 
-export const setBranchBase = (key: string, base: string | null) =>
-  invoke<Config>('set_branch_base', { key, base });
+export const setBranchBase = (key: string, base: string | null) => invoke<Config>('set_branch_base', { key, base });
 
 export const verifyRef = (repoId: string, rev: string) => invoke<string | null>('verify_ref', { repoId, rev });
 
@@ -266,7 +260,8 @@ export const writeScriptInput = (runId: string, data: string) => invoke<null>('w
 /** SIGINT, then SIGKILL after 3 s. */
 export const stopScript = (runId: string) => invoke<null>('stop_script', { runId });
 /** Saves an SSH key's passphrase in the Keychain (SPEC §15 "SSH passphrase"). */
-export const rememberSshKey = (key: string, passphrase: string) => invoke<void>('remember_ssh_key', { key, passphrase });
+export const rememberSshKey = (key: string, passphrase: string) =>
+  invoke<void>('remember_ssh_key', { key, passphrase });
 
 /** A run with its output so far (`buffered`). */
 export const getScriptRun = (runId: string) => invoke<ScriptRun>('get_script_run', { runId });

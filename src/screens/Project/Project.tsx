@@ -107,7 +107,12 @@ function SavedProject({ id }: { id: string }) {
     const group = t('cmd.groupProject');
     const entries = data?.project.id === id ? data.entries : [];
     const openEntry = (key?: string) =>
-      nav.push({ name: 'review', target: { kind: 'project', projectId: id }, focusKey: key, backLabel: t('project.backToProject') });
+      nav.push({
+        name: 'review',
+        target: { kind: 'project', projectId: id },
+        focusKey: key,
+        backLabel: t('project.backToProject'),
+      });
     return {
       go: entries.map((e) => entryGoItem(e, project?.name ?? '', () => openEntry(e.key))),
       commands: [
@@ -148,7 +153,12 @@ function SavedProject({ id }: { id: string }) {
         <Button kbd="⌘K" className={styles.addButton} onClick={openPalette}>
           {t('project.addEntries')}
         </Button>
-        <Button variant="primary" title={t('project.reviewChangesHint')} disabled={project.entries.length === 0} onClick={review}>
+        <Button
+          variant="primary"
+          title={t('project.reviewChangesHint')}
+          disabled={project.entries.length === 0}
+          onClick={review}
+        >
           {t('project.reviewChanges')}
         </Button>
         <button
@@ -195,7 +205,15 @@ function SavedProject({ id }: { id: string }) {
 function DraftProject() {
   usePaletteShortcut();
   useCommandSource(() => ({
-    commands: [{ id: 'project:add', title: t('shortcuts.addBranches'), group: t('cmd.groupProject'), keys: '⌘K', run: openPalette }],
+    commands: [
+      {
+        id: 'project:add',
+        title: t('shortcuts.addBranches'),
+        group: t('cmd.groupProject'),
+        keys: '⌘K',
+        run: openPalette,
+      },
+    ],
   }));
   const draft = useUi((s) => s.draftProject);
   const scan = useData((s) => s.scan);
@@ -219,8 +237,7 @@ function DraftProject() {
     useUi.getState().setDraftProject(null);
     nav.replace({ name: 'project', projectId: created.id });
   };
-  const setEntries = (entries: typeof draft.entries) =>
-    useUi.getState().setDraftProject({ ...draft, entries });
+  const setEntries = (entries: typeof draft.entries) => useUi.getState().setDraftProject({ ...draft, entries });
 
   return (
     <>
@@ -229,9 +246,7 @@ function DraftProject() {
         renaming
         draft
         subtitle={
-          rows.length === 0
-            ? t('project.nameYourProject')
-            : `${entriesSummary(rows)} · ${t('project.draftSuffix')}`
+          rows.length === 0 ? t('project.nameYourProject') : `${entriesSummary(rows)} · ${t('project.draftSuffix')}`
         }
         onNameChange={(name) => useUi.getState().setDraftProject({ ...draft, name })}
         onRenameSave={save}
@@ -358,9 +373,7 @@ function ProjectHeader(props: HeaderProps) {
     </span>
   );
 
-  const sub = conflict
-    ? t('project.conflictExists', { name: conflict })
-    : subtitle;
+  const sub = conflict ? t('project.conflictExists', { name: conflict }) : subtitle;
 
   return (
     <PageHeader title={titleNode} subtitle={<span className={conflict ? styles.danger : undefined}>{sub}</span>}>
@@ -557,11 +570,19 @@ function StatePill({
         </Pill>
       );
     case 'detached':
-      return <Pill tone="warning" className={cls}>{t('branches.detachedHead')}</Pill>;
+      return (
+        <Pill tone="warning" className={cls}>
+          {t('branches.detachedHead')}
+        </Pill>
+      );
     case 'base_missing':
       return clickable('warning', t('branches.baseMissing'), onBase);
     case 'git_error':
-      return <Pill tone="danger" className={cls} title={e.error ?? undefined}>{t('branches.gitErr')}</Pill>;
+      return (
+        <Pill tone="danger" className={cls} title={e.error ?? undefined}>
+          {t('branches.gitErr')}
+        </Pill>
+      );
     case 'branch_deleted':
       return clickable('danger', t('project.branchDeleted'), onMenu);
     case 'repo_missing':
@@ -614,7 +635,13 @@ function EntryMenu({
             onClose();
             push({
               name: 'review',
-              target: { kind: 'branch', repoId: entry.repoId, branch: entry.branch, worktreePath: null, tipOverride: tip.sha },
+              target: {
+                kind: 'branch',
+                repoId: entry.repoId,
+                branch: entry.branch,
+                worktreePath: null,
+                tipOverride: tip.sha,
+              },
               backLabel: t('project.backToProject'),
             });
           }}
@@ -664,7 +691,11 @@ function BranchPicker({
   };
   return (
     <Popover anchorRect={anchorRect} width={300} alignRight onClose={onClose}>
-      <div role="listbox" aria-label={t('project.pointBranch', { branch: entry.branch ?? '' })} className={styles.picker}>
+      <div
+        role="listbox"
+        aria-label={t('project.pointBranch', { branch: entry.branch ?? '' })}
+        className={styles.picker}
+      >
         <div className={styles.pickerFilterRow}>
           <Input
             autoFocus

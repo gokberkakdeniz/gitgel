@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type KeyboardEvent,
-  type PointerEvent,
-} from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 
 /**
  * Reordering a list by a handle on each row: a pointer drag or ↑ / ↓ on the focused handle.
@@ -194,8 +187,7 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
   const d = drag.current;
   const from = d?.from ?? -1;
   const slot = motion?.slot ?? -1;
-  const reduce =
-    typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const reduce = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const glide = reduce ? 'none' : 'transform 180ms cubic-bezier(0.2, 0, 0, 1)';
 
   /** The visual state of one row while a drag runs: translate it into place. */
@@ -222,11 +214,9 @@ export function useReorder(ids: string[], onCommit: (ids: string[]) => void) {
   };
 
   /** The accent line goes before this row (it moves down to open the gap). */
-  const dropBefore = (id: string) =>
-    !!d?.active && !!motion && slot < from && d.base.indexOf(id) === slot;
+  const dropBefore = (id: string) => !!d?.active && !!motion && slot < from && d.base.indexOf(id) === slot;
   /** The accent line goes after this row (it moves up to open the gap). */
-  const dropAfter = (id: string) =>
-    !!d?.active && !!motion && slot > from && d.base.indexOf(id) === slot;
+  const dropAfter = (id: string) => !!d?.active && !!motion && slot > from && d.base.indexOf(id) === slot;
 
   return {
     listRef,

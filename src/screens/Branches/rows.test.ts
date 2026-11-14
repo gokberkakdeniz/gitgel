@@ -59,7 +59,51 @@ const config: Config = {
       entries: [{ repoId: 'r_1', branch: 'in-project', worktreePath: null, lastKnownTip: null }],
     },
   ],
-  settings: { newBranchCheckout: 'main', defaultBaseOrder: ['main'], activeDays: 14, diffView: 'split', ignoreWhitespace: false, diffContext: 'changes', diffContextLines: 3, zoom: 100, language: 'system', dateFormat: 'MMM d, yyyy', timeFormat: 'HH:mm', numberFormat: 'plain-comma', preferAbsoluteDates: false, diffTabSize: 4, commitRows: 'two-line', historyLayout: 'tree', theme: 'gitgel', appearance: 'system', sidebarVisible: true, editor: 'auto', editorCommand: '', terminal: 'auto', terminalCommand: '', checkUpdates: true, lastSeenVersion: '', prompts: { removeRepositories: true, discardChanges: true, discardStash: true, deleteProjects: true, abortOperation: true, amendPushed: true }, ai: { enabled: true, order: ['opencode', 'claude', 'cursor', 'antigravity', 'codex', 'foundation'], opencode: { enabled: true, model: null, effort: null, prompt: null }, claude: { enabled: true, model: null, effort: null, prompt: null }, cursor: { enabled: true, model: null, effort: null, prompt: null }, antigravity: { enabled: true, model: null, effort: null, prompt: null }, codex: { enabled: true, model: null, effort: null, prompt: null }, foundation: { enabled: true, model: null, effort: null, prompt: null } } },
+  settings: {
+    newBranchCheckout: 'main',
+    defaultBaseOrder: ['main'],
+    activeDays: 14,
+    diffView: 'split',
+    ignoreWhitespace: false,
+    diffContext: 'changes',
+    diffContextLines: 3,
+    zoom: 100,
+    language: 'system',
+    dateFormat: 'MMM d, yyyy',
+    timeFormat: 'HH:mm',
+    numberFormat: 'plain-comma',
+    preferAbsoluteDates: false,
+    diffTabSize: 4,
+    commitRows: 'two-line',
+    historyLayout: 'tree',
+    theme: 'gitgel',
+    appearance: 'system',
+    sidebarVisible: true,
+    editor: 'auto',
+    editorCommand: '',
+    terminal: 'auto',
+    terminalCommand: '',
+    checkUpdates: true,
+    lastSeenVersion: '',
+    prompts: {
+      removeRepositories: true,
+      discardChanges: true,
+      discardStash: true,
+      deleteProjects: true,
+      abortOperation: true,
+      amendPushed: true,
+    },
+    ai: {
+      enabled: true,
+      order: ['opencode', 'claude', 'cursor', 'antigravity', 'codex', 'foundation'],
+      opencode: { enabled: true, model: null, effort: null, prompt: null },
+      claude: { enabled: true, model: null, effort: null, prompt: null },
+      cursor: { enabled: true, model: null, effort: null, prompt: null },
+      antigravity: { enabled: true, model: null, effort: null, prompt: null },
+      codex: { enabled: true, model: null, effort: null, prompt: null },
+      foundation: { enabled: true, model: null, effort: null, prompt: null },
+    },
+  },
   scripts: [],
   pinnedRepos: [],
 };
@@ -96,9 +140,7 @@ describe('branchGroups', () => {
 
   it('filters rows and hides missing repos while filtering', () => {
     const groups = branchGroups(config, scans, '  DETACH ');
-    expect(groups.map((g) => [g.scan.repo.id, g.rows.map((r) => r.key)])).toEqual([
-      ['r_2', ['r_2:@/wt/detached']],
-    ]);
+    expect(groups.map((g) => [g.scan.repo.id, g.rows.map((r) => r.key)])).toEqual([['r_2', ['r_2:@/wt/detached']]]);
   });
 });
 
@@ -205,7 +247,10 @@ describe('stashes under a band', () => {
     files: 1,
     createdAt: 0,
   });
-  const repo = { ...scan('r_1', [entry('r_1', 'feat/x', 5)]), stashes: [st(0, 'debug logging', 'feat/x'), st(1, 'wip', 'old')] };
+  const repo = {
+    ...scan('r_1', [entry('r_1', 'feat/x', 5)]),
+    stashes: [st(0, 'debug logging', 'feat/x'), st(1, 'wip', 'old')],
+  };
   const empty = { ...scan('r_2', []), stashes: [st(0, 'lonely', 'gone')] };
 
   it('lists the stack with the rows, filtered like the rows', () => {
@@ -262,4 +307,3 @@ describe('base branch row', () => {
     expect(branchCount(config, [withBase([main])])).toBe(0);
   });
 });
-

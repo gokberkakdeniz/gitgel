@@ -30,7 +30,11 @@ describe('themeChoices', () => {
   it('has only the mode of a theme with one', () => {
     const night = { id: 'night', name: 'Night', dark: themeOf('gitgel').dark };
     setCustomThemes([{ name: 'night.json', content: JSON.stringify(night) }]);
-    expect(themeChoices().filter((c) => c.theme === 'night').map((c) => c.appearance)).toEqual(['dark']);
+    expect(
+      themeChoices()
+        .filter((c) => c.theme === 'night')
+        .map((c) => c.appearance),
+    ).toEqual(['dark']);
     expect(choiceOf({ theme: 'night', appearance: 'system' })).toEqual({ theme: 'night', appearance: 'dark' });
     expect(resolveEffective({ theme: 'night', appearance: 'light' }, false)).toBe('night-dark');
     setCustomThemes([]);

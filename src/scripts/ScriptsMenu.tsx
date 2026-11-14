@@ -10,7 +10,12 @@ import { branchContext, menuScripts, type ScriptMenuName } from './when';
 
 /** The scripts a branch's menu lists: on, shown in this menu, Show when matching, and able to run
  * here (a missing repo runs nothing; worktree scripts need the branch checked out). */
-export function branchScripts(scripts: ScriptConfig[], entry: EntrySummary, menu: ScriptMenuName, project?: string): ScriptConfig[] {
+export function branchScripts(
+  scripts: ScriptConfig[],
+  entry: EntrySummary,
+  menu: ScriptMenuName,
+  project?: string,
+): ScriptConfig[] {
   if (entry.state === 'repo_missing') return [];
   return menuScripts(scripts, menu, branchContext(entry, menu, project)).filter(
     (s) => !(s.runsIn === 'worktree' && entry.worktreePath === null),
@@ -70,12 +75,7 @@ export function ScriptsMenu({
   return (
     <>
       <MenuDivider />
-      <MenuItem
-        icon="prompt"
-        submenu
-        onHover={(el) => setSub({ el })}
-        onSelect={(el) => setSub({ el, focus: true })}
-      >
+      <MenuItem icon="prompt" submenu onHover={(el) => setSub({ el })} onSelect={(el) => setSub({ el, focus: true })}>
         {t('scripts.menuRun')}
       </MenuItem>
       {sub && (

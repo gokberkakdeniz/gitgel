@@ -65,7 +65,13 @@ export function AuxApp({ label }: { label: string }) {
   }, []);
 
   const content =
-    label === 'about' ? <AboutWindow /> : label === 'update' ? <UpdateWindow /> : label === 'whats-new' ? <WhatsNewWindow /> : null;
+    label === 'about' ? (
+      <AboutWindow />
+    ) : label === 'update' ? (
+      <UpdateWindow />
+    ) : label === 'whats-new' ? (
+      <WhatsNewWindow />
+    ) : null;
   return (
     <div className={styles.window}>
       {/* The traffic lights sit here; the strip moves the window. */}

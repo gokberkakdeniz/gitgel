@@ -1,8 +1,9 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "includes": ["**", "!design", "!src-tauri/gen", "!src-tauri/target"] },
-  "formatter": { "enabled": false },
+  "files": { "includes": ["**", "!design", "!**/*.md", "!src-tauri/gen", "!src-tauri/target"] },
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
+  "javascript": { "formatter": { "quoteStyle": "single" } },
   "assist": { "enabled": false },
   "linter": {
     "enabled": true,
@@ -25,5 +26,5 @@
   "overrides": [
     { "includes": ["index.html"], "linter": { "rules": { "correctness": { "noInnerDeclarations": "off" } } } }
   ],
-  "css": { "parser": { "cssModules": true } }
+  "css": { "parser": { "cssModules": true }, "formatter": { "quoteStyle": "single" } }
 }

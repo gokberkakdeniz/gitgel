@@ -26,7 +26,14 @@ export type ListAction =
       active?: boolean;
       onPress?: (e: MouseEvent<HTMLButtonElement>) => void;
     }
-  | { kind: 'switch'; checked: boolean; ariaLabel: string; title?: string; disabled?: boolean; onToggle: (on: boolean) => void }
+  | {
+      kind: 'switch';
+      checked: boolean;
+      ariaLabel: string;
+      title?: string;
+      disabled?: boolean;
+      onToggle: (on: boolean) => void;
+    }
   | { kind: 'pill'; label: string; tone: PillTone; title?: string }
   | { kind: 'element'; element: ReactNode };
 
@@ -144,7 +151,11 @@ export function List({
       {!shut && (
         <div className={card}>
           {(items.length > 0 || empty == null) && (
-            <Tag ref={listRef as Ref<HTMLOListElement & HTMLUListElement>} aria-label={label ?? heading} className={styles.list}>
+            <Tag
+              ref={listRef as Ref<HTMLOListElement & HTMLUListElement>}
+              aria-label={label ?? heading}
+              className={styles.list}
+            >
               {items.map(({ key, rowProps, ...row }) => (
                 <li key={key} {...rowProps} className={[styles.item, rowProps?.className].filter(Boolean).join(' ')}>
                   <ListRow {...row} density={density} />
@@ -161,7 +172,11 @@ export function List({
             </div>
           ) : (
             addLabel && (
-              <div className={[styles.add, compact && styles.addCompact, items.length > 0 && styles.ruled].filter(Boolean).join(' ')}>
+              <div
+                className={[styles.add, compact && styles.addCompact, items.length > 0 && styles.ruled]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
                 <Button variant="link" onClick={onAdd}>
                   {addLabel}
                 </Button>
@@ -197,7 +212,12 @@ export function ListRow({
   density = 'regular',
 }: ListRowProps) {
   const compact = density === 'compact';
-  const row = [styles.row, compact ? styles.compact : styles.regular, active && styles.active, actionsOnHover && styles.hoverActions]
+  const row = [
+    styles.row,
+    compact ? styles.compact : styles.regular,
+    active && styles.active,
+    actionsOnHover && styles.hoverActions,
+  ]
     .filter(Boolean)
     .join(' ');
   const titleCls = [
@@ -219,9 +239,7 @@ export function ListRow({
           <Icon name={icon} size={14} strokeWidth={1.6} />
         </span>
       )}
-      {lead === 'tile' && (
-        <IconTile name={icon} className={off ? styles.tileOff : undefined} />
-      )}
+      {lead === 'tile' && <IconTile name={icon} className={off ? styles.tileOff : undefined} />}
       <span className={styles.body}>
         <span className={styles.line}>
           {prefix && <span className={styles.prefix}>{prefix}</span>}
