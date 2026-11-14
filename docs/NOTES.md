@@ -15,17 +15,10 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   (a commit running or mid-operation), Discard All Changes (no files), Stash All Changes / Stash
   (nothing to stash), Project's missing-folder item, History's item disabled without a scan.
   Proposal: keep the first group disabled, leave out the second.
-- **A commit menu in Review** (2026-10-16). The canvas had W2d: Review's commit row (right-click or
-  ⋯) with Copy SHA and Show in History only, rewriting left to History. Removed from the canvas as
-  not needed now; to think about later.
-- **Pick lines in a commit** (2026-10-16). The canvas had W1b: committing only some lines of a
-  file (the diff turns Unified with a box per changed line and "Include hunk" on each hunk, the
-  file's box shows "some", "2 of 3 lines"). Removed from the canvas with its WIP page; to be
-  implemented later. The design is still in Hi5's `lines` state (the old `HistH6.dc.html`, removed with the History screen; see git history).
-- **Tags** (2026-10-17). Today tags are only read, as base choices in the Base menu. To think
-  about: showing them on History's commit rows, creating one on a commit (lightweight or
-  annotated), deleting one, and pushing it (`git push origin <tag>`; tags are not pushed with the
-  branch). Creating, deleting and pushing are git actions (SPEC §0, §10).
+- **Tags** (2026-10-17). Today tags are only read: base choices in the Base menu and pills on
+  Review's commit rows. To think about: creating one on a commit (lightweight or annotated),
+  deleting one, and pushing it (`git push origin <tag>`; tags are not pushed with the branch).
+  All three are git actions (SPEC §0, §10).
 - **Hunk buttons in the diff gutter** (2026-10-19). VS Code's diff editor shows Revert (↶) and
   Stage (+) beside each hunk. Monaco 0.57 has the gutter menu (`renderGutterMenu`) but only with
   Revert Block, and only when the modified side is writable (ours is `readOnly`); Stage comes
