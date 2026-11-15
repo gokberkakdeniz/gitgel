@@ -11,10 +11,8 @@
 # (`version :latest`) and downloads the newest release's `Gitgel-macos-<arch>.zip`, a copy of the
 # zip under a name without the version. Nothing is published to the tap.
 #
-# Versions up to 0.2.5 read the update feed from the tap (`gitgel/latest.json` there). While
-# that file is still at 0.2.5 or older, a release writes it once with this release's update, so
-# those installs update and then follow the new endpoint. It needs the tap's clone next to this
-# repository, or at $GITGEL_TAP_DIR; without one the step is skipped with a warning.
+# Versions up to 0.2.5 read their update feed from the tap, which is not written any more: they
+# are updated once with `brew reinstall --cask gitgel` (or the zip).
 #
 # Signing: the build is signed with the Developer ID Application certificate in the keychain and
 # notarized (the ticket stapled to the app) with an App Store Connect API key, in Tauri's variables:
@@ -56,10 +54,8 @@ REPO="gokberkakdeniz/gitgel"
 # The same zip under a name without the version, for the cask's fixed URL.
 ZIP_LATEST="$BUNDLE/Gitgel-macos-$ARCH.zip"
 FEED="$BUNDLE/latest.json"
-TAP_DIR="${GITGEL_TAP_DIR:-../homebrew-tap}"
 UPDATER_KEY="${TAURI_SIGNING_PRIVATE_KEY:-$HOME/.tauri/gitgel.key}"
 UPDATE="$BUNDLE/Gitgel-$VERSION-macos-$ARCH.app.tar.gz"
-LATEST="gitgel/latest.json"
 
 CHANGELOG="CHANGELOG.md"
 # A version's section of the changelog, without its heading and the blank lines around it.
@@ -69,7 +65,7 @@ section() {
 }
 NOTES="$(section "$VERSION")"
 grep -q '^- ' <<<"$NOTES" || die "no notes for $VERSION in $CHANGELOG; write its section first"
-# Under the notes, after a rule: how it is signed (this repo) or how to install it (the tap).
+# Under the notes, after a rule: how it is signed and how to install it.
 INSTALL_NOTE=$'<hr>\n\nSigned and notarized by Apple. Install with Homebrew:\n```bash\nbrew install --cask gokberkakdeniz/tap/gitgel\n```'
 # The sections the update feed carries, newest first, headings included.
 FEED_NOTES="$(awk '/^## / { n++ } n >= 1 && n <= 10' "$CHANGELOG")"
@@ -97,19 +93,6 @@ if [[ -n "$REMOTE_TAG_SHA" && "$REMOTE_TAG_SHA" != "$HEAD_SHA" ]]; then
 fi
 
 [[ "$ARCH" == arm64 ]] || die "the cask and the update feed are for Apple silicon (arm64), this Mac is $ARCH"
-
-# The tap's old feed, while it is at 0.2.5 or older (see the top): checked before building, so a
-# release never stops half-way for it.
-MOVE_TAP_FEED=
-if [[ -f "$TAP_DIR/$LATEST" ]]; then
-  [[ -z "$(git -C "$TAP_DIR" status --porcelain)" ]] || die "uncommitted changes in $TAP_DIR"
-  git -C "$TAP_DIR" pull -q --ff-only
-  [[ -n "$(git -C "$TAP_DIR" branch -r --contains HEAD)" ]] || die "$TAP_DIR has unpushed commits"
-  TAP_VERSION="$(node -p 'require(require("path").resolve(process.argv[1])).version' "$TAP_DIR/$LATEST")"
-  if [[ "$(printf '%s\n' "$TAP_VERSION" 0.2.5 | sort -V | tail -1)" == 0.2.5 ]]; then MOVE_TAP_FEED=1; fi
-else
-  echo "release: no tap clone at $TAP_DIR; its old update feed is left as it is" >&2
-fi
 
 # The updater artifacts (Gitgel.app.tar.gz and its .sig) are made only here, so a plain
 # `pnpm tauri build` needs no key.
@@ -164,11 +147,3 @@ git fetch -q origin "refs/tags/$TAG:refs/tags/$TAG"
 echo "Released $VERSION: $(gh release view "$TAG" --json url --jq .url)"
 echo "The app updates itself; brew install --cask gokberkakdeniz/tap/gitgel gets this version"
 
-# Once: installs that still read the tap's feed are sent to this release.
-if [[ -n "$MOVE_TAP_FEED" ]]; then
-  cp "$FEED" "$TAP_DIR/$LATEST"
-  git -C "$TAP_DIR" add -- "$LATEST"
-  git -C "$TAP_DIR" commit -q -m "gitgel $VERSION: the update feed moves to the gitgel repository"
-  git -C "$TAP_DIR" push -q
-  echo "The tap's old update feed now points at $VERSION"
-fi

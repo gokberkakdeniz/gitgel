@@ -2296,12 +2296,8 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
   as `Gitgel-macos-arm64.zip` (no version in the name, for the cask), the signed update and
   `latest.json` (below). Everything is published here and nowhere else. After new commits, bump
   the version first. It also needs the update's key.
-  - **Old feed, once:** versions up to 0.2.5 read `gitgel/latest.json` in the Homebrew tap
-    (`gokberkakdeniz/homebrew-tap`). While that file is still at 0.2.5 or older, a release
-    copies its `latest.json` there, commits and pushes (the tap's clone at `../homebrew-tap` or
-    `$GITGEL_TAP_DIR`, clean and pushed; without a clone the step is skipped with a warning), so
-    those installs update to it and follow the new endpoint from then on. After that the tap is
-    never written again.
+  Versions up to 0.2.5 read their feed from the Homebrew tap, which is not written any more:
+  they are updated once with `brew reinstall --cask gitgel` (or the zip).
 - **Signing:** `release.sh` signs with the "Developer ID Application" certificate in the login
   keychain (passed as `--config` `signingIdentity` and `APPLE_SIGNING_IDENTITY`; hardened
   runtime, no entitlements) and has Tauri notarize and staple the app with an App Store Connect
