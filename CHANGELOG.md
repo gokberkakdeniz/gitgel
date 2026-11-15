@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.6 — 2026-11-15
+
+### Changed
+- Updates come from Gitgel's GitHub releases.
+- From 0.2.5 or older, run `brew reinstall --cask gitgel` once to update.
+
 ## 0.2.5 — 2026-11-15
 
 ### Changed
