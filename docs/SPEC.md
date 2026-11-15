@@ -3369,7 +3369,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     another git action in the repository. Pushed commits leave the branch diverged, so the
     diverged banner offers Force Push.
   - **Reword** (not in GitHub Desktop, which only amends the newest commit; `SquashModal` with `reword`): on a commit with
-    one parent when `rev` is checked out in a worktree and no commit, amend of it or operation
+    one parent under the branch's newest one (Amend rewords that one) when `rev` is checked out in a worktree and no commit, amend of it or operation
     is in progress; left out otherwise. Opens "Reword Commit" (Squash's dialog; sub `<repo> /
     <sha>` mono): the summary and description filled with the commit's, the ✦ (for that
     commit's changes), under the upstream line the note "This commit is on the remote: the

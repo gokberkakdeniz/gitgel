@@ -1755,8 +1755,8 @@ class Component extends DCLogic {
         var mshas = me.commits.map(function (c) { return c.sha; }), mi = mshas.indexOf(M.sha);
         if (mi >= 0) {
           if (mi === 0 && me.wt) menuItems.push({ label: 'Amend Commit…', icon: 'edit', onSelect: function () { self.amendStart(M.e); } });
-          // Reword Commit…: Squash's dialog for one commit, its message to change.
-          if (me.wt) menuItems.push({ label: 'Reword Commit…', icon: 'edit', onSelect: function () { var rc = me.commits[mi]; self.setState({ menu: null, modal: { kind: 'reword', e: M.e, sha: M.sha, summary: rc.subject, body: rc.body || '', force: mi >= me.unpushed } }); } });
+          // Reword Commit…: Squash's dialog for one commit, its message to change (not the newest: Amend).
+          if (mi > 0 && me.wt) menuItems.push({ label: 'Reword Commit…', icon: 'edit', onSelect: function () { var rc = me.commits[mi]; self.setState({ menu: null, modal: { kind: 'reword', e: M.e, sha: M.sha, summary: rc.subject, body: rc.body || '', force: mi >= me.unpushed } }); } });
           if (mi === 0 && me.unpushed > 0 && me.wt) menuItems.push({ label: 'Undo Commit', icon: 'undo', onSelect: function () { self.undoCommit(M.e); } });
           // Reset to Commit…: the branch back to a commit under its newest one; asks first.
           if (mi > 0 && me.wt) menuItems.push({ label: 'Reset to Commit…', icon: 'history', onSelect: function () { self.setState({ menu: null, modal: { kind: 'reset', e: M.e, sha: M.sha, hard: false } }); } });

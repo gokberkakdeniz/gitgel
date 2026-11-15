@@ -912,8 +912,14 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     );
   };
   // Reword: a one-parent commit of the checked-out branch gets a new message (Squash's dialog).
+  // Not the newest one, which Amend rewords.
   const rewordable = (c: HistoryCommit) =>
-    c.parents === 1 && !!entry?.worktreePath && !entry.operation && !committing && amending?.sha !== c.sha;
+    c.parents === 1 &&
+    c.sha !== tip &&
+    !!entry?.worktreePath &&
+    !entry.operation &&
+    !committing &&
+    amending?.sha !== c.sha;
   const [askReword, setAskReword] = useState<HistoryCommit | null>(null);
   const reword = (c: HistoryCommit, summary: string, description: string) => {
     if (!entryRef) return;
