@@ -741,6 +741,7 @@ it was done within a topic.
 - [x] `release.sh` takes its signing settings in Tauri's variables (`APPLE_API_ISSUER`, `APPLE_API_KEY_PATH`, `APPLE_API_KEY`, `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`; was `GITGEL_*`); the issuer id is no longer in the repo and the release stops without `APPLE_API_ISSUER` — 2026-11-10
 - [x] What's New after an update marks what is new: the sub names the version updated from, each newer version has a "new" pill and an "Earlier" rule starts the ones seen before (several versions skipped show as such); canvas U2 — 2026-11-15
 - [x] A found update shows with the sidebar hidden too: the header's show-sidebar button gets an accent dot and names the version (the "Update to" row is in the sidebar, out of sight on a Review with it hidden); canvas PageHeader `update` — 2026-11-15
+- [x] Releases go to the gitgel repository only: the zip, a versionless copy for the cask, the signed update and `latest.json` are assets of its GitHub release; the app's update endpoint is `releases/latest/download/latest.json`; the tap's cask is fixed (`version :latest`) and its old feed is moved once by the next release, for installs up to 0.2.5 — 2026-11-15
 
 ### Docs, fixtures and dev workflow
 - [x] Docs: task list and design handoff merged into `docs/SPEC.md` — 2026-09-27

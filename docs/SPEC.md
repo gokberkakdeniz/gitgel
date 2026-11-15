@@ -172,8 +172,8 @@ configurable refresh.
 | Diff | `@monaco-editor/react` + `monaco-editor`, bundled locally (`loader.config({ monaco })`), never from a CDN. Loaded from `src/monaco/monaco.ts`: the editor API, the Monarch grammars, JSON's tokenizer and the read-only contributions, without the TypeScript, CSS, HTML and JSON language services; the editor worker is the only worker. |
 | Fonts | Instrument Sans, Source Serif 4, JetBrains Mono via `@fontsource/*`, bundled. The app works offline. |
 | Bundle id | `com.gitgel.desktop` (must not end in `.app`). |
-| Distribution | `pnpm release` builds, zips and uploads to GitHub releases and updates the Homebrew cask and the update feed (§12). Release notes come from `CHANGELOG.md`. |
-| Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the tap's `gitgel/latest.json` at launch, on window focus and every 5 minutes of awake time, at most every hour (a failed check is retried at the next one); installs a signed build on request and restarts through LaunchServices (`open -n`), so the new version comes to the front focused; the window also takes focus when it is first shown (§12 "Updates"). |
+| Distribution | `pnpm release` builds, zips and uploads to this repository's GitHub release, with the update feed; the Homebrew cask is fixed and follows the newest release (§12). Release notes come from `CHANGELOG.md`. |
+| Updates | `tauri-plugin-updater`, driven from Rust (`updates.rs`): the only network access. Checks the newest release's `latest.json` at launch, on window focus and every 5 minutes of awake time, at most every hour (a failed check is retried at the next one); installs a signed build on request and restarts through LaunchServices (`open -n`), so the new version comes to the front focused; the window also takes focus when it is first shown (§12 "Updates"). |
 
 ---
 
@@ -2290,13 +2290,18 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
 - **Build:** `pnpm tauri build --bundles app` → `src-tauri/target/release/bundle/macos/Gitgel.app`,
   ad-hoc signed (`bundle.macOS.signingIdentity: "-"`), not notarized; only `pnpm release` signs
   with Developer ID (below). The version comes from `package.json`.
-- **Release:** `pnpm release` (`scripts/release.sh`) needs a clean, pushed working tree and a
-  clean, pushed Homebrew tap clone at `../homebrew-tap` (or `$GITGEL_TAP_DIR`), on an arm64 Mac.
-  It builds, zips with `ditto` (`Gitgel-<version>-macos-arm64.zip`) and uploads the zip to this
-  repo's GitHub release `<version>` (no `v`; created on first run). The code repo is private, so it
-  also uploads the zip to the public `gokberkakdeniz/homebrew-tap` release `gitgel-<version>`, then
-  updates `version` and `sha256` in the tap's `Casks/gitgel.rb`, commits and pushes. After new
-  commits, bump the version first. It also builds the signed update (below) and needs its key.
+- **Release:** `pnpm release` (`scripts/release.sh`) needs a clean, pushed working tree, on an
+  arm64 Mac. It builds, zips with `ditto` (`Gitgel-<version>-macos-arm64.zip`) and uploads to
+  this repo's GitHub release `<version>` (no `v`; created on first run): the zip, a copy of it
+  as `Gitgel-macos-arm64.zip` (no version in the name, for the cask), the signed update and
+  `latest.json` (below). Everything is published here and nowhere else. After new commits, bump
+  the version first. It also needs the update's key.
+  - **Old feed, once:** versions up to 0.2.5 read `gitgel/latest.json` in the Homebrew tap
+    (`gokberkakdeniz/homebrew-tap`). While that file still points into the tap, a release
+    copies its `latest.json` there, commits and pushes (the tap's clone at `../homebrew-tap` or
+    `$GITGEL_TAP_DIR`, clean and pushed; without a clone the step is skipped with a warning), so
+    those installs update to it and follow the new endpoint from then on. After that the tap is
+    never written again.
 - **Signing:** `release.sh` signs with the "Developer ID Application" certificate in the login
   keychain (passed as `--config` `signingIdentity` and `APPLE_SIGNING_IDENTITY`; hardened
   runtime, no entitlements) and has Tauri notarize and staple the app with an App Store Connect
@@ -2324,15 +2329,18 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
 - **Updates:** the release build also makes `Gitgel.app.tar.gz` and its minisign signature
   (`createUpdaterArtifacts`, passed with `--config` only by `release.sh`, so a plain build needs
   no key; key `~/.tauri/gitgel.key` or `$TAURI_SIGNING_PRIVATE_KEY`, public key in `tauri.conf.json`).
-  It is uploaded as `Gitgel-<version>-macos-arm64.app.tar.gz` next to the zip in the tap release,
-  and `gitgel/latest.json` in the tap (`version`, `pub_date`, `notes`,
-  `platforms.darwin-aarch64` url + signature) is committed with the cask. The app reads it from
-  `raw.githubusercontent.com/gokberkakdeniz/homebrew-tap/master/gitgel/latest.json`; the cask
-  has `auto_updates true`, so `brew upgrade` leaves a self-updating app alone. Only release
+  It is uploaded as `Gitgel-<version>-macos-arm64.app.tar.gz` next to the zip, with
+  `latest.json` (`version`, `pub_date`, `notes`, `platforms.darwin-aarch64` url + signature).
+  The app reads the newest release's:
+  `github.com/gokberkakdeniz/gitgel/releases/latest/download/latest.json`. Only release
   builds install; a lost key means existing installs can no longer update in-app (a new key
-  ships with a `brew upgrade`).
-- **Install:** `brew install --cask gokberkakdeniz/tap/gitgel` (Apple silicon). The app is
-  notarized, so it opens without removing the quarantine flag.
+  ships with `brew reinstall`).
+- **Install:** `brew install --cask gokberkakdeniz/tap/gitgel` (Apple silicon), or the zip from
+  the releases. The cask in the tap is fixed: `version :latest`, `sha256 :no_check`, the URL
+  `…/gitgel/releases/latest/download/Gitgel-macos-arm64.zip` and `auto_updates true`, so it
+  always installs the newest release, a release changes nothing in the tap, and `brew upgrade`
+  leaves the self-updating app alone. The app is notarized, so it opens without removing the
+  quarantine flag.
 - macOS asks for access to repositories in protected folders (`~/Desktop`, `~/Documents`); the
   first scan waits until the user answers.
 

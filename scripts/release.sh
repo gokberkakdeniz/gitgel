@@ -2,15 +2,19 @@
 # Builds Gitgel.app, zips it and uploads the zip to the GitHub release <version>, creating the
 # release (and its tag, on GitHub) when it does not exist yet. Run with `pnpm release`.
 #
-# Then publishes it to the Homebrew tap (`brew install --cask gokberkakdeniz/tap/gitgel`): this
-# repository is private, so brew cannot download from its releases; the zip also goes to the
-# public tap repository's release gitgel-<version>, and the cask there is updated and pushed.
-# The tap is a clone of that repository next to this one, or at $GITGEL_TAP_DIR.
-#
 # In-app updates: the build is also packed as a signed `.app.tar.gz` (the updater key, by default
-# ~/.tauri/gitgel.key, or $TAURI_SIGNING_PRIVATE_KEY), uploaded next to the zip in the tap release,
-# and the tap's gitgel/latest.json (the app's update endpoint) is pointed at it in the cask's
-# commit.
+# ~/.tauri/gitgel.key, or $TAURI_SIGNING_PRIVATE_KEY) and uploaded next to the zip with a
+# `latest.json` that points at it; the app's update endpoint is the newest release's
+# `latest.json` (releases/latest/download).
+#
+# Homebrew (`brew install --cask gokberkakdeniz/tap/gitgel`): the cask in the tap is fixed
+# (`version :latest`) and downloads the newest release's `Gitgel-macos-<arch>.zip`, a copy of the
+# zip under a name without the version. Nothing is published to the tap.
+#
+# Versions up to 0.2.5 read the update feed from the tap (`gitgel/latest.json` there). While
+# that file still points into the tap, a release moves it once to this release's update, so
+# those installs update and then follow the new endpoint. It needs the tap's clone next to this
+# repository, or at $GITGEL_TAP_DIR; without one the step is skipped with a warning.
 #
 # Signing: the build is signed with the Developer ID Application certificate in the keychain and
 # notarized (the ticket stapled to the app) with an App Store Connect API key, in Tauri's variables:
@@ -48,10 +52,11 @@ BUNDLE="src-tauri/target/release/bundle"
 APP="$BUNDLE/macos/Gitgel.app"
 ZIP="$BUNDLE/Gitgel-$VERSION-macos-$ARCH.zip"
 
-TAP_REPO="gokberkakdeniz/homebrew-tap"
+REPO="gokberkakdeniz/gitgel"
+# The same zip under a name without the version, for the cask's fixed URL.
+ZIP_LATEST="$BUNDLE/Gitgel-macos-$ARCH.zip"
+FEED="$BUNDLE/latest.json"
 TAP_DIR="${GITGEL_TAP_DIR:-../homebrew-tap}"
-CASK="Casks/gitgel.rb"
-TAP_TAG="gitgel-$VERSION"
 UPDATER_KEY="${TAURI_SIGNING_PRIVATE_KEY:-$HOME/.tauri/gitgel.key}"
 UPDATE="$BUNDLE/Gitgel-$VERSION-macos-$ARCH.app.tar.gz"
 LATEST="gitgel/latest.json"
@@ -65,8 +70,7 @@ section() {
 NOTES="$(section "$VERSION")"
 grep -q '^- ' <<<"$NOTES" || die "no notes for $VERSION in $CHANGELOG; write its section first"
 # Under the notes, after a rule: how it is signed (this repo) or how to install it (the tap).
-INSTALL_NOTE=$'<hr>\n\nSigned and notarized by Apple.'
-BREW_NOTE=$'<hr>\n\nInstall with Homebrew:\n```bash\nbrew install --cask gokberkakdeniz/tap/gitgel\n```'
+INSTALL_NOTE=$'<hr>\n\nSigned and notarized by Apple. Install with Homebrew:\n```bash\nbrew install --cask gokberkakdeniz/tap/gitgel\n```'
 # The sections the update feed carries, newest first, headings included.
 FEED_NOTES="$(awk '/^## / { n++ } n >= 1 && n <= 10' "$CHANGELOG")"
 
@@ -92,12 +96,19 @@ if [[ -n "$REMOTE_TAG_SHA" && "$REMOTE_TAG_SHA" != "$HEAD_SHA" ]]; then
   die "$TAG already points at ${REMOTE_TAG_SHA:0:7}, not HEAD (${HEAD_SHA:0:7}); bump the version in package.json"
 fi
 
-# The tap is checked before building, so a release never stops half-way for it.
-[[ "$ARCH" == arm64 ]] || die "the cask is for Apple silicon (arm64), this Mac is $ARCH"
-[[ -f "$TAP_DIR/$CASK" ]] || die "no $CASK in $TAP_DIR; clone $TAP_REPO there or set GITGEL_TAP_DIR"
-[[ -z "$(git -C "$TAP_DIR" status --porcelain)" ]] || die "uncommitted changes in $TAP_DIR"
-git -C "$TAP_DIR" pull -q --ff-only
-[[ -n "$(git -C "$TAP_DIR" branch -r --contains HEAD)" ]] || die "$TAP_DIR has unpushed commits"
+[[ "$ARCH" == arm64 ]] || die "the cask and the update feed are for Apple silicon (arm64), this Mac is $ARCH"
+
+# The tap's old feed, while it still points into the tap (see the top): checked before building,
+# so a release never stops half-way for it.
+MOVE_TAP_FEED=
+if [[ -f "$TAP_DIR/$LATEST" ]]; then
+  [[ -z "$(git -C "$TAP_DIR" status --porcelain)" ]] || die "uncommitted changes in $TAP_DIR"
+  git -C "$TAP_DIR" pull -q --ff-only
+  [[ -n "$(git -C "$TAP_DIR" branch -r --contains HEAD)" ]] || die "$TAP_DIR has unpushed commits"
+  if grep -q 'homebrew-tap/releases/download' "$TAP_DIR/$LATEST"; then MOVE_TAP_FEED=1; fi
+else
+  echo "release: no tap clone at $TAP_DIR; its old update feed is left as it is" >&2
+fi
 
 # The updater artifacts (Gitgel.app.tar.gz and its .sig) are made only here, so a plain
 # `pnpm tauri build` needs no key.
@@ -117,42 +128,13 @@ spctl --assess --type execute "$APP" || die "Gatekeeper rejects the app"
 cp "$BUNDLE/macos/Gitgel.app.tar.gz" "$UPDATE"
 
 # ditto keeps the bundle's macOS metadata (symlinks, permissions) intact.
-rm -f "$ZIP"
+rm -f "$ZIP" "$ZIP_LATEST"
 ditto -c -k --keepParent "$APP" "$ZIP"
+cp "$ZIP" "$ZIP_LATEST"
 
-if gh release view "$TAG" >/dev/null 2>&1; then
-  gh release upload "$TAG" "$ZIP" --clobber
-  gh release edit "$TAG" --notes "$NOTES"$'\n\n'"$INSTALL_NOTE" >/dev/null
-else
-  gh release create "$TAG" "$ZIP" \
-    --target "$HEAD_SHA" \
-    --title "Gitgel $VERSION" \
-    --notes "$NOTES"$'\n\n'"$INSTALL_NOTE"
-fi
-# gh creates the tag on GitHub only; bring it into the local repo too.
-git fetch -q origin "refs/tags/$TAG:refs/tags/$TAG"
-
-echo "Uploaded $(basename "$ZIP") to $TAG: $(gh release view "$TAG" --json url --jq .url)"
-
-# Homebrew tap: the zip and the update first, then the cask and latest.json that point at them.
-TAP_NOTES="$NOTES"$'\n\n'"$BREW_NOTE"
-if gh release view "$TAP_TAG" --repo "$TAP_REPO" >/dev/null 2>&1; then
-  gh release upload "$TAP_TAG" "$ZIP" "$UPDATE" --repo "$TAP_REPO" --clobber
-  gh release edit "$TAP_TAG" --repo "$TAP_REPO" --notes "$TAP_NOTES" >/dev/null
-else
-  gh release create "$TAP_TAG" "$ZIP" "$UPDATE" \
-    --repo "$TAP_REPO" \
-    --title "Gitgel $VERSION" \
-    --notes "$TAP_NOTES"
-fi
-SHA256="$(shasum -a 256 "$ZIP" | awk '{ print $1 }')"
-sed -i '' -E \
-  -e "s/^  version \".*\"$/  version \"$VERSION\"/" \
-  -e "s/^  sha256 \".*\"$/  sha256 \"$SHA256\"/" \
-  "$TAP_DIR/$CASK"
-mkdir -p "$TAP_DIR/$(dirname "$LATEST")"
+# The update feed: this version, its notes and where its signed update is.
 VERSION="$VERSION" NOTES="$FEED_NOTES" \
-  URL="https://github.com/$TAP_REPO/releases/download/$TAP_TAG/$(basename "$UPDATE")" \
+  URL="https://github.com/$REPO/releases/download/$TAG/$(basename "$UPDATE")" \
   SIG="$BUNDLE/macos/Gitgel.app.tar.gz.sig" \
   node -e '
     const fs = require("fs");
@@ -164,12 +146,28 @@ VERSION="$VERSION" NOTES="$FEED_NOTES" \
       platforms: { "darwin-aarch64": { url: URL, signature: fs.readFileSync(SIG, "utf8").trim() } },
     };
     process.stdout.write(JSON.stringify(latest, null, 2) + "\n");
-  ' >"$TAP_DIR/$LATEST"
-git -C "$TAP_DIR" add -- "$CASK" "$LATEST"
-if git -C "$TAP_DIR" diff --cached --quiet; then
-  echo "Cask already at $VERSION"
+  ' >"$FEED"
+
+if gh release view "$TAG" >/dev/null 2>&1; then
+  gh release upload "$TAG" "$ZIP" "$ZIP_LATEST" "$UPDATE" "$FEED" --clobber
+  gh release edit "$TAG" --notes "$NOTES"$'\n\n'"$INSTALL_NOTE" >/dev/null
 else
-  git -C "$TAP_DIR" commit -q -m "gitgel $VERSION"
+  gh release create "$TAG" "$ZIP" "$ZIP_LATEST" "$UPDATE" "$FEED" \
+    --target "$HEAD_SHA" \
+    --title "Gitgel $VERSION" \
+    --notes "$NOTES"$'\n\n'"$INSTALL_NOTE"
+fi
+# gh creates the tag on GitHub only; bring it into the local repo too.
+git fetch -q origin "refs/tags/$TAG:refs/tags/$TAG"
+
+echo "Released $VERSION: $(gh release view "$TAG" --json url --jq .url)"
+echo "The app updates itself; brew install --cask gokberkakdeniz/tap/gitgel gets this version"
+
+# Once: installs that still read the tap's feed are sent to this release.
+if [[ -n "$MOVE_TAP_FEED" ]]; then
+  cp "$FEED" "$TAP_DIR/$LATEST"
+  git -C "$TAP_DIR" add -- "$LATEST"
+  git -C "$TAP_DIR" commit -q -m "gitgel $VERSION: the update feed moves to the gitgel repository"
   git -C "$TAP_DIR" push -q
-  echo "Cask and update feed at $VERSION: brew upgrade --cask gitgel, or the app updates itself"
+  echo "The tap's old update feed now points at $VERSION"
 fi

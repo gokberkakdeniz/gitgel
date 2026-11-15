@@ -52,7 +52,7 @@ review it without switching branches.
 brew install --cask gokberkakdeniz/tap/gitgel
 ```
 
-Or download the zip from the [releases](https://github.com/gokberkakdeniz/homebrew-tap/releases).
+Or download the zip from the [releases](https://github.com/gokberkakdeniz/gitgel/releases).
 
 New versions show up in the sidebar and in **Gitgel › Check for Updates…**, and install with one
 click.
