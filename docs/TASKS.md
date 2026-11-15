@@ -546,6 +546,7 @@ it was done within a topic.
   - note: soft chosen over GitHub Desktop's mixed, to match Undo Commit.
 - [x] Checkout Commit…: the commit menu opens Checkout Branch's dialog for the commit; the picked worktree (or a new one) gets it as a detached HEAD (`git switch --detach`, `git worktree add --detach`) — 2026-11-14
 - [x] Reword Commit…: the commit menu opens Squash's dialog with the commit's message; any one-parent commit of a checked-out branch, the commits above it rebased onto the reworded one — 2026-11-15
+- [x] Image diffs: a changed binary image (png, jpg, gif, webp, avif, bmp, ico, svg; up to 10 MiB a side) shows Before and After side by side with pixel and file sizes, in place of "Binary file not shown" — 2026-11-15
 - [x] Reorder by dragging: a commit row of a checked-out branch drags to another place among its own one-parent commits (`git rebase -i` with a todo Gitgel writes); moving a pushed commit asks first — 2026-11-15
 
 ### Menus and open items

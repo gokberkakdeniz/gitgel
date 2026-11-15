@@ -5,11 +5,13 @@ use std::path::{Component, Path, PathBuf};
 use crate::config;
 use crate::error::AppError;
 use crate::git::{diff, worktrees};
-use crate::model::{FileChange, FileKind, FilePair, RemoteInfo, RemoteKind};
+use crate::model::{FileChange, FileKind, FilePair, ImagePair, RemoteInfo, RemoteKind};
 use crate::state::{lock, AppState};
 
 /// Larger files are not shown.
 const MAX_BYTES: usize = 1024 * 1024;
+/// Larger images are not shown.
+const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 /// Like git, a NUL in the first 8000 bytes means binary.
 const SNIFF_BYTES: usize = 8000;
 
@@ -29,7 +31,12 @@ pub fn read_file_pair(
             "file {}: {:.1} ms ({})",
             change.path,
             started.elapsed().as_secs_f64() * 1000.0,
-            if p.binary {
+            if let Some(image) = &p.image {
+                format!(
+                    "image, {} B → {} B",
+                    image.original_size, image.modified_size
+                )
+            } else if p.binary {
                 "binary".to_string()
             } else if p.too_large {
                 "too large".to_string()
@@ -119,14 +126,23 @@ fn read_pair(
         binary,
         too_large,
         lossy: false,
+        image: None,
     };
-    if change.binary {
+    // An image the webview can draw is read even when binary, and up to a larger size.
+    let old_mime = image_mime(change.old_path.as_deref().unwrap_or(&change.path));
+    let new_mime = image_mime(&change.path);
+    let image = old_mime.is_some() || new_mime.is_some();
+    if change.binary && !image {
         return Ok(empty(true, false));
     }
+    let max = if image { MAX_IMAGE_BYTES } else { MAX_BYTES };
+    let mut large = false;
     for oid in [&change.old_oid, &change.new_oid].into_iter().flatten() {
-        if diff::blob_size(&repo, oid)? > MAX_BYTES {
+        let size = diff::blob_size(&repo, oid)?;
+        if size > max {
             return Ok(empty(false, true));
         }
+        large |= size > MAX_BYTES;
     }
 
     let from_disk = change.new_oid.is_none() && change.kind != FileKind::D;
@@ -146,7 +162,7 @@ fn read_pair(
                 wt.display()
             )));
         }
-        match read_in_worktree(&wt, &change.path)? {
+        match read_in_worktree(&wt, &change.path, max)? {
             WorktreeFile::TooLarge => return Ok(empty(false, true)),
             WorktreeFile::Bytes(bytes) => Some(bytes),
         }
@@ -164,10 +180,32 @@ fn read_pair(
         // Deleted: nothing on the right.
         (None, None) => Vec::new(),
     };
-    if is_binary(&original) || is_binary(&modified) {
-        return Ok(empty(true, false));
+    large |= modified.len() > MAX_BYTES;
+    if change.binary || is_binary(&original) || is_binary(&modified) || large {
+        if !image {
+            return Ok(empty(!large, large));
+        }
+        let url = |mime: Option<&str>, bytes: &[u8], there: bool| {
+            use base64::Engine;
+            mime.filter(|_| there).map(|mime| {
+                format!(
+                    "data:{mime};base64,{}",
+                    base64::engine::general_purpose::STANDARD.encode(bytes)
+                )
+            })
+        };
+        return Ok(FilePair {
+            image: Some(ImagePair {
+                original: url(old_mime, &original, change.old_oid.is_some()),
+                modified: url(new_mime, &modified, change.kind != FileKind::D),
+                original_size: original.len(),
+                modified_size: modified.len(),
+            }),
+            ..empty(true, false)
+        });
     }
     Ok(FilePair {
+        image: None,
         lossy: std::str::from_utf8(&original).is_err() || std::str::from_utf8(&modified).is_err(),
         original: String::from_utf8_lossy(&original).into_owned(),
         modified: String::from_utf8_lossy(&modified).into_owned(),
@@ -185,7 +223,7 @@ enum WorktreeFile {
 
 /// Reads `rel` inside the canonical worktree folder `wt`, refusing anything that resolves
 /// outside it (`..`, absolute paths, symlinked folders pointing elsewhere).
-fn read_in_worktree(wt: &Path, rel: &str) -> Result<WorktreeFile, AppError> {
+fn read_in_worktree(wt: &Path, rel: &str, max: usize) -> Result<WorktreeFile, AppError> {
     let forbidden = || AppError::Forbidden(format!("{rel} is outside the worktree"));
     let rel_path = Path::new(rel);
     if rel_path
@@ -217,10 +255,26 @@ fn read_in_worktree(wt: &Path, rel: &str) -> Result<WorktreeFile, AppError> {
     if !full.canonicalize()?.starts_with(wt) {
         return Err(forbidden());
     }
-    if meta.len() as usize > MAX_BYTES {
+    if meta.len() as usize > max {
         return Ok(WorktreeFile::TooLarge);
     }
     Ok(WorktreeFile::Bytes(std::fs::read(&full)?))
+}
+
+/// The media type of an image the webview draws in an `<img>`, by the path's extension.
+fn image_mime(path: &str) -> Option<&'static str> {
+    let ext = Path::new(path).extension()?.to_str()?.to_ascii_lowercase();
+    Some(match ext.as_str() {
+        "png" | "apng" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        "avif" => "image/avif",
+        "bmp" => "image/bmp",
+        "ico" => "image/x-icon",
+        "svg" => "image/svg+xml",
+        _ => return None,
+    })
 }
 
 fn is_binary(bytes: &[u8]) -> bool {
@@ -231,6 +285,16 @@ fn is_binary(bytes: &[u8]) -> bool {
 mod tests {
     use super::*;
     use tempfile::TempDir;
+
+    #[test]
+    fn image_mime_goes_by_extension() {
+        assert_eq!(image_mime("a/logo.PNG"), Some("image/png"));
+        assert_eq!(image_mime("photo.jpeg"), Some("image/jpeg"));
+        assert_eq!(image_mime("icon.svg"), Some("image/svg+xml"));
+        for other in ["a.psd", "a.pdf", "png", "a.png/b", ".png"] {
+            assert_eq!(image_mime(other), None, "{other}");
+        }
+    }
 
     fn setup() -> (TempDir, PathBuf) {
         let dir = TempDir::new().unwrap();
@@ -245,12 +309,12 @@ mod tests {
     fn reads_files_inside_the_worktree() {
         let (_dir, wt) = setup();
         assert_eq!(
-            read_in_worktree(&wt, "src/a.ts").unwrap(),
+            read_in_worktree(&wt, "src/a.ts", MAX_BYTES).unwrap(),
             WorktreeFile::Bytes(b"hello\n".to_vec())
         );
         // Just deleted.
         assert_eq!(
-            read_in_worktree(&wt, "src/gone.ts").unwrap(),
+            read_in_worktree(&wt, "src/gone.ts", MAX_BYTES).unwrap(),
             WorktreeFile::Bytes(Vec::new())
         );
     }
@@ -265,14 +329,17 @@ mod tests {
             "./src/a.ts",
         ] {
             assert!(
-                matches!(read_in_worktree(&wt, bad), Err(AppError::Forbidden(_))),
+                matches!(
+                    read_in_worktree(&wt, bad, MAX_BYTES),
+                    Err(AppError::Forbidden(_))
+                ),
                 "{bad}"
             );
         }
         // A folder symlinked out of the worktree.
         std::os::unix::fs::symlink(wt.parent().unwrap(), wt.join("out")).unwrap();
         assert!(matches!(
-            read_in_worktree(&wt, "out/secret.txt"),
+            read_in_worktree(&wt, "out/secret.txt", MAX_BYTES),
             Err(AppError::Forbidden(_))
         ));
     }
@@ -282,7 +349,7 @@ mod tests {
         let (_dir, wt) = setup();
         std::os::unix::fs::symlink("../secret.txt", wt.join("link")).unwrap();
         assert_eq!(
-            read_in_worktree(&wt, "link").unwrap(),
+            read_in_worktree(&wt, "link", MAX_BYTES).unwrap(),
             WorktreeFile::Bytes(b"../secret.txt".to_vec())
         );
     }

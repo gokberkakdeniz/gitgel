@@ -1225,6 +1225,20 @@ pub struct FilePair {
     /// A side is not valid UTF-8 (shown with replacement characters), so its lines cannot be
     /// staged from the text.
     pub lossy: bool,
+    /// A binary image the webview can draw (by its extension): both sides, shown side by side.
+    pub image: Option<ImagePair>,
+}
+
+/// The two sides of a changed image, each a `data:` URL; `None` for a side that is not there
+/// (added, deleted) or is not an image.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImagePair {
+    pub original: Option<String>,
+    pub modified: Option<String>,
+    /// Bytes of each side's file.
+    pub original_size: usize,
+    pub modified_size: usize,
 }
 
 /// A repository remote's web page (`remote_url`): `origin` if there is one.

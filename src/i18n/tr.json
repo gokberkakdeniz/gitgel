@@ -45,6 +45,8 @@
   "diff.stageChange": "Değişikliği Hazırla",
   "diff.unstageChange": "Değişikliği Hazırlıktan Çıkar",
   "diff.binary": "Binary dosya gösterilmiyor",
+  "diff.imageOld": "Önce",
+  "diff.imageNew": "Sonra",
   "diff.tooLarge": "Dosya çok büyük (1 MB üstü)",
   "diff.actions": "Diff İşlemleri",
   "open.inApp": "{$app} ile Aç",

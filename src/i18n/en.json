@@ -936,6 +936,8 @@
   "common.resizeHint": "Drag to resize · double-click to reset",
   "common.dragHint": "Drag to reorder (↑ ↓)",
   "diff.binary": "Binary file not shown",
+  "diff.imageOld": "Before",
+  "diff.imageNew": "After",
   "diff.tooLarge": "File is too large to show (over 1 MB)",
   "diff.actions": "Diff Actions",
   "cmd.goTitle": "Go to Branch or Project",

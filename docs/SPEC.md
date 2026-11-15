@@ -237,7 +237,7 @@ gitgel/
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
-│  └─ monaco/   monaco.ts  setup.ts  theme.ts  language.ts  DiffView.tsx  position.ts  changeNav.ts
+│  └─ monaco/   monaco.ts  setup.ts  theme.ts  language.ts  DiffView.tsx  ImageDiff.tsx  position.ts  changeNav.ts
 │               # lineStage.ts (the diff's Stage / Unstage of picked lines, §15 "Stage")
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
@@ -896,7 +896,15 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   file page at the commit: GitHub-style `/blob/<sha>/<path>#L12-L13`, GitLab `/-/blob/…`, Bitbucket `/src/…#lines-…`;
   only for a file shown at a commit, with a remote, `origin` first: the new side links the commit, the old side its first parent (under the old name; none for an added file or a root commit); `get_remote_url`, `open_remote_link`, `src/monaco/reference.ts`), then after a divider the file row menu's open items (Open in Finder, Open in the chosen editor; not for a deleted file), an editor opening the file at the clicked line of the new side (the old side: the cursor's line; canvas R1, `menu: diff`). The editor is created once; changing
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
-  shown"; files over 1 MiB "File is too large to show (over 1 MB)".
+  shown"; files over 1 MiB "File is too large to show (over 1 MB)". A binary image the webview
+  draws (by extension: png, apng, jpg, jpeg, gif, webp, avif, bmp, ico, svg; up to 10 MiB a
+  side) shows in the editor's place instead (`monaco/ImageDiff.tsx`): the old and the new one
+  side by side, centred (gap 24, padding 24), each under an 11px/500 uppercase label "Before"
+  (`danger.text`) / "After" (`success`) in a 1px `border` frame of radius 8 over a 16px
+  checkerboard (`bg.sunken` / `bg.hover`), scaled down to fit (at most 60vh high), with mono 11
+  muted `<width> × <height> · <file size>` under it; an added or deleted image shows its one
+  side. A side the webview cannot decode says "Binary file not shown". An SVG that is text
+  keeps its text diff.
 - **Diff view menu:** the view button (split or unified icon + "Split" / "Unified" + chevron;
   28px, `#211f1c`, open state `#2a2825` with accent border) opens a 300px menu (`role="menu"`,
   right-aligned under the button): "Layout" label, `menuitemradio`
@@ -1734,7 +1742,9 @@ export type ReviewTarget =
   | { kind: 'branch'; repoId: string; branch: string | null;
       worktreePath: string | null; tipOverride: string | null }
   | { kind: 'stashes'; repoId: string };   // a repo's stash stack: no groups (§15)
-export interface FilePair { original: string; modified: string; binary: boolean; tooLarge: boolean; lossy: boolean }
+export interface FilePair { original: string; modified: string; binary: boolean; tooLarge: boolean; lossy: boolean; image: ImagePair | null }
+// A changed binary image: each side a `data:` URL (null: not there, or not an image) and its bytes.
+export interface ImagePair { original: string | null; modified: string | null; originalSize: number; modifiedSize: number }
 export interface RemoteInfo { base: string; kind: 'github' | 'gitlab' | 'bitbucket' | 'other' }
 ```
 
@@ -1922,7 +1932,10 @@ Notes:
 - `read_file_pair`: blobs are read from the main repo (worktrees share its object DB). Either
   side over 1 MiB (checked with the blob header, not the content) → `tooLarge`, empty content.
   `binary` if the change is binary or either side has a NUL in its first 8000 bytes. Text is
-  UTF-8 lossy (`lossy` when a side is not valid UTF-8: its lines cannot be staged). The right side comes from disk when `newOid` is null and the kind is not D: the
+  UTF-8 lossy (`lossy` when a side is not valid UTF-8: its lines cannot be staged). A path with
+  an image extension the webview draws is read even when binary, each side up to 10 MiB: `binary`
+  with `image`, the sides as base64 `data:` URLs with the extension's media type (a renamed
+  file's old side by its old path). The right side comes from disk when `newOid` is null and the kind is not D: the
   worktree path must be one of the repo's known worktrees and the canonical file path must stay
   inside it (else `Forbidden`); symlinks show their link text; a file that just vanished is `""`.
 - `update_settings` validates the base order (not empty) and threshold (1–365) and clamps

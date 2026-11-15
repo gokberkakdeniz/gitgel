@@ -11,6 +11,7 @@ import { t } from '../i18n';
 import { useEffectiveTheme } from '../lib/theme';
 import type { DiffContext, DiffLayout, DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
+import { ImageDiff } from './ImageDiff';
 import styles from './DiffView.module.css';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
 import { cutHunks, hunkAt, hunkAtZone, stagedContent, wholeCut, withoutEmptySide, type Cut } from './lineStage';
@@ -549,7 +550,7 @@ export function DiffView({
           }}
         />
       )}
-      {message && <div className={styles.message}>{message}</div>}
+      {data?.image ? <ImageDiff image={data.image} /> : message && <div className={styles.message}>{message}</div>}
       {menu && (
         <Popover anchorRect={menu.rect} width={230} onClose={() => setMenu(null)}>
           <Menu aria-label={t('diff.actions')} autoFocus>

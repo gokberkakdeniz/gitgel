@@ -458,6 +458,15 @@ export interface FilePair {
   tooLarge: boolean;
   /** A side is not valid UTF-8: its lines cannot be staged from the text. */
   lossy: boolean;
+  /** A binary image the webview can draw: its sides, shown side by side. */
+  image: ImagePair | null;
+}
+/** A changed image's sides as `data:` URLs (null: not there, or not an image) and file sizes. */
+export interface ImagePair {
+  original: string | null;
+  modified: string | null;
+  originalSize: number;
+  modifiedSize: number;
 }
 
 // ---- Other ----
