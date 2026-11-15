@@ -22,7 +22,7 @@ body{margin:0}
 <span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
 <span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
 </div>
-<button aria-label="Show sidebar" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><dc-import name="Icon" icon="sidebar" hint-size="17px,17px"></dc-import></button>
+<button aria-label="{{sidebarLabel}}" title="{{sidebarLabel}}" style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-muted)"><dc-import name="Icon" icon="sidebar" hint-size="17px,17px"></dc-import><sc-if value="{{update}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg-main)"></span></sc-if></button>
 <a href="{{backHref}}" aria-label="{{backLabel}}" style="margin-left: -10px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-body); border-radius: 7px"><dc-import name="Icon" icon="back" hint-size="17px,17px"></dc-import></a>
 <button aria-label="Forward" disabled style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 7px; color: var(--text-disabled)"><dc-import name="Icon" icon="forward" hint-size="17px,17px"></dc-import></button>
 </sc-if>
@@ -69,7 +69,7 @@ body{margin:0}
 </sc-if>
 </header>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"page":{"editor":"enum","options":["branches","review","stashes","project","settings"],"default":"review"},"title":{"editor":"text","default":"Review"},"subtitle":{"editor":"text","default":"web-app · session-token-refresh · ~/code/wt/token-refresh"},"chrome":{"editor":"boolean","default":true},"menuOpen":{"editor":"boolean","default":false},"push":{"editor":"text","default":"↑2"},"pull":{"editor":"text","default":""},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"actions":{"editor":null},"backHref":{"editor":null},"backLabel":{"editor":null},"subDanger":{"editor":null},"search":{"editor":null},"scopes":{"editor":null},"modes":{"editor":null},"repo":{"editor":null},"remote":{"editor":null},"fetched":{"editor":null},"upstream":{"editor":null},"editable":{"editor":null},"renaming":{"editor":null},"draftName":{"editor":null},"renameConflict":{"editor":null},"reviewHref":{"editor":null},"reviewOff":{"editor":null},"$preview":{"width":1020,"height":64}}'>
+<script type="text/x-dc" data-dc-script data-props='{"page":{"editor":"enum","options":["branches","review","stashes","project","settings"],"default":"review"},"title":{"editor":"text","default":"Review"},"subtitle":{"editor":"text","default":"web-app · session-token-refresh · ~/code/wt/token-refresh"},"chrome":{"editor":"boolean","default":true},"update":{"editor":"boolean","default":false},"menuOpen":{"editor":"boolean","default":false},"push":{"editor":"text","default":"↑2"},"pull":{"editor":"text","default":""},"theme":{"editor":"enum","options":["dark","light","none"],"default":"dark"},"actions":{"editor":null},"backHref":{"editor":null},"backLabel":{"editor":null},"subDanger":{"editor":null},"search":{"editor":null},"scopes":{"editor":null},"modes":{"editor":null},"repo":{"editor":null},"remote":{"editor":null},"fetched":{"editor":null},"upstream":{"editor":null},"editable":{"editor":null},"renaming":{"editor":null},"draftName":{"editor":null},"renameConflict":{"editor":null},"reviewHref":{"editor":null},"reviewOff":{"editor":null},"$preview":{"width":1020,"height":64}}'>
 class Component extends DCLogic {
   renderVals() {
     // The app's PageHeader (src/components/PageHeader) with each page's actions, so every screen
@@ -77,6 +77,8 @@ class Component extends DCLogic {
     // subtitle, actions 10px apart on the right.
     // chrome: the sidebar is hidden, so the header starts with the traffic lights, show-sidebar,
     // Back (to backHref) and Forward; padding 16px, else 28px on the left.
+    // update: a newer version is known and the sidebar's "Update to <version>" row is out of
+    // sight, so show-sidebar carries a 7px accent dot (top right) and says so in its tooltip.
     // page: branches (Refresh, All / Not in a project, Search ⌘K) · review (Search Commits, Fetch /
     // Pull / Push for the open branch, ⋮; Review and History are one screen) · stashes (⋮) · project
     // (Refresh, Add Entries…, Review Changes, ⋯) · settings (title only). The less used actions
@@ -108,6 +110,8 @@ class Component extends DCLogic {
       themeClass: p.theme === 'none' ? '' : 'theme-' + (p.theme || 'dark'),
       headerStyle: 'box-sizing: border-box; width: 100%; height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px 0 ' + (chrome ? 16 : 28) + 'px; border-bottom: 1px solid var(--border); background: var(--bg-main); font-family: \'Instrument Sans\', -apple-system, sans-serif',
       chrome: chrome,
+      update: !!p.update,
+      sidebarLabel: p.update ? 'Show sidebar · Update to 0.1.16' : 'Show sidebar',
       backHref: p.backHref || 'Main.dc.html',
       backLabel: p.backLabel || 'Back to Branches',
       titlesStyle: 'display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0' + (chrome ? '; margin-left: 4px' : ''),

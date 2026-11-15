@@ -598,7 +598,9 @@ inputs and textareas (the diff has its own menu, §5 Review).
   (`localStorage`); whether the sidebar is shown is remembered in the config
   (`settings.sidebarVisible`, also cached in `localStorage` so a launch draws it right before
   the config loads). Review leaves it as it is; with it hidden the header shows a
-  show-sidebar button next to the traffic lights. Resting the pointer on that button (120ms)
+  show-sidebar button next to the traffic lights; while a newer version is known (the Update
+  row below, then out of sight) it carries a 7px `accent` dot at its top right (a 2px `bg.main`
+  ring) and its label reads "Show sidebar · Update to <version>". Resting the pointer on that button (120ms)
   shows the sidebar over the page (the page does not move; `shadow.pop`), its toggle on the
   button's spot: it goes when the pointer leaves it (a menu it opened counts as inside), and a
   click on the toggle keeps it shown.

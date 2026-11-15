@@ -26,6 +26,23 @@
   gap: 2px;
 }
 
+/* A newer version is known and the sidebar, which has its row, is hidden: a dot on show-sidebar. */
+.hasUpdate {
+  position: relative;
+}
+
+.hasUpdate::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg-main);
+}
+
 /* Back to the page this one was opened from. */
 .back {
   color: var(--text-body);

@@ -932,6 +932,7 @@
   "diff.stageChange": "Stage Change",
   "diff.unstageChange": "Unstage Change",
   "nav.showSidebar": "Show sidebar",
+  "nav.showSidebarUpdate": "Show sidebar · Update to {$version}",
   "common.moreActions": "More actions",
   "common.clear": "Clear",
   "common.clearHint": "Clear (esc)",

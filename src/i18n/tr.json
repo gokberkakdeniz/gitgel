@@ -54,6 +54,7 @@
   "open.notCheckedOut": "Kullanıma alınmamış",
   "open.termMissing": "{$app} kurulu değil",
   "nav.showSidebar": "Kenar çubuğunu göster",
+  "nav.showSidebarUpdate": "Kenar çubuğunu göster · {$version} sürümüne güncelle",
   "branches.title": "Dallar",
   "branches.emptySubtitle": "İncelenecek Bir Şey Yok",
   "branches.noRepos": "Henüz Depo Yok",

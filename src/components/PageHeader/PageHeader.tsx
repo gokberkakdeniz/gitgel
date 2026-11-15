@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { selectCanBack, selectCanForward, useNav } from '../../state/nav';
+import { useData } from '../../state/data';
 import { useUi } from '../../state/ui';
 import { setSidebarVisible } from '../../lib/sidebar';
 import { BackIcon, ForwardIcon, SidebarIcon } from '../icons';
@@ -22,6 +23,8 @@ const PEEK_DELAY = 120;
  * shows the show-sidebar, back and forward buttons. */
 export function PageHeader({ title, subtitle, children, backLabel }: Props) {
   const sidebarVisible = useUi((s) => s.sidebarVisible);
+  // A newer version: its row is in the sidebar, so with that hidden the button says it.
+  const update = useData((s) => s.update);
   const canBack = useNav(selectCanBack);
   const canForward = useNav(selectCanForward);
   const back = useNav((s) => s.back);
@@ -43,8 +46,9 @@ export function PageHeader({ title, subtitle, children, backLabel }: Props) {
         <div className={styles.chrome} data-tauri-drag-region>
           <div className={styles.lights} data-tauri-drag-region />
           <IconButton
-            aria-label={t('nav.showSidebar')}
+            aria-label={update ? t('nav.showSidebarUpdate', { version: update.version }) : t('nav.showSidebar')}
             data-sidebar-peek
+            className={update ? styles.hasUpdate : undefined}
             onClick={() => setSidebarVisible(true)}
             onPointerEnter={peekSoon}
             onPointerLeave={peekCancel}
