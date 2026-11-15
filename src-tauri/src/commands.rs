@@ -430,10 +430,14 @@ pub fn get_update_check(app: AppHandle) -> Option<updates::UpdateCheck> {
 
 /// Opens (or brings forward) About Gitgel, Software Update or What's New (`windows.rs`).
 #[tauri::command]
-pub async fn open_window(app: AppHandle, label: String) -> Result<(), AppError> {
+pub async fn open_window(
+    app: AppHandle,
+    label: String,
+    from: Option<String>,
+) -> Result<(), AppError> {
     let aux = crate::windows::Aux::from_label(&label)
         .ok_or_else(|| AppError::NotFound(format!("no window {label}")))?;
-    crate::windows::open(&app, aux);
+    crate::windows::open_from(&app, aux, from.as_deref());
     Ok(())
 }
 

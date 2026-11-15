@@ -739,6 +739,7 @@ it was done within a topic.
 - [x] Update checks run at most every hour (was 6), also on a 5-minute timer so a Mac woken with Gitgel focused finds a new version, and a failed check retries at the next one — 2026-10-13
 - [x] Release notes get a `### Changed` group, listed first, for breaking changes (something the user relied on works differently, moved or is gone); SPEC §12 "Release notes", `.claude/agents/changelog-writer.md` — 2026-10-18
 - [x] `release.sh` takes its signing settings in Tauri's variables (`APPLE_API_ISSUER`, `APPLE_API_KEY_PATH`, `APPLE_API_KEY`, `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`; was `GITGEL_*`); the issuer id is no longer in the repo and the release stops without `APPLE_API_ISSUER` — 2026-11-10
+- [x] What's New after an update marks what is new: the sub names the version updated from, each newer version has a "new" pill and an "Earlier" rule starts the ones seen before (several versions skipped show as such); canvas U2 — 2026-11-15
 
 ### Docs, fixtures and dev workflow
 - [x] Docs: task list and design handoff merged into `docs/SPEC.md` — 2026-09-27

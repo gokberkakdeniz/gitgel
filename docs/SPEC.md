@@ -1468,7 +1468,12 @@ and menus that open things are off, only its 52px title strip still drags it.
   It opens by itself once after an update: at startup, when `settings.lastSeenVersion` is older
   than the running version, or empty in a config that has repositories (versions before 0.1.17
   did not write it), it is shown and `lastSeenVersion` is set to it; on a fresh install (empty,
-  no repositories) it is only set. Look and sizes:
+  no repositories) it is only set. Opened this way it knows the version it was updated from
+  (`open_window`'s `from`, in the window's URL as `&from=`; digits and dots only): the sub reads
+  `Gitgel <version> · updated from <from>`, every version newer than `from` has an accent sm
+  pill "new" after its date, and the first version seen before starts under a rule with
+  "Earlier" in its middle (11px/500 uppercase `text.faint`, 1px `border` lines) in place of its
+  top border. From the Help menu, or when the version before is not known, none of that. Look and sizes:
   `FlowU2.dc.html` (light twin on the canvas): the window, 20px under the traffic lights a `ModalHeader`
   "What's New", sub `Gitgel <version>`; the notes scroll between a top `border` and a
   `ModalFooter` with primary "OK" (19–42). Each version (padding 18px 0, `border.row` between):

@@ -19,12 +19,13 @@ button{font-family:inherit}
 <div class="{{themeClass}}" style="width: 520px; height: 640px; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
 <div role="dialog" aria-labelledby="wn-title" style="position: relative; box-sizing: border-box; width: 520px; height: 640px; padding-top: 20px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; overflow: hidden">
 <div aria-hidden="true" style="position: absolute; top: 10px; left: 12px; display: flex; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 9999px; background: #ff5f57"></span><span style="width: 12px; height: 12px; border-radius: 9999px; background: var(--border-strong)"></span><span style="width: 12px; height: 12px; border-radius: 9999px; background: var(--border-strong)"></span></div>
-<dc-import name="ModalHeader" theme="none" title="What’s New" sub="Gitgel 0.1.16" title-id="wn-title" hint-size="100%,76px"></dc-import>
+<dc-import name="ModalHeader" theme="none" title="What’s New" sub="{{sub}}" title-id="wn-title" hint-size="100%,76px"></dc-import>
 
 <div role="region" aria-label="Release notes" tabindex="0" style="flex-grow: 1; min-height: 0; overflow: auto; padding: 0 24px; border-top: 1px solid var(--border)">
 <sc-for list="{{versions}}" as="v" hint-placeholder-count="3">
+<sc-if value="{{v.earlier}}" hint-placeholder-val="{{false}}"><div style="display: flex; align-items: center; gap: 10px; padding: 2px 0 0"><span aria-hidden="true" style="flex-grow: 1; height: 1px; background: var(--border)"></span><span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint)">Earlier</span><span aria-hidden="true" style="flex-grow: 1; height: 1px; background: var(--border)"></span></div></sc-if>
 <section style="{{v.style}}">
-<h3 style="margin: 0; display: flex; align-items: baseline; gap: 10px"><span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text-strong)">{{v.version}}</span><span style="font-size: 12px; font-weight: 400; color: var(--text-muted)">{{v.date}}</span></h3>
+<h3 style="margin: 0; display: flex; align-items: center; gap: 10px"><span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text-strong)">{{v.version}}</span><span style="font-size: 12px; font-weight: 400; color: var(--text-muted)">{{v.date}}</span><sc-if value="{{v.isNew}}" hint-placeholder-val="{{true}}"><span style="height: 16px; box-sizing: border-box; display: inline-flex; align-items: center; padding: 0 7px; border-radius: 9999px; background: rgba(var(--accent-rgb), 0.14); font-size: 11px; font-weight: 500; color: var(--accent-text)">new</span></sc-if></h3>
 <sc-for list="{{v.groups}}" as="g" hint-placeholder-count="2">
 <div style="display: flex; flex-direction: column; gap: 6px">
 <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint)">{{g.title}}</span>
@@ -43,13 +44,19 @@ button{font-family:inherit}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 520, "height": 640}}'>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "updatedFrom": {"editor": "enum", "options": ["0.1.14", "0.1.15", "none"], "default": "0.1.14"}, "$preview": {"width": 520, "height": 640}}'>
 class Component extends DCLogic {
 renderVals() {
 // Help › What's New, and once at the first launch after an update: a window of its own
 // (520 × 640, resizable; src/windows/WhatsNewWindow.tsx). CHANGELOG.md as bundled in the app,
 // newest first, the running version on top. `code` spans are mono.
+// Opened by itself after an update (`updatedFrom`: the version last seen): the versions newer
+// than it carry an accent "new" pill, the sub line names it, and an "Earlier" rule starts the
+// ones seen before. From the Help menu ("none"): no pills, no rule, the sub is the version only.
 var theme = this.props.theme ?? 'dark';
+var from = this.props.updatedFrom ?? '0.1.14';
+if (from === 'none') from = '';
+var num = function (v) { return v.split('.').reduce(function (a, n) { return a * 1000 + parseInt(n, 10); }, 0); };
 var CODE = 'font-family: \'JetBrains Mono\', monospace; font-size: 12px; padding: 1px 5px; border-radius: 4px; background: var(--bg-hover); color: var(--text-code)';
 // A line is text with `code` spans, split into parts.
 var line = function (text) {
@@ -76,11 +83,15 @@ var log = [
 return {
   themeClass: 'theme-' + theme,
   themeName: theme,
+  sub: from ? 'Gitgel 0.1.16 · updated from ' + from : 'Gitgel 0.1.16',
   versions: log.map(function (v, i) {
+    var isNew = !!from && num(v[0]) > num(from);
     return {
-      version: v[0], date: v[1],
+      version: v[0], date: v[1], isNew: isNew,
+      // The first version seen before: the rule stands in for its top border.
+      earlier: !!from && !isNew && i > 0 && num(log[i - 1][0]) > num(from),
       groups: v[2].map(function (g) { return { title: g[0], items: g[1].map(line) }; }),
-      style: 'display: flex; flex-direction: column; gap: 12px; padding: 18px 0;' + (i ? ' border-top: 1px solid var(--border-row)' : '')
+      style: 'display: flex; flex-direction: column; gap: 12px; padding: 18px 0;' + (i && !(from && !isNew && num(log[i - 1][0]) > num(from)) ? ' border-top: 1px solid var(--border-row)' : '')
     };
   }),
   footerButtons: [{ label: 'OK', variant: 'primary' }]

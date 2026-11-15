@@ -142,8 +142,10 @@ export const checkForUpdates = () => invoke<void>('check_for_updates');
 export const openRemoteLink = (url: string) => invoke<void>('open_remote_link', { url });
 export const reportIssue = () => invoke<void>('report_issue');
 export const getUpdateCheck = () => invoke<UpdateCheck | null>('get_update_check');
-/** About Gitgel, Software Update or What's New, in a window of its own (`windows.rs`). */
-export const openWindow = (label: 'about' | 'update' | 'whats-new') => invoke<void>('open_window', { label });
+/** About Gitgel, Software Update or What's New, in a window of its own (`windows.rs`). `from`:
+ * What's New after an update, the version last seen (its newer versions are marked). */
+export const openWindow = (label: 'about' | 'update' | 'whats-new', from?: string) =>
+  invoke<void>('open_window', { label, from: from ?? null });
 /** This window has drawn: show it (every window starts hidden, so it never flashes white). */
 export const revealWindow = () => invoke<void>('reveal_window');
 

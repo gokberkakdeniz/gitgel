@@ -53,6 +53,12 @@ const DARK_BG: Color = Color(0x21, 0x1f, 0x1c, 0xff);
 const LIGHT_BG: Color = Color(0xff, 0xff, 0xff, 0xff);
 
 pub fn open(app: &AppHandle, aux: Aux) {
+    open_from(app, aux, None);
+}
+
+/// As `open`; with `from`, What's New opened after an update from that version, which its page
+/// reads from the URL (`&from=`). Only digits and dots get there.
+pub fn open_from(app: &AppHandle, aux: Aux, from: Option<&str>) {
     if let Some(window) = app.get_webview_window(aux.label()) {
         // Still loading: it shows itself when ready.
         if window.is_visible().unwrap_or(false) {
@@ -61,7 +67,11 @@ pub fn open(app: &AppHandle, aux: Aux) {
         return;
     }
     let (title, width, height, resizable) = aux.frame();
-    let url = WebviewUrl::App(format!("index.html?window={}", aux.label()).into());
+    let from = from
+        .filter(|v| !v.is_empty() && v.chars().all(|c| c.is_ascii_digit() || c == '.'))
+        .map(|v| format!("&from={v}"))
+        .unwrap_or_default();
+    let url = WebviewUrl::App(format!("index.html?window={}{from}", aux.label()).into());
     let mut builder = WebviewWindowBuilder::new(app, aux.label(), url)
         .title(title)
         .inner_size(width, height)

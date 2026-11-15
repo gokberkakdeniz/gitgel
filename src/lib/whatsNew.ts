@@ -16,7 +16,8 @@ export function useWhatsNewAfterUpdate() {
     done.current = true;
     const seen = config.settings.lastSeenVersion;
     if (seen && compareVersions(seen, version) >= 0) return;
-    if (seen || config.repos.length > 0) void openWindow('whats-new');
+    // The version it was updated from marks what is new since (unknown before 0.1.17).
+    if (seen || config.repos.length > 0) void openWindow('whats-new', seen || undefined);
     void updateSettings({ ...config.settings, lastSeenVersion: version });
   }, [config]);
 }
