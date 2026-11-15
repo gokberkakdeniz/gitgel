@@ -170,6 +170,11 @@
   cursor: pointer;
 }
 
+.viewButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .viewButtonOpen {
   background: var(--bg-hover);
   border-color: var(--accent);

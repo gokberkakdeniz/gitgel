@@ -1,20 +1,32 @@
-/* A changed image: its two sides next to each other, over the editor's place. */
+/* A changed image, over the editor's place: two halves as a split diff, old left and new right. */
 .root {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  background: var(--bg-main);
+  color: var(--text-muted);
+}
+
+.half {
+  min-width: 0;
+  flex: 1 1 0;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
   overflow: auto;
-  background: var(--bg-main);
+}
+
+.half + .half {
+  border-left: 1px solid var(--border);
 }
 
 .side {
   min-width: 0;
   max-height: 100%;
-  flex: 0 1 50%;
   display: flex;
   flex-direction: column;
   align-items: center;

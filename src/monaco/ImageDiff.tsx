@@ -4,6 +4,11 @@ import { formatCount } from '../lib/format';
 import type { ImagePair } from '../lib/types';
 import styles from './ImageDiff.module.css';
 
+/** The extensions shown as an image, as `files.rs` `image_mime` has them. */
+const IMAGE = /\.(png|apng|jpe?g|gif|webp|avif|bmp|ico|svg)$/i;
+/** Whether a changed file shows as an image: a binary one with an image extension. */
+export const showsAsImage = (file: { path: string; binary: boolean }) => file.binary && IMAGE.test(file.path);
+
 /** `12 B`, `3.4 KB`, `1.2 MB`. */
 export function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -11,14 +16,23 @@ export function formatBytes(n: number): string {
   return kb < 1024 ? `${kb.toFixed(1)} KB` : `${(kb / 1024).toFixed(1)} MB`;
 }
 
-/** A changed image (SPEC §5 Review "Diff"): the old and the new one side by side, each with its
- * pixel size and file size; only one for an added or deleted image. */
+/** A changed image (SPEC §5 Review "Diff"): the pane in two halves, as a split diff, the old one
+ * on the left and the new one on the right, each with its pixel size and file size; an added or
+ * deleted image leaves the other half empty. */
 export function ImageDiff({ image }: { image: ImagePair }) {
+  if (!image.original && !image.modified) return <div className={styles.root}>{t('diff.binary')}</div>;
   return (
     <div className={styles.root}>
-      {image.original && <Side label={t('diff.imageOld')} tone="old" src={image.original} bytes={image.originalSize} />}
-      {image.modified && <Side label={t('diff.imageNew')} tone="new" src={image.modified} bytes={image.modifiedSize} />}
-      {!image.original && !image.modified && <span className={styles.none}>{t('diff.binary')}</span>}
+      <div className={styles.half}>
+        {image.original && (
+          <Side label={t('diff.imageOld')} tone="old" src={image.original} bytes={image.originalSize} />
+        )}
+      </div>
+      <div className={styles.half}>
+        {image.modified && (
+          <Side label={t('diff.imageNew')} tone="new" src={image.modified} bytes={image.modifiedSize} />
+        )}
+      </div>
     </div>
   );
 }

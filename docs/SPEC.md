@@ -898,12 +898,14 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   file, layout or whitespace updates it in place. Binary files show muted "Binary file not
   shown"; files over 1 MiB "File is too large to show (over 1 MB)". A binary image the webview
   draws (by extension: png, apng, jpg, jpeg, gif, webp, avif, bmp, ico, svg; up to 10 MiB a
-  side) shows in the editor's place instead (`monaco/ImageDiff.tsx`): the old and the new one
-  side by side, centred (gap 24, padding 24), each under an 11px/500 uppercase label "Before"
+  side) shows in the editor's place instead (`monaco/ImageDiff.tsx`): the pane in two halves as a
+  split diff (a 1px `border` between them, padding 24 each), the old one centred in the left
+  half and the new one in the right, each under an 11px/500 uppercase label "Before"
   (`danger.text`) / "After" (`success`) in a 1px `border` frame of radius 8 over a 16px
   checkerboard (`bg.sunken` / `bg.hover`), scaled down to fit (at most 60vh high), with mono 11
-  muted `<width> × <height> · <file size>` under it; an added or deleted image shows its one
-  side. A side the webview cannot decode says "Binary file not shown". An SVG that is text
+  muted `<width> × <height> · <file size>` under it; an added or deleted image leaves the other
+  half empty. The view button then reads "Split" whatever the layout and is disabled (opacity
+  0.5). A side the webview cannot decode says "Binary file not shown". An SVG that is text
   keeps its text diff.
 - **Diff view menu:** the view button (split or unified icon + "Split" / "Unified" + chevron;
   28px, `#211f1c`, open state `#2a2825` with accent border) opens a 300px menu (`role="menu"`,

@@ -21,6 +21,7 @@ import { diffPosition } from '../../monaco/position';
 import { StashRowMenu } from '../../stash/StashRowMenu';
 import { useData } from '../../state/data';
 import { useUi } from '../../state/ui';
+import { showsAsImage } from '../../monaco/ImageDiff';
 import styles from './parts.module.css';
 import { dirLabel } from './selection';
 import { stashMeta, type ReviewStash } from './stashes';
@@ -123,6 +124,7 @@ export function FileBar({
         contextLines={contextLines}
         onContext={(c, lines) => saveView({ diffContext: c, diffContextLines: lines })}
         onToggleWs={toggleWs}
+        fixed={showsAsImage(file)}
       />
       <span className={styles.barDivider} />
       <ChangeNav
@@ -155,7 +157,10 @@ function ViewMenu({
   contextLines,
   onContext,
   onToggleWs,
+  fixed,
 }: {
+  /** An image is always shown split: the button says so and opens nothing. */
+  fixed: boolean;
   layout: DiffLayout;
   ignoreWs: boolean;
   onLayout: (l: DiffLayout) => void;
@@ -172,11 +177,12 @@ function ViewMenu({
         aria-haspopup="menu"
         aria-expanded={!!at}
         title={t('review.diffView')}
+        disabled={fixed}
         className={at ? `${styles.viewButton} ${styles.viewButtonOpen}` : styles.viewButton}
         onClick={(e) => setAt(at ? null : e.currentTarget.getBoundingClientRect())}
       >
-        {layout === 'split' ? <SplitIcon /> : <UnifiedIcon />}
-        <span>{layout === 'split' ? t('review.split') : t('review.unified')}</span>
+        {layout === 'split' || fixed ? <SplitIcon /> : <UnifiedIcon />}
+        <span>{layout === 'split' || fixed ? t('review.split') : t('review.unified')}</span>
         <ChevronDownIcon size={9} />
       </button>
       {at && (
