@@ -46,11 +46,16 @@ commit() {
   git -C "$1" commit -q -m "$3"
 }
 
-# A 1x1 PNG.
+# png <dir> <path> <blue|green>: a 128x128 PNG of one colour.
 png() {
+  local data
+  case "$3" in
+    blue) data='iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAyElEQVR42u3RQQ0AAAjEsDODMuRjAhnwaDIFa6pHh8UCAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAAwAUAAAQAgAAAEAAAAgBAAAAIAAABACAAAAQAgAAAEAAAAgBAAAAIAAABACAAAAQAgAAAEAAAAgBAAAAIAAABACAAAAQAgAAAEAAAAgBAAAAIwIcWcBbFZSync0QAAAAASUVORK5CYII=' ;;
+    green) data='iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAyElEQVR42u3RQQ0AAAjEsFOBKGxiFBnwaDIFa2pah8UCAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAAwAUAAAQAgAAAEAAAAgBAAAAIAAABACAAAAQAgAAAEAAAAgBAAAAIAAABACAAAAQAgAAAEAAAAgBAAAAIAAABACAAAAQAgAAAEAAAAgBAAAAIwIcW//DDwaZRB/wAAAAASUVORK5CYII=' ;;
+    *) die "png: unknown colour $3" ;;
+  esac
   mkdir -p "$(dirname "$1/$2")"
-  printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' \
-    | base64 --decode > "$1/$2"
+  printf '%s' "$data" | base64 --decode > "$1/$2"
 }
 
 make_web_app() {
@@ -138,14 +143,17 @@ make_web_app() {
   put "$ROOT/wt/token-refresh" src/auth/refresh.ts 'export function refresh() { return getSession(); }'
   put "$ROOT/wt/token-refresh" scripts/token-debug.ts 'console.log("token debug");'
 
-  # Recent, not checked out, with a binary file.
+  # Recent, not checked out, with a binary file (an image, added blue and then made green).
   git -C "$repo" switch -q -c feat/billing-v2
   put "$repo" src/billing/plan.ts 'export const plans = ["free", "pro"];'
   commit "$repo" 2 "Billing plans"
-  png "$repo" public/billing/badge.png
+  png "$repo" public/billing/badge.png blue
   commit "$repo" 2 "Billing badge"
   put "$repo" src/billing/invoice.ts 'export function invoice() {}'
   commit "$repo" 2 "Invoice stub"
+  # The image changes: its diff shows both sides.
+  png "$repo" public/billing/badge.png green
+  commit "$repo" 2 "Make the billing badge green"
   git -C "$repo" switch -q main
 
   # Started before the last main commit, then main merged in: the merge commit (flow D7) shows

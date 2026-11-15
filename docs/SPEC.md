@@ -2243,7 +2243,7 @@ Icons (copy into `src/components/icons.tsx`): sidebar toggle `Sidebar.dc.html:27
     1600-line `src/catalog/items.ts` with 14 changes for change navigation; `src/auth/config.ts`
     with a reindented line, trailing spaces and one real change; `src/auth/scopes.ts` with
     whitespace-only changes), checked out in `wt/token-refresh` with a modified file and an
-    untracked `scripts/token-debug.ts`; `feat/billing-v2` (3 commits, a binary PNG, not checked
+    untracked `scripts/token-debug.ts`; `feat/billing-v2` (4 commits, a 128×128 PNG added blue and then made green, not checked
     out); `feat/search` (started before main's last commit, then main merged in: a merge commit
     for commit review); `old-feature` (60 days old, unmerged); `merged-ff` (fast-forwarded);
     `squashed` (squash-merged). Stashes: `stash@{0}` "debug logging for refresh" on
