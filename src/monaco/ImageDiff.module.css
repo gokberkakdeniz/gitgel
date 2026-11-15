@@ -20,7 +20,8 @@
   overflow: auto;
 }
 
-.half + .half {
+/* Left of the right half, the border the two share: dragged to give one side more room. */
+.right {
   border-left: 1px solid var(--border);
 }
 

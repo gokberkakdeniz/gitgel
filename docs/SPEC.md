@@ -899,7 +899,9 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   shown"; files over 1 MiB "File is too large to show (over 1 MB)". A binary image the webview
   draws (by extension: png, apng, jpg, jpeg, gif, webp, avif, bmp, ico, svg; up to 10 MiB a
   side) shows in the editor's place instead (`monaco/ImageDiff.tsx`): the pane in two halves as a
-  split diff (a 1px `border` between them, padding 24 each), the old one centred in the left
+  split diff (a 1px `border` between them, padding 24 each; that border is a drag handle as the
+  list's: the left half takes 15–85% of the pane, ← / → by 16px when focused, double-click back
+  to half, remembered on this machine), the old one centred in the left
   half and the new one in the right, each under an 11px/500 uppercase label "Before"
   (`danger.text`) / "After" (`success`) in a 1px `border` frame of radius 8 over a 16px
   checkerboard (`bg.sunken` / `bg.hover`), scaled down to fit (at most 60vh high), with mono 11

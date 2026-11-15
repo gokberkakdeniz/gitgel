@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { ResizeHandle, useStoredWidth } from '../components/ResizeHandle';
 import { t } from '../i18n';
 import { formatCount } from '../lib/format';
 import type { ImagePair } from '../lib/types';
@@ -20,15 +21,30 @@ export function formatBytes(n: number): string {
  * on the left and the new one on the right, each with its pixel size and file size; an added or
  * deleted image leaves the other half empty. */
 export function ImageDiff({ image }: { image: ImagePair }) {
+  const root = useRef<HTMLDivElement>(null);
+  const left = useRef<HTMLDivElement>(null);
+  // The left half's share of the pane in percent (15–85), remembered; half until dragged.
+  const [share, setShare] = useStoredWidth('gitgel.imageDiffSplit');
   if (!image.original && !image.modified) return <div className={styles.root}>{t('diff.binary')}</div>;
   return (
-    <div className={styles.root}>
-      <div className={styles.half}>
+    <div ref={root} className={styles.root}>
+      <div ref={left} className={styles.half} style={{ flex: `0 0 ${share ?? 50}%` }}>
         {image.original && (
           <Side label={t('diff.imageOld')} tone="old" src={image.original} bytes={image.originalSize} />
         )}
       </div>
-      <div className={styles.half}>
+      <ResizeHandle
+        pane={left}
+        min={0}
+        max={100000}
+        onResize={(px) => {
+          const width = root.current?.getBoundingClientRect().width;
+          if (width) setShare(Math.min(85, Math.max(15, (px / width) * 100)));
+        }}
+        onReset={() => setShare(null)}
+        label={t('diff.imageResize')}
+      />
+      <div className={`${styles.half} ${styles.right}`}>
         {image.modified && (
           <Side label={t('diff.imageNew')} tone="new" src={image.modified} bytes={image.modifiedSize} />
         )}

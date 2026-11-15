@@ -938,6 +938,7 @@
   "diff.binary": "Binary file not shown",
   "diff.imageOld": "Before",
   "diff.imageNew": "After",
+  "diff.imageResize": "Resize the image sides",
   "diff.tooLarge": "File is too large to show (over 1 MB)",
   "diff.actions": "Diff Actions",
   "cmd.goTitle": "Go to Branch or Project",
