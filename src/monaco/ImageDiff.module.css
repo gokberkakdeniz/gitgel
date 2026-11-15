@@ -3,16 +3,21 @@
   position: absolute;
   inset: 0;
   display: flex;
+  /* The handle between the halves has no height of its own: it must stretch. */
+  align-items: stretch;
+  background: var(--bg-main);
+}
+
+/* Neither side can be shown. */
+.empty {
   align-items: center;
   justify-content: center;
-  background: var(--bg-main);
   color: var(--text-muted);
 }
 
 .half {
   min-width: 0;
   flex: 1 1 0;
-  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -25,7 +25,8 @@ export function ImageDiff({ image }: { image: ImagePair }) {
   const left = useRef<HTMLDivElement>(null);
   // The left half's share of the pane in percent (15–85), remembered; half until dragged.
   const [share, setShare] = useStoredWidth('gitgel.imageDiffSplit');
-  if (!image.original && !image.modified) return <div className={styles.root}>{t('diff.binary')}</div>;
+  if (!image.original && !image.modified)
+    return <div className={`${styles.root} ${styles.empty}`}>{t('diff.binary')}</div>;
   return (
     <div ref={root} className={styles.root}>
       <div ref={left} className={styles.half} style={{ flex: `0 0 ${share ?? 50}%` }}>
