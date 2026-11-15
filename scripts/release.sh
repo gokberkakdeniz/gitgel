@@ -12,7 +12,7 @@
 # zip under a name without the version. Nothing is published to the tap.
 #
 # Versions up to 0.2.5 read the update feed from the tap (`gitgel/latest.json` there). While
-# that file still points into the tap, a release moves it once to this release's update, so
+# that file is still at 0.2.5 or older, a release writes it once with this release's update, so
 # those installs update and then follow the new endpoint. It needs the tap's clone next to this
 # repository, or at $GITGEL_TAP_DIR; without one the step is skipped with a warning.
 #
@@ -98,14 +98,15 @@ fi
 
 [[ "$ARCH" == arm64 ]] || die "the cask and the update feed are for Apple silicon (arm64), this Mac is $ARCH"
 
-# The tap's old feed, while it still points into the tap (see the top): checked before building,
-# so a release never stops half-way for it.
+# The tap's old feed, while it is at 0.2.5 or older (see the top): checked before building, so a
+# release never stops half-way for it.
 MOVE_TAP_FEED=
 if [[ -f "$TAP_DIR/$LATEST" ]]; then
   [[ -z "$(git -C "$TAP_DIR" status --porcelain)" ]] || die "uncommitted changes in $TAP_DIR"
   git -C "$TAP_DIR" pull -q --ff-only
   [[ -n "$(git -C "$TAP_DIR" branch -r --contains HEAD)" ]] || die "$TAP_DIR has unpushed commits"
-  if grep -q 'homebrew-tap/releases/download' "$TAP_DIR/$LATEST"; then MOVE_TAP_FEED=1; fi
+  TAP_VERSION="$(node -p 'require(require("path").resolve(process.argv[1])).version' "$TAP_DIR/$LATEST")"
+  if [[ "$(printf '%s\n' "$TAP_VERSION" 0.2.5 | sort -V | tail -1)" == 0.2.5 ]]; then MOVE_TAP_FEED=1; fi
 else
   echo "release: no tap clone at $TAP_DIR; its old update feed is left as it is" >&2
 fi
