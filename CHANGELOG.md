@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.2.5 — 2026-11-15
+
+### Changed
+- Stash moved from Review's page menu to the Changes menu.
+
+### New
+- Reorder commits in Review by dragging.
+- Reset to Commit in Review's commit menu.
+- Checkout Commit in Review's commit menu.
+- Reword Commit in Review's commit menu.
+- Create Branch from Commit in Review's commit menu.
+- Create Tag in Review's commit menu.
+- Delete Tag in Review's commit menu, locally or on the remote.
+- Changed images show Before and After side by side.
+- Open Permalink in Review's commit menu.
+- Copy Tags in Review's commit menu.
+
+### Improved
+- Stash Changes for picked files in Review's file menu.
+- Stash asks only for a message.
+- Review's Changes header has a menu button.
+- Review's Staged and Unstaged show their file counts.
+- Several tags on a commit show as a stacked pill.
+- What's New marks the versions new since your last one.
+- The show-sidebar button shows an available update.
+
+### Fixed
+- Copy Permalink is offered only for commits the remote has.
+- Long submenus scroll and open beside their menu.
+
 ## 0.2.4 — 2026-11-13
 
 ### New
