@@ -105,6 +105,13 @@ a:hover {
   background-size: auto !important;
 }
 
+/* Blame (SPEC §5): after the cursor's line, the commit that last changed it. */
+.monaco-editor .gg-blame {
+  margin-left: 3ch;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
 /* The current change of the diff (flow D4): an accent bar on its left edge in both panes. */
 .monaco-editor .gg-current-change {
   box-shadow: inset 3px 0 0 var(--accent-text);

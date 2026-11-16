@@ -48,6 +48,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'shortcuts.splitUnified', keys: ['⌥', 'V'] },
       { label: 'shortcuts.contextWhole', keys: ['⌥', 'C'] },
       { label: 'shortcuts.ignoreWs', keys: ['⌥', 'W'] },
+      { label: 'shortcuts.blame', keys: ['⌥', 'B'] },
       { label: 'shortcuts.switchBranch', keys: ['⇧', '⌘', 'B'], note: 'shortcuts.inHistory' },
       { label: 'shortcuts.pickFiles', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.pickNote' },
       { label: 'shortcuts.pickCommits', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.pickCommitsNote' },

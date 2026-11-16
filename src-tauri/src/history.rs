@@ -4,8 +4,8 @@ use std::path::Path;
 
 use crate::config;
 use crate::error::AppError;
-use crate::git::{history, refs};
-use crate::model::{HistoryPage, RepoConfig};
+use crate::git::{blame, history, refs};
+use crate::model::{Blame, HistoryPage, RepoConfig};
 use crate::state::{lock, AppState};
 use crate::timing::Timings;
 
@@ -13,7 +13,8 @@ use crate::timing::Timings;
 const MAX_LIMIT: usize = 20_000;
 
 /// Up to `limit` commits of `rev`, newest first. `base`: the entry's base, which splits the list
-/// at the base line. `query`: words that must all match (search).
+/// at the base line. `query`: words that must all match (search), or `path:<file>` for the
+/// commits that changed that file (its history).
 pub fn get_history(
     state: &AppState,
     repo_id: &str,
@@ -23,7 +24,8 @@ pub fn get_history(
     limit: usize,
 ) -> Result<HistoryPage, AppError> {
     let repo_cfg = repo_of(state, repo_id)?;
-    let terms: Vec<String> = history::search_words(query)
+    let path = file_query(query);
+    let terms: Vec<String> = history::search_words(if path.is_some() { "" } else { query })
         .split(' ')
         .filter(|t| !t.is_empty())
         .map(str::to_string)
@@ -53,6 +55,7 @@ pub fn get_history(
             &tip,
             split.as_ref().map(|s| &s.ahead),
             &terms,
+            path,
             limit.clamp(1, MAX_LIMIT),
         )
     })?;
@@ -66,7 +69,13 @@ pub fn get_history(
         "history {rev} in {}: {t} · {} commits{}",
         repo_cfg.path,
         walked.commits.len(),
-        if terms.is_empty() { "" } else { " (search)" }
+        if path.is_some() {
+            " (file)"
+        } else if terms.is_empty() {
+            ""
+        } else {
+            " (search)"
+        }
     );
     Ok(HistoryPage {
         rev: rev.to_string(),
@@ -77,6 +86,42 @@ pub fn get_history(
         fetched_at,
         upstream,
     })
+}
+
+/// Who last changed each line of `path` as `rev` has it (§5 "Blame"); with `content`, of that
+/// text against `rev`.
+pub fn get_blame(
+    state: &AppState,
+    repo_id: &str,
+    rev: &str,
+    path: &str,
+    content: Option<&str>,
+) -> Result<Blame, AppError> {
+    let repo_cfg = repo_of(state, repo_id)?;
+    let folder = Path::new(&repo_cfg.path);
+    let commit = {
+        let shared = state.pool.get(folder)?;
+        let repo = lock(&shared);
+        refs::resolve_commit(&repo, rev)
+    };
+    let Some(commit) = commit else {
+        return Ok(Blame::default());
+    };
+    let started = std::time::Instant::now();
+    let found = blame::blame(folder, &commit, path, content)?;
+    log::info!(
+        "blame {path} at {}: {:.1} ms · {} hunks",
+        &commit[..7],
+        started.elapsed().as_secs_f64() * 1000.0,
+        found.hunks.len()
+    );
+    Ok(found)
+}
+
+/// The file of a `path:<file>` query (the whole rest of it, spaces included).
+fn file_query(query: &str) -> Option<&str> {
+    let path = query.trim().strip_prefix("path:")?.trim().trim_matches('/');
+    (!path.is_empty()).then_some(path)
 }
 
 fn repo_of(state: &AppState, repo_id: &str) -> Result<RepoConfig, AppError> {

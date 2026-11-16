@@ -237,7 +237,7 @@ gitgel/
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
-│  └─ monaco/   monaco.ts  setup.ts  theme.ts  language.ts  DiffView.tsx  ImageDiff.tsx  position.ts  changeNav.ts
+│  └─ monaco/   monaco.ts  setup.ts  theme.ts  language.ts  DiffView.tsx  ImageDiff.tsx  position.ts  changeNav.ts  blame.ts
 │               # lineStage.ts (the diff's Stage / Unstage of picked lines, §15 "Stage")
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
@@ -266,6 +266,7 @@ gitgel/
       │  ├─ inspect.rs            # folder resolution (flow A2)
       │  ├─ refs.rs               # branches, default base, ref checks, tags, last fetch time
       │  ├─ worktrees.rs          # main + linked worktrees, ignore check, staged / tracked paths
+      │  ├─ blame.rs              # who last changed each line of a file (§5 "Blame")
       │  ├─ diff.rs               # tree/workdir/commit diffs, FileChange conversion, blobs
       │  ├─ history.rs            # merge-base, ahead, revwalk, merged state, stack candidates,
       │  │                        # history pages and search (§16)
@@ -891,7 +892,10 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   "Stage" (picked lines), then a divider: "Stage Selected Lines" (`plus`; a Staged row's diff
   "Unstage Selected Lines", `remove`) when the click is inside a selection that touches a change,
   and "Stage Change" / "Unstage Change" for the change at the clicked line (unified: also on its
-  removed lines), left out when the selection takes the same. Then "Copy relative reference" (`@<path>:<line>` or
+  removed lines), left out when the selection takes the same. Then, not in a stash, "Show Commit <sha>"
+  (`history`; with Blame on, on the new side, for a line last changed by another commit than the
+  one shown: it searches that SHA, so the list is that commit, open on this file) and "File
+  History" (`history`; §16 "File history"), and a divider. Then "Copy relative reference" (`@<path>:<line>` or
   `@<path>:<from>-<to>`, the path relative to the repository), "Copy absolute reference" (the
   same with the file's path in its worktree, else the repository folder; with a commit shown it is
   the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (only for a commit the branch's upstream has; the remote's
@@ -920,7 +924,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   radius 7; buttons min 28 × 22, mono 11, active `bg.pressed` + `text.strong`), then
   `menuitemradio` "Whole file" (⌥C); while Whole file is picked the lines row is at 45% opacity
   and inert; picking a number also selects Changes only), divider, `menuitemcheckbox` "Ignore whitespace" with "Hide lines where only indentation or trailing
-  spaces changed" (⌥W). Every row
+  spaces changed" (⌥W), `menuitemcheckbox` "Blame" with "Show who last changed the line under the cursor" (⌥B). Every row
   has a 16px indicator column (accent check for the picked layout, a checkbox for whitespace),
   the label, and the shortcut right-aligned; no icons inside the menu. Picking a layout closes
   the menu; the checkbox leaves it open. All of them are global and saved in the config.
@@ -934,6 +938,15 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
   file and never changes the list's `+/−`. While on, a "Whitespace ignored" chip (20px pill,
   `rgba(79,143,163,0.16)`, `#a3cad6`, tooltip "Show whitespace changes (⌥W)") sits after the
   compare label; clicking it turns the option off. Toggling it returns to the first change.
+- **Blame** (GitLens' current-line blame; off by default, `diffBlame`): while on, the line the
+  cursor is on in the new side ends in `<author>, <age> ago · <subject>` (3ch after the text,
+  italic `text.faint`; the subject at most 72 characters), the commit that last changed it. It
+  moves with the cursor (a click, a jump between changes). A commit, or several rows, is blamed
+  at the newest commit shown; Uncommitted (and several rows with it) at the worktree's HEAD with
+  the text on screen, whose own lines read "Not committed yet". Not for a stash, a deleted,
+  binary or too large file. `get_blame` (§9) reads it once per file shown, on a repository
+  handle of its own (a long history takes seconds; the pooled handle stays free), and the text
+  comes in when it is there (`src/monaco/blame.ts`).
 - **Jump between changes** (flow D4): counter "Change i of n" (`aria-live="polite"`, tabular
   numbers) and a ↑ ↓ pair. The current change has the 3px accent bar in both panes; jumping
   scrolls it to the top third of the view. At the last change of a file, ↓ turns accent
@@ -1118,7 +1131,7 @@ outside or leaving the page closes it (`src/commands/`).
   `localStorage` `gitgel.recentCommands`), then by group in this order:
   - **Review** (Review): Switch Branch… ⇧⌘B (branch scope), Search Commits ⌘K, Next / Previous
     Change ⌥↓ / ⌥↑, Newer / Older Commit ⌥⇧↑ / ⌥⇧↓, and the view: Split View or Unified View ⌥V,
-    Whole File or Changes Only ⌥C, Ignore Whitespace or Show Whitespace ⌥W (each names the other
+    Whole File or Changes Only ⌥C, Ignore Whitespace or Show Whitespace ⌥W, Show Blame or Hide Blame ⌥B (each names the other
     state; the view ones in a stash stack too).
   - **Branch** (Review's open branch, as its ⋮ menu has them): Continue <op> / Abort <op> while
     one is stopped, else Checkout Branch…, Fetch, Pull, Pull (Rebase), Push, Force Push, Rebase on
@@ -1407,6 +1420,7 @@ either end or next to another goes too), unless this file says that item is show
 | | Newer / older commit | ⌥⇧↑ / ⌥⇧↓ | with no commit picked, ⌥⇧↓ picks the newest |
 | | Split / Unified | ⌥V | |
 | | Ignore whitespace | ⌥W | |
+| | Blame | ⌥B | |
 | | Changes only / Whole file | ⌥C | |
 | | Switch branch | ⇧⌘B | Review of a branch (opens Switch Branch) |
 | | Pick commits | ⌘-click / ⇧-click, ⇧↑ / ⇧↓ | Review's list (Uncommitted too; Esc goes back to one) |
@@ -1539,6 +1553,7 @@ export interface Settings {
   newBranchCheckout: 'worktree' | 'main' | 'none'; // New Branch's first row; default 'main'
   diffView: DiffLayout;          // default 'split'
   ignoreWhitespace: boolean;     // default false
+  diffBlame: boolean;            // default false; Review's Blame (§5)
   diffContext: 'changes' | 'whole'; // default 'changes'
   diffContextLines: 3 | 5 | 10;  // default 3; anything else reads as 3
   zoom: number;                  // View › Font Size, percent; default 100
@@ -1870,6 +1885,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_stash_changes` | `repoId, sha` | `StashChanges` |
 | `get_range_changes` | `repoId, oldest, newest: string\|null, worktreePath: string\|null` | `RangeChanges` (Review's picked rows, §16; `newest` null: to the working tree) |
 | `get_history` | `repoId, rev, base: string\|null, query, limit` | `HistoryPage` (§16) |
+| `get_blame` | `repoId, rev, path, content: string\|null` | `Blame` (§5 "Blame": `commits` and `hunks` of `{ start, lines, commit: index \| null }`; with `content` that text against `rev`; empty when `rev` lacks the file) |
 | `read_file_pair` | `repoId, worktreePath: string\|null, change: FileChange` | `FilePair` |
 | `create_project` | `name, entries: EntryRef[]` | `ProjectConfig` |
 | `rename_project` | `projectId, name` | `Config` |
@@ -2718,7 +2734,7 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   left out with merge conflicts or an operation in progress); with several files, a divider
   and "Stage Selected Files" (`plus`, when some are in Unstaged) / "Unstage Selected Files"
   (`remove`, when some are in Staged), left out while a commit or a stage runs (§15 "Stage"); a
-  divider, "Copy File Path" (the absolute path; several: "Copy
+  divider, "File History" (one file that is not new; §16 "File history"), "Copy File Path" (the absolute path; several: "Copy
   Paths", one per line) and "Copy Relative File Path" ("Copy Relative Paths"), `copy` icons;
   then a divider and the open items of §5 Review "File rows" for the files on disk (several open
   one after another). Each file is read from its own entry's worktree, so picks across repos
@@ -3163,8 +3179,18 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
   it are counted (`ahead`) and the rest are `inBase`. `query`: every word (the Branches filter
   rule) must appear in the subject, body, author name or email, the full SHA, or a path the
   commit changed against its first parent (read only when the text did not match); the walk goes
-  on until `limit` commits match. `fetchedAt`: the modification time of
+  on until `limit` commits match. A query `path:<file>` is a file's history instead (below).
+  `fetchedAt`: the modification time of
   `FETCH_HEAD` in the common git dir. Every call logs one line with its timings.
+- **File history** ("File History", `history` icon: first in a file row's right-click menu, and
+  in the diff's; in Uncommitted's after the stash items, not for an added or untracked file;
+  never in a stash): the search becomes `path:<file>` at once (it can be typed too), and the
+  list is the commits of the open branch that changed that file, with search's label, empty
+  state and rules (no Changes, no stashes; Esc or the field's ✕ ends it). A commit counts when
+  its entry at the path differs from every parent's, as `git log -- <path>` (a merge that took
+  one side as it is does not; a folder's path works too); a commit that put the file there by
+  renaming another carries the walk on under the old name too (`--follow`). Each commit opens on
+  that file (by its path or old path, else a file of the same name, else its first file).
 - **Opening, header and page menu:** Review's (§5 "Review": Scopes, Header).
 - **Switch Branch** (⇧⌘B, or the page menu of a branch's Review; `Review/SwitchBranch.tsx`): the Add
   palette's dialog (620px, top 96px; Esc or a click outside closes it) for this repo only, with
@@ -3458,7 +3484,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
   `N files`, `+a` (`success`), `−d` (`danger`). For Uncommitted: "Uncommitted changes", meta
   `N files +a −d` (the worktree is in the subtitle). Then Review's file bar (compare label `<parent> ↔ <sha>` or `HEAD
   ↔ working tree`, whitespace chip, view menu, change navigation over the picked row's files) and
-  the diff, with Review's view settings and ⌥V / ⌥C / ⌥W / ⌥↑ / ⌥↓.
+  the diff, with Review's view settings and ⌥V / ⌥C / ⌥W / ⌥B / ⌥↑ / ⌥↓.
 - **Refresh:** the page is fetched again when the repo is updated (`repo-updated`), keeping the
   loaded length; the Uncommitted row follows the scan.
 

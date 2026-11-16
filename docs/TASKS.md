@@ -474,6 +474,7 @@ it was done within a topic.
 - [x] The file bar's path and compare label are selectable, so they can be copied — 2026-11-10
 - [x] Review's Changes header has a ⋮ for its menu, which only a right-click opened; Stash All Changes… is first, Discard All Changes… second with a `trash` icon — 2026-11-14
 - [x] Staged / Unstaged show their count beside the label, as Changes does, instead of at the row's right end — 2026-11-14
+- [x] File History in the file and diff menus (the search `path:<file>`: the commits that changed it, renames followed) and Blame in the view menu (⌥B: the cursor's line names the commit that last changed it; "Show Commit <sha>" in the diff menu) — 2026-11-16
 
 ### Git actions
 - [x] Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree

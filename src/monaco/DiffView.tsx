@@ -2,17 +2,18 @@ import { DiffEditor } from '@monaco-editor/react';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import * as monaco from './monaco';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import { CopyIcon, LinkIcon } from '../components/icons';
+import { CopyIcon, HistoryIcon, LinkIcon } from '../components/icons';
 import { Menu, MenuDivider, MenuItem } from '../components/Menu';
 import { FileOpenItems } from '../components/OpenItems';
 import { Popover } from '../components/Popover';
-import { getRemoteUrl, openRemoteLink, readFilePair } from '../lib/ipc';
+import { getBlame, getRemoteUrl, openRemoteLink, readFilePair } from '../lib/ipc';
 import { t } from '../i18n';
 import { useEffectiveTheme } from '../lib/theme';
 import type { DiffContext, DiffLayout, DiffMode, FileChange } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
 import { ImageDiff } from './ImageDiff';
 import styles from './DiffView.module.css';
+import { blameAt, blameText } from './blame';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
 import { cutHunks, hunkAt, hunkAtZone, stagedContent, wholeCut, withoutEmptySide, type Cut } from './lineStage';
 import { languageForPath } from './language';
@@ -111,6 +112,16 @@ interface Props {
   /** The right-click menu's Stage / Unstage items; none (a commit, or a stage or commit
    * running), no items. */
   lineStage?: LineStage | null;
+  /** Blame of the new side (SPEC §5 "Blame"): the commit its lines are blamed at. `buffer`: the
+   * text shown is not that commit's (the index's or the working tree's), so it goes along and
+   * its own lines read "Not committed yet". None: off, or nothing to blame at. */
+  blame?: { rev: string; buffer: boolean } | null;
+  /** ⌥B while the diff has focus. */
+  onToggleBlame?: () => void;
+  /** The right-click menu's "File History"; none, no item. */
+  onFileHistory?: ((path: string) => void) | null;
+  /** The right-click menu's "Show Commit <sha>" for the blamed line; none, no item. */
+  onShowCommit?: ((sha: string, path: string) => void) | null;
 }
 
 /** Side-by-side diff of one file. The editor stays mounted; only its content changes. */
@@ -138,6 +149,10 @@ export function DiffView({
   onCommitStep,
   onFocusFilter,
   lineStage = null,
+  blame = null,
+  onToggleBlame = () => {},
+  onFileHistory = null,
+  onShowCommit = null,
 }: Props) {
   const [ready, setReady] = useState(false);
   /** The right-click menu: where it opens and the lines it refers to (`modified`: the new side). */
@@ -159,7 +174,16 @@ export function DiffView({
   }, []);
 
   // Latest props for Monaco callbacks registered once.
-  const handlers = { onNav, onStep, onToggleLayout, onToggleWhitespace, onToggleContext, onCommitStep, onFocusFilter };
+  const handlers = {
+    onNav,
+    onStep,
+    onToggleLayout,
+    onToggleWhitespace,
+    onToggleContext,
+    onCommitStep,
+    onFocusFilter,
+    onToggleBlame,
+  };
   const latest = useRef({ ...handlers, land, fileKey, layout, context, contextLines, tabSize, path: change.path });
   latest.current = { ...handlers, land, fileKey, layout, context, contextLines, tabSize, path: change.path };
 
@@ -232,6 +256,9 @@ export function DiffView({
     hunksFor: null as Shown | null,
   });
 
+  /** Redraws the blame after the cursor's line (set further down). */
+  const markBlameRef = useRef(() => {});
+
   const report = () => latest.current.onNav({ index: nav.current.index, count: nav.current.hunks.length });
 
   const mark = () => {
@@ -288,6 +315,7 @@ export function DiffView({
     const n = nav.current;
     if (!m) return;
     refold();
+    markBlameRef.current();
     n.hunksFor = shownText.current;
     n.hunks = (m.editor.getLineChanges() ?? []).map((c) => ({
       originalStart: c.originalStartLineNumber,
@@ -428,6 +456,58 @@ export function DiffView({
   // Lines can be staged from text read whole and as it is, once the last stage was read back.
   const canStage = !!lineStage && !!data && !data.binary && !data.tooLarge && !data.lossy && !pending;
 
+  // ---- Blame: the commit behind the cursor's line of the new side, after that line ----
+  const blamePath = blame?.buffer ? (change.oldPath ?? change.path) : change.path;
+  const blameKey = blame ? `${blame.rev}\u0000${blamePath}\u0000${fileKey}` : '';
+  const blameOn =
+    !!blame &&
+    change.kind !== 'D' &&
+    !!data &&
+    data.fileKey === fileKey &&
+    !data.binary &&
+    !data.tooLarge &&
+    !data.image;
+  const blameContent = blame?.buffer ? shown.modified : null;
+  const { data: blameRead } = useInvoke(
+    () => getBlame(repoId, blame!.rev, blamePath, blameContent).then((b) => ({ ...b, key: blameKey })),
+    [repoId, blameKey, blameContent],
+    { enabled: blameOn },
+  );
+  const blamed = blameOn && blameRead?.key === blameKey ? blameRead : null;
+  const blameRef = useRef<{ blamed: typeof blamed; deco: monaco.editor.IEditorDecorationsCollection | null }>({
+    blamed: null,
+    deco: null,
+  });
+  blameRef.current.blamed = blamed;
+  const markBlame = () => {
+    const m = mounted.current;
+    const { blamed: b, deco } = blameRef.current;
+    if (!m || !deco) return;
+    const ed = m.editor.getModifiedEditor();
+    const model = ed.getModel();
+    const line = ed.getPosition()?.lineNumber;
+    const commit = b && line ? blameAt(b, line) : undefined;
+    if (!model || !line || line > model.getLineCount() || commit === undefined) {
+      deco.clear();
+      return;
+    }
+    const column = model.getLineMaxColumn(line);
+    deco.set([
+      {
+        range: new monaco.Range(line, column, line, column),
+        options: { showIfCollapsed: true, after: { content: blameText(commit), inlineClassName: 'gg-blame' } },
+      },
+    ]);
+  };
+  markBlameRef.current = markBlame;
+  useEffect(() => {
+    markBlame();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blamed, ready]);
+  // The commit behind the menu's line, when it is another one than the commit shown.
+  const menuCommit = menu?.modified && blamed ? blameAt(blamed, menu.from) : null;
+  const showCommit = menuCommit && onShowCommit && (blame?.buffer || menuCommit.sha !== blame?.rev) ? menuCommit : null;
+
   // Stage / Unstage from the menu: the cuts' new staged version, or the whole file when they
   // take all of it. Made from the texts the menu was opened on, if they are still on screen.
   const stageCuts = (cuts: Cut[], text: Shown | null) => {
@@ -470,9 +550,12 @@ export function DiffView({
             const modified = editor.getModifiedEditor();
             nav.current.decorations = [original.createDecorationsCollection(), modified.createDecorationsCollection()];
             editor.onDidUpdateDiff(onDiffUpdated);
-            modified.onDidChangeCursorPosition((e) =>
-              setDiffPosition(latest.current.path, e.position.lineNumber, e.position.column),
-            );
+            blameRef.current.deco = modified.createDecorationsCollection();
+            modified.onDidChangeCursorPosition((e) => {
+              setDiffPosition(latest.current.path, e.position.lineNumber, e.position.column);
+              markBlameRef.current();
+            });
+            modified.onDidChangeModelContent(() => markBlameRef.current());
             // Scrolling by hand moves "current" to the first change in view.
             modified.onDidScrollChange(() => {
               const n = nav.current;
@@ -537,6 +620,7 @@ export function DiffView({
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyV, () => latest.current.onToggleLayout());
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyW, () => latest.current.onToggleWhitespace());
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyC, () => latest.current.onToggleContext());
+              ed.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyB, () => latest.current.onToggleBlame());
               // ⌥⇧↑/⌥⇧↓ (copy line) is free too.
               ed.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.UpArrow, () =>
                 latest.current.onCommitStep(-1),
@@ -570,6 +654,33 @@ export function DiffView({
                     onSelect={() => stageCuts(menu.change!, menu.text)}
                   >
                     {t(lineStage.unstage ? 'diff.unstageChange' : 'diff.stageChange')}
+                  </MenuItem>
+                )}
+                <MenuDivider />
+              </>
+            )}
+            {(showCommit || onFileHistory) && (
+              <>
+                {showCommit && (
+                  <MenuItem
+                    icon={<HistoryIcon />}
+                    onSelect={() => {
+                      setMenu(null);
+                      onShowCommit?.(showCommit.sha, change.path);
+                    }}
+                  >
+                    {t('diff.showCommit', { sha: showCommit.shortSha })}
+                  </MenuItem>
+                )}
+                {onFileHistory && (
+                  <MenuItem
+                    icon={<HistoryIcon />}
+                    onSelect={() => {
+                      setMenu(null);
+                      onFileHistory(change.path);
+                    }}
+                  >
+                    {t('review.fileHistory')}
                   </MenuItem>
                 )}
                 <MenuDivider />

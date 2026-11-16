@@ -26,7 +26,22 @@ import styles from './parts.module.css';
 import { dirLabel } from './selection';
 import { stashMeta, type ReviewStash } from './stashes';
 
-/** Layout, context and whitespace, remembered in the config; ⌥V / ⌥C / ⌥W outside the diff
+/** A file menu's "File History": the commits that changed it (SPEC §16 "File history"). */
+function FileHistoryItem({ path, open, onDone }: { path: string; open: (path: string) => void; onDone: () => void }) {
+  return (
+    <MenuItem
+      icon="history"
+      onSelect={() => {
+        onDone();
+        open(path);
+      }}
+    >
+      {t('review.fileHistory')}
+    </MenuItem>
+  );
+}
+
+/** Layout, context, whitespace and blame, remembered in the config; ⌥V / ⌥C / ⌥W / ⌥B outside the diff
  * (inside it Monaco handles them). Listed in lib/shortcuts.ts. */
 export function useDiffView() {
   const settings = useData((st) => st.config?.settings);
@@ -40,25 +55,28 @@ export function useDiffView() {
   };
   const toggleLayout = () => saveView({ diffView: layout === 'split' ? 'unified' : 'split' });
   const toggleWs = () => saveView({ ignoreWhitespace: !ignoreWs });
+  const blame = settings?.diffBlame ?? false;
+  const toggleBlame = () => saveView({ diffBlame: !blame });
   // Keeps the number of lines when switching back to changes only.
   const toggleContext = () => saveView({ diffContext: context === 'changes' ? 'whole' : 'changes' });
-  const viewRef = useRef({ toggleLayout, toggleWs, toggleContext });
-  viewRef.current = { toggleLayout, toggleWs, toggleContext };
+  const viewRef = useRef({ toggleLayout, toggleWs, toggleContext, toggleBlame });
+  viewRef.current = { toggleLayout, toggleWs, toggleContext, toggleBlame };
   // ⌥ turns letters into other characters, so the physical key is checked.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!e.altKey || e.metaKey || e.ctrlKey || !['KeyV', 'KeyC', 'KeyW'].includes(e.code)) return;
+      if (!e.altKey || e.metaKey || e.ctrlKey || !['KeyV', 'KeyC', 'KeyW', 'KeyB'].includes(e.code)) return;
       if ((e.target as HTMLElement | null)?.closest('.monaco-editor, input, textarea')) return;
       if (useUi.getState().modalCount > 0) return;
       e.preventDefault();
       if (e.code === 'KeyV') viewRef.current.toggleLayout();
       else if (e.code === 'KeyC') viewRef.current.toggleContext();
+      else if (e.code === 'KeyB') viewRef.current.toggleBlame();
       else viewRef.current.toggleWs();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-  // The same three in the command palette.
+  // The same four in the command palette.
   useCommandSource(() => {
     const group = t('cmd.groupReview');
     return {
@@ -78,10 +96,11 @@ export function useDiffView() {
           run: toggleContext,
         },
         { id: 'view:ws', title: t(ignoreWs ? 'cmd.showWs' : 'review.ignoreWs'), group, keys: '⌥W', run: toggleWs },
+        { id: 'view:blame', title: t(blame ? 'cmd.hideBlame' : 'cmd.showBlame'), group, keys: '⌥B', run: toggleBlame },
       ],
     };
   });
-  return { layout, ignoreWs, context, contextLines, tabSize, saveView, toggleWs, viewRef };
+  return { layout, ignoreWs, blame, context, contextLines, tabSize, saveView, toggleWs, toggleBlame, viewRef };
 }
 
 export type DiffViewSettings = ReturnType<typeof useDiffView>;
@@ -105,7 +124,7 @@ export function FileBar({
   nextFile: string | undefined;
   onStep: (dir: 1 | -1) => void;
 }) {
-  const { layout, ignoreWs, context, contextLines, saveView, toggleWs } = view;
+  const { layout, ignoreWs, blame, context, contextLines, saveView, toggleWs, toggleBlame } = view;
   return (
     <div className={styles.fileBar}>
       <span className={`${styles.filePath} selectable`}>{file.path}</span>
@@ -124,6 +143,8 @@ export function FileBar({
         contextLines={contextLines}
         onContext={(c, lines) => saveView({ diffContext: c, diffContextLines: lines })}
         onToggleWs={toggleWs}
+        blame={blame}
+        onToggleBlame={toggleBlame}
         fixed={showsAsImage(file)}
       />
       <span className={styles.barDivider} />
@@ -157,6 +178,8 @@ function ViewMenu({
   contextLines,
   onContext,
   onToggleWs,
+  blame,
+  onToggleBlame,
   fixed,
 }: {
   /** An image is always shown split: the button says so and opens nothing. */
@@ -168,6 +191,8 @@ function ViewMenu({
   contextLines: number;
   onContext: (context: DiffContext, lines: number) => void;
   onToggleWs: () => void;
+  blame: boolean;
+  onToggleBlame: () => void;
 }) {
   const [at, setAt] = useState<DOMRect | null>(null);
   return (
@@ -228,6 +253,9 @@ function ViewMenu({
             <MenuDivider />
             <MenuItem box={ignoreWs} desc={t('review.wsDesc')} kbd="⌥W" onSelect={onToggleWs}>
               {t('review.ignoreWs')}
+            </MenuItem>
+            <MenuItem box={blame} desc={t('review.blameDesc')} kbd="⌥B" onSelect={onToggleBlame}>
+              {t('review.blame')}
             </MenuItem>
           </Menu>
         </Popover>
@@ -290,6 +318,8 @@ export interface FileActions {
   /** The files it acts on: the picked ones when this row is one of them, else this one. Each
    * with its worktree: a project review's picks can span repositories with the same paths. */
   files: { file: FileChange; folder: string | null }[];
+  /** File History of one file; none, no item. */
+  onHistory?: (path: string) => void;
   onDiscard: () => void;
   /** Stash Changes…: asks for the message. Left out when git cannot stash there (merge
    * conflicts, an operation in progress). */
@@ -305,6 +335,7 @@ export function FileRow({
   picked,
   onClick,
   folder,
+  onHistory,
   stage,
   actions,
   conflict,
@@ -316,6 +347,8 @@ export function FileRow({
   onClick: (e: React.MouseEvent) => void;
   /** The folder the file is opened from by the right-click menu; none, no open items. */
   folder: string | null;
+  /** The menu's File History; none (a stash), no item. */
+  onHistory?: (path: string) => void;
   /** Uncommitted's sections (SPEC §5 "Uncommitted sections"): on hover, Discard and + (stage) or
    * − (unstage) open left of the counts, which stay last. */
   stage?: {
@@ -428,6 +461,7 @@ export function FileRow({
               />
             ) : (
               <>
+                {onHistory && <FileHistoryItem path={f.path} open={onHistory} onDone={() => setMenu(null)} />}
                 <CopyPathItems files={[{ folder, path: f.path }]} onDone={() => setMenu(null)} />
                 {menuFolder && (
                   <>
@@ -459,7 +493,7 @@ function UncommittedItems({
   at: () => { line: number; column: number } | null;
   onDone: () => void;
 }) {
-  const { files, onDiscard, onStash, onStage } = actions;
+  const { files, onHistory, onDiscard, onStash, onStage } = actions;
   const one = files.length === 1;
   const onDisk = files.flatMap((x) =>
     x.folder && x.file.kind !== 'D' ? [{ folder: x.folder, path: x.file.path }] : [],
@@ -513,6 +547,10 @@ function UncommittedItems({
         </>
       )}
       <MenuDivider />
+      {/* A file git has commits of: not one only added here. */}
+      {onHistory && one && files[0].file.kind !== 'A' && files[0].file.kind !== 'U' && (
+        <FileHistoryItem path={files[0].file.oldPath ?? files[0].file.path} open={onHistory} onDone={onDone} />
+      )}
       <CopyPathItems files={files.map((x) => ({ folder: x.folder, path: x.file.path }))} onDone={onDone} />
       {onDisk.length > 0 && (
         <>

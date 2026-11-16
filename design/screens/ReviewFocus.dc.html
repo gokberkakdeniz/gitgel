@@ -1673,7 +1673,8 @@ class Component extends DCLogic {
       { kind: 'segmented', label: 'Lines Around Changes', disabled: context === 'whole', options: [3, 5, 10].map(function (n) { return { label: String(n), on: ctxLines === n, pick: function () { self.setState({ ctxLines: n, context: 'changes' }); } }; }) },
       { label: 'Whole File', check: context === 'whole', kbd: '⌥C', onSelect: function () { self.setState({ context: 'whole', menu: null }); } },
       { kind: 'sep' },
-      { label: 'Ignore Whitespace', box: ignoreWs, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W', onSelect: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); } }
+      { label: 'Ignore Whitespace', box: ignoreWs, desc: 'Hide lines where only indentation or trailing spaces changed', kbd: '⌥W', onSelect: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); } },
+      { label: 'Blame', box: !!st.blame, desc: 'Show who last changed the line under the cursor', kbd: '⌥B', onSelect: function () { self.setState({ blame: !st.blame }); } }
     ];
 
     // Menus
@@ -1727,10 +1728,13 @@ class Component extends DCLogic {
         menuLabel = 'File Options';
         if (M.row === 'wip') menuItems = [{ label: 'Discard Changes…', icon: 'trash', danger: true, onSelect: function () { self.setState({ menu: null, modal: { kind: 'discard', e: M.e, paths: [M.path], part: M.part } }); } },
           { label: 'Stash Changes…', icon: 'package', onSelect: function () { self.setState({ menu: null, modal: { kind: 'stash', e: M.e, paths: [M.path], message: '' } }); } }, { kind: 'sep' },
+          { label: 'File History', icon: 'history', onSelect: close },
           { label: 'Copy File Path', icon: 'copy', onSelect: close }, { label: 'Copy Relative File Path', icon: 'copy', onSelect: close }, { kind: 'sep' },
           { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close }];
         else {
           menuItems = [{ label: 'Copy File Path', icon: 'copy', onSelect: close }, { label: 'Copy Relative File Path', icon: 'copy', onSelect: close }];
+          // File History: the commits that changed the file (not in a stash).
+          if (String(M.row).indexOf('stash') !== 0) menuItems.unshift({ label: 'File History', icon: 'history', onSelect: close });
           if (!M.gone) menuItems.push({ kind: 'sep' }, { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close });
         }
       } else if (M.kind === 'diff') {
@@ -1740,6 +1744,11 @@ class Component extends DCLogic {
         if (M.stage && M.lines) menuItems.push({ label: unst ? 'Unstage Selected Lines' : 'Stage Selected Lines', icon: sIcon, onSelect: close });
         if (M.stage && M.changed) menuItems.push({ label: unst ? 'Unstage Change' : 'Stage Change', icon: sIcon, onSelect: close });
         if (menuItems.length) menuItems.push({ kind: 'sep' });
+        // Blame on: the commit that last changed the clicked line; then the file's history.
+        if (String(selRow).indexOf('stash') !== 0) {
+          if (st.blame) menuItems.push({ label: 'Show Commit a41c9e2', icon: 'history', onSelect: close });
+          menuItems.push({ label: 'File History', icon: 'history', onSelect: close }, { kind: 'sep' });
+        }
         menuItems.push({ label: 'Copy Relative Reference', icon: 'copy', onSelect: close }, { label: 'Copy Absolute Reference', icon: 'copy', onSelect: close });
         if (selFile && selFile.k !== 'D') menuItems.push({ kind: 'sep' }, { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close });
       } else if (M.kind === 'stash') {

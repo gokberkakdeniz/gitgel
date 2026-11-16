@@ -25,8 +25,6 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   left; where the marks live and when a changed file loses its mark are open.
 - **Notes on lines** (2026-11-14). A local note on a diff line, and copying all of a review's
   notes at once (with their `@path:line` references) to hand to an agent.
-- **Blame and file history** (2026-11-14). Neither exists: who last changed a line, and the
-  commits of one file.
 - **Comparing two refs** (2026-11-14). Two branches or two commits against each other, not only
   a branch against its base.
 - **Conflicts** (2026-11-14). In a conflicted file: take ours, theirs or both, and opening it in

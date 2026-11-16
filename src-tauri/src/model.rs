@@ -69,6 +69,8 @@ pub struct Settings {
     /// Review layout; configs from before it load as `split`.
     pub diff_view: DiffLayout,
     pub ignore_whitespace: bool,
+    /// Review: the line under the cursor names the commit that last changed it.
+    pub diff_blame: bool,
     /// Review: fold unchanged lines or show the whole file.
     pub diff_context: DiffContext,
     /// Lines kept around each change while folding: 3, 5 or 10.
@@ -249,6 +251,7 @@ impl Default for Settings {
             active_days: 14,
             diff_view: DiffLayout::Split,
             ignore_whitespace: false,
+            diff_blame: false,
             diff_context: DiffContext::Changes,
             diff_context_lines: 3,
             zoom: 100,
@@ -1163,6 +1166,37 @@ pub struct HistoryCommit {
     pub in_base: bool,
     /// Tags pointing at it, sorted.
     pub tags: Vec<String>,
+}
+
+/// Who last changed each line of a file (§5 "Blame").
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Blame {
+    /// The commits the hunks point at.
+    pub commits: Vec<BlameCommit>,
+    /// Runs of lines, top to bottom.
+    pub hunks: Vec<BlameHunk>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BlameCommit {
+    pub sha: String,
+    pub short_sha: String,
+    pub subject: String,
+    pub author: String,
+    /// Committer time, unix seconds.
+    pub committed_at: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BlameHunk {
+    /// First line, from 1.
+    pub start: u32,
+    pub lines: u32,
+    /// Index into `commits`; `None`: lines not committed yet.
+    pub commit: Option<u32>,
 }
 
 /// A branch's history, newest first (§16).

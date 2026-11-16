@@ -1,6 +1,7 @@
 //! Merge-base, ahead count, revwalk, ancestry, stacked candidates.
 
 use std::collections::{HashMap, HashSet};
+use std::path::Path;
 
 use git2::{BranchType, ErrorCode, Oid, Repository, Sort};
 
@@ -387,12 +388,14 @@ pub fn base_split(repo: &Repository, tip: &str, base: &str) -> Result<BaseSplit,
 
 /// Commits reachable from `tip`, newest first in `git log`'s order, at most `limit`. With
 /// `terms` (lower-case words) only commits whose text or changed paths hold every term.
-/// `ahead`: the commits not in the base; the others are `in_base`.
+/// `ahead`: the commits not in the base; the others are `in_base`. With `path` only the commits
+/// that changed that file (or folder), followed through renames: a file's history.
 pub fn walk(
     repo: &Repository,
     tip: &str,
     ahead: Option<&HashSet<Oid>>,
     terms: &[String],
+    path: Option<&str>,
     limit: usize,
 ) -> Result<Walked, AppError> {
     // Unsorted: libgit2 then queues each commit's parents by committer date as it goes, which is
@@ -402,9 +405,13 @@ pub fn walk(
     walk.push(Oid::from_str(tip)?)?;
     let mut tags = refs::tags_by_commit(repo)?;
     let mut commits = Vec::new();
+    let mut tracked: Vec<String> = path.iter().map(|p| p.to_string()).collect();
     for oid in walk {
         let oid = oid?;
         let commit = repo.find_commit(oid)?;
+        if path.is_some() && !touches(repo, &commit, &mut tracked)? {
+            continue;
+        }
         if !terms.is_empty() && !matches_terms(repo, &commit, terms)? {
             continue;
         }
@@ -422,6 +429,47 @@ pub fn walk(
         commits,
         more: false,
     })
+}
+
+/// Whether `commit` changed one of the `tracked` paths: its entry there differs from every
+/// parent's (as `git log -- <path>`, a merge that took one side as it is does not count). A
+/// path the commit added by renaming another file brings the old name into `tracked`, so the
+/// walk goes on under it (`--follow`).
+fn touches(
+    repo: &Repository,
+    commit: &git2::Commit,
+    tracked: &mut Vec<String>,
+) -> Result<bool, AppError> {
+    let entry = |tree: &git2::Tree, path: &str| tree.get_path(Path::new(path)).ok().map(|e| e.id());
+    let tree = commit.tree()?;
+    let parents = commit
+        .parents()
+        .map(|p| p.tree())
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut hit = false;
+    let mut added = Vec::new();
+    for path in tracked.iter() {
+        let mine = entry(&tree, path);
+        let changed = match parents.as_slice() {
+            [] => mine.is_some(),
+            parents => parents.iter().all(|p| entry(p, path) != mine),
+        };
+        if !changed {
+            continue;
+        }
+        hit = true;
+        if mine.is_some() && parents.len() == 1 && entry(&parents[0], path).is_none() {
+            added.push(path.clone());
+        }
+    }
+    for path in added {
+        if let Some(old) = diff::renamed_from(repo, commit, &path)? {
+            if !tracked.contains(&old) {
+                tracked.push(old);
+            }
+        }
+    }
+    Ok(hit)
 }
 
 fn history_commit(commit: &git2::Commit, in_base: bool, tags: Vec<String>) -> HistoryCommit {
@@ -694,7 +742,7 @@ mod tests {
         let tip = t.commit_on("main", &[("c", Some(b"c"))], "third", 1);
         let tip = tip.to_string();
 
-        let all = walk(&t.repo, &tip, None, &[], 200).unwrap();
+        let all = walk(&t.repo, &tip, None, &[], None, 200).unwrap();
         assert_eq!(subjects(&all), ["third", "second", "init"]);
         assert!(!all.more);
         assert_eq!(all.commits[1].body, "with a body");
@@ -702,7 +750,7 @@ mod tests {
         assert_eq!(all.commits[2].parents, 0);
         assert_eq!(all.commits[2].sha, root.to_string());
 
-        let page = walk(&t.repo, &tip, None, &[], 2).unwrap();
+        let page = walk(&t.repo, &tip, None, &[], None, 2).unwrap();
         assert_eq!(subjects(&page), ["third", "second"]);
         assert!(page.more);
     }
@@ -718,7 +766,7 @@ mod tests {
         // A tag on a tree is no commit's.
         t.tag("tree", t.repo.find_commit(tip).unwrap().tree_id());
 
-        let w = walk(&t.repo, &tip.to_string(), None, &[], 200).unwrap();
+        let w = walk(&t.repo, &tip.to_string(), None, &[], None, 200).unwrap();
         // Their order (newest first) is `refs::tags_by_commit`'s test.
         let tags: Vec<_> = w
             .commits
@@ -745,7 +793,7 @@ mod tests {
         let split = base_split(&t.repo, &tip, &main).unwrap();
         assert_eq!(split.ahead.len(), 1);
         assert_eq!(split.merge_base, Some(base.to_string()));
-        let w = walk(&t.repo, &tip, Some(&split.ahead), &[], 200).unwrap();
+        let w = walk(&t.repo, &tip, Some(&split.ahead), &[], None, 200).unwrap();
         let marks: Vec<_> = w
             .commits
             .iter()
@@ -774,7 +822,7 @@ mod tests {
         let tip = t.repo.revparse_single("main").unwrap().id().to_string();
         let find = |q: &str| {
             let terms: Vec<String> = search_words(q).split(' ').map(str::to_string).collect();
-            let w = walk(&t.repo, &tip, None, &terms, 200).unwrap();
+            let w = walk(&t.repo, &tip, None, &terms, None, 200).unwrap();
             subjects(&w)
                 .iter()
                 .map(|s| s.to_string())
@@ -786,7 +834,7 @@ mod tests {
         assert_eq!(find(&fix.to_string()[..10]), ["Fix token-refresh"]);
         assert_eq!(find("test@example").len(), 4);
         assert!(find("nothing-like-this").is_empty());
-        let merge = walk(&t.repo, &tip, None, &[], 1).unwrap();
+        let merge = walk(&t.repo, &tip, None, &[], None, 1).unwrap();
         assert_eq!(merge.commits[0].parents, 2);
     }
 
@@ -797,5 +845,35 @@ mod tests {
             ("Line one line two".to_string(), "Body\n\nMore".to_string())
         );
         assert_eq!(split_message("Only\n"), ("Only".to_string(), String::new()));
+    }
+
+    #[test]
+    fn history_of_a_file_follows_renames() {
+        let t = TestRepo::new();
+        let text = b"one\ntwo\nthree\nfour\nfive\n";
+        t.commit_on("main", &[("old.txt", Some(text))], "add old", 6);
+        t.commit_on("main", &[("other", Some(b"o"))], "other file", 5);
+        t.commit_on(
+            "main",
+            &[("old.txt", None), ("dir/new.txt", Some(text))],
+            "rename",
+            4,
+        );
+        t.commit_on("main", &[("dir/new.txt", Some(b"changed\n"))], "edit", 3);
+        // A side branch that leaves the file alone: its merge does not count.
+        let side = t.commit_on("main", &[("x", Some(b"x"))], "x", 2);
+        t.branch_from("side", side);
+        t.commit_on("side", &[("s", Some(b"s"))], "side work", 2);
+        t.commit_on("main", &[("y", Some(b"y"))], "y", 1);
+        let tip = t.merge_on("main", "side", &[("s", Some(b"s"))], "merge side");
+        let tip = tip.to_string();
+
+        let w = walk(&t.repo, &tip, None, &[], Some("dir/new.txt"), 200).unwrap();
+        assert_eq!(subjects(&w), ["edit", "rename", "add old"]);
+        // A folder: the commits that changed anything under it.
+        let w = walk(&t.repo, &tip, None, &[], Some("dir"), 200).unwrap();
+        assert_eq!(subjects(&w), ["edit", "rename"]);
+        let w = walk(&t.repo, &tip, None, &[], Some("missing"), 200).unwrap();
+        assert!(w.commits.is_empty());
     }
 }

@@ -393,6 +393,13 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     const timer = window.setTimeout(() => setSearch(query.trim()), 200);
     return () => window.clearTimeout(timer);
   }, [query]);
+  // A file's history (SPEC §16 "File history"): the search `path:<file>`, at once.
+  const searchNow = (text: string) => {
+    setQuery(text);
+    setSearch(text);
+  };
+  const fileHistory = (file: string) => searchNow(`path:${file}`);
+  const historyOf = search.startsWith('path:') ? search.slice(5).trim() : null;
   const [limit, setLimit] = useState(PAGE);
   useEffect(() => setLimit(PAGE), [search]);
   const { data, error, loading } = useInvoke(
@@ -815,8 +822,29 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // it, else the same file in the other section (it moved there), else the first.
   const [path, setPath] = useState<string | null>(null);
   const moved = path && wipShown ? fileIds.indexOf(`${path.startsWith('s:') ? 'u' : 's'}:${path.slice(2)}`) : -1;
+  // In a file's history each commit opens on that file (under its old name before a rename).
+  const wanted = historyOf
+    ? [
+        files.findIndex((f) => f.path === historyOf || f.oldPath === historyOf),
+        files.findIndex((f) => basename(f.path) === basename(historyOf)),
+      ].find((i) => i >= 0)
+    : undefined;
   const fileIndex =
-    path && fileIds.includes(path) ? fileIds.indexOf(path) : moved >= 0 ? moved : files.length > 0 ? 0 : -1;
+    path && fileIds.includes(path)
+      ? fileIds.indexOf(path)
+      : moved >= 0
+        ? moved
+        : wanted !== undefined
+          ? wanted
+          : files.length > 0
+            ? 0
+            : -1;
+  // The commit a blamed line names (SPEC §5 "Blame"): searched by its SHA, on that file.
+  const showCommit = (sha: string, file: string) => {
+    searchNow(sha);
+    setPath(file);
+    setLand('first');
+  };
   const file = fileIndex >= 0 ? files[fileIndex] : undefined;
   const fileId = fileIndex >= 0 ? fileIds[fileIndex] : null;
   const wipRow = wipShown && fileIndex >= 0 ? wipRows[fileIndex] : undefined;
@@ -846,6 +874,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     const off = committing || staging;
     return {
       files: shown.map((x) => ({ file: x.file, folder })),
+      onHistory: fileHistory,
       onDiscard: () => discard(rows),
       onStash: canStash ? () => setAskStash({ files: shown.map((x) => x.file) }) : undefined,
       onStage: off
@@ -1257,6 +1286,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       rows={wipShown ? wipRows : files.map((f) => ({ id: f.path, file: f }))}
       file={fileId ?? undefined}
       folder={folder}
+      onHistory={fileHistory}
       stage={
         wipShown && index
           ? {
@@ -1285,6 +1315,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       rows={wipRows}
       file={wipShown ? (fileId ?? undefined) : undefined}
       folder={folder}
+      onHistory={fileHistory}
       stage={
         index
           ? {
@@ -2143,6 +2174,20 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 onCommitStep={(dir) => stepRowRef.current(dir)}
                 onFocusFilter={focusSearch}
                 lineStage={lineStage}
+                blame={
+                  !view.blame || stash
+                    ? null
+                    : wipShown || withWip
+                      ? entry?.headSha
+                        ? { rev: entry.headSha, buffer: true }
+                        : null
+                      : shownCommit
+                        ? { rev: shownCommit.sha, buffer: false }
+                        : null
+                }
+                onToggleBlame={() => viewRef.current.toggleBlame()}
+                onFileHistory={stash ? null : fileHistory}
+                onShowCommit={stash ? null : showCommit}
               />
             </>
           )}
@@ -2484,6 +2529,7 @@ function FileList({
   rows,
   file,
   folder,
+  onHistory,
   stage,
   onFile,
   picks,
@@ -2495,6 +2541,7 @@ function FileList({
   file: string | undefined;
   /** Where the files' right-click menu opens them from. */
   folder: string | null;
+  onHistory?: (path: string) => void;
   /** Uncommitted's sections (Hi5), when it is picked: Staged and Unstaged, + / − per row. */
   stage?: {
     disabled: boolean;
@@ -2556,6 +2603,7 @@ function FileList({
       key={r.id}
       file={r.file}
       folder={folder}
+      onHistory={onHistory}
       on={r.id === file}
       picked={picks?.isPicked(r.id)}
       onClick={(e) => (picks ? picks.click(r.id, e, () => onFile(r.id)) : onFile(r.id))}

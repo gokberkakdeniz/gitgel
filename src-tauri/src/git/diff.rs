@@ -153,6 +153,34 @@ pub fn commit_paths(repo: &Repository, commit: &git2::Commit) -> Result<Vec<Stri
     Ok(changed_paths(&diff))
 }
 
+/// The path the file at `path` had before `commit` renamed it (against its first parent), if
+/// that is how it came to be there.
+pub fn renamed_from(
+    repo: &Repository,
+    commit: &git2::Commit,
+    path: &str,
+) -> Result<Option<String>, AppError> {
+    let Ok(parent) = commit.parent(0) else {
+        return Ok(None);
+    };
+    let mut diff = repo.diff_tree_to_tree(
+        Some(&parent.tree()?),
+        Some(&commit.tree()?),
+        Some(&mut diff_options(false)),
+    )?;
+    find_renames(&mut diff)?;
+    Ok(diff
+        .deltas()
+        .find(|d| {
+            d.status() == Delta::Renamed && d.new_file().path() == Some(std::path::Path::new(path))
+        })
+        .and_then(|d| {
+            d.old_file()
+                .path()
+                .map(|p| p.to_string_lossy().into_owned())
+        }))
+}
+
 /// Number of changed files, without generating patches.
 pub fn delta_count(diff: &Diff) -> usize {
     diff.deltas()

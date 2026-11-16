@@ -1,6 +1,7 @@
 //! The only place git2 is used. Nothing here writes to a repository; `clippy.toml` bans the
 //! write APIs (only `testutil` may use them, inside its own temp folder).
 
+pub mod blame;
 pub mod diff;
 pub mod history;
 pub mod inspect;

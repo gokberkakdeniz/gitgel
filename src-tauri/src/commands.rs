@@ -6,11 +6,11 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
-    BaseOptions, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config, EditorOption,
-    EntryRef, FileChange, FilePair, FolderCheck, HistoryPage, IndexChanges, NewBranchCheckout,
-    NewBranchProblem, NewTagProblem, OpenApp, ProjectConfig, ProjectView, RangeChanges, RemoteInfo,
-    ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun, Settings, StashChanges,
-    TerminalOption,
+    BaseOptions, Blame, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config,
+    EditorOption, EntryRef, FileChange, FilePair, FolderCheck, HistoryPage, IndexChanges,
+    NewBranchCheckout, NewBranchProblem, NewTagProblem, OpenApp, ProjectConfig, ProjectView,
+    RangeChanges, RemoteInfo, ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun,
+    Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{
@@ -187,6 +187,21 @@ pub async fn get_history(
 ) -> Result<HistoryPage, AppError> {
     blocking(&state, move |state| {
         history::get_history(state, &repo_id, &rev, base.as_deref(), &query, limit)
+    })
+    .await
+}
+
+/// Who last changed each line of a file (§5 "Blame").
+#[tauri::command]
+pub async fn get_blame(
+    state: State<'_, AppState>,
+    repo_id: String,
+    rev: String,
+    path: String,
+    content: Option<String>,
+) -> Result<Blame, AppError> {
+    blocking(&state, move |state| {
+        history::get_blame(state, &repo_id, &rev, &path, content.as_deref())
     })
     .await
 }

@@ -66,6 +66,7 @@ const config: Config = {
     diffView: 'split',
     ignoreWhitespace: false,
     diffContext: 'changes',
+    diffBlame: false,
     diffContextLines: 3,
     zoom: 100,
     language: 'system',

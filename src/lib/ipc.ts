@@ -2,6 +2,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
   AiStatus,
+  Blame,
   BaseOptions,
   BranchLoss,
   CheckoutProblem,
@@ -72,6 +73,10 @@ export const getStashChanges = (repoId: string, sha: string) =>
 /** Up to `limit` commits of `rev`, newest first (SPEC §16); `base` splits off the base line. */
 export const getHistory = (repoId: string, rev: string, base: string | null, query: string, limit: number) =>
   invoke<HistoryPage>('get_history', { repoId, rev, base, query, limit });
+
+/** Who last changed each line of `path` at `rev`; with `content`, of that text against `rev`. */
+export const getBlame = (repoId: string, rev: string, path: string, content: string | null) =>
+  invoke<Blame>('get_blame', { repoId, rev, path, content });
 
 export const readFilePair = (repoId: string, worktreePath: string | null, change: FileChange) =>
   invoke<FilePair>('read_file_pair', { repoId, worktreePath, change });

@@ -118,6 +118,7 @@ pub fn run() {
             commands::get_stash_changes,
             commands::get_range_changes,
             commands::get_history,
+            commands::get_blame,
             commands::read_file_pair,
             commands::get_remote_url,
             commands::create_project,

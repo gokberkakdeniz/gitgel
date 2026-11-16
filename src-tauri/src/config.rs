@@ -183,6 +183,7 @@ mod tests {
         value["settings"]["editor"] = json!("other");
         value["settings"]["editorCommand"] = json!("idea %");
         value["settings"]["theme"] = json!("github");
+        value["settings"]["diffBlame"] = json!(true);
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(
             config.repos,

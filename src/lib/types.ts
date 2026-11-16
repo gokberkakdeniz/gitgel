@@ -43,6 +43,7 @@ export interface Settings {
   activeDays: number;
   diffView: DiffLayout; // review layout, remembered
   ignoreWhitespace: boolean;
+  diffBlame: boolean; // the cursor line names the commit that last changed it
   diffContext: DiffContext; // changes only (folded) or the whole file
   diffContextLines: number; // lines kept around each change: 3, 5 or 10
   zoom: number; // View › Font Size, percent
@@ -406,6 +407,23 @@ export interface HistoryCommit {
   parents: number; // > 1: a merge commit
   inBase: boolean; // reachable from the base asked for (below the base line)
   tags: string[]; // tags pointing at it, sorted
+}
+/** Who last changed each line of a file (SPEC §5 "Blame"). */
+export interface Blame {
+  commits: BlameCommit[];
+  hunks: BlameHunk[]; // runs of lines, top to bottom
+}
+export interface BlameCommit {
+  sha: string;
+  shortSha: string;
+  subject: string;
+  author: string;
+  committedAt: number; // committer time, unix seconds
+}
+export interface BlameHunk {
+  start: number; // first line, from 1
+  lines: number;
+  commit: number | null; // index into `commits`; null: not committed yet
 }
 export interface HistoryPage {
   rev: string;
