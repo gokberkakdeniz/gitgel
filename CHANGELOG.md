@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.7 — 2026-11-16
+
+### New
+- File History in Review's file and diff menus.
+- Blame in Review's diff view menu (`⌥B`), with Show Commit.
+
 ## 0.2.6 — 2026-11-15
 
 ### Changed
