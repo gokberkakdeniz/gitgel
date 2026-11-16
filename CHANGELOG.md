@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.8 — 2026-11-17
+
+### Changed
+- Stashes: Apply, Pop and Drop are in the page header.
+- Apply and Pop ask for a worktree in a dialog.
+
+### New
+- Pick several stashes to apply, pop or drop together.
+
 ## 0.2.7 — 2026-11-16
 
 ### New
