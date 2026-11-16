@@ -33,7 +33,9 @@ import {
   upstreamTitle,
   type SyncTarget,
 } from '../../sync/sync';
+import { StashActions } from '../../stash/StashActions';
 import { StashBar } from '../../stash/StashBar';
+import { StashSelection } from '../../stash/StashSelection';
 import { StashDialog, stashPush } from '../../stash/StashDialog';
 import { PageMenu } from '../../components/PageMenu';
 import { rescanAll } from '../../lib/events';
@@ -229,17 +231,18 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
   const stash = stashes.find((x) => x.sha === picked) ?? stashes[0];
   const [data, setData] = useState<Record<string, StashChanges>>({});
   const requested = useRef(new Set<string>());
-  useEffect(() => {
-    if (!stash || requested.current.has(stash.sha)) return;
-    requested.current.add(stash.sha);
-    getStashChanges(stash.repoId, stash.sha).then(
+  const load = (st: ReviewStash | undefined) => {
+    if (!st || requested.current.has(st.sha)) return;
+    requested.current.add(st.sha);
+    getStashChanges(st.repoId, st.sha).then(
       (c) => setData((d) => ({ ...d, [c.sha]: c })),
       (e) => {
         console.error('stash changes failed', e);
-        requested.current.delete(stash.sha);
+        requested.current.delete(st.sha);
       },
     );
-  }, [stash]);
+  };
+  useEffect(() => load(stash), [stash]);
   const changes = stash ? data[stash.sha] : undefined;
   const base = changes?.base ?? stash?.base ?? '';
   const files = changes?.files ?? [];
@@ -271,9 +274,36 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
     setPath(null);
     setLand('first');
   };
+  // Several stashes (a row's checkbox, ⌘ / ⇧-click, ⌘A): the pane then acts on them together.
+  // Listed in lib/shortcuts.ts.
+  const order = useMemo(() => stashes.map((s) => s.sha), [stashes]);
+  const picks = usePicks(order, stash?.sha ?? null, repoId);
+  const allRef = useRef(picks.all);
+  allRef.current = picks.all;
+  const several = stashes.length > 1;
+  const pickedStashes = stashes.filter((s) => picks.picked.includes(s.sha));
+  const picking = pickedStashes.length > 0;
+  // The selection pane lists the picked stashes' files.
+  const pickedKey = pickedStashes.map((s) => s.sha).join(' ');
+  useEffect(() => pickedStashes.forEach(load), [pickedKey]);
+  useEffect(() => {
+    if (!several) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.metaKey || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'a') return;
+      if (isTextField(e.target) || useUi.getState().modalCount > 0) return;
+      // In the diff ⌘A selects its text.
+      if ((e.target as HTMLElement | null)?.closest?.('.monaco-editor')) return;
+      if (document.querySelector('[data-popover]')) return;
+      e.preventDefault();
+      allRef.current();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [several]);
   return (
     <div className={parts.screen}>
       <ReviewHeader entry={undefined} target={{ kind: 'stashes', repoId }} backLabel={backLabel} stashes={stashes}>
+        {stash && <StashActions stashes={picking ? pickedStashes : [stash]} />}
         <PageMenu>
           {(close) => (
             <MenuItem
@@ -293,13 +323,13 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
           <div className={styles.stashStack}>
             {stashes.length > 0 && (
               <StashSection
-                heading={t('review.stashInRepo', { repo: stashes[0].repoName })}
                 stashes={stashes}
-                picked={stash?.sha}
+                picked={picking ? undefined : stash?.sha}
                 changes={changes}
                 file={file?.path}
                 divider={false}
                 withRepo={false}
+                picks={picks}
                 onPick={pick}
                 onFile={(p) => {
                   setPath(p);
@@ -320,6 +350,20 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
         <section className={parts.main}>
           {!stash ? (
             <div className={parts.empty}>{t('review.noStashes')}</div>
+          ) : picking ? (
+            <StashSelection
+              stashes={pickedStashes}
+              changes={data}
+              folderOf={(id) => repos?.find((r) => r.id === id)?.path ?? null}
+              onFile={(sha, p) => {
+                picks.clear();
+                setPicked(sha);
+                setPath(p);
+                setLand('first');
+              }}
+              onAll={pickedStashes.length < stashes.length ? picks.all : undefined}
+              onClear={picks.clear}
+            />
           ) : (
             <>
               <StashBar stash={stash} base={base} />
@@ -796,6 +840,27 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   }, [stash]);
   const stashChanges = stash ? stashData[stash.sha] : undefined;
   const stashBase = stashChanges?.base ?? stash?.base ?? '';
+  // Several stashes (a row's checkbox, ⌘ / ⇧-click; §15): the pane lists them with their files
+  // and the header's Apply | Pop | Drop act on them. Another row picked drops the picks.
+  const stashOrder = useMemo(() => stashes.map((s) => s.sha), [stashes]);
+  const stashPicks = usePicks(stashOrder, stash?.sha ?? null, `${repoId}\u0000${rev}\u0000${current}\u0000${isMulti}`);
+  const pickedStashes = stashes.filter((s) => stashPicks.picked.includes(s.sha));
+  const stashPicking = pickedStashes.length > 0;
+  const pickedStashKey = pickedStashes.map((s) => s.sha).join(' ');
+  useEffect(() => {
+    for (const st of pickedStashes) {
+      if (stashRequested.current.has(st.sha)) continue;
+      stashRequested.current.add(st.sha);
+      getStashChanges(st.repoId, st.sha).then(
+        (c) => setStashData((d) => ({ ...d, [c.sha]: c })),
+        (e) => {
+          console.error('stash changes failed', e);
+          stashRequested.current.delete(st.sha);
+        },
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickedStashKey]);
 
   // The single row shown is Uncommitted.
   const wipShown = current === WIP && !isMulti;
@@ -1388,7 +1453,15 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           }
         }}
       />
-      <SyncButtons target={syncTarget} fetchedAt={data?.fetchedAt ?? null} repos={project ? projectRepos : undefined} />
+      {stashPicking || stash ? (
+        <StashActions stashes={stashPicking ? pickedStashes : stash ? [stash] : []} />
+      ) : (
+        <SyncButtons
+          target={syncTarget}
+          fetchedAt={data?.fetchedAt ?? null}
+          repos={project ? projectRepos : undefined}
+        />
+      )}
       <PageMenu>
         {(close, anchor) => {
           // The open entry's part: Branch in a project review, the whole menu for a branch.
@@ -2057,7 +2130,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
               <StashSection
                 heading={t(project ? 'review.stashOfProject' : 'review.stashOfBranch')}
                 stashes={stashes}
-                picked={stash?.sha}
+                picked={stashPicking ? undefined : stash?.sha}
+                picks={stashPicks}
                 changes={!columns && filesOpen ? stashChanges : undefined}
                 file={file?.path}
                 divider={false}
@@ -2110,7 +2184,21 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
         )}
 
         <section className={parts.main}>
-          {error ? (
+          {stashPicking ? (
+            <StashSelection
+              stashes={pickedStashes}
+              changes={stashData}
+              folderOf={(id) => repos?.find((r) => r.id === id)?.path ?? null}
+              withRepo={!!project}
+              onFile={(sha, p) => {
+                stashPicks.clear();
+                pick(stashRow(sha));
+                setPath(p);
+              }}
+              onAll={pickedStashes.length < stashes.length ? stashPicks.all : undefined}
+              onClear={stashPicks.clear}
+            />
+          ) : error ? (
             <div className={parts.empty}>{error.message}</div>
           ) : isMulti ? (
             <RangeHeader
@@ -2127,7 +2215,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           ) : commit ? (
             <CommitHeader repoId={repoId} commit={commit} changes={columns ? undefined : commitChanges} />
           ) : null}
-          {!error && file && (wipShown || commitChanges || stashChanges || spanned) && (
+          {!stashPicking && !error && file && (wipShown || commitChanges || stashChanges || spanned) && (
             <>
               <FileBar
                 file={file}
@@ -2191,10 +2279,12 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
               />
             </>
           )}
-          {!error && (commitChanges || stashChanges || spanned) && files.length === 0 && !wipShown && (
+          {!stashPicking && !error && (commitChanges || stashChanges || spanned) && files.length === 0 && !wipShown && (
             <div className={parts.empty}>{t('history.noChanges')}</div>
           )}
-          {!error && isMulti && !consecutive && <div className={parts.empty}>{t('history.notConsecutive')}</div>}
+          {!stashPicking && !error && isMulti && !consecutive && (
+            <div className={parts.empty}>{t('history.notConsecutive')}</div>
+          )}
         </section>
       </div>
     </div>

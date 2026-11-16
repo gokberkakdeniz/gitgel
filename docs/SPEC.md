@@ -787,7 +787,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 Review and History are one screen (user decision 2026-10-18): one branch
 is open at a time, with its whole log, and the screen is reached for a project, a branch or a
 repository's stash stack. Canvas page "Review": R1 the prototype (`ReviewFocus.dc.html`, Play
-works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`,
+works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `commitRows`, `branches`,
 `baseCommits`, `hooks`, `stageGit`, `theme`), R2–R6 its states (`ReviewBranch`, `ReviewBase`,
 `ReviewRebase`, `ReviewConflicts`, `ReviewStashes.dc.html`, each mounting the prototype).
 
@@ -802,8 +802,8 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
     ` · last known state`. `rev` is a local branch, a remote-tracking branch or a SHA, as
     History's was.
   - **Stashes** (a Branches band's stash list): title "Stashes", subtitle
-    `<repo> · N stashes`; no branch is open: the list column is the stash section, no search, no
-    Fetch / Pull / Push.
+    `<repo> · N stashes`; no branch is open: the list column is the stash section, no search, and
+    Apply | Pop | Drop (§15 "Stash pane") where Fetch / Pull / Push are.
 - **Layout** as before: Review leaves the sidebar as it is; beside it (`ReviewSidebar.dc.html`,
   L2) the header drops the traffic lights, show-sidebar, Back and Forward and starts at 28px.
 - **Header** right side, gap 10 (the old History header's; `PageHeader` page `review`):
@@ -812,7 +812,8 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`
     branch's log (§16 "Reading", debounced 200 ms); Esc clears it. Not in the stash scope.
   - Fetch | Pull | Push (§15 "Sync") of the open branch (only when it is a local branch with a
     remote); in project scope Fetch fetches every repository of the project. Not in the stash
-    scope. A push count makes Push primary.
+    scope. A push count makes Push primary. While a stash is shown or picked, the stash actions
+    (Apply | Pop | Drop, §15 "Stash pane") take the group's place.
   - The page menu (⋮, `PageMenu`):
     - Project scope, in two labelled parts (`MenuLabel`): **Project**: "Refresh" (full rescan),
       "Edit Project" (`pencil`; the project page, going back to it when Review came from
@@ -1424,6 +1425,7 @@ either end or next to another goes too), unless this file says that item is show
 | | Changes only / Whole file | ⌥C | |
 | | Switch branch | ⇧⌘B | Review of a branch (opens Switch Branch) |
 | | Pick commits | ⌘-click / ⇧-click, ⇧↑ / ⇧↓ | Review's list (Uncommitted too; Esc goes back to one) |
+| | Pick stashes | ⌘-click / ⇧-click, ⌘A | the stash review's list (also each row's checkbox; Esc clears; §15) |
 | Lists and dialogs | Move | ↑ / ↓ | |
 | | Mark row | Space | Add palette |
 | | Run script | ⌘↵ | script run dialog |
@@ -1921,8 +1923,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_script_run` | `runId` | `ScriptRun` with its buffered output and `bufferedEnd` |
 | `resize_script` | `runId, cols, rows` | `null` (the run's pty) |
 | `stash_push` | `entries: StashPush[]` (an `EntryRef` with `paths: string[] \| null`, `untracked`), `message: string` | `ScriptRun` (one git action for all entries, §15) |
-| `stash_apply` | `repoId, index, sha, worktreePath, pop: boolean` | `ScriptRun` |
-| `stash_drop` | `repoId, index, sha` | `ScriptRun` |
+| `stash_apply` | `repoId, stashes: { index, sha }[], worktreePath, pop: boolean` | `ScriptRun` (one git action for all) |
+| `stash_drop` | `repoId, stashes: { index, sha }[]` | `ScriptRun` (one git action for all, §15 "Drop") |
 | `git_checkout_commit` | `repoId, sha` (full), `target: CheckoutTarget` | `ScriptRun` (§16 "Checkout Commit") |
 | `check_checkout_commit` | `repoId, sha, target: CheckoutTarget` | `CheckoutProblem \| null` |
 | `git_commit` | `entry: EntryRef`, `files: CommitFiles` (`summary`, `description`, `noVerify`, `amend`: the newest commit's SHA or null) | `ScriptRun` (§15 "Commit"; commits what is staged) |
@@ -2217,7 +2219,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
-| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (branch head above the scrolling list, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set |
+| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `picked` (stash scope: every stash picked, the selection pane), `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (branch head above the scrolling list, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Command palette | `CommandPalette.dc.html` | dialog 26–68 (search row 27–31, the line and titles 36–37, place rows with kind icons 40–51, `?` prefix rows 52–56, command rows 57–62), data per `mode` (go, search, commands, help) 73–140; `CommandPaletteSearch` / `CommandPaletteCommands` / `CommandPaletteHelp` mount it with `mode` |
@@ -2644,25 +2646,44 @@ actions (§0, "Writing stashes" below). Canvas flow P (P1, P5) and the Review pa
   `stash@{n}` sit on its first line), mono 11 muted `stash@{n}`; line 2 (indent 21) mono 11 muted
   `<repo> / <branch> · N files · <age>` (`<branch> (deleted)`, `detached HEAD`). Picking one lists
   its files under it (file rows as in a group) and opens its first file; the right pane shows
-  it. Right-click opens "Stash Options" at the pointer (row tinted `bg.sunken` meanwhile): Apply
-  (`download`) and Pop (`undo`) into the worktree its branch is checked out in (left out when it
-  is not), divider, danger Drop (`trash`, the confirmation P6). Picking an entry's file, switching mode or typing in the file filter leaves the stash; the
+  it. Right-click opens "Stash Options" at the pointer (row tinted `bg.sunken` meanwhile): "Apply…"
+  (`stash-apply`) and "Pop…" (`stash-pop`), which ask for the worktree (§15 "Apply / Pop
+  dialog"), divider, danger Drop (`trash`, the confirmation P6). Picking an entry's file, switching mode or typing in the file filter leaves the stash; the
   section is hidden while filtering.
 - **Stash pane:** an entry bar of two lines (P3): 15px/600 `text.strong` message (one line,
   ellipsis, tooltip the whole message) with the buttons on the right; under it a mono 11 muted
-  meta line, gap 8, faint `·` between: 12px `package` icon and `stash@{n}` in `accent.text`,
+  meta line, gap 8, faint `·` between (no `stash@{n}`: the row and the compare label have it):
   `<repo> / <branch>` (the part that gives way when short of room), `from <short base>`,
   `<age> ago`. Then the file bar (compare label
   `<short base> ↔ stash@{n}`, view menu, change navigation over the stash's files) and the diff.
-  On the right of the message 28px buttons Apply, Pop (secondary) and Drop (danger text): Apply
-  and Pop run at once in the worktree the stash's branch is checked out in (tooltip `Apply to
-  <branch> (<~folder>)`), and open the worktree picker (P5) under the button only when that
-  branch is not checked out (or deleted, or detached); Drop opens the confirmation (P6). No
+  No buttons on the bar: the **stash actions** are in the page header, left of the ⋮, in the
+  place of Fetch | Pull | Push while a stash is shown or picked (every scope), one control drawn
+  as that group (32px, `bg.elevated`, 1px border, 26px buttons with a 12px icon): Apply
+  (`stash-apply`: an open tray with a dotted arrow, a caret over three dots, leaving it), Pop
+  (`stash-pop`: the tray with a solid, filled arrow), a 16px divider, Drop (`trash`, `danger` text and icon). They act on the
+  picked stashes when any is picked, else on the stash shown. Apply
+  and Pop open the Apply / Pop dialog ("Writing stashes" below), which asks for the worktree;
+  Drop opens the confirmation (P6). No
   uncommitted banner while a stash is shown.
 - **Stash review** (P3, `ReviewTarget` `stashes`): from Branches; title "Stashes", subtitle
-  `<repo> · N stashes`; no mode segmented and no file filter; the list is the section only
-  (`Stashes in <repo> · N`, no rule above, line 2 without the repo), with the clicked stash
+  `<repo> · N stashes`; no mode segmented and no file filter; the list is the stash rows only
+  (no heading: the subtitle names the repository and the count; padding 8px; line 2 without the
+  repo), with the clicked stash
   picked (else the newest; also when the picked one is dropped). Empty stack: "No stashes".
+  **Several stashes** (user request 2026-11-16; in the Review list's stash section too, where
+  ⌘A is not taken and another row picked drops the picks): a 16px `Checkbox` takes the `package` icon's
+  place on the hovered row, and on every row once one is picked (as on Branches); ⌘-click adds or
+  drops a row, ⇧-click takes the range from the last one clicked, ⌘A picks them all, a plain
+  click or Esc clears. Picked rows are tinted `rgba(accent, 0.18)` as picked files are, and no
+  stash lists its files. While any is picked the pane is the **selection pane** in place of the
+  stash pane (no diff): an entry bar with 15px/600 `text.strong` "N stashes selected" ("1 stash
+  selected") and on its right 12px `accent.text` links "Select All" (left out when all are
+  picked) and "Clear", under it a mono 11 muted meta line `N files +A −D` over all of them; then,
+  scrolling (padding 10, gap 12), each picked stash in list order: its row as in the list (icon,
+  message, `stash@{n}`, line 2), not a button, and its file rows under it. A file opens its stash
+  on that file and clears the picks. The header's stash actions then act on the
+  picked stashes. A right-click on a picked row (2+ picked) opens a 230px menu: "Apply N
+  Stashes…" (`stash-apply`), "Pop N Stashes…" (`stash-pop`), divider, danger "Drop N Stashes…". Listed in Settings › Shortcuts ("Pick Stashes").
 
 ### Writing stashes
 
@@ -2696,8 +2717,16 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
   <unpicked staged>`, the same `stash push` with that variable, then `git … reset -q -- <picked>`
   on the real index; the copy is deleted when the run ends. Toast sub line `repo / branch` for one
   entry, else `N entries`.
-- **Worktree picker** (P5; Apply to / Pop to in the Branches stash menu, Apply / Pop in the
-  stash pane when its branch is not checked out): a 280px menu with no label, one item
+- **Apply / Pop dialog** (user request 2026-11-17; `ApplyStashModal`; the stash actions and
+  Review's stash row menu): Apply and Pop always ask where. A `Modal` as P4 (480px, 160px from
+  the top; `ModalHeader` "Apply Stash" / "Pop Stash", several: "Apply N Stashes" / "Pop N
+  Stashes"; sub mono `stash@{n} · <message>`, several: `<repo> · N stashes`; ✕), then a
+  radiogroup drawn as New Branch's Check out list (`Choice` rows, 40px: box, the branch or short
+  SHA, the folder `~/…` mono 11 muted on the right), one per checked-out entry of the repository
+  in the worktree picker's order, the first picked (stashes of several repositories: a list per
+  repository under its name, 12px/500, and a run per repository); Cancel and primary "Apply ↵" / "Pop ↵"
+  (focused; disabled with no worktree). It runs as a pick in the worktree picker does (below).
+- **Worktree picker** (P5; Apply to / Pop to in the Branches stash menu): a 280px menu with no label, one item
   per checked-out entry of the repository (scan order, the branch the stash was taken on first):
   `branch` icon, the branch (short SHA when detached) and under it the folder (`~/…`), nothing
   else; each on one line, ending in "…" when long. A pick runs `git stash apply 'stash@{n}'` (or `pop`) in
@@ -2713,6 +2742,16 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
   then Cancel (focused) and danger "Drop Stash". Runs `git stash drop 'stash@{n}'` in the
   repository folder, named "Drop stash@{n}". The stash review then picks the newest stash (above).
   With Settings › Prompts › "Dropping stashes" off it drops without asking.
+  Several stashes (the picked ones): "Confirm Drop Stashes", the card names up to
+  five (`stash@{n} · <message>` each; more than five: four and "N more") and a `branch` row
+  `repo · N stashes` (of several repositories, a project review: each row starts with its
+  repository and the last is `N stashes`), "Their changes are lost unless they are somewhere
+  else.", danger "Drop N Stashes". One git action "Drop N stashes" per repository, one after
+  another: every stash is checked against its SHA first, then
+  `git stash drop 'stash@{5}' && git stash drop 'stash@{2}' …`, the highest index first (a drop
+  renumbers only the stashes above it), stopping at the first failure. Apply and Pop of several
+  are built the same way (`git stash pop 'stash@{5}' && …` in the picked worktree, named "Apply N
+  stashes" / "Pop N stashes"; the oldest goes in first, and a conflict stops the rest).
 
 ### Discard
 

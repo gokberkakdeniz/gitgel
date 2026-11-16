@@ -2,3 +2,16 @@
 .body {
   padding: 4px 24px 22px;
 }
+
+/* Apply / Pop: a worktree list per repository. */
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

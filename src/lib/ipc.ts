@@ -177,15 +177,21 @@ export const importScripts = (scripts: ScriptConfig[], replace: string[]) =>
 export const runScript = (script: ScriptConfig, entry: EntryRef, inputs: Record<string, string>, context: RunContext) =>
   invoke<ScriptRun>('run_script', { script, entry, inputs, context });
 
+export interface StashRef {
+  index: number;
+  sha: string;
+}
+
 /** Git actions (SPEC §15 "Writing stashes"): runs like a script's. */
 export const stashPush = (entries: StashPush[], message: string) =>
   invoke<ScriptRun>('stash_push', { entries, message });
 
-export const stashApply = (repoId: string, index: number, sha: string, worktreePath: string, pop: boolean) =>
-  invoke<ScriptRun>('stash_apply', { repoId, index, sha, worktreePath, pop });
+/** Applies (or pops) each `stash@{index}` (still `sha`) of one repository in one run. */
+export const stashApply = (repoId: string, stashes: StashRef[], worktreePath: string, pop: boolean) =>
+  invoke<ScriptRun>('stash_apply', { repoId, stashes, worktreePath, pop });
 
-export const stashDrop = (repoId: string, index: number, sha: string) =>
-  invoke<ScriptRun>('stash_drop', { repoId, index, sha });
+/** Drops each `stash@{index}` (still `sha`) of one repository in one run. */
+export const stashDrop = (repoId: string, stashes: StashRef[]) => invoke<ScriptRun>('stash_drop', { repoId, stashes });
 
 /** Sync (W4a): git actions too, one branch (or repository) each. */
 export const gitFetch = (repoId: string) => invoke<ScriptRun>('git_fetch', { repoId });

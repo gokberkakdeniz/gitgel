@@ -9,6 +9,7 @@ import { ToastHost } from './components/Toast';
 import { OutputPanelHost } from './scripts/OutputPanel';
 import { PassphraseDialog } from './scripts/PassphraseDialog';
 import { RunDialogHost } from './scripts/RunDialog';
+import { ApplyStashModal } from './stash/ApplyStashModal';
 import { DropStashModal } from './stash/DropStashModal';
 import { AbortOperationModal } from './sync/OperationUi';
 import { CheckoutBranchModal } from './sync/CheckoutBranch';
@@ -159,6 +160,7 @@ export default function App() {
       <RunDialogHost />
       <OutputPanelHost />
       <DropStashModal />
+      <ApplyStashModal />
       <AbortOperationModal />
       <DeleteBranchModal />
       <CheckoutBranchModal />

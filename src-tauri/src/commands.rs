@@ -619,32 +619,31 @@ pub async fn stash_push(
     .await
 }
 
-/// `git stash apply` (or `pop`) of `stash@{index}`, which must still be `sha`, in a worktree.
+/// `git stash apply` (or `pop`) of each `stash@{index}`, which must still be its `sha`, in a
+/// worktree.
 #[tauri::command]
 pub async fn stash_apply(
     state: State<'_, AppState>,
     repo_id: String,
-    index: u32,
-    sha: String,
+    stashes: Vec<scripts::git::StashRef>,
     worktree_path: String,
     pop: bool,
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
-        scripts::git::stash_apply(state, &repo_id, index, &sha, &worktree_path, pop)
+        scripts::git::stash_apply(state, &repo_id, &stashes, &worktree_path, pop)
     })
     .await
 }
 
-/// `git stash drop` of `stash@{index}`, which must still be `sha`.
+/// `git stash drop` of each `stash@{index}`, which must still be its `sha`.
 #[tauri::command]
 pub async fn stash_drop(
     state: State<'_, AppState>,
     repo_id: String,
-    index: u32,
-    sha: String,
+    stashes: Vec<scripts::git::StashRef>,
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
-        scripts::git::stash_drop(state, &repo_id, index, &sha)
+        scripts::git::stash_drop(state, &repo_id, &stashes)
     })
     .await
 }

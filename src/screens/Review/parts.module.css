@@ -480,6 +480,35 @@
   background: var(--bg-sunken);
 }
 
+.stashRow.stashPickedRow,
+.stashRow.stashPickedRow:hover {
+  background: rgba(var(--accent-rgb), 0.18);
+}
+
+/* Stash scope: a checkbox takes the icon's place on the hovered row, and on every row once one
+   is picked (as on Branches). */
+.stashPickable {
+  position: relative;
+}
+
+.stashCheck {
+  position: absolute;
+  left: 6.5px;
+  top: 7px;
+  display: none;
+}
+
+.stashPickable:hover > .stashCheck,
+.stashPicking > .stashCheck,
+.stashCheck:focus-within {
+  display: inline-flex;
+}
+
+.stashPickable:hover > .stashRow .stashIcon,
+.stashPicking > .stashRow .stashIcon {
+  visibility: hidden;
+}
+
 .stashLine {
   display: flex;
   align-items: flex-start;

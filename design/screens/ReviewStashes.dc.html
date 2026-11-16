@@ -12,13 +12,13 @@
 <style>body{margin:0;background:#141311}</style>
 </helmet>
 <div style="width: 1280px; height: 800px; overflow: hidden">
-<dc-import name="ReviewFocus" scope="stashes" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
+<dc-import name="ReviewFocus" scope="stashes" picked="{{picked}}" theme="{{theme}}" hint-size="1280px,800px"></dc-import>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"picked":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  // Branches › a repo band's stashes: the repo's whole stack, no branch open. Title "Stashes", web-app · 2 stashes; Apply / Pop / Drop on the stash header.
-  renderVals() { return { theme: this.props.theme || 'dark' }; }
+  // Branches › a repo band's stashes: the repo's whole stack, no branch open. Title "Stashes", web-app · 2 stashes; Apply / Pop / Drop on the stash header. Tweak picked: every stash picked (row checkbox, ⌘ / ⇧-click, ⌘A): the selection pane: N stashes selected, Select All and Clear, then each picked stash with its files. Apply | Pop | Drop are one group in the header, left of the kebab menu (in a project or branch review too, in place of Fetch | Pull | Push while a stash is shown or picked).
+  renderVals() { return { theme: this.props.theme || 'dark', picked: !!this.props.picked }; }
 }
 </script>
 </body>

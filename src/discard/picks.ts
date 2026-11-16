@@ -68,5 +68,15 @@ export function usePicks(order: string[], shown: string | null, reset: unknown) 
     /** What a right-click on `id` acts on: the picked files when it is one of them, else it. */
     targets: (id: string) => (any && live.includes(id) ? live : [id]),
     clear: () => setPicks(null),
+    /** The picked ids, in list order. */
+    picked: live,
+    /** Picks every row (⌘A). */
+    all: () => setPicks(order),
+    /** A row's checkbox: adds it or takes it out, whatever is shown. */
+    toggle: (id: string) => {
+      const next = toggled(live, id);
+      setPicks(next.length > 0 ? next : null);
+      setAnchor(id);
+    },
   };
 }

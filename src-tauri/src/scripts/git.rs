@@ -259,12 +259,55 @@ pub fn stash_push(
     )
 }
 
-/// `git stash apply` (or `pop`) of `stash@{index}` in one of the repository's worktrees.
+/// One stash of an Apply, Pop or Drop: `stash@{index}`, which must still be `sha`.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StashRef {
+    pub index: u32,
+    pub sha: String,
+}
+
+/// `git stash <verb>` of each index, the highest first: a pop or drop renumbers only the stashes
+/// above it, so the rest keep the numbers the screen showed (and the oldest is applied first).
+pub(super) fn stash_command(verb: &str, indexes: &[u32]) -> String {
+    let mut sorted = indexes.to_vec();
+    sorted.sort_unstable_by(|a, b| b.cmp(a));
+    sorted.dedup();
+    sorted
+        .iter()
+        .map(|i| format!("git stash {verb} 'stash@{{{i}}}'"))
+        .collect::<Vec<_>>()
+        .join(" && ")
+}
+
+/// "Drop stash@{2}", "Drop 3 stashes".
+fn stash_action_name(verb: &str, indexes: &[u32]) -> String {
+    match indexes {
+        [index] => format!("{verb} stash@{{{index}}}"),
+        many => format!("{verb} {} stashes", many.len()),
+    }
+}
+
+/// The stashes of one action, each still where the screen showed it.
+fn checked_stashes(
+    state: &AppState,
+    repo: &Repo,
+    stashes: &[StashRef],
+) -> Result<Vec<u32>, AppError> {
+    if stashes.is_empty() {
+        return Err(AppError::Invalid("No stash picked.".into()));
+    }
+    for s in stashes {
+        repo.check_stash(state, s.index, &s.sha)?;
+    }
+    Ok(stashes.iter().map(|s| s.index).collect())
+}
+
+/// `git stash apply` (or `pop`) of one or several stashes in one of the repository's worktrees.
 pub fn stash_apply(
     state: &AppState,
     repo_id: &str,
-    index: u32,
-    sha: &str,
+    stashes: &[StashRef],
     worktree_path: &str,
     pop: bool,
 ) -> Result<ScriptRun, AppError> {
@@ -281,13 +324,13 @@ pub fn stash_apply(
                 repo.name
             ))
         })?;
-    repo.check_stash(state, index, sha)?;
+    let indexes = checked_stashes(state, &repo, stashes)?;
     let verb = if pop { "pop" } else { "apply" };
     run::launch(
         state,
         Launch {
             script_id: format!("{ACTION_PREFIX}stash-{verb}"),
-            name: format!("{} stash@{{{index}}}", if pop { "Pop" } else { "Apply" }),
+            name: stash_action_name(if pop { "Pop" } else { "Apply" }, &indexes),
             icon: ICON.into(),
             entry_key: entry_key(
                 &repo.id,
@@ -298,35 +341,34 @@ pub fn stash_apply(
             repo_id: repo.id.clone(),
             also_rescan: Vec::new(),
             folder: tree.path.clone(),
-            command: format!("git stash {verb} 'stash@{{{index}}}'"),
+            command: stash_command(verb, &indexes),
             env: with_git_env(Vec::new()),
             cleanup: Vec::new(),
         },
     )
 }
 
-/// `git stash drop` of `stash@{index}`, in the repository folder.
+/// `git stash drop` of one or several stashes, in the repository folder.
 pub fn stash_drop(
     state: &AppState,
     repo_id: &str,
-    index: u32,
-    sha: &str,
+    stashes: &[StashRef],
 ) -> Result<ScriptRun, AppError> {
     let repo = open_repo(state, repo_id)?;
     repo.not_busy(state)?;
-    repo.check_stash(state, index, sha)?;
+    let indexes = checked_stashes(state, &repo, stashes)?;
     run::launch(
         state,
         Launch {
             script_id: format!("{ACTION_PREFIX}stash-drop"),
-            name: format!("Drop stash@{{{index}}}"),
+            name: stash_action_name("Drop", &indexes),
             icon: ICON.into(),
             entry_key: repo.id.clone(),
             repo_label: repo.name.clone(),
             repo_id: repo.id.clone(),
             also_rescan: Vec::new(),
             folder: repo.main.clone(),
-            command: format!("git stash drop 'stash@{{{index}}}'"),
+            command: stash_command("drop", &indexes),
             env: with_git_env(Vec::new()),
             cleanup: Vec::new(),
         },
@@ -3154,6 +3196,17 @@ mod tests {
             push_command(&[around], false),
             r#"env GIT_INDEX_FILE="$GITGEL_INDEX_1" git -C "$GITGEL_FOLDER_1" reset -q -- "$GITGEL_UNSTAGE_1_1" && env GIT_INDEX_FILE="$GITGEL_INDEX_1" git -C "$GITGEL_FOLDER_1" stash push -- "$GITGEL_PATH_1_1" && git -C "$GITGEL_FOLDER_1" reset -q -- "$GITGEL_PATH_1_1""#
         );
+    }
+
+    #[test]
+    fn stash_commands_go_from_the_highest_index_down() {
+        assert_eq!(stash_command("drop", &[2]), "git stash drop 'stash@{2}'");
+        assert_eq!(
+            stash_command("pop", &[0, 3, 1, 3]),
+            "git stash pop 'stash@{3}' && git stash pop 'stash@{1}' && git stash pop 'stash@{0}'"
+        );
+        assert_eq!(stash_action_name("Apply", &[4]), "Apply stash@{4}");
+        assert_eq!(stash_action_name("Apply", &[4, 1]), "Apply 2 stashes");
     }
 
     #[test]

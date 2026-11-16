@@ -15,7 +15,7 @@ body{margin:0}
 </helmet>
 <span role="{{role}}" aria-label="{{label}}" aria-hidden="{{hidden}}" style="{{boxStyle}}"><svg width="{{size}}" height="{{size}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{stroke}}" stroke-linecap="round" stroke-linejoin="round" style="{{svgStyle}}"><path d="{{d}}"></path><path d="{{solid}}" fill="currentColor" stroke="none"></path><path d="{{knob}}" style="fill: var(--icon-knob, var(--bg-sidebar, #0e0d0c))"></path></svg></span>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"icon": {"editor": "enum", "options": ["sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "revert", "tag", "history", "pin", "download", "upload", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "project", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "sparkles", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "help", "warning", "update", "spinner"], "default": "branch"}, "size": {"editor": "int", "default": 0}, "stroke": {"editor": "float", "default": 0}, "spin": {"editor": "boolean", "default": false}, "color": {"editor": "text", "default": ""}, "label": {"editor": null}, "$preview": {"width": 24, "height": 24}}'>
+<script type="text/x-dc" data-dc-script data-props='{"icon": {"editor": "enum", "options": ["sidebar", "back", "forward", "chevron-down", "chevron-up", "chevron-right", "arrow-up", "arrow-down", "arrow-right", "plus", "close", "check", "search", "refresh", "pencil", "edit", "copy", "remove", "trash", "undo", "revert", "tag", "history", "pin", "download", "upload", "stash-apply", "stash-pop", "play", "more", "more-vertical", "folder", "folder-plus", "branch", "worktree", "project", "terminal", "prompt", "code", "pull-request", "rebase", "test", "link", "package", "rocket", "bug", "bolt", "sparkles", "gear", "sliders", "tune", "keyboard", "split", "unified", "info", "help", "warning", "update", "spinner"], "default": "branch"}, "size": {"editor": "int", "default": 0}, "stroke": {"editor": "float", "default": 0}, "spin": {"editor": "boolean", "default": false}, "color": {"editor": "text", "default": ""}, "label": {"editor": null}, "$preview": {"width": 24, "height": 24}}'>
 class Component extends DCLogic {
   renderVals() {
     // Gitgel's icon set: every icon a screen or component draws, by name. The names match
@@ -51,6 +51,8 @@ class Component extends DCLogic {
       'pin': [14, 1.8, 'M9 3h6M10 3v6l-3 4v1h10v-1l-3-4V3M12 14v7', '', ''],
       'download': [14, 1.8, 'M12 3v12M7 10l5 5 5-5M5 21h14', '', ''],
       'upload': [14, 1.8, 'M12 15V3M7 8l5-5 5 5M5 21h14', '', ''],
+      'stash-apply': [14, 1.8, 'M3 14v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M8 7.5 12 3.5l4 4M12 8.5v.01M12 12v.01M12 15.5v.01', '', ''],
+      'stash-pop': [14, 1.8, 'M3 14v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4', 'M12 3 17.5 10h-3.5v5h-4v-5H6.5Z', ''],
       'play': [12, 0, '', 'M7 5v14l11-7Z', ''],
       'more': [15, 0, '', 'M3.4 12a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0M10.4 12a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0M17.4 12a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0', ''],
       'more-vertical': [15, 0, '', 'M10.4 5a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0M10.4 12a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0M10.4 19a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0', ''],

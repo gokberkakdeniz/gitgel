@@ -4,7 +4,7 @@ import { tildifyHome } from '../lib/paths';
 import type { EntrySummary } from '../lib/types';
 import type { ReviewStash } from '../screens/Review/stashes';
 import { useData } from '../state/data';
-import { applyStash } from './actions';
+import { applyStashes } from './actions';
 
 /** The repository's checked-out entries, the branch the stash was taken on first. */
 export function stashTargets(st: ReviewStash, active: EntrySummary[]): EntrySummary[] {
@@ -13,19 +13,20 @@ export function stashTargets(st: ReviewStash, active: EntrySummary[]): EntrySumm
   return [...own, ...trees.filter((e) => !own.includes(e))];
 }
 
-/** Apply to… / Pop to… (flow P5): where the stash goes. */
+/** Apply to… / Pop to… (flow P5): where the stash (or the picked stashes of one repository) goes. */
 export function StashTargetMenu({
-  stash,
+  stashes,
   pop,
   autoFocus = true,
   onDone,
 }: {
-  stash: ReviewStash;
+  stashes: ReviewStash[];
   pop: boolean;
   /** Focus the first item (not when it opened on hover). */
   autoFocus?: boolean;
   onDone: () => void;
 }) {
+  const [stash] = stashes;
   const active = useData((s) => s.scan[stash.repoId]?.active);
   const targets = stashTargets(stash, active ?? []);
   return (
@@ -38,7 +39,7 @@ export function StashTargetMenu({
           oneLine
           onSelect={() => {
             onDone();
-            void applyStash(stash, e, pop);
+            void applyStashes(stashes, e, pop);
           }}
         >
           {e.branch ?? e.shortSha}

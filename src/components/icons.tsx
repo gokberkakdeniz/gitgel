@@ -449,6 +449,25 @@ export function DownloadIcon({ size = 14, className, strokeWidth: sw }: IconProp
   );
 }
 
+/** Apply a stash: a dotted arrow out of the tray (the stash stays). */
+export function StashApplyIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
+      <path d="M3 14v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M8 7.5 12 3.5l4 4M12 8.5v.01M12 12v.01M12 15.5v.01" />
+    </Svg>
+  );
+}
+
+/** Pop a stash: a solid arrow out of the tray (the stash goes). */
+export function StashPopIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
+      <path d="M3 14v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4" />
+      <path d="M12 3 17.5 10h-3.5v5h-4v-5H6.5Z" fill="currentColor" stroke="none" />
+    </Svg>
+  );
+}
+
 export function UploadIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   return (
     <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
@@ -603,6 +622,8 @@ const ICONS = {
   pin: PinIcon,
   download: DownloadIcon,
   upload: UploadIcon,
+  'stash-apply': StashApplyIcon,
+  'stash-pop': StashPopIcon,
   play: PlayIcon,
   more: MoreIcon,
   'more-vertical': MoreVerticalIcon,

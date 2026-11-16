@@ -4,6 +4,7 @@
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useCommandSource } from '../../commands/registry';
 import { useEffect, useRef, useState } from 'react';
+import { Checkbox } from '../../components/Checkbox';
 import { ChevronDownIcon, Icon, SplitIcon, UnifiedIcon } from '../../components/icons';
 import { KindBadge } from '../../components/KindBadge';
 import { Menu, MenuDivider, MenuItem, MenuLabel, MenuSegmented } from '../../components/Menu';
@@ -598,8 +599,10 @@ export function StashSection({
   onPick,
   onFile,
   fold,
+  picks,
 }: {
-  heading: string;
+  /** None in stash scope: the page header names the repository and counts the stashes. */
+  heading?: string;
   stashes: ReviewStash[];
   picked: string | undefined;
   /** The picked stash's files, once loaded. */
@@ -614,10 +617,20 @@ export function StashSection({
   onFile: (path: string) => void;
   /** The heading folds the section (Review's list column, SPEC §5). */
   fold?: { open: boolean; onToggle: () => void };
+  /** Stash scope: stashes picked with their checkbox, ⌘ / ⇧-click or ⌘A (ids are SHAs). */
+  picks?: {
+    picked: string[];
+    isPicked: (sha: string) => boolean;
+    click: (sha: string, e: React.MouseEvent, open: () => void) => void;
+    toggle: (sha: string) => void;
+    targets: (sha: string) => string[];
+  };
 }) {
   const repos = useData((s) => s.config?.repos);
-  // A row's right-click menu: Apply, Pop, Drop.
-  const [menu, setMenu] = useState<{ stash: ReviewStash; at: DOMRect } | null>(null);
+  // A row's right-click menu: Apply, Pop, Drop (of the picked stashes when it is one of them).
+  const [menu, setMenu] = useState<{ sha: string; stashes: ReviewStash[]; at: DOMRect } | null>(null);
+  const among = (shas: string[]) => stashes.filter((s) => shas.includes(s.sha));
+  const picking = (picks?.picked.length ?? 0) > 0;
   return (
     <section
       aria-label={t('branches.stashes')}
@@ -637,26 +650,43 @@ export function StashSection({
           {heading} · {formatCount(stashes.length)}
         </button>
       ) : (
-        <div className={styles.stashHeading}>
-          {heading} · {formatCount(stashes.length)}
-        </div>
+        heading && (
+          <div className={styles.stashHeading}>
+            {heading} · {formatCount(stashes.length)}
+          </div>
+        )
       )}
       {(!fold || fold.open) &&
         stashes.map((st) => {
           const on = st.sha === picked;
           return (
-            <div key={`${st.repoId}:${st.sha}`} className={styles.stash}>
+            <div
+              key={`${st.repoId}:${st.sha}`}
+              className={[styles.stash, picks && styles.stashPickable, picking && styles.stashPicking]
+                .filter(Boolean)
+                .join(' ')}
+            >
               <button
                 type="button"
-                className={[styles.stashRow, on && styles.stashOn, menu?.stash.sha === st.sha && styles.menuOpen]
+                className={[
+                  styles.stashRow,
+                  on && styles.stashOn,
+                  menu?.sha === st.sha && styles.menuOpen,
+                  picks?.isPicked(st.sha) && styles.stashPickedRow,
+                ]
                   .filter(Boolean)
                   .join(' ')}
                 aria-expanded={on}
+                aria-selected={picks?.isPicked(st.sha) || undefined}
                 title={st.message}
-                onClick={() => onPick(st.sha)}
+                onClick={(e) => (picks ? picks.click(st.sha, e, () => onPick(st.sha)) : onPick(st.sha))}
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  setMenu({ stash: st, at: new DOMRect(e.clientX, e.clientY, 0, 0) });
+                  setMenu({
+                    sha: st.sha,
+                    stashes: picks ? among(picks.targets(st.sha)) : [st],
+                    at: new DOMRect(e.clientX, e.clientY, 0, 0),
+                  });
                 }}
               >
                 <span className={styles.stashLine}>
@@ -666,6 +696,14 @@ export function StashSection({
                 </span>
                 <span className={styles.stashMeta}>{stashMeta(st, withRepo)}</span>
               </button>
+              {picks && (
+                <Checkbox
+                  className={styles.stashCheck}
+                  aria-label={t('review.selectStash', { stash: `stash@{${st.index}}` })}
+                  checked={picks.isPicked(st.sha)}
+                  onChange={() => picks.toggle(st.sha)}
+                />
+              )}
               {on && changes && (
                 <div className={styles.fileRows}>
                   {changes.files.map((f) => (
@@ -682,7 +720,7 @@ export function StashSection({
             </div>
           );
         })}
-      {menu && <StashRowMenu stash={menu.stash} at={menu.at} onClose={() => setMenu(null)} />}
+      {menu && <StashRowMenu stashes={menu.stashes} at={menu.at} onClose={() => setMenu(null)} />}
     </section>
   );
 }

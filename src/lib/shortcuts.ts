@@ -51,6 +51,11 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { label: 'shortcuts.blame', keys: ['⌥', 'B'] },
       { label: 'shortcuts.switchBranch', keys: ['⇧', '⌘', 'B'], note: 'shortcuts.inHistory' },
       { label: 'shortcuts.pickFiles', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.pickNote' },
+      {
+        label: 'shortcuts.pickStashes',
+        keys: ['⌘', 'click', '/', '⇧', 'click', '/', '⌘', 'A'],
+        note: 'shortcuts.pickStashesNote',
+      },
       { label: 'shortcuts.pickCommits', keys: ['⌘', 'click', '/', '⇧', 'click'], note: 'shortcuts.pickCommitsNote' },
     ],
   },

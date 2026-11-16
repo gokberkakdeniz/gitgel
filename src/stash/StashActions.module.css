@@ -1,0 +1,18 @@
+/* Apply / Pop / Drop: one control, as the header's Fetch / Pull / Push. */
+.group {
+  composes: group from '../sync/SyncButtons.module.css';
+  flex-shrink: 0;
+}
+
+.divider {
+  composes: divider from '../sync/SyncButtons.module.css';
+}
+
+.button {
+  composes: button from '../sync/SyncButtons.module.css';
+}
+
+.drop.drop,
+.drop.drop.drop:hover {
+  color: var(--danger-text);
+}

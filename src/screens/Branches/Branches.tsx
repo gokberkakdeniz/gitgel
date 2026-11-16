@@ -592,7 +592,7 @@ function StashList({
               onHover={() => setSub(null)}
               onSelect={() => {
                 closeMenu();
-                askDrop(stash);
+                askDrop([stash]);
               }}
             >
               {t('stash.dropMenu')}
@@ -616,7 +616,7 @@ function StashList({
               >
                 <StashTargetMenu
                   key={String(sub.pop)}
-                  stash={stash}
+                  stashes={[stash]}
                   pop={sub.pop}
                   autoFocus={!!sub.focus}
                   onDone={closeMenu}

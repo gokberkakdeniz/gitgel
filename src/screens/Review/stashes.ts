@@ -46,13 +46,6 @@ export function reviewStashes(
   }
 }
 
-/** The heading of the stash section. */
-export function stashHeading(target: ReviewTarget, repoName: string): string {
-  if (target.kind === 'project') return t('review.stashOfProject');
-  if (target.kind === 'branch') return t('review.stashOfBranch');
-  return t('review.stashInRepo', { repo: repoName });
-}
-
 /** Line 2 of a stash row: `web-app / session-token-refresh · 1 file · 20m`; without the repo in
  * stash scope, where the header names it. */
 export function stashMeta(s: ReviewStash, withRepo = true, now?: number): string {

@@ -485,6 +485,15 @@ it was done within a topic.
   the worktree picker beside them on hover; popovers follow their anchor on scroll and resize;
   Stash changes picks files per entry (`git stash push -- <paths>`, literal pathspecs; the
   untracked option became picking the files) — 2026-10-05
+- [x] Stash review and Review's stash section: several stashes picked (a checkbox on the row, ⌘ / ⇧-click, ⌘A) and applied,
+  popped or dropped together (the pane becomes a selection pane listing each picked stash with its files, with Select All
+  and Clear; Apply |
+  Pop | Drop are one group as Fetch | Pull | Push with `stash-apply` / `stash-pop` icons, Drop red,
+  in the page header in place of Fetch | Pull | Push while a stash is shown or picked; Apply and
+  Pop open a dialog asking for the worktree (per repository); the
+  same three on right-click; one git action from the highest index down); no
+  list heading there (the subtitle counts), no `stash@{n}` in the stash pane's meta line —
+  2026-11-16
 - [x] Merge conflicts shown: unmerged files are `C`, entries carry `conflicts` (a
   danger pill on Branches and in Review, a danger banner in Review, `· N conflicts` in History);
   Stash… leaves out entries with conflicts; canvas P7 — 2026-10-05

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EntrySummary, FileChange } from '../lib/types';
 import type { ReviewStash } from '../screens/Review/stashes';
+import { dropContext } from './DropStashModal';
 import { stashPush } from './StashDialog';
 import { stashTargets } from './StashTargetMenu';
 
@@ -73,5 +74,29 @@ describe('stashPush', () => {
 
   it('names a detached worktree by its folder', () => {
     expect(stashPush(entry('web-app', null, '/wt/d'), files, null).worktreePath).toBe('/wt/d');
+  });
+});
+
+describe('dropContext', () => {
+  const st = (index: number) =>
+    ({
+      index,
+      sha: `s${index}`,
+      message: `m${index}`,
+      branch: 'a',
+      files: 2,
+      repoId: 'r_1',
+      repoName: 'web-app',
+    }) as ReviewStash;
+
+  it('names one stash and where it was taken', () => {
+    expect(dropContext([st(2)]).map((r) => r.text)).toEqual(['stash@{2} · m2', 'web-app / a · 2 files']);
+  });
+
+  it('names up to five stashes, then counts the rest', () => {
+    const texts = (n: number) => dropContext(Array.from({ length: n }, (_, i) => st(i))).map((r) => r.text);
+    expect(texts(5)).toHaveLength(6);
+    expect(texts(5)[5]).toBe('web-app · 5 stashes');
+    expect(texts(8).slice(3)).toEqual(['stash@{3} · m3', '4 more', 'web-app · 8 stashes']);
   });
 });
