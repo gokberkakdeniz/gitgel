@@ -1,5 +1,5 @@
 // The palette's search: fuse.js over each row, groups kept together.
-import Fuse from 'fuse.js';
+import Fuse, { type Expression } from 'fuse.js';
 import type { Command, GoItem } from './registry';
 
 /** Rows of a group that is listed only while searching, at most. */
@@ -20,6 +20,15 @@ function grouped<T extends { group: string }>(rows: T[]): T[] {
 }
 
 const fuseOptions = { threshold: 0.35, ignoreLocation: true };
+
+/** A query of several words: each matched on its own (in any key), all of them needed, so words
+ * between them in a title do not break the match ("hide sha" finds "Hide Commit SHA"). One word
+ * is searched as is. */
+function byWords(query: string, keys: string[]): string | Expression {
+  const words = query.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return query;
+  return { $and: words.map((w) => ({ $or: keys.map((k) => ({ [k]: w })) })) };
+}
 
 /** What a query's first character asks for (`?` lists these). Git refuses `~` and `?` in a
  * branch name and `/` at its start; `#` and `>` rarely start one. */
@@ -62,7 +71,7 @@ export function searchGo(items: GoItem[], query: string, kinds: readonly GoItem[
     ],
   });
   // The project on show's entries stay on top.
-  const hits = grouped(fuse.search(q).map((r) => r.item));
+  const hits = grouped(fuse.search(byWords(q, ['label', 'repo', 'terms'])).map((r) => r.item));
   return capSearchOnly([...hits.filter((i) => i.heading), ...hits.filter((i) => !i.heading)]);
 }
 
@@ -96,7 +105,7 @@ export function searchCommands(commands: Command[], query: string, recent: strin
       { name: 'group', weight: 1 },
     ],
   });
-  return grouped(fuse.search(q).map((r) => r.item));
+  return grouped(fuse.search(byWords(q, ['title', 'group'])).map((r) => r.item));
 }
 
 const RECENT_KEY = 'gitgel.recentCommands';

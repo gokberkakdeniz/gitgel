@@ -57,6 +57,13 @@ describe('searchCommands', () => {
     cmd('newProject', 'New Project…', 'General'),
   ];
 
+  it('matches each word on its own, words between them or not', () => {
+    const rows = [...all, cmd('rows:sha', 'Hide Commit SHA', 'Settings'), cmd('blame', 'Hide Blame', 'Diff')];
+    expect(searchCommands(rows, 'hide sha', [], 'Recent').map((c) => c.id)).toEqual(['rows:sha']);
+    expect(searchCommands(rows, 'sha hide', [], 'Recent').map((c) => c.id)).toEqual(['rows:sha']);
+    expect(searchCommands(rows, 'new proj', [], 'Recent').map((c) => c.id)).toEqual(['newProject']);
+  });
+
   it('lists recent ones first, under their own group, and not twice', () => {
     const out = searchCommands(all, '', ['newProject', 'gone'], 'Recently Used');
     expect(out.map((c) => [c.id, c.group])).toEqual([

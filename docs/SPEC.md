@@ -1190,7 +1190,8 @@ outside or leaving the page closes it (`src/commands/`).
   - Command: 13px title, the shortcut that does the same as a `Kbd` on the right, under group
     titles as the Add palette's (11px uppercase muted).
 - Search: fuse.js (threshold 0.35, `ignoreLocation`), places on name (weight 2), repo and
-  worktree path; commands on title (weight 2) and group. While searching, groups stay together,
+  worktree path; commands on title (weight 2) and group. A query of several words matches each
+  word on its own, all of them needed ("hide sha" finds "Hide Commit SHA"). While searching, groups stay together,
   the group of the best match first (the project on show's entries always first). "No Matches"
   when nothing is left.
 - **Prefixes** (the query's first character; the rest is searched as usual): `>` commands, `#`
