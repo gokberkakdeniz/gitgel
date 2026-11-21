@@ -13,6 +13,7 @@ import type {
   CommitProvider,
   Config,
   DiscardFiles,
+  DiscardLines,
   EntryRef,
   FileChange,
   FilePair,
@@ -312,6 +313,10 @@ export const gitStage = (entry: EntryRef, files: StageFiles) => invoke<ScriptRun
 /** Stage / Unstage of picked lines (the diff's menu): one file's new staged version. */
 export const gitStageLines = (entry: EntryRef, lines: StageLines) =>
   invoke<ScriptRun>('git_stage_lines', { entry, lines });
+
+/** Discard of picked lines (the diff's menu): one file's new working-tree version. */
+export const gitDiscardLines = (entry: EntryRef, lines: DiscardLines) =>
+  invoke<ScriptRun>('git_discard_lines', { entry, lines });
 
 /** Typed text for a running script. */
 export const writeScriptInput = (runId: string, data: string) => invoke<null>('write_script_input', { runId, data });

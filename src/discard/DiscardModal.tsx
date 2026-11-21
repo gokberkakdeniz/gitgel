@@ -33,7 +33,13 @@ export function DiscardModal() {
       <div className={styles.body}>
         <WarningIcon size={28} strokeWidth={1.6} className={styles.icon} />
         <div className={styles.text}>
-          <p className={styles.lead}>{list ? t('discard.leadList') : t('discard.leadCount', { n: String(n) })}</p>
+          <p className={styles.lead}>
+            {req.lines
+              ? t('discard.leadLines')
+              : list
+                ? t('discard.leadList')
+                : t('discard.leadCount', { n: String(n) })}
+          </p>
           {list && (
             <div className={grouped ? `${styles.files} ${styles.groups}` : styles.files}>
               {req.targets.map((g) => (

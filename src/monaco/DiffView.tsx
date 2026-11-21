@@ -17,7 +17,16 @@ import { ImageDiff } from './ImageDiff';
 import styles from './DiffView.module.css';
 import { blameAt, blameText } from './blame';
 import { hunkAtScroll, hunkTarget, type Hunk } from './changeNav';
-import { cutHunks, hunkAt, hunkAtZone, stagedContent, wholeCut, withoutEmptySide, type Cut } from './lineStage';
+import {
+  cutHunks,
+  discardedContent,
+  hunkAt,
+  hunkAtZone,
+  stagedContent,
+  wholeCut,
+  withoutEmptySide,
+  type Cut,
+} from './lineStage';
 import { languageForPath } from './language';
 import { NoteCard, NoteDraft } from './NoteZone';
 import { diffPosition, setDiffPosition } from './position';
@@ -74,6 +83,9 @@ export interface LineStage {
   /** Puts the file's new staged version in the index (null: the whole file, as the row's + / −),
    * made from the staged blob `expect` (null: none); resolves false when it could not. */
   apply: (content: string | null, expect: string | null) => Promise<boolean>;
+  /** An Unstaged row only: writes the file's new working-tree version (null: the whole file, as
+   * the row's Discard Changes…), made from its content `expect`. */
+  discard?: (content: string | null, expect: string) => void;
 }
 
 /** Notes on the file's lines (SPEC §5 Review "Notes"): each sits in a view zone under the last
@@ -592,6 +604,15 @@ export function DiffView({
     });
   };
 
+  // Discard from the menu (an Unstaged row): the working tree without the cuts, or the whole file
+  // when they take all of it.
+  const discardCuts = (cuts: Cut[], text: Shown | null) => {
+    setMenu(null);
+    if (!lineStage?.discard || !data || !text || text !== nav.current.hunksFor) return;
+    const content = discardedContent(text.original, text.modified, cuts);
+    lineStage.discard(content === text.original ? null : content, text.modified);
+  };
+
   // ---- Notes on lines (SPEC §5 Review "Notes") ----
   const notesOn =
     !!notes && !!data && data.fileKey === fileKey && !data.binary && !data.tooLarge && !data.image && !pending;
@@ -1000,6 +1021,16 @@ export function DiffView({
                     onSelect={() => stageCuts(menu.change!, menu.text)}
                   >
                     {t(lineStage.unstage ? 'diff.unstageChange' : 'diff.stageChange')}
+                  </MenuItem>
+                )}
+                {lineStage.discard && menu.lines && (
+                  <MenuItem danger icon="undo" onSelect={() => discardCuts(menu.lines!, menu.text)}>
+                    {t('diff.discardLines')}
+                  </MenuItem>
+                )}
+                {lineStage.discard && menu.change && (
+                  <MenuItem danger icon="undo" onSelect={() => discardCuts(menu.change!, menu.text)}>
+                    {t('diff.discardChange')}
                   </MenuItem>
                 )}
                 <MenuDivider />

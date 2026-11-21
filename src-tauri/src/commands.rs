@@ -1117,6 +1117,19 @@ pub async fn git_stage_lines(
     .await
 }
 
+/// Discard of picked lines (the diff's menu): one file's new working-tree version.
+#[tauri::command]
+pub async fn git_discard_lines(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    lines: scripts::git::DiscardLines,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::discard_lines(state, entry, lines)
+    })
+    .await
+}
+
 /// Sync (W4a): `git push` of the entry's branch to its remote; `force`: `--force-with-lease`.
 #[tauri::command]
 pub async fn git_push(

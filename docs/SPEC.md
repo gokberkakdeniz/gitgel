@@ -900,7 +900,9 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
   "Stage" (picked lines), then a divider: "Stage Selected Lines" (`plus`; a Staged row's diff
   "Unstage Selected Lines", `remove`) when the click is inside a selection that touches a change,
   and "Stage Change" / "Unstage Change" for the change at the clicked line (unified: also on its
-  removed lines), left out when the selection takes the same. Then, not in a stash, "Show Commit <sha>"
+  removed lines), left out when the selection takes the same; on an Unstaged row's diff, danger
+  "Discard Selected Lines" / "Discard Change" (`undo`) after them, on the same lines (§15
+  "Discard", picked lines). Then, not in a stash, "Show Commit <sha>"
   (`history`; with Blame on, on the new side, for a line last changed by another commit than the
   one shown: it searches that SHA, so the list is that commit, open on this file) and "File
   History" (`history`; §16 "File history"), and a divider. Then "Add Note" (`note`, ⌥N; "Notes"
@@ -2041,6 +2043,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_index_changes` | `entry: EntryRef` | `IndexChanges` (`staged`: HEAD ↔ index, `unstaged`: index ↔ working tree, untracked included; `FileChange[]` each) |
 | `git_stage` | `entry: EntryRef`, `files: StageFiles` (`stage: string[]`, `unstage: string[]`) | `ScriptRun` (§15 "Stage") |
 | `git_stage_lines` | `entry: EntryRef`, `lines: StageLines` (`path`, `content`: the file's new staged version, `expect`: the staged blob it was made from or null, `unstage`) | `ScriptRun` (§15 "Stage", picked lines) |
+| `git_discard_lines` | `entry: EntryRef`, `lines: DiscardLines` (`path`, `content`: the file's new working-tree version, `expect`: the file's text it was made from) | `ScriptRun` (§15 "Discard", picked lines) |
 | `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`, `keepIndex: string[]`: those of `paths` that go back to the index) | `ScriptRun` (§15 "Discard") |
 | `git_ignore` | `files: IgnoreFiles` (`EntryRef` + `paths: string[]`) | `ScriptRun` (§15 "Ignore") |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
@@ -2926,6 +2929,16 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   (`worktrees::tracked` decides), with `GIT_LITERAL_PATHSPECS=1`; a
   rename sends its old path too. Only the working copy goes to the Trash: a staged version that
   differs from it is not kept.
+- **Picked lines** (the diff's right-click menu on an Unstaged row, §5 "Diff"): "Discard Selected
+  Lines" / "Discard Change" take the picked changes (cut as Stage's, §15 "Stage") out of the
+  working tree, back to what is staged. When that takes all of the file's changes it is the
+  row's Discard Changes… instead. Otherwise Confirm Discard Changes asks as for one picked file
+  (same setting), with "Are you sure you want to discard the selected changes to:", then
+  `git_discard_lines` (same name, icon and script id as Discard) checks the file is still the
+  text shown ("<path> changed. Pick the lines again."), a regular file in the worktree, not
+  conflicted and no other git action running, puts its copy in the Trash as above, and runs
+  `cat "$GITGEL_BLOB" > "$GITGEL_FOLDER/$GITGEL_PATH"` (the new text in a temp file removed when
+  the run ends; the file's mode stays).
 
 ### Ignore
 

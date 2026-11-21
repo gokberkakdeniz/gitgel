@@ -3,8 +3,8 @@
 // Discard Changes unless Settings › Prompts says not to ask.
 import { create } from 'zustand';
 import { t } from '../i18n';
-import { gitDiscard } from '../lib/ipc';
-import type { EntryRef, EntrySummary, FileChange } from '../lib/types';
+import { gitDiscard, gitDiscardLines } from '../lib/ipc';
+import type { DiscardLines, EntryRef, EntrySummary, FileChange } from '../lib/types';
 import { startGitAction } from '../scripts/runs';
 import { useData } from '../state/data';
 
@@ -38,6 +38,8 @@ export interface DiscardRequest {
   targets: DiscardTarget[];
   /** Discard All Changes (the Uncommitted row's menu): always asks, with the count. */
   all: boolean;
+  /** Picked lines of the one target's one file (the diff's menu): its new working-tree version. */
+  lines?: DiscardLines;
 }
 
 interface DiscardUi {
@@ -66,6 +68,11 @@ export function askDiscard(req: DiscardRequest): void {
 export const discardPaths = (files: FileChange[]) => files.flatMap((f) => (f.oldPath ? [f.path, f.oldPath] : [f.path]));
 
 export function discardNow(req: DiscardRequest): Promise<void> {
+  const { lines } = req;
+  if (lines)
+    return startGitAction(t('discard.btnOne'), t('discard.discarding'), () =>
+      gitDiscardLines(req.targets[0].entry, lines),
+    );
   return startGitAction(t('discard.btnOne'), t('discard.discarding'), () =>
     gitDiscard(req.targets.map((g) => ({ ...g.entry, paths: discardPaths(g.files), keepIndex: g.keepIndex ?? [] }))),
   );

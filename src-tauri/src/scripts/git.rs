@@ -810,6 +810,114 @@ pub fn discard(state: &AppState, discards: Vec<DiscardFiles>) -> Result<ScriptRu
     )
 }
 
+/// What a Discard of picked lines (the diff's menu on an Unstaged row) writes: one file's new
+/// working-tree version, made from the lines shown.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DiscardLines {
+    /// Relative to the worktree.
+    pub path: String,
+    /// The file's whole new content.
+    pub content: String,
+    /// The file's content the new one was made from; refused when the file holds another by now.
+    pub expect: String,
+}
+
+/// Discard of picked lines (SPEC §15 "Discard"): the file in the working tree is written with the
+/// picked changes taken out (back to what is staged), after a copy of it went to the Trash.
+pub fn discard_lines(
+    state: &AppState,
+    entry: EntryRef,
+    lines: DiscardLines,
+) -> Result<ScriptRun, AppError> {
+    let rel = lines.path.as_str();
+    if !valid_relative(rel) {
+        return Err(AppError::Invalid("The file has no valid path.".into()));
+    }
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let unmerged = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        operation::unmerged(&wt)?
+    };
+    if unmerged.iter().any(|p| p == rel) {
+        return Err(AppError::Invalid(format!("{rel} has merge conflicts.")));
+    }
+    let file = tree.path.join(rel);
+    let regular = std::fs::symlink_metadata(&file).is_ok_and(|m| m.is_file());
+    let inside = file
+        .parent()
+        .and_then(|p| p.canonicalize().ok())
+        .is_some_and(|p| p.starts_with(&tree.path));
+    if !regular || !inside {
+        return Err(AppError::Invalid(format!(
+            "{rel} is not a file in the worktree."
+        )));
+    }
+    if std::fs::read(&file)? != lines.expect.as_bytes() {
+        return Err(AppError::Invalid(format!(
+            "{rel} changed. Pick the lines again."
+        )));
+    }
+    let branch = tree
+        .branch
+        .clone()
+        .unwrap_or_else(|| tree.head.chars().take(7).collect());
+    let names = crate::trash::copy_names(
+        &[crate::trash::Discarded {
+            repo: &repo.name,
+            branch: &branch,
+            path: rel,
+        }],
+        chrono::Local::now(),
+    );
+    crate::trash::copy_to_trash(&file, &names[0])?;
+    let blob = std::env::temp_dir().join(format!("gitgel-{}.blob", new_id("discard")));
+    std::fs::write(&blob, lines.content.as_bytes())?;
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}discard"),
+            name: "Discard changes".into(),
+            icon: "undo".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: DISCARD_LINES_COMMAND.into(),
+            env: with_git_env(vec![
+                (
+                    "GITGEL_FOLDER".to_string(),
+                    tree.path.to_string_lossy().into_owned(),
+                ),
+                ("GITGEL_PATH".to_string(), lines.path.clone()),
+                (
+                    "GITGEL_BLOB".to_string(),
+                    blob.to_string_lossy().into_owned(),
+                ),
+            ]),
+            cleanup: vec![blob],
+        },
+    )
+}
+
+/// The new content over the file (its mode stays); only fixed text and quoted variables.
+pub(super) const DISCARD_LINES_COMMAND: &str =
+    r#"cat "$GITGEL_BLOB" > "$GITGEL_FOLDER/$GITGEL_PATH""#;
+
 /// Add to .gitignore (SPEC §15 "Ignore"): untracked files of one entry.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]

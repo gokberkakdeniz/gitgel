@@ -317,6 +317,13 @@ export interface StageLines {
   expect: string | null;
   unstage: boolean;
 }
+/** A Discard of picked lines (`git_discard_lines`): one file's new working-tree version. */
+export interface DiscardLines {
+  path: string;
+  content: string;
+  /** The file's content the new one was made from. */
+  expect: string;
+}
 /** What a Commit holds (W1a, `git_commit`). */
 export interface CommitFiles {
   summary: string;

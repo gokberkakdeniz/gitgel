@@ -1240,6 +1240,41 @@ mod tests {
         assert_eq!(staged, ["a.txt"]);
     }
 
+    /// Discard of picked lines (SPEC §15 "Discard"): the file gets the new content, its mode and
+    /// the index stay, and a name with spaces or quotes is no problem.
+    #[test]
+    fn git_action_discards_picked_lines() {
+        use crate::git::testutil::TestRepo;
+        use std::os::unix::fs::PermissionsExt;
+        let t = TestRepo::new();
+        let name = "a b'\"$x.sh";
+        t.commit_on("main", &[(name, Some(b"one\ntwo\n"))], "base", 1);
+        t.checkout_main();
+        t.write_file(t.path(), name, b"one\nONE\ntwo\nTWO\n");
+        let file = t.path().join(name);
+        std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let dir = tempfile::TempDir::new().unwrap();
+        let blob = dir.path().join("blob");
+        std::fs::write(&blob, b"one\ntwo\nTWO\n").unwrap();
+        let folder = t.path().to_string_lossy().into_owned();
+        let (out, ended) = pty(
+            super::super::git::DISCARD_LINES_COMMAND,
+            &[
+                ("GITGEL_FOLDER", &folder),
+                ("GITGEL_PATH", name),
+                ("GITGEL_BLOB", &blob.to_string_lossy()),
+            ],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        assert_eq!(std::fs::read(&file).unwrap(), b"one\ntwo\nTWO\n");
+        assert_eq!(
+            std::fs::metadata(&file).unwrap().permissions().mode() & 0o777,
+            0o755
+        );
+        let (staged, _) = crate::git::worktrees::staged(&t.repo).unwrap();
+        assert!(staged.is_empty());
+    }
+
     /// Picked files while other files are staged: the stash holds the picked ones only, and the
     /// staged ones that were not picked stay staged (git alone would put them in the stash too).
     #[test]

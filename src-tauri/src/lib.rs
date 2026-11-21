@@ -199,6 +199,7 @@ pub fn run() {
             commands::get_ai_status,
             commands::get_default_prompt,
             commands::git_discard,
+            commands::git_discard_lines,
             commands::git_ignore,
             commands::get_index_changes,
             commands::git_stage,

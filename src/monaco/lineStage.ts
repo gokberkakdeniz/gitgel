@@ -128,6 +128,11 @@ function apply(baseText: string, targetText: string, cuts: Cut[]): string {
   return out.map((l, i) => l.text + (l.end ?? (i === out.length - 1 ? '' : eol))).join('');
 }
 
+/** The working tree's new version when the cuts are discarded from an Unstaged diff (index →
+ * working tree): taken back out of the modified, as unstaging does. */
+export const discardedContent = (original: string, modified: string, cuts: Cut[]): string =>
+  stagedContent(original, modified, cuts, true);
+
 /** The file's new staged version. Staging (an Unstaged diff: index → working tree) applies the
  * cuts to the original; unstaging (a Staged diff: HEAD → index) takes them back out of the
  * modified. */

@@ -1025,6 +1025,20 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
             }
             return requestStageLines(stageTarget(entry, entryRef), { path: f.path, content, expect, unstage });
           },
+          // Picked lines go back to what is staged (§15 "Discard"); all of them, as the row's
+          // Discard Changes….
+          discard:
+            wipRow.sec === 'u'
+              ? (content, expect) => {
+                  if (content === null) discard([wipRow]);
+                  else
+                    askDiscard({
+                      targets: [targetOf(entry, [wipRow.file])],
+                      all: false,
+                      lines: { path: wipRow.file.path, content, expect },
+                    });
+                }
+              : undefined,
         }
       : null;
   // The Uncommitted row's right-click menu: Discard All Changes, Stash All Changes.

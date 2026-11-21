@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Hunk } from './changeNav';
-import { cutHunks, hunkAt, hunkAtZone, stagedContent, wholeCut, withoutEmptySide } from './lineStage';
+import { cutHunks, discardedContent, hunkAt, hunkAtZone, stagedContent, wholeCut, withoutEmptySide } from './lineStage';
 
 const h = (originalStart: number, originalEnd: number, modifiedStart: number, modifiedEnd: number): Hunk => ({
   originalStart,
@@ -68,6 +68,14 @@ describe('stagedContent', () => {
     expect(
       stagedContent('', 'x\ny\n', cutHunks([h(0, 0, 1, 2)], { side: 'modified', from: 1, to: 1, lines: 3 }), false),
     ).toBe('x\n');
+  });
+});
+
+describe('discardedContent', () => {
+  it('takes the changes out of the working tree', () => {
+    expect(discardedContent(original, modified, [wholeCut(hunks[0])])).toBe('a\nb\nc\nX\nY\nd\n');
+    expect(discardedContent(original, modified, cutHunks(hunks, pick('modified', 5, 5)))).toBe('a\nB\nc\nX\nd\n');
+    expect(discardedContent(original, modified, hunks.map(wholeCut))).toBe(original);
   });
 });
 
