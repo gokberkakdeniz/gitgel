@@ -568,7 +568,11 @@ export function DiffView({
     deco.set([
       {
         range: new monaco.Range(line, column, line, column),
-        options: { showIfCollapsed: true, after: { content: blameText(commit), inlineClassName: 'gg-blame' } },
+        options: {
+          showIfCollapsed: true,
+          // An empty line: the text starts at its left edge, no gap.
+          after: { content: blameText(commit), inlineClassName: column === 1 ? 'gg-blame gg-blame-empty' : 'gg-blame' },
+        },
       },
     ]);
   };

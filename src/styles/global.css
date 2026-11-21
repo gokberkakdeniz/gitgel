@@ -111,6 +111,9 @@ a:hover {
   color: var(--text-faint);
   font-style: italic;
 }
+.monaco-editor .gg-blame-empty {
+  margin-left: 0;
+}
 
 /* The current change of the diff (flow D4): an accent bar on its left edge in both panes. */
 .monaco-editor .gg-current-change {
