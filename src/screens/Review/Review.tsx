@@ -26,6 +26,7 @@ import { SyncButtons, SyncItems } from '../../sync/SyncButtons';
 import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import {
   divergedBanner,
+  fetchRepo,
   forcePushBranch,
   pullBranch,
   syncState,
@@ -1273,14 +1274,40 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           run: () => stepRowRef.current(1),
         },
       );
-    if (project)
+    if (project) {
       commands.push({
         id: 'project:edit',
         title: t('review.editProject'),
         group: t('cmd.groupProject'),
         run: () => editProject(project.projectId),
       });
-    if (entry) commands.push(...branchCommands(entry, project ? 'project' : 'branches', project?.projectName));
+      // Fetch of the whole project, as the header's: each of its repositories with a remote.
+      const { scan } = useData.getState();
+      const repos = projectRepos.filter((r) => {
+        const s = scan[r.repoId];
+        return s?.status === 'ok' && (s.active.some((e) => e.upstream) || s.remotes.length > 0);
+      });
+      const busy = Object.values(useRuns.getState().runs).some(
+        (r) => r.status === 'running' && r.scriptId.startsWith('git:') && repos.some((x) => x.repoId === r.repoId),
+      );
+      if (repos.length > 0 && !busy)
+        commands.push({
+          id: 'project:fetch',
+          title: t('sync.fetchBtn'),
+          group: t('cmd.groupProject'),
+          run: () => repos.forEach((r) => void fetchRepo({ ...r, branch: null, worktreePath: null, upstream: null })),
+        });
+    }
+    if (entry)
+      commands.push(
+        ...branchCommands(entry, project ? 'project' : 'branches', project?.projectName, {
+          changeBase: () => {
+            const rect = menuButton.current?.getBoundingClientRect();
+            if (rect) setBaseMenu(rect);
+          },
+          projectFetch: !!project,
+        }),
+      );
     return { commands };
   });
 
@@ -1324,6 +1351,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const gitBusy = useGitActionRunning(repoId);
   // Change Base… (⋮) opens the Base menu where the ⋮ was.
   const [baseMenu, setBaseMenu] = useState<DOMRect | null>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
   const [baseSaved, setBaseSaved] = useState<string | null>(null);
   // A project's repositories, for Fetch; the conflicts a stash apply left (no operation).
   const projectRepos = useMemo(() => {
@@ -1462,7 +1490,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           repos={project ? projectRepos : undefined}
         />
       )}
-      <PageMenu>
+      <PageMenu buttonRef={menuButton}>
         {(close, anchor) => {
           // The open entry's part: Branch in a project review, the whole menu for a branch.
           const branchItems = (

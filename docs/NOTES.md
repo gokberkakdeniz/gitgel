@@ -37,8 +37,6 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
 - **Ignore a file** (2026-11-14). "Add to .gitignore" in Uncommitted's file menu. It writes a
   file in the worktree, not the repository: to decide whether that is a git action.
 - **Stash picked lines** (2026-11-14). As staging picked lines, but into a stash.
-- **Command palette** (2026-11-14). Change Base… and Fetch of a whole project are not in it
-  (SPEC §5 "Command palette").
 - **More from the AI providers** (2026-11-14). A summary of a review, or a pull request
   description, from the provider that writes commit messages.
 - **Many tags on a commit** (2026-11-14). The list under a stacked tag pill cannot scroll (the

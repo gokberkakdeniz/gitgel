@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, Ref } from 'react';
 import styles from './IconButton.module.css';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -7,6 +7,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 24 | 28 | 32;
   active?: boolean;
   'aria-label': string;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function IconButton({ size = 28, active, className, type = 'button', ...rest }: Props) {

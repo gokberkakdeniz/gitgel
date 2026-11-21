@@ -1134,12 +1134,15 @@ outside or leaving the page closes it (`src/commands/`).
     Change ⌥↓ / ⌥↑, Newer / Older Commit ⌥⇧↑ / ⌥⇧↓, and the view: Split View or Unified View ⌥V,
     Whole File or Changes Only ⌥C, Ignore Whitespace or Show Whitespace ⌥W, Show Blame or Hide Blame ⌥B (each names the other
     state; the view ones in a stash stack too).
-  - **Branch** (Review's open branch, as its ⋮ menu has them): Continue <op> / Abort <op> while
-    one is stopped, else Checkout Branch…, Fetch, Pull, Pull (Rebase), Push, Force Push, Rebase on
-    <base>, each when its menu item would be usable; Copy Branch Name, Open in <App>, the scripts
-    of that menu, Delete Branch….
+  - **Branch** (Review's open branch, as its ⋮ menu has them): Change Base… (opens the Base menu
+    at the ⋮), Continue <op> / Abort <op> while one is stopped, else Checkout Branch…, Fetch (not
+    in project scope), Pull, Pull (Rebase), Push, Force Push, Rebase on <base>, each when its menu
+    item would be usable; Copy Branch Name, Open in <App>, the scripts of that menu, Delete
+    Branch….
   - **Project**: Review Changes ⌘R, Add Branches… ⌘K, Rename Project F2 (project page; the draft
-    only Add Branches…), Edit Project, Rename Project (project review), Delete Project… (both).
+    only Add Branches…), Edit Project, Fetch (every repository of the project with a remote, as
+    the header's; not while a git action runs in one), Rename Project (project review), Delete
+    Project… (both).
   - **General**: New Project… ⌘N, Go to Branches, Go Back ⌘[, Go Forward ⌘], Show / Hide Sidebar
     ⌘B, Refresh, Add Repository…, Check for Updates…, What's New, About Gitgel, Report an Issue.
   - **Settings**: Open Settings ⌘,, Settings: <section> for each section, Theme: <name> for every
@@ -1148,7 +1151,6 @@ outside or leaving the page closes it (`src/commands/`).
 - Screens add their rows with `useCommandSource` (`src/commands/registry.ts`), read when the
   palette opens; the app's own are in `global.ts`, the branch's in `branch.ts`, which reuse the
   menus' rules (`syncState`, `rebaseBase`, `canCheckout`, `canDeleteBranch`, `branchScripts`).
-  Not in the palette yet: Change Base… and Fetch of a whole project.
 
 ### Settings (`Settings.dc.html`)
 

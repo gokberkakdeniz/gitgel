@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 import { t } from '../i18n';
 import { IconButton } from './IconButton';
 import { MoreVerticalIcon } from './icons';
@@ -7,12 +7,20 @@ import { Popover } from './Popover';
 
 /** The ⋮ button that closes a page header (Review): the page's less used actions
  * (Stash, Refresh, Edit project). `children` gets a `close` that also hands back the
- * button's rect, for a dialog that opens from it. */
-export function PageMenu({ children }: { children: (close: () => void, anchor: DOMRect) => ReactNode }) {
+ * button's rect, for a dialog that opens from it; `buttonRef` gives the button, for one opened
+ * from elsewhere (the command palette). */
+export function PageMenu({
+  children,
+  buttonRef,
+}: {
+  children: (close: () => void, anchor: DOMRect) => ReactNode;
+  buttonRef?: Ref<HTMLButtonElement>;
+}) {
   const [at, setAt] = useState<DOMRect | null>(null);
   return (
     <>
       <IconButton
+        ref={buttonRef}
         size={32}
         aria-label={t('common.moreActions')}
         title={t('common.moreActions')}

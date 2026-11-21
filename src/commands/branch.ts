@@ -14,7 +14,14 @@ import { fetchRepo, forcePushBranch, pullBranch, pushBranch, rebaseBase, rebaseO
 import { useData } from '../state/data';
 import type { Command } from './registry';
 
-export function branchCommands(entry: EntrySummary, menu: ScriptMenuName, project?: string): Command[] {
+/** `changeBase` opens Review's Base menu; `projectFetch` leaves Fetch out (a project's own Fetch
+ * fetches all of its repositories). */
+export function branchCommands(
+  entry: EntrySummary,
+  menu: ScriptMenuName,
+  project?: string,
+  { changeBase, projectFetch }: { changeBase?: () => void; projectFetch?: boolean } = {},
+): Command[] {
   const { config, scan, openApps } = useData.getState();
   const group = t('cmd.groupBranch');
   const running = Object.values(useRuns.getState().runs).some(
@@ -23,6 +30,7 @@ export function branchCommands(entry: EntrySummary, menu: ScriptMenuName, projec
   const list: Command[] = [];
   const add = (id: string, title: string, run: () => void) => list.push({ id: `branch:${id}`, title, group, run });
 
+  if (changeBase) add('changeBase', t('review.changeBase'), changeBase);
   const gone = entry.state === 'repo_missing' || entry.state === 'branch_deleted';
   if (!running && !gone) {
     const op = entry.operation;
@@ -39,7 +47,7 @@ export function branchCommands(entry: EntrySummary, menu: ScriptMenuName, projec
       const u = entry.upstream;
       if (entry.branch && u) {
         const st = syncState(entry);
-        add('fetch', t('sync.fetchBtn'), () => void fetchRepo(entry));
+        if (!projectFetch) add('fetch', t('sync.fetchBtn'), () => void fetchRepo(entry));
         if (!st.pull) add('pull', t('sync.pullBtn'), () => void pullBranch(entry));
         if (st.diverged && !st.pull) add('pullRebase', t('history.pullRebase'), () => void pullBranch(entry, true));
         if (!st.push) add('push', t('sync.pushBtn'), () => void pushBranch(entry));

@@ -664,6 +664,7 @@ it was done within a topic.
 - [x] Hidden sidebar peek: resting on the header's show-sidebar button shows the sidebar over the page until the pointer leaves it; its toggle pins it — 2026-10-17
 - [x] Command palette, VS Code style: ⌘P goes to a project entry, project or branch, ⇧⌘P (a `>` query) runs a command of the screen or the app, Recently Used first; SPEC §5 "Command palette" — 2026-10-18
   - note: the old ⌘K shortcuts stay as they are for now (user decision); Stash…, Change Base… and a project-wide Fetch are not in the palette yet.
+- [x] Command palette: Change Base… (Branch; opens the Base menu at Review's ⋮) and a project review's Fetch of every repository (Project, in place of the Branch group's Fetch) — 2026-11-21
 
 ### Components and design canvas
 - [x] Design: open-item menu states (not checked out opens the repository folder,
