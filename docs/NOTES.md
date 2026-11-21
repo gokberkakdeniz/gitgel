@@ -13,13 +13,6 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
 - **Tags after pushing** (2026-11-21; pushing one is T28.1). Fetch brings only the tags on the
   commits it fetches and keeps a tag the remote deleted (no `--prune-tags`); pushing every tag
   at once (`git push --tags`) does not exist.
-- **Hunk buttons in the diff gutter** (2026-10-19). VS Code's diff editor shows Revert (↶) and
-  Stage (+) beside each hunk. Monaco 0.57 has the gutter menu (`renderGutterMenu`) but only with
-  Revert Block, and only when the modified side is writable (ours is `readOnly`); Stage comes
-  from VS Code's git extension via `MenuId.DiffEditorHunkToolbar`, which standalone Monaco does
-  not expose (only through internal ESM modules, which may break on upgrades). Sturdier: our own
-  glyph-margin / overlay widget per hunk from `getLineChanges()`, wired to the picked-lines
-  stage/unstage (`79f1a20`); Revert would be a git action (SPEC §0, §10).
 - **Viewed files** (2026-11-14). Marking a file of a review as viewed, with a count of what is
   left; where the marks live and when a changed file loses its mark are open.
 - **Comparing two refs** (2026-11-14). Two branches or two commits against each other, not only
