@@ -149,8 +149,22 @@ make_web_app() {
   commit "$repo" 2 "Billing plans"
   png "$repo" public/billing/badge.png blue
   commit "$repo" 2 "Billing badge"
+  # One annotated tag (the single pill's tooltip has its message).
+  at 2
+  git -C "$repo" tag -a billing-badge -m "$(printf '%s\n\n%s' 'Billing badge' 'First cut of the badge, blue.')"
   put "$repo" src/billing/invoice.ts 'export function invoice() {}'
   commit "$repo" 2 "Invoice stub"
+  # Many tags on one commit (the stacked pill's list scrolls past ten): annotated ones with a
+  # message, every third one lightweight.
+  local n
+  for n in $(seq 1 24); do
+    if (( n % 3 == 0 )); then
+      git -C "$repo" tag "billing-rc.$n"
+    else
+      at 2
+      git -C "$repo" tag -a "billing-rc.$n" -m "$(printf '%s\n\n%s' "Billing RC $n" "Release candidate $n of billing v2.")"
+    fi
+  done
   # The image changes: its diff shows both sides.
   png "$repo" public/billing/badge.png green
   commit "$repo" 2 "Make the billing badge green"
