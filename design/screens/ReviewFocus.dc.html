@@ -30,6 +30,13 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 .gg-has:hover .gg-acts,.gg-has:focus-within .gg-acts{display:flex}
 .gg-ib:hover{background:var(--bg-pressed)!important;color:var(--text-strong)!important}
 .gg-commits{container-type:inline-size}
+/* Several tags: the newest one's pill with a second pill's edge behind it (GitHub Desktop's stack);
+   resting on it 300ms lists them all under it, ten lines tall, scrolling past that. */
+.gg-tstack{position:relative;display:flex;padding-right:4px}
+.gg-tstack::before{content:'';position:absolute;inset:0 0 0 4px;border-radius:999px;background:var(--border-strong)}
+.gg-tstack>*{position:relative}
+.gg-tlist{position:absolute!important;top:calc(100% + 4px);right:0;z-index:20;display:flex;flex-direction:column;gap:2px;padding:6px 10px;max-width:320px;max-height:190px;overflow-y:auto;overscroll-behavior:contain;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;box-shadow:0 12px 32px var(--shadow);font-family:'JetBrains Mono',monospace;font-size:11px;line-height:16px;color:var(--text-body);white-space:nowrap;user-select:text;cursor:text;visibility:hidden;transition:visibility 0s .15s}
+.gg-tstack:hover .gg-tlist{visibility:visible;transition-delay:.3s}
 .gg-dl{position:relative}
 .gg-nb{opacity:0}
 .gg-dl:hover .gg-nb,.gg-nb:focus-visible{opacity:1}
@@ -134,7 +141,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <sc-if value="{{it.two}}" hint-placeholder-val="{{true}}">
 <span title="{{it.author}}" style="width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 10px; font-weight: 600; background: var(--bg-avatar); color: var(--text-strong)">{{it.initials}}</span>
 <span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if><span style="margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 6px"><sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for><sc-if value="{{it.hasTagRest}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tagRest}}" tone="neutral" size="sm" mono="{{true}}" title="{{it.tagRestTitle}}" hint-size="24px,16px"></dc-import></sc-if></span></span>
+<span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{it.subjectStyle}}">{{it.subject}}</span><sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if><span style="margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 6px"><sc-if value="{{it.oneTag}}" hint-placeholder-val="{{false}}"><span style="display: flex; max-width: 120px"><dc-import name="Pill" theme="none" label="{{it.tag1}}" tone="neutral" size="sm" mono="{{true}}" title="{{it.tag1}}" hint-size="48px,16px"></dc-import></span></sc-if><sc-if value="{{it.manyTags}}" hint-placeholder-val="{{false}}"><span class="gg-tstack" title="" aria-label="{{it.tagsLabel}}"><span style="display: flex; max-width: 120px"><dc-import name="Pill" theme="none" label="{{it.tag1}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></span><span class="gg-tlist"><sc-for list="{{it.allTags}}" as="tg" hint-placeholder-count="2"><span title="{{tg.name}}">{{tg.name}}</span></sc-for></span></span></sc-if></span></span>
 <span style="display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap"><span style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{it.author}} · {{it.age}}</span><span class="gg-hide" style="color: var(--accent-text)">{{it.sha}}</span></span>
 </span>
 </sc-if>
@@ -143,7 +150,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <span style="{{it.subjectStyle}}">{{it.subject}}</span>
 <sc-if value="{{it.hasTag}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tag}}" tone="accent" size="sm" hint-size="64px,16px"></dc-import></sc-if><sc-if value="{{it.hasFrom}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.from}}" tone="warning" size="sm" mono="{{true}}" hint-size="96px,16px"></dc-import></sc-if>
 <span style="flex-grow: 1"></span>
-<sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="0"><dc-import name="Pill" theme="none" label="{{tg.name}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></sc-for><sc-if value="{{it.hasTagRest}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="{{it.tagRest}}" tone="neutral" size="sm" mono="{{true}}" title="{{it.tagRestTitle}}" hint-size="24px,16px"></dc-import></sc-if>
+<sc-if value="{{it.oneTag}}" hint-placeholder-val="{{false}}"><span style="display: flex; max-width: 120px"><dc-import name="Pill" theme="none" label="{{it.tag1}}" tone="neutral" size="sm" mono="{{true}}" title="{{it.tag1}}" hint-size="48px,16px"></dc-import></span></sc-if><sc-if value="{{it.manyTags}}" hint-placeholder-val="{{false}}"><span class="gg-tstack" title="" aria-label="{{it.tagsLabel}}"><span style="display: flex; max-width: 120px"><dc-import name="Pill" theme="none" label="{{it.tag1}}" tone="neutral" size="sm" mono="{{true}}" hint-size="48px,16px"></dc-import></span><span class="gg-tlist"><sc-for list="{{it.allTags}}" as="tg" hint-placeholder-count="2"><span title="{{tg.name}}">{{tg.name}}</span></sc-for></span></span></sc-if>
 <span class="gg-hide" style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{it.age}}</span>
 </sc-if>
 </button>
@@ -1511,9 +1518,9 @@ class Component extends DCLogic {
       var on = !multi && selE.id === e.id && selRow === c.sha;
       return { isCommit: true, two: !oneLine, one: oneLine, sha: c.sha, subject: c.subject, author: c.author, age: c.age, initials: initials(c.author),
         hasTag: i === 0 && !!st.amend[e.id], tag: 'amending', sel: on || inMulti, hasFrom: !!c.from, from: c.from || '',
-        // The first tag and +N for the rest (their names in its tooltip).
-        tags: (c.tags || []).slice(0, 1).map(function (n) { return { name: n }; }),
-        hasTagRest: (c.tags || []).length > 1, tagRest: '+' + ((c.tags || []).length - 1), tagRestTitle: (c.tags || []).slice(1).join('\n'),
+        // The newest tag; with more, a second pill's edge behind it and every tag listed on hover.
+        oneTag: (c.tags || []).length === 1, manyTags: (c.tags || []).length > 1, tag1: (c.tags || [])[0] || '',
+        tagsLabel: (c.tags || []).join(', '), allTags: (c.tags || []).map(function (n) { return { name: n }; }),
         pick: pickRow(e, c.sha), menu: commitMenu(e, c, false),
         title: c.body ? c.subject + '\n\n' + c.body : c.subject,
         wrapStyle: wrap(on, inMulti, ''), hitStyle: hit(oneLine ? '5px 8px' : '7px 8px'),
