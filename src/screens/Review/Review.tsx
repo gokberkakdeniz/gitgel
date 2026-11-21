@@ -2578,7 +2578,7 @@ function ListRow({
               {fromBranch[c.sha]}
             </Pill>
           )}
-          <TagPills tags={c.tags} />
+          <TagPills tags={c.tags} messages={c.tagMessages} />
         </>
       );
       const age = c.committedAt ? ageTitle(c.committedAt) : undefined;
@@ -2804,15 +2804,45 @@ function ShaLink({ repoId, sha, short }: { repoId: string; sha: string; short: s
 
 /** A commit's tags (§16) on the right of its line (a list row, the commit's header): the newest
  * one as a neutral mono pill. With more, a second pill's edge shows behind it (GitHub Desktop's
- * stack) and hovering lists them all under it. Not a `title`: the row has one (the commit's
- * message), and macOS keeps showing that one. */
-function TagPills({ tags }: { tags: string[] }) {
+ * stack) and resting the pointer on it lists them all under it; the pointer can move into the
+ * list (ten names tall; a longer one scrolls), to select a name or rest on one for its message.
+ * Not a `title`: the row has one (the commit's message), and macOS keeps showing that one. */
+function TagPills({ tags, messages = {} }: { tags: string[]; messages?: Record<string, string> }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const opening = useRef<number | undefined>(undefined);
+  const closing = useRef<number | undefined>(undefined);
+  // A short wait before opening, so a pointer passing over the pills on its way down the list
+  // does not leave lists over the rows.
+  const open = (el: Element) => {
+    window.clearTimeout(closing.current);
+    window.clearTimeout(opening.current);
+    opening.current = window.setTimeout(() => setRect(el.getBoundingClientRect()), 300);
+  };
+  const stay = () => window.clearTimeout(closing.current);
+  // A short delay, so the pointer can move from the pill into the list.
+  const close = () => {
+    window.clearTimeout(opening.current);
+    window.clearTimeout(closing.current);
+    closing.current = window.setTimeout(() => setRect(null), 150);
+  };
+  useEffect(
+    () => () => {
+      window.clearTimeout(opening.current);
+      window.clearTimeout(closing.current);
+    },
+    [],
+  );
   if (!tags.length) return null;
   if (tags.length === 1)
     return (
       <span className={styles.tags}>
-        <Pill tone="neutral" size="sm" mono title={tags[0]} className={styles.tag}>
+        <Pill
+          tone="neutral"
+          size="sm"
+          mono
+          title={messages[tags[0]] ? `${tags[0]}\n\n${messages[tags[0]]}` : tags[0]}
+          className={styles.tag}
+        >
           {tags[0]}
         </Pill>
       </span>
@@ -2823,18 +2853,22 @@ function TagPills({ tags }: { tags: string[] }) {
         className={styles.tagStack}
         // Empty: the row's tooltip stays away while the list shows.
         title=""
-        onMouseEnter={(e) => setRect(e.currentTarget.getBoundingClientRect())}
-        onMouseLeave={() => setRect(null)}
+        onMouseEnter={(e) => (rect ? stay() : open(e.currentTarget))}
+        onMouseLeave={close}
       >
         <Pill tone="neutral" size="sm" mono aria-label={tags.join(', ')} className={styles.tag}>
           {tags[0]}
         </Pill>
       </span>
       {rect && (
-        <Popover anchorRect={rect} alignRight className={styles.moreTags} onClose={() => setRect(null)}>
-          {tags.map((tag) => (
-            <span key={tag}>{tag}</span>
-          ))}
+        <Popover anchorRect={rect} alignRight onClose={() => setRect(null)} onMouseEnter={stay} onMouseLeave={close}>
+          <div className={styles.moreTags}>
+            {tags.map((tag) => (
+              <span key={tag} title={messages[tag]}>
+                {tag}
+              </span>
+            ))}
+          </div>
         </Popover>
       )}
     </span>
@@ -2889,7 +2923,7 @@ function CommitHeader({
         <span className={`${parts.barTitle} selectable`} title={c.subject}>
           {c.subject}
         </span>
-        <TagPills tags={c.tags} />
+        <TagPills tags={c.tags} messages={c.tagMessages} />
       </div>
       {c.body && (
         <div ref={bodyRef} className={`${styles.body} selectable`}>

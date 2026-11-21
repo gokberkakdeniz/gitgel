@@ -1752,6 +1752,8 @@ export interface HistoryCommit {
   committedAt: number;            // committer time, unix seconds
   parents: number;                // > 1: a merge commit
   inBase: boolean;                // reachable from the base asked for (below the base line)
+  tags: string[];                 // tags pointing at it, newest first
+  tagMessages?: Record<string, string>; // annotated tags' messages by name (trimmed, no signature); absent when none
 }
 export interface HistoryPage {
   rev: string;                    // as asked for
@@ -3273,9 +3275,12 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     `text.strong` subject (ellipsis) with an outline sm pill "merge" for a merge commit and a
     neutral mono sm pill for the newest tag on it (annotated tags peeled; by an annotated tag's
     date or a lightweight one's ref file's, packed lightweight ones last by name; at most 120px,
-    ellipsis); with more tags a second pill's edge shows 4px behind it on the right
-    (`border.strong`; GitHub Desktop's stack) and hovering lists them all under it (mono 11, one
-    per line, at once; not a tooltip, since the row has its own) on the right of the line; line 2
+    ellipsis; its native tooltip the name, and an annotated tag's message under it); with more
+    tags a second pill's edge shows 4px behind it on the right (`border.strong`; GitHub Desktop's
+    stack) and resting the pointer on it 300ms lists them all under it (mono 11, one per line,
+    selectable, ten lines tall and scrolling past that; an annotated tag's message is its line's
+    native tooltip; not a tooltip itself, since the row has its own; it stays open while the
+    pointer is in it and closes 150ms after it leaves both) on the right of the line; line 2
     mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
     below the base line: subject `text.muted`, row opacity 0.7. With "Commit rows: One line"
     (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11

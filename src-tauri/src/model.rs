@@ -1164,8 +1164,12 @@ pub struct HistoryCommit {
     pub parents: u32,
     /// Reachable from the base asked for (listed below the base line).
     pub in_base: bool,
-    /// Tags pointing at it, sorted.
+    /// Tags pointing at it, newest first.
     pub tags: Vec<String>,
+    /// The annotated ones' messages by tag name (trimmed, signature left out); only tags with
+    /// one, and left out when there are none.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub tag_messages: BTreeMap<String, String>,
 }
 
 /// Who last changed each line of a file (§5 "Blame").

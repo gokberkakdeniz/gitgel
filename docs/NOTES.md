@@ -39,6 +39,3 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
 - **Stash picked lines** (2026-11-14). As staging picked lines, but into a stash.
 - **More from the AI providers** (2026-11-14). A summary of a review, or a pull request
   description, from the provider that writes commit messages.
-- **Many tags on a commit** (2026-11-14). The list under a stacked tag pill cannot scroll (the
-  pointer cannot enter it), so a commit with dozens of tags gets a long one. Option: show the
-  first few and `+N`.

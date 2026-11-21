@@ -406,7 +406,8 @@ export interface HistoryCommit {
   committedAt: number; // committer time, unix seconds
   parents: number; // > 1: a merge commit
   inBase: boolean; // reachable from the base asked for (below the base line)
-  tags: string[]; // tags pointing at it, sorted
+  tags: string[]; // tags pointing at it, newest first
+  tagMessages?: Record<string, string>; // annotated tags' messages by name; absent when none
 }
 /** Who last changed each line of a file (SPEC §5 "Blame"). */
 export interface Blame {

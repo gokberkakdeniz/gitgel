@@ -27,6 +27,9 @@ interface Props {
    * element at the middle of `anchorRect` when it opens. */
   anchor?: Element | null;
   className?: string;
+  /** For a popover opened on hover, so it stays open while the pointer is in it. */
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   children: ReactNode;
 }
 
@@ -79,7 +82,19 @@ function place(
   return { top, left, maxHeight: h > room ? room : undefined };
 }
 
-export function Popover({ anchorRect, onClose, width, alignRight, above, side, anchor, className, children }: Props) {
+export function Popover({
+  anchorRect,
+  onClose,
+  width,
+  alignRight,
+  above,
+  side,
+  anchor,
+  className,
+  onMouseEnter,
+  onMouseLeave,
+  children,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Pos | null>(null);
 
@@ -187,6 +202,8 @@ export function Popover({ anchorRect, onClose, width, alignRight, above, side, a
           maxHeight: pos?.maxHeight,
           overflowY: pos?.maxHeight ? 'auto' : undefined,
         }}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       >
         {children}
       </div>

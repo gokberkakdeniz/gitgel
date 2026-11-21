@@ -143,13 +143,16 @@ impl TestRepo {
             .unwrap();
     }
 
-    /// An annotated tag on `oid`.
+    /// An annotated tag on `oid`, with the message "annotated".
     pub fn tag_annotated(&self, name: &str, oid: Oid) {
+        self.tag_with_message(name, oid, "annotated");
+    }
+
+    /// An annotated tag on `oid` with `message`.
+    pub fn tag_with_message(&self, name: &str, oid: Oid, message: &str) {
         let target = self.repo.find_object(oid, None).unwrap();
         let sig = git2::Signature::now("Test", "test@example.com").unwrap();
-        self.repo
-            .tag(name, &target, &sig, "annotated", false)
-            .unwrap();
+        self.repo.tag(name, &target, &sig, message, false).unwrap();
     }
 
     /// Moves a branch to `oid` (simulates a fast-forward merge).

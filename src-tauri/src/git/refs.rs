@@ -321,42 +321,76 @@ pub fn tags(repo: &Repository) -> Result<Vec<String>, AppError> {
     Ok(tags)
 }
 
-/// Tag names by the commit they point to (annotated tags peeled), each list newest first by
-/// when the tag was made: an annotated tag's own date, a lightweight one's ref file's (a packed
+/// A tag on a commit, from `tags_by_commit`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CommitTag {
+    pub name: String,
+    /// An annotated tag's message, trimmed and without its signature; `None` for a lightweight
+    /// tag or an empty message.
+    pub message: Option<String>,
+}
+
+/// Tags by the commit they point to (annotated tags peeled), each list newest first by when the
+/// tag was made: an annotated tag's own date, a lightweight one's ref file's (a packed
 /// lightweight tag has none; those come last, by name). Tags on anything other than a commit are
 /// left out.
-pub fn tags_by_commit(repo: &Repository) -> Result<HashMap<Oid, Vec<String>>, AppError> {
-    let mut out: HashMap<Oid, Vec<(Option<i64>, String)>> = HashMap::new();
+pub fn tags_by_commit(repo: &Repository) -> Result<HashMap<Oid, Vec<CommitTag>>, AppError> {
+    let mut out: HashMap<Oid, Vec<(Option<i64>, CommitTag)>> = HashMap::new();
     for r in repo.references_glob("refs/tags/*")? {
         let r = r?;
         let (Ok(name), Ok(commit)) = (r.shorthand(), r.peel_to_commit()) else {
             continue;
         };
-        out.entry(commit.id())
-            .or_default()
-            .push((tag_made_at(repo, &r), name.to_string()));
+        let tag = r.peel_to_tag().ok();
+        let made_at = tag_made_at(repo, &r, tag.as_ref());
+        let message = tag.as_ref().and_then(tag_message);
+        out.entry(commit.id()).or_default().push((
+            made_at,
+            CommitTag {
+                name: name.to_string(),
+                message,
+            },
+        ));
     }
     Ok(out
         .into_iter()
         .map(|(oid, mut tags)| {
             tags.sort_by(|a, b| match (a.0, b.0) {
-                (Some(x), Some(y)) => y.cmp(&x).then_with(|| a.1.cmp(&b.1)),
+                (Some(x), Some(y)) => y.cmp(&x).then_with(|| a.1.name.cmp(&b.1.name)),
                 (Some(_), None) => std::cmp::Ordering::Less,
                 (None, Some(_)) => std::cmp::Ordering::Greater,
-                (None, None) => a.1.cmp(&b.1),
+                (None, None) => a.1.name.cmp(&b.1.name),
             });
-            (oid, tags.into_iter().map(|(_, name)| name).collect())
+            (oid, tags.into_iter().map(|(_, tag)| tag).collect())
         })
         .collect())
 }
 
+/// An annotated tag's message, trimmed, without the signature a signed tag keeps after it.
+fn tag_message(tag: &git2::Tag) -> Option<String> {
+    let message = String::from_utf8_lossy(tag.message_bytes()?).into_owned();
+    let end = [
+        "-----BEGIN PGP SIGNATURE-----",
+        "-----BEGIN SSH SIGNATURE-----",
+    ]
+    .iter()
+    .filter_map(|mark| {
+        message
+            .match_indices(mark)
+            .find(|(i, _)| *i == 0 || message[..*i].ends_with('\n'))
+            .map(|(i, _)| i)
+    })
+    .min()
+    .unwrap_or(message.len());
+    let message = message[..end].trim();
+    (!message.is_empty()).then(|| message.to_string())
+}
+
 /// When a tag was made, in milliseconds: the tagger's date of an annotated tag, else the
 /// modification time of its loose ref file (git keeps no date for a lightweight tag).
-fn tag_made_at(repo: &Repository, r: &git2::Reference) -> Option<i64> {
-    if let Ok(tag) = r.peel_to_tag() {
-        if let Some(tagger) = tag.tagger() {
-            return Some(tagger.when().seconds() * 1000);
-        }
+fn tag_made_at(repo: &Repository, r: &git2::Reference, tag: Option<&git2::Tag>) -> Option<i64> {
+    if let Some(tagger) = tag.and_then(|t| t.tagger()) {
+        return Some(tagger.when().seconds() * 1000);
     }
     let file = repo.commondir().join(r.name().ok()?);
     let made = std::fs::metadata(file).ok()?.modified().ok()?;
@@ -787,11 +821,39 @@ mod tests {
         at("b", 100);
         at("a", 200);
         at("c", 300);
-        assert_eq!(tags_by_commit(&t.repo).unwrap()[&a], ["c", "a", "b"]);
+        let names = || -> Vec<String> {
+            tags_by_commit(&t.repo).unwrap()[&a]
+                .iter()
+                .map(|tag| tag.name.clone())
+                .collect()
+        };
+        assert_eq!(names(), ["c", "a", "b"]);
         // An annotated tag goes by its own date (now), whatever its file says.
         t.tag_annotated("z", a);
         at("z", 1);
-        assert_eq!(tags_by_commit(&t.repo).unwrap()[&a], ["z", "c", "a", "b"]);
+        assert_eq!(names(), ["z", "c", "a", "b"]);
+    }
+
+    #[test]
+    fn tags_by_commit_gives_an_annotated_tags_message() {
+        let t = TestRepo::new();
+        let a = t.commit_on("main", &[("a", Some(b"a"))], "a", 1);
+        t.tag("light", a);
+        t.tag_annotated("heavy", a);
+        let signed =
+            "Release\n\nNotes\n-----BEGIN PGP SIGNATURE-----\n\nabc\n-----END PGP SIGNATURE-----\n";
+        t.tag_with_message("signed", a, signed);
+        let message = |name: &str| {
+            tags_by_commit(&t.repo).unwrap()[&a]
+                .iter()
+                .find(|tag| tag.name == name)
+                .unwrap()
+                .message
+                .clone()
+        };
+        assert_eq!(message("light"), None);
+        assert_eq!(message("heavy").as_deref(), Some("annotated"));
+        assert_eq!(message("signed").as_deref(), Some("Release\n\nNotes"));
     }
 
     #[test]

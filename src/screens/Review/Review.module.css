@@ -288,12 +288,19 @@
   position: relative;
 }
 
-/* A commit's tags, under the stack while hovered. */
+/* A commit's tags, under the stack while hovered; the pointer can enter it. Ten names tall (16px
+   lines, 2px gaps, the padding), a longer list scrolls in it. */
 .moreTags {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
   padding: 6px 10px;
   max-width: 320px;
-  pointer-events: none;
+  max-height: calc(10 * 16px + 9 * 2px + 12px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  user-select: text;
+  -webkit-user-select: text;
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 16px;

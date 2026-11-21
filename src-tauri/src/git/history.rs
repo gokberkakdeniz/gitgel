@@ -472,11 +472,19 @@ fn touches(
     Ok(hit)
 }
 
-fn history_commit(commit: &git2::Commit, in_base: bool, tags: Vec<String>) -> HistoryCommit {
+fn history_commit(
+    commit: &git2::Commit,
+    in_base: bool,
+    tags: Vec<refs::CommitTag>,
+) -> HistoryCommit {
     let sha = commit.id().to_string();
     let message = String::from_utf8_lossy(commit.message_bytes()).into_owned();
     let (subject, body) = split_message(&message);
     let author = commit.author();
+    let tag_messages = tags
+        .iter()
+        .filter_map(|t| Some((t.name.clone(), t.message.clone()?)))
+        .collect();
     HistoryCommit {
         short_sha: sha[..7].to_string(),
         sha,
@@ -487,7 +495,8 @@ fn history_commit(commit: &git2::Commit, in_base: bool, tags: Vec<String>) -> Hi
         committed_at: commit.time().seconds(),
         parents: commit.parent_count() as u32,
         in_base,
-        tags,
+        tags: tags.into_iter().map(|t| t.name).collect(),
+        tag_messages,
     }
 }
 
@@ -778,6 +787,9 @@ mod tests {
             })
             .collect();
         assert_eq!(tags, [vec!["v1.0", "v1.1"], vec!["first"]]);
+        // Only the annotated one has a message.
+        let messages: Vec<_> = w.commits[0].tag_messages.iter().collect();
+        assert_eq!(messages, [(&"v1.0".to_string(), &"annotated".to_string())]);
     }
 
     #[test]
