@@ -20,6 +20,8 @@ import type {
   HistoryPage,
   IgnoreFiles,
   IndexChanges,
+  Note,
+  Notes,
   NewBranchCheckout,
   NewBranchProblem,
   NewTagProblem,
@@ -46,6 +48,16 @@ import type {
 import type { ThemeFile } from '../themes/types';
 
 export const getConfig = () => invoke<Config>('get_config');
+
+/** Every branch's notes (SPEC §5 Review "Notes"). */
+export const getNotes = () => invoke<Notes>('get_notes');
+
+/** Replaces a branch's notes; an empty list drops them. */
+export const setNotes = (key: string, list: Note[]) => invoke<void>('set_notes', { key, list });
+
+/** The noted files as they are now (null: missing, binary, too large): from the worktree, else at `rev`. */
+export const getNoteFiles = (repoId: string, worktreePath: string | null, rev: string, paths: string[]) =>
+  invoke<(string | null)[]>('get_note_files', { repoId, worktreePath, rev, paths });
 
 export const inspectFolders = (paths: string[]) => invoke<FolderCheck[]>('inspect_folders', { paths });
 

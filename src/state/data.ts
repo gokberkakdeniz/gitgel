@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type {
   Config,
   EditorOption,
+  Notes,
   OpenApp,
   RepoScan,
   RepoUpdated,
@@ -23,6 +24,7 @@ interface DataState {
   terminalOptions: TerminalOption[]; // install state of Terminal/iTerm2/WezTerm, for Settings
   update: UpdateInfo | null; // a newer version, from the update check
   updateProgress: number | 'unknown' | null; // download percent while installing; null otherwise
+  notes: Notes; // every branch's notes on diff lines (notes.json)
   setConfig: (config: Config) => void;
   setScan: (result: ScanResult) => void;
   applyRepoUpdated: (event: RepoUpdated) => void;
@@ -32,6 +34,7 @@ interface DataState {
   setTerminalOptions: (options: TerminalOption[]) => void;
   setUpdate: (update: UpdateInfo | null) => void;
   setUpdateProgress: (progress: number | 'unknown' | null) => void;
+  setNotes: (notes: Notes) => void;
 }
 
 export const useData = create<DataState>()((set) => ({
@@ -46,6 +49,7 @@ export const useData = create<DataState>()((set) => ({
   terminalOptions: [],
   update: null,
   updateProgress: null,
+  notes: {},
   setConfig: (config) => set((s) => ({ config, configVersion: s.configVersion + 1 })),
   setScan: (result) =>
     set((s) => {
@@ -68,6 +72,7 @@ export const useData = create<DataState>()((set) => ({
   setTerminalOptions: (terminalOptions) => set({ terminalOptions }),
   setUpdate: (update) => set({ update }),
   setUpdateProgress: (updateProgress) => set({ updateProgress }),
+  setNotes: (notes) => set({ notes }),
 }));
 
 /** Scans of the repos in the config, in config order. Records of removed repos are ignored. */

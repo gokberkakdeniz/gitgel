@@ -207,6 +207,7 @@ function Prompts({ config }: { config: Config }) {
     ['abortOperation', 'settings.promptAbort'],
     ['amendPushed', 'settings.promptAmend'],
     ['deleteProjects', 'settings.promptDelete'],
+    ['clearNotes', 'settings.promptNotes'],
   ];
   return (
     <section className={styles.prompts} aria-labelledby="prompts-title">

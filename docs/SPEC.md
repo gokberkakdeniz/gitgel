@@ -201,6 +201,7 @@ gitgel/
 │  │            shortcuts.ts  addRepos.ts  draft.ts  projects.ts  projectSort.ts  useFolderDrop.ts  theme.ts  zoom.ts
 │  │            useCopy.ts  changelog.ts (CHANGELOG.md parsed, version compare)  whatsNew.ts
 │  │            prompts.ts (Settings › Prompts: "Do not show this message again")
+│  │            notes.ts (notes on diff lines: finding them again, sorting, copying; §5 "Notes")
 │  │            ai.ts (generate-finished hub, provider list; §15 "Generate message")
 │  ├─ i18n/     index.ts (`t()` wrapper over MF2, locale resolution, en fallback), en.json, tr.json, TRANSLATE.md
 │  ├─ windows/  # §7 the small windows: AuxApp (entry, theme, sizing), AboutWindow,
@@ -215,6 +216,7 @@ gitgel/
 │  │                              # Sidebar/, BaseMenu/, ProjectPicker/, PageHeader/, ...
 │  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
+│  │            # Review/notes.tsx: the Notes button and popover, List Options, Clear (§5 "Notes")
 │  │            # Review/parts.tsx (+ parts.module.css): file bar (view menu, change navigation),
 │  │            #   file row, stash section, diff view settings, page layout
 │  │            # Review/Review.tsx: the screen (BranchReview, ProjectReview, StashReview around BranchView),
@@ -238,6 +240,7 @@ gitgel/
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
 │  └─ monaco/   monaco.ts  setup.ts  theme.ts  language.ts  DiffView.tsx  ImageDiff.tsx  position.ts  changeNav.ts  blame.ts
+│               # NoteZone.tsx (a note's card and form in the diff, §5 "Notes")
 │               # lineStage.ts (the diff's Stage / Unstage of picked lines, §15 "Stage")
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
@@ -273,6 +276,7 @@ gitgel/
       │  ├─ stash.rs              # stash stack from the refs/stash reflog, a stash's changes
       │  ├─ operation.rs          # a rebase / merge / cherry-pick / revert stopped in a worktree (§15)
       │  └─ testutil.rs           # #[cfg(test)] only: throwaway repos in a TempDir
+      ├─ notes.rs                 # notes on diff lines: notes.json, the noted files now (§5 "Notes")
       ├─ scan.rs                  # branch/worktree discovery, entry summaries, stored scan
       ├─ watch.rs                 # file watching, event classification, targeted recompute
       ├─ review.rs  files.rs  base.rs  projects.rs  repos.rs
@@ -807,6 +811,9 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
 - **Layout** as before: Review leaves the sidebar as it is; beside it (`ReviewSidebar.dc.html`,
   L2) the header drops the traffic lights, show-sidebar, Back and Forward and starts at 28px.
 - **Header** right side, gap 10 (the old History header's; `PageHeader` page `review`):
+  - Notes button (only while the listed branches have notes; "Notes" below): 32px, padding
+    0 10px, `bg.elevated`, `border`, radius 8; `note` icon 14 and the count (mono 12, tabular)
+    of the notes listed; open: `bg.hover`, `text.strong`, accent border.
   - Search field: `Input` 32px, 200px, placeholder "Search commits", label "Search commit
     messages, SHAs and paths", `Kbd` "⌘K" while empty; ⌘K focuses it. Typing searches the open
     branch's log (§16 "Reading", debounced 200 ms); Esc clears it. Not in the stash scope.
@@ -896,7 +903,9 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
   removed lines), left out when the selection takes the same. Then, not in a stash, "Show Commit <sha>"
   (`history`; with Blame on, on the new side, for a line last changed by another commit than the
   one shown: it searches that SHA, so the list is that commit, open on this file) and "File
-  History" (`history`; §16 "File history"), and a divider. Then "Copy relative reference" (`@<path>:<line>` or
+  History" (`history`; §16 "File history"), and a divider. Then "Add Note" (`note`, ⌥N; "Notes"
+  below: on the new side always, on the old side for a removed line; the lines selected, else the
+  clicked one; not in a stash), "Copy relative reference" (`@<path>:<line>` or
   `@<path>:<from>-<to>`, the path relative to the repository), "Copy absolute reference" (the
   same with the file's path in its worktree, else the repository folder; with a commit shown it is
   the folder's current file, not that commit's) and "Copy permalink" / "Open permalink" in the browser (only for a commit the branch's upstream has; the remote's
@@ -958,6 +967,74 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
   the first change in view. Picking a file lands on its first change. A file with no line
   changes (binary, too large, rename only) shows "No line changes" ("Only whitespace changed"
   when whitespace is ignored), and ↑ ↓ go straight to the neighbouring file.
+- **Notes** (canvas page "Review", W1–W10; `screens/Review/notes.tsx`, `monaco/NoteZone.tsx`,
+  `lib/notes.ts`, `notes.rs`): local notes on diff lines, to hand to an agent.
+  - **Kept** on this machine in `notes.json` beside `config.json`, one list per branch (its entry
+    key), never in git. A note holds its file (the new path), side (`old` / `new`), the lines it was
+    written on, their text, its text, when it was added and `resolved`. Commit, push, merge, amend
+    and rebase leave notes alone (a merge does not carry them to the base); Delete Branch drops the
+    branch's notes, removing a repository its branches'.
+  - **Where it shows**: a note is tied to its file and its lines' text, not to a commit: every diff
+    of the branch whose side has those lines shows it under the last of them (the occurrence
+    nearest to where it was written), in a Monaco view zone (split: Monaco
+    keeps the other side aligned; unified: a note on removed lines sits under the new line its
+    change ends on). The lines it covers have `accent.text` line numbers (500).
+  - **Outdated**: the branch's file as it is now (the worktree when checked out, else the branch
+    tip; `get_note_files`) no longer has the lines: listed only, never in the diff. Notes on
+    removed lines never turn outdated. **Resolved**: by hand (Resolve on the card). Resolved and
+    outdated notes count as closed.
+  - **Writing**: select lines (any selection takes the lines it touches; one ending at the start
+    of a line leaves that line out; Monaco's line numbers pick whole lines) and, once the mouse
+    button is up (at once for a keyboard selection), a toolbar shows on the right of that side
+    under the last one (`bg.elevated`, `border.strong`, radius 8, a shadow; 26×24 icon buttons): Add Note
+    (`note`, tooltip "Add Note (⌥N)"; new side: any lines; old side: removed lines only) and, on an
+    Uncommitted file when the lines touch a change, "Stage Selected Lines" (`plus`; a Staged row's
+    diff: "Unstage Selected Lines", `remove`; §15 "Stage"). No selection, no toolbar. ⌥N writes a note on the selected lines (else the cursor's line), as does the diff
+    menu's "Add Note". There is no `+` in the gutter: in Gitgel `+` stages. The form opens under
+    the lines: their numbers, a
+    textarea (placeholder "Note", 60px, accent border, focused), Cancel (ghost 28) and Save
+    (primary 28, disabled while empty, tooltip "Save (⌘↵)"); ⌘↵ saves, Esc cancels; the lines
+    are tinted `rgba(accent, 0.2)` meanwhile. A new note with nothing written closes when the focus
+    leaves it (not when the window does). The editor's own keys stay out of the card, which is an
+    overlay widget over a view zone that keeps its room (Monaco takes clicks in a view zone for
+    itself), from the code column to the scrollbar.
+  - **Card** (`bg.elevated`, `border`, radius 8, margin 6px 16px 6px 0, padding 6px 8px 9px 12px):
+    `note` icon 13 `accent.text`, `Line 2` / `Lines 22–23` (mono 11 muted), a neutral sm
+    "resolved" pill when resolved (card at 70% opacity); on hover or focus 22px icon buttons
+    Resolve (`check`; Unresolve, `undo`, when resolved), Edit Note (`pencil`: the form with its
+    text) and Delete Note (`trash`); the text 13px/19px, selectable. While the card is hovered or
+    focused (a click on it; `border.strong` border), its lines are tinted as while writing. Resolving while resolved
+    notes are hidden toasts "Note resolved", deleting "Note deleted", both with Undo.
+  - **File rows**: a note count (`note` icon 12 + number, mono 11 `accent.text`) after the folder:
+    the notes the file's diff shows.
+  - **Popover** (400px, right-aligned under the button, at most 560px tall): header "Notes"
+    (13px/600) + count pill, List Options (`tune`, 26px) on the right; the notes listed; footer
+    (top border, padding 10px 12px): "Clear Resolved" (ghost 28; only while some are closed),
+    "Clear All" (ghost 28), primary "Copy All" (`copy`) on the right. "No notes" when the options
+    hide them all. A note opens the whole review (the base line) on its file, scrolled to it (a
+    project review opens its branch first).
+    - **By date added** (default): one list; a row (padding 7px 8px, radius 8, hover `bg.hover`)
+      is `file:range` (mono 11 `accent.text`; the repo name first, 12px/600, when the list has
+      several branches), an "outdated" (warning) or "resolved" (neutral) sm pill, the age on the
+      right (mono 11 faint), the text under it (13px, two lines at most).
+    - **Grouped by file**: per branch (repo 13/600 + branch mono 12, when every branch is
+      listed), file name (mono 12) and folder (mono 11 faint), its notes by line (`L22–23`).
+  - **List Options** (220px menu): a project review first has **Branches**: "Open Branch"
+    (default) / "All Branches"; then **List**: "Sort by Date Added" (default) / "Group by File";
+    by date **Order**: "Newest First" (default) / "Oldest First"; then the checkbox "Show
+    Resolved" (off by default: closed notes are neither listed nor copied, resolved ones not in the
+    diff). A choice closes the menu, the checkbox leaves it open; global (`settings.notesList`).
+    The button's count, Copy All and Clear All follow what is listed.
+  - **Copy All** puts the listed notes on the clipboard in list order, each as its reference
+    (Copy Relative Reference's `@<path>:<line>` / `@<path>:<from>-<to>`, at the lines' place now)
+    and its text on the next line, a blank line between notes; toast "Copied N notes". With All
+    Branches and notes of several branches, each path starts where the branches' folders part
+    (the worktree, else the repository folder): `@token-refresh/src/auth/refresh.ts:22-23`.
+  - **Clear All** removes the listed notes, **Clear Resolved** every closed one; both ask first
+    while Settings › Prompts › "Clearing notes" is on: "Confirm Clear Notes" / "Confirm Clear
+    Resolved Notes", a `branch` row `<repo> / <branch>` (one branch), `Are you sure you want to
+    clear all N notes?` / `… N resolved notes?`, "Do not show this message again", Cancel and
+    danger "Clear Notes" / "Clear Resolved Notes"; then a toast `Cleared N notes` with Undo.
 - **Base menu** (340px popover, from Review's ⋮ › "Change Base…", the Project table's Base button or a
   "base missing" pill): "Search" input; **Suggested** (mono 13 name +
   `Contains N of the M commits shown`); **Default** (see "Default and remote rows" below);
@@ -1289,7 +1366,7 @@ outside or leaving the page closes it (`src/commands/`).
   confirmation dialog before...", then one `Checkbox` per line, gap 12: "Removing repositories"
   (the Repositories ✕), "Discarding changes" (§15 "Discard"), "Dropping stashes" (Drop, P6),
   "Deleting projects" (flow G), "Aborting a rebase or merge" (T3), "Amending pushed commits"
-  (Hi10). All on by default (`settings.prompts`); off, the action runs
+  (Hi10), "Clearing notes" (Review's Notes). All on by default (`settings.prompts`); off, the action runs
   without its dialog. Saved at once. Each of those dialogs has a `Checkbox` "Do not show this
   message again" above its buttons (`ConfirmModal`'s `dontAsk`; Confirm Discard Changes and Confirm Amend their own,
   §15); confirming with it checked turns its box here off (`src/lib/prompts.ts`).
@@ -1424,6 +1501,7 @@ either end or next to another goes too), unless this file says that item is show
 | | Split / Unified | ⌥V | |
 | | Ignore whitespace | ⌥W | |
 | | Blame | ⌥B | |
+| | Add Note | ⌥N | on the selected lines, else the cursor's (§5 "Notes") |
 | | Changes only / Whole file | ⌥C | |
 | | Switch branch | ⇧⌘B | Review of a branch (opens Switch Branch) |
 | | Pick commits | ⌘-click / ⇧-click, ⇧↑ / ⇧↓ | Review's list (Uncommitted too; Esc goes back to one) |
@@ -1579,6 +1657,13 @@ export interface Settings {
   historyLayout: 'tree' | 'columns'; // Settings › Appearance › Review › Layout; default tree
   sidebarVisible: boolean;       // the main sidebar is shown; remembered; default true
   prompts: Prompts;              // Settings › Prompts; every one true by default
+  notesList: NotesList;          // Review's Notes › List Options (§5 "Notes"); all false by default
+}
+export interface NotesList {
+  allBranches: boolean;          // a project review lists every branch's notes
+  byFile: boolean;               // grouped by file instead of by date added
+  oldestFirst: boolean;          // by date added, oldest first
+  showResolved: boolean;         // resolved and outdated notes listed and copied, resolved ones in the diff
 }
 export interface Prompts {       // "Show a Confirmation Dialog Before…"
   removeRepositories: boolean;
@@ -1587,6 +1672,7 @@ export interface Prompts {       // "Show a Confirmation Dialog Before…"
   deleteProjects: boolean;       // flow G
   abortOperation: boolean;       // Abort of a rebase or merge (T3)
   amendPushed: boolean;          // Amend of a commit already on the remote (Hi10)
+  clearNotes: boolean;           // Review's Notes: Clear All / Clear Resolved
 }
 export interface Config {
   version: 1;
@@ -1598,6 +1684,23 @@ export interface Config {
   pinnedRepos: string[];                 // repo ids pinned to the top of Branches, in pin order
 }
 export interface EntryRef { repoId: string; branch: string | null; worktreePath: string | null }
+```
+
+Notes on diff lines (§5 "Notes") are in `notes.json` beside it (`notes.rs`; same atomic save and
+broken-file handling, `notes.broken-<unix>.json`):
+
+```ts
+export interface Note {
+  id: string;
+  path: string;                  // the file, relative to the repository (its new path)
+  side: 'old' | 'new';
+  from: number; to: number;      // 1-based, inclusive: where the lines were when it was written
+  lines: string[];               // their text then: where it is found again; outdated once gone
+  text: string;
+  createdAt: number;             // unix ms
+  resolved: boolean;
+}
+export type Notes = Record<string, Note[]>; // entry key -> its notes, in the order written
 ```
 
 Settings fields added later default when missing (`#[serde(default)]`), so older config files
@@ -1882,6 +1985,9 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | Command | Arguments | Returns |
 |---|---|---|
 | `get_config` | – | `Config` |
+| `get_notes` | – | `Notes` (§8 "Config (on disk)") |
+| `set_notes` | `key, list: Note[]` | – (replaces a branch's notes, none drops them; emits `notes-changed`) |
+| `get_note_files` | `repoId, worktreePath: string\|null, rev, paths: string[]` | `(string \| null)[]` (the files now: from the worktree, else at `rev`; null when missing, binary, over 1 MiB or not UTF-8) |
 | `inspect_folders` | `paths: string[]` | `FolderCheck[]` |
 | `add_repos` | `paths: string[]` | `Config` |
 | `get_scan` | – | `ScanResult` (stored result; full scan if none yet) |
@@ -2008,6 +2114,7 @@ Notes:
 | Event | Payload | When |
 |---|---|---|
 | `config-changed` | `Config` | every `config::update` (user actions, `lastKnownTip` refresh, font size) |
+| `notes-changed` | `Notes` | every change of `notes.json` |
 | `repo-updated` | `RepoUpdated` | after the watcher handles a change, and after a command or scan rescans a repo whose result changed (its tags count: a tag added, moved or deleted is a change) |
 | `open-settings` | – | Gitgel › Settings… (⌘,) |
 | `script-output` | `{ runId, data, end }` | output from a running script (`end`: bytes so far) |
@@ -2225,7 +2332,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
-| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `picked` (stash scope: every stash picked, the selection pane), `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (branch head above the scrolling list, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set |
+| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `picked` (stash scope: every stash picked, the selection pane), `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (branch head above the scrolling list, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set; W1–W10 (`Notes*.dc.html`, tweak `notes`) its notes on lines |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Command palette | `CommandPalette.dc.html` | dialog 26–68 (search row 27–31, the line and titles 36–37, place rows with kind icons 40–51, `?` prefix rows 52–56, command rows 57–62), data per `mode` (go, search, commands, help) 73–140; `CommandPaletteSearch` / `CommandPaletteCommands` / `CommandPaletteHelp` mount it with `mode` |
@@ -3123,7 +3230,7 @@ action runs in the repository ("A git action is running").
 
   Refused for the base branch, an operation in progress, or a tip that is no longer the one the
   menu showed (the repo is rescanned). Success toast `Deleted <branch>`; a failure opens the
-  output panel. A project entry on it becomes "branch deleted".
+  output panel. A project entry on it becomes "branch deleted". Its notes (§5 "Notes") are dropped.
 - **After** (`leaveDeletedBranch`, `state/nav.ts`): when the branch's own Review is
   showing, every page about the branch leaves the navigation stack (forward ones too) and
   Branches shows; inside a project (a project page or project review under it), the project page

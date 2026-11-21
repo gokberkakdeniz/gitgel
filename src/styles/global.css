@@ -116,3 +116,14 @@ a:hover {
 .monaco-editor .gg-current-change {
   box-shadow: inset 3px 0 0 var(--accent-text);
 }
+
+/* Notes (SPEC §5 Review "Notes"): the noted lines' numbers, the lines of the note being
+   written (or whose card is hovered). */
+.monaco-editor .line-numbers.gg-note-line {
+  color: var(--accent-text) !important;
+  font-weight: 500;
+}
+
+.monaco-editor .gg-note-draft {
+  background: rgba(var(--accent-rgb), 0.2);
+}

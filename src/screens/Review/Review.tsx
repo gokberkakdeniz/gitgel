@@ -110,6 +110,15 @@ import { SquashModal } from './SquashModal';
 import { TagModal } from './TagModal';
 import { requestStage, requestStageLines, useStage, withMoves, type StageOp, type StageTo } from './stage';
 import { SwitchBranchDialog } from './SwitchBranch';
+import {
+  NotesButton,
+  notesEntry,
+  useDiffNotes,
+  useNoteJump,
+  useNotePlaces,
+  useNotesList,
+  type NotesEntry,
+} from './notes';
 import { historyRows, initials, isBot, lineRows, whenLabel, type HistoryRow } from './rows';
 
 /** Commits asked for at a time; scrolling near the end asks for this many more. */
@@ -925,6 +934,32 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const file = fileIndex >= 0 ? files[fileIndex] : undefined;
   const fileId = fileIndex >= 0 ? fileIds[fileIndex] : null;
   const wipRow = wipShown && fileIndex >= 0 ? wipRows[fileIndex] : undefined;
+
+  // Notes on lines (SPEC §5 Review "Notes"): the open branch's; a project review can list every
+  // branch's. A note opens at its lines: the whole review (the base line), on its file.
+  const configRepos = useData((s) => s.config?.repos);
+  const notesEntries = useMemo(() => {
+    const list = project ? project.groups.map((g) => g.entry) : entry ? [entry] : [];
+    return list.flatMap((e) => {
+      const n = notesEntry(e, configRepos?.find((r) => r.id === e.repoId)?.path);
+      return n ? [n] : [];
+    });
+  }, [project, entry, configRepos]);
+  const notesList = useNotesList();
+  const notePlaces = useNotePlaces(
+    project && notesList.allBranches ? notesEntries : notesEntries.filter((e) => e.key === entry?.key),
+  );
+  const branchNotes = useData((s) => (entry ? s.notes[entry.key] : undefined));
+  const noteCount = (p: string) =>
+    (branchNotes ?? []).filter(
+      (n) => n.path === p && notePlaces.get(n.id) !== null && (!n.resolved || notesList.showResolved),
+    ).length;
+  const [noteReveal, setNoteReveal] = useState<{ id: string; seq: number } | null>(null);
+  const diffNotes = useDiffNotes(stash || !entry ? null : entry.key, file?.path ?? null, noteReveal);
+  const goNote = (note: { id: string; path: string }, e: NotesEntry) => {
+    useNoteJump.getState().go({ key: e.key, noteId: note.id, path: note.path });
+    if (project && e.key !== entry?.key) project.onOpen(e.key);
+  };
   // Several of Uncommitted's files picked with ⌘ / ⇧-click (Hi8): their right-click menu acts on
   // all of them.
   const picks = usePicks(wipShown ? fileIds : [], fileId, `${repoId}\u0000${rev}\u0000${current}\u0000${isMulti}`);
@@ -1145,6 +1180,18 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     const now = isMulti ? selected : current ? [current] : [];
     return list.length > 0 && list.length === now.length && list.every((r, i) => r === now[i]);
   };
+  // A note picked in the Notes popover: the whole review, its file, scrolled to it.
+  const noteJump = useNoteJump((s) => s.jump);
+  const jumped = useRef(0);
+  useEffect(() => {
+    if (!noteJump || !entry || noteJump.key !== entry.key || noteJump.seq === jumped.current || !data) return;
+    jumped.current = noteJump.seq;
+    pickLine('base');
+    setPath(noteJump.path);
+    setLand('first');
+    setNoteReveal({ id: noteJump.noteId, seq: noteJump.seq });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteJump, entry?.key, data]);
   // Not checked out: the branch opens on its base line, the whole review (once per rev).
   const openedOn = useRef<string | null>(null);
   useEffect(() => {
@@ -1422,6 +1469,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       picks={wipShown ? picks : undefined}
       actions={wipShown ? (r) => wipActions(r as WipRow) : undefined}
       conflict={wipShown && entry ? (f) => conflictOf(entry, f) : undefined}
+      noteCount={stash ? undefined : noteCount}
     />
   );
   // Uncommitted's files under Changes (tree), whichever row is picked: a click picks Uncommitted
@@ -1452,6 +1500,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       picks={wipShown ? picks : undefined}
       actions={(r) => wipActions(r as WipRow)}
       conflict={entry ? (f) => conflictOf(entry, f) : undefined}
+      noteCount={noteCount}
     />
   );
   const commitForm = ((wipShown && wip) || amending) && (
@@ -1485,6 +1534,9 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
 
   const headerRight = (
     <>
+      {entry && (
+        <NotesButton entries={notesEntries} open={entry.key} inProject={!!project} places={notePlaces} onGo={goNote} />
+      )}
       <Input
         ref={searchInput}
         size={32}
@@ -2341,6 +2393,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 onToggleContext={() => viewRef.current.toggleContext()}
                 onCommitStep={(dir) => stepRowRef.current(dir)}
                 onFocusFilter={focusSearch}
+                notes={diffNotes}
                 lineStage={lineStage}
                 blame={
                   !view.blame || stash
@@ -2705,6 +2758,7 @@ function FileList({
   picks,
   actions,
   conflict,
+  noteCount,
 }: {
   rows: ListedFile[];
   /** The id of the row shown. */
@@ -2729,6 +2783,8 @@ function FileList({
   actions?: (row: ListedFile) => FileActions;
   /** Uncommitted's conflicted files of an operation in progress: ⚠ / ✓ (T4). */
   conflict?: (f: FileChange) => 'unresolved' | 'resolved' | undefined;
+  /** How many of the branch's notes a file's diff shows (SPEC §5 Review "Notes"). */
+  noteCount?: (path: string) => number;
 }) {
   // Staged / Unstaged (SPEC §5 "Uncommitted sections"): the header folds its section (per branch,
   // while the app runs); Stage / Unstage All on its hover; the count in a pill.
@@ -2779,6 +2835,7 @@ function FileList({
       onClick={(e) => (picks ? picks.click(r.id, e, () => onFile(r.id)) : onFile(r.id))}
       actions={actions?.(r)}
       conflict={conflict?.(r.file)}
+      notes={noteCount?.(r.file.path)}
       stage={
         stage && r.sec
           ? {

@@ -12,7 +12,7 @@ import { FileOpenItems } from '../../components/OpenItems';
 import { Pill } from '../../components/Pill';
 import { Popover } from '../../components/Popover';
 import { Stepper } from '../../components/Stepper';
-import { formatCount, validTabSize } from '../../lib/format';
+import { cnt, formatCount, validTabSize } from '../../lib/format';
 import { t } from '../../i18n';
 import { updateSettings } from '../../lib/ipc';
 import { basename } from '../../lib/paths';
@@ -342,6 +342,7 @@ export function FileRow({
   stage,
   actions,
   conflict,
+  notes,
 }: {
   file: FileChange;
   on: boolean;
@@ -366,6 +367,8 @@ export function FileRow({
   /** A conflicted file of an operation in progress (T2): ⚠ while it has git's markers, ✓ once
    * they are gone, in place of the counts. */
   conflict?: 'unresolved' | 'resolved';
+  /** How many notes its diff shows (SPEC §5 Review "Notes"). */
+  notes?: number;
 }) {
   const [menu, setMenu] = useState<DOMRect | null>(null);
   const counts =
@@ -408,6 +411,12 @@ export function FileRow({
       <KindBadge kind={f.kind} />
       <span className={styles.fileName}>{basename(f.path)}</span>
       <span className={styles.fileDir}>{dirLabel(f)}</span>
+      {!!notes && (
+        <span className={styles.noteCount} title={t('notes.count', { ...cnt(notes) })}>
+          <Icon name="note" size={12} />
+          {notes}
+        </span>
+      )}
       {!stage && counts}
     </button>
   );

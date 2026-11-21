@@ -22,20 +22,6 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   stage/unstage (`79f1a20`); Revert would be a git action (SPEC §0, §10).
 - **Viewed files** (2026-11-14). Marking a file of a review as viewed, with a count of what is
   left; where the marks live and when a changed file loses its mark are open.
-- **Notes on lines** (2026-11-14). A local note on a diff line, and copying all of a review's
-  notes at once (with their `@path:line` references) to hand to an agent. Designed on the canvas
-  page "Review" (W1–W10). Decided 2026-11-21: notes are kept on this machine per repository and
-  branch (never in git) and go when the branch is deleted; commit, push and merge leave them (a
-  merge does not carry them to the base). A note is tied to its file and line text, not to the
-  commit it was written on, so it shows in every diff with that line and survives amend and
-  rebase; it turns outdated when the line's text changes, or is resolved by hand (Resolve /
-  Unresolve on its card). Resolved and outdated notes count as closed: hidden by default, out of
-  Copy All, removed by "Clear Resolved". The popover's List Options default to the open branch,
-  sorted by date added, newest first, resolved ones left out; the others are every branch, grouped
-  by file, oldest first, resolved shown. With every branch listed in a project review, references
-  start where the branches' folders part (`@token-refresh/src/auth/refresh.ts:22-23`). Copy All
-  and Clear All take what is listed; Clear All and Clear Resolved ask first (Settings › Prompts ›
-  "Clearing notes").
 - **Comparing two refs** (2026-11-14). Two branches or two commits against each other, not only
   a branch against its base.
 - **Conflicts** (2026-11-14). In a conflicted file: take ours, theirs or both, and opening it in

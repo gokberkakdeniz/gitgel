@@ -14,6 +14,7 @@ pub mod memory;
 pub mod menu;
 pub mod model;
 pub mod nearest;
+pub mod notes;
 pub mod projects;
 pub mod repos;
 pub mod review;
@@ -85,6 +86,7 @@ pub fn run() {
             // Folders are watched after the first scan (`get_scan`).
             watch::start(&state);
             app.manage(state);
+            app.manage(notes::NoteStore::load(app.handle())?);
             menu::apply_zoom(app.handle(), zoom);
             appearance::show_main_window(app.handle(), appearance);
             updates::check_if_due(app.handle());
@@ -109,6 +111,9 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_config,
+            commands::get_notes,
+            commands::set_notes,
+            commands::get_note_files,
             commands::inspect_folders,
             commands::add_repos,
             commands::get_scan,

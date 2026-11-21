@@ -154,7 +154,8 @@ mod tests {
                 "newBranchCheckout": "worktree",
                 "prompts": { "removeRepositories": true, "discardChanges": false,
                              "discardStash": true, "deleteProjects": false,
-                             "abortOperation": true, "amendPushed": true },
+                             "abortOperation": true, "amendPushed": true,
+                             "clearNotes": false },
                 "ai": {
                     // `provider` was the stored default: old files still load it, but it is
                     // not saved back (the default is the topmost switched-on provider now).
@@ -184,6 +185,7 @@ mod tests {
         value["settings"]["editorCommand"] = json!("idea %");
         value["settings"]["theme"] = json!("github");
         value["settings"]["diffBlame"] = json!(true);
+        value["settings"]["notesList"] = json!({ "allBranches": true, "byFile": false, "oldestFirst": true, "showResolved": false });
         let config: Config = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(
             config.repos,

@@ -480,6 +480,7 @@ it was done within a topic.
 - [x] Staged / Unstaged show their count beside the label, as Changes does, instead of at the row's right end — 2026-11-14
 - [x] File History in the file and diff menus (the search `path:<file>`: the commits that changed it, renames followed) and Blame in the view menu (⌥B: the cursor's line names the commit that last changed it; "Show Commit <sha>" in the diff menu) — 2026-11-16
 - [x] A commit's tag list opens after the pointer rests 300ms on the stacked pill and the pointer can move into it: ten names tall (a longer one scrolls), names selectable, an annotated tag's message as its native tooltip (`HistoryCommit.tagMessages`) — 2026-11-21
+- [x] Notes on diff lines (SPEC §5 "Notes"): written from the toolbar of lines picked by their numbers, ⌥N or the diff menu's Add Note, shown under their lines in every diff of the branch that has them, Resolve / Edit / Delete; the header's Notes button lists them (List Options: open or all branches, by date or by file, Show Resolved), Copy All as references for an agent, Clear All / Clear Resolved ask first; kept per branch in `notes.json` — 2026-11-21
 
 ### Git actions
 - [x] Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree

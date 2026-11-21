@@ -569,3 +569,14 @@
 .resolvedMark {
   color: var(--success);
 }
+
+/* How many notes a file's diff shows (SPEC §5 Review "Notes"). */
+.noteCount {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-text);
+}

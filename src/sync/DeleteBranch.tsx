@@ -8,6 +8,7 @@ import { MenuDivider, MenuItem } from '../components/Menu';
 import { t } from '../i18n';
 import { cnt } from '../lib/format';
 import { getBranchLoss, gitDeleteBranch } from '../lib/ipc';
+import { saveNotes } from '../lib/notes';
 import { tildifyHome } from '../lib/paths';
 import { useInvoke } from '../lib/useInvoke';
 import type { EntrySummary } from '../lib/types';
@@ -96,7 +97,11 @@ function deleteBranch(e: EntrySummary, remote: boolean, stash: boolean): Promise
         const ended = () => {
           const r = useRuns.getState().runs[runId];
           if (!r || r.status === 'running') return false;
-          if (r.status === 'exited' && r.exitCode === 0) leaveDeletedBranch(e.repoId, branch);
+          if (r.status === 'exited' && r.exitCode === 0) {
+            // Its notes go with it (SPEC §5 Review "Notes").
+            void saveNotes(e.key, []);
+            leaveDeletedBranch(e.repoId, branch);
+          }
           return true;
         };
         if (ended()) return;

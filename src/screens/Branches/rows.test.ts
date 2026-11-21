@@ -61,6 +61,7 @@ const config: Config = {
   ],
   settings: {
     newBranchCheckout: 'main',
+    notesList: { allBranches: false, byFile: false, oldestFirst: false, showResolved: false },
     defaultBaseOrder: ['main'],
     activeDays: 14,
     diffView: 'split',
@@ -93,6 +94,7 @@ const config: Config = {
       deleteProjects: true,
       abortOperation: true,
       amendPushed: true,
+      clearNotes: true,
     },
     ai: {
       enabled: true,

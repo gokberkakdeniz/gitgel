@@ -10,7 +10,7 @@ import { syncSidebarVisible } from './sidebar';
 import { applyPassphraseAsked, applyPassphraseRunExited } from '../scripts/PassphraseDialog';
 import { applyRunExited, applyRunOutput } from '../scripts/runs';
 import { applyGenerateFinished } from './ai';
-import type { Config, GenerateFinished, RepoUpdated, ScriptOutputChunk, ScriptRun, UpdateInfo } from './types';
+import type { Config, GenerateFinished, Notes, RepoUpdated, ScriptOutputChunk, ScriptRun, UpdateInfo } from './types';
 
 let started: Promise<void> | null = null;
 
@@ -42,6 +42,12 @@ async function start() {
     }
   });
   await listen<RepoUpdated>('repo-updated', (e) => data.applyRepoUpdated(e.payload));
+  // Notes on diff lines changed (notes.rs).
+  let noteEvents = 0;
+  await listen<Notes>('notes-changed', (e) => {
+    noteEvents++;
+    data.setNotes(e.payload);
+  });
   // A script ended (scripts/run.rs); its toast says how.
   await listen<ScriptRun>('script-exited', (e) => {
     applyRunExited(e.payload);
@@ -80,6 +86,7 @@ async function start() {
     data.setConfig(config);
     syncSidebarVisible(config);
   }
+  void ipc.getNotes().then((notes) => noteEvents === 0 && data.setNotes(notes));
   data.setScan(await ipc.getScan());
 }
 

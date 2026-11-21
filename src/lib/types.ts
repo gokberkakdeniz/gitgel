@@ -66,7 +66,29 @@ export interface Settings {
   lastSeenVersion: string; // the version whose What's New was shown; '' before any
   prompts: Prompts; // Settings › Prompts
   ai: AiSettings; // Settings › AI
+  notesList: NotesList; // Review › Notes › List Options
 }
+/** How Review's Notes popover lists the notes (SPEC §5 Review "Notes"); all off by default. */
+export interface NotesList {
+  allBranches: boolean; // a project review lists every branch's notes
+  byFile: boolean; // grouped by file instead of by date added
+  oldestFirst: boolean; // by date added, oldest first
+  showResolved: boolean; // resolved and outdated notes listed (and copied), resolved ones in the diff
+}
+/** A note on diff lines (SPEC §5 Review "Notes"), kept on this machine per branch. */
+export interface Note {
+  id: string;
+  path: string; // the file, relative to the repository (its new path)
+  side: 'old' | 'new';
+  from: number; // 1-based, inclusive: where the lines were when it was written
+  to: number;
+  lines: string[]; // their text then: where it is found again; outdated once the file lacks them
+  text: string;
+  createdAt: number; // unix ms
+  resolved: boolean;
+}
+/** Entry key → its notes, in the order they were written. */
+export type Notes = Record<string, Note[]>;
 /** Settings › Prompts (M6): "Show a Confirmation Dialog Before…" each of these. */
 export interface Prompts {
   removeRepositories: boolean;
@@ -75,6 +97,7 @@ export interface Prompts {
   deleteProjects: boolean;
   abortOperation: boolean; // Abort of a rebase, merge, cherry-pick or revert (T3)
   amendPushed: boolean; // Amend of a commit already on the remote (Hi10)
+  clearNotes: boolean; // Review › Notes › Clear All / Clear Resolved
 }
 export type EditorChoice = 'auto' | 'cursor' | 'vscode' | 'windsurf' | 'zed' | 'sublime' | 'xcode' | 'typora' | 'other';
 export type TerminalChoice = 'auto' | 'terminal' | 'iterm' | 'wezterm' | 'other';

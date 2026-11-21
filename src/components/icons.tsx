@@ -533,6 +533,15 @@ export function LinkIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   );
 }
 
+/** A note on diff lines (SPEC §5 Review "Notes"): a speech bubble with lines. */
+export function NoteIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
+  return (
+    <Svg size={size} strokeWidth={sw ?? 1.8} className={className}>
+      <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5" />
+    </Svg>
+  );
+}
+
 /** A project: stacked layers, branches of several repos reviewed together. */
 export function ProjectIcon({ size = 14, className, strokeWidth: sw }: IconProps) {
   return (
@@ -639,6 +648,7 @@ const ICONS = {
   rebase: RebaseIcon,
   test: TestIcon,
   link: LinkIcon,
+  note: NoteIcon,
   package: PackageIcon,
   rocket: RocketIcon,
   bug: BugIcon,

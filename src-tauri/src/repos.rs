@@ -7,6 +7,7 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{Config, DuplicateOf, FolderKind, RepoConfig, Settings, UpdateReason};
+use crate::notes;
 use crate::scan;
 use crate::state::{lock, AppState};
 use crate::timing::Timings;
@@ -85,7 +86,8 @@ pub fn locate_repo(state: &AppState, repo_id: &str, path: &str) -> Result<Config
     Ok(config)
 }
 
-/// Removes a repository, its saved bases and its project entries. Nothing on disk is touched.
+/// Removes a repository, its saved bases, its project entries and its notes. Nothing on disk is
+/// touched.
 pub fn remove_repo(state: &AppState, repo_id: &str) -> Result<Config, AppError> {
     let prefix = format!("{repo_id}:");
     let mut path = None;
@@ -108,6 +110,7 @@ pub fn remove_repo(state: &AppState, repo_id: &str) -> Result<Config, AppError> 
         Ok(config.clone())
     })?;
     lock(&state.last_scan).remove(repo_id);
+    notes::forget_repo(&state.app, repo_id);
     lock(&state.layouts).remove(repo_id);
     lock(&state.cache).forget_repo(repo_id);
     if let Some(path) = path {

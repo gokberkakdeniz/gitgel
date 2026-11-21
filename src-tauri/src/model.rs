@@ -132,6 +132,23 @@ pub struct Settings {
     /// Settings › Repositories › where New Branch checks a branch out unless another row is
     /// picked; configs from before it use the repository folder.
     pub new_branch_checkout: NewBranchCheckoutDefault,
+    /// Review › Notes › List Options; configs from before it use the defaults.
+    pub notes_list: NotesList,
+}
+
+/// How Review's Notes popover lists the notes (SPEC §5 Review "Notes"). The defaults: the open
+/// branch only, by date added, newest first, resolved ones left out.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct NotesList {
+    /// A project review lists every branch's notes, not only the open one's.
+    pub all_branches: bool,
+    /// Grouped by file (branch, file, line) instead of by date added.
+    pub by_file: bool,
+    /// By date added, oldest first.
+    pub oldest_first: bool,
+    /// Resolved and outdated notes are listed (and copied), resolved ones shown in the diff.
+    pub show_resolved: bool,
 }
 
 /// The row New Branch opens with (SPEC §15 "New branch").
@@ -157,6 +174,8 @@ pub struct Prompts {
     pub abort_operation: bool,
     /// Amend of a commit already on the remote (Hi10).
     pub amend_pushed: bool,
+    /// Review › Notes › Clear All / Clear Resolved.
+    pub clear_notes: bool,
 }
 
 impl Default for Prompts {
@@ -168,6 +187,7 @@ impl Default for Prompts {
             delete_projects: true,
             abort_operation: true,
             amend_pushed: true,
+            clear_notes: true,
         }
     }
 }
@@ -275,6 +295,7 @@ impl Default for Settings {
             prompts: Prompts::default(),
             ai: AiSettings::default(),
             new_branch_checkout: NewBranchCheckoutDefault::Main,
+            notes_list: NotesList::default(),
         }
     }
 }

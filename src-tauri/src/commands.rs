@@ -14,7 +14,8 @@ use crate::model::{
 };
 use crate::state::AppState;
 use crate::{
-    ai, apps, base, files, history, projects, repos, review, scan, scripts, themes, updates, watch,
+    ai, apps, base, files, history, notes, projects, repos, review, scan, scripts, themes, updates,
+    watch,
 };
 
 /// Runs git or disk work off the async runtime.
@@ -60,6 +61,40 @@ pub async fn locate_repo(
 ) -> Result<Config, AppError> {
     blocking(&state, move |state| {
         repos::locate_repo(state, &repo_id, &path)
+    })
+    .await
+}
+
+/// Every branch's notes (SPEC §5 Review "Notes").
+#[tauri::command]
+pub fn get_notes(store: State<'_, notes::NoteStore>) -> notes::Notes {
+    store.all()
+}
+
+/// Replaces a branch's notes (none: drops them) and emits `notes-changed`.
+#[tauri::command]
+pub fn set_notes(
+    app: AppHandle,
+    store: State<'_, notes::NoteStore>,
+    key: String,
+    list: Vec<notes::Note>,
+) -> Result<(), AppError> {
+    store.update(&app, |all| {
+        all.insert(key, list);
+    })
+}
+
+/// The noted files as they are now: from the worktree, else at `rev`.
+#[tauri::command]
+pub async fn get_note_files(
+    state: State<'_, AppState>,
+    repo_id: String,
+    worktree_path: Option<String>,
+    rev: String,
+    paths: Vec<String>,
+) -> Result<Vec<Option<String>>, AppError> {
+    blocking(&state, move |state| {
+        notes::current_files(state, &repo_id, worktree_path.as_deref(), &rev, &paths)
     })
     .await
 }
