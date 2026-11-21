@@ -1228,8 +1228,8 @@ outside or leaving the page closes it (`src/commands/`).
     ⌘B, Refresh, Add Repository…, Check for Updates…, What's New, About Gitgel, Report an Issue.
   - **Settings**: Open Settings ⌘,, Settings: <section> for each section, Theme: <name> for every
     theme in every mode but the chosen one ("Theme: GitHub System", "Theme: GitHub Light", …), Commit Rows: <name> and Layout: <name> for the Appearance choice not
-    made (One Line / Two Lines, Columns / Tree), and with one-line rows Hide Commit SHA / Show
-    Commit SHA (Hide SHA's other state).
+    made (One Line / Two Lines, Columns / Tree), and Hide Commit SHA / Show Commit SHA (Hide
+    SHA's other state).
 - Screens add their rows with `useCommandSource` (`src/commands/registry.ts`), read when the
   palette opens; the app's own are in `global.ts`, the branch's in `branch.ts`, which reuse the
   menus' rules (`syncState`, `rebaseBase`, `canCheckout`, `canDeleteBranch`, `branchScripts`).
@@ -1340,8 +1340,8 @@ outside or leaving the page closes it (`src/commands/`).
     spaces); the output panel is unaffected.
   - "Review" (was "History"): "Commit rows" (`settings.commitRows`, default `two-line`): a dropdown with "Two
     lines" / "One line"; anything else reads as two lines. It sets Review's commit rows (§16
-    "Commit row"). With One line, "Hide SHA" under it (`settings.hideCommitSha`, a `Switch`, off
-    by default; user request 2026-11-21) leaves the short SHA out of the rows. "Layout" (`settings.historyLayout`, default `tree`): a dropdown with "Tree" /
+    "Commit row"). "Hide SHA" under it (`settings.hideCommitSha`, a `Switch`, off by default; user
+    request 2026-11-21) leaves the short SHA out of the rows, one or two lines. "Layout" (`settings.historyLayout`, default `tree`): a dropdown with "Tree" /
     "Columns"; anything else reads as tree. It sets where Review lists the picked row's files
     (§16 "Files column").
 - **Scripts:** see §14 "Settings › Scripts".
@@ -1660,7 +1660,7 @@ export interface Settings {
   preferAbsoluteDates: boolean;  // Settings › Appearance › Formatting › Prefer absolute dates over relative dates; default false
   diffTabSize: number;           // Settings › Appearance › Diff › Tab size; default 4
   commitRows: 'two-line' | 'one-line'; // Settings › Appearance › Review › Commit rows; default two-line
-  hideCommitSha: boolean;        // Settings › Appearance › Review › Hide SHA (one-line rows only); default false
+  hideCommitSha: boolean;        // Settings › Appearance › Review › Hide SHA; default false
   historyLayout: 'tree' | 'columns'; // Settings › Appearance › Review › Layout; default tree
   sidebarVisible: boolean;       // the main sidebar is shown; remembered; default true
   prompts: Prompts;              // Settings › Prompts; every one true by default
@@ -3438,7 +3438,8 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     selectable, ten lines tall and scrolling past that; an annotated tag's message is its line's
     native tooltip; not a tooltip itself, since the row has its own; it stays open while the
     pointer is in it and closes 150ms after it leaves both) on the right of the line; line 2
-    mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text`. Commits
+    mono 11 muted `<author> · <age>` and, on the right, the short SHA in `accent.text` (not with
+    "Hide SHA", §5 Settings › Appearance). Commits
     below the base line: subject `text.muted`, row opacity 0.7. With "Commit rows: One line"
     (§5 Settings › Appearance) the row is one line, padding 5px 8px: the short SHA (mono 11
     `accent.text`, a 7ch column, wider for a longer SHA; not while the list is under 340px, nor with

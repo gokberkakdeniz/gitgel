@@ -54,7 +54,7 @@ export interface Settings {
   preferAbsoluteDates: boolean; // Settings › Appearance › Formatting › Prefer absolute dates
   diffTabSize: number; // Settings › Appearance › Diff › Tab size
   commitRows: CommitRows; // Settings › Appearance › Review › Commit rows
-  hideCommitSha: boolean; // Settings › Appearance › Review › Hide SHA (one-line rows only)
+  hideCommitSha: boolean; // Settings › Appearance › Review › Hide SHA
   historyLayout: HistoryLayout; // Settings › Appearance › History › Layout
   theme: string; // Settings › Appearance › Theme: a theme id (src/themes)
   appearance: Appearance; // Settings › Appearance › Theme: its mode

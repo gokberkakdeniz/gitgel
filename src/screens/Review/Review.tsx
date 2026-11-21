@@ -2753,7 +2753,7 @@ function ListRow({
                     <span className={styles.metaWho} title={age}>
                       {c.author} · {ageText(c.committedAt)}
                     </span>
-                    <span className={styles.sha}>{c.shortSha}</span>
+                    {!hideSha && <span className={styles.sha}>{c.shortSha}</span>}
                   </span>
                 </span>
               </>
