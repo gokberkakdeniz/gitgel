@@ -1007,6 +1007,15 @@ pub async fn git_discard(
     blocking(&state, move |state| scripts::git::discard(state, entries)).await
 }
 
+/// Add to .gitignore: the untracked files' lines appended to the worktree's `.gitignore`.
+#[tauri::command]
+pub async fn git_ignore(
+    state: State<'_, AppState>,
+    files: scripts::git::IgnoreFiles,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| scripts::git::ignore(state, files)).await
+}
+
 /// Delete Branch's note: the branch's commits on no other branch, tag or remote-tracking branch.
 #[tauri::command]
 pub async fn get_branch_loss(

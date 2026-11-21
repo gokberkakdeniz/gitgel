@@ -272,6 +272,10 @@ export interface DiscardFiles extends EntryRef {
   paths: string[]; // relative to the worktree (a rename's old path too)
   keepIndex: string[]; // of `paths`, the ones whose unstaged part alone goes (back to the index)
 }
+/** Add to .gitignore (`git_ignore`): untracked files of one entry, relative to the worktree. */
+export interface IgnoreFiles extends EntryRef {
+  paths: string[];
+}
 /** A worktree's uncommitted changes as git's index splits them (Review's sections, `get_index_changes`). */
 export interface IndexChanges {
   staged: FileChange[]; // HEAD ↔ index

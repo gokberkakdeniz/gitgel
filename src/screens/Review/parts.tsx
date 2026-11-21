@@ -325,6 +325,8 @@ export interface FileActions {
   /** Stash Changes…: asks for the message. Left out when git cannot stash there (merge
    * conflicts, an operation in progress). */
   onStash?: () => void;
+  /** Add to .gitignore: left out unless every file is untracked. */
+  onIgnore?: () => void;
   /** Uncommitted's sections, with several files: Stage / Unstage Selected Files, whichever the
    * picked rows allow. */
   onStage?: { stage?: () => void; unstage?: () => void };
@@ -483,7 +485,7 @@ export function FileRow({
   );
 }
 
-/** Uncommitted's file menu (Hi8, D12; GitHub Desktop's texts): Discard, Stash, Include / Exclude (Review,
+/** Uncommitted's file menu (Hi8, D12; GitHub Desktop's texts): Discard, Stash, Add to .gitignore, Include / Exclude (Review,
  * several files), the paths, then the open items for the files still on disk. */
 function UncommittedItems({
   actions,
@@ -494,7 +496,7 @@ function UncommittedItems({
   at: () => { line: number; column: number } | null;
   onDone: () => void;
 }) {
-  const { files, onHistory, onDiscard, onStash, onStage } = actions;
+  const { files, onHistory, onDiscard, onStash, onIgnore, onStage } = actions;
   const one = files.length === 1;
   const onDisk = files.flatMap((x) =>
     x.folder && x.file.kind !== 'D' ? [{ folder: x.folder, path: x.file.path }] : [],
@@ -518,6 +520,16 @@ function UncommittedItems({
           }}
         >
           {one ? t('review.stashOne') : t('review.stashN', { n: String(files.length) })}
+        </MenuItem>
+      )}
+      {onIgnore && (
+        <MenuItem
+          onSelect={() => {
+            onDone();
+            onIgnore();
+          }}
+        >
+          {one ? t('review.ignoreOne') : t('review.ignoreN', { n: String(files.length) })}
         </MenuItem>
       )}
       {!one && (onStage?.stage || onStage?.unstage) && (

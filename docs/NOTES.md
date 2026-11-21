@@ -34,8 +34,6 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   refresh interval on purpose, so this would change that decision.
 - **Pull requests** (2026-11-14). A branch's pull request: its state and checks, and a link to
   open or create one. Needs the host's API or `gh`.
-- **Ignore a file** (2026-11-14). "Add to .gitignore" in Uncommitted's file menu. It writes a
-  file in the worktree, not the repository: to decide whether that is a git action.
 - **Stash picked lines** (2026-11-14). As staging picked lines, but into a stash.
 - **More from the AI providers** (2026-11-14). A summary of a review, or a pull request
   description, from the provider that writes commit messages.

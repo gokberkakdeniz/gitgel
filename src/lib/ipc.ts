@@ -18,6 +18,7 @@ import type {
   FilePair,
   FolderCheck,
   HistoryPage,
+  IgnoreFiles,
   IndexChanges,
   NewBranchCheckout,
   NewBranchProblem,
@@ -284,6 +285,9 @@ export const getDefaultPrompt = (provider: CommitProvider) => invoke<string>('ge
 
 /** Discard (Hi8, D12): the files go back to HEAD, a copy of each to the Trash first. */
 export const gitDiscard = (entries: DiscardFiles[]) => invoke<ScriptRun>('git_discard', { entries });
+
+/** Add to .gitignore: a `/<path>` line per untracked file in the worktree's `.gitignore`. */
+export const gitIgnore = (files: IgnoreFiles) => invoke<ScriptRun>('git_ignore', { files });
 
 /** The entry's uncommitted changes as git's index splits them: Review's Staged and Unstaged. */
 export const getIndexChanges = (entry: EntryRef) => invoke<IndexChanges>('get_index_changes', { entry });

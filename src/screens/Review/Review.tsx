@@ -55,6 +55,7 @@ import {
   gitCommit,
   gitCreateTag,
   gitDeleteTag,
+  gitIgnore,
   gitReorder,
   gitReset,
   gitRevert,
@@ -930,6 +931,17 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // for the message. git cannot stash merge conflicts.
   const [askStash, setAskStash] = useState<{ files: FileChange[] | null } | null>(null);
   const canStash = !!entry?.worktreePath && !entry.operation && entry.conflicts === 0 && wipFiles.length > 0;
+  // Add to .gitignore: untracked files only (a tracked one stays tracked), not `.gitignore` itself.
+  const ignorable = (list: FileChange[]) =>
+    entryRef && entry?.worktreePath && list.every((f) => f.kind === 'U' && basename(f.path) !== '.gitignore')
+      ? () => {
+          const n = list.length;
+          const name = n === 1 ? t('review.ignoreOne') : t('review.ignoreN', { n: String(n) });
+          void startGitAction(name, t('review.ignoring'), () =>
+            gitIgnore({ ...entryRef, paths: list.map((f) => f.path) }),
+          );
+        }
+      : undefined;
   const wipActions = (row: WipRow): FileActions => {
     const ids = picks.targets(row.id);
     const rows = wipRows.filter((x) => ids.includes(x.id));
@@ -943,6 +955,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       onHistory: fileHistory,
       onDiscard: () => discard(rows),
       onStash: canStash ? () => setAskStash({ files: shown.map((x) => x.file) }) : undefined,
+      onIgnore: ignorable(shown.map((x) => x.file)),
       onStage: off
         ? undefined
         : {

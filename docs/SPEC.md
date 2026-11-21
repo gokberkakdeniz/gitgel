@@ -23,7 +23,7 @@ parts marked `(planned, Tn.m)` that an open task in `docs/TASKS.md` will add.
 
 - **Reads through git2, writes through the git CLI.** Everything Gitgel reads comes from git2
   (libgit2); the git binary is never run to read. Everything that changes a repository (the stash,
-  sync, commit and discard actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
+  sync, commit, discard and ignore actions, §15) is a **git action**: the user's `git`, started only by a click, with a fixed
   command line built in `src-tauri/src/scripts/git.rs` and run like a script (§14: login shell,
   pty, toast, output panel, rescan when it ends). Values (a message, folders) go in `GITGEL_*`
   environment variables, never into the command text. `std::process::Command` is banned in app
@@ -1936,6 +1936,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_stage` | `entry: EntryRef`, `files: StageFiles` (`stage: string[]`, `unstage: string[]`) | `ScriptRun` (§15 "Stage") |
 | `git_stage_lines` | `entry: EntryRef`, `lines: StageLines` (`path`, `content`: the file's new staged version, `expect`: the staged blob it was made from or null, `unstage`) | `ScriptRun` (§15 "Stage", picked lines) |
 | `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`, `keepIndex: string[]`: those of `paths` that go back to the index) | `ScriptRun` (§15 "Discard") |
+| `git_ignore` | `files: IgnoreFiles` (`EntryRef` + `paths: string[]`) | `ScriptRun` (§15 "Ignore") |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
 | `git_push` | `entry: EntryRef, force: boolean` | `ScriptRun` |
@@ -2774,7 +2775,9 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   every picked one, on any other file on that file alone. A 230px menu: danger "Discard
   Changes…" (several: "Discard N Selected Changes…"); "Stash Changes…" (several: "Stash N
   Selected Changes…"; asks for the message (P4) and stashes only those files;
-  left out with merge conflicts or an operation in progress); with several files, a divider
+  left out with merge conflicts or an operation in progress); "Add to .gitignore" (several: "Add
+  N Files to .gitignore"; only when every file is untracked and none is `.gitignore`; §15
+  "Ignore"); with several files, a divider
   and "Stage Selected Files" (`plus`, when some are in Unstaged) / "Unstage Selected Files"
   (`remove`, when some are in Staged), left out while a commit or a stage runs (§15 "Stage"); a
   divider, "File History" (one file that is not new; §16 "File history"), "Copy File Path" (the absolute path; several: "Copy
@@ -2815,6 +2818,18 @@ instead: only its changes since then go. Canvas: `ReviewFocus.dc.html`.
   (`worktrees::tracked` decides), with `GIT_LITERAL_PATHSPECS=1`; a
   rename sends its old path too. Only the working copy goes to the Trash: a staged version that
   differs from it is not kept.
+
+### Ignore
+
+"Add to .gitignore" in the file menu (above) writes the worktree's top `.gitignore`, which is not
+the repository, but it changes what git sees, so it is a git action too (`git_ignore`, script id
+`git:ignore`, name "Add to .gitignore", `package` icon, toast sub line `repo / branch`, rescanned
+when it ends). Each untracked file gets a line `/<path>` (anchored, so only that file; `\`, `*`,
+`?`, `[` and a trailing space escaped with `\`), skipping lines the file already has, after a
+newline when the file does not end in one. The lines are worked out from the file on disk and
+appended with `printf '%s' "$GITGEL_LINES" >> "$GITGEL_FOLDER/.gitignore"` (a missing file is
+created). Refused before running: a path outside the worktree or with a line break, an entry
+that is not checked out, another git action in the repository.
 
 ### Stage
 

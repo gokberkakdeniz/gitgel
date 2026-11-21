@@ -559,6 +559,7 @@ it was done within a topic.
 - [x] Reword Commit…: the commit menu opens Squash's dialog with the commit's message; any one-parent commit of a checked-out branch, the commits above it rebased onto the reworded one — 2026-11-15
 - [x] Image diffs: a changed binary image (png, jpg, gif, webp, avif, bmp, ico, svg; up to 10 MiB a side) shows Before and After side by side with pixel and file sizes, in place of "Binary file not shown" — 2026-11-15
 - [x] Reorder by dragging: a commit row of a checked-out branch drags to another place among its own one-parent commits (`git rebase -i` with a todo Gitgel writes); moving a pushed commit asks first — 2026-11-15
+- [x] Add to .gitignore: Review's file menu on untracked files appends a `/<path>` line per file to the worktree's `.gitignore`, as a git action (`git_ignore`, §15 "Ignore") — 2026-11-21
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked

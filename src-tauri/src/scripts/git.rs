@@ -810,6 +810,106 @@ pub fn discard(state: &AppState, discards: Vec<DiscardFiles>) -> Result<ScriptRu
     )
 }
 
+/// Add to .gitignore (SPEC §15 "Ignore"): untracked files of one entry.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IgnoreFiles {
+    #[serde(flatten)]
+    pub entry: EntryRef,
+    /// Relative to the worktree.
+    pub paths: Vec<String>,
+}
+
+/// Appends a line per file (`/<path>`, escaped) to the worktree's top `.gitignore`, a git action
+/// as the other writes are; lines already there are not added again.
+pub fn ignore(state: &AppState, files: IgnoreFiles) -> Result<ScriptRun, AppError> {
+    if files.paths.is_empty() {
+        return Err(AppError::Invalid("Nothing to ignore.".into()));
+    }
+    if files
+        .paths
+        .iter()
+        .any(|p| !valid_relative(p) || p.contains(['\n', '\r']))
+    {
+        return Err(AppError::Invalid("A picked file has no valid path.".into()));
+    }
+    let entry = &files.entry;
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let existing = std::fs::read_to_string(tree.path.join(".gitignore")).unwrap_or_default();
+    let lines = ignore_lines(&existing, &files.paths);
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}ignore"),
+            name: "Add to .gitignore".into(),
+            icon: ICON.into(),
+            entry_key: entry_key(
+                &entry.repo_id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: IGNORE_COMMAND.into(),
+            env: vec![
+                (
+                    "GITGEL_FOLDER".into(),
+                    tree.path.to_string_lossy().into_owned(),
+                ),
+                ("GITGEL_LINES".into(), lines),
+            ],
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// What Add to .gitignore appends to `existing`: `/<path>` per new path (anchored, so only that
+/// file), on a line of its own.
+pub(super) fn ignore_lines(existing: &str, paths: &[String]) -> String {
+    let have: Vec<&str> = existing.lines().map(str::trim_end).collect();
+    let mut out = String::new();
+    for p in paths {
+        let line = ignore_pattern(p);
+        if !have.contains(&line.as_str()) && !out.lines().any(|l| l == line) {
+            out.push_str(&line);
+            out.push('\n');
+        }
+    }
+    if !out.is_empty() && !existing.is_empty() && !existing.ends_with('\n') {
+        out.insert(0, '\n');
+    }
+    out
+}
+
+/// `/<path>` with gitignore's wildcards and a trailing space escaped, so it names that path alone.
+fn ignore_pattern(path: &str) -> String {
+    let mut out = String::from("/");
+    for c in path.chars() {
+        if matches!(c, '\\' | '*' | '?' | '[') {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+    if out.ends_with(' ') {
+        out.insert(out.len() - 1, '\\');
+    }
+    out
+}
+
+/// Only fixed text and quoted variables; reads the same in sh, bash, zsh and fish.
+pub(super) const IGNORE_COMMAND: &str =
+    r#"printf '%s' "$GITGEL_LINES" >> "$GITGEL_FOLDER/.gitignore""#;
+
 /// A path inside the worktree: relative, no `..`, no NUL.
 fn valid_relative(p: &str) -> bool {
     let path = Path::new(p);
@@ -3225,6 +3325,24 @@ mod tests {
             discard_command(&[both, untracked]),
             r#"git -C "$GITGEL_FOLDER_1" restore --source=HEAD --staged --worktree -- "$GITGEL_PATH_1_1" "$GITGEL_PATH_1_2" && git -C "$GITGEL_FOLDER_1" restore --worktree -- "$GITGEL_KEEP_1_1" && git -C "$GITGEL_FOLDER_1" clean -f -q -- "$GITGEL_CLEAN_1_1" && git -C "$GITGEL_FOLDER_2" clean -f -q -- "$GITGEL_CLEAN_2_1""#
         );
+    }
+
+    #[test]
+    fn ignore_lines_name_each_path_once() {
+        let paths = |p: &[&str]| p.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        assert_eq!(ignore_lines("", &paths(&["a.log"])), "/a.log\n");
+        assert_eq!(
+            ignore_lines("dist/\n/a.log\n", &paths(&["a.log", "b/c.txt"])),
+            "/b/c.txt\n"
+        );
+        assert_eq!(ignore_lines("dist/", &paths(&["x"])), "\n/x\n");
+        assert_eq!(ignore_lines("/x\n", &paths(&["x"])), "");
+        assert_eq!(ignore_lines("", &paths(&["x", "x"])), "/x\n");
+        assert_eq!(
+            ignore_lines("", &paths(&["#a [1]*?.txt", r"b\c", "d "])),
+            "/#a \\[1]\\*\\?.txt\n/b\\\\c\n/d\\ \n"
+        );
+        assert!(!IGNORE_COMMAND.contains('{'));
     }
 
     #[test]
