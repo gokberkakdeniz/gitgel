@@ -46,6 +46,8 @@
   "diff.unstageLines": "Seçili Satırları Hazırlıktan Çıkar",
   "diff.stageChange": "Değişikliği Hazırla",
   "diff.unstageChange": "Değişikliği Hazırlıktan Çıkar",
+  "diff.stashLines": "Seçili Satırları Geçici Kaydet…",
+  "diff.stashChange": "Değişikliği Geçici Kaydet…",
   "diff.discardLines": "Seçili Satırları At",
   "diff.discardChange": "Değişikliği At",
   "diff.binary": "Binary dosya gösterilmiyor",

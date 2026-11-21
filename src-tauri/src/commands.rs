@@ -654,6 +654,20 @@ pub async fn stash_push(
     .await
 }
 
+/// Stash of picked lines (the diff's menu): one file's picked changes into a stash.
+#[tauri::command]
+pub async fn stash_lines(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    lines: scripts::git::StashLines,
+    message: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::stash_lines(state, entry, lines, message)
+    })
+    .await
+}
+
 /// `git stash apply` (or `pop`) of each `stash@{index}`, which must still be its `sha`, in a
 /// worktree.
 #[tauri::command]

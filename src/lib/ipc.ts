@@ -36,6 +36,7 @@ import type {
   RunContext,
   ScriptConfig,
   ScriptRun,
+  StashLines,
   StashPush,
   StashChanges,
   StageFiles,
@@ -199,6 +200,10 @@ export interface StashRef {
 /** Git actions (SPEC §15 "Writing stashes"): runs like a script's. */
 export const stashPush = (entries: StashPush[], message: string) =>
   invoke<ScriptRun>('stash_push', { entries, message });
+
+/** A Stash of picked lines (the diff's menu): one file's picked changes into a stash. */
+export const stashLines = (entry: EntryRef, lines: StashLines, message: string) =>
+  invoke<ScriptRun>('stash_lines', { entry, lines, message });
 
 /** Applies (or pops) each `stash@{index}` (still `sha`) of one repository in one run. */
 export const stashApply = (repoId: string, stashes: StashRef[], worktreePath: string, pop: boolean) =>

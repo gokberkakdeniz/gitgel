@@ -566,6 +566,7 @@ it was done within a topic.
 - [x] Reorder by dragging: a commit row of a checked-out branch drags to another place among its own one-parent commits (`git rebase -i` with a todo Gitgel writes); moving a pushed commit asks first — 2026-11-15
 - [x] Add to .gitignore: Review's file menu on untracked files appends a `/<path>` line per file to the worktree's `.gitignore`, as a git action (`git_ignore`, §15 "Ignore") — 2026-11-21
 - [x] Discarding picked lines: the diff's right-click menu on an Unstaged file has Discard Selected Lines / Discard Change; the working tree loses those changes (back to what is staged) after Confirm Discard Changes and a copy in the Trash (`git_discard_lines`, §15 "Discard") — 2026-11-21
+- [x] Stashing picked lines: the diff's right-click menu on an Unstaged file has Stash Selected Lines… / Stash Change…; after the message (P4) the stash holds only those changes and the working tree loses them, the index stays (`stash_lines`, §15 "Writing stashes") — 2026-11-21
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked

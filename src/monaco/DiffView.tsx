@@ -86,6 +86,10 @@ export interface LineStage {
   /** An Unstaged row only: writes the file's new working-tree version (null: the whole file, as
    * the row's Discard Changes…), made from its content `expect`. */
   discard?: (content: string | null, expect: string) => void;
+  /** An Unstaged row only: the picked changes into a stash; `content` is what is staged with them,
+   * `rest` the working tree without them, both made from its content `expect` and the staged blob
+   * `expectIndex`. */
+  stash?: (content: string, rest: string, expect: string, expectIndex: string | null) => void;
 }
 
 /** Notes on the file's lines (SPEC §5 Review "Notes"): each sits in a view zone under the last
@@ -617,6 +621,19 @@ export function DiffView({
     lineStage.discard(content === text.original ? null : content, text.modified);
   };
 
+  // Stash from the menu (an Unstaged row): the stash gets the cuts on top of what is staged, the
+  // working tree keeps the rest.
+  const stashCuts = (cuts: Cut[], text: Shown | null) => {
+    setMenu(null);
+    if (!lineStage?.stash || !data || !text || text !== nav.current.hunksFor) return;
+    lineStage.stash(
+      stagedContent(text.original, text.modified, cuts, false),
+      discardedContent(text.original, text.modified, cuts),
+      text.modified,
+      text.oldOid,
+    );
+  };
+
   // ---- Notes on lines (SPEC §5 Review "Notes") ----
   const notesOn =
     !!notes && !!data && data.fileKey === fileKey && !data.binary && !data.tooLarge && !data.image && !pending;
@@ -1025,6 +1042,16 @@ export function DiffView({
                     onSelect={() => stageCuts(menu.change!, menu.text)}
                   >
                     {t(lineStage.unstage ? 'diff.unstageChange' : 'diff.stageChange')}
+                  </MenuItem>
+                )}
+                {lineStage.stash && menu.lines && (
+                  <MenuItem icon="package" onSelect={() => stashCuts(menu.lines!, menu.text)}>
+                    {t('diff.stashLines')}
+                  </MenuItem>
+                )}
+                {lineStage.stash && menu.change && (
+                  <MenuItem icon="package" onSelect={() => stashCuts(menu.change!, menu.text)}>
+                    {t('diff.stashChange')}
                   </MenuItem>
                 )}
                 {lineStage.discard && menu.lines && (

@@ -2,8 +2,8 @@
 import { create } from 'zustand';
 import { t } from '../i18n';
 import { cnt } from '../lib/format';
-import { stashApply, stashDrop, stashPush } from '../lib/ipc';
-import type { EntrySummary, StashPush } from '../lib/types';
+import { stashApply, stashDrop, stashLines, stashPush } from '../lib/ipc';
+import type { EntryRef, EntrySummary, StashLines, StashPush } from '../lib/types';
 import type { ReviewStash } from '../screens/Review/stashes';
 import { startGitAction } from '../scripts/runs';
 import { useData } from '../state/data';
@@ -76,4 +76,9 @@ export function applyStashes(list: ReviewStash[], target: EntrySummary, pop: boo
 /** One stash per entry, one after another (P4). */
 export function pushStashes(entries: StashPush[], message: string): Promise<void> {
   return startGitAction(t('stash.dialogTitle'), t('stash.stashing'), () => stashPush(entries, message));
+}
+
+/** Picked lines of one file (the diff's menu, P4). */
+export function pushStashLines(entry: EntryRef, lines: StashLines, message: string): Promise<void> {
+  return startGitAction(t('stash.dialogTitle'), t('stash.stashing'), () => stashLines(entry, lines, message));
 }

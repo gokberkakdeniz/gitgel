@@ -918,6 +918,208 @@ pub fn discard_lines(
 pub(super) const DISCARD_LINES_COMMAND: &str =
     r#"cat "$GITGEL_BLOB" > "$GITGEL_FOLDER/$GITGEL_PATH""#;
 
+/// What a Stash of picked lines (the diff's menu on an Unstaged row) writes: the file as the
+/// stash holds it and as the working tree keeps it, both made from the lines shown.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StashLines {
+    /// Relative to the worktree.
+    pub path: String,
+    /// The file in the stash: what is staged with the picked changes.
+    pub content: String,
+    /// The file in the working tree afterwards: without the picked changes.
+    pub rest: String,
+    /// The file's content both were made from; refused when the file holds another by now.
+    pub expect: String,
+    /// The staged blob both were made from (none: not in the index); refused when the index has
+    /// another by now.
+    pub expect_index: Option<String>,
+}
+
+/// Stash of picked lines (SPEC §15 "Writing stashes"): a stash of the picked changes alone, built
+/// with `commit-tree` from two temp indexes (HEAD with the file's staged version; HEAD with the
+/// stashed one), based on HEAD or, when the file has staged changes, on a commit of them; put on
+/// the stack with `stash store`, then the working tree loses those changes. The real index and
+/// every other file stay as they are.
+pub fn stash_lines(
+    state: &AppState,
+    entry: EntryRef,
+    lines: StashLines,
+    message: String,
+) -> Result<ScriptRun, AppError> {
+    let rel = lines.path.as_str();
+    if !valid_relative(rel) {
+        return Err(AppError::Invalid("The file has no valid path.".into()));
+    }
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let tree = repo.tree_of(&entry).ok_or_else(|| {
+        AppError::Invalid(format!(
+            "{} / {} is not checked out.",
+            repo.name,
+            entry.branch.as_deref().unwrap_or("detached HEAD")
+        ))
+    })?;
+    let (mode, head, subject, on_index) = {
+        let shared = state.pool.get(&tree.path)?;
+        let wt = lock(&shared);
+        if !operation::unmerged(&wt)?.is_empty() {
+            return Err(AppError::Invalid(format!(
+                "{} has merge conflicts.",
+                repo.label(tree)
+            )));
+        }
+        let mode = worktrees::stage_mode(&wt, &tree.path, rel, lines.expect_index.as_deref())?;
+        let commit = wt.head().and_then(|h| h.peel_to_commit()).map_err(|_| {
+            AppError::Invalid("Nothing can be stashed before the first commit.".into())
+        })?;
+        let subject = commit
+            .summary()
+            .ok()
+            .flatten()
+            .unwrap_or_default()
+            .to_string();
+        // Staged changes to the file: the stash is based on them, so it holds the picks alone.
+        let in_head = commit
+            .tree()?
+            .get_path(Path::new(rel))
+            .ok()
+            .map(|e| e.id().to_string());
+        let on_index = in_head != lines.expect_index;
+        (mode, commit.id().to_string(), subject, on_index)
+    };
+    let file = tree.path.join(rel);
+    let regular = std::fs::symlink_metadata(&file).is_ok_and(|m| m.is_file());
+    let inside = file
+        .parent()
+        .and_then(|p| p.canonicalize().ok())
+        .is_some_and(|p| p.starts_with(&tree.path));
+    if !regular || !inside {
+        return Err(AppError::Invalid(format!(
+            "{rel} is not a file in the worktree."
+        )));
+    }
+    if std::fs::read(&file)? != lines.expect.as_bytes() {
+        return Err(AppError::Invalid(format!(
+            "{rel} changed. Pick the lines again."
+        )));
+    }
+    // git's own stash messages.
+    let branch = tree.branch.as_deref().unwrap_or("(no branch)");
+    let short: String = head.chars().take(7).collect();
+    let message = message.trim();
+    let stash_message = if message.is_empty() {
+        format!("WIP on {branch}: {short} {subject}")
+    } else {
+        format!("On {branch}: {message}")
+    };
+    let id = new_id("stash");
+    let temp = |ext: &str| std::env::temp_dir().join(format!("gitgel-{id}.{ext}"));
+    let (blob, rest, index, work, base) = (
+        temp("blob"),
+        temp("rest"),
+        temp("index"),
+        temp("work"),
+        temp("base"),
+    );
+    std::fs::write(&blob, lines.content.as_bytes())?;
+    std::fs::write(&rest, lines.rest.as_bytes())?;
+    let path = |p: &Path| p.to_string_lossy().into_owned();
+    let mut env = vec![
+        ("GITGEL_FOLDER".to_string(), path(&tree.path)),
+        ("GITGEL_PATH".to_string(), lines.path.clone()),
+        ("GITGEL_MODE".to_string(), mode),
+        ("GITGEL_HEAD".to_string(), head),
+        ("GITGEL_INDEX".to_string(), path(&index)),
+        ("GITGEL_WORK".to_string(), path(&work)),
+        ("GITGEL_BASE".to_string(), path(&base)),
+        ("GITGEL_BLOB".to_string(), path(&blob)),
+        ("GITGEL_REST".to_string(), path(&rest)),
+        ("GITGEL_MESSAGE".to_string(), stash_message),
+        (
+            "GITGEL_INDEX_MESSAGE".to_string(),
+            format!("index on {branch}: {short} {subject}"),
+        ),
+    ];
+    if let Some(oid) = &lines.expect_index {
+        env.push(("GITGEL_STAGED".to_string(), oid.clone()));
+    }
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}stash-push"),
+            name: "Stash changes".into(),
+            icon: ICON.into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: repo.label(tree),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: tree.path.clone(),
+            command: stash_lines_command(StashLinesShape {
+                staged: lines.expect_index.is_some(),
+                on_index,
+            }),
+            env: with_git_env(env),
+            cleanup: vec![blob, rest, index, work, base],
+        },
+    )
+}
+
+/// How the command of a Stash of picked lines is built.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct StashLinesShape {
+    /// The file is in the index (`$GITGEL_STAGED`); else it is left out of the index commit.
+    pub staged: bool,
+    /// Its staged version differs from HEAD's: the stash is based on a commit of HEAD with that
+    /// version (written to `$GITGEL_BASE` first), so the stash holds only the picked changes and
+    /// applies where they are staged or committed; else on HEAD, as git's own.
+    pub on_index: bool,
+}
+
+/// The stash of picked lines (see `stash_lines`): the index commit (HEAD's tree with the file's
+/// staged version) and the stash commit (HEAD's tree with the stashed version), then `stash
+/// store`, then the rest over the file. Only fixed text and quoted variables; `env` sets the temp
+/// indexes the same way in every shell, and nothing touches the working tree before the stash is
+/// stored.
+pub(super) fn stash_lines_command(shape: StashLinesShape) -> String {
+    let git = "git -C \"$GITGEL_FOLDER\"";
+    let index = format!("env GIT_INDEX_FILE=\"$GITGEL_INDEX\" {git}");
+    let work = format!("env GIT_INDEX_FILE=\"$GITGEL_WORK\" {git}");
+    let mut steps = vec![format!("{index} read-tree \"$GITGEL_HEAD\"")];
+    steps.push(if shape.staged {
+        format!(
+            "{index} update-index --add --cacheinfo \"$GITGEL_MODE,$GITGEL_STAGED,$GITGEL_PATH\""
+        )
+    } else {
+        format!("{index} update-index --force-remove -- \"$GITGEL_PATH\"")
+    });
+    let index_tree = format!("\"$({index} write-tree)\"");
+    let base = if shape.on_index {
+        steps.push(format!(
+            "{git} commit-tree -p \"$GITGEL_HEAD\" -m \"$GITGEL_INDEX_MESSAGE\" {index_tree} > \"$GITGEL_BASE\""
+        ));
+        "\"$(cat \"$GITGEL_BASE\")\""
+    } else {
+        "\"$GITGEL_HEAD\""
+    };
+    let index_commit =
+        format!("{git} commit-tree -p {base} -m \"$GITGEL_INDEX_MESSAGE\" {index_tree}");
+    let stash_commit = format!(
+        "{git} commit-tree -p {base} -p \"$({index_commit})\" -m \"$GITGEL_MESSAGE\" \"$({work} write-tree)\""
+    );
+    steps.extend([
+        format!("{work} read-tree \"$GITGEL_HEAD\""),
+        format!("{work} update-index --add --cacheinfo \"$GITGEL_MODE,$({git} hash-object -w --path=\"$GITGEL_PATH\" -- \"$GITGEL_BLOB\"),$GITGEL_PATH\""),
+        format!("{git} stash store -m \"$GITGEL_MESSAGE\" \"$({stash_commit})\""),
+        "cat \"$GITGEL_REST\" > \"$GITGEL_FOLDER/$GITGEL_PATH\"".to_string(),
+    ]);
+    steps.join(" && ")
+}
+
 /// Add to .gitignore (SPEC §15 "Ignore"): untracked files of one entry.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]

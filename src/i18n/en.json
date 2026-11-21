@@ -967,6 +967,8 @@
   "diff.unstageLines": "Unstage Selected Lines",
   "diff.stageChange": "Stage Change",
   "diff.unstageChange": "Unstage Change",
+  "diff.stashLines": "Stash Selected Lines…",
+  "diff.stashChange": "Stash Change…",
   "diff.discardLines": "Discard Selected Lines",
   "diff.discardChange": "Discard Change",
   "nav.showSidebar": "Show sidebar",

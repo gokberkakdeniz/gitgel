@@ -900,9 +900,11 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
   "Stage" (picked lines), then a divider: "Stage Selected Lines" (`plus`; a Staged row's diff
   "Unstage Selected Lines", `remove`) when the click is inside a selection that touches a change,
   and "Stage Change" / "Unstage Change" for the change at the clicked line (unified: also on its
-  removed lines), left out when the selection takes the same; on an Unstaged row's diff, danger
-  "Discard Selected Lines" / "Discard Change" (`undo`) after them, on the same lines (§15
-  "Discard", picked lines). Then, not in a stash, "Show Commit <sha>"
+  removed lines), left out when the selection takes the same; on an Unstaged row's diff,
+  "Stash Selected Lines…" / "Stash Change…" (`package`; not for an untracked or deleted file, nor
+  where Stash Changes… is left out; §15 "Writing stashes", picked lines) and danger "Discard
+  Selected Lines" / "Discard Change" (`undo`; §15 "Discard", picked lines) after them, on the same
+  lines. Then, not in a stash, "Show Commit <sha>"
   (`history`; with Blame on, on the new side, for a line last changed by another commit than the
   one shown: it searches that SHA, so the list is that commit, open on this file) and "File
   History" (`history`; §16 "File history"), and a divider. Then "Add Note" (`note`, ⌥N; "Notes"
@@ -2035,6 +2037,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `get_script_run` | `runId` | `ScriptRun` with its buffered output and `bufferedEnd` |
 | `resize_script` | `runId, cols, rows` | `null` (the run's pty) |
 | `stash_push` | `entries: StashPush[]` (an `EntryRef` with `paths: string[] \| null`, `untracked`), `message: string` | `ScriptRun` (one git action for all entries, §15) |
+| `stash_lines` | `entry: EntryRef`, `lines: StashLines` (`path`, `content`: the file in the stash, `rest`: the file left in the working tree, `expect`: the file's text they were made from, `expectIndex`: its staged blob or null), `message: string` | `ScriptRun` (§15 "Writing stashes", picked lines) |
 | `stash_apply` | `repoId, stashes: { index, sha }[], worktreePath, pop: boolean` | `ScriptRun` (one git action for all) |
 | `stash_drop` | `repoId, stashes: { index, sha }[]` | `ScriptRun` (one git action for all, §15 "Drop") |
 | `git_checkout_commit` | `repoId, sha` (full), `target: CheckoutTarget` | `ScriptRun` (§16 "Checkout Commit") |
@@ -2833,6 +2836,21 @@ fails (exits non-zero, not stopped) opens its output panel by itself instead of 
   <unpicked staged>`, the same `stash push` with that variable, then `git … reset -q -- <picked>`
   on the real index; the copy is deleted when the run ends. Toast sub line `repo / branch` for one
   entry, else `N entries`.
+- **Picked lines** (user request 2026-11-21; the diff's right-click menu on an Unstaged row, §5
+  "Diff"): "Stash Selected Lines…" / "Stash Change…" put the picked changes (cut as Stage's, §15
+  "Stage") in a stash and take them out of the working tree; what is staged and every other file
+  stay. It asks for the message as P4 (empty: git's "WIP on <branch>: <sha> <subject>"), then
+  `stash_lines` (same name, icon and script id as Stash changes) checks as `git_stage_lines` and
+  `git_discard_lines` do (the staged blob and the file's text are still the ones shown, a
+  regular file, no conflicts, no other git action) and builds the stash without touching the
+  working tree: two temp indexes read from HEAD, one with the file's staged version (the index
+  commit), one with that version plus the picks (the stash's tree, `hash-object -w
+  --path`), each made a commit with `commit-tree`, the stash put on the stack with `git stash
+  store -m "$GITGEL_MESSAGE"`, and only then the file gets the rest (`cat "$GITGEL_REST" >
+  …`). The stash is based on HEAD, or, when the file has staged changes, on a commit of HEAD with
+  them (parent HEAD, written to a temp file first), so it holds the picks alone and applies where
+  those changes are staged or committed. Applying it over other unstaged changes to the file is
+  refused by git (above).
 - **Apply / Pop dialog** (user request 2026-11-17; `ApplyStashModal`; the stash actions and
   Review's stash row menu): Apply and Pop always ask where. A `Modal` as P4 (480px, 160px from
   the top; `ModalHeader` "Apply Stash" / "Pop Stash", several: "Apply N Stashes" / "Pop N

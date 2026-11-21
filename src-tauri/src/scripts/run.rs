@@ -1275,6 +1275,107 @@ mod tests {
         assert!(staged.is_empty());
     }
 
+    /// Stash of picked lines (SPEC §15 "Writing stashes"): the stash holds the picked change
+    /// alone (on top of what is staged in that file) and nothing else; the working tree loses
+    /// that change, the index and other files stay; popping it brings the change back.
+    #[test]
+    fn git_action_stashes_picked_lines() {
+        use super::super::git::{stash_lines_command, StashLinesShape};
+        use crate::git::testutil::TestRepo;
+        let t = TestRepo::new();
+        let name = "a b'\"$x.txt";
+        t.commit_on(
+            "main",
+            &[
+                (name, Some(b"one\ntwo\n")),
+                ("other.txt", Some(b"o\n")),
+                ("plain.txt", Some(b"p\n")),
+            ],
+            "base",
+            1,
+        );
+        t.checkout_main();
+        t.write_file(t.path(), name, b"ONE\ntwo\n");
+        t.stage(t.path(), name);
+        t.write_file(t.path(), "other.txt", b"staged\n");
+        t.stage(t.path(), "other.txt");
+        t.write_file(t.path(), name, b"ONE\nmid\ntwo\nend\n");
+        t.write_file(t.path(), "plain.txt", b"top\np\nbottom\n");
+        let head = t.repo.head().unwrap().peel_to_commit().unwrap().id();
+        let head = head.to_string();
+        let folder = t.path().to_string_lossy().into_owned();
+        let dir = tempfile::TempDir::new().unwrap();
+        let temp = |n: &str| dir.path().join(n).to_string_lossy().into_owned();
+        let stash = |path: &str, stashed: &[u8], rest: &[u8], on_index: bool| {
+            let mut real = t.repo.index().unwrap();
+            real.read(true).unwrap();
+            let staged = real.get_path(Path::new(path), 0).unwrap().id.to_string();
+            std::fs::write(temp("blob"), stashed).unwrap();
+            std::fs::write(temp("rest"), rest).unwrap();
+            let (out, ended) = pty(
+                &stash_lines_command(StashLinesShape {
+                    staged: true,
+                    on_index,
+                }),
+                &[
+                    ("GITGEL_FOLDER", &folder),
+                    ("GITGEL_PATH", path),
+                    ("GITGEL_MODE", "100644"),
+                    ("GITGEL_HEAD", &head),
+                    ("GITGEL_STAGED", &staged),
+                    ("GITGEL_INDEX", &temp("index")),
+                    ("GITGEL_WORK", &temp("work")),
+                    ("GITGEL_BASE", &temp("base")),
+                    ("GITGEL_BLOB", &temp("blob")),
+                    ("GITGEL_REST", &temp("rest")),
+                    ("GITGEL_MESSAGE", "On main: $(echo no) 'q'"),
+                    ("GITGEL_INDEX_MESSAGE", "index on main: x base"),
+                ],
+            );
+            assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+            assert_eq!(std::fs::read(t.path().join(path)).unwrap(), rest);
+            t.repo
+                .revparse_single("stash@{0}")
+                .unwrap()
+                .peel_to_commit()
+                .unwrap()
+        };
+        let blob_at = |c: &git2::Commit, p: &str| {
+            let id = c.tree().unwrap().get_path(Path::new(p)).unwrap().id();
+            t.repo.find_blob(id).unwrap().content().to_vec()
+        };
+
+        // No staged change to the file: based on HEAD, as git's own.
+        let w = stash("plain.txt", b"top\np\n", b"p\nbottom\n", false);
+        assert_eq!(w.parent_id(0).unwrap().to_string(), head);
+        assert_eq!(blob_at(&w, "plain.txt"), b"top\np\n");
+
+        // A staged change next to the picked one: based on it, so the stash is the pick alone.
+        let w = stash(name, b"ONE\nmid\ntwo\n", b"ONE\ntwo\nend\n", true);
+        let base = w.parent(0).unwrap();
+        assert_eq!(base.parent_id(0).unwrap().to_string(), head);
+        assert_eq!(blob_at(&base, name), b"ONE\ntwo\n");
+        assert_eq!(blob_at(&w.parent(1).unwrap(), name), b"ONE\ntwo\n");
+        assert_eq!(blob_at(&w, name), b"ONE\nmid\ntwo\n");
+        assert_eq!(blob_at(&w, "other.txt"), b"o\n");
+        let (now, _) = crate::git::worktrees::staged(&t.repo).unwrap();
+        assert_eq!(now.len(), 2);
+        let stack = crate::git::stash::list(&t.repo).unwrap();
+        assert_eq!(stack.len(), 2);
+        assert_eq!(stack[0].message, "$(echo no) 'q'");
+
+        // git refuses to apply over unstaged changes to the file, so those go first.
+        let (out, ended) = pty_in(
+            t.path(),
+            "git checkout -- . && git stash pop && git stash pop",
+            &[("GIT_PAGER", "cat")],
+        );
+        assert!(matches!(ended, Ended::Exited(Some(0), None)), "{out}");
+        let read = |p: &str| std::fs::read(t.path().join(p)).unwrap();
+        assert_eq!(read(name), b"ONE\nmid\ntwo\n");
+        assert_eq!(read("plain.txt"), b"top\np\n");
+    }
+
     /// Picked files while other files are staged: the stash holds the picked ones only, and the
     /// staged ones that were not picked stay staged (git alone would put them in the stash too).
     #[test]

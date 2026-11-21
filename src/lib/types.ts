@@ -324,6 +324,19 @@ export interface DiscardLines {
   /** The file's content the new one was made from. */
   expect: string;
 }
+/** A Stash of picked lines (`stash_lines`): one file as the stash holds it and as the working
+ * tree keeps it. */
+export interface StashLines {
+  path: string;
+  /** What is staged with the picked changes. */
+  content: string;
+  /** The working tree's file without them. */
+  rest: string;
+  /** The file's content both were made from. */
+  expect: string;
+  /** The staged blob both were made from (null: not in the index). */
+  expectIndex: string | null;
+}
 /** What a Commit holds (W1a, `git_commit`). */
 export interface CommitFiles {
   summary: string;

@@ -81,6 +81,7 @@ import type {
   ReviewGroup,
   ReviewTarget,
   StashChanges,
+  StashLines,
 } from '../../lib/types';
 import { useCopy } from '../../lib/useCopy';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -974,7 +975,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   };
   // Stash Changes (P4): all of Uncommitted (`files` null) or the picked files; the dialog asks only
   // for the message. git cannot stash merge conflicts.
-  const [askStash, setAskStash] = useState<{ files: FileChange[] | null } | null>(null);
+  // Stash Changes (P4): picked files (null: all), or picked lines of one file (the diff's menu).
+  const [askStash, setAskStash] = useState<{ files: FileChange[] | null; lines?: StashLines } | null>(null);
   const canStash = !!entry?.worktreePath && !entry.operation && entry.conflicts === 0 && wipFiles.length > 0;
   // Add to .gitignore: untracked files only (a tracked one stays tracked), not `.gitignore` itself.
   const ignorable = (list: FileChange[]) =>
@@ -1038,6 +1040,13 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                       lines: { path: wipRow.file.path, content, expect },
                     });
                 }
+              : undefined,
+          // Picked lines into a stash (§15 "Writing stashes"), after its message (P4); not for a
+          // file that is untracked or gone from the working tree.
+          stash:
+            wipRow.sec === 'u' && canStash && wipRow.file.kind !== 'U' && wipRow.file.kind !== 'D'
+              ? (content, rest, expect, expectIndex) =>
+                  setAskStash({ files: null, lines: { path: wipRow.file.path, content, rest, expect, expectIndex } })
               : undefined,
         }
       : null;
@@ -1666,9 +1675,11 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           );
         }}
       </PageMenu>
-      {askStash && entry && (
+      {askStash && entry && entryRef && (
         <StashDialog
-          push={stashPush(entry, wipFiles, askStash.files)}
+          push={
+            askStash.lines ? { entry: entryRef, lines: askStash.lines } : stashPush(entry, wipFiles, askStash.files)
+          }
           sub={`${repoName} / ${rev}`}
           onClose={() => setAskStash(null)}
         />

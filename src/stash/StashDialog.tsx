@@ -3,8 +3,8 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 import { t } from '../i18n';
-import type { EntrySummary, FileChange, StashPush } from '../lib/types';
-import { pushStashes } from './actions';
+import type { EntryRef, EntrySummary, FileChange, StashLines, StashPush } from '../lib/types';
+import { pushStashLines, pushStashes } from './actions';
 import styles from './StashDialog.module.css';
 
 /** What to stash in an entry's worktree: `picked` of its uncommitted `files` (a staged and an
@@ -23,13 +23,27 @@ export function stashPush(entry: EntrySummary, files: FileChange[], picked: File
   };
 }
 
+/** Picked lines of one file of an entry (the diff's Stash Selected Lines…). */
+export interface StashLinesPush {
+  entry: EntryRef;
+  lines: StashLines;
+}
+
 /** Stash Changes (flow P4): a modal that asks only for the stash's message (Changes' Stash All
- * Changes…, a file's Stash Changes…). */
-export function StashDialog({ push, sub, onClose }: { push: StashPush; sub: string; onClose: () => void }) {
+ * Changes…, a file's Stash Changes…, the diff's Stash Selected Lines…). */
+export function StashDialog({
+  push,
+  sub,
+  onClose,
+}: {
+  push: StashPush | StashLinesPush;
+  sub: string;
+  onClose: () => void;
+}) {
   const [message, setMessage] = useState('');
   const stash = () => {
     onClose();
-    void pushStashes([push], message);
+    void ('lines' in push ? pushStashLines(push.entry, push.lines, message) : pushStashes([push], message));
   };
   return (
     <Modal aria-label={t('stash.dialogTitle')} width={480} paddingTop={160} onClose={onClose}>

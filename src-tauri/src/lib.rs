@@ -168,6 +168,7 @@ pub fn run() {
             commands::get_script_run,
             commands::resize_script,
             commands::stash_push,
+            commands::stash_lines,
             commands::stash_apply,
             commands::stash_drop,
             commands::git_fetch,
