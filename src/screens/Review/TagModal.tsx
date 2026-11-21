@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Button } from '../../components/Button';
+import { Checkbox } from '../../components/Checkbox';
 import { Input } from '../../components/Input';
 import { Modal, ModalFooter, ModalHeader } from '../../components/Modal';
 import { t } from '../../i18n';
-import { checkNewTag } from '../../lib/ipc';
+import { checkNewTag, getTagRemote } from '../../lib/ipc';
 import type { NewTagProblem } from '../../lib/types';
+import { useInvoke } from '../../lib/useInvoke';
 import styles from './TagModal.module.css';
 
 const PROBLEM: Record<NewTagProblem, string> = {
@@ -13,7 +15,8 @@ const PROBLEM: Record<NewTagProblem, string> = {
 };
 
 /** Create a Tag (SPEC §16 "Create Tag"): the tag's name and an optional message (with one the tag
- * is annotated, without it lightweight), then Create Tag. The name is checked as it is typed. */
+ * is annotated, without it lightweight), then Create Tag. The name is checked as it is typed. With a
+ * remote, an option pushes the new tag there too. */
 export function TagModal({
   repoId,
   sub,
@@ -24,10 +27,12 @@ export function TagModal({
   /** `<repo> / <short SHA>`. */
   sub: string;
   onClose: () => void;
-  onCreate: (name: string, message: string) => void;
+  onCreate: (name: string, message: string, push: boolean) => void;
 }) {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
+  const { data: remote } = useInvoke(() => getTagRemote(repoId), [repoId]);
+  const [push, setPush] = useState(false);
   const [problem, setProblem] = useState<NewTagProblem | null>(null);
   const [checking, setChecking] = useState(false);
   const tag = name.trim();
@@ -57,7 +62,7 @@ export function TagModal({
   const create = () => {
     if (!ok) return;
     onClose();
-    onCreate(tag, message.trim());
+    onCreate(tag, message.trim(), push && !!remote);
   };
   return (
     <Modal aria-label={t('tag.title')} width={480} paddingTop={110} onClose={onClose}>
@@ -94,6 +99,9 @@ export function TagModal({
             onChange={(e) => setMessage(e.target.value)}
           />
           {problem && <span className={styles.error}>{t(PROBLEM[problem], { tag })}</span>}
+          {remote && (
+            <Checkbox label={t('tag.push', { remote })} checked={push} onChange={(e) => setPush(e.target.checked)} />
+          )}
         </div>
         <ModalFooter>
           <Button size={36} onClick={onClose}>

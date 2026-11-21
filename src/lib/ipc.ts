@@ -220,8 +220,10 @@ export const gitReword = (entry: EntryRef, sha: string, summary: string, descrip
 export const gitReset = (entry: EntryRef, sha: string, tip: string, hard: boolean) =>
   invoke<ScriptRun>('git_reset', { entry, sha, tip, hard });
 /** Create Tag: `git tag <name> <sha>`, annotated when `message` is not empty. */
-export const gitCreateTag = (entry: EntryRef, sha: string, name: string, message: string) =>
-  invoke<ScriptRun>('git_create_tag', { entry, sha, name, message });
+export const gitCreateTag = (entry: EntryRef, sha: string, name: string, message: string, push: boolean) =>
+  invoke<ScriptRun>('git_create_tag', { entry, sha, name, message, push });
+/** Push Tag: the tag to the repository's remote (`origin`, or the only one). */
+export const gitPushTag = (entry: EntryRef, name: string) => invoke<ScriptRun>('git_push_tag', { entry, name });
 /** Delete Tag: `git tag -d <name>`, with `remote` on the remote too. */
 export const gitDeleteTag = (entry: EntryRef, name: string, remote: boolean) =>
   invoke<ScriptRun>('git_delete_tag', { entry, name, remote });

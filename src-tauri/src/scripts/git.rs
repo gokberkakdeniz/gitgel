@@ -1521,18 +1521,20 @@ pub fn check_new_tag(
 }
 
 /// Create Tag (SPEC §16 "Create Tag"): the tag `name` on the commit `sha`, annotated with
-/// `message` when there is one, lightweight otherwise. Runs in the repository folder; the branch
-/// need not be checked out. `entry` only says whose run it is.
+/// `message` when there is one, lightweight otherwise; with `push`, then on the remote too (as
+/// Push Tag). Runs in the repository folder; the branch need not be checked out. `entry` only says
+/// whose run it is.
 pub fn create_tag(
     state: &AppState,
     entry: EntryRef,
     sha: &str,
     name: &str,
     message: &str,
+    push: bool,
 ) -> Result<ScriptRun, AppError> {
     let repo = open_repo(state, &entry.repo_id)?;
     repo.not_busy(state)?;
-    let full = {
+    let (full, on) = {
         let shared = state.pool.get(&repo.path)?;
         let git = lock(&shared);
         if let Some(problem) = new_tag_problem(&git, name) {
@@ -1544,7 +1546,15 @@ pub fn create_tag(
         let commit = git2::Oid::from_str(sha)
             .and_then(|oid| git.find_commit(oid))
             .map_err(|_| AppError::NotFound(format!("commit {sha}")))?;
-        commit.id().to_string()
+        let on = if push {
+            Some(
+                refs::default_remote(&git)
+                    .ok_or_else(|| AppError::Invalid(format!("{} has no remote.", repo.name)))?,
+            )
+        } else {
+            None
+        };
+        (commit.id().to_string(), on)
     };
     let message = message.trim();
     let mut env = vec![
@@ -1554,6 +1564,11 @@ pub fn create_tag(
     if !message.is_empty() {
         env.push(("GITGEL_MESSAGE".into(), message.to_string()));
     }
+    if let Some(on) = &on {
+        env.push(("GITGEL_REMOTE".into(), on.clone()));
+        env.push(("GITGEL_REMOTE_REF".into(), format!("refs/tags/{name}")));
+    }
+    let command = create_tag_command(!message.is_empty(), on.is_some());
     let label = entry
         .branch
         .clone()
@@ -1573,22 +1588,83 @@ pub fn create_tag(
             repo_id: repo.id.clone(),
             also_rescan: Vec::new(),
             folder: repo.main.clone(),
-            command: create_tag_command(!message.is_empty()),
+            command: if on.is_some() {
+                format!("{LOAD_KEYS}{command}")
+            } else {
+                command
+            },
             env: with_git_env(env),
             cleanup: Vec::new(),
         },
     )
 }
 
-/// `git tag [-a -m "$GITGEL_MESSAGE"] "$GITGEL_TAG" "$GITGEL_COMMIT"`: only fixed text and quoted
-/// variables.
-pub(super) fn create_tag_command(annotated: bool) -> String {
+/// `git tag [-a -m "$GITGEL_MESSAGE"] "$GITGEL_TAG" "$GITGEL_COMMIT"`, with `push` then Push
+/// Tag's command (a failed push keeps the tag): only fixed text and quoted variables.
+pub(super) fn create_tag_command(annotated: bool, push: bool) -> String {
     let message = if annotated {
         r#" -a -m "$GITGEL_MESSAGE""#
     } else {
         ""
     };
-    format!(r#"git tag{message} "$GITGEL_TAG" "$GITGEL_COMMIT""#)
+    let push = if push {
+        format!(" && {PUSH_TAG_COMMAND}")
+    } else {
+        String::new()
+    };
+    format!(r#"git tag{message} "$GITGEL_TAG" "$GITGEL_COMMIT"{push}"#)
+}
+
+/// Push Tag's command: the tag (`refs/tags/<name>`) to the remote, values from the environment.
+pub(super) const PUSH_TAG_COMMAND: &str = r#"git push "$GITGEL_REMOTE" "$GITGEL_REMOTE_REF""#;
+
+/// Push Tag (SPEC §16 "Push Tag"): the tag `name` to the repository's remote (`origin`, else the
+/// only one), from the repository folder. A tag the remote has on the same commit ends "up to
+/// date"; the remote's own tag of that name on another commit refuses it (no force). `entry`
+/// only says whose run it is. Refused when the tag is gone already or there is no remote.
+pub fn push_tag(state: &AppState, entry: EntryRef, name: &str) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, &entry.repo_id)?;
+    repo.not_busy(state)?;
+    let full = format!("refs/tags/{name}");
+    let on = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        if name.starts_with('-') || git.find_reference(&full).is_err() {
+            drop(git);
+            scan::rescan_repo(state, &repo.id, UpdateReason::Rescan, None);
+            return Err(AppError::Invalid(format!("{name} is not a tag.")));
+        }
+        refs::default_remote(&git)
+            .ok_or_else(|| AppError::Invalid(format!("{} has no remote.", repo.name)))?
+    };
+    let env = vec![
+        ("GITGEL_REMOTE".to_string(), on),
+        ("GITGEL_REMOTE_REF".to_string(), full),
+    ];
+    let label = entry
+        .branch
+        .clone()
+        .unwrap_or_else(|| entry.worktree_path.clone().unwrap_or_default());
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}push-tag"),
+            name: format!("Push Tag {name}"),
+            icon: "arrow-up".into(),
+            entry_key: entry_key(
+                &repo.id,
+                entry.branch.as_deref(),
+                entry.worktree_path.as_deref(),
+            ),
+            repo_label: format!("{} / {label}", repo.name),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: repo.main.clone(),
+            command: format!("{LOAD_KEYS}{PUSH_TAG_COMMAND}"),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
 }
 
 /// Delete Tag's remote (SPEC §16 "Delete Tag"): where its "Also delete from" option deletes the
@@ -2963,12 +3039,24 @@ mod tests {
     #[test]
     fn create_tag_commands_hold_no_values() {
         assert_eq!(
-            create_tag_command(false),
+            create_tag_command(false, false),
             r#"git tag "$GITGEL_TAG" "$GITGEL_COMMIT""#
         );
         assert_eq!(
-            create_tag_command(true),
+            create_tag_command(true, false),
             r#"git tag -a -m "$GITGEL_MESSAGE" "$GITGEL_TAG" "$GITGEL_COMMIT""#
+        );
+        assert_eq!(
+            create_tag_command(false, true),
+            r#"git tag "$GITGEL_TAG" "$GITGEL_COMMIT" && git push "$GITGEL_REMOTE" "$GITGEL_REMOTE_REF""#
+        );
+    }
+
+    #[test]
+    fn push_tag_command_holds_no_values() {
+        assert_eq!(
+            PUSH_TAG_COMMAND,
+            r#"git push "$GITGEL_REMOTE" "$GITGEL_REMOTE_REF""#
         );
     }
 

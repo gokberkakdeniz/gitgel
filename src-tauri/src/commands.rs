@@ -705,7 +705,8 @@ pub async fn git_undo_commit(
     .await
 }
 
-/// Create Tag: `git tag` of `name` on the commit `sha`, annotated when `message` is not empty.
+/// Create Tag: `git tag` of `name` on the commit `sha`, annotated when `message` is not empty;
+/// with `push`, on the remote too.
 #[tauri::command]
 pub async fn git_create_tag(
     state: State<'_, AppState>,
@@ -713,9 +714,23 @@ pub async fn git_create_tag(
     sha: String,
     name: String,
     message: String,
+    push: bool,
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
-        scripts::git::create_tag(state, entry, &sha, &name, &message)
+        scripts::git::create_tag(state, entry, &sha, &name, &message, push)
+    })
+    .await
+}
+
+/// Push Tag: the tag `name` to the repository's remote.
+#[tauri::command]
+pub async fn git_push_tag(
+    state: State<'_, AppState>,
+    entry: EntryRef,
+    name: String,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::push_tag(state, entry, &name)
     })
     .await
 }

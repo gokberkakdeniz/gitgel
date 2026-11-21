@@ -55,6 +55,8 @@ import {
   gitCommit,
   gitCreateTag,
   gitDeleteTag,
+  gitPushTag,
+  getTagRemote,
   gitIgnore,
   gitReorder,
   gitReset,
@@ -680,14 +682,22 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const [askBranch, setAskBranch] = useState<{ commit: HistoryCommit; at: DOMRect } | null>(null);
   // Create Tag: any commit, checked out or not; the name (and a message) in a dialog.
   const [askTag, setAskTag] = useState<HistoryCommit | null>(null);
-  const createTag = (c: HistoryCommit, tag: string, message: string) => {
+  const createTag = (c: HistoryCommit, tag: string, message: string, push: boolean) => {
     if (!entryRef) return;
     void startGitAction(
       t('tag.act', { tag }),
       t('tag.running', { tag }),
-      () => gitCreateTag(entryRef, c.sha, tag, message),
-      { done: t('tag.done', { tag, sha: c.shortSha }) },
+      () => gitCreateTag(entryRef, c.sha, tag, message, push),
+      { done: push ? t('tag.donePushed', { tag }) : t('tag.done', { tag, sha: c.shortSha }) },
     );
+  };
+  // Push Tag: no dialog; to the remote Delete Tag's option uses. Left out without one.
+  const { data: tagRemote } = useInvoke(() => getTagRemote(repoId), [repoId]);
+  const pushTag = (tag: string) => {
+    if (!entryRef || !tagRemote) return;
+    void startGitAction(t('tag.pushAct', { tag }), t('tag.pushing', { tag }), () => gitPushTag(entryRef, tag), {
+      done: t('tag.pushed', { tag, remote: tagRemote }),
+    });
   };
   // Delete Tag: asks first; with a remote, there too.
   const [askDeleteTag, setAskDeleteTag] = useState<string | null>(null);
@@ -1064,8 +1074,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // Cherry-Pick to's picker, beside its item (Hi11).
   const [cherrySub, setCherrySub] = useState<{ el: HTMLElement; focus?: boolean } | null>(null);
   useEffect(() => setCherrySub(null), [commitMenu]);
-  // Delete Tag's picker beside its item, for a commit with several tags.
-  const [tagSub, setTagSub] = useState<{ el: HTMLElement; focus?: boolean } | null>(null);
+  // Push Tag's or Delete Tag's picker beside its item, for a commit with several tags.
+  const [tagSub, setTagSub] = useState<{ el: HTMLElement; push: boolean; focus?: boolean } | null>(null);
   useEffect(() => setTagSub(null), [commitMenu]);
   const closeSubs = () => {
     setCherrySub(null);
@@ -1805,6 +1815,34 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 {t('tag.menu')}
               </MenuItem>
             )}
+            {entryRef && tagRemote && commitMenu.commit.tags.length === 1 && (
+              <MenuItem
+                icon="arrow-up"
+                onHover={closeSubs}
+                onSelect={() => {
+                  setCommitMenu(null);
+                  pushTag(commitMenu.commit.tags[0]);
+                }}
+              >
+                {t('tag.pushMenu')}
+              </MenuItem>
+            )}
+            {entryRef && tagRemote && commitMenu.commit.tags.length > 1 && (
+              <MenuItem
+                icon="arrow-up"
+                submenu
+                onHover={(el) => {
+                  setCherrySub(null);
+                  setTagSub({ el, push: true });
+                }}
+                onSelect={(el) => {
+                  setCherrySub(null);
+                  setTagSub({ el, push: true, focus: true });
+                }}
+              >
+                {t('tag.pushMenu')}
+              </MenuItem>
+            )}
             {entryRef && commitMenu.commit.tags.length === 1 && (
               <MenuItem
                 icon="trash"
@@ -1823,11 +1861,11 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 submenu
                 onHover={(el) => {
                   setCherrySub(null);
-                  setTagSub({ el });
+                  setTagSub({ el, push: false });
                 }}
                 onSelect={(el) => {
                   setCherrySub(null);
-                  setTagSub({ el, focus: true });
+                  setTagSub({ el, push: false, focus: true });
                 }}
               >
                 {t('tag.deleteMenu')}
@@ -1903,7 +1941,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                   setTagSub(null);
                 }}
               >
-                <Menu aria-label={t('tag.deleteAria')} autoFocus={!!tagSub.focus}>
+                <Menu aria-label={t(tagSub.push ? 'tag.pushAria' : 'tag.deleteAria')} autoFocus={!!tagSub.focus}>
                   {commitMenu.commit.tags.map((tag) => (
                     <MenuItem
                       key={tag}
@@ -1911,7 +1949,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                       oneLine
                       onSelect={() => {
                         setCommitMenu(null);
-                        setAskDeleteTag(tag);
+                        if (tagSub.push) pushTag(tag);
+                        else setAskDeleteTag(tag);
                       }}
                     >
                       {tag}
@@ -2005,7 +2044,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           repoId={repoId}
           sub={`${repoName} / ${askTag.shortSha}`}
           onClose={() => setAskTag(null)}
-          onCreate={(tag, message) => createTag(askTag, tag, message)}
+          onCreate={(tag, message, push) => createTag(askTag, tag, message, push)}
         />
       )}
       {askDeleteTag && (

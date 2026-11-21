@@ -176,6 +176,7 @@ pub fn run() {
             commands::git_revert,
             commands::git_reset,
             commands::git_create_tag,
+            commands::git_push_tag,
             commands::check_new_tag,
             commands::git_delete_tag,
             commands::get_tag_remote,

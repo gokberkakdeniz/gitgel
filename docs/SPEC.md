@@ -1943,8 +1943,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_operation` | `entry: EntryRef, abort: boolean` | `ScriptRun` (§15 "Operations in progress") |
 | `git_revert` | `entry: EntryRef, sha` | `ScriptRun` (§16 "Revert Changes") |
 | `git_reset` | `entry: EntryRef, sha, tip` (the branch's newest commit as shown), `hard: boolean` | `ScriptRun` (§16 "Reset to Commit") |
-| `git_create_tag` | `entry: EntryRef, sha, name, message` (annotated when `message` is not empty), `push: boolean` (to the remote too; planned, T28.1) | `ScriptRun` (§16 "Create Tag") |
-| `git_push_tag` (planned, T28.1) | `entry: EntryRef, name` | `ScriptRun` (§16 "Push Tag") |
+| `git_create_tag` | `entry: EntryRef, sha, name, message` (annotated when `message` is not empty), `push: boolean` (to the remote too) | `ScriptRun` (§16 "Create Tag") |
+| `git_push_tag` | `entry: EntryRef, name` | `ScriptRun` (§16 "Push Tag") |
 | `check_new_tag` | `repoId, name` | `NewTagProblem \| null` (`badName`, `exists`) |
 | `git_delete_tag` | `entry: EntryRef, name, remote: boolean` (the tag on the remote too) | `ScriptRun` (§16 "Delete Tag") |
 | `get_tag_remote` | `repoId` | `string \| null` (`origin`, else the only remote) |
@@ -3303,7 +3303,7 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     `accent.text`, a 7ch column, wider for a longer SHA; not while the list is under 340px), the subject and its pills, and on the right the age (mono 11
     muted; tooltip author · date); no avatar. Right-click on it (Hi10; a 240px menu): "Amend Commit…" (`pencil`; only on the branch's newest commit when it is checked out
     in a worktree; disabled while a commit runs or mid-operation), "Reword Commit…" (`edit`, below), "Undo Commit" (`undo`, below),
-    "Reset to Commit…" (`history`, below), "Checkout Commit…" (`worktree`, below), "Revert Changes" (`revert`, below), "Create Branch from Commit…" (`branch`, below), "Create Tag…" (`tag`, below), "Push Tag" (`arrow-up`, below; only on a commit with a tag, in a repository with a remote; planned, T28.1), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
+    "Reset to Commit…" (`history`, below), "Checkout Commit…" (`worktree`, below), "Revert Changes" (`revert`, below), "Create Branch from Commit…" (`branch`, below), "Create Tag…" (`tag`, below), "Push Tag" (`arrow-up`, below; only on a commit with a tag, in a repository with a remote), "Delete Tag…" (`trash`, below; only on a commit with a tag), "Cherry-Pick to" (`rebase`, a
     chevron; Hi11, below; left out when it has no target) and a divider, then "Copy SHA" (`copy`), "Copy Tags" (`copy`; "Copy Tag" for one; the names with spaces between; left out without a tag) and "Open Permalink" (`link`; the commit's page on the remote in the browser, as the header's SHA; only for a commit the branch's upstream has, on a GitHub, GitLab or Bitbucket remote). On one of several picked commits (below) the menu is theirs: "Squash N Commits…" (`rebase`; Hi13, below), and none opens when they cannot be squashed. The commit being amended carries an accent sm pill "amending" after its subject.
   - **Origin and base lines**: §5 "List column" (buttons that pick the rows above them).
   - The picked commit (or Uncommitted) lists its files under it: file rows as in Review (the
@@ -3440,10 +3440,10 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
     stays local: tags are not pushed with the branch. With a remote (Delete Tag's,
     `get_tag_remote`) a `Checkbox` "Push to <remote>" (off) sits under the message; checked, the
     tag then goes to the remote as Push Tag's below, in the same run, and the toast says “Created
-    and pushed tag <name>”; a failed push keeps the local tag (planned, T28.1). Refused before
+    and pushed tag <name>”; a failed push keeps the local tag Refused before
     running: a bad or taken name, a commit the repository does not have, another git action in
     the repository.
-  - **Push Tag** (planned, T28.1): on a commit with a tag, when the repository has a remote
+  - **Push Tag**: on a commit with a tag, when the repository has a remote
     (`origin`, else the only one; `get_tag_remote`). With several tags the item has a chevron and
     opens Delete Tag's picker. No dialog: it runs `git push "$GITGEL_REMOTE"
     "$GITGEL_REMOTE_REF"` (`refs/tags/<name>`) in the repository folder as a git action (script

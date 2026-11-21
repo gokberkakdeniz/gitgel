@@ -386,6 +386,10 @@ rather than as a task is under "Done on request".
     there are no day labels. `settings.historyLayout` keeps its config key.
 - [x] T27.6 ✋ Checkpoint — phase 27 — 2026-10-18
 
+### Phase 28 — Pushing tags
+- [x] T28.1 Push Tag — 2026-11-21
+- [x] T28.2 ✋ Checkpoint — phase 28 — 2026-11-21
+
 ## Done on request
 
 Work asked for in chat rather than as a task, one line each, grouped by topic and in the order
@@ -782,34 +786,4 @@ it was done within a topic.
 
 ## Open
 
-### Phase 28 — Pushing tags
-
-#### T28.1 Push Tag
-- **Why:** tags can be created and deleted but never sent to the remote; `docs/NOTES.md` "Tags"
-  (user decision 2026-11-21: a checkbox in Create Tag and a commit menu item).
-- **Spec:** SPEC §16 "Create Tag", "Push Tag" and the commit menu (Hi10); §9 commands
-  `git_create_tag`, `git_push_tag`.
-- **Reference:** `ReviewFocus.dc.html` commit menu (`Create Tag…` / `Delete Tag…` items) and the
-  `tag` / `deleteTag` modals; add the item and the checkbox there.
-- **Files:** `src-tauri/src/scripts/git.rs` (`create_tag`, a new `push_tag`, their command
-  builders and tests), `src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`,
-  `src/screens/Review/TagModal.tsx`, `src/screens/Review/Review.tsx` (the commit menu, Delete
-  Tag's picker reused), `src/i18n/en.json` and `tr.json`.
-- **Steps:**
-  1. Design canvas first (CLAUDE.md): "Push Tag" in the commit menu and the "Push to origin"
-     checkbox in "Create a Tag" on the Review artboards, publish, copy `ReviewFocus.dc.html`.
-  2. `push_tag`: Delete Tag's checks (tag exists, not starting with `-`, a remote, not busy),
-     `LOAD_KEYS` before the command, values only through the environment (`GITGEL_TAG`,
-     `GITGEL_REMOTE`, `GITGEL_REMOTE_REF` = `refs/tags/<name>`), as `delete_tag`.
-  3. `create_tag` with `push`: one command, `git tag … && git push …`, so a failed push leaves
-     the tag created; `LOAD_KEYS` only when pushing.
-  4. A failed push opens the run's output panel as a sync does, not the failed toast.
-- **Acceptance:** Push Tag sends a tag to the remote (`git ls-remote --tags origin` shows it);
-  pushing it again succeeds; a remote tag of the same name on another commit fails with the
-  output panel open; the item is left out in a repository without a remote; Create Tag with the
-  box checked creates and pushes in one run; the command tests show no values in the commands.
-
-#### T28.2 ✋ Checkpoint — phase 28
-- **Depends on:** T28.1
-- **Check:** in the fixtures, create a tag with "Push to origin", push another from the commit
-  menu (several tags: the picker), push one twice, and one that clashes with the remote's.
+No open tasks.
