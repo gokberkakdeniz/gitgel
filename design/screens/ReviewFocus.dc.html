@@ -30,6 +30,11 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 .gg-has:hover .gg-acts,.gg-has:focus-within .gg-acts{display:flex}
 .gg-ib:hover{background:var(--bg-pressed)!important;color:var(--text-strong)!important}
 .gg-commits{container-type:inline-size}
+.gg-dl{position:relative}
+.gg-nb{opacity:0}
+.gg-dl:hover .gg-nb,.gg-nb:focus-visible{opacity:1}
+.gg-nact{opacity:0}
+.gg-nc:hover .gg-nact,.gg-nc:focus-within .gg-nact{opacity:1}
 @container (max-width: 339px){.gg-sha{display:none}}
 </style>
 </helmet>
@@ -51,6 +56,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <div style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted)">{{pageSub}}</div>
 </div>
 <div style="display: flex; align-items: center; gap: 10px">
+<sc-if value="{{nt.on}}" hint-placeholder-val="{{false}}"><span style="position: relative; display: flex"><button type="button" onClick="{{nt.toggle}}" aria-haspopup="dialog" aria-expanded="{{nt.open}}" aria-label="{{nt.label}}" title="Notes" style="{{nt.btnStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; font-variant-numeric: tabular-nums">{{nt.count}}</span></button><sc-if value="{{nt.open}}" hint-placeholder-val="{{false}}"><div role="dialog" aria-label="Notes" style="position: absolute; top: calc(100% + 6px); right: 0; z-index: 41; width: 400px; max-height: 560px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px var(--shadow); text-align: left"><div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 12px 14px 6px"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong)">Notes</span><span style="min-width: 18px; height: 18px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 0 5px; border-radius: 9px; background: var(--bg-hover); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-body)">{{nt.count}}</span><span style="flex-grow: 1"></span><button type="button" onClick="{{nt.toggleView}}" aria-haspopup="menu" aria-expanded="{{nt.viewOpen}}" aria-label="List Options" title="List Options" style="{{nt.viewBtnStyle}}"><dc-import name="Icon" icon="tune" size="14" hint-size="14px,14px"></dc-import></button></div><sc-if value="{{nt.viewOpen}}" hint-placeholder-val="{{false}}"><div style="position: absolute; top: 40px; right: 8px; z-index: 3"><dc-import name="Menu" theme="none" width="{{220}}" label="List Options" items="{{nt.viewItems}}" hint-size="220px,200px"></dc-import></div></sc-if><div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; padding: 0 6px 8px"><sc-if value="{{nt.byFile}}" hint-placeholder-val="{{true}}"><sc-for list="{{nt.groups}}" as="g" hint-placeholder-count="2"><sc-if value="{{g.hasEntry}}" hint-placeholder-val="{{false}}"><div style="display: flex; align-items: baseline; gap: 8px; padding: 12px 8px 0; min-width: 0"><span style="font-size: 13px; font-weight: 600; color: var(--text-strong); white-space: nowrap">{{g.repo}}</span><span style="min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.branch}}</span></div></sc-if><div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 4px; min-width: 0"><dc-import name="KindBadge" theme="none" kind="{{g.kind}}" hint-size="18px,18px"></dc-import><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{g.name}}</span><span style="min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.dir}}</span></div><sc-for list="{{g.notes}}" as="n" hint-placeholder-count="2"><button type="button" class="gg-row" onClick="{{n.go}}" title="{{n.ref}}" style="display: flex; flex-direction: column; gap: 3px; width: 100%; padding: 6px 8px 7px 34px; border: 0; border-radius: 8px; background: transparent; font: inherit; text-align: left; cursor: pointer"><span style="display: flex; align-items: center; gap: 8px"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-text)">{{n.range}}</span><sc-if value="{{n.outdated}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="outdated" tone="warning" size="sm" hint-size="56px,16px"></dc-import></sc-if><sc-if value="{{n.resolved}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="resolved" tone="neutral" size="sm" hint-size="56px,16px"></dc-import></sc-if></span><span style="font-size: 13px; line-height: 18px; color: var(--text-body); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical">{{n.text}}</span></button></sc-for></sc-for></sc-if><sc-if value="{{nt.byDate}}" hint-placeholder-val="{{false}}"><div style="height: 4px"></div><sc-for list="{{nt.flat}}" as="n" hint-placeholder-count="4"><button type="button" class="gg-row" onClick="{{n.go}}" title="{{n.ref}}" style="display: flex; flex-direction: column; gap: 3px; width: 100%; padding: 7px 8px; border: 0; border-radius: 8px; background: transparent; font: inherit; text-align: left; cursor: pointer"><span style="display: flex; align-items: center; gap: 8px; min-width: 0"><sc-if value="{{n.hasRepo}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 600; color: var(--text-strong); white-space: nowrap">{{n.repo}}</span></sc-if><span style="min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{n.label}}</span><sc-if value="{{n.outdated}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="outdated" tone="warning" size="sm" hint-size="56px,16px"></dc-import></sc-if><sc-if value="{{n.resolved}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="resolved" tone="neutral" size="sm" hint-size="56px,16px"></dc-import></sc-if><span style="margin-left: auto; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint)">{{n.age}}</span></span><span style="font-size: 13px; line-height: 18px; color: var(--text-body); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical">{{n.text}}</span></button></sc-for></sc-if><sc-if value="{{nt.empty}}" hint-placeholder-val="{{false}}"><div style="padding: 16px 8px; font-size: 13px; color: var(--text-muted)">No notes</div></sc-if></div><div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border)"><sc-if value="{{nt.hasOld}}" hint-placeholder-val="{{false}}"><dc-import name="Button" theme="none" variant="ghost" size="28" label="Clear Resolved" on-press="{{nt.clearOld}}" hint-size="112px,28px"></dc-import></sc-if><dc-import name="Button" theme="none" variant="ghost" size="28" label="Clear All" on-press="{{nt.clear}}" hint-size="80px,28px"></dc-import><span style="flex-grow: 1"></span><dc-import name="Button" theme="none" variant="primary" size="28" icon="copy" label="Copy All" on-press="{{nt.copy}}" hint-size="96px,28px"></dc-import></div></div></sc-if></span></sc-if>
 <sc-if value="{{hasSync}}" hint-placeholder-val="{{true}}"><dc-import name="Input" theme="none" size="32" width="200px" value="{{q}}" on-value="{{setQ}}" placeholder="Search Commits" label="Search commit messages, SHAs and paths" right-text="{{qRight}}" right-kind="kbd" hint-size="200px,32px"></dc-import></sc-if>
 <sc-if value="{{hasSyncGroup}}" hint-placeholder-val="{{true}}">
 <div role="group" aria-label="Sync with the remote" style="height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px">
@@ -175,6 +181,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <dc-import name="KindBadge" theme="none" kind="{{it.kind}}" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
+<sc-if value="{{it.hasNotes}}" hint-placeholder-val="{{false}}"><span title="{{it.notesTitle}}" style="flex-shrink: 0; display: flex; align-items: center; gap: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-text)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg>{{it.notes}}</span></sc-if>
 </button>
 <sc-if value="{{it.hasAct}}" hint-placeholder-val="{{false}}"><span class="gg-acts" style="flex-shrink: 0; align-items: center; gap: 0; margin-right: -2px"><button type="button" class="gg-ib" onClick="{{it.discard}}" aria-label="{{it.discardTitle}}" title="{{it.discardTitle}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"></path></svg></button><button type="button" class="gg-ib" onClick="{{it.act}}" aria-label="{{it.actTitle}}" title="{{it.actTitle}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="{{it.actPath}}"></path></svg></button></span></sc-if>
 <span class="gg-cnts" onClick="{{it.pick}}" style="display: flex; gap: 8px; flex-shrink: 0; padding: 0 2px 0 0; cursor: pointer"><sc-if value="{{it.cUn}}" hint-placeholder-val="{{false}}"><span title="Has conflicts" style="display: flex; color: var(--danger)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="M12 3 2.5 20h19ZM12 10v4M12 17.2v.1"></path></svg></span></sc-if><sc-if value="{{it.cOk}}" hint-placeholder-val="{{false}}"><span title="Conflicts resolved" style="display: flex; color: var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span></sc-if><sc-if value="{{it.hasAdd}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span></sc-if><sc-if value="{{it.hasDel}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span></sc-if></span>
@@ -286,6 +293,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <dc-import name="KindBadge" theme="none" kind="{{it.kind}}" hint-size="18px,18px"></dc-import>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{it.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-grow: 1">{{it.dir}}</span>
+<sc-if value="{{it.hasNotes}}" hint-placeholder-val="{{false}}"><span title="{{it.notesTitle}}" style="flex-shrink: 0; display: flex; align-items: center; gap: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-text)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg>{{it.notes}}</span></sc-if>
 </button>
 <sc-if value="{{it.hasAct}}" hint-placeholder-val="{{false}}"><span class="gg-acts" style="flex-shrink: 0; align-items: center; gap: 0; margin-right: -2px"><button type="button" class="gg-ib" onClick="{{it.discard}}" aria-label="{{it.discardTitle}}" title="{{it.discardTitle}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"></path></svg></button><button type="button" class="gg-ib" onClick="{{it.act}}" aria-label="{{it.actTitle}}" title="{{it.actTitle}}" style="width: 20px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="{{it.actPath}}"></path></svg></button></span></sc-if>
 <span class="gg-cnts" onClick="{{it.pick}}" style="display: flex; gap: 8px; flex-shrink: 0; padding: 0 2px 0 0; cursor: pointer"><sc-if value="{{it.cUn}}" hint-placeholder-val="{{false}}"><span title="Has conflicts" style="display: flex; color: var(--danger)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="M12 3 2.5 20h19ZM12 10v4M12 17.2v.1"></path></svg></span></sc-if><sc-if value="{{it.cOk}}" hint-placeholder-val="{{false}}"><span title="Conflicts resolved" style="display: flex; color: var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span></sc-if><sc-if value="{{it.hasAdd}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success)">{{it.add}}</span></sc-if><sc-if value="{{it.hasDel}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--danger)">{{it.del}}</span></sc-if></span>
@@ -391,13 +399,15 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <div style="border-right: 1px solid var(--border); overflow: hidden">
 <sc-for list="{{lines}}" as="l" hint-placeholder-count="12">
 <sc-if value="{{l.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{l.unfold}}" title="Show unchanged lines" style="{{l.foldStyle}}">{{l.text}}</button></sc-if>
-<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div onContextMenu="{{l.lMenu}}" style="{{l.lStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.ln}}</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)">{{l.lMark}}</span><span style="white-space: pre">{{l.lt}}</span></div></sc-if>
+<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div class="gg-dl" onContextMenu="{{l.lMenu}}" style="{{l.lStyle}}"><sc-if value="{{l.lCan}}" hint-placeholder-val="{{false}}"><button type="button" class="gg-nb" onClick="{{l.lAdd}}" aria-label="Add Note" title="Add Note" style="position: absolute; left: 4px; top: 2px; z-index: 1; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 4px; background: var(--accent); color: var(--on-accent); cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M12 5v14M5 12h14"></path></svg></button></sc-if><span style="{{l.lnStyle}}">{{l.ln}}</span><span style="width: 14px; flex-shrink: 0; color: var(--danger)">{{l.lMark}}</span><span style="white-space: pre">{{l.lt}}</span></div></sc-if>
+<sc-if value="{{l.isZone}}" hint-placeholder-val="{{false}}"><div style="{{l.zStyle}}"><sc-if value="{{l.lZ.note}}" hint-placeholder-val="{{false}}"><div class="gg-nc" style="{{l.lZ.cardStyle}}"><div style="display: flex; align-items: center; gap: 6px; height: 22px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{l.lZ.range}}</span><sc-if value="{{l.lZ.resolved}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="resolved" tone="neutral" size="sm" hint-size="56px,16px"></dc-import></sc-if><span style="flex-grow: 1"></span><span class="gg-nact" style="display: flex"><button type="button" class="gg-ib" onClick="{{l.lZ.resolve}}" aria-label="{{l.lZ.resolveLabel}}" title="{{l.lZ.resolveLabel}}" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="{{l.lZ.resolvePath}}"></path></svg></button><button type="button" class="gg-ib" onClick="{{l.lZ.edit}}" aria-label="Edit Note" title="Edit Note" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Zm-2 2 4 4"></path></svg></button><button type="button" class="gg-ib" onClick="{{l.lZ.del}}" aria-label="Delete Note" title="Delete Note" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg></button></span></div><p style="margin: 0; font-size: 13px; line-height: 19px; color: var(--text-body); white-space: pre-wrap; overflow-wrap: anywhere">{{l.lZ.text}}</p></div></sc-if><sc-if value="{{l.lZ.draft}}" hint-placeholder-val="{{false}}"><div role="form" aria-label="Note" style="{{l.lZ.cardStyle}}"><div style="display: flex; align-items: center; gap: 6px; height: 22px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{l.lZ.range}}</span><span style="flex-grow: 1"></span></div><textarea aria-label="Note" placeholder="Note" value="{{l.lZ.text}}" onChange="{{l.lZ.setText}}" onKeyDown="{{l.lZ.key}}" style="height: 60px; box-sizing: border-box; width: 100%; padding: 7px 10px; resize: none; background: var(--bg-sunken); border: 1px solid var(--accent); border-radius: 6px; color: var(--text-strong); font-family: inherit; font-size: 13px; line-height: 19px; outline: none"></textarea><div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px"><dc-import name="Button" theme="none" variant="ghost" size="28" label="Cancel" on-press="{{l.lZ.cancel}}" hint-size="72px,28px"></dc-import><dc-import name="Button" theme="none" variant="primary" size="28" label="Save" title="Save (⌘↵)" disabled="{{l.lZ.saveOff}}" on-press="{{l.lZ.save}}" hint-size="60px,28px"></dc-import></div></div></sc-if></div></sc-if>
 </sc-for>
 </div>
 <div style="overflow: hidden">
 <sc-for list="{{lines}}" as="l" hint-placeholder-count="12">
 <sc-if value="{{l.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{l.unfold}}" title="Show unchanged lines" style="{{l.foldStyle}}">{{l.text}}</button></sc-if>
-<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div onContextMenu="{{l.rMenu}}" style="{{l.rStyle}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{l.rn}}</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">{{l.rMark}}</span><span style="white-space: pre">{{l.rt}}</span></div></sc-if>
+<sc-if value="{{l.isLine}}" hint-placeholder-val="{{true}}"><div class="gg-dl" onContextMenu="{{l.rMenu}}" style="{{l.rStyle}}"><sc-if value="{{l.rCan}}" hint-placeholder-val="{{false}}"><button type="button" class="gg-nb" onClick="{{l.rAdd}}" aria-label="Add Note" title="Add Note" style="position: absolute; left: 4px; top: 2px; z-index: 1; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 4px; background: var(--accent); color: var(--on-accent); cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M12 5v14M5 12h14"></path></svg></button></sc-if><span style="{{l.rnStyle}}">{{l.rn}}</span><span style="width: 14px; flex-shrink: 0; color: var(--success)">{{l.rMark}}</span><span style="white-space: pre">{{l.rt}}</span></div></sc-if>
+<sc-if value="{{l.isZone}}" hint-placeholder-val="{{false}}"><div style="{{l.zStyle}}"><sc-if value="{{l.rZ.note}}" hint-placeholder-val="{{false}}"><div class="gg-nc" style="{{l.rZ.cardStyle}}"><div style="display: flex; align-items: center; gap: 6px; height: 22px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{l.rZ.range}}</span><sc-if value="{{l.rZ.resolved}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="resolved" tone="neutral" size="sm" hint-size="56px,16px"></dc-import></sc-if><span style="flex-grow: 1"></span><span class="gg-nact" style="display: flex"><button type="button" class="gg-ib" onClick="{{l.rZ.resolve}}" aria-label="{{l.rZ.resolveLabel}}" title="{{l.rZ.resolveLabel}}" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="{{l.rZ.resolvePath}}"></path></svg></button><button type="button" class="gg-ib" onClick="{{l.rZ.edit}}" aria-label="Edit Note" title="Edit Note" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Zm-2 2 4 4"></path></svg></button><button type="button" class="gg-ib" onClick="{{l.rZ.del}}" aria-label="Delete Note" title="Delete Note" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg></button></span></div><p style="margin: 0; font-size: 13px; line-height: 19px; color: var(--text-body); white-space: pre-wrap; overflow-wrap: anywhere">{{l.rZ.text}}</p></div></sc-if><sc-if value="{{l.rZ.draft}}" hint-placeholder-val="{{false}}"><div role="form" aria-label="Note" style="{{l.rZ.cardStyle}}"><div style="display: flex; align-items: center; gap: 6px; height: 22px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{l.rZ.range}}</span><span style="flex-grow: 1"></span></div><textarea aria-label="Note" placeholder="Note" value="{{l.rZ.text}}" onChange="{{l.rZ.setText}}" onKeyDown="{{l.rZ.key}}" style="height: 60px; box-sizing: border-box; width: 100%; padding: 7px 10px; resize: none; background: var(--bg-sunken); border: 1px solid var(--accent); border-radius: 6px; color: var(--text-strong); font-family: inherit; font-size: 13px; line-height: 19px; outline: none"></textarea><div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px"><dc-import name="Button" theme="none" variant="ghost" size="28" label="Cancel" on-press="{{l.rZ.cancel}}" hint-size="72px,28px"></dc-import><dc-import name="Button" theme="none" variant="primary" size="28" label="Save" title="Save (⌘↵)" disabled="{{l.rZ.saveOff}}" on-press="{{l.rZ.save}}" hint-size="60px,28px"></dc-import></div></div></sc-if></div></sc-if>
 </sc-for>
 </div>
 </div>
@@ -406,7 +416,8 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 20px; padding: 6px 0 32px">
 <sc-for list="{{uLines}}" as="u" hint-placeholder-count="14">
 <sc-if value="{{u.isFold}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{u.unfold}}" title="Show unchanged lines" style="{{u.foldStyle}}">{{u.text}}</button></sc-if>
-<sc-if value="{{u.isLine}}" hint-placeholder-val="{{true}}"><div onContextMenu="{{u.menu}}" style="{{u.style}}"><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 8px; color: var(--text-faint)">{{u.on}}</span><span style="width: 44px; flex-shrink: 0; text-align: right; padding-right: 12px; color: var(--text-faint)">{{u.nn}}</span><span style="{{u.markStyle}}">{{u.mark}}</span><span style="white-space: pre">{{u.t}}</span></div></sc-if>
+<sc-if value="{{u.isLine}}" hint-placeholder-val="{{true}}"><div class="gg-dl" onContextMenu="{{u.menu}}" style="{{u.style}}"><sc-if value="{{u.nCan}}" hint-placeholder-val="{{false}}"><button type="button" class="gg-nb" onClick="{{u.nAdd}}" aria-label="Add Note" title="Add Note" style="position: absolute; left: 4px; top: 2px; z-index: 1; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 4px; background: var(--accent); color: var(--on-accent); cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M12 5v14M5 12h14"></path></svg></button></sc-if><span style="{{u.onStyle}}">{{u.on}}</span><span style="{{u.nnStyle}}">{{u.nn}}</span><span style="{{u.markStyle}}">{{u.mark}}</span><span style="white-space: pre">{{u.t}}</span></div></sc-if>
+<sc-if value="{{u.isZone}}" hint-placeholder-val="{{false}}"><div style="{{u.zStyle}}"><sc-if value="{{u.z.note}}" hint-placeholder-val="{{false}}"><div class="gg-nc" style="{{u.z.cardStyle}}"><div style="display: flex; align-items: center; gap: 6px; height: 22px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{u.z.range}}</span><sc-if value="{{u.z.resolved}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="resolved" tone="neutral" size="sm" hint-size="56px,16px"></dc-import></sc-if><span style="flex-grow: 1"></span><span class="gg-nact" style="display: flex"><button type="button" class="gg-ib" onClick="{{u.z.resolve}}" aria-label="{{u.z.resolveLabel}}" title="{{u.z.resolveLabel}}" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="{{u.z.resolvePath}}"></path></svg></button><button type="button" class="gg-ib" onClick="{{u.z.edit}}" aria-label="Edit Note" title="Edit Note" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Zm-2 2 4 4"></path></svg></button><button type="button" class="gg-ib" onClick="{{u.z.del}}" aria-label="Delete Note" title="Delete Note" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg></button></span></div><p style="margin: 0; font-size: 13px; line-height: 19px; color: var(--text-body); white-space: pre-wrap; overflow-wrap: anywhere">{{u.z.text}}</p></div></sc-if><sc-if value="{{u.z.draft}}" hint-placeholder-val="{{false}}"><div role="form" aria-label="Note" style="{{u.z.cardStyle}}"><div style="display: flex; align-items: center; gap: 6px; height: 22px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2ZM8 9h8M8 13h5"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted)">{{u.z.range}}</span><span style="flex-grow: 1"></span></div><textarea aria-label="Note" placeholder="Note" value="{{u.z.text}}" onChange="{{u.z.setText}}" onKeyDown="{{u.z.key}}" style="height: 60px; box-sizing: border-box; width: 100%; padding: 7px 10px; resize: none; background: var(--bg-sunken); border: 1px solid var(--accent); border-radius: 6px; color: var(--text-strong); font-family: inherit; font-size: 13px; line-height: 19px; outline: none"></textarea><div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px"><dc-import name="Button" theme="none" variant="ghost" size="28" label="Cancel" on-press="{{u.z.cancel}}" hint-size="72px,28px"></dc-import><dc-import name="Button" theme="none" variant="primary" size="28" label="Save" title="Save (⌘↵)" disabled="{{u.z.saveOff}}" on-press="{{u.z.save}}" hint-size="60px,28px"></dc-import></div></div></sc-if></div></sc-if>
 </sc-for>
 </div>
 </sc-if>
@@ -420,6 +431,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 </section>
 </div>
 
+<sc-if value="{{nt.open}}" hint-placeholder-val="{{false}}"><button type="button" aria-label="Close notes" onClick="{{nt.close}}" style="position: absolute; inset: 0; z-index: 40; padding: 0; border: 0; background: transparent; cursor: default"></button></sc-if>
 <sc-if value="{{menuOn}}" hint-placeholder-val="{{false}}">
 <button type="button" aria-label="Close menu" onClick="{{closeMenu}}" onContextMenu="{{closeMenu}}" style="position: absolute; inset: 0; z-index: 40; padding: 0; border: 0; background: transparent; cursor: default"></button>
 <div style="{{menuStyle}}"><dc-import name="Menu" theme="none" width="{{menuW}}" label="{{menuLabel}}" items="{{menuItems}}" hint-size="260px,200px"></dc-import></div>
@@ -482,7 +494,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;project&quot;,&quot;branch&quot;,&quot;stashes&quot;],&quot;default&quot;:&quot;project&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;web&quot;,&quot;api&quot;],&quot;default&quot;:&quot;web&quot;,&quot;section&quot;:&quot;State&quot;},&quot;op&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;rebase&quot;,&quot;conflicts&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;open&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pageMenu&quot;,&quot;baseMenu&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;embedded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;picked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tree&quot;,&quot;columns&quot;],&quot;default&quot;:&quot;tree&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;stageGit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;hooks&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;commitRows&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;two-line&quot;,&quot;one-line&quot;],&quot;default&quot;:&quot;two-line&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;branches&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;collapsed&quot;,&quot;open&quot;],&quot;default&quot;:&quot;collapsed&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;baseCommits&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Layout&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;project&quot;,&quot;branch&quot;,&quot;stashes&quot;],&quot;default&quot;:&quot;project&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;web&quot;,&quot;api&quot;],&quot;default&quot;:&quot;web&quot;,&quot;section&quot;:&quot;State&quot;},&quot;op&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;rebase&quot;,&quot;conflicts&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;open&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pageMenu&quot;,&quot;baseMenu&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;notes&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;adding&quot;,&quot;saved&quot;,&quot;list&quot;,&quot;listMenu&quot;,&quot;listAll&quot;,&quot;listFile&quot;,&quot;resolved&quot;,&quot;clearAll&quot;,&quot;copied&quot;,&quot;menu&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;embedded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;picked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tree&quot;,&quot;columns&quot;],&quot;default&quot;:&quot;tree&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;stageGit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;hooks&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;commitRows&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;two-line&quot;,&quot;one-line&quot;],&quot;default&quot;:&quot;two-line&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;branches&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;collapsed&quot;,&quot;open&quot;],&quot;default&quot;:&quot;collapsed&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;baseCommits&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Layout&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   // Review + History in one screen, one branch open at a time: the open entry lists its
   // Uncommitted changes, its commits, the base line (the whole review) and the base's log under
@@ -522,6 +534,41 @@ class Component extends DCLogic {
     this.state.sel = { e: P0.scope === 'stashes' ? 'web1' : a0, row: r0, rows: null, anchor: r0, file: null };
     this.state.open = {}; this.state.open[a0] = r0;
     if (P0.open === 'pageMenu' || P0.open === 'baseMenu') this.state.menu = { kind: P0.open === 'baseMenu' ? 'base' : 'page', e: a0, x: W0 - 16, y: 56, right: true, sub: false };
+    // Notes on lines (canvas page Notes, W1–W5): local notes on diff lines of the open branch, one
+    // list per branch. The notes tweak opens web-app's newest commit on refresh.ts with notes in it:
+    // adding (a note being written on lines 22–23), saved, list (the Notes popover), copied (after
+    // Copy All), menu (right-click on line 22).
+    // The popover's list options (global, saved in the config): sorted by date added (default,
+    // newest first) or grouped by file; resolved notes (Resolve by hand, or outdated: the line's text
+    // changed) left out (default; of Copy All and the diff too) or shown.
+    this.state.notes = []; this.state.draft = null; this.state.notesOpen = false;
+    this.state.notesGroup = P0.notes === 'listFile' ? 'file' : 'date'; this.state.notesOrder = 'new'; this.state.notesOutdated = P0.notes === 'listFile' || P0.notes === 'resolved'; this.state.notesView = P0.notes === 'listMenu';
+    // A project review lists only the open branch's notes (default) or every branch's; Clear All / Clear Resolved
+    // ask first while Settings › Prompts › "Clearing notes" is on (notesAsk).
+    this.state.notesScope = P0.notes === 'listAll' || P0.notes === 'listFile' ? 'all' : 'open'; this.state.notesAsk = true;
+    var NT = P0.notes;
+    if (NT && NT !== 'none') {
+      var ne = this.state.E.filter(function (x) { return x.id === 'web1'; })[0], nrow = ne.commits[0].sha;
+      this.state.active = 'web1';
+      this.state.sel = { e: 'web1', row: nrow, rows: null, anchor: nrow, file: 'src/auth/refresh.ts' };
+      this.state.open = { web1: nrow };
+      var T0 = Date.now(), AT = { n1: 130, n2: 35, n3: 70, n4: 1500, n5: 20, n6: 90 };
+      var N = function (id, path, row, from, to, text, old, eid) { return { id: id, at: T0 - AT[id] * 60000, e: eid || 'web1', row: row, path: path, side: 'r', from: from, to: to, text: text, outdated: old === true, resolved: old === 'resolved' }; };
+      var n2 = 'Retries on any NetworkError, also one thrown after the new token was stored. Could this issue two tokens?';
+      this.state.notes = [
+        N('n1', 'src/auth/refresh.ts', nrow, 2, 2, 'Import it from ../http/errors, as client.ts does.'),
+        N('n3', 'test/auth/refresh.test.ts', nrow, 31, 31, 'Add a case where both tries fail.'),
+        N('n6', 'src/auth/refresh.ts', nrow, 20, 20, 'Await it here, so the catch below sees the rejection.', 'resolved'),
+        N('n4', 'src/auth/store.ts', ne.commits[1].sha, 14, 14, 'Why keep the old id here?', true),
+        N('n5', 'src/jobs/rotate-tokens.ts', 'wip', 8, 8, 'Run this before the refresh window opens, not after it.', false, 'api1')
+      ];
+      if (NT === 'adding') this.state.draft = { e: 'web1', row: nrow, path: 'src/auth/refresh.ts', side: 'r', from: 22, to: 23, text: n2.slice(0, 66) };
+      else this.state.notes.splice(1, 0, N('n2', 'src/auth/refresh.ts', nrow, 22, 23, n2));
+      if (NT === 'list' || NT === 'listMenu' || NT === 'listAll' || NT === 'listFile') this.state.notesOpen = true;
+      if (NT === 'copied') this.state.toast = { id: 0, status: 'success', message: 'Copied 3 notes', sub: '', actionLabel: '', onAction: null };
+      if (NT === 'clearAll') this.state.modal = { kind: 'clearNotes', e: 'web1', n: 3, old: false, one: true, run: function () {} };
+      if (NT === 'menu') this.state.menu = { kind: 'diff', e: 'web1', stage: false, staged: false, changed: true, lines: false, side: 'r', line: 22, x: 1010, y: 402, right: false, sub: false };
+    }
   }
 
   componentWillUnmount() { this.timers.forEach(function (t) { clearTimeout(t); }); }
@@ -1351,6 +1398,7 @@ class Component extends DCLogic {
         bodyStyle: 'height: ' + (pane ? 48 : 56) + 'px; box-sizing: border-box; width: 100%; padding: 7px 10px; resize: none; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-body); font-family: inherit; font-size: 12px; line-height: 1.45; outline: none' };
     };
 
+    var NOTES = st.notes || [];
     var pushFiles = function (e, row, out, navOut, c2) {
       var files = self.filesFor(e, row, st.sel);
       var isWip = row === 'wip';
@@ -1361,7 +1409,8 @@ class Component extends DCLogic {
         var on = e.id === selE.id && row === selRow && id === selPath;
         navOut.push({ key: keyOf(e, row, id), go: pickFile(e, row, id) });
         var cf = isWip && OP && OP.e === e.id ? OP.files[path] : null;
-        return { isFile: true, kind: f.k, name: f.name, dir: f.dir, add: f.add, del: f.del, hasAdd: !cf && !!f.add, hasDel: !cf && !!f.del, cUn: cf === 'unresolved', cOk: cf === 'resolved', on: on,
+        var nN = NOTES.filter(function (n) { return n.e === e.id && n.row === row && n.path === id && !n.outdated && (st.notesOutdated || !n.resolved); }).length;
+        return { isFile: true, hasNotes: nN > 0, notes: String(nN), notesTitle: nN + (nN === 1 ? ' note' : ' notes'), kind: f.k, name: f.name, dir: f.dir, add: f.add, del: f.del, hasAdd: !cf && !!f.add, hasDel: !cf && !!f.del, cUn: cf === 'unresolved', cOk: cf === 'resolved', on: on,
           pick: pickFile(e, row, id),
           menu: menuAt({ kind: 'file', e: e.id, row: row, path: path, part: f.part, gone: f.k === 'D', untracked: f.k === 'U' }),
           hasAct: !!o, actIcon: o && o.glyph === '−' ? 'remove' : 'plus', actPath: o && o.glyph === '−' ? 'M5 12h14' : 'M12 5v14M5 12h14', actTitle: o ? o.title : '', rowCls: o ? 'gg-has' : '',
@@ -1698,27 +1747,91 @@ class Component extends DCLogic {
     // The diff's right-click menu: on an Uncommitted file, Stage (Unstage on a Staged row) Selected
     // Lines when text is selected and Stage Change on a changed line, then the reference and open items.
     var canStageLines = selRow === 'wip' && !!selFile && !st.busy[selE.id] && !st.stq[selE.id];
-    var diffMenu = function (changed, side) {
+    var diffMenu = function (changed, side, line) {
       return function (ev) {
         if (ev && ev.preventDefault) ev.preventDefault();
         if (ev && ev.stopPropagation) ev.stopPropagation();
         var sel = typeof window !== 'undefined' && window.getSelection ? String(window.getSelection()) : '';
-        self.openMenu({ kind: 'diff', e: selE.id, stage: canStageLines, staged: !!(selFile && selFile.st), changed: changed, lines: changed && sel.trim().length > 0, side: side }, ev);
+        self.openMenu({ kind: 'diff', e: selE.id, stage: canStageLines, staged: !!(selFile && selFile.st), changed: changed, lines: changed && sel.trim().length > 0, side: side, line: line }, ev);
       };
     };
+    // Notes on the file shown (W1–W5): a note sits under its last line, as a Monaco view zone (split:
+    // the other side keeps an empty zone of the same height); the lines it covers have accent numbers;
+    // a note being written tints its lines. Outdated notes are only listed; resolved ones show (with
+    // their pill and Unresolve) only while Show Resolved is on.
+    var showResolved = !!st.notesOutdated;
+    var DR = st.draft && st.draft.e === selE.id && st.draft.row === selRow && st.draft.path === selPath ? st.draft : null;
+    var fNotes = NOTES.filter(function (n) { return n.e === selE.id && n.row === selRow && n.path === selPath && !n.outdated && (showResolved || !n.resolved) && !(DR && DR.id === n.id); });
+    var rangeOf = function (n) { return n.from === n.to ? 'Line ' + n.to : 'Lines ' + n.from + '–' + n.to; };
+    var estLines = function (t, cpl) { return String(t || ' ').split('\n').reduce(function (a, p) { return a + Math.max(1, Math.ceil(p.length / cpl)); }, 0); };
+    var cardStyle = function (pad) { return 'margin: 6px 12px 6px ' + pad + 'px; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; padding: 6px 8px 9px 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; font-family: \'Instrument Sans\', -apple-system, sans-serif; white-space: normal'; };
+    var saveDraft = function () {
+      var d = self.state.draft; if (!d || !d.text.trim()) return;
+      var list = (self.state.notes || []).slice();
+      if (d.id) list = list.map(function (n) { return n.id === d.id ? Object.assign({}, n, { text: d.text }) : n; });
+      else list.push(Object.assign({}, d, { id: 'n' + (++self.tid), at: Date.now(), outdated: false, resolved: false }));
+      self.setState({ notes: list, draft: null });
+    };
+    var deleteNote = function (id) {
+      var before = self.state.notes;
+      self.setState({ notes: before.filter(function (n) { return n.id !== id; }) });
+      self.toast({ status: 'none', message: 'Note deleted', actionLabel: 'Undo', onAction: function () { self.setState({ notes: before }); } });
+    };
+    var addNote = function (side, line) { self.setState({ menu: null, notesOpen: false, draft: { e: selE.id, row: selRow, path: selPath, side: side, from: line, to: line, text: '' } }); };
+    var setResolved = function (id, on) {
+      var before = self.state.notes;
+      self.setState({ notes: before.map(function (x) { return x.id === id ? Object.assign({}, x, { resolved: on }) : x; }) });
+      if (on && !self.state.notesOutdated) self.toast({ status: 'none', message: 'Note resolved', actionLabel: 'Undo', onAction: function () { self.setState({ notes: before }); } });
+    };
+    var noteZ = function (n, pad, cpl) { return { note: true, draft: false, range: rangeOf(n), text: n.text, cardStyle: cardStyle(pad) + (n.resolved ? '; opacity: 0.7' : ''), h: 12 + 2 + 15 + 22 + 2 + estLines(n.text, cpl) * 19,
+      resolved: !!n.resolved, resolveLabel: n.resolved ? 'Unresolve' : 'Resolve', resolvePath: n.resolved ? 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5' : 'm5 12.5 4.5 4.5L19 7.5',
+      resolve: function () { setResolved(n.id, !n.resolved); },
+      edit: function () { self.setState({ draft: Object.assign({}, n) }); }, del: function () { deleteNote(n.id); } }; };
+    var draftZ = function (pad) { return { note: false, draft: true, range: rangeOf(DR), text: DR.text, cardStyle: cardStyle(pad), h: 154, saveOff: !DR.text.trim(),
+      setText: function (ev) { self.setState({ draft: Object.assign({}, self.state.draft, { text: ev.target.value }) }); },
+      key: function (ev) { if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) { ev.preventDefault(); saveDraft(); } else if (ev.key === 'Escape') { ev.preventDefault(); self.setState({ draft: null }); } },
+      save: saveDraft, cancel: function () { self.setState({ draft: null }); } }; };
+    var noZ = { note: false, draft: false };
+    // The zones under a line: side 'l' by its old number, 'r' by its new one; the note being written last.
+    var zonesAt = function (ln, rn, pad, cpl) {
+      var out = [];
+      fNotes.forEach(function (n) { if ((n.side === 'l' && ln !== '' && n.to === ln) || (n.side === 'r' && rn !== '' && n.to === rn)) out.push({ side: n.side, z: noteZ(n, pad, cpl) }); });
+      if (DR && ((DR.side === 'l' && ln !== '' && DR.to === ln) || (DR.side === 'r' && rn !== '' && DR.to === rn))) out.push({ side: DR.side, z: draftZ(pad) });
+      return out;
+    };
+    var inNote = function (side, n) { if (n === '' || n == null) return false; return fNotes.some(function (x) { return x.side === side && n >= x.from && n <= x.to; }); };
+    var inDraft = function (side, n) { return !!DR && n !== '' && n != null && DR.side === side && n >= DR.from && n <= DR.to; };
+    var numStyle = function (on, padR) { return 'width: 44px; flex-shrink: 0; text-align: right; padding-right: ' + padR + 'px; ' + (on ? 'color: var(--accent-text); font-weight: 500' : 'color: var(--text-faint)'); };
+    var draftBg = 'background: rgba(var(--accent-rgb), 0.2)';
     var lines = (rows || []).map(function (r, i) {
       var k = r[4];
       if (k === 'fold') return { isFold: true, text: foldText(r), unfold: unfoldFn(r), foldStyle: foldStyle(58) };
+      var lCan = r[0] !== '' && (k === 'mod' || k === 'del'), rCan = r[2] !== '';
       return { isLine: true, ln: r[0], lt: r[1], rn: r[2], rt: r[3],
-        lMenu: diffMenu(k === 'mod' || k === 'del', 'l'), rMenu: diffMenu(k === 'mod' || k === 'add', 'r'),
+        lCan: lCan, rCan: rCan, lAdd: function () { addNote('l', r[0]); }, rAdd: function () { addNote('r', r[2]); },
+        lnStyle: numStyle(inNote('l', r[0]) || inDraft('l', r[0]), 12), rnStyle: numStyle(inNote('r', r[2]) || inDraft('r', r[2]), 12),
+        lMenu: diffMenu(k === 'mod' || k === 'del', 'l', r[0]), rMenu: diffMenu(k === 'mod' || k === 'add', 'r', r[2]),
         lMark: k === 'mod' || k === 'del' ? '−' : '', rMark: k === 'mod' || k === 'add' ? '+' : '',
-        lStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'add' ? hatch : k ? 'background: rgba(var(--danger-rgb), 0.17)' : ''),
-        rStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'del' ? hatch : k ? 'background: rgba(var(--success-rgb), 0.15)' : '') };
+        lStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'add' ? hatch : k ? 'background: rgba(var(--danger-rgb), 0.17)' : '') + (inDraft('l', r[0]) ? '; ' + draftBg : ''),
+        rStyle: base0 + (hunkOf[i] === hIdx ? cur : '') + (k === 'del' ? hatch : k ? 'background: rgba(var(--success-rgb), 0.15)' : '') + (inDraft('r', r[2]) ? '; ' + draftBg : '') };
     });
+    var linesZ = [];
+    lines.forEach(function (l, i) {
+      linesZ.push(l);
+      if (!l.isLine) return;
+      zonesAt(rows[i][0], rows[i][2], 58, 54).forEach(function (x) {
+        linesZ.push({ isZone: true, lZ: x.side === 'l' ? x.z : noZ, rZ: x.side === 'r' ? x.z : noZ, zStyle: 'height: ' + x.z.h + 'px; overflow: hidden; background: var(--bg-main)' });
+      });
+    });
+    lines = linesZ;
     var uLines = [], pend = [];
     var uRow = function (on, nn, mark, t, kind, isCur) {
       var bg = kind === 'del' ? 'background: rgba(var(--danger-rgb), 0.17)' : kind === 'add' ? 'background: rgba(var(--success-rgb), 0.15)' : '';
-      uLines.push({ isLine: true, on: on, nn: nn, mark: mark, t: t, menu: diffMenu(!!kind, kind === 'del' ? 'l' : 'r'), style: base0 + (isCur ? cur : '') + bg, markStyle: 'width: 14px; flex-shrink: 0; color: ' + (kind === 'del' ? 'var(--danger)' : 'var(--success)') });
+      var uSide = kind === 'del' ? 'l' : 'r', uNum = kind === 'del' ? on : nn, uDr = inDraft(uSide, uNum);
+      uLines.push({ isLine: true, on: on, nn: nn, mark: mark, t: t, menu: diffMenu(!!kind, uSide, uNum), style: base0 + (isCur ? cur : '') + bg + (uDr ? '; ' + draftBg : ''), markStyle: 'width: 14px; flex-shrink: 0; color: ' + (kind === 'del' ? 'var(--danger)' : 'var(--success)'),
+        nCan: uNum !== '', nAdd: function () { addNote(uSide, uNum); },
+        onStyle: numStyle(uSide === 'l' && (inNote('l', on) || uDr), 8), nnStyle: numStyle(uSide === 'r' && (inNote('r', nn) || uDr), 12) });
+      zonesAt(kind === 'del' ? on : '', kind === 'del' ? '' : nn, 102, 110).forEach(function (x) { uLines.push({ isZone: true, z: x.z, zStyle: 'height: ' + x.z.h + 'px; overflow: hidden' }); });
     };
     var flush = function () {
       if (!pend.length) return;
@@ -1823,6 +1936,7 @@ class Component extends DCLogic {
           if (st.blame) menuItems.push({ label: 'Show Commit a41c9e2', icon: 'history', onSelect: close });
           menuItems.push({ label: 'File History', icon: 'history', onSelect: close }, { kind: 'sep' });
         }
+        if (M.line !== '' && M.line != null && (M.side === 'r' || M.changed)) menuItems.push({ label: 'Add Note', icon: 'note', onSelect: function () { addNote(M.side, M.line); } });
         menuItems.push({ label: 'Copy Relative Reference', icon: 'copy', onSelect: close }, { label: 'Copy Absolute Reference', icon: 'copy', onSelect: close });
         if (selFile && selFile.k !== 'D') menuItems.push({ kind: 'sep' }, { label: 'Open in Finder', app: 'finder', onSelect: close }, { label: 'Open in Cursor', app: 'cursor', onSelect: close });
       } else if (M.kind === 'stash') {
@@ -1900,6 +2014,15 @@ class Component extends DCLogic {
         md.title = 'Confirm Discard All Changes'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch; md.hasText = true;
         md.text = 'Are you sure you want to discard all ' + plural(mE.wip.length, 'change') + '?';
         md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: 'Discard All Changes', variant: 'danger', onPress: function () { self.discard(MD.e, mE.wip.map(pathOf)); } }];
+      } else if (MD.kind === 'clearNotes') {
+        // Clear All / Clear Resolved in the Notes popover (Settings › Prompts › "Clearing notes").
+        md.title = MD.old ? 'Confirm Clear Resolved Notes' : 'Confirm Clear Notes';
+        if (MD.one) { md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch; }
+        md.hasText = true; md.text = MD.old ? 'Are you sure you want to clear ' + plural(MD.n, 'resolved note') + '?' : 'Are you sure you want to clear all ' + plural(MD.n, 'note') + '?';
+        md.hasCheck = true; md.checkLabel = 'Do not show this message again'; md.checked = !!MD.dontAsk;
+        md.toggleCheck = function () { self.setState({ modal: Object.assign({}, self.state.modal, { dontAsk: !self.state.modal.dontAsk }) }); };
+        md.buttons = [{ label: 'Cancel', variant: 'secondary', onPress: closeM }, { label: MD.old ? 'Clear Resolved Notes' : 'Clear Notes', variant: 'danger', onPress: function () {
+          self.setState({ modal: null, notesAsk: MD.dontAsk ? false : self.state.notesAsk }); MD.run(); } }];
       } else if (MD.kind === 'abortOp') {
         var aop = st.op || { onto: mE.base, step: 2, total: 4 };
         md.title = 'Confirm Abort Rebase'; md.hasSub = true; md.sub = mE.repo + ' / ' + mE.branch; md.hasText = true;
@@ -1996,6 +2119,85 @@ class Component extends DCLogic {
       md.style = 'position: absolute; left: 50%; top: ' + (md.isOutput ? 80 : 150) + 'px; transform: translateX(-50%); width: ' + md.width + 'px; display: flex; flex-direction: column; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow); overflow: hidden; z-index: 51';
     }
 
+    // Notes button (header, only while the open branch has notes) and its popover: every note of the
+    // branch by file, resolved and outdated ones flagged; a note opens its row and file; Copy All, Clear All (Undo).
+    // A project review lists (and copies) every branch's notes, by branch: their references start
+    // where the branches' folders part (the worktree, else the repository folder), e.g.
+    // @token-refresh/src/auth/refresh.ts:22-23; a branch review's are relative to the repository.
+    var inProject = !branchScope && !stashScope, projNotes = inProject && st.notesScope !== 'open';
+    var eOrder = projNotes ? E.map(function (e) { return e.id; }) : [selE.id];
+    var allNotes = NOTES.filter(function (n) { return eOrder.indexOf(n.e) >= 0; });
+    var byDate = st.notesGroup === 'date', newest = st.notesOrder !== 'old', showOut = st.notesOutdated !== false;
+    var eNotes = allNotes.filter(function (n) { return showOut || !(n.outdated || n.resolved); }).slice().sort(function (a, b) {
+      var ea = eOrder.indexOf(a.e), eb = eOrder.indexOf(b.e);
+      return ea !== eb ? ea - eb : a.path < b.path ? -1 : a.path > b.path ? 1 : a.from - b.from; });
+    var folderOf = function (id) { var e = self.entry(id); return e.wt || '~/code/' + e.repo; };
+    var noteEs = eNotes.map(function (n) { return n.e; }).filter(function (id, i, a) { return a.indexOf(id) === i; });
+    var common = noteEs.map(function (id) { return folderOf(id).split('/'); }).reduce(function (acc, parts) { var i = 0; while (i < acc.length && acc[i] === parts[i]) i++; return acc.slice(0, i); }, folderOf(noteEs[0] || selE.id).split('/'));
+    var refOf = function (n) {
+      var lead = projNotes && noteEs.length > 1 ? folderOf(n.e).split('/').slice(common.length).join('/') + '/' : '';
+      return '@' + lead + n.path + ':' + (n.from === n.to ? n.to : n.from + '-' + n.to); };
+    var kindOf = function (n) { var fs = self.filesFor(self.entry(n.e), n.row, null); for (var i = 0; i < fs.length; i++) if (fid(fs[i]) === n.path) return fs[i].k; return 'M'; };
+    var ntGroups = [];
+    eNotes.forEach(function (n) {
+      var last = ntGroups[ntGroups.length - 1];
+      var g = last && last.e === n.e && last.path === n.path ? last : null;
+      if (!g) {
+        var cut = n.path.lastIndexOf('/'), ne2 = self.entry(n.e);
+        g = { e: n.e, path: n.path, kind: kindOf(n), name: n.path.slice(cut + 1), dir: cut > 0 ? n.path.slice(0, cut) : '', notes: [],
+          hasEntry: projNotes && (!last || last.e !== n.e), repo: ne2.repo, branch: ne2.branch };
+        ntGroups.push(g);
+      }
+      g.notes.push({ range: n.from === n.to ? 'L' + n.to : 'L' + n.from + '–' + n.to, text: n.text, outdated: !!n.outdated, resolved: !!n.resolved && !n.outdated, ref: refOf(n),
+        go: function () { var to = self.entry(n.e); self.setState(Object.assign({ active: n.e, hover: false, q: '' }, self.selPart(to, n.row, { file: n.path }), { notesOpen: false, notesView: false })); } });
+    });
+    var ageOf = function (t) { var m = Math.max(0, Math.round((Date.now() - (t || Date.now())) / 60000)); return m < 1 ? 'now' : m < 60 ? m + 'm' : m < 1440 ? Math.round(m / 60) + 'h' : Math.round(m / 1440) + 'd'; };
+    var flat = byDate ? eNotes.slice().sort(function (a, b) { return newest ? (b.at || 0) - (a.at || 0) : (a.at || 0) - (b.at || 0); }) : [];
+    var ntFlat = flat.map(function (n) {
+      var r = n.from === n.to ? String(n.to) : n.from + '–' + n.to;
+      return { label: n.path.slice(n.path.lastIndexOf('/') + 1) + ':' + r, repo: self.entry(n.e).repo, hasRepo: projNotes && noteEs.length > 1, text: n.text, outdated: !!n.outdated, resolved: !!n.resolved && !n.outdated, age: ageOf(n.at), ref: refOf(n),
+        go: function () { var to = self.entry(n.e); self.setState(Object.assign({ active: n.e, hover: false, q: '' }, self.selPart(to, n.row, { file: n.path }), { notesOpen: false, notesView: false })); } };
+    });
+    var setNotes = function (o) { return function () { self.setState(o); }; };
+    var ntViewItems = !inProject ? [] : [
+      { kind: 'label', label: 'Branches' },
+      { label: 'All Branches', check: projNotes, onSelect: setNotes({ notesScope: 'all', notesView: false }) },
+      { label: 'Open Branch', check: !projNotes, onSelect: setNotes({ notesScope: 'open', notesView: false }) },
+      { kind: 'sep' }];
+    ntViewItems.push(
+      { kind: 'label', label: 'List' },
+      { label: 'Group by File', check: !byDate, onSelect: setNotes({ notesGroup: 'file', notesView: false }) },
+      { label: 'Sort by Date Added', check: byDate, onSelect: setNotes({ notesGroup: 'date', notesView: false }) });
+    if (byDate) ntViewItems.push({ kind: 'sep' }, { kind: 'label', label: 'Order' },
+      { label: 'Newest First', check: newest, onSelect: setNotes({ notesOrder: 'new', notesView: false }) },
+      { label: 'Oldest First', check: !newest, onSelect: setNotes({ notesOrder: 'old', notesView: false }) });
+    ntViewItems.push({ kind: 'sep' }, { label: 'Show Resolved', box: showOut, onSelect: setNotes({ notesOutdated: !showOut }) });
+    var ntOpen = !!st.notesOpen && allNotes.length > 0, ntView = ntOpen && !!st.notesView;
+    var askClear = function (old) {
+      // Clear All takes the notes listed (hidden resolved ones stay); Clear Resolved every resolved or outdated one.
+      var hit = function (n) { return old ? eOrder.indexOf(n.e) >= 0 && (n.outdated || n.resolved) : eNotes.indexOf(n) >= 0; };
+      var k = NOTES.filter(hit).length;
+      var run = function () {
+        var before = self.state.notes;
+        self.setState({ draft: null, notes: before.filter(function (n) { return !hit(n); }) });
+        self.toast({ status: 'none', message: 'Cleared ' + k + (old ? ' resolved' : '') + (k === 1 ? ' note' : ' notes'), actionLabel: 'Undo', onAction: function () { self.setState({ notes: before }); } });
+      };
+      self.setState({ notesOpen: false, notesView: false });
+      if (st.notesAsk === false) run();
+      else self.setState({ modal: { kind: 'clearNotes', e: selE.id, n: k, old: old, one: eOrder.length === 1, run: run } });
+    };
+    var nt = { on: allNotes.length > 0, open: ntOpen, count: String(eNotes.length), label: eNotes.length + (eNotes.length === 1 ? ' note' : ' notes'),
+      byFile: !byDate && eNotes.length > 0, byDate: byDate && eNotes.length > 0, empty: !eNotes.length, flat: ntFlat, viewOpen: ntView, viewItems: ntViewItems,
+      toggleView: function () { self.setState({ notesView: !self.state.notesView }); },
+      viewBtnStyle: 'width: 26px; height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 6px; cursor: pointer; ' + (ntView ? 'background: var(--bg-hover); color: var(--text-strong); border: 1px solid var(--accent)' : 'background: transparent; color: var(--text-muted); border: 1px solid transparent'), groups: ntGroups,
+      btnStyle: 'height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-radius: 8px; cursor: pointer; ' + (ntOpen ? 'background: var(--bg-hover); color: var(--text-strong); border: 1px solid var(--accent)' : 'background: var(--bg-elevated); color: var(--text-body); border: 1px solid var(--border)'),
+      toggle: function () { self.setState({ notesOpen: !self.state.notesOpen, notesView: false, menu: null }); },
+      close: function () { self.setState({ notesOpen: false, notesView: false }); },
+      copy: function () { self.setState({ notesOpen: false, notesView: false }); self.toast({ status: 'success', message: 'Copied ' + eNotes.length + (eNotes.length === 1 ? ' note' : ' notes') }); },
+      // Clear Resolved: only while some are resolved or outdated (Undo).
+      hasOld: allNotes.some(function (n) { return n.outdated || n.resolved; }),
+      clearOld: function () { askClear(true); },
+      clear: function () { askClear(false); } };
     var TS = st.toast;
     var toast = TS ? Object.assign({}, TS, { onAction: TS.onAction ? function () { self.setState({ toast: null }); TS.onAction(); } : undefined }) : {};
     var viewOpen = !!(M && M.kind === 'view');
@@ -2095,7 +2297,7 @@ class Component extends DCLogic {
       subOn: subOn, subItems: subItems, subStyle: subStyle,
       closeMenu: function (ev) { if (ev && ev.preventDefault) ev.preventDefault(); self.setState({ menu: null }); },
       modalOn: !!MD, md: md,
-      toastOn: !!TS, toast: toast
+      toastOn: !!TS, toast: toast, nt: nt
     };
   }
 }
