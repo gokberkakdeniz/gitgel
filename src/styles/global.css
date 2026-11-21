@@ -111,7 +111,9 @@ a:hover {
   color: var(--text-faint);
   font-style: italic;
 }
-.monaco-editor .gg-blame-empty {
+/* Monaco splits long text into several spans of this class: only the first one has the gap. */
+.monaco-editor .gg-blame-empty,
+.monaco-editor .gg-blame + .gg-blame {
   margin-left: 0;
 }
 
