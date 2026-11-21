@@ -1758,7 +1758,7 @@ class Component extends DCLogic {
     var unfoldFn = function (r) { return function () { self.setState({ unfold: self.kv('unfold', fileKey + '#' + r[7], true) }); }; };
     var foldStyle = function (pad) { return 'display: flex; width: 100%; padding: 0 0 0 ' + pad + 'px; border: 0; color: var(--text-faint); background: var(--bg-sunken); font-family: inherit; font-size: 11px; line-height: 20px; text-align: left; cursor: pointer'; };
     // The diff's right-click menu: on an Uncommitted file, Stage (Unstage on a Staged row) Selected
-    // Lines when text is selected and Stage Change on a changed line, then the reference and open items.
+    // Lines when text is selected and Stage Change on a changed line (Discard … too on an Unstaged row), then the reference and open items.
     var canStageLines = selRow === 'wip' && !!selFile && !st.busy[selE.id] && !st.stq[selE.id];
     var diffMenu = function (changed, side, line) {
       return function (ev) {
@@ -1967,6 +1967,9 @@ class Component extends DCLogic {
         var unst = M.staged, sIcon = unst ? 'remove' : 'plus';
         if (M.stage && M.lines) menuItems.push({ label: unst ? 'Unstage Selected Lines' : 'Stage Selected Lines', icon: sIcon, onSelect: close });
         if (M.stage && M.changed) menuItems.push({ label: unst ? 'Unstage Change' : 'Stage Change', icon: sIcon, onSelect: close });
+        // An Unstaged row's diff: the picked changes leave the working tree (§15 "Discard"), after Confirm Discard Changes.
+        if (M.stage && !unst && M.lines) menuItems.push({ label: 'Discard Selected Lines', icon: 'undo', danger: true, onSelect: close });
+        if (M.stage && !unst && M.changed) menuItems.push({ label: 'Discard Change', icon: 'undo', danger: true, onSelect: close });
         if (menuItems.length) menuItems.push({ kind: 'sep' });
         // Blame on: the commit that last changed the clicked line; then the file's history.
         if (String(selRow).indexOf('stash') !== 0) {
