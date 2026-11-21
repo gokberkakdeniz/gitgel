@@ -953,7 +953,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
   `rgba(79,143,163,0.16)`, `#a3cad6`, tooltip "Show whitespace changes (⌥W)") sits after the
   compare label; clicking it turns the option off. Toggling it returns to the first change.
 - **Blame** (GitLens' current-line blame; off by default, `diffBlame`): while on, the line the
-  cursor is on in the new side ends in `<author>, <age> ago · <subject>` (3ch after the text, none
+  cursor is on in the new side ends in `<author>, <age> ago · <subject>` (1ch after the text, none
   on an empty line; italic `text.faint`; the subject at most 72 characters), the commit that last changed it. It
   moves with the cursor (a click, a jump between changes). A commit, or several rows, is blamed
   at the newest commit shown; Uncommitted (and several rows with it) at the worktree's HEAD with

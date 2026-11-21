@@ -107,7 +107,7 @@ a:hover {
 
 /* Blame (SPEC §5): after the cursor's line, the commit that last changed it. */
 .monaco-editor .gg-blame {
-  margin-left: 3ch;
+  margin-left: 1ch;
   color: var(--text-faint);
   font-style: italic;
 }
