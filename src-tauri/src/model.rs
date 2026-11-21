@@ -99,6 +99,8 @@ pub struct Settings {
     /// Settings › Appearance › History › Commit rows; anything else reads as two lines.
     #[serde(deserialize_with = "commit_rows")]
     pub commit_rows: CommitRows,
+    /// Settings › Appearance › Review › Hide SHA: one-line commit rows without the short SHA.
+    pub hide_commit_sha: bool,
     /// Settings › Appearance › History › Layout; anything else reads as a tree.
     #[serde(deserialize_with = "history_layout")]
     pub history_layout: HistoryLayout,
@@ -282,6 +284,7 @@ impl Default for Settings {
             prefer_absolute_dates: false,
             diff_tab_size: 4,
             commit_rows: CommitRows::TwoLine,
+            hide_commit_sha: false,
             history_layout: HistoryLayout::Tree,
             theme: "gitgel".to_string(),
             appearance: Appearance::System,

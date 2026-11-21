@@ -77,6 +77,7 @@ const config: Config = {
     preferAbsoluteDates: false,
     diffTabSize: 4,
     commitRows: 'two-line',
+    hideCommitSha: false,
     historyLayout: 'tree',
     theme: 'gitgel',
     appearance: 'system',

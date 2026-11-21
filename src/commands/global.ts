@@ -186,6 +186,17 @@ export function appCommands(route: Route): Command[] {
             group: settingsGroup,
             run: () => saveSettings({ commitRows: 'one-line' }),
           },
+      // Hide SHA (one-line rows only): the state not chosen.
+      ...(settings.commitRows === 'one-line'
+        ? [
+            {
+              id: 'rows:sha',
+              title: t(settings.hideCommitSha ? 'cmd.showCommitSha' : 'cmd.hideCommitSha'),
+              group: settingsGroup,
+              run: () => saveSettings({ hideCommitSha: !settings.hideCommitSha }),
+            },
+          ]
+        : []),
       settings.historyLayout === 'columns'
         ? {
             id: 'layout:tree',

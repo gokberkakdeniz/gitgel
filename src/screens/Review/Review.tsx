@@ -2649,6 +2649,7 @@ function ListRow({
   drag: { dragging: string | null; onPointerDown: (sha: string) => (e: React.PointerEvent<HTMLElement>) => void };
 }) {
   const oneLine = useData((s) => s.config?.settings.commitRows === 'one-line');
+  const hideSha = useData((s) => s.config?.settings.hideCommitSha === true);
   switch (row.kind) {
     case 'origin':
     case 'base': {
@@ -2729,9 +2730,9 @@ function ListRow({
             }}
           >
             {oneLine ? (
-              // One line (Settings › Appearance › Review): SHA, subject, pills, age.
+              // One line (Settings › Appearance › Review): SHA (unless Hide SHA), subject, pills, age.
               <>
-                <span className={`${styles.sha} ${styles.shaCol}`}>{c.shortSha}</span>
+                {!hideSha && <span className={`${styles.sha} ${styles.shaCol}`}>{c.shortSha}</span>}
                 <span className={styles.subjectLine}>
                   <span className={styles.subject}>{c.subject}</span>
                   {pills}

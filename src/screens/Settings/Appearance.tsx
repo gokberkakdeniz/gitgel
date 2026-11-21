@@ -242,6 +242,19 @@ function ReviewListGroup({ config }: { config: Config }) {
           ]}
         />
       </label>
+      {rows === 'one-line' && (
+        <label className={styles.setting}>
+          <span className={styles.settingText}>
+            <span className={styles.settingName}>{t('settings.hideCommitSha')}</span>
+          </span>
+          <Switch
+            aria-label={t('settings.hideCommitSha')}
+            title={t('settings.hideCommitSha')}
+            checked={config.settings.hideCommitSha === true}
+            onChange={(e) => save({ hideCommitSha: e.target.checked })}
+          />
+        </label>
+      )}
       <label className={styles.setting}>
         <span className={styles.settingText}>
           <span className={styles.settingName}>{t('settings.historyLayout')}</span>

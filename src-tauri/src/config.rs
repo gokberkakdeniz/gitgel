@@ -180,6 +180,7 @@ mod tests {
         });
         // Set apart: one more key in the literal passes `json!`'s recursion limit.
         value["settings"]["commitRows"] = json!("one-line");
+        value["settings"]["hideCommitSha"] = json!(true);
         value["settings"]["historyLayout"] = json!("columns");
         value["settings"]["editor"] = json!("other");
         value["settings"]["editorCommand"] = json!("idea %");
@@ -249,6 +250,7 @@ mod tests {
             config.settings.commit_rows,
             crate::model::CommitRows::TwoLine
         );
+        assert!(!config.settings.hide_commit_sha);
         assert_eq!(
             config.settings.history_layout,
             crate::model::HistoryLayout::Tree
