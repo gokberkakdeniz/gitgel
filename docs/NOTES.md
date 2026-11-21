@@ -10,10 +10,9 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   (a commit running or mid-operation), Discard All Changes (no files), Stash All Changes
   (nothing to stash), Project's missing-folder item, History's item disabled without a scan.
   Proposal: keep the first group disabled, leave out the second.
-- **Tags** (2026-10-17). Tags are read (base choices in the Base menu, pills on Review's commit
-  rows), created and deleted (the commit menu's Create Tag… and Delete Tag…, the latter on the
-  remote too). To think about: pushing one (`git push origin <tag>`; tags are not pushed with
-  the branch), a git action (SPEC §0, §10).
+- **Tags after pushing** (2026-11-21; pushing one is T28.1). Fetch brings only the tags on the
+  commits it fetches and keeps a tag the remote deleted (no `--prune-tags`); pushing every tag
+  at once (`git push --tags`) does not exist.
 - **Hunk buttons in the diff gutter** (2026-10-19). VS Code's diff editor shows Revert (↶) and
   Stage (+) beside each hunk. Monaco 0.57 has the gutter menu (`renderGutterMenu`) but only with
   Revert Block, and only when the modified side is writable (ours is `readOnly`); Stage comes
