@@ -137,6 +137,10 @@ button,input{font-family:inherit}
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Commit rows</span></span>
 <dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Commit rows" options="{{commitRows}}" hint-size="230px,36px"></dc-import>
 </div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Hide SHA</span></span>
+<dc-import name="Switch" theme="{{themeName}}" checked="{{false}}" aria-label="Hide SHA" hint-size="32px,18px"></dc-import>
+</div>
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--text-strong)">Layout</span></span>
 <dc-import name="Select" theme="{{themeName}}" size="36" width="230px" label="Layout" options="{{historyLayouts}}" hint-size="230px,36px"></dc-import>
@@ -357,8 +361,9 @@ class Component extends DCLogic {
       tabSizes: ['1', '2', '3', '4 (default)', '5', '6', '8', '10', '12'].map(function (x, i) {
         return { value: x, label: x, on: i === 3 };
       }),
+      // One line picked, so Hide SHA (shown only with One line) is drawn.
       commitRows: ['Two lines', 'One line'].map(function (x, i) {
-        return { value: x, label: x, on: i === 0 };
+        return { value: x, label: x, on: i === 1 };
       }),
       historyLayouts: ['Tree', 'Columns'].map(function (x, i) {
         return { value: x, label: x, on: i === 0 };
