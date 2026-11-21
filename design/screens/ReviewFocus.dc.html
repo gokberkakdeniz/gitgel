@@ -1966,13 +1966,14 @@ class Component extends DCLogic {
         menuW = 230;
         var unst = M.staged, sIcon = unst ? 'remove' : 'plus';
         if (M.stage && M.lines) menuItems.push({ label: unst ? 'Unstage Selected Lines' : 'Stage Selected Lines', icon: sIcon, onSelect: close });
-        if (M.stage && M.changed) menuItems.push({ label: unst ? 'Unstage Change' : 'Stage Change', icon: sIcon, onSelect: close });
+        // The Change items only when no lines are selected: the menu acts on the selection alone.
+        if (M.stage && M.changed && !M.lines) menuItems.push({ label: unst ? 'Unstage Change' : 'Stage Change', icon: sIcon, onSelect: close });
         // An Unstaged row's diff: the picked changes go into a stash after its message (§15 "Writing stashes"), or leave the
         // working tree after Confirm Discard Changes (§15 "Discard").
         if (M.stage && !unst && M.lines) menuItems.push({ label: 'Stash Selected Lines…', icon: 'package', onSelect: close });
-        if (M.stage && !unst && M.changed) menuItems.push({ label: 'Stash Change…', icon: 'package', onSelect: close });
+        if (M.stage && !unst && M.changed && !M.lines) menuItems.push({ label: 'Stash Change…', icon: 'package', onSelect: close });
         if (M.stage && !unst && M.lines) menuItems.push({ label: 'Discard Selected Lines', icon: 'undo', danger: true, onSelect: close });
-        if (M.stage && !unst && M.changed) menuItems.push({ label: 'Discard Change', icon: 'undo', danger: true, onSelect: close });
+        if (M.stage && !unst && M.changed && !M.lines) menuItems.push({ label: 'Discard Change', icon: 'undo', danger: true, onSelect: close });
         if (menuItems.length) menuItems.push({ kind: 'sep' });
         // Blame on: the commit that last changed the clicked line; then the file's history.
         if (String(selRow).indexOf('stash') !== 0) {

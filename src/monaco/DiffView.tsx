@@ -995,8 +995,8 @@ export function DiffView({
                   endColumn: inSel ? sel.endColumn : 2,
                   modified: ed === modified,
                   lines: lines.length > 0 ? lines : null,
-                  // Left out when the selection takes the same.
-                  change: change && JSON.stringify(change) !== JSON.stringify(lines) ? change : null,
+                  // Left out when lines are selected: the menu acts on them alone.
+                  change: lines.length > 0 ? null : change,
                   text,
                 });
               });

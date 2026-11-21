@@ -900,7 +900,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
   "Stage" (picked lines), then a divider: "Stage Selected Lines" (`plus`; a Staged row's diff
   "Unstage Selected Lines", `remove`) when the click is inside a selection that touches a change,
   and "Stage Change" / "Unstage Change" for the change at the clicked line (unified: also on its
-  removed lines), left out when the selection takes the same; on an Unstaged row's diff,
+  removed lines) when no lines are selected; on an Unstaged row's diff,
   "Stash Selected Lines…" / "Stash Change…" (`package`; not for an untracked or deleted file, nor
   where Stash Changes… is left out; §15 "Writing stashes", picked lines) and danger "Discard
   Selected Lines" / "Discard Change" (`undo`; §15 "Discard", picked lines) after them, on the same
