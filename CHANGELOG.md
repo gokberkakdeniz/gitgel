@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.2.9 — 2026-11-22
+
+### New
+- Notes on diff lines in Review (`⌥N`).
+- Discard Selected Lines in the diff's right-click menu.
+- Stash Selected Lines in the diff's right-click menu.
+- Push Tag in Review's commit menu, and Push to origin in Create Tag.
+- Add to .gitignore in Review's untracked file menu.
+
+### Improved
+- Settings › Appearance: Hide SHA on commit rows.
+- Command palette: Change Base.
+- Command palette: Fetch for a project.
+- Review's commit tag list scrolls and stays open under the pointer.
+- Annotated tag messages show as tooltips.
+
+### Fixed
+- Command palette matches each word of the query.
+- Review's commits already in base have readable subjects.
+- Even spacing before blame in Review's diff.
+
 ## 0.2.8 — 2026-11-17
 
 ### Changed
