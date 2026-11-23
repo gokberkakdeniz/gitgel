@@ -1209,8 +1209,21 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   useEffect(() => {
     if (!noteJump || !entry || noteJump.key !== entry.key || noteJump.seq === jumped.current || !data) return;
     jumped.current = noteJump.seq;
-    pickLine('base');
-    setPath(noteJump.path);
+    const p = noteJump.path;
+    if (lineRows(rows, 'base').length > 0) {
+      pickLine('base');
+      setPath(p);
+    } else if (wip && (unstaged.some((f) => f.path === p) || staged.some((f) => f.path === p))) {
+      // No commits of its own (all in the base, as `master` once pushed): Uncommitted when it
+      // changes the file, else the file's history, newest first.
+      pick(WIP);
+      setPath(unstaged.some((f) => f.path === p) ? `u:${p}` : `s:${p}`);
+    } else {
+      setPicked(null);
+      setMulti(null);
+      fileHistory(p);
+      setPath(null);
+    }
     setLand('first');
     setNoteReveal({ id: noteJump.noteId, seq: noteJump.seq });
     // eslint-disable-next-line react-hooks/exhaustive-deps

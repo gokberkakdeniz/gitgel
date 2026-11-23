@@ -1023,6 +1023,8 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
     "Clear All" (ghost 28), primary "Copy All" (`copy`) on the right. "No notes" when the options
     hide them all. A note opens the whole review (the base line) on its file, scrolled to it (a
     project review opens its branch first); a folded region it is in opens from the closer change.
+    With no base line (every commit already in the base, as `master` once pushed): Uncommitted
+    when it changes the file, else the file's history (§16), newest commit first.
     - **By date added** (default): one list; a row (padding 7px 8px, radius 8, hover `bg.hover`)
       is `file:range` (mono 11 `accent.text`; the repo name first, 12px/600, when the list has
       several branches), an "outdated" (warning) or "resolved" (neutral) sm pill, the age on the

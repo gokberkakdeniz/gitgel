@@ -484,6 +484,7 @@ it was done within a topic.
 - [x] A branch review's header subtitle can be copied: repo, rev and worktree are selectable, a double click selects the whole one — 2026-11-23
 - [x] A project review's branch head shows the worktree the branch is checked out in as a third line (start cut when long, selectable) — 2026-11-23
 - [x] Notes in a folded region (Changes only): the fold's bar shows their count on its right, which opens the first; opening a note from the Notes popover unfolds its region — 2026-11-23
+- [x] A note opens on a branch with no commits of its own (all pushed, as `master`): Uncommitted when it changes the file, else the file's history — 2026-11-23
 
 ### Git actions
 - [x] Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree
