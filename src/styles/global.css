@@ -105,6 +105,12 @@ a:hover {
   background-size: auto !important;
 }
 
+/* Monaco: a fold's bar is laid out for content-box; with border-box its drag strips shrink and the
+   bar sits 4px high (cut off on a file's first line). */
+.monaco-editor .diff-hidden-lines * {
+  box-sizing: content-box;
+}
+
 /* Blame (SPEC §5): after the cursor's line, the commit that last changed it. */
 .monaco-editor .gg-blame {
   margin-left: 1ch;
