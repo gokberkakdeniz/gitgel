@@ -21,6 +21,13 @@
   container-type: inline-size;
 }
 
+/* Narrower than its 280px minimum, only while its edge is dragged (SPEC §5 "Hidden list column"):
+   its parts keep their width and the column cuts them off on the right, so nothing reflows and the
+   icons on the left stay to the end. 279: inside its 1px border. */
+.listPane > * {
+  min-width: 279px;
+}
+
 .listPaneColumns {
   width: 300px;
 }

@@ -71,6 +71,8 @@ interface UiState {
   /** Review's Branches section is open (folded by default) and its Stashes folded, while the app runs. */
   reviewBranchesOpen: boolean;
   reviewStashesShut: boolean;
+  /** Review's list column hidden to its rail (⌥⌘B), remembered on this machine. */
+  reviewListHidden: boolean;
   setSidebarVisible: (visible: boolean) => void;
   setSidebarPeek: (peek: boolean) => void;
   setBranchesFilter: (filter: string) => void;
@@ -91,6 +93,7 @@ interface UiState {
   toggleSection: (key: string) => void;
   toggleReviewBranches: () => void;
   toggleReviewStashes: () => void;
+  setReviewListHidden: (hidden: boolean) => void;
 }
 
 let toastId = 0;
@@ -104,6 +107,16 @@ function cachedSidebarVisible(): boolean {
     return localStorage.getItem(SIDEBAR_CACHE_KEY) !== 'false';
   } catch {
     return true;
+  }
+}
+
+const LIST_HIDDEN_KEY = 'gitgel.reviewListHidden';
+
+function cachedListHidden(): boolean {
+  try {
+    return localStorage.getItem(LIST_HIDDEN_KEY) === 'true';
+  } catch {
+    return false;
   }
 }
 
@@ -126,6 +139,7 @@ export const useUi = create<UiState>()((set) => ({
   shutSections: {},
   reviewBranchesOpen: false,
   reviewStashesShut: false,
+  reviewListHidden: cachedListHidden(),
   setSidebarVisible: (sidebarVisible) => set({ sidebarVisible, sidebarPeek: false }),
   setSidebarPeek: (sidebarPeek) => set({ sidebarPeek }),
   setBranchesFilter: (branchesFilter) => set({ branchesFilter }),
@@ -154,6 +168,14 @@ export const useUi = create<UiState>()((set) => ({
     }),
   toggleReviewBranches: () => set((s) => ({ reviewBranchesOpen: !s.reviewBranchesOpen })),
   toggleReviewStashes: () => set((s) => ({ reviewStashesShut: !s.reviewStashesShut })),
+  setReviewListHidden: (reviewListHidden) => {
+    set({ reviewListHidden });
+    try {
+      localStorage.setItem(LIST_HIDDEN_KEY, String(reviewListHidden));
+    } catch {
+      // Not remembered; fine.
+    }
+  },
 }));
 
 // Dev only: a hot swap would leave the event listeners (lib/events.ts) on the old store, so a

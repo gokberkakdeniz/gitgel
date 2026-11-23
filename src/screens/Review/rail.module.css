@@ -1,0 +1,152 @@
+/* Review's hidden list column (SPEC §5 "List column"; ReviewRail.dc.html): a 36px rail. */
+
+.rail {
+  width: 36px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+}
+
+.show {
+  margin: 6px 0 2px;
+}
+
+.dots {
+  flex-grow: 1;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0 16px;
+}
+
+.row {
+  width: 28px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Under the pointer the dot grows (its ring too). */
+.row:hover .mark {
+  transform: scale(1.3);
+}
+
+/* The picked one has only its ring; the box shows while it has the keyboard focus. */
+.row:focus-visible {
+  outline: none;
+  background: var(--bg-hover);
+}
+
+.rowPicked,
+.rowPicked:hover {
+  background: rgba(var(--accent-rgb), 0.18);
+}
+
+.mark {
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.12s;
+}
+
+/* Changes. */
+.wip {
+  background: var(--accent-text);
+}
+
+/* A commit from another branch (stacked). */
+.from {
+  background: var(--warning);
+}
+
+/* Picked: a ring in its own colour, a gap from the dot. */
+.markOn {
+  outline: 1.5px solid currentColor;
+  outline-offset: 2px;
+  color: var(--text-muted);
+}
+
+.markOn.wip {
+  color: var(--accent-text);
+}
+
+.markOn.from {
+  color: var(--warning);
+}
+
+/* The files of the dot under the pointer, beside it. */
+.pop {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 320px;
+}
+
+.popHead {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.popTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popMeta {
+  display: flex;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.popWhere {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popFiles {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+}
+
+.popLabel {
+  padding: 6px 8px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

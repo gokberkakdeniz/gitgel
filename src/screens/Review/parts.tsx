@@ -112,6 +112,7 @@ export function FileBar({
   label,
   view,
   nav,
+  place,
   prevFile,
   nextFile,
   onStep,
@@ -121,6 +122,8 @@ export function FileBar({
   label: string;
   view: DiffViewSettings;
   nav: NavInfo;
+  /** The file's place among the row's files, from 1: "3/13" before the path. */
+  place: { at: number; of: number };
   prevFile: string | undefined;
   nextFile: string | undefined;
   onStep: (dir: 1 | -1) => void;
@@ -128,6 +131,9 @@ export function FileBar({
   const { layout, ignoreWs, blame, context, contextLines, saveView, toggleWs, toggleBlame } = view;
   return (
     <div className={styles.fileBar}>
+      <span className={styles.filePlace}>
+        {formatCount(place.at)}/{formatCount(place.of)}
+      </span>
       <span className={`${styles.filePath} selectable`}>{file.path}</span>
       <span className={`${styles.muted} selectable`}>{label}</span>
       {ignoreWs && (

@@ -217,6 +217,7 @@ gitgel/
 │  ├─ screens/  Branches/  Project/  Review/  Settings/  Palette/  AddRepos/
 │  │            # Review/stashes.ts: which stashes a review lists (§15)
 │  │            # Review/notes.tsx: the Notes button and popover, List Options, Clear (§5 "Notes")
+│  │            # Review/rail.tsx: the hidden list column's rail, ⌥⌘B (§5 "Hidden list column")
 │  │            # Review/parts.tsx (+ parts.module.css): file bar (view menu, change navigation),
 │  │            #   file row, stash section, diff view settings, page layout
 │  │            # Review/Review.tsx: the screen (BranchReview, ProjectReview, StashReview around BranchView),
@@ -792,9 +793,10 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 Review and History are one screen (user decision 2026-10-18): one branch
 is open at a time, with its whole log, and the screen is reached for a project, a branch or a
 repository's stash stack. Canvas page "Review": R1 the prototype (`ReviewFocus.dc.html`, Play
-works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `commitRows`, `branches`,
+works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `list`, `commitRows`, `branches`,
 `baseCommits`, `hooks`, `stageGit`, `theme`), R2–R6 its states (`ReviewBranch`, `ReviewBase`,
-`ReviewRebase`, `ReviewConflicts`, `ReviewStashes.dc.html`, each mounting the prototype).
+`ReviewRebase`, `ReviewConflicts`, `ReviewStashes.dc.html`, each mounting the prototype), R7 the list
+column hidden (`ReviewRail.dc.html`, tweak `list`).
 
 - **Scopes** (route `review`; there is no `history` route any more):
   - **Project** (a sidebar project, Project → "Review changes" or ⌘R, a project row's branch
@@ -882,8 +884,33 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
     take over; the one open before joins the list).
   - "N entries not reviewable · Open project" (project scope, under a top border), as before.
   - The **commit form** at the bottom while Uncommitted is picked (§16 "Commit form").
+- **Hidden list column** (`ReviewRail.dc.html`, R7): ⌥⌘B, the palette's Hide Commits / Show
+  Commits or the column's edge let go under 200px hide it, the files column of "Layout: Columns" with it;
+  remembered on this machine (`localStorage` `gitgel.reviewListHidden`), every scope. In its place
+  a 36px rail (`bg.sidebar`, right border): on top a 28px `sidebar` button "Show Commits (⌥⌘B)",
+  under it one 28×22 button per row, top to bottom as the list: Changes (an 8px `accent.text` dot)
+  and each of the branch's own commits (not in the base; 8px `text.muted`, `warning` when it comes
+  from another branch); none in the stash scope or for folded Commits. The picked one has a 1.5px
+  ring of its own colour 2px off the dot (no background; `bg.hover` only while it has the keyboard
+  focus); under the pointer a dot grows 1.3× (0.12s), ring and all; rows picked together tinted as
+  in the list. A click picks as in
+  the list (⌘ / ⇧-click too); the rail scrolls and loads more commits as the list does.
+  **Files on hover**: resting 300ms on a dot (at once while one is open) opens a popover beside it
+  (340px, at most 320px tall, its files scrolling; the pointer can move into it, it closes 150ms after
+  leaving both): the subject (or "Changes"), `<short SHA> · <author> · <age>` (or the file count)
+  and the totals, then the row's file rows (Changes: Staged and Unstaged under their labels when
+  both have files). A file picks its row and opens that file.
+  The rail's right edge is the column's drag handle. While either edge is dragged the column follows
+  the pointer at any width, its content kept 280px wide and cut off on the right (nothing reflows;
+  the icons on the left stay to the end), the rail under 36px); let go, the
+  column hides when under 200px (dragged from the column) or stays hidden when under 24px out
+  (dragged from the rail), else it takes 280–640px. A double-click or → on the rail's edge shows it
+  too. The stashes,
+  Branches and commit form are not shown; ⌘K shows the column again.
 - **Pane**: §16's headers (commit, Uncommitted, several rows, a stash's StashBar), the file bar
-  and the diff below.
+  and the diff below. The file bar starts with the file's place among the row's files (mono 11
+  `text.muted`, tabular, `3/13`; Uncommitted counts its Staged and Unstaged rows, as ⌥↓ steps), then
+  the path.
 - **Uncommitted sections** (VS Code's Changes list): each section's header row
   (28px, margin-top 2, padding 0 4px 0 8px) is a chevron button with the uppercase label that
   folds the section (per branch while the app runs); on its hover a 20×22 icon button (`plus`
@@ -1221,7 +1248,8 @@ outside or leaving the page closes it (`src/commands/`).
   be used, §7); a git action running in the repository hides the open branch's git actions.
   Without a query, **Recently Used** first (the last 5 run, on this machine:
   `localStorage` `gitgel.recentCommands`), then by group in this order:
-  - **Review** (Review): Switch Branch… ⇧⌘B (branch scope), Search Commits ⌘K, Next / Previous
+  - **Review** (Review): Switch Branch… ⇧⌘B (branch scope), Search Commits ⌘K, Hide Commits or
+    Show Commits ⌥⌘B, Next / Previous
     Change ⌥↓ / ⌥↑, Newer / Older Commit ⌥⇧↑ / ⌥⇧↓, and the view: Split View or Unified View ⌥V,
     Whole File or Changes Only ⌥C, Ignore Whitespace or Show Whitespace ⌥W, Show Blame or Hide Blame ⌥B (each names the other
     state; the view ones in a stash stack too).
@@ -1520,6 +1548,7 @@ either end or next to another goes too), unless this file says that item is show
 | | Add Note | ⌥N | on the selected lines, else the cursor's (§5 "Notes") |
 | | Changes only / Whole file | ⌥C | |
 | | Switch branch | ⇧⌘B | Review of a branch (opens Switch Branch) |
+| | Show / hide commits | ⌥⌘B | Review (the list column, "Hidden list column") |
 | | Pick commits | ⌘-click / ⇧-click, ⇧↑ / ⇧↓ | Review's list (Uncommitted too; Esc goes back to one) |
 | | Pick stashes | ⌘-click / ⇧-click, ⌘A | the stash review's list (also each row's checkbox; Esc clears; §15) |
 | Lists and dialogs | Move | ↑ / ↓ | |
@@ -2351,7 +2380,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
 | Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
-| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `picked` (stash scope: every stash picked, the selection pane), `layout`, `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (branch head above the scrolling list, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R6 mount it with a state set; W1–W12 (`Notes*.dc.html`, tweak `notes`) its notes on lines |
+| Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`, `ReviewRail`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `picked` (stash scope: every stash picked, the selection pane), `layout`, `list` (open / rail), `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (branch head above the scrolling list, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R7 mount it with a state set; W1–W12 (`Notes*.dc.html`, tweak `notes`) its notes on lines |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
 | Command palette | `CommandPalette.dc.html` | dialog 26–68 (search row 27–31, the line and titles 36–37, place rows with kind icons 40–51, `?` prefix rows 52–56, command rows 57–62), data per `mode` (go, search, commands, help) 73–140; `CommandPaletteSearch` / `CommandPaletteCommands` / `CommandPaletteHelp` mount it with `mode` |

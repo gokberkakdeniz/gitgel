@@ -125,6 +125,15 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* "3/13": the file's place among the row's files. */
+.filePlace {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
 .filePath {
   min-width: 0;
   flex-shrink: 1;

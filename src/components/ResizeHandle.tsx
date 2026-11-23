@@ -32,6 +32,10 @@ export function ResizeHandle({
   max,
   onResize,
   onReset,
+  onCollapse,
+  collapsed = false,
+  onExpand,
+  onPreview,
   label,
   axis = 'x',
 }: {
@@ -40,6 +44,14 @@ export function ResizeHandle({
   max: number;
   onResize: (size: number) => void;
   onReset: () => void;
+  /** A pane that hides: while dragged its size follows the pointer (`onPreview`, any size; null
+   * when let go). Let go more than 80px under `min` it is hidden (`onCollapse`); hidden
+   * (`collapsed`, `pane` is what stands in its place), let go 24px or more out it shows again
+   * (`onExpand`) at `min` or more. A double-click or → shows a hidden one too. */
+  onPreview?: (size: number | null) => void;
+  onCollapse?: () => void;
+  collapsed?: boolean;
+  onExpand?: () => void;
   label: string;
   axis?: 'x' | 'y';
 }) {
@@ -56,10 +68,25 @@ export function ResizeHandle({
     const rect = pane.current.getBoundingClientRect();
     const startAt = horizontal ? e.clientY : e.clientX;
     const startSize = horizontal ? rect.height : rect.width;
+    let last: number | null = null;
     setDragging(true);
     document.body.classList.add(resizingClass);
-    const move = (ev: PointerEvent) => onResize(clamp(startSize + (horizontal ? ev.clientY : ev.clientX) - startAt));
+    const move = (ev: PointerEvent) => {
+      const size = startSize + (horizontal ? ev.clientY : ev.clientX) - startAt;
+      if (!onPreview) return onResize(clamp(size));
+      last = size;
+      onPreview(Math.max(0, Math.min(max, size)));
+    };
     const up = () => {
+      if (onPreview && last !== null) {
+        onPreview(null);
+        if (last < (collapsed ? startSize + 24 : min - 80)) {
+          if (!collapsed) onCollapse?.();
+        } else {
+          if (collapsed) onExpand?.();
+          onResize(clamp(last));
+        }
+      }
       setDragging(false);
       document.body.classList.remove(resizingClass);
       handle.removeEventListener('pointermove', move);
@@ -76,6 +103,10 @@ export function ResizeHandle({
     const next = horizontal ? 'ArrowDown' : 'ArrowRight';
     if (e.key !== prev && e.key !== next) return;
     e.preventDefault();
+    if (collapsed) {
+      if (e.key === next) onExpand?.();
+      return;
+    }
     const rect = pane.current?.getBoundingClientRect();
     const size = horizontal ? (rect?.height ?? min) : (rect?.width ?? min);
     onResize(clamp(size + (e.key === next ? 16 : -16)));
@@ -93,7 +124,7 @@ export function ResizeHandle({
       title={t('common.resizeHint')}
       className={cls}
       onPointerDown={down}
-      onDoubleClick={onReset}
+      onDoubleClick={collapsed ? onExpand : onReset}
       onKeyDown={key}
     />
   );

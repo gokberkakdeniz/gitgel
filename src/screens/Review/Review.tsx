@@ -93,6 +93,7 @@ import { CopyBranchItem, EntryMenuNote, OpenItems, useEntryFolder, useRepoFolder
 import { useData } from '../../state/data';
 import { type CommitDraft, commitDraftKey, EMPTY_COMMIT_DRAFT, useUi } from '../../state/ui';
 import { DiffStat, FileBar, FileRow, StashSection, useDiffView, type FileActions } from './parts';
+import { ListRail, type RailFiles, type RailRow, useListColumn } from './rail';
 import parts from './parts.module.css';
 import { reviewStashes, type ReviewStash } from './stashes';
 import { CopyableSubtitle, editProject, ReviewHeader, selectWhole } from './header';
@@ -282,7 +283,9 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
   stepRef.current = step;
   const view = useDiffView();
   const listPane = useRef<HTMLDivElement>(null);
+  const railPane = useRef<HTMLElement>(null);
   const [listWidth, setListWidth] = useStoredWidth('gitgel.historyListWidth');
+  const { hidden: listHidden, rail: railShown, live: liveWidth, setLive: setLiveWidth } = useListColumn();
   const pick = (sha: string) => {
     setPicked(sha);
     setPath(null);
@@ -333,7 +336,12 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
         </PageMenu>
       </ReviewHeader>
       <div className={parts.body}>
-        <div ref={listPane} className={styles.listPane} style={listWidth ? { width: listWidth } : undefined}>
+        {railShown && <ListRail ref={railPane} />}
+        <div
+          ref={listPane}
+          className={styles.listPane}
+          style={paneStyle(railShown, liveWidth ?? listWidth, liveWidth !== null)}
+        >
           <div className={styles.stashStack}>
             {stashes.length > 0 && (
               <StashSection
@@ -353,12 +361,17 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
             )}
           </div>
         </div>
+        {/* Kept while hidden, on the rail's edge: dragged out, the column shows again. */}
         <ResizeHandle
-          pane={listPane}
+          pane={listHidden ? railPane : listPane}
           min={280}
           max={640}
           onResize={setListWidth}
           onReset={() => setListWidth(null)}
+          onCollapse={() => useUi.getState().setReviewListHidden(true)}
+          collapsed={listHidden}
+          onPreview={setLiveWidth}
+          onExpand={() => useUi.getState().setReviewListHidden(false)}
           label={t('history.resizeList')}
         />
         <section className={parts.main}>
@@ -388,6 +401,7 @@ export function StashReview({ repoId, backLabel, focusKey }: { repoId: string; b
                     label={`${base.slice(0, 7)} ↔ stash@{${stash.index}}`}
                     view={view}
                     nav={nav}
+                    place={{ at: fileIndex + 1, of: ids.length }}
                     prevFile={fileIndex > 0 ? `\u0000${ids[fileIndex - 1]}` : undefined}
                     nextFile={fileIndex < ids.length - 1 ? `\u0000${ids[fileIndex + 1]}` : undefined}
                     onStep={step}
@@ -833,16 +847,20 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // A commit's files are fetched once (a commit never changes).
   const [changes, setChanges] = useState<Record<string, CommitChanges>>({});
   const requested = useRef(new Set<string>());
-  useEffect(() => {
-    if (!commit || requested.current.has(commit.sha)) return;
-    requested.current.add(commit.sha);
-    getCommitChanges(repoId, commit.sha).then(
+  // Also for a dot of the hidden list's rail the pointer rests on.
+  const loadChanges = (sha: string) => {
+    if (requested.current.has(sha)) return;
+    requested.current.add(sha);
+    getCommitChanges(repoId, sha).then(
       (c) => setChanges((d) => ({ ...d, [c.sha]: c })),
       (e) => {
         console.error('commit changes failed', e);
-        requested.current.delete(commit.sha);
+        requested.current.delete(sha);
       },
     );
+  };
+  useEffect(() => {
+    if (commit) loadChanges(commit.sha);
   }, [commit, repoId]);
   const commitChanges = commit ? changes[commit.sha] : undefined;
 
@@ -935,6 +953,41 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const file = fileIndex >= 0 ? files[fileIndex] : undefined;
   const fileId = fileIndex >= 0 ? fileIds[fileIndex] : null;
   const wipRow = wipShown && fileIndex >= 0 ? wipRows[fileIndex] : undefined;
+
+  // The hidden list's rail (SPEC §5 "Hidden list column"): Changes and the branch's own commits.
+  const railRows: RailRow[] = rows.flatMap((r): RailRow[] => {
+    if (r.kind === 'wip')
+      return [
+        {
+          key: WIP,
+          wip: true,
+          title: t('history.changes'),
+          meta: t('branches.fileCount', { ...cnt(wipRows.length || (entry?.uncommitted ?? 0)) }),
+        },
+      ];
+    if (r.kind !== 'commit' || r.commit.inBase || commitsShut) return [];
+    const c = r.commit;
+    return [
+      {
+        key: c.sha,
+        from: !!fromBranch[c.sha],
+        title: c.subject,
+        meta: [c.shortSha, c.author, c.committedAt ? ageText(c.committedAt) : ''].filter(Boolean).join(' · '),
+      },
+    ];
+  });
+  const railFiles = (key: string): RailFiles => {
+    if (key !== WIP) {
+      const c = changes[key];
+      return c && [{ files: c.files.map((f) => ({ id: f.path, file: f })) }];
+    }
+    const sec = (label: string, list: WipRow[]) => ({ label, files: list.map((w) => ({ id: w.id, file: w.file })) });
+    const s = wipRows.filter((w) => w.sec === 's');
+    const u = wipRows.filter((w) => w.sec === 'u');
+    return s.length && u.length
+      ? [sec(t('history.staged'), s), sec(t('history.unstaged'), u)]
+      : [{ files: wipRows.map((w) => ({ id: w.id, file: w.file })) }];
+  };
 
   // Notes on lines (SPEC §5 Review "Notes"): the open branch's; a project review can list every
   // branch's. A note opens at its lines: the whole review (the base line), on its file.
@@ -1321,6 +1374,8 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // ⌘K focuses the search (inside the diff Monaco handles it). Listed in lib/shortcuts.ts.
   const searchInput = useRef<HTMLInputElement>(null);
   const focusSearch = () => {
+    // The matches are listed in the list column.
+    if (useUi.getState().reviewListHidden) useUi.getState().setReviewListHidden(false);
     searchInput.current?.focus();
     searchInput.current?.select();
   };
@@ -1462,6 +1517,9 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   // The files column's (columns layout) once dragged; until then 300px.
   const filesPane = useRef<HTMLDivElement>(null);
   const [filesWidth, setFilesWidth] = useStoredWidth('gitgel.historyFilesWidth');
+  // Hidden (⌥⌘B or its edge dragged in): a rail in its place.
+  const { hidden: listHidden, rail: railShown, live: liveWidth, setLive: setLiveWidth } = useListColumn();
+  const railPane = useRef<HTMLElement>(null);
   const worktree = entry?.worktreePath ? tildifyHome(entry.worktreePath) : null;
   // A local branch syncs with its remote (W4a); `upstream` is set only for one.
   const syncTarget: SyncTarget = {
@@ -2202,10 +2260,28 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
       )}
 
       <div className={parts.body}>
+        {railShown && (
+          <ListRail
+            ref={railPane}
+            rows={railRows}
+            current={current}
+            shownFile={fileId}
+            selected={isMulti ? selected : []}
+            filesOf={railFiles}
+            onHover={(key) => key !== WIP && loadChanges(key)}
+            onPick={clickRow}
+            onFile={(key, id) => {
+              if (key !== current || isMulti) pick(key);
+              setPath(id);
+              setLand('first');
+            }}
+            onScroll={onScroll}
+          />
+        )}
         <div
           ref={listPane}
           className={columns ? `${styles.listPane} ${styles.listPaneColumns}` : styles.listPane}
-          style={listWidth ? { width: listWidth } : undefined}
+          style={paneStyle(railShown, liveWidth ?? listWidth, liveWidth !== null)}
         >
           {project && entry && <BranchHead entry={entry} group={group} />}
           <aside
@@ -2340,15 +2416,20 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           {project && project.groups.length > 1 && entry && <OtherBranches project={project} open={entry.key} />}
           {!columns && commitForm}
         </div>
+        {/* Kept while hidden, on the rail's edge: dragged out, the column shows again. */}
         <ResizeHandle
-          pane={listPane}
+          pane={listHidden ? railPane : listPane}
           min={280}
           max={640}
           onResize={setListWidth}
           onReset={() => setListWidth(null)}
+          onCollapse={() => useUi.getState().setReviewListHidden(true)}
+          collapsed={listHidden}
+          onPreview={setLiveWidth}
+          onExpand={() => useUi.getState().setReviewListHidden(false)}
           label={t('history.resizeList')}
         />
-        {columns && (
+        {columns && !railShown && (
           <>
             <div ref={filesPane} className={styles.filesPane} style={filesWidth ? { width: filesWidth } : undefined}>
               {/* The count and totals, here instead of in the header over the diff. */}
@@ -2429,6 +2510,7 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
                 }
                 view={view}
                 nav={nav}
+                place={{ at: fileIndex + 1, of: fileIds.length }}
                 prevFile={fileIndex > 0 ? `\u0000${fileIds[fileIndex - 1]}` : undefined}
                 nextFile={
                   fileIndex >= 0 && fileIndex < fileIds.length - 1 ? `\u0000${fileIds[fileIndex + 1]}` : undefined
@@ -2578,6 +2660,14 @@ function OtherBranches({ project, open: openKey }: { project: ProjectScope; open
       )}
     </div>
   );
+}
+
+/** The list column's width once dragged; kept mounted while hidden, so it keeps its scroll.
+ * While its edge is dragged it may be narrower than its content, which it then cuts off. */
+function paneStyle(hidden: boolean, width: number | null, dragged: boolean): React.CSSProperties | undefined {
+  if (hidden) return { display: 'none' };
+  if (dragged) return { width: width ?? undefined, overflow: 'hidden' };
+  return width ? { width } : undefined;
 }
 
 function rowKey(r: HistoryRow): string {
