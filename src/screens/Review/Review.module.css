@@ -369,6 +369,12 @@
   gap: 2px;
 }
 
+/* A SHA that opens nothing (no remote, or a commit it does not have): the meta line's colour,
+   so it does not read as a link. */
+.shaPlain {
+  font-family: var(--font-mono);
+}
+
 .shaLink:global(.selectable) {
   padding: 0;
   background: transparent;

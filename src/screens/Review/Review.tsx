@@ -2372,7 +2372,12 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
           ) : stash ? (
             <StashBar stash={stash} base={stashBase} />
           ) : commit ? (
-            <CommitHeader repoId={repoId} commit={commit} changes={columns ? undefined : commitChanges} />
+            <CommitHeader
+              repoId={repoId}
+              commit={commit}
+              pushed={onRemote(commit)}
+              changes={columns ? undefined : commitChanges}
+            />
           ) : null}
           {!stashPicking && !error && file && (wipShown || commitChanges || stashChanges || spanned) && (
             <>
@@ -2920,12 +2925,13 @@ function totals(files: FileChange[]) {
   };
 }
 
-/** A short SHA that opens the commit on the remote; the text stays selectable, so it copies. */
-function ShaLink({ repoId, sha, short }: { repoId: string; sha: string; short: string }) {
-  const { data: remote } = useInvoke(() => getRemoteUrl(repoId), [repoId]);
+/** A short SHA that opens the commit on the remote (no `repoId`: one the remote does not have);
+ * the text stays selectable, so it copies. */
+function ShaLink({ repoId, sha, short }: { repoId: string | null; sha: string; short: string }) {
+  const { data: remote } = useInvoke(() => (repoId ? getRemoteUrl(repoId) : Promise.resolve(null)), [repoId]);
   if (!remote) {
     return (
-      <span className={`${styles.sha} selectable`} title={sha}>
+      <span className={`${styles.shaPlain} selectable`} title={sha}>
         {short}
       </span>
     );
@@ -3024,10 +3030,13 @@ function TagPills({ tags, messages = {} }: { tags: string[]; messages?: Record<s
 function CommitHeader({
   repoId,
   commit: c,
+  pushed,
   changes,
 }: {
   repoId: string;
   commit: HistoryCommit;
+  /** On the branch's upstream: only then does the SHA open it on the remote. */
+  pushed: boolean;
   changes: CommitChanges | undefined;
 }) {
   const stat = changes ? totals(changes.files) : null;
@@ -3084,7 +3093,7 @@ function CommitHeader({
         <span>{whenLabel(c.committedAt)}</span>
         <span className={parts.dot}>·</span>
         <span className={styles.shaGroup}>
-          <ShaLink repoId={repoId} sha={c.sha} short={c.shortSha} />
+          <ShaLink repoId={pushed ? repoId : null} sha={c.sha} short={c.shortSha} />
           <IconButton
             size={24}
             aria-label={copied ? t('history.copied') : t('history.copySha')}

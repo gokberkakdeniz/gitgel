@@ -3705,8 +3705,9 @@ Canvas page "Review", `ReviewFocus.dc.html` (§11).
   15px/600 `text.strong` subject (selectable) with its tags on the right as on its row (the newest one's pill, stacked when there are more, the list on hover); the body (13px, line-height 1.5, `text.muted`, `white-space:
   pre-wrap`, max-width 720px; left out when empty; selectable); mono 11 muted meta (selectable): an 18px avatar, the author
   (`text.body`), `·` the committer time (`today 11:42`, `yesterday 11:42`, `Oct 2, 11:42`, `Oct 2,
-  2025`), `·` the short SHA (`accent.text`, selectable; a click opens the commit on the remote when the repo
-  has one (GitHub, GitLab, Bitbucket, Gitea-style), tooltip "Open remote") with a copy icon beside it (tooltip "Copy full SHA",
+  2025`), `·` the short SHA (selectable; `accent.text` and a click opens the commit on the remote when the repo
+  has one (GitHub, GitLab, Bitbucket, Gitea-style) and the branch's upstream has the commit, tooltip "Open remote";
+  otherwise the meta line's colour) with a copy icon beside it (tooltip "Copy full SHA",
   copies the full SHA; ✓ and "Copied" for 1.5 s); a hand selection across the header copies as one line (line breaks from the
   layout, and the body's within a wider selection, are collapsed to spaces, `·` to `-`, the relative time to `y/m/d h:i:s`), `·`
   `N files`, `+a` (`success`), `−d` (`danger`). For Uncommitted: "Uncommitted changes", meta
