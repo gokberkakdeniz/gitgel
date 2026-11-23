@@ -19,6 +19,33 @@ export function editProject(projectId: string) {
   else nav.push({ name: 'project', projectId });
 }
 
+/** A branch review's subtitle: the repo, rev and worktree joined by ` · `. Each can be selected
+ * and copied, and a double click selects all of it rather than one word of a branch name or path;
+ * having no drag attribute, pressing one does not move the window. A label (`last known state`)
+ * stays plain text. */
+export function CopyableSubtitle({ parts, label }: { parts: (string | null | undefined)[]; label?: string }) {
+  const items: React.ReactNode[] = parts
+    .filter((p): p is string => !!p)
+    .map((p, i) => (
+      <span
+        // Fixed order; the repo and the rev can share a name.
+        key={i}
+        className="selectable"
+        // Set once the double click is over (after mouseup), so no drag of the press extends
+        // it; a triple click's line selection would run past the span, so it is kept out.
+        onDoubleClick={(e) => {
+          const text = e.currentTarget.firstChild;
+          if (text) window.getSelection()?.setBaseAndExtent(text, 0, text, text.textContent?.length ?? 0);
+        }}
+        onMouseDown={(e) => e.detail > 2 && e.preventDefault()}
+      >
+        {p}
+      </span>
+    ));
+  if (label) items.push(label);
+  return <>{items.flatMap((item, i) => (i ? [' · ', item] : [item]))}</>;
+}
+
 /** Review's page header: the project's name (renamed in place), "Review" for a branch, or
  * "Stashes" for a repository's stash stack, with the subtitle of each (SPEC §5). */
 export function ReviewHeader({

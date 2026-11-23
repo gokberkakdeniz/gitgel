@@ -95,7 +95,7 @@ import { type CommitDraft, commitDraftKey, EMPTY_COMMIT_DRAFT, useUi } from '../
 import { DiffStat, FileBar, FileRow, StashSection, useDiffView, type FileActions } from './parts';
 import parts from './parts.module.css';
 import { reviewStashes, type ReviewStash } from './stashes';
-import { editProject, ReviewHeader } from './header';
+import { CopyableSubtitle, editProject, ReviewHeader } from './header';
 import { conflictsBanner } from './banners';
 import styles from './Review.module.css';
 import { AmendModal } from './AmendModal';
@@ -1453,9 +1453,11 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
     return [...seen].map(([id, name]) => ({ repoId: id, repoName: name }));
   }, [project]);
   const conflicts = conflictsBanner(project ? project.groups : entry ? [{ entry } as ReviewGroup] : []);
-  const subtitle = lastKnown
-    ? [repoName, lastKnown.branch ?? rev.slice(0, 7), t('review.lastKnownState')].join(' · ')
-    : [repoName, rev, worktree].filter(Boolean).join(' · ');
+  const subtitle = lastKnown ? (
+    <CopyableSubtitle parts={[repoName, lastKnown.branch ?? rev.slice(0, 7)]} label={t('review.lastKnownState')} />
+  ) : (
+    <CopyableSubtitle parts={[repoName, rev, worktree]} />
+  );
 
   // Only a search has a label: the subtitle names the rev.
   const label =

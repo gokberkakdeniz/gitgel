@@ -804,7 +804,8 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
     branch while filtering, a deleted branch's last known state): title "Review", subtitle
     `<repo> · <rev>` (short SHA if detached), plus ` · <~worktree>` when checked out, or
     ` · last known state`. `rev` is a local branch, a remote-tracking branch or a SHA, as
-    History's was.
+    History's was. The repo, rev and worktree are selectable (right-click copies, pressing them
+    does not drag the window); a double click selects the whole one, not a word of it.
   - **Stashes** (a Branches band's stash list): title "Stashes", subtitle
     `<repo> · N stashes`; no branch is open: the list column is the stash section, no search, and
     Apply | Pop | Drop (§15 "Stash pane") where Fetch / Pull / Push are.
