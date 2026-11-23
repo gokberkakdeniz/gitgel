@@ -95,7 +95,7 @@ import { type CommitDraft, commitDraftKey, EMPTY_COMMIT_DRAFT, useUi } from '../
 import { DiffStat, FileBar, FileRow, StashSection, useDiffView, type FileActions } from './parts';
 import parts from './parts.module.css';
 import { reviewStashes, type ReviewStash } from './stashes';
-import { CopyableSubtitle, editProject, ReviewHeader } from './header';
+import { CopyableSubtitle, editProject, ReviewHeader, selectWhole } from './header';
 import { conflictsBanner } from './banners';
 import styles from './Review.module.css';
 import { AmendModal } from './AmendModal';
@@ -2452,14 +2452,15 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
 }
 
 /** A project review's open branch, fixed above its rows (SPEC §5 "Branch head"): repo and the
- * branch's totals against its base, then the branch and its operation / conflicts pills. */
+ * branch's totals against its base, the branch and its operation / conflicts pills, then the
+ * worktree it is checked out in (selectable; a long path loses its start, not its folder). */
 function BranchHead({ entry: e, group }: { entry: EntrySummary; group: ReviewGroup | undefined }) {
   const files = group?.files.committed ?? [];
   const add = files.reduce((n, f) => n + (f.add ?? 0), 0);
   const del = files.reduce((n, f) => n + (f.del ?? 0), 0);
   const where = e.worktreePath ? tildifyHome(e.worktreePath) : null;
   return (
-    <div className={styles.branchHead} title={[e.repoName, e.branch ?? e.shortSha, where].filter(Boolean).join(' · ')}>
+    <div className={styles.branchHead} title={[e.repoName, e.branch ?? e.shortSha].join(' · ')}>
       <div className={styles.branchHeadLine}>
         <span className={styles.branchHeadRepo}>{e.repoName}</span>
         <DiffStat add={files.length > 0 ? add : undefined} del={del > 0 ? del : undefined} />
@@ -2473,6 +2474,13 @@ function BranchHead({ entry: e, group }: { entry: EntrySummary; group: ReviewGro
           </Pill>
         )}
       </div>
+      {where && (
+        <div className={styles.branchHeadPath} title={where}>
+          <bdi className="selectable" {...selectWhole}>
+            {where}
+          </bdi>
+        </div>
+      )}
     </div>
   );
 }

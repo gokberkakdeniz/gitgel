@@ -482,6 +482,7 @@ it was done within a topic.
 - [x] A commit's tag list opens after the pointer rests 300ms on the stacked pill and the pointer can move into it: ten names tall (a longer one scrolls), names selectable, an annotated tag's message as its native tooltip (`HistoryCommit.tagMessages`) — 2026-11-21
 - [x] Notes on diff lines (SPEC §5 "Notes"): written from the toolbar of lines picked by their numbers, ⌥N or the diff menu's Add Note, shown under their lines in every diff of the branch that has them, Resolve / Edit / Delete; the header's Notes button lists them (List Options: open or all branches, by date or by file, Show Resolved), Copy All as references for an agent, Clear All / Clear Resolved ask first; kept per branch in `notes.json` — 2026-11-21
 - [x] A branch review's header subtitle can be copied: repo, rev and worktree are selectable, a double click selects the whole one — 2026-11-23
+- [x] A project review's branch head shows the worktree the branch is checked out in as a third line (start cut when long, selectable) — 2026-11-23
 
 ### Git actions
 - [x] Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree

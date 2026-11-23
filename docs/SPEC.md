@@ -845,8 +845,9 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
     `bg.main`, bottom border `border`, padding 8px 16px 7px, gap 4): line 1 14px/600 repo
     (ellipsis), right mono 11 `+add` / `−del` (the branch against its base, as the old group
     totals); line 2 mono 12 branch (short SHA if detached), the operation pill (`rebasing`) and
-    the conflicts pill. No menu and no upstream text (the header's Pull / Push carry the counts);
-    tooltip `<repo> · <branch> · <~worktree>`.
+    the conflicts pill; line 3, when checked out, mono 11 muted `<~worktree>`, a long path cut at
+    its start (`…/Projects/gitgel`), selectable as the branch subtitle's. No menu and no upstream
+    text (the header's Pull / Push carry the counts); tooltip `<repo> · <branch>`.
   - **Stacked warning** (margin 2px 0 6px, padding 7px 10px, radius 8, warning tone) when commits
     come from another branch: `N of M commits come from <branch>. A different base may fit
     better.`; those commits carry a warning sm mono pill with the branch's name.

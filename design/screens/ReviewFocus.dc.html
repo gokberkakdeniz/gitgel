@@ -118,6 +118,9 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 <span style="flex-grow: 1"></span>
 <span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap">{{head.upstream}}</span>
 </div>
+<sc-if value="{{head.hasPath}}" hint-placeholder-val="{{false}}">
+<div title="{{head.path}}" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left"><bdi style="user-select: text">{{head.path}}</bdi></div>
+</sc-if>
 </div>
 </sc-if>
 <div class="gg-list" tabIndex="0" onKeyDown="{{navKey}}" aria-label="Commits" style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; padding: {{listPad}}; {{listHide}}">
@@ -1542,7 +1545,7 @@ class Component extends DCLogic {
       var opPill = !mine ? '' : OP.kind === 'rebase' ? 'rebasing' : nUn ? plural(nUn, 'conflict') : '';
       return Object.assign(it, { isEntry: false, isHead: true, repo: e.repo, add: t.add, del: t.del, hasPush: false, hasPull: false,
         hasOp: !!opPill, opLabel: opPill, opTone: OP && OP.kind === 'rebase' ? 'warning' : 'danger',
-        upstream: '', title: [e.repo, e.branch, e.wt].filter(Boolean).join(' · ') });
+        upstream: '', title: [e.repo, e.branch].join(' · '), hasPath: !!e.wt, path: e.wt });
     };
     var head = !branchScope && !stashScope ? headItem(act) : null;
     (function (e) {

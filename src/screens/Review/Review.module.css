@@ -576,6 +576,18 @@
   text-overflow: ellipsis;
 }
 
+/* Right-to-left only so a long path is cut at its start; the <bdi> keeps the path itself LTR. */
+.branchHeadPath {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
 .stackHint {
   margin: 2px 0 6px;
   padding: 7px 10px;
