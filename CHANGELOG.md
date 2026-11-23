@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.10 — 2026-11-23
+
+### New
+- Hide Commits in Review (`⌥⌘B`), leaving a rail of dots.
+
+### Improved
+- Review's folded regions show their note count.
+- Project review shows the worktree path under the branch.
+- Review's header text is selectable to copy the repo, branch and worktree.
+
+### Fixed
+- Review opens a note on a branch with no commits of its own.
+- Review opens a note on a file the branch's commits leave alone in its history.
+- Review's commit SHA is a link only for a pushed commit.
+
 ## 0.2.9 — 2026-11-22
 
 ### New
