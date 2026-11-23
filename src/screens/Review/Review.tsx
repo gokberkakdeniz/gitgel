@@ -1208,24 +1208,44 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const jumped = useRef(0);
   useEffect(() => {
     if (!noteJump || !entry || noteJump.key !== entry.key || noteJump.seq === jumped.current || !data) return;
-    jumped.current = noteJump.seq;
+    const seq = noteJump.seq;
+    jumped.current = seq;
     const p = noteJump.path;
-    if (lineRows(rows, 'base').length > 0) {
-      pickLine('base');
-      setPath(p);
-    } else if (wip && (unstaged.some((f) => f.path === p) || staged.some((f) => f.path === p))) {
-      // No commits of its own (all in the base, as `master` once pushed): Uncommitted when it
-      // changes the file, else the file's history, newest first.
-      pick(WIP);
-      setPath(unstaged.some((f) => f.path === p) ? `u:${p}` : `s:${p}`);
-    } else {
-      setPicked(null);
-      setMulti(null);
-      fileHistory(p);
-      setPath(null);
+    const open = (inReview: boolean) => {
+      if (jumped.current !== seq) return;
+      if (inReview) {
+        pickLine('base');
+        setPath(p);
+      } else if (wip && (unstaged.some((f) => f.path === p) || staged.some((f) => f.path === p))) {
+        // The whole review does not change the file (it has no commits of its own, as `master`
+        // once pushed, or they leave the file alone): Uncommitted when it changes the file, else
+        // the file's history, newest first.
+        pick(WIP);
+        setPath(unstaged.some((f) => f.path === p) ? `u:${p}` : `s:${p}`);
+      } else {
+        setPicked(null);
+        setMulti(null);
+        fileHistory(p);
+        setPath(null);
+      }
+      setLand('first');
+      setNoteReveal({ id: noteJump.noteId, seq });
+    };
+    const list = lineRows(rows, 'base');
+    if (list.length === 0) {
+      open(false);
+      return;
     }
-    setLand('first');
-    setNoteReveal({ id: noteJump.noteId, seq: noteJump.seq });
+    const withWip = list[0] === WIP;
+    getRangeChanges(
+      repoId,
+      list[list.length - 1],
+      withWip ? null : list[0],
+      withWip ? (entry.worktreePath ?? null) : null,
+    ).then(
+      (r) => open(r.files.some((f) => f.path === p)),
+      () => open(true),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteJump, entry?.key, data]);
   // Not checked out: the branch opens on its base line, the whole review (once per rev).
