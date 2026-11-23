@@ -54,3 +54,29 @@
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
+
+/* The notes a fold hides: a count on the right of its bar; a click opens the first one. */
+.foldNotes {
+  position: absolute;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.foldNotes:hover {
+  background: var(--bg-pressed);
+}
+
+.foldNotes:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

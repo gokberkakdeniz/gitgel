@@ -27,6 +27,7 @@ import {
   withoutEmptySide,
   type Cut,
 } from './lineStage';
+import { FoldNotes } from './FoldNotes';
 import { languageForPath } from './language';
 import { NoteCard, NoteDraft } from './NoteZone';
 import { diffPosition, setDiffPosition } from './position';
@@ -854,6 +855,21 @@ export function DiffView({
     setDraft(null);
   };
 
+  // A note into view, its folded lines first: a cursor in a fold unfolds it (Monaco's own), so the
+  // note's line and the one under it (the card sits between them) are selected, then the cursor
+  // stays on the note's line.
+  const openZone = (z: PlacedZone) => {
+    nav.current.jumping = true;
+    const line = Math.max(1, z.after);
+    const below = Math.min(line + 1, z.ed.getModel()?.getLineCount() ?? line);
+    z.ed.setSelection(new monaco.Selection(line, 1, below, 1));
+    z.ed.setPosition({ lineNumber: line, column: 1 });
+    requestAnimationFrame(() => {
+      z.ed.setScrollTop(Math.max(0, z.ed.getTopForLineNumber(z.after) - z.ed.getLayoutInfo().height / 3));
+      window.setTimeout(() => (nav.current.jumping = false), 80);
+    });
+  };
+
   // Popover's notes open their file at them (once per `seq`), after the view lands.
   const revealed = useRef(0);
   useEffect(() => {
@@ -862,11 +878,8 @@ export function DiffView({
     const z = zones.find((x) => x.key === r.id);
     if (!z) return;
     revealed.current = r.seq;
-    window.setTimeout(() => {
-      nav.current.jumping = true;
-      z.ed.setScrollTop(Math.max(0, z.ed.getTopForLineNumber(z.after) - z.ed.getLayoutInfo().height / 3));
-      window.setTimeout(() => (nav.current.jumping = false), 80);
-    }, 120);
+    window.setTimeout(() => openZone(z), 120);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zones, notes?.reveal]);
 
   const zoneBody = (z: PlacedZone): ReactNode => {
@@ -1199,6 +1212,12 @@ export function DiffView({
           z.node,
           `${z.key}:${z.id}`,
         ),
+      )}
+      {editorOn && mounted.current && (
+        <>
+          <FoldNotes diff={mounted.current.editor} side="original" zones={zones} onOpen={openZone} />
+          <FoldNotes diff={mounted.current.editor} side="modified" zones={zones} onOpen={openZone} />
+        </>
       )}
     </div>
   );

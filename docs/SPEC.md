@@ -241,6 +241,7 @@ gitgel/
 │  │            # useReorder, describe.ts
 │  └─ monaco/   monaco.ts  setup.ts  theme.ts  language.ts  DiffView.tsx  ImageDiff.tsx  position.ts  changeNav.ts  blame.ts
 │               # NoteZone.tsx (a note's card and form in the diff, §5 "Notes")
+│               # FoldNotes.tsx (a fold's count of the notes it hides, §5 "Notes")
 │               # lineStage.ts (the diff's Stage / Unstage of picked lines, §15 "Stage")
 └─ src-tauri/
    ├─ Cargo.toml  Cargo.lock  rust-toolchain.toml  clippy.toml  tauri.conf.json  build.rs
@@ -984,7 +985,10 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
     of the branch whose side has those lines shows it under the last of them (the occurrence
     nearest to where it was written), in a Monaco view zone (split: Monaco
     keeps the other side aligned; unified: a note on removed lines sits under the new line its
-    change ends on). The lines it covers have `accent.text` line numbers (500).
+    change ends on). The lines it covers have `accent.text` line numbers (500). A note in a
+    folded region (Changes only) puts a count on the right of the fold's bar, as far from the right
+    edge as its unfold icon is from the left (`note` 12 + the number, mono 11 `accent.text`, 18px,
+    hover `bg.pressed`, tooltip "N notes"); clicking it opens the region's first note.
   - **Outdated**: the branch's file as it is now (the worktree when checked out, else the branch
     tip; `get_note_files`) no longer has the lines: listed only, never in the diff. Notes on
     removed lines never turn outdated. **Resolved**: by hand (Resolve on the card). Resolved and
@@ -1018,7 +1022,7 @@ works; tweaks `scope`, `focus`, `op`, `open`, `embedded`, `picked`, `layout`, `c
     (top border, padding 10px 12px): "Clear Resolved" (ghost 28; only while some are closed),
     "Clear All" (ghost 28), primary "Copy All" (`copy`) on the right. "No notes" when the options
     hide them all. A note opens the whole review (the base line) on its file, scrolled to it (a
-    project review opens its branch first).
+    project review opens its branch first); a folded region it is in opens from the closer change.
     - **By date added** (default): one list; a row (padding 7px 8px, radius 8, hover `bg.hover`)
       is `file:range` (mono 11 `accent.text`; the repo name first, 12px/600, when the list has
       several branches), an "outdated" (warning) or "resolved" (neutral) sm pill, the age on the

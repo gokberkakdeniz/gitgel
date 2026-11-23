@@ -483,6 +483,7 @@ it was done within a topic.
 - [x] Notes on diff lines (SPEC §5 "Notes"): written from the toolbar of lines picked by their numbers, ⌥N or the diff menu's Add Note, shown under their lines in every diff of the branch that has them, Resolve / Edit / Delete; the header's Notes button lists them (List Options: open or all branches, by date or by file, Show Resolved), Copy All as references for an agent, Clear All / Clear Resolved ask first; kept per branch in `notes.json` — 2026-11-21
 - [x] A branch review's header subtitle can be copied: repo, rev and worktree are selectable, a double click selects the whole one — 2026-11-23
 - [x] A project review's branch head shows the worktree the branch is checked out in as a third line (start cut when long, selectable) — 2026-11-23
+- [x] Notes in a folded region (Changes only): the fold's bar shows their count on its right, which opens the first; opening a note from the Notes popover unfolds its region — 2026-11-23
 
 ### Git actions
 - [x] Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree
