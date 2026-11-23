@@ -30,6 +30,8 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 .gg-has:hover .gg-acts,.gg-has:focus-within .gg-acts{display:flex}
 .gg-ib:hover{background:var(--bg-pressed)!important;color:var(--text-strong)!important}
 .gg-fn:hover{background:var(--bg-pressed)!important}
+.gg-dot>span{transition:transform 0.12s}
+.gg-dot:hover>span{transform:scale(1.3)}
 .gg-commits{container-type:inline-size}
 /* Several tags: the newest one's pill with a second pill's edge behind it (GitHub Desktop's stack);
    resting on it 300ms lists them all under it, ten lines tall, scrolling past that. */
@@ -98,6 +100,28 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 
 <div style="flex-grow: 1; display: flex; min-height: 0">
 
+<sc-if value="{{railOn}}" hint-placeholder-val="{{false}}">
+<nav aria-label="Commits" style="position: relative; width: 36px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; background: var(--bg-sidebar); box-sizing: border-box; min-height: 0">
+<button type="button" class="gg-hit gg-ib" onClick="{{toggleRail}}" aria-label="Show Commits" aria-expanded="false" title="Show Commits (⌥⌘B)" style="width: 28px; height: 28px; flex-shrink: 0; margin: 6px 0 2px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer"><dc-import name="Icon" icon="sidebar" size="16" hint-size="16px,16px"></dc-import></button>
+<div style="flex-grow: 1; min-height: 0; width: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 16px; box-sizing: border-box">
+<sc-for list="{{railRows}}" as="r" hint-placeholder-count="6">
+<button type="button" class="gg-hit gg-dot" onClick="{{r.pick}}" onMouseEnter="{{r.enter}}" onMouseLeave="{{r.leave}}" aria-pressed="{{r.on}}" aria-label="{{r.label}}" style="{{r.boxStyle}}"><span style="{{r.markStyle}}"></span></button>
+</sc-for>
+</div>
+<sc-if value="{{railPop.on}}" hint-placeholder-val="{{false}}">
+<div role="dialog" aria-label="{{railPop.label}}" onMouseEnter="{{railPop.stay}}" onMouseLeave="{{railPop.leave}}" style="{{railPop.style}}">
+<div style="display: flex; flex-direction: column; gap: 3px; padding: 6px 8px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px">
+<span style="font-size: 13px; font-weight: 500; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{railPop.title}}</span>
+<span style="display: flex; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap"><span style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{railPop.meta}}</span><span style="color: var(--success)">{{railPop.add}}</span><span style="color: var(--danger)">{{railPop.del}}</span></span>
+</div>
+<sc-for list="{{railPop.files}}" as="f" hint-placeholder-count="4">
+<sc-if value="{{f.isLabel}}" hint-placeholder-val="{{false}}"><div style="padding: 6px 8px 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted)">{{f.label}}</div></sc-if>
+<sc-if value="{{f.isFile}}" hint-placeholder-val="{{true}}"><button type="button" class="gg-hit gg-ib" onClick="{{f.open}}" style="{{f.style}}"><dc-import name="KindBadge" theme="none" kind="{{f.kind}}" hint-size="18px,18px"></dc-import><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap">{{f.name}}</span><span style="flex-grow: 1; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left">{{f.dir}}</span><span style="flex-shrink: 0; display: flex; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px"><span style="color: var(--success)">{{f.add}}</span><span style="color: var(--danger)">{{f.del}}</span></span></button></sc-if>
+</sc-for>
+</div>
+</sc-if>
+</nav>
+</sc-if>
 <aside class="gg-commits" style="{{asideStyle}}">
 <sc-if value="{{hasHead}}" hint-placeholder-val="{{false}}">
 <div class="gg-head" title="{{head.title}}" style="background: var(--bg-main); border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; padding: 8px 16px 7px">
@@ -389,6 +413,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 
 <sc-if value="{{hasFile}}" hint-placeholder-val="{{true}}">
 <div style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; min-height: 36px; box-sizing: border-box; padding: 4px 10px 4px 18px; border-bottom: 1px solid var(--border); background: var(--bg-sunken)">
+<sc-if value="{{filePlaceOn}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums">{{filePlace}}</span></sc-if>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{filePath}}</span>
 <span style="font-size: 12px; color: var(--text-muted); white-space: nowrap">{{compare}}</span>
 <sc-if value="{{ignoreWs}}" hint-placeholder-val="{{false}}"><dc-import name="Pill" theme="none" label="Whitespace ignored" tone="accent" title="Show whitespace changes (⌥W)" on-press="{{toggleWs}}" hint-size="120px,20px"></dc-import></sc-if>
@@ -503,7 +528,7 @@ input::placeholder,textarea::placeholder{color:var(--text-muted)}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;project&quot;,&quot;branch&quot;,&quot;stashes&quot;],&quot;default&quot;:&quot;project&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;web&quot;,&quot;api&quot;],&quot;default&quot;:&quot;web&quot;,&quot;section&quot;:&quot;State&quot;},&quot;op&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;rebase&quot;,&quot;conflicts&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;open&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pageMenu&quot;,&quot;baseMenu&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;notes&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;adding&quot;,&quot;saved&quot;,&quot;list&quot;,&quot;listMenu&quot;,&quot;listAll&quot;,&quot;listFile&quot;,&quot;resolved&quot;,&quot;clearAll&quot;,&quot;select&quot;,&quot;copied&quot;,&quot;menu&quot;,&quot;folded&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;embedded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;picked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tree&quot;,&quot;columns&quot;],&quot;default&quot;:&quot;tree&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;stageGit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;hooks&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;commitRows&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;two-line&quot;,&quot;one-line&quot;],&quot;default&quot;:&quot;two-line&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;branches&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;collapsed&quot;,&quot;open&quot;],&quot;default&quot;:&quot;collapsed&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;baseCommits&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Layout&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;project&quot;,&quot;branch&quot;,&quot;stashes&quot;],&quot;default&quot;:&quot;project&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;web&quot;,&quot;api&quot;],&quot;default&quot;:&quot;web&quot;,&quot;section&quot;:&quot;State&quot;},&quot;op&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;rebase&quot;,&quot;conflicts&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;open&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pageMenu&quot;,&quot;baseMenu&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;notes&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;adding&quot;,&quot;saved&quot;,&quot;list&quot;,&quot;listMenu&quot;,&quot;listAll&quot;,&quot;listFile&quot;,&quot;resolved&quot;,&quot;clearAll&quot;,&quot;select&quot;,&quot;copied&quot;,&quot;menu&quot;,&quot;folded&quot;],&quot;default&quot;:&quot;none&quot;,&quot;section&quot;:&quot;State&quot;},&quot;embedded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;picked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;State&quot;},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tree&quot;,&quot;columns&quot;],&quot;default&quot;:&quot;tree&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;list&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;open&quot;,&quot;rail&quot;,&quot;railFiles&quot;],&quot;default&quot;:&quot;open&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;stageGit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;hooks&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pass&quot;,&quot;fail&quot;],&quot;default&quot;:&quot;pass&quot;,&quot;section&quot;:&quot;Commit&quot;},&quot;commitRows&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;two-line&quot;,&quot;one-line&quot;],&quot;default&quot;:&quot;two-line&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;branches&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;collapsed&quot;,&quot;open&quot;],&quot;default&quot;:&quot;collapsed&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;baseCommits&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Layout&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   // Review + History in one screen, one branch open at a time: the open entry lists its
   // Uncommitted changes, its commits, the base line (the whole review) and the base's log under
@@ -554,6 +579,11 @@ class Component extends DCLogic {
     // Lines picked by their numbers (click, ⇧-click for a range): a toolbar under the last one
     // writes a note on them (⌥N) or, on an Uncommitted file, stages them.
     this.state.lineSel = null;
+    // The list column hidden (⌥⌘B or its edge dragged under 200px): a 36px
+    // rail stays, a dot for Changes and each commit of the branch's own; its top button shows the column
+    // again. Resting on a dot lists that row's files beside it (railFiles: open on the newest commit).
+    this.state.rail = P0.list === 'rail' || P0.list === 'railFiles';
+    this.state.railPop = P0.list === 'railFiles' ? 'first' : null;
     this.state.notesGroup = P0.notes === 'listFile' ? 'file' : 'date'; this.state.notesOrder = 'new'; this.state.notesOutdated = P0.notes === 'listFile' || P0.notes === 'resolved'; this.state.notesView = P0.notes === 'listMenu';
     // A project review lists only the open branch's notes (default) or every branch's; Clear All / Clear Resolved
     // ask first while Settings › Prompts › "Clearing notes" is on (notesAsk).
@@ -1551,6 +1581,42 @@ class Component extends DCLogic {
         upstream: '', title: [e.repo, e.branch].join(' · '), hasPath: !!e.wt, path: e.wt });
     };
     var head = !branchScope && !stashScope ? headItem(act) : null;
+    // The rail: a dot for Changes (accent) and each of the branch's own commits, top to bottom as the
+    // list; resting on one lists its files beside it (a short wait first, the pointer can move in).
+    var railPop = { on: false };
+    var railRows = (function (e) {
+      if (!e || stashScope) return [];
+      var multi = st.sel.e === e.id && st.sel.rows ? st.sel.rows : (selE.id === e.id && (selRow === 'range' || selRow === 'origin') ? self.lineKeys(e, selRow) : []);
+      var keys = (hasWip(e) ? ['wip'] : []).concat(e.commits.map(function (c) { return c.sha; }));
+      var popKey = st.railPop === 'first' ? (e.commits[0] || {}).sha : st.railPop;
+      var leave = function () { clearTimeout(self._railT); self._railT = setTimeout(function () { self.setState({ railPop: null }); }, 150); };
+      return keys.map(function (key, i) {
+        var c = key === 'wip' ? null : e.commits[i - (keys[0] === 'wip' ? 1 : 0)];
+        var on = selE.id === e.id && selRow === key, tint = multi.indexOf(key) >= 0;
+        var fill = key === 'wip' ? 'var(--accent-text)' : c.from ? 'var(--warning)' : 'var(--text-muted)';
+        var label = c ? c.subject + ' · ' + c.sha : 'Changes · ' + plural(e.wip.length, 'file');
+        if (key === popKey) {
+          var fs = self.filesFor(e, key), t = totals(fs), list = [];
+          var fileItem = function (f) { return { isFile: true, isLabel: false, kind: f.k, name: f.name, dir: f.dir, add: f.add || '', del: f.del || '',
+            open: function () { clearTimeout(self._railT); self.setState({ railPop: null }); pickFile(e, key, fid(f))(); },
+            style: 'width: 100%; height: 28px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; font: inherit; cursor: pointer' }; };
+          if (key === 'wip') {
+            var stg = fs.filter(function (f) { return f.st; }), uns = fs.filter(function (f) { return !f.st; });
+            if (stg.length && uns.length) { list.push({ isLabel: true, isFile: false, label: 'Staged' }); stg.forEach(function (f) { list.push(fileItem(f)); }); list.push({ isLabel: true, isFile: false, label: 'Unstaged' }); uns.forEach(function (f) { list.push(fileItem(f)); }); }
+            else fs.forEach(function (f) { list.push(fileItem(f)); });
+          } else fs.forEach(function (f) { list.push(fileItem(f)); });
+          railPop = { on: true, label: label, title: c ? c.subject : 'Changes', meta: c ? c.sha + ' · ' + c.author + ' · ' + c.age : plural(fs.length, 'file'), add: t.add, del: t.del, files: list,
+            stay: function () { clearTimeout(self._railT); }, leave: leave,
+            style: 'position: absolute; left: 38px; top: ' + (40 + i * 24) + 'px; z-index: 20; width: 320px; max-height: 320px; overflow-y: auto; box-sizing: border-box; padding: 4px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px var(--shadow)' };
+        }
+        return { on: on, label: label, pick: pickRow(e, key),
+          enter: function () { clearTimeout(self._railT); var open = !!self.state.railPop; self._railT = setTimeout(function () { self.setState({ railPop: key }); }, open ? 0 : 300); },
+          leave: leave,
+          // The picked one has only its ring; the box shows while it has the keyboard focus.
+          boxStyle: 'width: 28px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; cursor: pointer; background: ' + (tint ? 'rgba(var(--accent-rgb), 0.18)' : 'transparent'),
+          markStyle: 'width: 8px; height: 8px; border-radius: 50%; background: ' + fill + (on ? '; outline: 1.5px solid ' + fill + '; outline-offset: 2px' : '') };
+      });
+    })(act);
     (function (e) {
         if (!e) return;
         var fromN = e.commits.filter(function (c) { return !!c.from; }).length;
@@ -2302,7 +2368,8 @@ class Component extends DCLogic {
       pageMenuOn: !!(M && M.kind === 'page'),
       openPage: function (ev) { self.openMenu({ kind: 'page', e: self.state.active }, ev, true); },
       qRight: q ? '' : '⌘K',
-      asideStyle: 'width: 360px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; min-height: 0',
+      asideStyle: 'width: 360px; flex-shrink: 0; border-right: 1px solid var(--border); display: ' + (st.rail ? 'none' : 'flex') + '; flex-direction: column; background: var(--bg-sidebar); box-sizing: border-box; min-height: 0',
+      railOn: !!st.rail, railOff: !st.rail, railRows: railRows, railPop: railPop, toggleRail: function () { self.setState({ rail: !self.state.rail }); },
       q: q, setQ: function (v) { self.setState({ q: v }); }, clearQ: function () { self.setState({ q: '' }); },
       noMatches: terms.length > 0 && items.length <= 1,
       hasStashes: stashList.length > 0, stashCount: String(stashList.length), stashHeading: stashScope ? 'Stashes in web-app' : branchScope ? 'Stashes of this branch' : 'Stashes of this project', stashOpen: st.stashOpen, stashItems: stashItems,
@@ -2329,11 +2396,13 @@ class Component extends DCLogic {
         ? 'position: absolute; left: 8px; right: 8px; bottom: calc(100% - 1px); z-index: 10; display: flex; flex-direction: column; gap: 1px; padding: 4px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px var(--shadow)'
         : 'display: flex; flex-direction: column; gap: 1px',
       items: items, navKey: keyNav(nav),
-      isCols: cols, items2: items2, navKey2: keyNav(nav2),
+      isCols: cols && !st.rail, items2: items2, navKey2: keyNav(nav2),
       dockTree: !cols && cmode === 'dock' && selRow === 'wip', dockCols: cols && cmode === 'dock' && selRow === 'wip', dockCm: dockCm,
       paneOn: paneOn, paneCm: cmFor(selE, 'pane'),
       ctxOn: !paneOn, cx: cx,
       hasFile: !!selFile, filePath: selFile ? pathOf(selFile) : '', compare: compare,
+      // "3/13" before the path: the file's place among the row's.
+      filePlaceOn: selFiles.length > 0, filePlace: (selFiles.indexOf(selFile) + 1) + '/' + selFiles.length,
       ignoreWs: ignoreWs, toggleWs: function () { self.setState({ ignoreWs: !ignoreWs, hunk: 0 }); },
       openView: menuAt({ kind: 'view' }, true), viewOpen: viewOpen,
       viewIcon: view === 'split' ? 'split' : 'unified', viewLabel: view === 'split' ? 'Split' : 'Unified',
