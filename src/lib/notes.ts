@@ -23,8 +23,22 @@ export function locate(note: Pick<Note, 'lines' | 'from'>, lines: string[]): { f
   return best < 0 ? null : { from: best + 1, to: best + n };
 }
 
+/** Where a note sits in a diff side's `lines`: where they have its lines; else, when it is
+ * `outdated` (on the new side), under the line it was written on, within the file; else nowhere. */
+export function notePlace(
+  note: Pick<Note, 'lines' | 'from' | 'to' | 'side'>,
+  lines: string[],
+  outdated: boolean,
+): { from: number; to: number; outdated: boolean } | null {
+  const at = locate(note, lines);
+  if (at) return { ...at, outdated: false };
+  if (!outdated || note.side !== 'new') return null;
+  const last = Math.max(1, lines.length);
+  return { from: Math.min(note.from, last), to: Math.min(note.to, last), outdated: true };
+}
+
 /** A note is closed when resolved by hand or outdated; closed notes are listed (and copied) only
- * with Show Resolved, and never shown in the diff when outdated. */
+ * with Show Resolved, and shown in the diff where they were written when outdated. */
 export function isClosed(note: Note, outdated: boolean): boolean {
   return note.resolved || outdated;
 }

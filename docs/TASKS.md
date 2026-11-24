@@ -486,6 +486,7 @@ it was done within a topic.
 - [x] Notes in a folded region (Changes only): the fold's bar shows their count on its right, which opens the first; opening a note from the Notes popover unfolds its region — 2026-11-23
 - [x] A note whose file the whole review does not change (no commits of its own, as `master` once pushed, or they leave the file alone) opens in Uncommitted when it changes the file, else in the file's history — 2026-11-23
 - [x] Review's list column can be hidden (⌥⌘B, its edge dragged in): a 36px rail stays with a dot for Changes and each of the branch's own commits, their files in a popover on hover; remembered on this machine. The file bar shows the file's place among the row's files (3/13) before its path — 2026-11-23
+- [x] An outdated note shows in the diff (with Show Resolved) under the line it was written on, its card dimmed with an "outdated" pill and the lines it was written on; opening it from the Notes popover scrolls to it — 2026-11-24
 
 ### Git actions
 - [x] Stashes after T19.4: the stash pane's Apply / Pop go straight to the worktree

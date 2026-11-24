@@ -10,7 +10,7 @@ import { Popover } from '../components/Popover';
 import { getBlame, getRemoteUrl, openRemoteLink, readFilePair } from '../lib/ipc';
 import { t } from '../i18n';
 import { useEffectiveTheme } from '../lib/theme';
-import { locate, textLines } from '../lib/notes';
+import { notePlace, textLines } from '../lib/notes';
 import type { DiffContext, DiffLayout, DiffMode, FileChange, Note } from '../lib/types';
 import { useInvoke } from '../lib/useInvoke';
 import { ImageDiff } from './ImageDiff';
@@ -94,11 +94,14 @@ export interface LineStage {
 }
 
 /** Notes on the file's lines (SPEC §5 Review "Notes"): each sits in a view zone under the last
- * of its lines where the side shown still has them; resolved ones only with `showResolved`. */
+ * of its lines where the side shown still has them; resolved ones only with `showResolved`, and
+ * outdated ones (with it) under the line they were written on. */
 export interface DiffNotes {
   /** The branch's notes on this file. */
   list: Note[];
   showResolved: boolean;
+  /** The notes the branch's file no longer has the lines of. */
+  outdated: ReadonlySet<string>;
   onAdd: (note: Pick<Note, 'path' | 'side' | 'from' | 'to' | 'lines' | 'text'>) => void;
   onEdit: (id: string, text: string) => void;
   onResolve: (id: string, resolved: boolean) => void;
@@ -643,12 +646,13 @@ export function DiffView({
   const [litNote, setLitNote] = useState<string | null>(null);
   useEffect(() => setDraft(null), [fileKey]);
   const sideLines = useMemo(() => ({ old: textLines(shown.original), new: textLines(shown.modified) }), [shown]);
-  /** Each note where the side shown has its lines (an outdated one, nowhere). */
+  /** Each note where the side shown has its lines; an outdated one (with Show Resolved) where it
+   * was written. */
   const placed = useMemo(() => {
     if (!notesOn || !notes) return [];
     return notes.list.flatMap((note) => {
       if ((note.resolved && !notes.showResolved) || draft?.editId === note.id) return [];
-      const at = locate(note, sideLines[note.side]);
+      const at = notePlace(note, sideLines[note.side], notes.showResolved && notes.outdated.has(note.id));
       return at ? [{ note, ...at }] : [];
     });
   }, [notesOn, notes, sideLines, draft?.editId]);
@@ -726,7 +730,8 @@ export function DiffView({
     z.ed.changeViewZones((acc) => acc.layoutZone(z.id));
   };
 
-  // The lines a note covers have accent numbers; the lines of the note being written are tinted.
+  // The lines a note covers have accent numbers (an outdated one covers none); the lines of the
+  // note being written are tinted.
   const noteDeco = useRef<monaco.editor.IEditorDecorationsCollection[]>([]);
   useEffect(() => {
     const [orig, mod] = noteDeco.current;
@@ -737,7 +742,7 @@ export function DiffView({
     });
     const of = (side: Note['side']) => [
       ...placed
-        .filter((p) => p.note.side === side)
+        .filter((p) => p.note.side === side && !p.outdated)
         .map((p) => lineDeco(p.from, p.to, p.note.id === litNote ? 'gg-note-draft' : '')),
       ...(notesOn && draft && draft.side === side ? [lineDeco(draft.from, draft.to, 'gg-note-draft')] : []),
     ];
@@ -904,6 +909,7 @@ export function DiffView({
         to={p.to}
         text={p.note.text}
         resolved={p.note.resolved}
+        outdated={p.outdated ? p.note.lines : null}
         onResolve={() => notes.onResolve(p.note.id, !p.note.resolved)}
         onEdit={() => setDraft({ side: p.note.side, from: p.from, to: p.to, editId: p.note.id, text: p.note.text })}
         onDelete={() => notes.onDelete(p.note.id)}

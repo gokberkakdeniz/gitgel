@@ -74,6 +74,23 @@
   outline-offset: -2px;
 }
 
+/* An outdated note's lines as they were written. */
+.quote {
+  margin: 2px 0 4px;
+  padding: 4px 8px;
+  max-height: 120px;
+  overflow: auto;
+  background: var(--bg-sunken);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--text-muted);
+  white-space: pre;
+  user-select: text;
+  cursor: text;
+}
+
 .text {
   margin: 0;
   font-size: 13px;

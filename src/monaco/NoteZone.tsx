@@ -11,12 +11,14 @@ export function rangeLabel(from: number, to: number): string {
 }
 
 /** A saved note under its last line (SPEC §5 Review "Notes"): its lines and text; on hover
- * Resolve (Unresolve), Edit Note and Delete Note. */
+ * Resolve (Unresolve), Edit Note and Delete Note. An outdated one quotes the lines it was
+ * written on. */
 export function NoteCard({
   from,
   to,
   text,
   resolved,
+  outdated,
   onResolve,
   onEdit,
   onDelete,
@@ -26,6 +28,8 @@ export function NoteCard({
   to: number;
   text: string;
   resolved: boolean;
+  /** Outdated: the lines it was written on. */
+  outdated: string[] | null;
   onResolve: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -44,7 +48,7 @@ export function NoteCard({
   return (
     // Focusable (a click on it lights its lines), but not a tab stop of its own.
     <div
-      className={`${styles.card} ${resolved ? styles.resolved : ''}`}
+      className={`${styles.card} ${resolved || outdated ? styles.resolved : ''}`}
       tabIndex={-1}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
@@ -56,10 +60,16 @@ export function NoteCard({
       <div className={styles.head}>
         <NoteIcon size={13} className={styles.icon} />
         <span className={styles.range}>{rangeLabel(from, to)}</span>
-        {resolved && (
-          <Pill tone="neutral" size="sm">
-            {t('notes.resolved')}
+        {outdated ? (
+          <Pill tone="warning" size="sm">
+            {t('notes.outdated')}
           </Pill>
+        ) : (
+          resolved && (
+            <Pill tone="neutral" size="sm">
+              {t('notes.resolved')}
+            </Pill>
+          )
         )}
         <span className={styles.grow} />
         <span className={styles.actions}>
@@ -92,6 +102,7 @@ export function NoteCard({
           </button>
         </span>
       </div>
+      {outdated && <pre className={styles.quote}>{outdated.join('\n')}</pre>}
       <p className={styles.text}>{text}</p>
     </div>
   );

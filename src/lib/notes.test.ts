@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { copyText, folderLeads, locate, noteReference, sortNotes } from './notes';
+import { copyText, folderLeads, locate, notePlace, noteReference, sortNotes } from './notes';
 import type { Note } from './types';
 
 const note = (over: Partial<Note>): Note => ({
@@ -24,6 +24,28 @@ describe('locate', () => {
   });
   it('is null once the text is gone', () => {
     expect(locate(note({ lines: ['gone'] }), ['a', 'b'])).toBeNull();
+  });
+});
+
+describe('notePlace', () => {
+  it('is where the lines are, outdated or not', () => {
+    expect(notePlace(note({ from: 1, lines: ['b'] }), ['a', 'b'], true)).toEqual({ from: 2, to: 2, outdated: false });
+  });
+  it('keeps an outdated note where it was written, within the file', () => {
+    expect(notePlace(note({ from: 2, to: 3, lines: ['gone', 'too'] }), ['a', 'b', 'c'], true)).toEqual({
+      from: 2,
+      to: 3,
+      outdated: true,
+    });
+    expect(notePlace(note({ from: 8, to: 9, lines: ['gone'] }), ['a', 'b'], true)).toEqual({
+      from: 2,
+      to: 2,
+      outdated: true,
+    });
+  });
+  it('is nowhere when the lines are missing but the note is not outdated', () => {
+    expect(notePlace(note({ lines: ['gone'] }), ['a'], false)).toBeNull();
+    expect(notePlace(note({ side: 'old', lines: ['gone'] }), ['a'], true)).toBeNull();
   });
 });
 

@@ -1006,10 +1006,14 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const branchNotes = useData((s) => (entry ? s.notes[entry.key] : undefined));
   const noteCount = (p: string) =>
     (branchNotes ?? []).filter(
-      (n) => n.path === p && notePlaces.get(n.id) !== null && (!n.resolved || notesList.showResolved),
+      (n) => n.path === p && (notesList.showResolved || (notePlaces.get(n.id) !== null && !n.resolved)),
     ).length;
   const [noteReveal, setNoteReveal] = useState<{ id: string; seq: number } | null>(null);
-  const diffNotes = useDiffNotes(stash || !entry ? null : entry.key, file?.path ?? null, noteReveal);
+  const outdatedNotes = useMemo(
+    () => new Set([...notePlaces].flatMap(([id, at]) => (at === null ? [id] : []))),
+    [notePlaces],
+  );
+  const diffNotes = useDiffNotes(stash || !entry ? null : entry.key, file?.path ?? null, noteReveal, outdatedNotes);
   const goNote = (note: { id: string; path: string }, e: NotesEntry) => {
     useNoteJump.getState().go({ key: e.key, noteId: note.id, path: note.path });
     if (project && e.key !== entry?.key) project.onOpen(e.key);

@@ -54,7 +54,12 @@ function setNotesList(patch: Partial<NotesList>) {
 }
 
 /** The diff's notes for one file of a branch: add, edit, resolve, delete (Undo). */
-export function useDiffNotes(key: string | null, path: string | null, reveal: DiffNotes['reveal']): DiffNotes | null {
+export function useDiffNotes(
+  key: string | null,
+  path: string | null,
+  reveal: DiffNotes['reveal'],
+  outdated: DiffNotes['outdated'],
+): DiffNotes | null {
   const all = useData((s) => (key ? s.notes[key] : undefined));
   const list = useNotesList();
   return useMemo(() => {
@@ -64,6 +69,7 @@ export function useDiffNotes(key: string | null, path: string | null, reveal: Di
     return {
       list: mine,
       showResolved: list.showResolved,
+      outdated,
       reveal,
       onAdd: (n) => change((notes) => [...notes, { ...n, id: newNoteId(), createdAt: Date.now(), resolved: false }]),
       onEdit: (id, text) => change((notes) => notes.map((x) => (x.id === id ? { ...x, text } : x))),
@@ -87,7 +93,7 @@ export function useDiffNotes(key: string | null, path: string | null, reveal: Di
         });
       },
     };
-  }, [key, path, all, list.showResolved, reveal]);
+  }, [key, path, all, list.showResolved, reveal, outdated]);
 }
 
 /** Where each note of a branch is in its files now (null: outdated). Notes on removed lines

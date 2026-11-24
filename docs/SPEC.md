@@ -1017,9 +1017,12 @@ column hidden (`ReviewRail.dc.html`, tweak `list`).
     edge as its unfold icon is from the left (`note` 12 + the number, mono 11 `accent.text`, 18px,
     hover `bg.pressed`, tooltip "N notes"); clicking it opens the region's first note.
   - **Outdated**: the branch's file as it is now (the worktree when checked out, else the branch
-    tip; `get_note_files`) no longer has the lines: listed only, never in the diff. Notes on
-    removed lines never turn outdated. **Resolved**: by hand (Resolve on the card). Resolved and
-    outdated notes count as closed.
+    tip; `get_note_files`) no longer has the lines. A diff side without them shows it (with Show
+    Resolved) under the line it was written on (the file's last when shorter), no line numbers
+    marked: the card at 70% opacity with a warning sm "outdated" pill and, above its text, the
+    lines it was written on (mono 12/18 muted, `bg.sunken`, radius 6, padding 4px 8px, at most
+    120px tall). Notes on removed lines never turn outdated. **Resolved**: by hand (Resolve on the
+    card). Resolved and outdated notes count as closed.
   - **Writing**: select lines (any selection takes the lines it touches; one ending at the start
     of a line leaves that line out; Monaco's line numbers pick whole lines) and, once the mouse
     button is up (at once for a keyboard selection), a toolbar shows on the right of that side
