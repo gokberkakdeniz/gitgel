@@ -86,7 +86,9 @@
   font-size: 12px;
   line-height: 18px;
   color: var(--text-muted);
-  white-space: pre;
+  /* Long lines wrap: a horizontal scrollbar would cover the last line. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   user-select: text;
   cursor: text;
 }

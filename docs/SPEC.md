@@ -1020,8 +1020,8 @@ column hidden (`ReviewRail.dc.html`, tweak `list`).
     tip; `get_note_files`) no longer has the lines. A diff side without them shows it (with Show
     Resolved) under the line it was written on (the file's last when shorter), no line numbers
     marked: the card at 70% opacity with a warning sm "outdated" pill and, above its text, the
-    lines it was written on (mono 12/18 muted, `bg.sunken`, radius 6, padding 4px 8px, at most
-    120px tall). Notes on removed lines never turn outdated. **Resolved**: by hand (Resolve on the
+    lines it was written on (mono 12/18 muted, wrapped, `bg.sunken`, radius 6, padding 4px 8px,
+    at most 120px tall). Notes on removed lines never turn outdated. **Resolved**: by hand (Resolve on the
     card). Resolved and outdated notes count as closed.
   - **Writing**: select lines (any selection takes the lines it touches; one ending at the start
     of a line leaves that line out; Monaco's line numbers pick whole lines) and, once the mouse
