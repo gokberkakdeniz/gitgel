@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.11 — 2026-11-24
+
+### Fixed
+- Review shows an outdated note under the line it was written on.
+- A note opened from the Notes popover stays in view.
+- A note in a fold shows as soon as the fold opens.
+- Review opens a note's file after another note opened a file history.
+
 ## 0.2.10 — 2026-11-23
 
 ### New
