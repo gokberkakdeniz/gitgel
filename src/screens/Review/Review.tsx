@@ -1265,6 +1265,12 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const jumped = useRef(0);
   useEffect(() => {
     if (!noteJump || !entry || noteJump.key !== entry.key || noteJump.seq === jumped.current || !data) return;
+    // A search (another note's file history) lists only its commits: clear it, and go on once the
+    // branch's own list is back.
+    if (search) {
+      searchNow('');
+      return;
+    }
     const seq = noteJump.seq;
     jumped.current = seq;
     const p = noteJump.path;
