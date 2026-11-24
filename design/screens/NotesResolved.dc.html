@@ -17,7 +17,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  // Show Resolved on: a resolved note stays in the diff, dimmed, with a resolved pill and Unresolve; outdated ones are only listed.
+  // Show Resolved on: a resolved note stays in the diff, dimmed, with a resolved pill and Unresolve.
   renderVals() { return { theme: this.props.theme || 'dark' }; }
 }
 </script>
