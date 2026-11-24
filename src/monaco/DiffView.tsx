@@ -307,6 +307,8 @@ export function DiffView({
   );
 
   // ---- Changes (hunks), the current one, jumping (flow D4) ----
+  /** The file the view last landed on (its first or last change). */
+  const [landed, setLanded] = useState<string | null>(null);
   const nav = useRef({
     hunks: [] as Hunk[],
     index: null as number | null,
@@ -417,6 +419,7 @@ export function DiffView({
       n.index = null;
       if (n.hunks.length > 0) goTo(where === 'last' ? n.hunks.length - 1 : 0);
       else report();
+      setLanded(wanted);
     } else {
       // Same file, new content (or new folds): keep the place.
       if (n.index !== null) n.index = n.hunks.length ? Math.min(n.index, n.hunks.length - 1) : null;
@@ -875,17 +878,18 @@ export function DiffView({
     });
   };
 
-  // Popover's notes open their file at them (once per `seq`), after the view lands.
+  // Popover's notes open their file at them (once per `seq`), after the view lands: landing goes
+  // to the first change and folds the file again, which would hide a note opened before it.
   const revealed = useRef(0);
   useEffect(() => {
     const r = notes?.reveal;
-    if (!r || r.seq === revealed.current) return;
+    if (!r || r.seq === revealed.current || landed !== fileKey) return;
     const z = zones.find((x) => x.key === r.id);
     if (!z) return;
     revealed.current = r.seq;
     window.setTimeout(() => openZone(z), 120);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zones, notes?.reveal]);
+  }, [zones, notes?.reveal, landed, fileKey]);
 
   const zoneBody = (z: PlacedZone): ReactNode => {
     if (z.key === 'draft') {
