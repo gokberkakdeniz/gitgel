@@ -727,6 +727,9 @@ export function DiffView({
     setZones(next);
   }, [specKey, editorOn]);
   const fitZone = (z: PlacedZone, height: number) => {
+    // A card not on screen (its zone in a fold) measures 0: keep its last height, so the zone has
+    // room, and Monaco draws it, once the fold opens.
+    if (height <= 0) return;
     zoneHeights.current.set(z.key, height);
     if (Math.abs((z.zone.heightInPx ?? 0) - height) < 1) return;
     z.zone.heightInPx = height;
@@ -874,6 +877,8 @@ export function DiffView({
     z.ed.setPosition({ lineNumber: line, column: 1 });
     requestAnimationFrame(() => {
       z.ed.setScrollTop(Math.max(0, z.ed.getTopForLineNumber(z.after) - z.ed.getLayoutInfo().height / 3));
+      // The fold just opened: draw its zones now, not on the next scroll.
+      z.ed.render(true);
       window.setTimeout(() => (nav.current.jumping = false), 80);
     });
   };
