@@ -102,7 +102,11 @@ export function NoteCard({
           </button>
         </span>
       </div>
-      {outdated && <pre className={styles.quote}>{outdated.join('\n')}</pre>}
+      {outdated && (
+        <div className={styles.quoteBox}>
+          <pre className={styles.quote}>{outdated.join('\n')}</pre>
+        </div>
+      )}
       <p className={styles.text}>{text}</p>
     </div>
   );

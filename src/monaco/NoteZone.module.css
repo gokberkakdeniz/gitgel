@@ -74,9 +74,15 @@
   outline-offset: -2px;
 }
 
-/* An outdated note's lines as they were written. */
-.quote {
+/* An outdated note's lines as they were written; long lines scroll sideways. In a block of its
+   own: as a flex item its height would leave out the scrollbar, which then covers the text. */
+.quoteBox {
   margin: 2px 0 4px;
+  min-width: 0;
+}
+
+.quote {
+  margin: 0;
   padding: 4px 8px;
   max-height: 120px;
   overflow: auto;
@@ -86,9 +92,7 @@
   font-size: 12px;
   line-height: 18px;
   color: var(--text-muted);
-  /* Long lines wrap: a horizontal scrollbar would cover the last line. */
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  white-space: pre;
   user-select: text;
   cursor: text;
 }
