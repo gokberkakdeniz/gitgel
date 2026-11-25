@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>X1 · Delete orphan branches</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',-apple-system,sans-serif;background:#141311;color:#d8d4cc}
+a{color:var(--accent-text,#7fb3c4);text-decoration:none}a:hover{color:var(--accent-hover,#a3cad6)}
+button,input{font-family:inherit}
+.theme-dark{--bg-main:#141311;--bg-sunken:#1a1917;--bg-elevated:#211f1c;--bg-track:#211f1c;--bg-hover:#2a2825;--bg-pressed:#383631;--border:#302e2a;--border-row:#262420;--border-strong:#383631;--text-strong:#faf9f5;--text-code:#e0ddd6;--text-body:#d8d4cc;--text-muted:#a09d96;--text-faint:#75726b;--accent:#4f8fa3;--accent-text:#7fb3c4;--accent-hover:#a3cad6;--on-accent:#141311;--accent-rgb:79,143,163;--success:#8fcf9c;--success-rgb:93,184,114;--danger:#ee9a90;--shadow:rgba(0,0,0,0.5);--scrim:rgba(0,0,0,0.5)}
+.theme-light{--bg-main:#fbfaf7;--bg-sunken:#f4f2ee;--bg-elevated:#ffffff;--bg-track:#e9e6e0;--bg-hover:#ebe8e1;--bg-pressed:#ffffff;--border:#e2ded6;--border-row:#ebe8e2;--border-strong:#d5d0c7;--text-strong:#1d1c19;--text-code:#2b2925;--text-body:#3b3934;--text-muted:#6e6a62;--text-faint:#99958c;--accent:#3a7b8f;--accent-text:#2c6a7d;--accent-hover:#1f5566;--on-accent:#ffffff;--accent-rgb:58,123,143;--success:#2e7a45;--success-rgb:46,140,78;--danger:#b3463b;--shadow:rgba(40,32,20,0.18);--scrim:rgba(30,26,20,0.28)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="width: 1280px; height: 800px; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg-main); overflow: hidden; font-size: 13px; font-family: 'Instrument Sans', -apple-system, sans-serif; color: var(--text-body)">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 800px">
+<dc-import name="Main" theme="{{themeName}}" popover="none" hint-size="1280px,800px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+<div role="dialog" aria-label="Delete Orphan Branches" style="position: relative; margin-top: 110px; width: 560px; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow)">
+<dc-import name="ModalHeader" theme="none" title="Delete Orphan Branches" sub="web-app" sub-mono="{{true}}" hint-size="100%,76px"></dc-import>
+
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+<div style="min-height: 96px; display: flex; align-items: center; justify-content: center; padding: 0 24px 20px; font-size: 13px; color: var(--text-muted)">No orphan branches</div>
+</sc-if>
+
+<sc-if value="{{hasRows}}" hint-placeholder-val="{{true}}">
+<div style="padding: 0 24px 20px">
+<div style="display: flex; flex-direction: column; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 12px; overflow: hidden">
+<div style="height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--border-row); font-size: 12px; color: var(--text-muted)">
+<span aria-hidden="true" style="width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: var(--accent)"><span style="width: 8px; height: 2px; border-radius: 1px; background: var(--on-accent)"></span></span>
+<span>6 branches</span>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<label style="{{r.rowStyle}}">
+<dc-import name="Checkbox" theme="none" label="" aria-label="{{r.name}}" checked="{{r.checked}}" hint-size="16px,16px"></dc-import>
+<span title="{{r.name}}" style="flex-grow: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-strong)">{{r.name}}</span>
+<dc-import name="Pill" theme="none" label="{{r.reason}}" tone="{{r.tone}}" size="sm" hint-size="52px,16px"></dc-import>
+<span style="width: 34px; flex-shrink: 0; text-align: right; font-size: 12px; color: var(--text-muted)">{{r.age}}</span>
+</label>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<dc-import name="ModalFooter" theme="none" note="{{footerNote}}" buttons="{{footerButtons}}" hint-size="100%,64px"></dc-import>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"case":{"editor":"enum","options":["list","empty"],"default":"list"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+// Delete Orphan Branches… (a repo band's ⋮, the last item, danger): the repo's local branches
+// whose upstream is gone ("gone": its remote branch was deleted and a fetch pruned it) or that
+// are merged into the base ("merged"), newest commit first. Never the base branch, a checked-out
+// branch or another branch's hand-picked base. Every row starts checked; the header box checks or
+// clears all (a dash while some are checked). The footer counts the checked ones; Delete Branches
+// deletes them in one run ("Deleted 5 branches"). Nothing found: "No orphan branches" and Close.
+// list: one row unchecked (spike/graphql-client). empty: none found.
+var theme = this.props.theme ?? 'dark';
+var empty = this.props.case === 'empty';
+var data = [
+  ['fix/login-redirect', 'gone', '12d', true],
+  ['feat/billing-v1', 'merged', '3w', true],
+  ['chore/bump-eslint', 'gone', '1mo', true],
+  ['feat/search-filters', 'merged', '2mo', true],
+  ['spike/graphql-client', 'gone', '4mo', false],
+  ['fix/session-timeout', 'merged', '5mo', true]
+];
+return {
+  themeClass: 'theme-' + theme, themeName: theme,
+  isEmpty: empty,
+  hasRows: !empty,
+  rows: data.map(function (d, i) {
+    return {
+      name: d[0], reason: d[1], tone: d[1] === 'gone' ? 'neutral' : 'success', age: d[2], checked: d[3],
+      rowStyle: 'height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 12px; cursor: pointer' + (i < data.length - 1 ? '; border-bottom: 1px solid var(--border-row)' : '')
+    };
+  }),
+  footerNote: empty ? '' : '5 selected',
+  footerButtons: empty ? [{ label: 'Close' }] : [{ label: 'Cancel' }, { label: 'Delete Branches', variant: 'danger' }]
+};
+}
+}
+</script>
+</body>
+</html>
