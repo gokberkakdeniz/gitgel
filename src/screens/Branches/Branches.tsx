@@ -491,7 +491,7 @@ function RepoSection({
         >
           <PinIcon size={13} />
         </IconButton>
-        {opens ? (
+        {opens && (
           <IconButton
             ref={menuButton}
             size={24}
@@ -503,8 +503,6 @@ function RepoSection({
           >
             <MoreVerticalIcon size={13} />
           </IconButton>
-        ) : (
-          <span className={styles.bandMenuGap} />
         )}
       </div>
       {menuAt && (

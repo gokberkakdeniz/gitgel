@@ -686,7 +686,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     focus, and always on a pinned band, where it is `accent.text`. Pins are kept in the config
     (`pinnedRepos`); removing a repo drops its pin.
   - **Band menu**: last, in the ⋮ column, a 24px vertical "⋮" button (`aria-label` "Repository
-    options"), always shown; a repo that does not open keeps its place empty. While its menu or
+    options"), always shown, for a repo that opens (none otherwise). While its menu or
     New Branch is open it is `bg.pressed`. Right-clicking the band opens the menu at the pointer. A
     230px menu, right-aligned under the button, icons as §4 `Menu`:
     "New Branch…" (`plus`; opens New Branch under the ⋮, §15 "New branch", flow V; only for a

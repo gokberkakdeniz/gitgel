@@ -195,10 +195,8 @@
   visibility: hidden;
 }
 
-/* The band's ⋮, in the ⋮ column: always shown; a repo that does not open keeps its place empty. */
-.bandMenu,
-.bandMenuGap {
-  width: 24px;
+/* The band's ⋮, last: always shown, for a repo that opens. */
+.bandMenu {
   flex-shrink: 0;
 }
 
