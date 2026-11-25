@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.12 — 2026-11-25
+
+### Changed
+- Branches: New Branch, Fetch and Pin to Top are in the repo band's menu.
+
+### New
+- Delete Orphan Branches in Branches' repo band menu.
+
 ## 0.2.11 — 2026-11-24
 
 ### Fixed
