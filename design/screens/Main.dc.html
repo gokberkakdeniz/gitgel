@@ -38,9 +38,9 @@ button,input{font-family:inherit}
 <span style="font-size: 15px; font-weight: 600; color: var(--text-strong)">{{repo.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{repo.path}}</span>
 </button>
-<button type="button" aria-label="Repository Options" aria-haspopup="menu" aria-expanded="{{repo.menuOpen}}" style="{{repo.menuStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button>
 <span title="{{repo.countTitle}}" style="margin-right: -2px; font-size: 12px; color: var(--text-muted)">{{repo.count}}</span>
 <button type="button" aria-label="{{repo.pinLabel}}" aria-pressed="{{repo.pinned}}" title="{{repo.pinTitle}}" style="{{repo.pinStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-3 4v1h10v-1l-3-4V3M12 14v7"></path></svg></button>
+<button type="button" aria-label="Repository Options" aria-haspopup="menu" aria-expanded="{{repo.menuOpen}}" style="{{repo.menuStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button>
 </div>
 <sc-if value="{{repo.open}}" hint-placeholder-val="{{true}}">
 <sc-for list="{{repo.rows}}" as="row" hint-placeholder-count="2">
@@ -122,7 +122,7 @@ button,input{font-family:inherit}
 </sc-if>
 
 <sc-if value="{{showBandMenu}}" hint-placeholder-val="{{false}}">
-<div style="position: absolute; top: 149px; right: 78px">
+<div style="position: absolute; top: 149px; right: 26px">
 <dc-import name="Menu" theme="{{themeName}}" width="230" label="Repository Options" items="{{bandMenuItems}}" hint-size="230px,140px"></dc-import>
 </div>
 </sc-if>
@@ -339,10 +339,10 @@ class Component extends DCLogic {
         pinned: g.pinned,
         pinLabel: g.pinned ? 'Unpin ' + g.name : 'Pin ' + g.name + ' to top',
         pinTitle: g.pinned ? 'Unpin' : 'Pin to top',
-        // The band's ⋮ (New Branch…, Fetch, Delete Orphan Branches…): shows on the hovered band,
-        // drawn on the first; pressed while its menu or New Branch (opened from it) is open.
+        // The band's ⋮ (New Branch…, Fetch, Delete Orphan Branches…), always shown, last after the
+        // count and the pin; pressed while its menu or New Branch (opened from it) is open.
         menuOpen: i === 0 && (newOpen || bandMenu),
-        menuStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; cursor: pointer; ' + (i === 0 && (newOpen || bandMenu) ? 'background: var(--bg-pressed); color: var(--text-strong)' : 'background: transparent; color: var(--text-muted)') + (i === 0 ? '' : '; visibility: hidden'),
+        menuStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; cursor: pointer; ' + (i === 0 && (newOpen || bandMenu) ? 'background: var(--bg-pressed); color: var(--text-strong)' : 'background: transparent; color: var(--text-muted)'),
         pinStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: ' + (g.pinned ? 'var(--accent-text)' : 'var(--text-muted); visibility: hidden'),
         chevronStyle: 'stroke: var(--text-muted); flex-shrink: 0' + (g.collapsed ? '; transform: rotate(-90deg)' : '')
       };
