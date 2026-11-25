@@ -10,6 +10,10 @@ a task in `docs/TASKS.md` (or is dropped) and leaves this file.
   (a commit running or mid-operation), Discard All Changes (no files), Stash All Changes
   (nothing to stash), Project's missing-folder item, History's item disabled without a scan.
   Proposal: keep the first group disabled, leave out the second.
+- **Slow scans of a large repository** (2026-11-25). A 19-worktree monorepo takes 43–59 s on
+  the first scan after launch (worktree status read one by one, stash changes recomputed) and
+  ~2 s on every scan after it (upstream comparison not cached). Analysis and options:
+  `docs/SCAN-PERFORMANCE.md`.
 - **Tags after pushing** (2026-11-21; pushing one is T28.1). Fetch brings only the tags on the
   commits it fetches and keeps a tag the remote deleted (no `--prune-tags`); pushing every tag
   at once (`git push --tags`) does not exist.
