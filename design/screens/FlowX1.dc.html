@@ -26,6 +26,12 @@ button,input{font-family:inherit}
 <div role="dialog" aria-label="Delete Orphan Branches" style="position: relative; margin-top: 110px; width: 560px; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px var(--shadow)">
 <dc-import name="ModalHeader" theme="none" title="Delete Orphan Branches" sub="web-app" sub-mono="{{true}}" hint-size="100%,76px"></dc-import>
 
+<sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+<div role="status" aria-label="Finding orphan branches" style="min-height: 96px; display: flex; align-items: center; justify-content: center; padding: 0 24px 20px; color: var(--text-muted)">
+<dc-import name="Icon" icon="spinner" size="16" hint-size="16px,16px"></dc-import>
+</div>
+</sc-if>
+
 <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
 <div style="min-height: 96px; display: flex; align-items: center; justify-content: center; padding: 0 24px 20px; font-size: 13px; color: var(--text-muted)">No orphan branches</div>
 </sc-if>
@@ -53,7 +59,7 @@ button,input{font-family:inherit}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"case":{"editor":"enum","options":["list","empty"],"default":"list"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"case":{"editor":"enum","options":["list","loading","empty"],"default":"list"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
 renderVals() {
 // Delete Orphan Branches… (a repo band's ⋮, the last item, danger): the repo's local branches
@@ -62,9 +68,12 @@ renderVals() {
 // branch or another branch's hand-picked base. Every row starts checked; the header box checks or
 // clears all (a dash while some are checked). The footer counts the checked ones; Delete Branches
 // deletes them in one run ("Deleted 5 branches"). Nothing found: "No orphan branches" and Close.
-// list: one row unchecked (spike/graphql-client). empty: none found.
+// While it reads (it is worked out each time the modal opens): a 16px spinner in place of the list
+// and only Close. list: one row unchecked (spike/graphql-client). loading: still reading. empty:
+// none found.
 var theme = this.props.theme ?? 'dark';
 var empty = this.props.case === 'empty';
+var loading = this.props.case === 'loading';
 var data = [
   ['fix/login-redirect', 'gone', '12d', true],
   ['feat/billing-v1', 'merged', '3w', true],
@@ -75,16 +84,17 @@ var data = [
 ];
 return {
   themeClass: 'theme-' + theme, themeName: theme,
+  isLoading: loading,
   isEmpty: empty,
-  hasRows: !empty,
+  hasRows: !empty && !loading,
   rows: data.map(function (d, i) {
     return {
       name: d[0], reason: d[1], tone: d[1] === 'gone' ? 'neutral' : 'success', age: d[2], checked: d[3],
       rowStyle: 'height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 12px; cursor: pointer' + (i < data.length - 1 ? '; border-bottom: 1px solid var(--border-row)' : '')
     };
   }),
-  footerNote: empty ? '' : '5 selected',
-  footerButtons: empty ? [{ label: 'Close' }] : [{ label: 'Cancel' }, { label: 'Delete Branches', variant: 'danger' }]
+  footerNote: empty || loading ? '' : '5 selected',
+  footerButtons: empty || loading ? [{ label: 'Close' }] : [{ label: 'Cancel' }, { label: 'Delete Branches', variant: 'danger' }]
 };
 }
 }
