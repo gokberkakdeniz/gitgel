@@ -796,4 +796,53 @@ it was done within a topic.
 
 ## Open
 
-No open tasks.
+### Phase 29 — Repo band menu
+
+#### T29.1 Repo band menu
+- **Depends on:** —
+- **Why:** user request 2026-11-25: the band's "+" and Fetch go into a kebab menu.
+- **Spec:** SPEC §5 Branches "Repo band" › "Band menu"; §15 "New branch", "Sync".
+- **Reference:** canvas page "Branch actions" / `Main.dc.html` repo band (update it first, see
+  CLAUDE.md, then copy the changed screens into `design/screens/`).
+- **Files:** `src/screens/Branches/Branches.tsx` (the band), `src/sync/NewBranch.tsx` (anchor),
+  i18n en + tr.
+- **Steps:**
+  1. Replace the band's "+" and Fetch buttons with the ⋮ button and its `Menu`; New Branch opens
+     anchored to the ⋮; right-click on the band opens the menu at the pointer.
+  2. The ⋮ stays visible while New Branch is open or the repo's fetch runs (the spinning icon is
+     gone; the toast shows the fetch).
+  3. Leave out "Delete Orphan Branches…" until T29.2.
+- **Acceptance:** the band shows only count and pin until hovered; ⋮ › New Branch… and Fetch do
+  what the buttons did, with the same disabled states; no "+" or download icon left on the band.
+
+#### T29.2 Delete orphan branches
+- **Depends on:** T29.1
+- **Why:** user request 2026-11-25: clear the left-over local branches of a repo (one repo here
+  has 1429 local branches outside the active list, `docs/SCAN-PERFORMANCE.md`). No lost-commit
+  count (user decision).
+- **Spec:** SPEC §15 "Delete orphan branches"; §5 "Band menu"; §7 flow X; API table
+  `get_orphan_branches`, `git_delete_branches`.
+- **Reference:** `FlowX1.dc.html` (new; draw it on the canvas page "Branch actions" first).
+- **Files:** `src-tauri/src/git/refs.rs` (`orphans`), `src-tauri/src/scripts/git.rs`
+  (`git:delete-branches`, built like `git:delete-branch`), commands + `model.rs`,
+  `src/sync/DeleteOrphans.tsx`, the band menu, i18n en + tr.
+- **Steps:**
+  1. `refs::orphans`: walk local branches once; "gone" from the configured upstream (named
+     remote only); "merged" with the same ahead / squash check the entry state uses, against the
+     repo's base. Skip base, checked-out (any worktree), hand-picked bases of other branches, an
+     operation in progress. Must stay fast on ~1500 branches: reuse the scan's merged / squash
+     cache where it applies.
+  2. `git_delete_branches`: one `GITGEL_BRANCH_<n>` variable per branch; re-check tips and
+     checkouts before running and leave out the ones that changed; drop their notes and URL
+     tracking refs as Delete Branch does.
+  3. The modal and its run; after it, `leaveDeletedBranch` for each deleted branch.
+  4. Tests: gone, merged, squash-merged, checked-out and base cases in a fixture repo; the
+     command line for several branches.
+- **Acceptance:** on a repo with gone and merged branches the modal lists exactly them with the
+  right pill; unchecking one keeps it; Delete Branches removes the rest in one run and the
+  toast counts them; a branch checked out meanwhile is not deleted.
+
+#### T29.3 ✋ Checkpoint — repo band menu
+- **Depends on:** T29.2
+- **Steps:** run the app; show the band menu and the orphan modal on a repo with gone and merged
+  branches (and the large one, for speed).
