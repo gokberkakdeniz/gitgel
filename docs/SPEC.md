@@ -236,7 +236,7 @@ gitgel/
 │  │            # OperationUi (operations in progress: pill, banner, Continue / Abort, T3 dialog);
 │  │            # DeleteBranch (the branch menus' Delete Branch… and its confirmation);
 │  │            # CheckoutBranch (the Sync group's Checkout Branch… and its dialog, flow V4);
-│  │            # NewBranch + branchDefaults.ts (a repo band's "+": New Branch, flow V)
+│  │            # NewBranch + branchDefaults.ts (a repo band's New Branch…, flow V)
 │  │            # DeleteOrphans (a repo band's Delete Orphan Branches…, flow X; planned, T29.2)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
@@ -685,8 +685,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     (tooltip "Pin to top" / "Unpin"). It shows while the band is hovered or the button has
     focus, and always on a pinned band, where it is `accent.text`. Pins are kept in the config
     (`pinnedRepos`); removing a repo drops its pin.
-  - **Band menu** (planned, T29.1; it replaces the band's "+" and Fetch buttons): before the
-    count, a 24px vertical "⋮" button (`aria-label` "Repository options"). It shows while the band
+  - **Band menu**: before the count, a 24px vertical "⋮" button (`aria-label` "Repository options"). It shows while the band
     is hovered, the button has focus, its menu or New Branch is open, or its fetch runs; while the
     menu is open it is `bg.pressed`. Right-clicking the band opens the menu at the pointer. A
     230px menu, right-aligned under the button, icons as §4 `Menu`:
@@ -1505,7 +1504,7 @@ open.
   as the script starts. When a script exits its repo is rescanned.
 - **O · Script inputs.** A script with inputs opens the run dialog first (O1, O2); one with
   "Ask before running" and nothing to fill in asks in a short confirmation (O3); ⌘↵ runs it.
-- **V · New branch.** A Branches repo band's "+" (its ⋮ › "New Branch…"; planned, T29.1) opens New Branch (V2, V3): a name, a base (the repo's
+- **V · New branch.** A Branches repo band's ⋮ › "New Branch…" opens New Branch (V2, V3): a name, a base (the repo's
   default) and where to check it out: a new worktree beside the repository (default), the
   repository folder (its uncommitted changes brought along or stashed) or nowhere. Create Branch
   runs as a git action; the new branch then shows in the band.
@@ -2391,7 +2390,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Screen | File | Key lines |
 |---|---|---|
 | Sidebar | `Sidebar.dc.html` | top row 20–35, nav 37–48, "Projects" header 50–60, list 62–77, footer 81–92 (repo row + "+" 82–88), row and footer styles 102–123 |
-| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 57–62 (its "+" 53), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
+| Branches | `Main.dc.html` | header 24–46 (scope selector 34–38), columns 50–52 (Diff 51), repo band 34–42 (its ⋮ 40, its menu: `bandMenu`), row 64–83 (checked-out icon 67–74, Diff cell 77, Projects cell 79, ⋯ button 81), row and cell styles 230–285 (row menu target 240–242, checked-out, sub and Diff values 275–283), filter logic 309–318 and 351–359, empty state 90–100, picker 102–115, new-project form 117–133, projects menu 135–151, row menu 153–164 and 341–350, toast 166–172, selection bar 173–186, drop overlay 189–196, sheet 198–222 and 364–373; `FlowK2.dc.html` (canvas page "Branch actions", K2): remote branches while filtering |
 | Review | `ReviewFocus.dc.html` (+ `ReviewBranch`, `ReviewBase`, `ReviewRebase`, `ReviewConflicts`, `ReviewStashes`, `ReviewRail`) | canvas page "Review": R1 the prototype (Play; tweaks in its `data-props`: `scope` project / branch / stashes, `focus`, `op`, `open`, `embedded`, `picked` (stash scope: every stash picked, the selection pane), `layout`, `list` (open / rail), `commitRows`, `branches`, `baseCommits`, `hooks`, `stageGit`, `theme`): header (search, sync group, ⋮ with Project / Branch parts), op banner, list column (branch head above the scrolling list, stacked hint, Uncommitted with Staged / Unstaged, commits, origin and base lines, base log), Stashes, Branches, commit form; pane headers, file bar and diff; R2–R7 mount it with a state set; W1–W12 (`Notes*.dc.html`, tweak `notes`) its notes on lines |
 | Project | `Projects.dc.html` | header 22–43, table 47–60 and 219–230, "add related" card 62–68, empty project 72–80, deleted-branch entry menu with icons, disabled open items and note 82–94, open-item entry menu 95–109 (`openMenu`: worktree / notCheckedOut / repoMissing, 140–145; items 177–188; note and position 211–215), project menu 110–116, delete modal 119–130, rename 173–202, pills 146–155 |
 | Palette | `Palette.dc.html` | dialog 25–56, row style 70–76, pills 62–69 |
@@ -2400,7 +2399,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Scripts | `FlowN4`, `FlowN6`, `FlowN7`, `FlowO1`, `FlowO2`, `FlowO3.dc.html`; `Main.dc.html` (`scripts`, `scriptRun`), `Settings.dc.html` (section `scripts`) | canvas flow N1–N7, O1–O3: menu group in Main's row menu data, run toast, output panel N4, Settings › Scripts list, editor N6 (popover tweak: icon / command / when), import N7, inputs O1–O2, ask O3 |
 | Stashes | `FlowP1`, `FlowP5.dc.html`, `ReviewStashes`, `ReviewConflicts` | canvas flow P: P1 Branches stash list (`List` with heading, `stashes…` data, menu), P5 worktree submenu beside Apply to (`FlowP5` mounts `FlowP1` with `picker`); Review's stash section, the stash stack (R6) and a merge conflict after Apply (R5) on the Review page |
 | Sync | `ReviewFocus.dc.html` | Review's header group Fetch / Pull / Push (the `sync` values in its logic), the origin line; the Branches menus' Sync group in `Main` |
-| New branch | `FlowV2.dc.html`, `FlowV3.dc.html` | canvas page "Branch actions": V2, the form under a repo band's "+", interactive (`case` worktree, checkout, branchOnly: the row picked first; `dirty`: the repository folder has changes); V3 mounts it with Repository folder picked; the "+" on the bands of `Main` (`newBranch` shows it open) |
+| New branch | `FlowV2.dc.html`, `FlowV3.dc.html` | canvas page "Branch actions": V2, the form under a repo band's ⋮, interactive (`case` worktree, checkout, branchOnly: the row picked first; `dirty`: the repository folder has changes); V3 mounts it with Repository folder picked; the ⋮ on the bands of `Main` (`newBranch` shows it pressed, `bandMenu` its menu open) |
 | Checkout branch | `FlowV4.dc.html` | canvas page "Branch actions": V4, the dialog over Branches, interactive (`case` repository, worktree, new: the row picked first; `remote`: from a Remote Branches row) |
 | Delete orphan branches (planned, T29.2) | `FlowX1.dc.html` | canvas page "Branch actions": X1, the modal over Branches (`case` list, empty); the band's ⋮ menu on `Main` (`bandMenu` shows it open) |
 | Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `ReviewFocus` (page menu) |
@@ -3119,7 +3118,7 @@ is refused when the worktree's HEAD is another commit by then.
 ### Sync (W4a)
 
 Fetch, Pull and Push of one branch: buttons in Review's header, and a group in the branch
-menus (Branches row, Project entry, Review entry); Fetch also on each Branches repo band (in its ⋮ menu; planned, T29.1). Review's header has none: it only shows where
+menus (Branches row, Project entry, Review entry); Fetch also in each Branches repo band's ⋮ menu. Review's header has none: it only shows where
 each branch stands. Each is a git action as above (`upload` icon; toast sub line `repo / branch`,
 `repo` for Fetch). Gitgel never fetches on its own, force-pushes only when asked ("Force push",
 `--force-with-lease`), and syncs one branch at a time.
@@ -3191,7 +3190,7 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
 
 ### New branch
 
-A Branches repo band's "+" (§5; its ⋮ › "New Branch…", planned, T29.1) opens it under the button (`sync/NewBranch.tsx`, `Popover`, 400px;
+A Branches repo band's ⋮ › "New Branch…" (§5) opens it under the ⋮ (`sync/NewBranch.tsx`, `Popover`, 400px;
 `FlowV2.dc.html`, V2; `FlowV3.dc.html`, V3). Esc or a click outside closes it.
 
 - **Form:** serif 18px "New Branch" with the repo's name beside it (mono 12px muted); "Name" (`Input` 32, mono, focused); "Base" (a field drawn

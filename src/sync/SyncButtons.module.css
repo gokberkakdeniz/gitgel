@@ -75,8 +75,3 @@
     transform: rotate(360deg);
   }
 }
-
-/* A repo's Fetch (Branches band) stays visible while it runs. */
-.running.running {
-  visibility: visible;
-}

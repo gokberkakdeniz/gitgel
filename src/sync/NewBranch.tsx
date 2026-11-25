@@ -4,8 +4,7 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button } from '../components/Button';
-import { IconButton } from '../components/IconButton';
-import { CheckIcon, ChevronDownIcon, Icon, PlusIcon } from '../components/icons';
+import { CheckIcon, ChevronDownIcon, Icon } from '../components/icons';
 import { Input } from '../components/Input';
 import { Popover } from '../components/Popover';
 import { t } from '../i18n';
@@ -30,29 +29,6 @@ const PROBLEM: Record<NewBranchProblem, string> = {
 
 type Where = NewBranchCheckout['kind'];
 const trimSlash = (p: string) => p.replace(/\/+$/, '');
-
-/** The band's "+": opens the New Branch form under it. Disabled while a git action runs. */
-export function NewBranchButton({ scan, className }: { scan: RepoScan; className?: string }) {
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const running = useGitActionRunning(scan.repo.id);
-  return (
-    <>
-      <IconButton
-        size={24}
-        aria-label={t('branches.newBranchIn', { repo: scan.name })}
-        title={running ? t('sync.gitBusy') : t('branches.newBranchIn', { repo: scan.name })}
-        disabled={running}
-        aria-haspopup="dialog"
-        aria-expanded={!!rect}
-        className={className}
-        onClick={(e) => setRect(e.currentTarget.getBoundingClientRect())}
-      >
-        <PlusIcon size={13} />
-      </IconButton>
-      {rect && <NewBranchForm scan={scan} anchorRect={rect} onClose={() => setRect(null)} />}
-    </>
-  );
-}
 
 /** The New Branch form. With `commit` (the commit menu's Create Branch from Commit…, SPEC §16) the
  * base is that commit and cannot be changed. */

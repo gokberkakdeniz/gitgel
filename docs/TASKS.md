@@ -390,6 +390,9 @@ rather than as a task is under "Done on request".
 - [x] T28.1 Push Tag — 2026-11-21
 - [x] T28.2 ✋ Checkpoint — phase 28 — 2026-11-21
 
+### Phase 29 — Repo band menu
+- [x] T29.1 Repo band menu — 2026-11-25
+
 ## Done on request
 
 Work asked for in chat rather than as a task, one line each, grouped by topic and in the order
@@ -797,23 +800,6 @@ it was done within a topic.
 ## Open
 
 ### Phase 29 — Repo band menu
-
-#### T29.1 Repo band menu
-- **Depends on:** —
-- **Why:** user request 2026-11-25: the band's "+" and Fetch go into a kebab menu.
-- **Spec:** SPEC §5 Branches "Repo band" › "Band menu"; §15 "New branch", "Sync".
-- **Reference:** canvas page "Branch actions" / `Main.dc.html` repo band (update it first, see
-  CLAUDE.md, then copy the changed screens into `design/screens/`).
-- **Files:** `src/screens/Branches/Branches.tsx` (the band), `src/sync/NewBranch.tsx` (anchor),
-  i18n en + tr.
-- **Steps:**
-  1. Replace the band's "+" and Fetch buttons with the ⋮ button and its `Menu`; New Branch opens
-     anchored to the ⋮; right-click on the band opens the menu at the pointer.
-  2. The ⋮ stays visible while New Branch is open or the repo's fetch runs (the spinning icon is
-     gone; the toast shows the fetch).
-  3. Leave out "Delete Orphan Branches…" until T29.2.
-- **Acceptance:** the band shows only count and pin until hovered; ⋮ › New Branch… and Fetch do
-  what the buttons did, with the same disabled states; no "+" or download icon left on the band.
 
 #### T29.2 Delete orphan branches
 - **Depends on:** T29.1

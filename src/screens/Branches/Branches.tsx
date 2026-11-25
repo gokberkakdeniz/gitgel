@@ -20,8 +20,8 @@ import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
 import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { conflictsTooltip, useGitActionRunning } from '../../sync/operation';
 import { OperationPill } from '../../sync/OperationUi';
-import { NewBranchButton } from '../../sync/NewBranch';
-import { RepoFetchButton, SyncItems } from '../../sync/SyncButtons';
+import { NewBranchForm } from '../../sync/NewBranch';
+import { RepoFetchItem, SyncItems, useRunningSync } from '../../sync/SyncButtons';
 import { openCheckout } from '../../sync/CheckoutBranch';
 import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
@@ -429,9 +429,28 @@ function RepoSection({
 }) {
   const pinned = config.pinnedRepos.includes(scan.repo.id);
   const remote = scan.active.find((e) => e.upstream)?.upstream?.remote ?? scan.remotes[0]?.name.split('/')[0];
+  const opens = scan.status === 'ok';
+  // The band's ⋮ menu (at the ⋮, or at the pointer on a right-click) and New Branch, opened from it
+  // under the ⋮.
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const [menuAt, setMenuAt] = useState<{ rect: DOMRect; atPointer: boolean } | null>(null);
+  const [newBranchAt, setNewBranchAt] = useState<DOMRect | null>(null);
+  const gitRunning = useGitActionRunning(scan.repo.id);
+  const fetching = useRunningSync(scan.repo.id) === 'git:fetch';
+  const menuOpen = !!menuAt || !!newBranchAt;
   return (
     <section id={`repo-${scan.repo.id}`} className={styles.section}>
-      <div className={flash ? `${styles.band} ${styles.flash}` : styles.band}>
+      <div
+        className={flash ? `${styles.band} ${styles.flash}` : styles.band}
+        onContextMenu={
+          opens
+            ? (ev) => {
+                ev.preventDefault();
+                setMenuAt({ rect: new DOMRect(ev.clientX, ev.clientY, 0, 0), atPointer: true });
+              }
+            : undefined
+        }
+      >
         <button
           type="button"
           className={styles.bandToggle}
@@ -447,9 +466,18 @@ function RepoSection({
           <span className={styles.repoName}>{scan.name}</span>
           <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
         </button>
-        {scan.status === 'ok' && <NewBranchButton scan={scan} className={styles.newBranch} />}
-        {scan.status === 'ok' && remote && (
-          <RepoFetchButton repoId={scan.repo.id} repoName={scan.name} remote={remote} className={styles.fetch} />
+        {opens && (
+          <IconButton
+            ref={menuButton}
+            size={24}
+            aria-label={t('branches.repoOptions')}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            className={menuOpen || fetching ? `${styles.bandMenu} ${styles.bandMenuOpen}` : styles.bandMenu}
+            onClick={(ev) => setMenuAt({ rect: ev.currentTarget.getBoundingClientRect(), atPointer: false })}
+          >
+            <MoreVerticalIcon size={13} />
+          </IconButton>
         )}
         {scan.status === 'missing' ? (
           <Pill tone="danger" onClick={() => openSettings('repositories')}>
@@ -477,6 +505,26 @@ function RepoSection({
           <PinIcon size={13} />
         </IconButton>
       </div>
+      {menuAt && (
+        <Popover anchorRect={menuAt.rect} width={230} alignRight={!menuAt.atPointer} onClose={() => setMenuAt(null)}>
+          <Menu aria-label={t('branches.repoOptions')} autoFocus>
+            <MenuItem
+              icon="plus"
+              disabled={gitRunning}
+              title={gitRunning ? t('sync.gitBusy') : undefined}
+              onSelect={() => {
+                setMenuAt(null);
+                const rect = menuButton.current?.getBoundingClientRect();
+                if (rect) setNewBranchAt(rect);
+              }}
+            >
+              {t('branches.newBranchItem')}
+            </MenuItem>
+            {remote && <RepoFetchItem repoId={scan.repo.id} repoName={scan.name} onDone={() => setMenuAt(null)} />}
+          </Menu>
+        </Popover>
+      )}
+      {newBranchAt && <NewBranchForm scan={scan} anchorRect={newBranchAt} onClose={() => setNewBranchAt(null)} />}
       {open &&
         rows.map((e) => (
           <Row

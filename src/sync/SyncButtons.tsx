@@ -1,5 +1,4 @@
 import { Icon, type IconName } from '../components/icons';
-import { IconButton } from '../components/IconButton';
 import { agoText, formatCount } from '../lib/format';
 import { t } from '../i18n';
 import { MenuDivider, MenuItem } from '../components/Menu';
@@ -21,7 +20,7 @@ import {
 } from './sync';
 
 /** The sync action running in the repository, if any (one git action at a time per repository). */
-function useRunningSync(repoId: string): string | null {
+export function useRunningSync(repoId: string): string | null {
   return useRuns(
     (s) =>
       Object.values(s.runs).find(
@@ -119,30 +118,21 @@ function SyncButton({
 }
 
 /** Fetch of a whole repository: a 24px button in its Branches band. Spins while it runs. */
-export function RepoFetchButton({
-  repoId,
-  repoName,
-  remote,
-  className,
-}: {
-  repoId: string;
-  repoName: string;
-  remote: string;
-  className?: string;
-}) {
+/** A repo band's ⋮ › Fetch (Branches): fetches the whole repository. */
+export function RepoFetchItem({ repoId, repoName, onDone }: { repoId: string; repoName: string; onDone: () => void }) {
   const running = useRunningSync(repoId);
-  const busy = running === 'git:fetch';
   return (
-    <IconButton
-      size={24}
-      aria-label={t('sync.fetchBtn')}
-      title={running && !busy ? t('sync.busy') : t('sync.fetchTitle', { repo: repoName, remote, fetch: '' })}
+    <MenuItem
+      icon="download"
       disabled={!!running}
-      className={busy ? `${className ?? ''} ${styles.running}` : className}
-      onClick={() => void fetchRepo({ repoId, repoName, branch: null, worktreePath: null, upstream: null })}
+      title={running ? t('sync.busy') : undefined}
+      onSelect={() => {
+        onDone();
+        void fetchRepo({ repoId, repoName, branch: null, worktreePath: null, upstream: null });
+      }}
     >
-      <Icon name={busy ? 'spinner' : 'download'} size={13} className={busy ? styles.spin : undefined} />
-    </IconButton>
+      {t('sync.fetchBtn')}
+    </MenuItem>
   );
 }
 

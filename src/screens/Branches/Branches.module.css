@@ -196,17 +196,24 @@
   visibility: hidden;
 }
 
-.fetch,
-.newBranch {
+/* The band's ⋮: shown while the band is hovered, the button has focus, its menu or New Branch
+   is open, or its fetch runs. */
+.bandMenu {
   flex-shrink: 0;
   visibility: hidden;
 }
 
-.band:hover .fetch,
-.fetch:focus-visible,
-.band:hover .newBranch,
-.newBranch:focus-visible,
-.newBranch[aria-expanded='true'],
+.bandMenuOpen.bandMenuOpen {
+  visibility: visible;
+}
+
+.bandMenu[aria-expanded='true'] {
+  background: var(--bg-pressed);
+  color: var(--text-strong);
+}
+
+.band:hover .bandMenu,
+.bandMenu:focus-visible,
 .band:hover .pin,
 .pin:focus-visible,
 .pin.pinned {
