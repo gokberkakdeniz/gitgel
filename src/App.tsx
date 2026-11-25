@@ -14,6 +14,7 @@ import { DropStashModal } from './stash/DropStashModal';
 import { AbortOperationModal } from './sync/OperationUi';
 import { CheckoutBranchModal } from './sync/CheckoutBranch';
 import { DeleteBranchModal } from './sync/DeleteBranch';
+import { DeleteOrphansModal } from './sync/DeleteOrphans';
 import { DiscardModal } from './discard/DiscardModal';
 import { startDraftProject } from './lib/draft';
 import { startEventBridge } from './lib/events';
@@ -163,6 +164,7 @@ export default function App() {
       <ApplyStashModal />
       <AbortOperationModal />
       <DeleteBranchModal />
+      <DeleteOrphansModal />
       <CheckoutBranchModal />
       <DiscardModal />
       <PassphraseDialog />

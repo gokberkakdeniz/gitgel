@@ -194,6 +194,15 @@ impl TestRepo {
             .unwrap();
     }
 
+    /// Removes the remote-tracking branch `name` (e.g. `origin/main`), as `git fetch --prune`.
+    pub fn delete_remote(&self, name: &str) {
+        self.repo
+            .find_reference(&format!("refs/remotes/{name}"))
+            .unwrap()
+            .delete()
+            .unwrap();
+    }
+
     /// Points the main HEAD at `branch` without touching the working directory.
     pub fn point_head(&self, branch: &str) {
         self.repo.set_head(&format!("refs/heads/{branch}")).unwrap();

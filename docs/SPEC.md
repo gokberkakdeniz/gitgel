@@ -237,7 +237,7 @@ gitgel/
 │  │            # DeleteBranch (the branch menus' Delete Branch… and its confirmation);
 │  │            # CheckoutBranch (the Sync group's Checkout Branch… and its dialog, flow V4);
 │  │            # NewBranch + branchDefaults.ts (a repo band's New Branch…, flow V)
-│  │            # DeleteOrphans (a repo band's Delete Orphan Branches…, flow X; planned, T29.2)
+│  │            # DeleteOrphans (a repo band's Delete Orphan Branches…, flow X)
 │  ├─ scripts/  # §14: when.ts (CEL), runs.ts (running scripts store, toasts), ScriptsMenu,
 │  │            # ScriptEditor, ImportScripts, RunDialog, OutputPanel, ScriptIcon, DragHandle,
 │  │            # useReorder, describe.ts
@@ -693,8 +693,8 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     repo that opens; disabled while a git action runs in the repo), "Fetch" (`download`; fetches
     the repository, §15 "Sync"; only for a repo with a remote; disabled while a sync runs in the
     repo), a divider and danger "Delete Orphan Branches…" (`trash`; §15 "Delete orphan
-    branches", flow X; only for a repo that opens; disabled while a git action runs in the repo;
-    planned, T29.2). ↑/↓/↵/Esc work.
+    branches", flow X; only for a repo that opens; disabled while a git action runs in the repo).
+    ↑/↓/↵/Esc work.
 - **Row** (same grid, bottom border `border.row`):
   - Checkbox: visible only on the hovered row; once anything is selected, all are visible.
   - **Branch** cell, three lines (gap 3), so every row has the same height:
@@ -1508,7 +1508,7 @@ open.
   default) and where to check it out: a new worktree beside the repository (default), the
   repository folder (its uncommitted changes brought along or stashed) or nowhere. Create Branch
   runs as a git action; the new branch then shows in the band.
-- **X · Orphan branches** (planned, T29.2). A Branches repo band's ⋮ › "Delete Orphan
+- **X · Orphan branches.** A Branches repo band's ⋮ › "Delete Orphan
   Branches…" lists the repo's local branches whose upstream is gone or that are merged into the
   base, all checked (X1); Delete Branches deletes the checked ones in one run.
 - **P · Stashes.** Each repo band on Branches lists its stash stack (P1); a stash opens the
@@ -2101,8 +2101,8 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`, `keepIndex: string[]`: those of `paths` that go back to the index) | `ScriptRun` (§15 "Discard") |
 | `git_ignore` | `files: IgnoreFiles` (`EntryRef` + `paths: string[]`) | `ScriptRun` (§15 "Ignore") |
 | `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
-| `get_orphan_branches` (planned, T29.2) | `repoId` | `OrphanBranch[]` (`name`, `tip`, `reason: 'gone' \| 'merged'`, `lastCommitAt`; §15 "Delete orphan branches") |
-| `git_delete_branches` (planned, T29.2) | `repoId, branches: { name, tip }[]` | `ScriptRun` (§15 "Delete orphan branches") |
+| `get_orphan_branches` | `repoId` | `OrphanBranch[]` (`name`, `tip`, `reason: 'gone' \| 'merged'`, `lastCommitAt`; §15 "Delete orphan branches") |
+| `git_delete_branches` | `repoId, branches: { name, tip }[]` | `ScriptRun` (§15 "Delete orphan branches") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
 | `git_push` | `entry: EntryRef, force: boolean` | `ScriptRun` |
 | `git_operation` | `entry: EntryRef, abort: boolean` | `ScriptRun` (§15 "Operations in progress") |
@@ -2401,7 +2401,7 @@ No polling. The backend watches the file system, recomputes what changed and pus
 | Sync | `ReviewFocus.dc.html` | Review's header group Fetch / Pull / Push (the `sync` values in its logic), the origin line; the Branches menus' Sync group in `Main` |
 | New branch | `FlowV2.dc.html`, `FlowV3.dc.html` | canvas page "Branch actions": V2, the form under a repo band's ⋮, interactive (`case` worktree, checkout, branchOnly: the row picked first; `dirty`: the repository folder has changes); V3 mounts it with Repository folder picked; the ⋮ on the bands of `Main` (`newBranch` shows it pressed, `bandMenu` its menu open) |
 | Checkout branch | `FlowV4.dc.html` | canvas page "Branch actions": V4, the dialog over Branches, interactive (`case` repository, worktree, new: the row picked first; `remote`: from a Remote Branches row) |
-| Delete orphan branches (planned, T29.2) | `FlowX1.dc.html` | canvas page "Branch actions": X1, the modal over Branches (`case` list, empty); the band's ⋮ menu on `Main` (`bandMenu` shows it open) |
+| Delete orphan branches | `FlowX1.dc.html` | canvas page "Branch actions": X1, the modal over Branches (`case` list, empty); the band's ⋮ menu on `Main` (`bandMenu` shows it open) |
 | Delete branch | `FlowR2.dc.html` | canvas page "Branch actions": R2, the confirmation over Branches (`ConfirmModal` with `options`; `case` worktree, noStash, notCheckedOut); the item in the menus of `Main` (row menu), `Projects`, `ReviewFocus` (page menu) |
 | Operations in progress | `FlowT1.dc.html`, `ReviewRebase.dc.html` | canvas page "Branch actions", T1: Branches with a rebasing and a merging row (`rebasing 2/4` / `merging` + conflicts pills) and the rebasing row's ⋮ menu (Continue Rebase disabled, Abort Rebase); canvas page "Review", R4: the operation banner (names, (2/4), Abort / Continue), the head's `rebasing` pill, ⚠ / ✓ file marks and the Abort confirmation |
 | File menu | `ReviewFocus.dc.html` | the file row's right-click menu (its `file` menu in the logic): Discard for Uncommitted, the copy paths, Open in Finder / the chosen editor |
@@ -3321,7 +3321,7 @@ action runs in the repository ("A git action is running").
   Branches shows; inside a project (a project page or project review under it), the project page
   it was opened from shows instead. Elsewhere nothing moves.
 
-### Delete orphan branches (planned, T29.2)
+### Delete orphan branches
 
 A Branches repo band's ⋮ › "Delete Orphan Branches…" (§5, flow X) lists the repository's left-over
 local branches and deletes the checked ones in one git action. Canvas: `FlowX1.dc.html`.
@@ -3331,26 +3331,28 @@ local branches and deletes the checked ones in one git action. Canvas: `FlowX1.d
   - **gone**: its configured upstream is on a named remote (`branch.<name>.remote` / `.merge`) and
     that remote-tracking branch no longer exists (Fetch prunes, §15 "Sync"); an upstream on a URL
     never counts as gone; or
-  - **merged** into the repo's base branch (§1), by §6 "Entry state"'s rule (no commits ahead of
-    the base, or squash-merged);
+  - **merged**, as the last scan found it: a branch outside the active list whose tip is in the
+    default base's history (Branches' "merged", `OtherBranch.merged`), or an active one not
+    checked out whose state is "merged" (§6 "Entry state": no commits ahead, or squash-merged);
 
   and is not the base branch, not checked out in any worktree, not another branch's base picked
-  by hand, and has no operation in progress. A branch that is both is "gone". Newest commit
-  first.
+  by hand (an operation in progress needs a checkout, so none has one). A branch that is both is
+  "gone". Newest commit first.
 - **Modal** (`sync/DeleteOrphans.tsx`, `Modal`, 560px; X1): `ModalHeader` "Delete Orphan
-  Branches", sub line the repo name (mono). A spinner while it reads. Then a compact `List`
-  (at most 420px high, scrolls) with a header row: a `Checkbox` that checks or clears all (mixed
-  when some are checked) and "N branches" (12px muted); one row per branch: a `Checkbox`
-  (checked), the mono 13 name (cut in the middle as on Branches, tooltip the full name), a pill
-  "gone" (neutral) or "merged" (success) and the age (12px muted, right). `ModalFooter`: note "N
+  Branches", sub line the repo name (mono). A spinner while it reads (a failure shows its message).
+  Then a compact `List` look (the rows at most 420px high, then they scroll) with a header row: a
+  `Checkbox` (aria-label "Select all") that checks or clears all (mixed when some are checked) and
+  "N branches" (12px muted); one row per branch, a `label` that toggles it: a `Checkbox`
+  (checked), the mono 13 name (ellipsis, tooltip the full name), an sm pill "gone" (neutral) or
+  "merged" (success) and the age (12px muted, tooltip the date). `ModalFooter`: note "N
   selected", Cancel (focused) and danger "Delete Branches" (disabled with none checked). With no
   orphans the body says "No orphan branches" and the footer has only Close.
 - **Run** (`git_delete_branches`, script id `git:delete-branches`, `trash` icon, toast “Deleting N
   branches…”, sub line `repo`), in the repository folder: `git branch -D "$GITGEL_BRANCH_1"
   "$GITGEL_BRANCH_2" …`, then for an upstream on a URL `git update-ref -d` of the ref Gitgel kept
-  for it (as Delete branch step 4). Before running, a branch whose tip is no longer the listed one,
-  that is now checked out or is the base is left out; with none left the run is refused. Refused
-  while another git action runs in the repository. Success toast `Deleted N branches`; a failure
+  for it (as Delete branch step 4). Refused when a branch's tip is no longer the listed one or it
+  was taken meanwhile (checked out, the base, a picked base): "Some branches changed. Look at them
+  again.", and the repo is rescanned. Refused while another git action runs in the repository. Success toast `Deleted N branches`; a failure
   opens the output panel. As for Delete branch, project entries on them become "branch deleted",
   their notes are dropped, and pages about them leave the navigation (`leaveDeletedBranch`).
 

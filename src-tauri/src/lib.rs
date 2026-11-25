@@ -188,6 +188,8 @@ pub fn run() {
             commands::get_tag_remote,
             commands::git_undo_commit,
             commands::git_delete_branch,
+            commands::git_delete_branches,
+            commands::get_orphan_branches,
             commands::git_create_branch,
             commands::check_new_branch,
             commands::git_checkout_branch,

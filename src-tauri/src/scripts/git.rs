@@ -13,8 +13,9 @@ use crate::config::new_id;
 use crate::error::AppError;
 use crate::git::{diff, operation, refs, stash, worktrees};
 use crate::model::{
-    entry_key, BranchLoss, CheckoutProblem, CheckoutTarget, EntryRef, IndexChanges,
-    NewBranchCheckout, NewBranchProblem, NewTagProblem, OperationKind, ScriptRun, UpdateReason,
+    entry_key, BranchLoss, BranchTip, CheckoutProblem, CheckoutTarget, EntryRef, EntryState,
+    IndexChanges, NewBranchCheckout, NewBranchProblem, NewTagProblem, OperationKind, OrphanBranch,
+    OrphanReason, ScriptRun, UpdateReason,
 };
 use crate::scan;
 use crate::state::{lock, AppState};
@@ -2521,6 +2522,157 @@ pub(super) fn delete_branch_command(
     steps.join(" && ")
 }
 
+/// The branches Delete Orphan Branches may never take: the repo's base branch, the local form of
+/// its default base, a branch checked out in a worktree and a branch another one's base was
+/// picked on by hand.
+fn kept_branches(state: &AppState, repo: &Repo) -> std::collections::HashSet<String> {
+    let mut kept: std::collections::HashSet<String> =
+        repo.trees.iter().filter_map(|w| w.branch.clone()).collect();
+    if let Some(scan) = lock(&state.last_scan).get(&repo.id) {
+        kept.extend(scan.base_branch.clone());
+        kept.extend(scan.default_base.clone());
+    }
+    let prefix = format!("{}:", repo.id);
+    let config = config::snapshot(state);
+    kept.extend(
+        config
+            .branch_bases
+            .iter()
+            .filter(|(k, _)| k.starts_with(&prefix))
+            .map(|(_, base)| base.clone()),
+    );
+    kept
+}
+
+/// Delete Orphan Branches' list (SPEC §15 "Delete orphan branches"), newest first. Read only:
+/// "gone" is read from the repository now; "merged" is what the last scan found (an older branch
+/// merged into the default base, or a recent one merged or squash-merged into its base).
+pub fn orphan_branches(state: &AppState, repo_id: &str) -> Result<Vec<OrphanBranch>, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    let kept = kept_branches(state, &repo);
+    let merged: std::collections::HashSet<String> = lock(&state.last_scan)
+        .get(&repo.id)
+        .map(|scan| {
+            let others = scan
+                .others
+                .iter()
+                .filter(|o| o.merged)
+                .map(|o| o.branch.clone());
+            let active = scan
+                .active
+                .iter()
+                .filter(|e| e.state == EntryState::Merged && e.worktree_path.is_none())
+                .filter_map(|e| e.branch.clone());
+            others.chain(active).collect()
+        })
+        .unwrap_or_default();
+    let shared = state.pool.get(&repo.path)?;
+    let git = lock(&shared);
+    let gone = refs::gone_branches(&git);
+    let mut out: Vec<OrphanBranch> = refs::local_branches(&git)?
+        .into_iter()
+        .filter(|b| !kept.contains(&b.name))
+        .filter_map(|b| {
+            let reason = if gone.contains(&b.name) {
+                OrphanReason::Gone
+            } else if merged.contains(&b.name) {
+                OrphanReason::Merged
+            } else {
+                return None;
+            };
+            Some(OrphanBranch {
+                name: b.name,
+                tip: b.tip,
+                reason,
+                last_commit_at: b.last_commit_at,
+            })
+        })
+        .collect();
+    out.sort_by_key(|b| std::cmp::Reverse(b.last_commit_at));
+    Ok(out)
+}
+
+/// Delete Orphan Branches' run (SPEC §15 "Delete orphan branches"): one `git branch -D` of the
+/// branches, then the refs Gitgel kept for those whose upstream is a URL. Refused when one is no
+/// longer at the tip the list showed or was taken meanwhile (checked out, the base, a picked
+/// base; the repo is rescanned), or when another git action runs in the repository.
+pub fn delete_branches(
+    state: &AppState,
+    repo_id: &str,
+    branches: Vec<BranchTip>,
+) -> Result<ScriptRun, AppError> {
+    let repo = open_repo(state, repo_id)?;
+    repo.not_busy(state)?;
+    let kept = kept_branches(state, &repo);
+    let (names, owns) = {
+        let shared = state.pool.get(&repo.path)?;
+        let git = lock(&shared);
+        let tips: std::collections::HashMap<String, String> = refs::local_branches(&git)?
+            .into_iter()
+            .map(|b| (b.name, b.tip))
+            .collect();
+        if branches
+            .iter()
+            .any(|b| kept.contains(&b.name) || tips.get(&b.name) != Some(&b.tip))
+        {
+            drop(git);
+            scan::rescan_repo(state, &repo.id, UpdateReason::Rescan, None);
+            return Err(AppError::Invalid(
+                "Some branches changed. Look at them again.".into(),
+            ));
+        }
+        let names: Vec<String> = branches.into_iter().map(|b| b.name).collect();
+        let owns: Vec<String> = names
+            .iter()
+            .filter_map(|n| refs::tracking(&git, n).and_then(|t| t.own_ref))
+            .collect();
+        (names, owns)
+    };
+    if names.is_empty() {
+        return Err(AppError::Invalid("No branches to delete.".into()));
+    }
+    let mut env: Vec<(String, String)> = names
+        .iter()
+        .enumerate()
+        .map(|(i, n)| (format!("GITGEL_BRANCH_{}", i + 1), n.clone()))
+        .collect();
+    env.extend(
+        owns.iter()
+            .enumerate()
+            .map(|(i, r)| (format!("GITGEL_TRACKING_{}", i + 1), r.clone())),
+    );
+    let count = names.len();
+    run::launch(
+        state,
+        Launch {
+            script_id: format!("{ACTION_PREFIX}delete-branches"),
+            name: format!("Delete {count} branches"),
+            icon: "trash".into(),
+            entry_key: repo.id.clone(),
+            repo_label: repo.name.clone(),
+            repo_id: repo.id.clone(),
+            also_rescan: Vec::new(),
+            folder: repo.main.clone(),
+            command: delete_branches_command(count, owns.len()),
+            env: with_git_env(env),
+            cleanup: Vec::new(),
+        },
+    )
+}
+
+/// `git branch -D "$GITGEL_BRANCH_1" … [&& git update-ref -d "$GITGEL_TRACKING_1" …]`: only fixed
+/// text and quoted variables.
+pub(super) fn delete_branches_command(branches: usize, owns: usize) -> String {
+    let mut command = String::from("git branch -D");
+    for n in 1..=branches {
+        command.push_str(&format!(" \"$GITGEL_BRANCH_{n}\""));
+    }
+    for n in 1..=owns {
+        command.push_str(&format!(" && git update-ref -d \"$GITGEL_TRACKING_{n}\""));
+    }
+    command
+}
+
 /// New Branch's checks (SPEC §15 "New branch"). Read only: the name is one git takes for a branch
 /// (and not an option) and no local branch has it; the folder, when there is one, is absolute and
 /// missing or empty (`git worktree add` makes it and its parents).
@@ -3602,6 +3754,18 @@ mod tests {
         assert_eq!(src("origin/nope", true), Err(CheckoutProblem::Unavailable));
         // A local branch has its name.
         assert_eq!(src("origin/main", true), Err(CheckoutProblem::Exists));
+    }
+
+    #[test]
+    fn delete_branches_command_names_each_branch_by_variable() {
+        assert_eq!(
+            delete_branches_command(2, 0),
+            r#"git branch -D "$GITGEL_BRANCH_1" "$GITGEL_BRANCH_2""#
+        );
+        assert_eq!(
+            delete_branches_command(1, 1),
+            r#"git branch -D "$GITGEL_BRANCH_1" && git update-ref -d "$GITGEL_TRACKING_1""#
+        );
     }
 
     #[test]

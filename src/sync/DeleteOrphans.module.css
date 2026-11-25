@@ -1,0 +1,89 @@
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: 0 24px 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.body {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px 20px;
+}
+
+/* A compact List: bg.sunken card, rows 34px, rules between them; at most 420px, then it scrolls. */
+.list {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-row);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.rows {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-row);
+  cursor: pointer;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row:hover {
+  background: var(--bg-hover);
+}
+
+.name {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-strong);
+}
+
+.age {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}

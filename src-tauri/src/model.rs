@@ -864,6 +864,34 @@ pub struct BranchLoss {
     pub lost_with_remote: u32,
 }
 
+/// Why Delete Orphan Branches lists a branch (SPEC §15 "Delete orphan branches").
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OrphanReason {
+    /// Its upstream's remote-tracking branch is gone.
+    Gone,
+    /// Merged into the repo's base.
+    Merged,
+}
+
+/// A left-over local branch Delete Orphan Branches offers to delete.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OrphanBranch {
+    pub name: String,
+    pub tip: String,
+    pub reason: OrphanReason,
+    pub last_commit_at: i64,
+}
+
+/// A branch to delete, with the tip the list showed.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BranchTip {
+    pub name: String,
+    pub tip: String,
+}
+
 /// What stops New Branch (SPEC §15 "New branch"), for the dialog's message.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

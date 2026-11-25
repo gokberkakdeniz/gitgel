@@ -20,6 +20,7 @@ import { Menu, MenuDivider, MenuItem, MenuLabel } from '../../components/Menu';
 import { CopyBranchItem, EntryMenuNote, OpenItems } from '../../components/OpenItems';
 import { conflictsTooltip, useGitActionRunning } from '../../sync/operation';
 import { OperationPill } from '../../sync/OperationUi';
+import { DeleteOrphansItem } from '../../sync/DeleteOrphans';
 import { NewBranchForm } from '../../sync/NewBranch';
 import { RepoFetchItem, SyncItems, useRunningSync } from '../../sync/SyncButtons';
 import { openCheckout } from '../../sync/CheckoutBranch';
@@ -521,6 +522,7 @@ function RepoSection({
               {t('branches.newBranchItem')}
             </MenuItem>
             {remote && <RepoFetchItem repoId={scan.repo.id} repoName={scan.name} onDone={() => setMenuAt(null)} />}
+            <DeleteOrphansItem repoId={scan.repo.id} repoName={scan.name} onDone={() => setMenuAt(null)} />
           </Menu>
         </Popover>
       )}

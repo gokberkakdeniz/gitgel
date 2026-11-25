@@ -5,6 +5,7 @@ import type {
   Blame,
   BaseOptions,
   BranchLoss,
+  OrphanBranch,
   CheckoutProblem,
   CheckoutTarget,
   CommitChanges,
@@ -261,6 +262,11 @@ export const getBranchLoss = (repoId: string, branch: string) =>
   invoke<BranchLoss>('get_branch_loss', { repoId, branch });
 export const gitDeleteBranch = (repoId: string, branch: string, sha: string, remote: boolean, stash: boolean) =>
   invoke<ScriptRun>('git_delete_branch', { repoId, branch, sha, remote, stash });
+/** Delete Orphan Branches' list: local branches whose upstream is gone or that are merged. */
+export const getOrphanBranches = (repoId: string) => invoke<OrphanBranch[]>('get_orphan_branches', { repoId });
+/** Delete Orphan Branches: one `git branch -D` of branches still at their listed tips. */
+export const gitDeleteBranches = (repoId: string, branches: { name: string; tip: string }[]) =>
+  invoke<ScriptRun>('git_delete_branches', { repoId, branches });
 
 /** New Branch: `branch` from `base`, with no upstream, checked out as `checkout` says. */
 export const gitCreateBranch = (repoId: string, branch: string, base: string, checkout: NewBranchCheckout) =>

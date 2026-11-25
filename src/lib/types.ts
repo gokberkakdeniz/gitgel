@@ -230,6 +230,13 @@ export interface BranchLoss {
   lost: number; // its own remote-tracking branch kept
   lostWithRemote: number; // its remote branch deleted too
 }
+/** A left-over local branch Delete Orphan Branches offers (`get_orphan_branches`). */
+export interface OrphanBranch {
+  name: string;
+  tip: string;
+  reason: 'gone' | 'merged'; // its upstream's remote branch is gone / merged into the base
+  lastCommitAt: number;
+}
 /** What stops Create Tag (`check_new_tag`). */
 export type NewTagProblem = 'badName' | 'exists';
 /** What stops New Branch (`check_new_branch`). */

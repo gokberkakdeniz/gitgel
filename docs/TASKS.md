@@ -392,6 +392,11 @@ rather than as a task is under "Done on request".
 
 ### Phase 29 — Repo band menu
 - [x] T29.1 Repo band menu — 2026-11-25
+- [x] T29.2 Delete orphan branches — 2026-11-25
+  - note: "merged" comes from the last scan (ancestry into the default base for branches outside
+    the active list; squash only for active ones), so an old squash-merged branch shows only when
+    it is also "gone". The run is refused, not trimmed, when a listed branch changed, so the toast
+    count is exact.
 
 ## Done on request
 
@@ -800,33 +805,6 @@ it was done within a topic.
 ## Open
 
 ### Phase 29 — Repo band menu
-
-#### T29.2 Delete orphan branches
-- **Depends on:** T29.1
-- **Why:** user request 2026-11-25: clear the left-over local branches of a repo (one repo here
-  has 1429 local branches outside the active list, `docs/SCAN-PERFORMANCE.md`). No lost-commit
-  count (user decision).
-- **Spec:** SPEC §15 "Delete orphan branches"; §5 "Band menu"; §7 flow X; API table
-  `get_orphan_branches`, `git_delete_branches`.
-- **Reference:** `FlowX1.dc.html` (new; draw it on the canvas page "Branch actions" first).
-- **Files:** `src-tauri/src/git/refs.rs` (`orphans`), `src-tauri/src/scripts/git.rs`
-  (`git:delete-branches`, built like `git:delete-branch`), commands + `model.rs`,
-  `src/sync/DeleteOrphans.tsx`, the band menu, i18n en + tr.
-- **Steps:**
-  1. `refs::orphans`: walk local branches once; "gone" from the configured upstream (named
-     remote only); "merged" with the same ahead / squash check the entry state uses, against the
-     repo's base. Skip base, checked-out (any worktree), hand-picked bases of other branches, an
-     operation in progress. Must stay fast on ~1500 branches: reuse the scan's merged / squash
-     cache where it applies.
-  2. `git_delete_branches`: one `GITGEL_BRANCH_<n>` variable per branch; re-check tips and
-     checkouts before running and leave out the ones that changed; drop their notes and URL
-     tracking refs as Delete Branch does.
-  3. The modal and its run; after it, `leaveDeletedBranch` for each deleted branch.
-  4. Tests: gone, merged, squash-merged, checked-out and base cases in a fixture repo; the
-     command line for several branches.
-- **Acceptance:** on a repo with gone and merged branches the modal lists exactly them with the
-  right pill; unchecking one keeps it; Delete Branches removes the rest in one run and the
-  toast counts them; a branch checked out meanwhile is not deleted.
 
 #### T29.3 ✋ Checkpoint — repo band menu
 - **Depends on:** T29.2

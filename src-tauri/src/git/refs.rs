@@ -1,6 +1,6 @@
 //! Local branches, default base, ref verification, tags.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
 
 use git2::{BranchType, Direction, Oid, Remote, Repository};
@@ -171,6 +171,59 @@ pub fn upstreams<'a>(
             });
         if let Some(up) = configured.or_else(|| origin_fallback(repo, branch)) {
             out.insert(branch.clone(), up);
+        }
+    }
+    out
+}
+
+/// The local branches whose upstream is gone (SPEC §15 "Delete orphan branches"): set in their
+/// config to a branch on a named remote whose remote-tracking branch no longer exists (a fetch with
+/// `--prune` removed it). An upstream on a URL, on the repository itself (`.`) or outside the
+/// remote's fetch refspecs never counts.
+pub fn gone_branches(repo: &Repository) -> HashSet<String> {
+    let mut remote: HashMap<String, String> = HashMap::new();
+    let mut merge: HashMap<String, String> = HashMap::new();
+    if let Ok(cfg) = repo.config().and_then(|mut c| c.snapshot()) {
+        if let Ok(mut entries) = cfg.entries(Some(r"^branch\..*\.(remote|merge)$")) {
+            while let Some(Ok(entry)) = entries.next() {
+                let (Ok(name), Ok(value)) = (entry.name(), entry.value()) else {
+                    continue;
+                };
+                let Some(rest) = name.strip_prefix("branch.") else {
+                    continue;
+                };
+                if let Some(b) = rest.strip_suffix(".remote") {
+                    remote.insert(b.to_string(), value.to_string());
+                } else if let Some(b) = rest.strip_suffix(".merge") {
+                    merge.insert(b.to_string(), value.to_string());
+                }
+            }
+        }
+    }
+    let mut found: HashMap<String, Option<Remote>> = HashMap::new();
+    let mut out = HashSet::new();
+    for (branch, r) in &remote {
+        let Some(m) = merge.get(branch) else { continue };
+        if r == "." || repo.find_branch(branch, BranchType::Local).is_err() {
+            continue;
+        }
+        let Some(rem) = found
+            .entry(r.clone())
+            .or_insert_with(|| repo.find_remote(r).ok())
+            .as_ref()
+        else {
+            continue;
+        };
+        let Some(refname) = rem
+            .refspecs()
+            .find(|s| s.direction() == Direction::Fetch && s.src_matches(m))
+            .and_then(|s| s.transform(m).ok())
+            .and_then(|b| b.as_str().ok().map(str::to_string))
+        else {
+            continue;
+        };
+        if repo.find_reference(&refname).is_err() {
+            out.insert(branch.clone());
         }
     }
     out
@@ -660,6 +713,27 @@ mod tests {
         for b in &names {
             assert_eq!(all.get(b).cloned(), upstream_of(&t.repo, b), "{b}");
         }
+    }
+
+    #[test]
+    fn a_branch_is_gone_when_its_upstream_on_a_remote_was_pruned() {
+        let t = TestRepo::new();
+        let tip = t.commit_on("main", &[("a", Some(b"a"))], "init", 0);
+        for b in ["kept", "pruned", "local", "fork"] {
+            t.branch_from(b, tip);
+        }
+        t.set_remote("origin/kept", tip);
+        t.set_remote("origin/pruned", tip);
+        t.set_upstream("kept", "origin/kept");
+        t.set_upstream("pruned", "origin/pruned");
+        t.set_upstream_url("fork", "git@github.com:someone/repo.git");
+        assert!(gone_branches(&t.repo).is_empty());
+        // `git fetch --prune` drops the remote-tracking branch; the config stays.
+        t.delete_remote("origin/pruned");
+        assert_eq!(
+            gone_branches(&t.repo),
+            HashSet::from(["pruned".to_string()])
+        );
     }
 
     #[test]

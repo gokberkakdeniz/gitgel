@@ -6,11 +6,11 @@ use crate::config;
 use crate::error::AppError;
 use crate::git::inspect;
 use crate::model::{
-    BaseOptions, Blame, BranchLoss, CheckoutProblem, CheckoutTarget, CommitChanges, Config,
-    EditorOption, EntryRef, FileChange, FilePair, FolderCheck, HistoryPage, IndexChanges,
-    NewBranchCheckout, NewBranchProblem, NewTagProblem, OpenApp, ProjectConfig, ProjectView,
-    RangeChanges, RemoteInfo, ReviewData, ReviewTarget, ScanResult, ScriptConfig, ScriptRun,
-    Settings, StashChanges, TerminalOption,
+    BaseOptions, Blame, BranchLoss, BranchTip, CheckoutProblem, CheckoutTarget, CommitChanges,
+    Config, EditorOption, EntryRef, FileChange, FilePair, FolderCheck, HistoryPage, IndexChanges,
+    NewBranchCheckout, NewBranchProblem, NewTagProblem, OpenApp, OrphanBranch, ProjectConfig,
+    ProjectView, RangeChanges, RemoteInfo, ReviewData, ReviewTarget, ScanResult, ScriptConfig,
+    ScriptRun, Settings, StashChanges, TerminalOption,
 };
 use crate::state::AppState;
 use crate::{
@@ -923,6 +923,31 @@ pub async fn git_delete_branch(
 ) -> Result<ScriptRun, AppError> {
     blocking(&state, move |state| {
         scripts::git::delete_branch(state, &repo_id, &branch, &sha, remote, stash)
+    })
+    .await
+}
+
+/// Delete Orphan Branches' list: local branches whose upstream is gone or that are merged.
+#[tauri::command]
+pub async fn get_orphan_branches(
+    state: State<'_, AppState>,
+    repo_id: String,
+) -> Result<Vec<OrphanBranch>, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::orphan_branches(state, &repo_id)
+    })
+    .await
+}
+
+/// Delete Orphan Branches: one `git branch -D` of the branches still at their listed tips.
+#[tauri::command]
+pub async fn git_delete_branches(
+    state: State<'_, AppState>,
+    repo_id: String,
+    branches: Vec<BranchTip>,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::delete_branches(state, &repo_id, branches)
     })
     .await
 }
