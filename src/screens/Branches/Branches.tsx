@@ -22,7 +22,7 @@ import { conflictsTooltip, useGitActionRunning } from '../../sync/operation';
 import { OperationPill } from '../../sync/OperationUi';
 import { DeleteOrphansItem } from '../../sync/DeleteOrphans';
 import { NewBranchForm } from '../../sync/NewBranch';
-import { RepoFetchItem, SyncItems, useRunningSync } from '../../sync/SyncButtons';
+import { RepoFetchItem, SyncItems } from '../../sync/SyncButtons';
 import { openCheckout } from '../../sync/CheckoutBranch';
 import { DeleteBranchItem } from '../../sync/DeleteBranch';
 import { ScriptsMenu } from '../../scripts/ScriptsMenu';
@@ -437,7 +437,6 @@ function RepoSection({
   const [menuAt, setMenuAt] = useState<{ rect: DOMRect; atPointer: boolean } | null>(null);
   const [newBranchAt, setNewBranchAt] = useState<DOMRect | null>(null);
   const gitRunning = useGitActionRunning(scan.repo.id);
-  const fetching = useRunningSync(scan.repo.id) === 'git:fetch';
   const menuOpen = !!menuAt || !!newBranchAt;
   return (
     <section id={`repo-${scan.repo.id}`} className={styles.section}>
@@ -467,19 +466,6 @@ function RepoSection({
           <span className={styles.repoName}>{scan.name}</span>
           <span className={styles.repoPath}>{tildifyHome(scan.repo.path)}</span>
         </button>
-        {opens && (
-          <IconButton
-            ref={menuButton}
-            size={24}
-            aria-label={t('branches.repoOptions')}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            className={menuOpen || fetching ? `${styles.bandMenu} ${styles.bandMenuOpen}` : styles.bandMenu}
-            onClick={(ev) => setMenuAt({ rect: ev.currentTarget.getBoundingClientRect(), atPointer: false })}
-          >
-            <MoreVerticalIcon size={13} />
-          </IconButton>
-        )}
         {scan.status === 'missing' ? (
           <Pill tone="danger" onClick={() => openSettings('repositories')}>
             {t('branches.pathNotFound')}
@@ -505,6 +491,21 @@ function RepoSection({
         >
           <PinIcon size={13} />
         </IconButton>
+        {opens ? (
+          <IconButton
+            ref={menuButton}
+            size={24}
+            aria-label={t('branches.repoOptions')}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            className={styles.bandMenu}
+            onClick={(ev) => setMenuAt({ rect: ev.currentTarget.getBoundingClientRect(), atPointer: false })}
+          >
+            <MoreVerticalIcon size={13} />
+          </IconButton>
+        ) : (
+          <span className={styles.bandMenuGap} />
+        )}
       </div>
       {menuAt && (
         <Popover anchorRect={menuAt.rect} width={230} alignRight={!menuAt.atPointer} onClose={() => setMenuAt(null)}>

@@ -184,27 +184,22 @@
 }
 
 .count {
-  /* Ends where the Projects column does; the pin button takes the ⋮ column after it. */
   margin-right: -2px;
   font-size: 12px;
   color: var(--text-muted);
 }
 
-/* In the ⋮ column: shown while the band is hovered or the button has focus, always when pinned. */
+/* Before the ⋮: shown while the band is hovered or the button has focus, always when pinned. */
 .pin {
   flex-shrink: 0;
   visibility: hidden;
 }
 
-/* The band's ⋮: shown while the band is hovered, the button has focus, its menu or New Branch
-   is open, or its fetch runs. */
-.bandMenu {
+/* The band's ⋮, in the ⋮ column: always shown; a repo that does not open keeps its place empty. */
+.bandMenu,
+.bandMenuGap {
+  width: 24px;
   flex-shrink: 0;
-  visibility: hidden;
-}
-
-.bandMenuOpen.bandMenuOpen {
-  visibility: visible;
 }
 
 .bandMenu[aria-expanded='true'] {
@@ -212,8 +207,6 @@
   color: var(--text-strong);
 }
 
-.band:hover .bandMenu,
-.bandMenu:focus-visible,
 .band:hover .pin,
 .pin:focus-visible,
 .pin.pinned {
