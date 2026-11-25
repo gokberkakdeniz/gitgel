@@ -38,8 +38,7 @@ button,input{font-family:inherit}
 <span style="font-size: 15px; font-weight: 600; color: var(--text-strong)">{{repo.name}}</span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{repo.path}}</span>
 </button>
-<button type="button" aria-label="New branch in {{repo.name}}" title="New branch in {{repo.name}}" aria-haspopup="dialog" aria-expanded="{{repo.newOpen}}" style="{{repo.newStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
-<button type="button" aria-label="Fetch" title="{{repo.fetchTitle}}" style="{{repo.fetchStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg></button>
+<button type="button" aria-label="Repository Options" aria-haspopup="menu" aria-expanded="{{repo.menuOpen}}" style="{{repo.menuStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button>
 <span title="{{repo.countTitle}}" style="margin-right: -2px; font-size: 12px; color: var(--text-muted)">{{repo.count}}</span>
 <button type="button" aria-label="{{repo.pinLabel}}" aria-pressed="{{repo.pinned}}" title="{{repo.pinTitle}}" style="{{repo.pinStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-3 4v1h10v-1l-3-4V3M12 14v7"></path></svg></button>
 </div>
@@ -122,6 +121,12 @@ button,input{font-family:inherit}
 </div>
 </sc-if>
 
+<sc-if value="{{showBandMenu}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; top: 149px; right: 78px">
+<dc-import name="Menu" theme="{{themeName}}" width="230" label="Repository Options" items="{{bandMenuItems}}" hint-size="230px,140px"></dc-import>
+</div>
+</sc-if>
+
 <sc-if value="{{showRowMenu}}" hint-placeholder-val="{{false}}">
 <div style="{{rowMenuStyle}}">
 <dc-import name="Menu" theme="{{themeName}}" width="260" label="Branch Options" items="{{rowMenuItems}}" hint-size="260px,230px"></dc-import>
@@ -185,7 +190,7 @@ Drop folders to add repositories
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;newBranch&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;rowMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;worktree&quot;,&quot;notCheckedOut&quot;,&quot;terminalMissing&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scripts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;scriptRun&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;running&quot;,&quot;success&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;popover&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;pick&quot;,&quot;new&quot;],&quot;default&quot;:&quot;pick&quot;},&quot;added&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;select&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;dropping&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;repoHover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;newBranch&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;bandMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;projMenu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;rowMenu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;worktree&quot;,&quot;notCheckedOut&quot;,&quot;terminalMissing&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scripts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;scriptRun&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;running&quot;,&quot;success&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;none&quot;},&quot;scope&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;unassigned&quot;],&quot;default&quot;:&quot;all&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
 class Component extends DCLogic {
   renderVals() {
     var popover = this.props.popover ?? 'none';
@@ -320,6 +325,7 @@ class Component extends DCLogic {
         : [{ name: 'Session auth refresh', count: '5' }, { name: 'Rate limiting rollout', count: '2' }];
     var self = this;
     var newOpen = !!this.props.newBranch;
+    var bandMenu = !newOpen && popover === 'none' && !!this.props.bandMenu;
     var scope = this.state && this.state.scope ? this.state.scope : (this.props.scope ?? 'all');
     var unassigned = scope === 'unassigned';
     var built = repos.map(function (g) { return { name: g.name, path: g.path, collapsed: !!g.collapsed, pinned: !!g.pinned, rows: g.rows.map(mk) }; });
@@ -333,11 +339,10 @@ class Component extends DCLogic {
         pinned: g.pinned,
         pinLabel: g.pinned ? 'Unpin ' + g.name : 'Pin ' + g.name + ' to top',
         pinTitle: g.pinned ? 'Unpin' : 'Pin to top',
-        fetchTitle: 'Fetch ' + g.name + ' from origin',
-        newOpen: i === 0 && newOpen,
-        newStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; cursor: pointer; ' + (i === 0 && newOpen ? 'background: var(--bg-hover); color: var(--text-strong)' : 'background: transparent; color: var(--text-muted)') + (i === 0 ? '' : '; visibility: hidden'),
-        // Shows on the hovered band: drawn on the first.
-        fetchStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: var(--text-muted)' + (i === 0 ? '' : '; visibility: hidden'),
+        // The band's ⋮ (New Branch…, Fetch, Delete Orphan Branches…): shows on the hovered band,
+        // drawn on the first; pressed while its menu or New Branch (opened from it) is open.
+        menuOpen: i === 0 && (newOpen || bandMenu),
+        menuStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; cursor: pointer; ' + (i === 0 && (newOpen || bandMenu) ? 'background: var(--bg-pressed); color: var(--text-strong)' : 'background: transparent; color: var(--text-muted)') + (i === 0 ? '' : '; visibility: hidden'),
         pinStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: ' + (g.pinned ? 'var(--accent-text)' : 'var(--text-muted); visibility: hidden'),
         chevronStyle: 'stroke: var(--text-muted); flex-shrink: 0' + (g.collapsed ? '; transform: rotate(-90deg)' : '')
       };
@@ -360,6 +365,14 @@ class Component extends DCLogic {
       inboxCount: empty ? '0' : '7',
       showProjMenu: !empty && projMenu,
       showRowMenu: !empty && menuTarget !== null,
+      // The first band's ⋮ menu, right-aligned under it.
+      showBandMenu: !empty && bandMenu,
+      bandMenuItems: [
+        { label: 'New Branch…', icon: 'plus', active: true },
+        { label: 'Fetch', icon: 'download' },
+        { kind: 'sep' },
+        { label: 'Delete Orphan Branches…', icon: 'trash', danger: true }
+      ],
       // Not checked out: the items stay enabled and open the repository folder (the note says so).
       // Kept inside the window like the app's Popover: below the ⋮, moved up when it would not fit.
       rowMenuStyle: 'position: absolute; top: ' + menuTop + 'px; right: 26px',
