@@ -671,7 +671,7 @@ Every active branch, whether or not it is in a project, and each repo's base bra
 - **Repo band** per repo: `bg.band`, top border `border.strong`, bottom border `border`, padding
   10px 16px 10px 6px; a 12px muted collapse chevron (in the left padding, so the folder icon
   stays over the checkbox column), folder icon in accent, 15px/600 repo name, mono 11px muted
-  path, then on the right its row count (12px muted, tooltip "N branches"), the pin and the ⋮ (the ⋮ in the ⋮ column); 14px between
+  path, then on the right its row count (12px muted, tooltip "N branches") and the ⋮ (in the ⋮ column); 14px between
   bands. Repos with no rows are hidden, except when focused from a repo link
   (then "0 branches"). A missing repo shows a danger pill "path not found" (→ Settings); a repo
   git2 cannot open shows a danger "git error" pill.
@@ -681,20 +681,19 @@ Every active branch, whether or not it is in a project, and each repo's base bra
     `localStorage` (`gitgel.branches.collapsedRepos`), and a band focused from a repo link opens.
     While filtering every band starts open and can still be collapsed; that state is not
     remembered and is dropped when the filter is cleared.
-  - **Pin**: a 24px icon button with a 13px `pin` icon after the count, before the ⋮
-    (tooltip "Pin to top" / "Unpin"). It shows while the band is hovered or the button has
-    focus, and always on a pinned band, where it is `accent.text`. Pins are kept in the config
+  - **Pin**: the band menu's "Pin to Top" / "Unpin". Pins are kept in the config
     (`pinnedRepos`); removing a repo drops its pin.
   - **Band menu**: last, in the ⋮ column, a 24px vertical "⋮" button (`aria-label` "Repository
-    options"), always shown, for a repo that opens (none otherwise). While its menu or
+    options"), always shown. While its menu or
     New Branch is open it is `bg.pressed`. Right-clicking the band opens the menu at the pointer. A
     230px menu, right-aligned under the button, icons as §4 `Menu`:
     "New Branch…" (`plus`; opens New Branch under the ⋮, §15 "New branch", flow V; only for a
     repo that opens; disabled while a git action runs in the repo), "Fetch" (`download`; fetches
     the repository, §15 "Sync"; only for a repo with a remote; disabled while a sync runs in the
-    repo), a divider and danger "Delete Orphan Branches…" (`trash`; §15 "Delete orphan
-    branches", flow X; only for a repo that opens; disabled while a git action runs in the repo).
-    ↑/↓/↵/Esc work.
+    repo), a divider, "Pin to Top" / "Unpin" (`pin`; Pin above), a divider and danger "Delete
+    Orphan Branches…" (`trash`; §15 "Delete orphan branches", flow X; only for a repo that opens;
+    disabled while a git action runs in the repo). A repo that does not open has only Pin to Top /
+    Unpin. ↑/↓/↵/Esc work.
 - **Row** (same grid, bottom border `border.row`):
   - Checkbox: visible only on the hovered row; once anything is selected, all are visible.
   - **Branch** cell, three lines (gap 3), so every row has the same height:

@@ -12,7 +12,6 @@ import {
   CopyIcon,
   FolderIcon,
   MoreVerticalIcon,
-  PinIcon,
   SplitIcon,
   WorktreeIcon,
 } from '../../components/icons';
@@ -442,14 +441,10 @@ function RepoSection({
     <section id={`repo-${scan.repo.id}`} className={styles.section}>
       <div
         className={flash ? `${styles.band} ${styles.flash}` : styles.band}
-        onContextMenu={
-          opens
-            ? (ev) => {
-                ev.preventDefault();
-                setMenuAt({ rect: new DOMRect(ev.clientX, ev.clientY, 0, 0), atPointer: true });
-              }
-            : undefined
-        }
+        onContextMenu={(ev) => {
+          ev.preventDefault();
+          setMenuAt({ rect: new DOMRect(ev.clientX, ev.clientY, 0, 0), atPointer: true });
+        }}
       >
         <button
           type="button"
@@ -480,48 +475,49 @@ function RepoSection({
           </span>
         )}
         <IconButton
+          ref={menuButton}
           size={24}
-          aria-label={
-            pinned ? t('branches.unpinName', { name: scan.name }) : t('branches.pinName', { name: scan.name })
-          }
-          aria-pressed={pinned}
-          title={pinned ? t('branches.unpin') : t('branches.pinToTop')}
-          className={pinned ? `${styles.pin} ${styles.pinned}` : styles.pin}
-          onClick={() => void setRepoPinned(scan.repo.id, !pinned)}
+          aria-label={t('branches.repoOptions')}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          className={styles.bandMenu}
+          onClick={(ev) => setMenuAt({ rect: ev.currentTarget.getBoundingClientRect(), atPointer: false })}
         >
-          <PinIcon size={13} />
+          <MoreVerticalIcon size={13} />
         </IconButton>
-        {opens && (
-          <IconButton
-            ref={menuButton}
-            size={24}
-            aria-label={t('branches.repoOptions')}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            className={styles.bandMenu}
-            onClick={(ev) => setMenuAt({ rect: ev.currentTarget.getBoundingClientRect(), atPointer: false })}
-          >
-            <MoreVerticalIcon size={13} />
-          </IconButton>
-        )}
       </div>
       {menuAt && (
         <Popover anchorRect={menuAt.rect} width={230} alignRight={!menuAt.atPointer} onClose={() => setMenuAt(null)}>
+          {/* A repo that does not open has only Pin to Top / Unpin. */}
           <Menu aria-label={t('branches.repoOptions')} autoFocus>
+            {opens && (
+              <>
+                <MenuItem
+                  icon="plus"
+                  disabled={gitRunning}
+                  title={gitRunning ? t('sync.gitBusy') : undefined}
+                  onSelect={() => {
+                    setMenuAt(null);
+                    const rect = menuButton.current?.getBoundingClientRect();
+                    if (rect) setNewBranchAt(rect);
+                  }}
+                >
+                  {t('branches.newBranchItem')}
+                </MenuItem>
+                {remote && <RepoFetchItem repoId={scan.repo.id} repoName={scan.name} onDone={() => setMenuAt(null)} />}
+                <MenuDivider />
+              </>
+            )}
             <MenuItem
-              icon="plus"
-              disabled={gitRunning}
-              title={gitRunning ? t('sync.gitBusy') : undefined}
+              icon="pin"
               onSelect={() => {
                 setMenuAt(null);
-                const rect = menuButton.current?.getBoundingClientRect();
-                if (rect) setNewBranchAt(rect);
+                void setRepoPinned(scan.repo.id, !pinned);
               }}
             >
-              {t('branches.newBranchItem')}
+              {pinned ? t('branches.unpin') : t('branches.pinToTop')}
             </MenuItem>
-            {remote && <RepoFetchItem repoId={scan.repo.id} repoName={scan.name} onDone={() => setMenuAt(null)} />}
-            <DeleteOrphansItem repoId={scan.repo.id} repoName={scan.name} onDone={() => setMenuAt(null)} />
+            {opens && <DeleteOrphansItem repoId={scan.repo.id} repoName={scan.name} onDone={() => setMenuAt(null)} />}
           </Menu>
         </Popover>
       )}

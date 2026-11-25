@@ -189,13 +189,7 @@
   color: var(--text-muted);
 }
 
-/* Before the ⋮: shown while the band is hovered or the button has focus, always when pinned. */
-.pin {
-  flex-shrink: 0;
-  visibility: hidden;
-}
-
-/* The band's ⋮, last: always shown, for a repo that opens. */
+/* The band's ⋮, last: always shown. */
 .bandMenu {
   flex-shrink: 0;
 }
@@ -203,16 +197,6 @@
 .bandMenu[aria-expanded='true'] {
   background: var(--bg-pressed);
   color: var(--text-strong);
-}
-
-.band:hover .pin,
-.pin:focus-visible,
-.pin.pinned {
-  visibility: visible;
-}
-
-.pin.pinned {
-  color: var(--accent-text);
 }
 
 .row {
