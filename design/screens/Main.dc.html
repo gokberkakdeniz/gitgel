@@ -39,7 +39,6 @@ button,input{font-family:inherit}
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{repo.path}}</span>
 </button>
 <span title="{{repo.countTitle}}" style="margin-right: -2px; font-size: 12px; color: var(--text-muted)">{{repo.count}}</span>
-<button type="button" aria-label="{{repo.pinLabel}}" aria-pressed="{{repo.pinned}}" title="{{repo.pinTitle}}" style="{{repo.pinStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-3 4v1h10v-1l-3-4V3M12 14v7"></path></svg></button>
 <button type="button" aria-label="Repository Options" aria-haspopup="menu" aria-expanded="{{repo.menuOpen}}" style="{{repo.menuStyle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button>
 </div>
 <sc-if value="{{repo.open}}" hint-placeholder-val="{{true}}">
@@ -123,7 +122,7 @@ button,input{font-family:inherit}
 
 <sc-if value="{{showBandMenu}}" hint-placeholder-val="{{false}}">
 <div style="position: absolute; top: 149px; right: 26px">
-<dc-import name="Menu" theme="{{themeName}}" width="230" label="Repository Options" items="{{bandMenuItems}}" hint-size="230px,140px"></dc-import>
+<dc-import name="Menu" theme="{{themeName}}" width="230" label="Repository Options" items="{{bandMenuItems}}" hint-size="230px,190px"></dc-import>
 </div>
 </sc-if>
 
@@ -302,7 +301,7 @@ class Component extends DCLogic {
       });
     };
     var repos = [
-      // Pinned (accent pin, always shown): first whatever its activity; the others' pin shows on hover.
+      // Pinned (the band's ⋮ › Pin to Top / Unpin): first whatever its activity.
       { name: 'web-app', path: '~/code/web-app', pinned: true, rows: [
         { branch: 'session-token-refresh', base: 'main', wt: '~/code/wt/token-refresh', ahead: 4, files: 9, dirty: 3, age: '6m', focus: true, projects: ['Session auth refresh', 'Rate limiting rollout'] },
         { branch: 'feature/PROJ-4821-add-retry-with-exponential-backoff-to-the-api-client', base: 'origin/main', wt: '~/code/wt/api-retry', ahead: 11, files: 23, dirty: 0, age: '42m', hover: true, sel: true },
@@ -337,13 +336,10 @@ class Component extends DCLogic {
         name: g.name, path: g.path, rows: rows, count: String(rows.length), countTitle: rows.length + (rows.length === 1 ? ' branch' : ' branches'),
         open: !g.collapsed,
         pinned: g.pinned,
-        pinLabel: g.pinned ? 'Unpin ' + g.name : 'Pin ' + g.name + ' to top',
-        pinTitle: g.pinned ? 'Unpin' : 'Pin to top',
         // The band's ⋮ (New Branch…, Fetch, Delete Orphan Branches…), always shown, last after the
         // count and the pin; pressed while its menu or New Branch (opened from it) is open.
         menuOpen: i === 0 && (newOpen || bandMenu),
         menuStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px; cursor: pointer; ' + (i === 0 && (newOpen || bandMenu) ? 'background: var(--bg-pressed); color: var(--text-strong)' : 'background: transparent; color: var(--text-muted)'),
-        pinStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: ' + (g.pinned ? 'var(--accent-text)' : 'var(--text-muted); visibility: hidden'),
         chevronStyle: 'stroke: var(--text-muted); flex-shrink: 0' + (g.collapsed ? '; transform: rotate(-90deg)' : '')
       };
     }).filter(function (g) { return g.rows.length > 0; });
@@ -370,6 +366,9 @@ class Component extends DCLogic {
       bandMenuItems: [
         { label: 'New Branch…', icon: 'plus', active: true },
         { label: 'Fetch', icon: 'download' },
+        { kind: 'sep' },
+        // The first band (web-app) is pinned: pinned bands come first, in the order pinned.
+        { label: 'Unpin', icon: 'pin' },
         { kind: 'sep' },
         { label: 'Delete Orphan Branches…', icon: 'trash', danger: true }
       ],
