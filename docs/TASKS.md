@@ -582,6 +582,7 @@ it was done within a topic.
 - [x] Discarding picked lines: the diff's right-click menu on an Unstaged file has Discard Selected Lines / Discard Change; the working tree loses those changes (back to what is staged) after Confirm Discard Changes and a copy in the Trash (`git_discard_lines`, §15 "Discard") — 2026-11-21
 - [x] Stashing picked lines: the diff's right-click menu on an Unstaged file has Stash Selected Lines… / Stash Change…; after the message (P4) the stash holds only those changes and the working tree loses them, the index stays (`stash_lines`, §15 "Writing stashes") — 2026-11-21
 - [x] Fetch reaches only the fork of the branch it runs for (a branch whose upstream is a URL), not every `gh pr checkout` branch's fork, so a branch on origin no longer fails on a merged PR's deleted fork branch — 2026-11-26
+- [x] Fetch of a branch whose fork no longer has it drops Gitgel's ref for it instead of failing (as `--prune` does for a named remote), so the branch shows `not on <owner>`; an unreachable fork still fails — 2026-11-26
 
 ### Menus and open items
 - [x] Entry menus have one warning note, at the very end after a divider; not checked

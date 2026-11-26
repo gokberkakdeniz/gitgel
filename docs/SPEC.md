@@ -3163,7 +3163,10 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   for whose upstream is a URL, `&& git fetch "$GITGEL_REMOTE_<n>" "$GITGEL_REFSPEC_<n>"`
   (`+refs/heads/<branch on the remote>:<its own ref>`): a branch's Fetch its own, a project's
   Fetch its entries' in that repository, a repo band's none. Other branches' forks are left alone
-  (a merged PR's fork branch is often gone). Success toast `Fetched <repo>`.
+  (a merged PR's fork branch is often gone). Each such step runs in `/bin/sh -c '…'` (fixed text):
+  when the fork no longer has the branch (`git ls-remote --exit-code` exits 2) it drops the own
+  ref (`git update-ref -d "$GITGEL_OWN_<n>"`), as `--prune` does for a named remote, and the run
+  still succeeds; any other failure (unreachable, no access) fails it. Success toast `Fetched <repo>`.
 - **Pull**: `git pull [--rebase] "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<branch on the
   remote>`) in the worktree, so a branch without a configured upstream pulls too and git's own
   `pull.rebase` / `pull.ff` settings apply; for an upstream on a URL `$GITGEL_MERGE` is the

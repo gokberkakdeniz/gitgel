@@ -1268,7 +1268,7 @@ fn launch_sync(
 /// branch on `origin` never reaches a fork whose branch is gone.
 pub fn fetch(state: &AppState, repo_id: &str, branches: &[String]) -> Result<ScriptRun, AppError> {
     let repo = open_repo(state, repo_id)?;
-    let mut specs: Vec<(String, String)> = Vec::new();
+    let mut specs: Vec<(String, String, String, String)> = Vec::new();
     {
         let shared = state.pool.get(&repo.path)?;
         let git = lock(&shared);
@@ -1276,7 +1276,12 @@ pub fn fetch(state: &AppState, repo_id: &str, branches: &[String]) -> Result<Scr
             let Some(t) = refs::tracking(&git, branch).filter(|t| t.own_ref.is_some()) else {
                 continue;
             };
-            let spec = (t.remote.clone(), own_refspec(&t));
+            let spec = (
+                t.remote.clone(),
+                own_refspec(&t),
+                format!("refs/heads/{}", t.branch),
+                t.own_ref.clone().unwrap_or_default(),
+            );
             if !specs.contains(&spec) {
                 specs.push(spec);
             }
@@ -1285,11 +1290,13 @@ pub fn fetch(state: &AppState, repo_id: &str, branches: &[String]) -> Result<Scr
     let env: Vec<(String, String)> = specs
         .into_iter()
         .enumerate()
-        .flat_map(|(i, (remote, spec))| {
+        .flat_map(|(i, (remote, spec, head, own))| {
             let n = i + 1;
             [
                 (format!("GITGEL_REMOTE_{n}"), remote),
                 (format!("GITGEL_REFSPEC_{n}"), spec),
+                (format!("GITGEL_HEAD_{n}"), head),
+                (format!("GITGEL_OWN_{n}"), own),
             ]
         })
         .collect();
@@ -1301,7 +1308,7 @@ pub fn fetch(state: &AppState, repo_id: &str, branches: &[String]) -> Result<Scr
         repo.main.clone(),
         repo.name.clone(),
         repo.id.clone(),
-        fetch_command(env.len() / 2),
+        fetch_command(env.len() / 4),
         env,
     )
 }
@@ -3278,12 +3285,17 @@ pub(super) fn upload_command(set_upstream: bool, force: bool, own: bool) -> Stri
     format!("git push{upstream}{force} \"$GITGEL_REMOTE\" \"$GITGEL_REFSPEC\"{track}")
 }
 
-/// `git fetch --all --prune`, then one fetch per asked-for branch on a URL.
+/// `git fetch --all --prune`, then one fetch per asked-for branch on a URL. A fork that no longer
+/// has the branch (`git ls-remote --exit-code` exits 2) drops the ref Gitgel keeps for it instead
+/// of failing, as `--prune` does for a named remote; any other failure fails the run. That part
+/// runs in `/bin/sh` (single-quoted fixed text, read the same by sh, bash, zsh and fish).
 pub(super) fn fetch_command(urls: usize) -> String {
     let mut command = String::from("git fetch --all --prune");
     for n in 1..=urls {
         command.push_str(&format!(
-            " && git fetch \"$GITGEL_REMOTE_{n}\" \"$GITGEL_REFSPEC_{n}\""
+            " && /bin/sh -c 'git fetch \"$GITGEL_REMOTE_{n}\" \"$GITGEL_REFSPEC_{n}\" || \
+             {{ git ls-remote --exit-code \"$GITGEL_REMOTE_{n}\" \"$GITGEL_HEAD_{n}\" >/dev/null; \
+             [ $? -eq 2 ] && git update-ref -d \"$GITGEL_OWN_{n}\"; }}'"
         ));
     }
     command
@@ -3823,9 +3835,14 @@ mod tests {
             r#"git push --force-with-lease="$GITGEL_LEASE" "$GITGEL_REMOTE" "$GITGEL_REFSPEC" && git update-ref "$GITGEL_TRACKING" "$GITGEL_LOCAL""#
         );
         assert_eq!(fetch_command(0), "git fetch --all --prune");
+        let fork = |n: u8| {
+            format!(
+                r#" && /bin/sh -c 'git fetch "$GITGEL_REMOTE_{n}" "$GITGEL_REFSPEC_{n}" || {{ git ls-remote --exit-code "$GITGEL_REMOTE_{n}" "$GITGEL_HEAD_{n}" >/dev/null; [ $? -eq 2 ] && git update-ref -d "$GITGEL_OWN_{n}"; }}'"#
+            )
+        };
         assert_eq!(
             fetch_command(2),
-            r#"git fetch --all --prune && git fetch "$GITGEL_REMOTE_1" "$GITGEL_REFSPEC_1" && git fetch "$GITGEL_REMOTE_2" "$GITGEL_REFSPEC_2""#
+            format!("git fetch --all --prune{}{}", fork(1), fork(2))
         );
         assert_eq!(
             delete_branch_command(false, CheckedOut::No, true, true),
