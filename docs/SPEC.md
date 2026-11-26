@@ -2099,7 +2099,7 @@ All commands live in `src-tauri/src/commands.rs` as `async fn`, run git and disk
 | `git_discard_lines` | `entry: EntryRef`, `lines: DiscardLines` (`path`, `content`: the file's new working-tree version, `expect`: the file's text it was made from) | `ScriptRun` (§15 "Discard", picked lines) |
 | `git_discard` | `entries: DiscardFiles[]` (`EntryRef` + `paths: string[]`, `keepIndex: string[]`: those of `paths` that go back to the index) | `ScriptRun` (§15 "Discard") |
 | `git_ignore` | `files: IgnoreFiles` (`EntryRef` + `paths: string[]`) | `ScriptRun` (§15 "Ignore") |
-| `git_fetch` | `repoId` | `ScriptRun` (§15 "Sync") |
+| `git_fetch` | `repoId, branches: string[]` | `ScriptRun` (§15 "Sync") |
 | `get_orphan_branches` | `repoId` | `OrphanBranch[]` (`name`, `tip`, `reason: 'gone' \| 'merged'`, `lastCommitAt`; §15 "Delete orphan branches") |
 | `git_delete_branches` | `repoId, branches: { name, tip }[]` | `ScriptRun` (§15 "Delete orphan branches") |
 | `git_pull` | `entry: EntryRef, rebase: boolean` | `ScriptRun` |
@@ -3159,9 +3159,11 @@ each branch stands. Each is a git action as above (`upload` icon; toast sub line
   missing repository. Review's page menu, whose header has Fetch / Pull / Push, keeps only
   Checkout Branch… and Rebase on `<base>` of the group. While an operation is in progress the group is its Continue / Abort
   instead (§15 "Operations in progress"; also for a detached HEAD).
-- **Fetch**: `git fetch --all --prune` in the repository folder, then, for each local branch
-  whose upstream is a URL, `&& git fetch "$GITGEL_REMOTE_<n>" "$GITGEL_REFSPEC_<n>"`
-  (`+refs/heads/<branch on the remote>:<its own ref>`). Success toast `Fetched <repo>`.
+- **Fetch**: `git fetch --all --prune` in the repository folder, then, for each branch it runs
+  for whose upstream is a URL, `&& git fetch "$GITGEL_REMOTE_<n>" "$GITGEL_REFSPEC_<n>"`
+  (`+refs/heads/<branch on the remote>:<its own ref>`): a branch's Fetch its own, a project's
+  Fetch its entries' in that repository, a repo band's none. Other branches' forks are left alone
+  (a merged PR's fork branch is often gone). Success toast `Fetched <repo>`.
 - **Pull**: `git pull [--rebase] "$GITGEL_REMOTE" "$GITGEL_MERGE"` (`refs/heads/<branch on the
   remote>`) in the worktree, so a branch without a configured upstream pulls too and git's own
   `pull.rebase` / `pull.ff` settings apply; for an upstream on a URL `$GITGEL_MERGE` is the

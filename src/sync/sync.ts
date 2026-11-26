@@ -92,8 +92,10 @@ function refOf(t: SyncTarget): EntryRef {
 }
 
 // A failed sync opens its output panel: git says there what went wrong (or asks for a password).
-export function fetchRepo(t: SyncTarget): Promise<void> {
-  return startGitAction(translate('sync.fetchBtn'), translate('sync.fetching'), () => gitFetch(t.repoId), {
+// `branches`: also fetched from their fork when their upstream is a URL (default: the target's own).
+export function fetchRepo(t: SyncTarget & { branches?: string[] }): Promise<void> {
+  const branches = t.branches ?? (t.branch ? [t.branch] : []);
+  return startGitAction(translate('sync.fetchBtn'), translate('sync.fetching'), () => gitFetch(t.repoId, branches), {
     done: translate('sync.fetched', { repo: t.repoName }),
   });
 }

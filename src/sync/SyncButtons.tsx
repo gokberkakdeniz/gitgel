@@ -38,7 +38,7 @@ export function SyncButtons({
 }: {
   target: SyncTarget;
   fetchedAt: number | null;
-  repos?: { repoId: string; repoName: string }[];
+  repos?: { repoId: string; repoName: string; branches?: string[] }[];
 }) {
   const running = useRunningSync(target.repoId);
   const u = target.upstream;

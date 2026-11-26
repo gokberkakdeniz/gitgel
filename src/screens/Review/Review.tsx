@@ -1549,9 +1549,13 @@ export function BranchView({ repoId, rev, backLabel, lastKnown, project }: Props
   const [baseSaved, setBaseSaved] = useState<string | null>(null);
   // A project's repositories, for Fetch; the conflicts a stash apply left (no operation).
   const projectRepos = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const g of project?.groups ?? []) seen.set(g.entry.repoId, g.entry.repoName);
-    return [...seen].map(([id, name]) => ({ repoId: id, repoName: name }));
+    const seen = new Map<string, { repoId: string; repoName: string; branches: string[] }>();
+    for (const { entry: e } of project?.groups ?? []) {
+      const r = seen.get(e.repoId) ?? { repoId: e.repoId, repoName: e.repoName, branches: [] };
+      if (e.branch) r.branches.push(e.branch);
+      seen.set(e.repoId, r);
+    }
+    return [...seen.values()];
   }, [project]);
   const conflicts = conflictsBanner(project ? project.groups : entry ? [{ entry } as ReviewGroup] : []);
   const subtitle = lastKnown ? (

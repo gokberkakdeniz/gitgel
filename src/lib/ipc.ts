@@ -214,7 +214,7 @@ export const stashApply = (repoId: string, stashes: StashRef[], worktreePath: st
 export const stashDrop = (repoId: string, stashes: StashRef[]) => invoke<ScriptRun>('stash_drop', { repoId, stashes });
 
 /** Sync (W4a): git actions too, one branch (or repository) each. */
-export const gitFetch = (repoId: string) => invoke<ScriptRun>('git_fetch', { repoId });
+export const gitFetch = (repoId: string, branches: string[]) => invoke<ScriptRun>('git_fetch', { repoId, branches });
 export const gitPull = (entry: EntryRef, rebase: boolean) => invoke<ScriptRun>('git_pull', { entry, rebase });
 export const gitRebaseOnBase = (entry: EntryRef) => invoke<ScriptRun>('git_rebase_on_base', { entry });
 export const gitPush = (entry: EntryRef, force = false) => invoke<ScriptRun>('git_push', { entry, force });

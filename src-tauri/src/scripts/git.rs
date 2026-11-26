@@ -1263,19 +1263,23 @@ fn launch_sync(
     )
 }
 
-/// Fetch (W4a): `git fetch --all --prune` in the repository folder.
-pub fn fetch(state: &AppState, repo_id: &str) -> Result<ScriptRun, AppError> {
+/// Fetch (W4a): `git fetch --all --prune` in the repository folder, then each of `branches` whose
+/// upstream is a URL (`gh pr checkout` of a fork) from that URL: only the ones asked for, so a
+/// branch on `origin` never reaches a fork whose branch is gone.
+pub fn fetch(state: &AppState, repo_id: &str, branches: &[String]) -> Result<ScriptRun, AppError> {
     let repo = open_repo(state, repo_id)?;
-    let urls = {
+    let mut specs: Vec<(String, String)> = Vec::new();
+    {
         let shared = state.pool.get(&repo.path)?;
         let git = lock(&shared);
-        refs::url_tracked(&git)
-    };
-    let mut specs: Vec<(String, String)> = Vec::new();
-    for t in urls {
-        let spec = (t.remote.clone(), own_refspec(&t));
-        if !specs.contains(&spec) {
-            specs.push(spec);
+        for branch in branches {
+            let Some(t) = refs::tracking(&git, branch).filter(|t| t.own_ref.is_some()) else {
+                continue;
+            };
+            let spec = (t.remote.clone(), own_refspec(&t));
+            if !specs.contains(&spec) {
+                specs.push(spec);
+            }
         }
     }
     let env: Vec<(String, String)> = specs
@@ -3274,7 +3278,7 @@ pub(super) fn upload_command(set_upstream: bool, force: bool, own: bool) -> Stri
     format!("git push{upstream}{force} \"$GITGEL_REMOTE\" \"$GITGEL_REFSPEC\"{track}")
 }
 
-/// `git fetch --all --prune`, then one fetch per branch on a URL (`refs::url_tracked`).
+/// `git fetch --all --prune`, then one fetch per asked-for branch on a URL.
 pub(super) fn fetch_command(urls: usize) -> String {
     let mut command = String::from("git fetch --all --prune");
     for n in 1..=urls {
@@ -3820,8 +3824,8 @@ mod tests {
         );
         assert_eq!(fetch_command(0), "git fetch --all --prune");
         assert_eq!(
-            fetch_command(1),
-            r#"git fetch --all --prune && git fetch "$GITGEL_REMOTE_1" "$GITGEL_REFSPEC_1""#
+            fetch_command(2),
+            r#"git fetch --all --prune && git fetch "$GITGEL_REMOTE_1" "$GITGEL_REFSPEC_1" && git fetch "$GITGEL_REMOTE_2" "$GITGEL_REFSPEC_2""#
         );
         assert_eq!(
             delete_branch_command(false, CheckedOut::No, true, true),

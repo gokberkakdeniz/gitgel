@@ -78,34 +78,6 @@ fn own_ref(repo: &Repository, remote: &str, branch: &str) -> Option<(String, Str
         .then(|| (owner.to_string(), refname))
 }
 
-/// The local branches whose upstream is a URL, with the ref Gitgel keeps for each ([`own_ref`]):
-/// `git fetch --all` does not reach them.
-pub fn url_tracked(repo: &Repository) -> Vec<Tracking> {
-    let mut out = Vec::new();
-    let Ok(cfg) = repo.config().and_then(|mut c| c.snapshot()) else {
-        return out;
-    };
-    let Ok(mut entries) = cfg.entries(Some(r"^branch\..*\.remote$")) else {
-        return out;
-    };
-    while let Some(Ok(entry)) = entries.next() {
-        let (Ok(name), Ok(value)) = (entry.name(), entry.value()) else {
-            continue;
-        };
-        let Some(branch) = name
-            .strip_prefix("branch.")
-            .and_then(|n| n.strip_suffix(".remote"))
-        else {
-            continue;
-        };
-        if !value.contains([':', '/']) || repo.find_branch(branch, BranchType::Local).is_err() {
-            continue;
-        }
-        out.extend(tracking(repo, branch).filter(|t| t.own_ref.is_some()));
-    }
-    out
-}
-
 fn origin_fallback(repo: &Repository, branch: &str) -> Option<String> {
     let fallback = format!("origin/{branch}");
     repo.find_reference(&format!("refs/remotes/{fallback}"))
@@ -808,10 +780,6 @@ mod tests {
                 .get("feat/x")
                 .map(String::as_str),
             Some("someone/feat/x")
-        );
-        assert_eq!(
-            url_tracked(&t.repo),
-            vec![expect(Some("someone/feat/x")).unwrap()]
         );
         // A remote of the owner's name keeps its refs to itself.
         t.add_remote("someone");

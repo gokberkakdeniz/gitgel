@@ -697,10 +697,18 @@ pub async fn stash_drop(
     .await
 }
 
-/// Sync (W4a): `git fetch --all --prune` in the repository.
+/// Sync (W4a): `git fetch --all --prune` in the repository, and each of `branches` from its fork
+/// when its upstream is a URL.
 #[tauri::command]
-pub async fn git_fetch(state: State<'_, AppState>, repo_id: String) -> Result<ScriptRun, AppError> {
-    blocking(&state, move |state| scripts::git::fetch(state, &repo_id)).await
+pub async fn git_fetch(
+    state: State<'_, AppState>,
+    repo_id: String,
+    branches: Vec<String>,
+) -> Result<ScriptRun, AppError> {
+    blocking(&state, move |state| {
+        scripts::git::fetch(state, &repo_id, &branches)
+    })
+    .await
 }
 
 /// Sync (W4a): `git pull` (or `--rebase`) in the entry's worktree.
