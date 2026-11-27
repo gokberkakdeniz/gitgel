@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.13 — 2026-11-27
+
+### Fixed
+- A branch's Fetch no longer fails on another branch's deleted fork.
+- Fetch no longer fails when a fork has deleted its branch.
+
 ## 0.2.12 — 2026-11-25
 
 ### Changed
